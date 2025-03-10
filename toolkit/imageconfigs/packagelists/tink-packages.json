@@ -1,0 +1,8 @@
+{
+    "packages": [
+        "fluent-bit",
+        "caddy",
+        "rng-tools",
+        "containerd"
+    ]
+}
