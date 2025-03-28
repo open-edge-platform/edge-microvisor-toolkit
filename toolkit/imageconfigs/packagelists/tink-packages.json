@@ -1,5 +1,7 @@
 {
     "packages": [
+        "dracut-tmpfsroot",
+        "tar",
         "fluent-bit",
         "caddy",
         "rng-tools",

@@ -6,7 +6,7 @@
             "Artifacts": [
                 {
                     "Name": "edge-readonly-tink",
-                    "Compression": "tar.gz"
+                    "Type": "tar.gz"
                 }
             ]
         }
@@ -37,10 +37,13 @@
             "FinalizeImageScripts": [
                 {
                     "Path": "scripts/cleanup.sh"
+                },
+                {
+                    "Path": "scripts/setup-tink-initramfs.sh"
                 }
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "quiet splash"
+                "ExtraCommandLine": "root=tmpfs rootflags=size=1G,mode=0755 rd.skipfsck noresume quiet splash"
             },
             "Hostname": "EdgeMicrovisorToolkitTink",
             "DisableRpmDocs": true,
