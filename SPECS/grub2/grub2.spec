@@ -7,10 +7,10 @@
 Summary:        GRand Unified Bootloader
 Name:           grub2
 Version:        2.06
-Release:        22%{?dist}
+Release:        23%{?dist}
 License:        GPLv3+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          Applications/System
 URL:            https://www.gnu.org/software/grub
 Source0:        https://git.savannah.gnu.org/cgit/grub.git/snapshot/grub-%{version}.tar.gz
@@ -39,6 +39,7 @@ Patch0115:      0115-x86-efi-Use-bounce-buffers-for-reading-to-addresses-.patch
 Patch0116:      0116-x86-efi-Re-arrange-grub_cmd_linux-a-little-bit.patch
 Patch0117:      0117-x86-efi-Make-our-own-allocator-for-kernel-stuff.patch
 Patch0118:      0118-x86-efi-Allow-initrd-params-cmdline-allocations-abov.patch
+Patch0119:      0119-Fix-4GB-memory-be-filtered-out-by-filter_memory_map.patch
 Patch0148:      0148-efi-Set-image-base-address-before-jumping-to-the-PE-.patch
 Patch0149:      0149-tpm-Don-t-propagate-TPM-measurement-errors-to-the-ve.patch
 Patch0150:      0150-x86-efi-Reduce-maximum-bounce-buffer-size-to-16-MiB.patch
@@ -433,6 +434,9 @@ cp $GRUB_PXE_MODULE_SOURCE $EFI_BOOT_DIR/$GRUB_PXE_MODULE_NAME
 %config(noreplace) %{_sysconfdir}/grub.d/41_custom
 
 %changelog
+* Mon Apr 07 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 2.06-23
+- Add patch to remove the 2GB limitation in memory map.
+
 * Sun Nov 10 2024 Chris Co <chrco@microsoft.com> - 2.06-22
 - Set efidir location to BOOT for eventual use in changing to "azurelinux"
 - Bump release to also force signing with the new Azure Linux secure boot key
