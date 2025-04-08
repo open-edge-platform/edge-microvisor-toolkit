@@ -1,7 +1,7 @@
 Summary:        Remote Provisioning Client for Intel AMT
 Name:           rpc
-Version:        2.43.0
-Release:        10%{?dist}
+Version:        2.45.1
+Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -46,6 +46,9 @@ cp LICENSE %{buildroot}%{_defaultlicensedir}/%{name}
 %license %{_defaultlicensedir}/%{name}/LICENSE
 
 %changelog
+* Tue Apr 8 2025 kintali Jayanth <jayanthx.kintali@intel.com> - 2.45.1-1
+- Upgrade the RPC component version from 2.43.0 to 2.45.1
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 2.43.0-10
 - Bump Release to rebuild
 
