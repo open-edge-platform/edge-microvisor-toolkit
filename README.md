@@ -1,8 +1,8 @@
 # Edge Microvisor Toolkit
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE) [![go-test-coverage](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/go-test-coverage.yml/badge.svg?branch=3.0) ![lint](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/lint.yml/badge.svg?branch=3.0)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE) ![go-test-coverage](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/go-test-coverage.yml/badge.svg?branch=3.0) ![lint](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/lint.yml/badge.svg?branch=3.0)
 
-The Edge Microvisor Toolkit is a streamlined container operating system that
+The Edge Microvisor Toolkit is a streamlined container host that
 showcases the Intel silicon optimizations. Built on Azure Linux, it features a
 Linux Kernel maintained by Intel, incorporating all the latest kernel and user
 patches.
@@ -32,7 +32,7 @@ Toolkit are available as Open-Source.
 
 Check out these articles to quickly learn how to work with Edge Microvisor Toolkit:
 
-* [System requirements](./docs/developer-guide/system_requirements.md)
+* [System requirements](./docs/developer-guide/system-requirements.md)
   for the hardware and software requirements.
 * [Install on bare metal edge node](./docs/developer-guide/get-started/installation-howto.md#baremetal-with-iso) or
   [Install on a Virtual Machine](./docs/developer-guide/get-started/installation-howto.md#virtual-machine-with-hyper-v)
