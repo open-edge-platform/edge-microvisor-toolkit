@@ -1,6 +1,6 @@
 # Edge Microvisor Toolkit
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE) ![go-test-coverage](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/go-test-coverage.yml/badge.svg?branch=3.0)![lint](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/lint.yml/badge.svg?branch=3.0)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE) [![go-test-coverage](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/go-test-coverage.yml/badge.svg?branch=3.0) ![lint](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/lint.yml/badge.svg?branch=3.0)
 
 The Edge Microvisor Toolkit is a streamlined container operating system that
 showcases the Intel silicon optimizations. Built on Azure Linux, it features a
