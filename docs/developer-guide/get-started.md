@@ -45,7 +45,7 @@ To create a custom developer build of Edge Microvisor Toolkit, follow the steps 
 | Filesystem | e2fsprogs, mount |
 | Included in kernel | iGPU, dGPU (Intel® Arc), SRIOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
 
-The supported package repository offers additional `rpm` to be installed to tailor the image for the specific scenarios and workloads. For example, to adjust container runtime, virtualization, orchestration software, monitoring tools and standard cloud- edge (CNCF) software.
+The supported package repository offers additional `rpm` for tailoring the image to specific needs of container runtime, virtualization, orchestration software, monitoring tools, standard cloud-edge (CNCF) software, and more.
 
 ### Standalone Edge Node
 
