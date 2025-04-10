@@ -60,7 +60,7 @@ Example : `sha256sum ./SPECS/node-agent/env_wrapper.sh`
     python3 -m pip install -r ./toolkit/scripts/requirements.txt
     python3 ./toolkit/scripts/update_cgmanifest.py first cgmanifest.json ./SPECS/node-agent/node-agent.spec
     ```
-> **Note:** This guide, in general, applies to addition of `rpm` packages for Edge Microvisor.
+> **Note:** This guide applies to `rpm` package addition in general for Edge Microvisor.
 
 ## Release Cadence
 
