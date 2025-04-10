@@ -25,16 +25,16 @@ and workloads. The microvisor has been validated on the following platforms:
 
 The following outlines the recommended hardware configuration to run Edge Microvisor Toolkit.
 
-| Component    | Standalone Installation    | Production Deployment (Orchestrator Managed) |
+| Component    | Edge Microvisor Toolkit Developer | Edge Microvisor Toolkit (Open Edge Platform or Standalone) |
 |--------------|----------------------------|----------------------------------------------|
 | CPU          | Intel® Atom, Core, or Xeon | Intel® Atom, Core, or Xeon                   |
 | RAM          | 2GB minimum                | 8GB minimum                                  |
 | Storage      | 32GB SSD/NVMe or eMMC      | 64GB SSD or NVMe                             |
-| Networking   | 1GbE Ethernet or Wi-Fi     | 1GbE Ethernet or higher                      |
+| Networking   | 1GbE Ethernet              | 1GbE Ethernet or higher                      |
 
 ## Software Requirements
 
-| Component        | Standalone Installation | Production Deployment   |
+| Component        | Edge Microvisor Toolkit Developer | Edge Microvisor Toolkit (Open Edge Platform or Standalone) |
 |------------------|-------------------------|-------------------------|
 | Kernel Version   | Intel® Kernel 6.12      | Intel® Kernel 6.12      |
 | Bootloader       | GRUB                    | Systemd-boot            |
