@@ -67,8 +67,7 @@ sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfig
 
 To add packages to the default image, you can define your own `packagelist` json file, pointing
 to `rpms` that should be included in the image. The `edge-image.json` file points to
-multiple `packagelist` files, located under `imageconfigs/packagelists`. The OS allows
-having same `rpms` included in an `imageconfig` file through the `packagelist` files. The resulting
+multiple `packagelist` files, located under `imageconfigs/packagelists`. Same `rpms` may be included in an `imageconfig` file through the `packagelist` files. The resulting
 image will include the set of all `rpms` specified within the array of `packagelist`
 files from the `imageconfig`.
 
