@@ -25,12 +25,12 @@ immediately to prevent potential tampering.
 
 ![System Partition](assets/security-partitions.drawio.svg)
 
-Note on Measured Boot:
-Measured Boot is a related mechanism that records cryptographic hashes
-(measurements) of each boot stage into TPM (Trusted Platform Module) PCR
-registers. These measurements provide an auditable log of the boot process.
-However, in the current Secure Boot implementation, measured boot is not used as
-the enforcement mechanism. Its role is purely for recording and attestation.
+> Note:
+  Measured Boot is a related mechanism that records cryptographic hashes
+  (measurements) of each boot stage into TPM (Trusted Platform Module) PCR
+  registers. These measurements provide an auditable log of the boot process.
+  However, in the current Secure Boot implementation, measured boot is not used as
+  the enforcement mechanism. Its role is purely for recording and attestation.
 
 On Intel® platforms, hardware-based root of trust is often provided by
 technologies such as Intel® Boot Guard, TPM 2.0, and Intel® TXT. For example,
@@ -77,7 +77,7 @@ When the system is powered off, the root microvisor partition is further
 protected by a Linux kernel feature called `dm-verity`. This tool verifies that
 the partition’s contents match a pre-computed cryptographic hash, the "known
 good" value, stored separately on disk. In addition, secure boot, as described in
-the previous section, ensures that only genuine versions of the Edge Microvisor Toolkit
+the previous section, ensures that only genuine versions of Edge Microvisor Toolkit
 can be booted, and that the image remains untampered both at runtime and at rest.
 
 ### Application Deployment and Data Persistence

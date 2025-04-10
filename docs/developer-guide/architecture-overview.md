@@ -27,7 +27,7 @@ overview of key software components:
 ## Edge Microvisor Toolkit Real Time
 
 To support workloads that have real-time requirements, a dedicated image is generated.
-The RT version of Edge Microvisor includes several features over the standard release.
+The RT version of Edge Microvisor Toolkit includes several features over the standard release.
 
 ### Preempt RT Kernel
 
@@ -87,8 +87,9 @@ performance: `idle`.
 - **idle=poll**
 Forces the CPU to actively poll for work when idle, rather than entering low-power idle states. In RT systems, this can reduce latency by ensuring the CPU is always ready to handle high-priority tasks immediately, at the cost of higher power consumption.
 
-**Note!** It is not currently possible to directly modify the kernel command line parameters once a build has been generated, as it is packaged inside the signed UKI. Modifying the kernel command line would invalidate the signature.
-The mechanism to enable customization of the kernel command line will be added in future releases.
+> **Note:**
+  It is not currently possible to directly modify the kernel command line parameters once a build has been generated, as it is packaged inside the signed UKI. Modifying the kernel command line would invalidate the signature.
+  The mechanism to enable customization of the kernel command line will be added in future releases.
 
 - **isolcpus=<list>**
 Isolates specific CPU cores from the general scheduler, preventing non-RT tasks from being scheduled on those cores. This ensures that designated cores are available solely for RT tasks.
@@ -113,7 +114,7 @@ Limits deep idle states on Intel® CPUs, reducing wake-up latencies that can adv
 
 ## Build Artifacts
 
-Each build of the Edge Microvisor Toolkit produces several build artifacts based on
+Each build of Edge Microvisor Toolkit produces several build artifacts based on
 the image configuration used. The artifacts come with associated `sha256` files.
 
 - Unique build ID
@@ -239,7 +240,7 @@ The hardware discovery agent is responsible for initial discovery and introspect
 
 ### Platform Update Agent
 
-The platform update agent (PUA) is responsible for updating the edge node, particularly performing updates during scheduled maintenance windows. For the Edge Microvisor Toolkit, this involves downloading a new OS image when available in the remote registry service, verifying its integrity, writing the image to the inactive user partition and reconfiguring the bootloader to make the inactive partition active and reboot the system. If a failure occurs during the boot process to the image, the bootloader will revert back to the last image. Update flows will be discussed in more detail in the following sections.
+The platform update agent (PUA) is responsible for updating the edge node, particularly performing updates during scheduled maintenance windows. For Edge Microvisor Toolkit, this involves downloading a new OS image when available in the remote registry service, verifying its integrity, writing the image to the inactive user partition and reconfiguring the bootloader to make the inactive partition active and reboot the system. If a failure occurs during the boot process to the image, the bootloader will revert back to the last image. Update flows will be discussed in more detail in the following sections.
 
 ### Node Agent
 
@@ -247,7 +248,7 @@ The node agent is responsible for configuration aspects related to platform func
 
 ### Cluster Agent
 
-The cluster agents are responsible for installation and formation of the Kubernetes cluster, which may involve one or more edge nodes. The Kubernetes software, and associated extensions (scheduler extensions, device plugins, network extensions, etc.) are **not** included in the Edge Microvisor Toolkit image itself, but installed on a writable portion of the filesystem.
+The cluster agents are responsible for installation and formation of the Kubernetes cluster, which may involve one or more edge nodes. The Kubernetes software, and associated extensions (scheduler extensions, device plugins, network extensions, etc.) are **not** included in the microvisor image itself, but installed on a writable portion of the filesystem.
 
 ### Telemetry Agent
 
@@ -290,7 +291,7 @@ The A/B paradigm eliminates the complexities associated with handling partial up
 - **Enhanced Security**
 With a read-only filesystem and a verified update process, the risk of unauthorized modifications is greatly reduced.
 
-This comprehensive update mechanism ensures that the Edge Microvisor Toolkit remains stable, secure, and easy to maintain, even in environments where reliability is paramount.
+This comprehensive update mechanism ensures that Edge Microvisor Toolkit remains stable, secure, and easy to maintain, even in environments where reliability is paramount.
 
 ### Updates Open Edge Platform vs. Standalone
 
@@ -301,5 +302,6 @@ Edge Microvisor Toolkit updates are well integrated when using the Open Edge Pla
 
 The Edge Microvisor Toolkit may also be updated as a standalone solution, through a manual update procedure, without the automation offered by Open Edge Platform. In such a case, download the new version of the Microvisor and run the update by invoking the `os-update-script` and providing the path to the downloaded image.
 
-> Note! Future versions of the Edge Microvisor Toolkit are going to implement automatic update checks, image validation, and updates.
+> **Note:**
+  Future versions of Edge Microvisor Toolkit are going to implement automatic update checks, image validation, and updates.
 

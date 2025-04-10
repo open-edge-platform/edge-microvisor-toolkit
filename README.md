@@ -32,7 +32,7 @@ Toolkit are available as Open-Source.
 
 Check out these articles to quickly learn how to work with Edge Microvisor Toolkit:
 
-* [System requirements](./docs/developer-guide/system_requirements.md)
+* [System requirements](./docs/developer-guide/system-requirements.md)
   for the hardware and software requirements.
 * [Install on bare metal edge node](./docs/developer-guide/get-started/installation-howto.md#baremetal-with-iso) or
   [Install on a Virtual Machine](./docs/developer-guide/get-started/installation-howto.md#virtual-machine-with-hyper-v)

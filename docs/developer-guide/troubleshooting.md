@@ -1,4 +1,8 @@
 # Edge Microvisor Toolkit Troubleshooting
+
+Each build artifact is accompanied with a SHA256 checksum file
+that can be used to ensure the integrity of the original image file.
+
 This section provides additional tips and suggestions covering common questions
 and issues users may run into.
 
@@ -14,7 +18,9 @@ sha256sum -c full-3.0.20250320.0243.iso.sha256sum
 sha256sum 20250320.0243/full-3.0.20250320.0243.iso
 85b137474ec0b9bd79f8573af56f80888cef2f34e6c0649da79dfb58aa28a3bb  20250320.0243/full-3.0.20250320.0243.iso
 ```
->Note! If using `sha256sum` with the -c option, ensure that the image is located in the expected directory. In this case /20250320.0243.
+
+> **Note:** If using `sha256sum` with the -c option, ensure that the image is located in the expected directory. In this case /20250320.0243.
+
 Windows
 ```winbatch
 > certutil -hashfile full-3.0.20250320.0243.iso SHA256
@@ -38,14 +44,14 @@ VM does not attempt to boot from USB or PXE (Network Boot)
 
 
 ````{dropdown} How many CPUs and how much memory should I allocate?
-While the Edge Microvisor will work with constrained devices or VMs,
+While Edge Microvisor Toolkit will work with constrained devices or VMs,
 it is recommended that you have at least 4 CPUs and 4096MB of memory. For quick
-testing purposes you can boot and evaluate Edge Microvisor Toolkit with as little as
+testing purposes, you can boot and evaluate Edge Microvisor Toolkit with as little as
 a single CPU core with 1024MB of memory.
 ````
 
 
-````{dropdown} How much CPU and memory does the Edge Microvisor Toolkit consume when idle?
+````{dropdown} How much CPU and memory does Edge Microvisor Toolkit consume when idle?
 With a *single* CPU core you should see idle consumption
 to be around 300MB of memory and on average 3-7% CPU utilization.
 ````
@@ -102,7 +108,7 @@ directories as well.
 ````{dropdown} Is virtualization supported in Edge Microvisor Toolkit?
 Yes, Edge Microvisor Toolkit offers native support for virtualization through
 KVM/qemu. You can install it as a bare metal/host operating
-system and run Guest operating systems on top.
+system and run guest operating systems on top.
 ````
 
 
@@ -116,22 +122,23 @@ NVIDIA GPUs are not currently supported.
 ````
 
 
-````{dropdown} Are the Edge Microvisor Toolkit images signed?
+````{dropdown} Are the microvisor images signed?
 Yes, the production images are signed by Intel, and because the UKI is
 signed, BIOS needs to be configured with those keys
 ````
 
 
 ````{dropdown} How do I add a Kernel module (.ko) file?
-It depends on which image of Edge Microvisor Toolkit you are using.
+It depends on which microvisor image you are using.
 
 * Mutable ISO: You can add or update modules at runtime. Standard commands like
 `insmod` or `modprobe` enable you to load a downloaded or newly built .ko file.
-The file system is writable, so you can modify or add kernel modules as needed.
+The file system is writable, plus the `dm‑verity` feature is not enabled,
+so you can modify or add kernel modules as needed.
 * Immutable Image: The OS image is read-only; you cannot download or add new .ko
 files after deployment. If a module is needed, it must be included in the system
-image at build time. Assuming the module is part of the verified image, you can
-load it using the usual methods (insmod or modprobe). `dm‑verity` ensures the
+image at build time. Assuming the module is a part of the verified image, you can
+load it using the usual methods (`insmod` or `modprobe`). `dm‑verity` ensures the
 integrity of the image, so any module loaded must match the signed, verified
 version in the image.
 ````
@@ -144,26 +151,22 @@ configuration (`/etc/default/grub`) and then regenerate the configuration by
 running `grub-mkconfig`.
 * Immutable Image: You cannot change the kernel line currently without rebuilding
 the image as the command line is included in the UKI and signed. The kernel
-command line can be modified in the image file (e.g. `edge-image.json`), the
-JSON attribute `KernelCommandLine` updated to include desired kernel command
+command line can be modified in the image file (e.g. `edge-image.json`). The
+`KernelCommandLine` JSON attribute can be updated to include desired kernel command
 line parameter(s).
 ````
 
 ````{dropdown} What do the many JSON files in imageconfigs do? Which needs to be modified for the ISO or the immutable Edge Microvisor Toolkit?
 Most of this is captured in the [Building Howto](./get-started/building-howto.md).
-The `imageconfigs` has a set of different image files that defines different
-image types the Buildkit can produce. The Edge Microvisor Toolkit is using the
-following ones for the different validated images `edge-image.json` and
-image types the Buildkit can produce. Edge Microvisor Toolkit uses the
-following ones for the different validated images: `edge-image.json` and
-`edge-image-rt.json`.
+The `imageconfigs` includes a set of different image files that defines different
+image types the Buildkit can produce. For different validated images, Edge Microvisor Toolkit uses the `edge-image.json` and
+`edge-image-rt.json`, and image types the Buildkit can produce
 ````
 
 ````{dropdown} What changes are needed on the BIOS to support Edge Microvisor Toolkit?
-To install from a USB device, BIOS needs to be updated to include
+To install from a USB device, BIOS needs to be updated to include the
 USB boot option and you need to make sure USB boot has highest precedence in the
-boot order list. To enable secure boot with the Edge Microvisor you would also
-boot order list. To enable secure boot with Edge Microvisor Toolkit, you would also
-need to configure BIOS with the Platform Keys for secure boot. [TODO add
+boot order list. You would also need to configure BIOS with the Platform Keys to enable
+secure boot for Edge Microvisor Toolkit. [TODO add
 additional details on the BIOS setup flow].
 ````
