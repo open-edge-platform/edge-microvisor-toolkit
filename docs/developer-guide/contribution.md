@@ -54,7 +54,7 @@ Example : `sha256sum ./SPECS/node-agent/env_wrapper.sh`
 
 1. Update the signature file name `<agent-name>.signatures.json`. Example : `node-agent.signatures.json`.
 
-1. Update `cgmanifest.json`. If you have an rpm environment, you can use a script to make updates to `cgmanifest.json`. Else, update version and download URL manually. Example commands to update using manifest:
+1. Update `cgmanifest.json`. You can use a script to do it, if you have an rpm environment. Else, update the version and download the URL manually. Example commands to update using a manifest:
 
     ```bash
     python3 -m pip install -r ./toolkit/scripts/requirements.txt
