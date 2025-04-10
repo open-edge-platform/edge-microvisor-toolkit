@@ -167,6 +167,5 @@ image types the Buildkit can produce. For different validated images, Edge Micro
 To install from a USB device, BIOS needs to be updated to include the
 USB boot option and you need to make sure USB boot has highest precedence in the
 boot order list. You would also need to configure BIOS with the Platform Keys to enable
-secure boot for Edge Microvisor Toolkit. [TODO add
-additional details on the BIOS setup flow].
+[secure boot](./get-started/sb-howto.md) for Edge Microvisor Toolkit.
 ````
