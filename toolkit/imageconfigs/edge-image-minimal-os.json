@@ -1,0 +1,73 @@
+{
+    "Disks": [
+        {
+            "PartitionTableType": "gpt",
+            "MaxSize": 500,
+            "Artifacts": [
+                {
+                    "Name": "edge-minimal-os",
+                    "Type": "raw"
+                },
+                {
+                    "Name": "edge-minimal-os",
+                    "Type": "vhdx"
+                }
+            ],
+            "Partitions": [
+                {
+                    "ID": "boot",
+                    "Flags": [
+                        "esp",
+                        "boot"
+                    ],
+                    "Start": 1,
+                    "End": 9,
+                    "FsType": "fat32"
+                },
+                {
+                    "ID": "rootfs",
+                    "Start": 9,
+                    "End": 0,
+                    "FsType": "ext4"
+                }
+            ]
+        }
+    ],
+    "SystemConfigs": [
+        {
+            "Name": "Standard",
+            "BootType": "efi",
+            "PartitionSettings": [
+                {
+                    "ID": "boot",
+                    "MountPoint": "/boot/efi",
+                    "MountOptions": "umask=0077"
+                },
+                {
+                    "ID": "rootfs",
+                    "MountPoint": "/"
+                }
+            ],
+            "PackageLists": [
+                "packagelists/minimal-os-packages.json"
+            ],
+            "AdditionalFiles": {
+                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network",
+                "additionalconfigs/systemd-networkd-wait-online-override.conf": "/etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf"
+            },
+            "PostInstallScripts": [
+                {
+                        "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                        "Path": "additionalconfigs/add-sudoer.sh"
+                }
+            ],
+            "KernelOptions": {
+                "default": "kernel"
+            },
+            "Hostname": "EdgeMicrovisorToolkit-minimal-os",
+            "DisableRpmDocs": true
+        }
+    ]
+}
