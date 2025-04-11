@@ -38,9 +38,9 @@ Check out these articles to quickly learn how to work with Edge Microvisor Toolk
   [Install on a Virtual Machine](./docs/developer-guide/get-started/installation-howto.md#virtual-machine-with-hyper-v)
   to learn how to install Edge Microvisor Toolkit.
 * [Install the developer ISO image](./docs/developer-guide/get-started.md#standalone-developer-edge-node)
-  for a mutable operating system providing only minimum functionality.
+  for a mutable container host providing only minimum functionality.
 * [Install the production RAW image]( ./docs/developer-guide/get-started.md#standalone-edge-node)
-  for an immutable operating system with essential functionality.
+  for an immutable container host with essential functionality.
 * [Build or customize the Edge Microvisor](./docs/developer-guide/get-started/building-howto.md)
   for maximum control over the system you want to deploy.
 * [Edge Orchestrator integration](./docs/developer-guide/deployment-edge-orchestrator.md)
