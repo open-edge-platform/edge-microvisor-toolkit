@@ -10,9 +10,8 @@ name: Linter
 
 on:
   pull_request:
-    branches: [3.0*]
+    branches: [3.0, 3.0-dev]
     paths-ignore:
-      - "**.md"
       - "**/CODEOWNERS"
       - "**.spec"
       - "**.patch"
