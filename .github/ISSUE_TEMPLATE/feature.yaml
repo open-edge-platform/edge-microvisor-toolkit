@@ -6,35 +6,23 @@ body:
 
   - type: markdown
     attributes:
-      value: <br>To expedite issue processing please search open and closed issues before submitting a new one. Existing issues often contain information about workarounds, resolution, or progress updates.
+      value: |
+        <br>To expedite issue processing please search open and closed issues before submitting a new one. Existing issues often contain information about workarounds, resolution, or progress updates.
+        <br>The Design Proposal process is described in the [Design Proposal](https://github.com/open-edge-platform/edge-microvisor-toolkit/design-proposals/README.md)
 
   - type: textarea
     attributes:
       label: Feature Description
-      description: A short summary of the proposal with an introduction and the problem being solved by the proposed change. Include useful persona flows. 
+      description: A clear and concise description of the problem or missing capability. 
     validations:
       required: true
 
   - type: textarea
     attributes:
-      label: Proposal
-      description: A precise statement of the proposed change. Including sub-paragrpahs and diagrams.
-    validations:
-      required: true
+      label: Solution Description
+      description: If you have a solution in mind, please describe it.
 
   - type: textarea
     attributes:
-      label: Rationale
-      description: A discussion of alternate approaches that have been considered and the trade offs, advantages, and disadvantages of the chosen approach.
-    validations:
-      required: true
-
-  - type: textarea
-    attributes:
-      label: Affected components (optional)
-      description: What known compoenents in the Open Edge platform would be impacted by this feature?
-
-  - type: textarea
-    attributes:
-      label: Open issues (optional)
-      description: A discussion of issues relating to this proposal for which the author does not know the solution. This section may be omitted if there are none.
+      label: Alternative Description
+      description: Have you considered any alternative solutions or workarounds?
