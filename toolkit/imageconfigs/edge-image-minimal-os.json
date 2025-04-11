@@ -48,6 +48,9 @@
                     "MountPoint": "/"
                 }
             ],
+            "Packages": [
+                "openssh-server"
+            ],
             "PackageLists": [
                 "packagelists/minimal-os-packages.json"
             ],
