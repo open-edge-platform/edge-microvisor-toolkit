@@ -21,10 +21,10 @@ including the existing functionality not downstreamed in the existing distributi
 With its build infrastructure, you can create your own, custom images, if you need more
 than the default versions currently published:
 
-* Immutable Edge Microvisor Toolkit for Intel® Core™ and Xeon®
-* Immutable Edge Microvisor Toolkit with real time extensions for Intel® Core™ and Xeon®
-* ISO Edge Microvisor Toolkit installer for standalone edge nodes Intel® Core™ and Xeon® platforms
-* ISO Edge Microvisor Toolkit installer for developers for Intel® Core™ and Xeon® platforms
+- Immutable Edge Microvisor Toolkit for Intel® Core™ and Xeon®.
+- Immutable Edge Microvisor Toolkit with real time extensions for Intel® Core™ and Xeon®.
+- ISO Edge Microvisor Toolkit installer for standalone edge nodes Intel® Core™ and Xeon® platforms.
+- ISO Edge Microvisor Toolkit installer for developers for Intel® Core™ and Xeon® platforms.
 
 
 Why Use Edge Microvisor Toolkit
@@ -57,30 +57,30 @@ Why Use Edge Microvisor Toolkit
 Customers Highlights
 -----------------------------------------------------------------------------------------------
 
-* Edge Microvisor Toolkit as the edge OS with and without real time support
-* Built-in support for Intel® platform features, Ethernet and GPU support
-* Immutable OS with support for atomic (A/B) updates with Open Edge Platform
-* Secure the edge platform with an opt-in security model with support for Secure Boot,
-  Full Disc Encryption, dm-verity with TPM 2.0 support
-* Can be deployed with Edge Orchestrator or as a standalone OS
+- Edge Microvisor Toolkit as the edge OS with and without real time support.
+- Built-in support for Intel® platform features, Ethernet and GPU support.
+- Immutable OS with support for atomic (A/B) updates with Open Edge Platform.
+- Secure the edge platform with an opt-in security model with support for Secure Boot,
+  Full Disc Encryption, dm-verity with TPM 2.0 support.
+- Can be deployed with Edge Orchestrator or as a standalone OS.
 
 Developers Highlights
 -----------------------------------------------------------------------------------------------
 
-* Flexible build infrastructure for creating custom images from a large set
-  of pre-provisioned packages via .SPEC files
-* Support for multiple image formats for use on bare metal systems, virtual machines and
-  containers (ISO, VHD, VHDX, RAW)
-* Supporting UKI (Unified Kernel Image) format with or without second stage bootloaders
-  (GRUB, systemd-boot)
-* Supporting mutable developer ISO builds
+- Flexible build infrastructure for creating custom images from a large set
+  of pre-provisioned packages via .SPEC files.
+- Support for multiple image formats for use on bare metal systems, virtual machines and
+  containers (ISO, VHD, VHDX, RAW).
+- Supporting UKI (Unified Kernel Image) format with or without second stage bootloaders
+  (GRUB, systemd-boot).
+- Supporting mutable developer ISO builds.
 
 Key Performance Indicators
 -----------------------------------------------------------------------------------------------
 
-* Boot time less than 8 seconds on entry level Intel® Core™ platforms
-* Fast A/B image updates (<30s) with automatic rollback support on Edge Microvisor Toolkit
-* Small footprint with less than 750MB of disk space required for the OS and under 350MB
+- Boot time less than 8 seconds on entry level Intel® Core™ platforms.
+- Fast A/B image updates (<30s) with automatic rollback support on Edge Microvisor Toolkit.
+- Small footprint with less than 750MB of disk space required for the OS and under 350MB
   compressed RAW image size.
 
 

@@ -6,13 +6,13 @@ facilitate creating `rpm` based OS images supporting a variety of different imag
 The toolkit has an `imageconfig` construct in the `json` format that defines the resulting
 image characteristics, such as:
 
-- Partitioning table type and size
-- The different partitions and their types (such as EFI, rootfs, etc.) and settings, file system (`fat32`, `ext4` etc.) and size
-- Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in the image
-- Additional configuration files that should be embedded in the image (e.g. network-, systemd configurations)
-- Any required post installation scripts that should be executed once the image has been generated
-- Kernel options and command line
-- Final configuration properties that should be applied (e.g. enable full disc encryption, immutable image, second stage bootloader provider, purge documentation etc.)
+- Partitioning table type and size.
+- The different partitions and their types (such as EFI, rootfs, etc.) and settings, file system (`fat32`, `ext4` etc.) and size.
+- Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in the image.
+- Additional configuration files that should be embedded in the image (e.g. network-, systemd configurations).
+- Any required post installation scripts that should be executed once the image has been generated.
+- Kernel options and command line.
+- Final configuration properties that should be applied (e.g. enable full disc encryption, immutable image, second stage bootloader provider, purge documentation etc.).
 
 
 Before you can build OS images you need to build the toolchain and make sure to
@@ -74,7 +74,7 @@ files from the `imageconfig`.
 ### Example: Adding Nano
 
 The following example shows how to add `nano` as an alternative text editor to the image.
-You can add the packages for which SPEC files already exist. Simply include them in an
+You can add the packages for which .SPEC files already exist. Simply include them in an
 existing `packagelist` file, or create a new one and add it to the `imageconfig`.
 
 

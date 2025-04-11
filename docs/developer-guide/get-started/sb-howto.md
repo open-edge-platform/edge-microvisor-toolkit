@@ -3,10 +3,10 @@
 In most production scenarios, you should consider using Secure Boot for your system, ensuring
 it is protected against advanced attacks. Here are the steps required to do so using:
 
-* [ISO Image](#iso-image) - manually sign extensible firmware interface (EFI) binaries,
+- [ISO Image](#iso-image) - manually sign extensible firmware interface (EFI) binaries,
   generating local signing certificates, rebuilding packages, and testing the secure boot
   functionality.
-* [RAW or VHD/X](#raw-and-vhd-image) - configure BIOS with signed production keys of
+- [RAW or VHD/X](#raw-and-vhd-image) - configure BIOS with signed production keys of
 a RAW/VHD Edge Microvisor image.
 
 ## RAW and VHD Image
@@ -36,24 +36,24 @@ This converts certificate.der to a PEM-formatted file called certificate.pem.
 
 ### Step 3: Enroll the Certificate in the UEFI/BIOS
 
-* Restart Your Computer:
-  * Enter your UEFI/BIOS setup by pressing a key such as F2, Del, or Esc during startup (refer to your system's manual if needed).
-* Navigate to the Secure Boot or Security Section:
-  * Look for a menu labeled "Secure Boot," "Security," or similar.
-* Enroll the Custom Key:
-  * Find an option like "Manage Keys," "Enroll Key," or "Add Certificate."
-  * Choose the file selection option and locate your certificate file (use certificate.der or certificate.pem based on your firmware requirements).
-  * Follow the on-screen instructions to enroll the key
+- Restart Your Computer:
+  - Enter your UEFI/BIOS setup by pressing a key such as F2, Del, or Esc during startup (refer to your system's manual if needed).
+- Navigate to the Secure Boot or Security Section:
+  - Look for a menu labeled "Secure Boot," "Security," or similar.
+- Enroll the Custom Key:
+  - Find an option like "Manage Keys," "Enroll Key," or "Add Certificate".
+  - Choose the file selection option and locate your certificate file (use certificate.der or certificate.pem based on your firmware requirements).
+  - Follow the on-screen instructions to enroll the key.
 
-### Step 4: Step 4: Enable Secure Boot
+### Step 4: Enable Secure Boot
 
-* Locate the Secure Boot Setting:
-  * Within the UEFI/BIOS menu, find the Secure Boot option.
-* Enable Secure Boot:
-  * Change the setting to “Enabled.”
-  * Save your changes and exit the UEFI/BIOS setup.
-* Reboot:
-  * Your system will now check the OS image signature against the enrolled certificate during boot
+- Locate the Secure Boot Setting:
+  - Within the UEFI/BIOS menu, find the Secure Boot option.
+- Enable Secure Boot:
+  - Change the setting to “Enabled”.
+  - Save your changes and exit the UEFI/BIOS setup.
+- Reboot:
+  - Your system will now check the OS image signature against the enrolled certificate during boot
 
 ## ISO Image
 

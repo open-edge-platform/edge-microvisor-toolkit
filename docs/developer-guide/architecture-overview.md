@@ -11,11 +11,11 @@ Edge Microvisor Toolkit is produced and maintained in several versions, in both 
 mutable images. It enables users to quickly deploy and run their workloads on Intel® platforms,
 offering quick solutions to multiple scenarios.
 
-- ISO installer with a mutable image using GRUB as the second-stage bootloader
-- ISO installer - mutable image, GRUB as the second-stage bootloader
-- RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader
+- ISO installer with a mutable image using GRUB as the second-stage bootloader.
+- ISO installer - mutable image, GRUB as the second-stage bootloader.
+- RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader.
 - RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader, with real-time
-  support
+  support.
 
 Two flavors of immutable microvisor are available, integrating the Intel® kernel and
 enabling the software and features offered by Intel® Open Edge Platform. Check out this
@@ -117,12 +117,12 @@ Limits deep idle states on Intel® CPUs, reducing wake-up latencies that can adv
 Each build of Edge Microvisor Toolkit produces several build artifacts based on
 the image configuration used. The artifacts come with associated `sha256` files.
 
-- Unique build ID
-- Manifest containing version, kernel version, size, release details and CVE manifest
-- Software BOM package manifests (included packages, dependencies, patches)
-- Signed Image in raw.gz format
-- Image in VHD format
-- Signing key
+- Unique build ID.
+- Manifest containing version, kernel version, size, release details and CVE manifest.
+- Software BOM package manifests (included packages, dependencies, patches).
+- Signed Image in raw.gz format.
+- Image in VHD format.
+- Signing key.
 
 
 ## Packaging
@@ -138,9 +138,9 @@ Device          Start    End      Sectors   Size  Type
 ...raw3         3145728  4192255  1046528   511M  Linux filesystem
 ```
 
-- The first partition is the EFI boot partition
-- The second partition contains the read-only rootfs filesystem
-- The third partition contains the persistent filesystem
+- The first partition is the EFI boot partition.
+- The second partition contains the read-only rootfs filesystem.
+- The third partition contains the persistent filesystem.
 
 UKI (Unified Kernel Image) is an EFI executable that bundles several components, reducing
 the number of artifacts and making updates to the operating system easier to manage.
@@ -195,8 +195,8 @@ The `layout.env` defines the `tmpfs` and persistent bind mounts for the image. B
   /etc/otelcol
 ```
 
-- The `/var` directory requires to be writable as its content changes during normal operation (logs, cache, OS runtime data, persistent application data and temporary files)
-- The `/etc/lp` holds assets and configuration for the system's printing subsystem
+- The `/var` directory requires to be writable as its content changes during normal operation (logs, cache, OS runtime data, persistent application data and temporary files).
+- The `/etc/lp` holds assets and configuration for the system's printing subsystem.
 - The `/etc/node-agent` and `/etc/cluster-agent` and `/etc/health-check` are required for the Open Edge Platform's baremetal agents for configuration data.
 - The `/etc/telegraf` and `/etc/otelcol` are for telemetry data and configuration for the `telemetry-agent` and `observability-agent` required by the Open Edge Platform.
 - `/etc/caddy` is the ephemeral data required by the reverse-proxy required by the Open Edge Platform to communicate with the backend service(s).
@@ -225,8 +225,8 @@ PERSISTENT_BIND_PATHS="
   /var/lib/rancher"
 ```
 
-- Several key directories required for the OS to be writable for normal system operations are kept as persistent bind paths such as `/etc/fstab`, `/etc/environemnt`, `/etc/hosts`, `/etc/pki`, `/etc/ssh`, `/etc/systemd`, `/etc/udev`, `/etc/sysconfig`, `/etc/netplan`
-- The Kubernetes distribution used for Open Edge platform uses Rancher's RKE2 and requires additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`, `/var/lib/rancher`
+- Several key directories required for the OS to be writable for normal system operations are kept as persistent bind paths such as `/etc/fstab`, `/etc/environemnt`, `/etc/hosts`, `/etc/pki`, `/etc/ssh`, `/etc/systemd`, `/etc/udev`, `/etc/sysconfig`, `/etc/netplan`.
+- The Kubernetes distribution used for Open Edge platform uses Rancher's RKE2 and requires additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`, `/var/lib/rancher`.
 
 ## Bare Metal Agents
 
@@ -275,10 +275,14 @@ One partition is designated as active and is used during system boot via EFI and
 When a new update is available, the following steps occur:
 
 - The new image is downloaded and then verified for integrity and authenticity.
-Once verified, the new image is written to the inactive partition.
+
+  Once verified, the new image is written to the inactive partition.
+
 - The bootloader (systemd-boot) is then reconfigured to boot from this updated partition, which will become the new active partition upon the next reboot.
+
 - Rollback Capability:
-Integrated within systemd-boot is the ability to detect boot failures. If the system fails to boot from the new image, the bootloader can automatically rollback to the previous, stable partition, ensuring continuous system availability.
+
+  Integrated within systemd-boot is the ability to detect boot failures. If the system fails to boot from the new image, the bootloader can automatically rollback to the previous, stable partition, ensuring continuous system availability.
 
 ### Benefits of This Approach
 

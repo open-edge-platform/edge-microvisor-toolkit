@@ -7,8 +7,8 @@ deploying edge workloads across multiple deployment models.
 The section provides an overview of both the operating system and build pipelines.
 Once you have decided on the usage scenarios presented below, you can move on to:
 
-* [Build an Edge Microvisor Toolkit Image](./get-started/building-howto.md)
-* [Install Edge Microvisor Toolkit](./get-started/installation-howto.md)
+- [Build an Edge Microvisor Toolkit Image.](./get-started/building-howto.md)
+- [Install Edge Microvisor Toolkit.](./get-started/installation-howto.md)
 
 ## Usage Scenarios
 
@@ -25,7 +25,7 @@ To create a custom developer build of Edge Microvisor Toolkit, follow the steps 
 
 - Install the mutable OS via ISO image that includes only essential pre-installed packages, providing a ready-to-use base environment.
 - Install additional RPM packages, using DNF to tailor the OS to your specific needs.
-- Update installed RPMs regularly to stay up-to-date in the OS, for package updates, kernel updates, security vulnerability fixes and bug fixes
+- Update installed RPMs regularly to stay up-to-date in the OS, for package updates, kernel updates, security vulnerability fixes and bug fixes.
 - Build a custom OS image, using the OS toolkit and available packages, which enables you to:
   - Configure the system for specialized workloads or environments.
   - Experiment with simplified or enhanced configurations tailored for your specific workloads.
