@@ -81,10 +81,10 @@ language, libraries, and tools. “Notable” includes (but is not limited to):
 - Adoption or use of new protocols, protocol versions, cryptographic algorithms,
   and the like, even in an implementation.
 
-Since proposals begin (and will often end) with the filing of an Feature Request
+Because proposals begin (and will often end) with the filing of a Feature Request
 issue, even small changes can go through the proposal process if appropriate.
-Deciding what is appropriate is matter of judgment we will refine through
-experience. If in doubt, file a proposal.
+Deciding what is appropriate is a matter of judgment that is constantly refined.
+If in doubt, do file a proposal.
 
 ### Design Documents
 
