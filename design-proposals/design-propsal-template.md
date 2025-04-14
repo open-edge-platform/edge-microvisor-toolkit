@@ -1,6 +1,6 @@
 # Design Proposal: [Title]
 
-[REMOVE - This is a template for Edge Microvisor Toolkit design proposal
+[REMOVE - This is a template for the Edge Microvisor Toolkit design proposal
 process, documented [here](../README.md).]
 
 Author(s): [Author Name, Co-Author Name]
