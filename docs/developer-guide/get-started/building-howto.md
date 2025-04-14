@@ -74,7 +74,7 @@ files from the `imageconfig`.
 ### Example: Adding Nano
 
 The following example shows how to add `nano` as an alternative text editor to the image.
-You can add the packages for which .SPEC files already exist. Simply include them in an
+You can add the packages for which .spec files already exist. Simply include them in an
 existing `packagelist` file, or create a new one and add it to the `imageconfig`.
 
 

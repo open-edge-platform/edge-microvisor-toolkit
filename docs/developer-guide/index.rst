@@ -68,7 +68,7 @@ Developers Highlights
 -----------------------------------------------------------------------------------------------
 
 - Flexible build infrastructure for creating custom images from a large set
-  of pre-provisioned packages via .SPEC files.
+  of pre-provisioned packages via .spec files.
 - Support for multiple image formats for use on bare metal systems, virtual machines and
   containers (ISO, VHD, VHDX, RAW).
 - Supporting UKI (Unified Kernel Image) format with or without second stage bootloaders

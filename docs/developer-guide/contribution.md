@@ -28,18 +28,18 @@ General contribution guidelines to Open Edge platform can be found [TODO]
 
 ### Update of Edge Node Agents
 
-1. If a new package has to be released, follow below steps to ensure the package is available in the artifactory.
+1. If a new package has to be released, follow these steps to ensure the package is available in the artifactory:
 
     a. Checkout the tag for your agent which has to be released.
     b. cd into your agent's directory.
     c. Invoke `make tarball`.
     d. Upload tarball from `build/artifacts` to the tarball repository.
 
-2. Update the respective .SPEC file in SPECS/<agent-name> directory. Example : `SPECS/node-agent`.
+2. Update the respective .spec file in SPECS/<agent-name> directory. Example : `SPECS/node-agent`.
 
-3. Bump the release number declared in the top section of the .SPEC file if on the same version. Else, update the release version and set the number to 1.
+3. Bump the release number declared in the top section of the .spec file if on the same version. Else, update the release version and set the number to 1.
 
-4. Update `env_wrapper.sh` and the .SPEC file if there are new configurations to be added or installation changes.
+4. Update `env_wrapper.sh` and the .spec file if there are new configurations to be added or installation changes.
 
 5. Update the changelog to ensure the version and release number are mentioned correctly as well.
 Example :

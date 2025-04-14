@@ -72,7 +72,7 @@ Edge repository that is pre-configured in the image. There are over 3000
 packages available.
 - If you need to enable additional packages in the immutable image, you need
 to add the rpm(s) to an image file. You can use an existing image or create a new one.
-- If a .SPEC file does not exist for the rpm you want to add to your image,
+- If a .spec file does not exist for the rpm you want to add to your image,
 you need to create it as well.
 ````
 
