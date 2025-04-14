@@ -39,10 +39,10 @@ with the `Feature Request` template, briefly describing the new feature.
    repository, assigns it the `Proposal` label, and adds a link to it in the
    original feature issue.
 
-1. Once comments and revisions on the design doc wind down, there is a final
-   discussion on the issue, to reach one of two outcomes:
-    - accept design document and related feature by merging the Pull Request or
-    - decline proposal, by closing the Pull Request without merging.
+4. Once comments and revisions on the design doc are resolved, the final discussion of the
+   issue leads to one of two outcomes:
+    - Accept design document and related feature by merging the Pull Request.
+    - Decline proposal, by closing the Pull Request without merging.
 
 1. If the Pull request with the Design Document is merged, it means the design
 is accepted in the form it's described and it becomes an
