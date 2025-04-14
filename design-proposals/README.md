@@ -33,12 +33,11 @@ with the `Feature Request` template, briefly describing the new feature.
    Otherwise the discussion is expected to identify concerns that
    should be addressed in more detail in the design document.
 
-1. If requested the proposal author writes
-   a [Design Document](#design-documents)
-   to work out details of the proposed design and address the concerns raised in
-   the initial discussion. The author create a Pull Request in the
-   `edge-microvisor-toolkit` repository with a `Proposal` label in it and links
-   the Pull Request in the original feature issue.
+3. If the [Design Document](#design-documents) is requested, the author of the proposed
+   changes creates it, working out its details and addressing the concerns raised in
+   the initial discussion. The author creates a Pull Request in the `edge-microvisor-toolkit`
+   repository, assigns it the `Proposal` label, and adds a link to it in the
+   original feature issue.
 
 1. Once comments and revisions on the design doc wind down, there is a final
    discussion on the issue, to reach one of two outcomes:
