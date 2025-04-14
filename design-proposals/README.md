@@ -47,9 +47,9 @@ with the `Feature Request` template, briefly describing the new feature.
 5. If the pull request with the Design Document is merged, it means the design is accepted
    as described there, and it becomes an **ADR, Architecture Decision Record**.
 
-After the Pull Request is merged or closed and it's corresponding design is
+After the Pull Request is merged or closed, and its corresponding design is
 accepted or declined (whether after step 2 or step 4), implementation work
-proceeds in the same way as any other contribution.
+proceeds in the same way as for any other contribution.
 
 ## Detail
 
