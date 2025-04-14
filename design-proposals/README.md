@@ -88,8 +88,8 @@ If in doubt, do file a proposal.
 
 ### Design Documents
 
-As noted above, some (but not all) proposals need to be elaborated in design
-document, that if accepted becomes an Architecture Decision Record (ADR)
+As noted above, some (but not all) proposals need to be elaborated on in a design
+document.
 
 - The design document should be checked in
   to [the proposal directory](https://github.com/open-edge-platform/edge-microvisor-toolkit/design-proposals/) as `EMT-shortname.md`, and `shortname` is a short name (a
