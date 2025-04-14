@@ -16,7 +16,7 @@ image characteristics, such as:
 
 
 Before you can build OS images you need to build the toolchain and make sure to
-[**install pre-requisites (Ubuntu)**](../../toolkit/docs/building/prerequisites-ubuntu.md).
+[**install pre-requisites (Ubuntu)**](/toolkit/docs/building/prerequisites-ubuntu.md).
 
 The toolkit can use prebuilt packages for building the OS images. This is the recommended
 approach as building the *entire toolchain* can take a lot of time. Adding
@@ -31,6 +31,7 @@ cd <Microvisor repo>
 git checkout <latest stable>
 
 # Build the tools
+cd ./toolkit
 sudo make toolchain REBUILD_TOOLS=y
 ```
 
@@ -88,7 +89,7 @@ cat <<EOF > ./imageconfigs/packagelists/utilities.json
 }
 EOF
 
-# Edit the edge-image.json file and add the packagelist
+# Edit the edge-image.json file to add custom packagelist and default login account for testing.
 ...
 "PackageLists": [
   "packagelists/core-packages-image-systemd-boot.json",
@@ -101,7 +102,13 @@ EOF
   "packagelists/selinux-full.json",
   "packagelists/intel-gpu-base.json",
   "packagelists/os-ab-update.json",
-  "packagelists/utilities.json", # Add the packagelist ref.
+  "packagelists/utilities.json"
+],
+"Users": [
+  {
+      "Name": "user",
+      "Password": "user"
+  }
 ],
 ...
 ```
