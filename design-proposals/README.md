@@ -119,9 +119,9 @@ In the worst case, skipping these steps only leads to an unnecessary design doc.
 ### Proposal Review
 
 The proposal will be discussed in the pull request and if needed one or more
-online calls will be established. At the end of the desicussion the repo
-maintainer(s) for the involved code will have the last say for moving the
-proposal in one of the following 3 stages.
+online calls will be established. At the end of the discussion, the repo
+maintainer(s) for the code involved will have the last say in changing the
+pull request status to 'Active', 'Accepted', or 'Declined'.
 
 #### Active
 
