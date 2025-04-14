@@ -132,12 +132,12 @@ sure everyone agrees about what exactly is being discussed.
 
 #### Accepted
 
-Once a proposal is marked Accepted, the Pull Request is merged or the Issue
-closed, the Proposal-Accepted label is applied, and the accepted design will be
+Once a proposal is marked as Accepted, the pull request is merged or the Issue
+is closed, the Proposal-Accepted label is applied, and the accepted design is put
 in the `/design-proposals` folder.
 
-One can apply a release label to signify which release of the Edge Microvisor
-Toolkit release will contain the proposal.
+A release label may be added to signify which release of the Edge Microvisor
+Toolkit is going to include the proposal.
 
 #### Declined
 
