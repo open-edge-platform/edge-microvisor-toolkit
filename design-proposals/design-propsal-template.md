@@ -19,8 +19,8 @@ diagrams.]
 
 ## Rationale
 
-[A discussion of alternate approaches that have been considered and the trade
-offs, advantages, and disadvantages of the chosen approach.]
+[A discussion of alternate approaches that have been considered and the
+trade-offs, advantages, and disadvantages of the chosen approach.]
 
 ## Affected components and Teams
 
