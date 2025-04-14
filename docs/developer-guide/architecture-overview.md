@@ -74,15 +74,15 @@ for system administrators looking to optimize CPU behavior according to workload
 It is used to query and set up CPU frequency scaling, managing the trade-offs between
 performance and power consumption.
 
-- **Frequency Management** allows you to view current CPU frequencies and adjust settings using various governors (like performance, powersave, or on demand).
+- **Frequency Management** enables you to view current CPU frequencies and adjust settings using various governors (like performance, powersave, or on demand).
 - **Power Saving Adjustments** helps in tuning system’s energy usage by adjusting parameters such as frequency limits and enabling/disabling turbo boost.
 - **Dynamic Control** provides commands such as `cpupower frequency-info` (to display current frequency information) and `cpupower frequency-set` (to adjust CPU frequency settings).
 
 
 ### Kernel Command Line
 
-The kernel command line for the RT kernel can be customized to tune specifically for customer workloads. Currently, only one command line argument affecting real-time
-performance is configured: `idle`.
+The kernel command line for the RT kernel can be customized to tune specifically for customer workloads. Currently, `idle` is the only configured command line argument that affects real-time
+performance.
 
 - **idle=poll**
 Forces the CPU to actively poll for work when idle, rather than entering low-power idle states. In RT systems, this can reduce latency by ensuring the CPU is always ready to handle high-priority tasks immediately, at the cost of higher power consumption.

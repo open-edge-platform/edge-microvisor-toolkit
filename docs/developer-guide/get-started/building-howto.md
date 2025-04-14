@@ -6,7 +6,7 @@ facilitate creating `rpm` based OS images supporting a variety of different imag
 The toolkit has an `imageconfig` construct in the JSON format that defines the characteristics of the resulting image, such as:
 
 - Type and size of partitioning table.
-- Different partitions and their types (such as EFI, rootfs, etc.) settings, file system (`fat32`, `ext4` etc.) and size.
+- Partitions, their types (such as EFI, rootfs, etc.), settings, file system, and size.
 - Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in the image.
 - Additional configuration files that should be embedded in the image (e.g. network-, systemd configurations).
 - Any required post-installation scripts that should be executed once the image has been generated.
@@ -18,7 +18,7 @@ Before you can build OS images you need to build the toolchain and make sure to
 [**install pre-requisites (Ubuntu)**](../../toolkit/docs/building/prerequisites-ubuntu.md).
 
 The toolkit can use prebuilt packages for building the OS images. This is the recommended
-approach, as building the *entire toolchain* can take a lot of time. Adding
+approach, as building the *entire toolchain* may take a lot of time. Adding the
 `REBUILD_TOOLCHAIN=y` parameter to the `make` command rebuilds the entire toolchain.
 
 ```bash
