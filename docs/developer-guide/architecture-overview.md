@@ -53,7 +53,7 @@ The Linux `perf` tool is a powerful, integrated suite for performance analysis t
 `perf` can measure a wide range of performance events, including CPU cycles, instructions, cache misses, branch mispredictions, and more. This granular data is invaluable for identifying performance bottlenecks in both kernel and user-space applications.
 
 - **Multiple Modes of Operation**
-`perf` provides multiple modes of operation that enable one to capture a quick summary of performance counters over different periods. It provides insights into overall system performance with its reports, as well as visualization of real-time performance data (using a `top` command).
+`perf` provides multiple modes of operation that enable capturing a quick summary of performance counters over different periods. It provides insights into overall system performance with its reports, as well as visualization of real-time performance data (using the `top` command).
 
 ### turbostat
 
@@ -74,15 +74,15 @@ for system administrators looking to optimize CPU behavior according to workload
 It is used to query and set up CPU frequency scaling, managing the trade-offs between
 performance and power consumption.
 
-- **Frequency Management** enables you to view current CPU frequencies and adjust settings using various governors (like performance, powersave, or on demand).
+- **Frequency Management** allows you to view current CPU frequencies and adjust settings using various governors (like performance, powersave, or on demand).
 - **Power Saving Adjustments** helps in tuning system’s energy usage by adjusting parameters such as frequency limits and enabling/disabling turbo boost.
-- **Dynamic Control** provides commands such as cpupower frequency-info (to display current frequency information) and cpupower frequency-set (to adjust CPU frequency settings).
+- **Dynamic Control** provides commands such as `cpupower frequency-info` (to display current frequency information) and `cpupower frequency-set` (to adjust CPU frequency settings).
 
 
 ### Kernel Command Line
 
-The kernel command line for the RT kernel can be customized to tune specifically for customer workloads. Currently, there is only one command line argument configured that affects real-time
-performance: `idle`.
+The kernel command line for the RT kernel can be customized to tune specifically for customer workloads. Currently, only one command line argument affecting real-time
+performance is configured: `idle`.
 
 - **idle=poll**
 Forces the CPU to actively poll for work when idle, rather than entering low-power idle states. In RT systems, this can reduce latency by ensuring the CPU is always ready to handle high-priority tasks immediately, at the cost of higher power consumption.
@@ -101,10 +101,10 @@ Enables full tickless (nohz) mode on specified cores, reducing periodic timer in
 Offloads RCU (Read-Copy-Update) callbacks from the specified CPUs, reducing interference on cores that need to be as responsive as possible.
 
 - **threadirqs**
-Forces interrupts to be handled by dedicated threads rather than in interrupt context, which can improve the predictability and scheduling granularity of RT tasks.
+Forces interrupts to be handled by dedicated threads rather than in interrupt context, which can improve the predictability and granularity of scheduling RT tasks.
 
 - **nosmt**
-Disables simultaneous multi-threading (hyperthreading). This can prevent contention between sibling threads sharing the same physical core, leading to more predictable performance.
+Disables simultaneous multi-threading (hyperthreading). This can prevent contention between sibling threads that share the same physical core, leading to more predictable performance.
 
 - **numa_balancing=0**
 Disables automatic NUMA balancing. While NUMA awareness is important, automatic migration of processes can introduce latency. Disabling it helps maintain predictable memory locality.
@@ -119,15 +119,15 @@ the image configuration used. The artifacts come with associated `sha256` files.
 
 - Unique build ID.
 - Manifest containing version, kernel version, size, release details and CVE manifest.
-- Software BOM package manifests (included packages, dependencies, patches).
-- Signed Image in raw.gz format.
+- Software BOM package manifests (included packages, dependencies, and patches).
+- Signed Image in `raw.gz` format.
 - Image in VHD format.
 - Signing key.
 
 
 ## Packaging
 
-The image is compressed and packaged as a raw image file that consists of
+The image is compressed and packaged as a RAW image file that consists of
 the bootloader, kernel, and root filesystem, ready to be flashed to a
 drive directly. The image consists of three partitions:
 
@@ -139,11 +139,11 @@ Device          Start    End      Sectors   Size  Type
 ```
 
 - The first partition is the EFI boot partition.
-- The second partition contains the read-only rootfs filesystem.
+- The second partition contains the read-only `rootfs` filesystem.
 - The third partition contains the persistent filesystem.
 
 UKI (Unified Kernel Image) is an EFI executable that bundles several components, reducing
-the number of artifacts and making updates to the operating system easier to manage.
+the number of artifacts and simplifying management of operating system updates.
 
 ```bash
 .

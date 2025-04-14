@@ -1,7 +1,7 @@
 # Enable Secure Boot for Edge Microvisor Toolkit
 
 In most production scenarios, you should consider using Secure Boot for your system, ensuring
-it is protected against advanced attacks. Here are the steps required to do so using:
+it is protected against advanced attacks. Here are the steps required to do so, using:
 
 - [ISO Image](#iso-image) - manually sign extensible firmware interface (EFI) binaries,
   generating local signing certificates, rebuilding packages, and testing the secure boot
@@ -32,28 +32,28 @@ Open a Terminal/Command Prompt. Run the following command:
 openssl x509 -in certificate.der -inform DER -out certificate.pem -outform PEM
 ```
 
-This converts certificate.der to a PEM-formatted file called certificate.pem.
+This converts `certificate.der` into PEM-formatted file `certificate.pem`.
 
 ### Step 3: Enroll the Certificate in the UEFI/BIOS
 
 - Restart Your Computer:
-  - Enter your UEFI/BIOS setup by pressing a key such as F2, Del, or Esc during startup (refer to your system's manual if needed).
-- Navigate to the Secure Boot or Security Section:
-  - Look for a menu labeled "Secure Boot," "Security," or similar.
+  - Enter your UEFI/BIOS setup by pressing F2, Del, or Esc during startup (refer to your system's manual if needed).
+- Navigate to the *Secure Boot* or *Security* Section:
+  - Look for a menu labeled *Secure Boot*, *Security*, or similar.
 - Enroll the Custom Key:
-  - Find an option like "Manage Keys," "Enroll Key," or "Add Certificate".
-  - Choose the file selection option and locate your certificate file (use certificate.der or certificate.pem based on your firmware requirements).
+  - Find the key/certificate management option such as *Manage Keys*, *Enroll Key*, or *Add Certificate*.
+  - Choose the file selection option and locate your certificate file (use `certificate.der` or `certificate.pem` depending on your firmware requirements).
   - Follow the on-screen instructions to enroll the key.
 
 ### Step 4: Enable Secure Boot
 
 - Locate the Secure Boot Setting:
-  - Within the UEFI/BIOS menu, find the Secure Boot option.
+  - Within the UEFI/BIOS menu, find the *Secure Boot* option.
 - Enable Secure Boot:
-  - Change the setting to “Enabled”.
+  - Change the setting to *Enabled*.
   - Save your changes and exit the UEFI/BIOS setup.
 - Reboot:
-  - Your system will now check the OS image signature against the enrolled certificate during boot
+  - Your system will now check the OS image signature against the enrolled certificate during boot.
 
 ## ISO Image
 
@@ -167,7 +167,7 @@ sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
 
 ### Step 4: Disable Secure Boot
 
-Disable secure boot on your test system. For a VM under QEMU using OVMF:
+Disable secure boot on your test system. For a VM under QEMU using OVMF, run:
 
 ```bash
 sudo systemctl reboot --firmware-setup
@@ -182,7 +182,7 @@ Note: This path can vary between vendors.
 
 ### Step 5: Install the new shim-x64 Package
 
-Install the new shim-x64 package and reboot with secure boot disabled:
+Install the new `shim-x64` package and reboot with secure boot disabled:
 
 ```bash
 sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
