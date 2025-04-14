@@ -76,7 +76,7 @@ The proposal process should be used for any notable change or addition to the
 language, libraries, and tools. “Notable” includes (but is not limited to):
 
 - New features, such as the addition of a new component or a feature.
-- Build infrastructure changes
+- Build infrastructure changes.
 - Any other behavior changes in existing functionality.
 - Adoption or use of new protocols, protocol versions, cryptographic algorithms,
   and the like, even in an implementation.
