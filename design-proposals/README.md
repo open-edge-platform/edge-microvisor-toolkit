@@ -100,9 +100,7 @@ document.
   revisions.
 
 - For ease of review with Github, design documents should be compliant with
-  the `markdownlit` rules express in this
-- repo, that will be checked by `CI`. The writer can check conformace by issuing
-the `make lint` command.
+  the `markdownlit` rules express in this.
 
 ### Quick Start for Experienced Committers
 
