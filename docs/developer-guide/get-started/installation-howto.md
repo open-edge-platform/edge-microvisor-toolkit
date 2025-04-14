@@ -49,15 +49,19 @@ you can attach an existing VHD artifact produced by the build pipeline. See the 
 
 ### Converting Image File to VDI
 
-You can convert a VHD or RAW image to the VDI format, which is natively supported by VirtualBox:
+You can convert a VHD or RAW image to the VDI format, which is natively supported by VirtualBox.
+Simply, navigate to the installation folder of VirtualBox, e.g. `C:\Program Files\Oracle\VirtualBox`
+and run the commands below in a terminal to convert:
+
+a VHD disk image:
 
 ```bash
-# Navigate to the installation folder of VirtualBox, e.g. C:\Program Files\Oracle\VirtualBox.
-
-# Convert a VHD disk image to VDI, or
 VBoxManage clonehd --format VDI <input-vhd-image.vhd> <output-vdi-image.vdi>
+```
 
-# convert a RAW disk image to VDI.
+a RAW disk image:
+
+```bash
 VBoxManage convertfromraw <input-vhd-image.img> <output-vdi-image.vdi> --format VDI
 ```
 
