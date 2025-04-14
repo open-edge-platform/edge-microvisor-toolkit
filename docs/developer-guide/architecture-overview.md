@@ -11,11 +11,11 @@ Edge Microvisor Toolkit is produced and maintained in several versions, in both 
 mutable images. It enables users to quickly deploy and run their workloads on Intel® platforms,
 offering quick solutions to multiple scenarios.
 
-- ISO installer with a mutable image using GRUB as the second-stage bootloader
-- ISO installer - mutable image, GRUB as the second-stage bootloader
-- RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader
+- ISO installer with a mutable image using GRUB as the second-stage bootloader.
+- ISO installer - mutable image, GRUB as the second-stage bootloader.
+- RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader.
 - RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader, with real-time
-  support
+  support.
 
 Two flavors of immutable microvisor are available, integrating the Intel® kernel and
 enabling the software and features offered by Intel® Open Edge Platform. Check out this
@@ -27,7 +27,7 @@ overview of key software components:
 ## Edge Microvisor Toolkit Real Time
 
 To support workloads that have real-time requirements, a dedicated image is generated.
-The RT version of Edge Microvisor includes several features over the standard release.
+The RT version of Edge Microvisor Toolkit includes several features over the standard release.
 
 ### Preempt RT Kernel
 
@@ -87,8 +87,9 @@ performance: `idle`.
 - **idle=poll**
 Forces the CPU to actively poll for work when idle, rather than entering low-power idle states. In RT systems, this can reduce latency by ensuring the CPU is always ready to handle high-priority tasks immediately, at the cost of higher power consumption.
 
-**Note!** It is not currently possible to directly modify the kernel command line parameters once a build has been generated, as it is packaged inside the signed UKI. Modifying the kernel command line would invalidate the signature.
-The mechanism to enable customization of the kernel command line will be added in future releases.
+> **Note:**
+  It is not currently possible to directly modify the kernel command line parameters once a build has been generated, as it is packaged inside the signed UKI. Modifying the kernel command line would invalidate the signature.
+  The mechanism to enable customization of the kernel command line will be added in future releases.
 
 - **isolcpus=<list>**
 Isolates specific CPU cores from the general scheduler, preventing non-RT tasks from being scheduled on those cores. This ensures that designated cores are available solely for RT tasks.
@@ -113,15 +114,15 @@ Limits deep idle states on Intel® CPUs, reducing wake-up latencies that can adv
 
 ## Build Artifacts
 
-Each build of the Edge Microvisor Toolkit produces several build artifacts based on
+Each build of Edge Microvisor Toolkit produces several build artifacts based on
 the image configuration used. The artifacts come with associated `sha256` files.
 
-- Unique build ID
-- Manifest containing version, kernel version, size, release details and CVE manifest
-- Software BOM package manifests (included packages, dependencies, patches)
-- Signed Image in raw.gz format
-- Image in VHD format
-- Signing key
+- Unique build ID.
+- Manifest containing version, kernel version, size, release details and CVE manifest.
+- Software BOM package manifests (included packages, dependencies, patches).
+- Signed Image in raw.gz format.
+- Image in VHD format.
+- Signing key.
 
 
 ## Packaging
@@ -137,9 +138,9 @@ Device          Start    End      Sectors   Size  Type
 ...raw3         3145728  4192255  1046528   511M  Linux filesystem
 ```
 
-- The first partition is the EFI boot partition
-- The second partition contains the read-only rootfs filesystem
-- The third partition contains the persistent filesystem
+- The first partition is the EFI boot partition.
+- The second partition contains the read-only rootfs filesystem.
+- The third partition contains the persistent filesystem.
 
 UKI (Unified Kernel Image) is an EFI executable that bundles several components, reducing
 the number of artifacts and making updates to the operating system easier to manage.
@@ -194,8 +195,8 @@ The `layout.env` defines the `tmpfs` and persistent bind mounts for the image. B
   /etc/otelcol
 ```
 
-- The `/var` directory requires to be writable as its content changes during normal operation (logs, cache, OS runtime data, persistent application data and temporary files)
-- The `/etc/lp` holds assets and configuration for the system's printing subsystem
+- The `/var` directory requires to be writable as its content changes during normal operation (logs, cache, OS runtime data, persistent application data and temporary files).
+- The `/etc/lp` holds assets and configuration for the system's printing subsystem.
 - The `/etc/node-agent` and `/etc/cluster-agent` and `/etc/health-check` are required for the Open Edge Platform's baremetal agents for configuration data.
 - The `/etc/telegraf` and `/etc/otelcol` are for telemetry data and configuration for the `telemetry-agent` and `observability-agent` required by the Open Edge Platform.
 - `/etc/caddy` is the ephemeral data required by the reverse-proxy required by the Open Edge Platform to communicate with the backend service(s).
@@ -224,8 +225,8 @@ PERSISTENT_BIND_PATHS="
   /var/lib/rancher"
 ```
 
-- Several key directories required for the OS to be writable for normal system operations are kept as persistent bind paths such as `/etc/fstab`, `/etc/environemnt`, `/etc/hosts`, `/etc/pki`, `/etc/ssh`, `/etc/systemd`, `/etc/udev`, `/etc/sysconfig`, `/etc/netplan`
-- The Kubernetes distribution used for Open Edge platform uses Rancher's RKE2 and requires additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`, `/var/lib/rancher`
+- Several key directories required for the OS to be writable for normal system operations are kept as persistent bind paths such as `/etc/fstab`, `/etc/environemnt`, `/etc/hosts`, `/etc/pki`, `/etc/ssh`, `/etc/systemd`, `/etc/udev`, `/etc/sysconfig`, `/etc/netplan`.
+- The Kubernetes distribution used for Open Edge platform uses Rancher's RKE2 and requires additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`, `/var/lib/rancher`.
 
 ## Bare Metal Agents
 
@@ -239,7 +240,7 @@ The hardware discovery agent is responsible for initial discovery and introspect
 
 ### Platform Update Agent
 
-The platform update agent (PUA) is responsible for updating the edge node, particularly performing updates during scheduled maintenance windows. For the Edge Microvisor Toolkit, this involves downloading a new OS image when available in the remote registry service, verifying its integrity, writing the image to the inactive user partition and reconfiguring the bootloader to make the inactive partition active and reboot the system. If a failure occurs during the boot process to the image, the bootloader will revert back to the last image. Update flows will be discussed in more detail in the following sections.
+The platform update agent (PUA) is responsible for updating the edge node, particularly performing updates during scheduled maintenance windows. For Edge Microvisor Toolkit, this involves downloading a new OS image when available in the remote registry service, verifying its integrity, writing the image to the inactive user partition and reconfiguring the bootloader to make the inactive partition active and reboot the system. If a failure occurs during the boot process to the image, the bootloader will revert back to the last image. Update flows will be discussed in more detail in the following sections.
 
 ### Node Agent
 
@@ -247,7 +248,7 @@ The node agent is responsible for configuration aspects related to platform func
 
 ### Cluster Agent
 
-The cluster agents are responsible for installation and formation of the Kubernetes cluster, which may involve one or more edge nodes. The Kubernetes software, and associated extensions (scheduler extensions, device plugins, network extensions, etc.) are **not** included in the Edge Microvisor Toolkit image itself, but installed on a writable portion of the filesystem.
+The cluster agents are responsible for installation and formation of the Kubernetes cluster, which may involve one or more edge nodes. The Kubernetes software, and associated extensions (scheduler extensions, device plugins, network extensions, etc.) are **not** included in the microvisor image itself, but installed on a writable portion of the filesystem.
 
 ### Telemetry Agent
 
@@ -274,10 +275,14 @@ One partition is designated as active and is used during system boot via EFI and
 When a new update is available, the following steps occur:
 
 - The new image is downloaded and then verified for integrity and authenticity.
-Once verified, the new image is written to the inactive partition.
+
+  Once verified, the new image is written to the inactive partition.
+
 - The bootloader (systemd-boot) is then reconfigured to boot from this updated partition, which will become the new active partition upon the next reboot.
+
 - Rollback Capability:
-Integrated within systemd-boot is the ability to detect boot failures. If the system fails to boot from the new image, the bootloader can automatically rollback to the previous, stable partition, ensuring continuous system availability.
+
+  Integrated within systemd-boot is the ability to detect boot failures. If the system fails to boot from the new image, the bootloader can automatically rollback to the previous, stable partition, ensuring continuous system availability.
 
 ### Benefits of This Approach
 
@@ -290,7 +295,7 @@ The A/B paradigm eliminates the complexities associated with handling partial up
 - **Enhanced Security**
 With a read-only filesystem and a verified update process, the risk of unauthorized modifications is greatly reduced.
 
-This comprehensive update mechanism ensures that the Edge Microvisor Toolkit remains stable, secure, and easy to maintain, even in environments where reliability is paramount.
+This comprehensive update mechanism ensures that Edge Microvisor Toolkit remains stable, secure, and easy to maintain, even in environments where reliability is paramount.
 
 ### Updates Open Edge Platform vs. Standalone
 
@@ -301,5 +306,6 @@ Edge Microvisor Toolkit updates are well integrated when using the Open Edge Pla
 
 The Edge Microvisor Toolkit may also be updated as a standalone solution, through a manual update procedure, without the automation offered by Open Edge Platform. In such a case, download the new version of the Microvisor and run the update by invoking the `os-update-script` and providing the path to the downloaded image.
 
-> Note! Future versions of the Edge Microvisor Toolkit are going to implement automatic update checks, image validation, and updates.
+> **Note:**
+  Future versions of Edge Microvisor Toolkit are going to implement automatic update checks, image validation, and updates.
 

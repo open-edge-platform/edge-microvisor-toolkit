@@ -1,18 +1,17 @@
 # Contribute to Edge Microvisor Toolkit
 
-Edge Microvisor Toolkit is released in open source and always looking for an active
+Edge Microvisor Toolkit is open source and always welcomes an active
 community to support adding new features, optimizing, and improving security.
 
 There are many areas in which you can contribute, such as:
 
-1. the build infrastructure pipeline
-1. new features and functionality in new or existing microvisor image definitions
-1. support for new edge platforms
+1. The build infrastructure pipeline.
+2. New features and functionality in new or existing microvisor image definitions.
+3. Support for new edge platforms.
 
 ## New Features
 
-New feature requests should always be made by opening an Architecture Decision Record (ADR) GitHub issue, regardless of whether you are willing to contribute directly or just file
-a request. To do so, use this template and provide as much information as possible, as it
+New feature requests should always be made by opening an Architecture Decision Record (ADR) GitHub issue, regardless of whether you want to contribute directly or just file a request. To do so, use this template and provide as much information as possible, as it
 helps maintainers and stakeholders to review, better understand, and prioritize the request.
 
 **TODO**: Add link to Andrea's suggested ADR template
@@ -29,20 +28,20 @@ General contribution guidelines to Open Edge platform can be found [TODO]
 
 ### Update of Edge Node Agents
 
-1. If a new package has to be released, follow below steps to ensure the package is available in the artifactory
+1. If a new package has to be released, follow below steps to ensure the package is available in the artifactory.
 
-    1. Checkout the tag for your agent which has to be released
-    1. cd into your agent's directory
-    1. Invoke `make tarball`
-    1. Upload tarball from build/artifacts to the tarball repository
+    a. Checkout the tag for your agent which has to be released.
+    b. cd into your agent's directory.
+    c. Invoke `make tarball`.
+    d. Upload tarball from `build/artifacts` to the tarball repository.
 
-1. Update the respective spec file in SPECS/<agent-name> directory. Example : `SPECS/node-agent`
+2. Update the respective .SPEC file in SPECS/<agent-name> directory. Example : `SPECS/node-agent`.
 
-1. Bump Release number declared in the top section of the spec file if on same version. Else update the release version and number set to 1.
+3. Bump the release number declared in the top section of the .SPEC file if on the same version. Else, update the release version and set the number to 1.
 
-1. Update env_wrapper.sh and spec file if there are new configurations to be added or installation changes
+4. Update `env_wrapper.sh` and the .SPEC file if there are new configurations to be added or installation changes.
 
-1. Update changelog to ensure the version and release number are mentioned accurately as well.
+5. Update the changelog to ensure the version and release number are mentioned correctly as well.
 Example :
 
     ```bash
@@ -50,18 +49,18 @@ Example :
     - Move from RSTYPE to RS_TYPE in wrapper for node-agent
     ```
 
-1. Generate sha256sum of all files that have been updated
+6. Generate sha256sum of all files that have been updated.
 Example : `sha256sum ./SPECS/node-agent/env_wrapper.sh`
 
-1. Update signature file name <agent-name>.signatures.json. Example : node-agent.signatures.json
+7. Update the signature file name `<agent-name>.signatures.json`. Example : `node-agent.signatures.json`.
 
-1. Update cgmanifest.json. If you have a rpm environment, you can use a script to make updates to cgmanifest.json. Else, update version and downloadURL manually. Example commands to update using manifest :
+8. Update `cgmanifest.json`. You can use a script to do it, if you have an rpm environment. Else, update the version and download the URL manually. Example commands to update using a manifest:
 
     ```bash
     python3 -m pip install -r ./toolkit/scripts/requirements.txt
     python3 ./toolkit/scripts/update_cgmanifest.py first cgmanifest.json ./SPECS/node-agent/node-agent.spec
     ```
-> Note! This guide applies to `rpm` package addition in general for Edge Microvisor.
+> **Note:** This guide applies to `rpm` package addition in general for Edge Microvisor.
 
 ## Release Cadence
 
@@ -71,15 +70,15 @@ planned releases.
 
 Edge Microvisor Toolkit releases every 6 weeks. Here are the details:
 
-every 6 weeks:
-- RPM updates including new RPMs or patches to existing RPMs
-- Exception releases to address critical bugs/CVEs
+**every 6 weeks:**
+- RPM updates including new RPMs or patches to existing RPMs.
+- Exception releases to address critical bugs/CVEs.
 
-every 12 weeks:
-- ISO image + RPM release
+**every 12 weeks:**
+- ISO image + RPM release.
 
-every quarter:
-- RAW/VHD (+RPMs delta) image release
+**every quarter:**
+- RAW/VHD (+RPMs delta) image release.
 
 ## Contribution license
 

@@ -4,7 +4,7 @@ orphan: true
 # Overview
 
 The Edge Microvisor Toolkit Developer is a package that contains mutable Edge Microvisor Toolkit in an `ISO` installer format. Edge Microvisor Toolkit is a streamlined container operating system that showcases the Intel silicon optimizations. Built on Azure Linux, it features a Linux Kernel maintained by
-Intel, incorporating all the latest kernel and user patches.  
+Intel, incorporating all the latest kernel and user patches.
 
 The Edge Microvisor Toolkit Developer has undergone extensive validation across
 all Intel platforms such as Xeon®, Intel® Core Ultra™, Intel Core™ and Intel®

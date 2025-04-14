@@ -8,44 +8,44 @@ provides details of how to quickly install and try out Edge Microvisor Toolkit o
 When using Hyper-V you can install the ISO to a virtual hard drive that you create, or directly
 use the VHD artifact produced by the build pipeline
 
-- From Hyper-V Select Action->New->Virtual Machine
-- Provide a name for your VM and press Next >
-- Select Generation 1 (VHD) or Generation 2 (VHDX), then press Next >
-- Change Memory size if desired, then press Next >
-- Select a virtual switch, then press Next >
-- Select Create a virtual hard disk and one of two options:
-  - select a location for your VHD(X) and set your desired disk size, then press Next >
-  - select Install an operating system from a bootable image file and browse to your microvisor ISO.
+1. From Hyper-V Select Action->New->Virtual Machine.
+2. Provide a name for your VM and press Next > .
+3. Select Generation 1 (VHD) or Generation 2 (VHDX), then press Next > .
+4. Change Memory size if desired, then press Next > .
+5. Select a virtual switch, then press Next > .
+6. Select Create a virtual hard disk and one of two options:
+  - Select a location for your VHD(X) and set your desired disk size, then press Next > .
+  - Select Install an operating system from a bootable image file and browse to your microvisor ISO.
   - Press Finish.
 
   or
 
-  - select "Use existing VHD" to proceed with the VHD(X) produced by the build infrastructure,
-  - this option does not need the ISO, just press Next and Finish.
+  - Select "Use existing VHD" to proceed with the VHD(X) produced by the build infrastructure.
+  - This option does not need the ISO, just press Next and Finish.
 
 [Gen2/VHDX Only] Fix Boot Options
 
-- Right click your virtual machine from Hyper-V Manager. Select Settings...
-- Select Security and disable Secure Boot
-- Select Firmware and adjust the boot order so DVD is the first and Hard Drive is second.
-- Select Apply to apply all changes.
+1. Right click your virtual machine from Hyper-V Manager. Select Settings...
+2. Select Security and disable Secure Boot.
+3. Select Firmware and adjust the boot order so DVD is the first and Hard Drive is second.
+4. Select Apply to apply all changes.
+5. Right click your VM and select Connect.... Select Start.
+6. Follow the Installer Prompts to Install your image.
+7. When installation completes, select restart to reboot the machine. The installation ISO will be automatically ejected.
+8. When prompted sign in to your Edge Microvisor Toolkit using the user name and password provisioned through the Installer.
 
-- Right click your VM and select Connect.... Select Start.
-- Follow the Installer Prompts to Install your image
-- When installation completes, select restart to reboot the machine. The installation ISO will be automatically ejected.
-- When prompted sign in to your Edge Microvisor Toolkit using the user name and password provisioned through the Installer.
-
-> Note if installing the VHD directly, without the ISO, default username/password is root/root
+> **Note:**
+  If installing the VHD directly, without the ISO, default username/password is root/root.
 
 ## Virtual Machine with Oracle Virtual Box
 
-- Start the Oracle VirtualBox Manager
-- Create a new VM and chose a name for the virtual machine
-- Select the Edge Microvisor Toolkit ISO image
-- Under Operating System, select Linux, sub-type Fedora (64-bit)
-- Configure number of CPUs and memory allocated to the virtual machine
-- Enable EFI
-- Create virtual disk image, if you choose to use a pre-existing disk image file you may want to first convert the VHD or RAW image file to VDI
+1. Start the Oracle VirtualBox Manager.
+2. Create a new VM and chose a name for the virtual machine.
+3. Select the ISO image of Edge Microvisor Toolkit.
+4. Under Operating System, select Linux, sub-type Fedora (64-bit).
+5. Configure number of CPUs and memory allocated to the virtual machine.
+6. Enable EFI.
+7. Create virtual disk image, if you choose to use a pre-existing disk image file you may want to first convert the VHD or RAW image file to VDI.
 
 ### Converting Image File to VDI
 
@@ -75,13 +75,13 @@ sudo apt install libvirt-daemon-system
 sudo usermod -a -G libvirt $(whoami)
 ```
 
-- Start virt-manager
-- Create a New Virtual Machine
-- Select local install media (ISO image) or alternatively "Import existing disk image" and select the raw disk image
-- Unselect automatic OS discovery, and select OS type manually to Fedora
-- Configure how many CPUs and memory to allocate for the virtual machine
-- Create the virtual disk image
-- Create a name for the virtual machine and configure network as desired
+1. Start virt-manager.
+2. Create a New Virtual Machine.
+3. Select local install media (ISO image) or alternatively "Import existing disk image" and select the raw disk image.
+4. Unselect automatic OS discovery and select OS type manually to Fedora.
+5. Configure how many CPUs and memory to allocate for the virtual machine.
+6. Create the virtual disk image.
+7. Create a name for the virtual machine and configure network as desired.
 
 | Image | Support |
 | ----- | ------- |
@@ -94,15 +94,15 @@ sudo usermod -a -G libvirt $(whoami)
 
 ### Linux
 
-Follow these steps to create a bootable USB device to install the Edge Microvisor Toolkit on a system (baremetal) using `dd`
+Follow these steps to create a bootable USB device to install Edge Microvisor Toolkit on a system (baremetal) using `dd`.
 
-Ensure you have the Edge Microvisor Toolkit ISO file you want to flash saved on your system. Insert the USB drive and identify it.
+Ensure you have the microvisor ISO file you want to flash saved on your system. Insert the USB drive and identify it.
 
 ```bash
 lsblk
 ```
 
-Compare the output before and after inserting your USB to identify its device name (e.g., /dev/sdb). Flash the ISO Image. Use the `dd` command to write the ISO image. Replace /path/to/your.iso with the ISO’s location and /dev/sdb with your USB device
+Compare the output before and after inserting your USB to identify its device name (e.g., /dev/sdb). Flash the ISO Image. Use the `dd` command to write the ISO image. Replace `/path/to/your.iso` with the ISO’s location and `/dev/sdb` with your USB device.
 
 ```bash
 sudo dd if=/path/to/your.iso of=/dev/sdb bs=4M status=progress oflag=sync
@@ -119,18 +119,20 @@ Then safely remove the USB drive.
 
 ### Windows
 
-On Windows, download and install an ISO writer software such as [Rufus](https://rufus.ie)
+On Windows, download and install an ISO writer software such as [Rufus](https://rufus.ie).
+Make sure you follow the steps below:
 
-- Plug in the USB device
-- Launch Rufus and select the USB drive from the dropdown
-- Choose the ISO file by clicking "SELECT" under "Boot Selection"
-- Select GPT as the partitioning scheme
-- Click START to start writing the ISO to the USB device
-- Eject the USB device when Rufus has completed writing the ISO to USB
+1. Plug in the USB device.
+2. Launch Rufus and select the USB drive from the dropdown.
+3. Choose the ISO file by clicking "SELECT" under "Boot Selection".
+4. Select GPT as the partitioning scheme.
+5. Click "START" to begin writing the ISO to the USB device.
+6. Eject the USB device when Rufus has completed writing the ISO.
 
-Install the Edge Microvisor using the live installer ISO and follow the on-screen instructions to configure it. You can optionally enable Full Disc Encryption (FDE) as a choice from the installer.
+Install the Edge Microvisor Toolkit, using the live installer ISO and follow the on-screen configuration instructions. Optionally, you can enable
+the option for Full Disc Encryption (FDE).
 
 ## Next
 
 - Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](sb-howto.md).
-- Learn how to customize and manually build Edge Microvisor images by using the [Build an Edge Microvisor Toolkit Image](building-howto.md)
+- Learn how to customize and manually [build microvisor images](building-howto.md).

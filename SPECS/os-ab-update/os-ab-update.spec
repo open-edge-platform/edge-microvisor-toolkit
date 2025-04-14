@@ -1,7 +1,7 @@
 Summary:        OS AB Update Tool for OS A and B swapping for image based update
 Name:           os-ab-update
-Version:        2.5
-Release:        2%{?dist}
+Version:        2.6
+Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -58,6 +58,11 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Apr 10 2025 Suh Haw Teoh <suh.haw.teoh@intel.com> - 2.6-1
+- Bump version to 2.6
+- Add filesystem check before change UUID
+- Fix dm verity only system not creating hash for b partition
+
 * Fri Mar 21 2025 Suh Haw Teoh <suh.haw.teoh@intel.com> - 2.5-1
 - Bump version to 2.5
 - Split fde and dm verity

@@ -1,0 +1,29 @@
+From: Jeremy Szu <jeremy.szu@canonical.com>
+Date: Wed, 29 Jun 2022 07:36:17 +0800
+Subject: Fix > 4GB memory be filtered out by filter_memory_map()
+
+If the size of initramfs grows bigger, then grub will probably not able
+to load initramfs (LP: #1842320).
+
+Although kernel_alloc() support > 4GB for kernel/initramfs, the
+retrieved memory map from EFI_BOOT_SERVICES.GetMemoryMap() has been
+limited with 2 GB. (0x7fffffff)
+Remove the limitation to align the GRUB_EFI_MAX_USABLE_ADDRESS to make
+the > 4 GB memory allocation works.
+---
+ include/grub/x86_64/efi/memory.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/grub/x86_64/efi/memory.h b/include/grub/x86_64/efi/memory.h
+index e81cfb3..547e3f8 100644
+--- a/include/grub/x86_64/efi/memory.h
++++ b/include/grub/x86_64/efi/memory.h
+@@ -3,7 +3,7 @@
+ 
+ #if defined (__code_model_large__)
+ #define GRUB_EFI_MAX_USABLE_ADDRESS __UINTPTR_MAX__
+-#define GRUB_EFI_MAX_ALLOCATION_ADDRESS 0x7fffffff
++#define GRUB_EFI_MAX_ALLOCATION_ADDRESS GRUB_EFI_MAX_USABLE_ADDRESS
+ #else
+ #define GRUB_EFI_MAX_USABLE_ADDRESS 0x7fffffff
+ #define GRUB_EFI_MAX_ALLOCATION_ADDRESS GRUB_EFI_MAX_USABLE_ADDRESS

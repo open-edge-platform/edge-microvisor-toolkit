@@ -6,17 +6,17 @@ facilitate creating `rpm` based OS images supporting a variety of different imag
 The toolkit has an `imageconfig` construct in the `json` format that defines the resulting
 image characteristics, such as:
 
-- Partitioning table type and size
-- The different partitions and their type (such as EFI, rootfs, etc.) and settings, file system (`fat32`, `ext4` etc.) and size
-- Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in the image
-- Additional configuration files that should be embedded in the image (e.g. network-, systemd configurations)
-- Any required post installation scripts that should be executed once the image has been generated
-- Kernel options and command line
-- Final configuration properties that should be applied (e.g. enable full disc encryption, immutable image, second stage bootloader provider, purge documentation etc.)
+- Partitioning table type and size.
+- The different partitions and their types (such as EFI, rootfs, etc.) and settings, file system (`fat32`, `ext4` etc.) and size.
+- Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in the image.
+- Additional configuration files that should be embedded in the image (e.g. network-, systemd configurations).
+- Any required post installation scripts that should be executed once the image has been generated.
+- Kernel options and command line.
+- Final configuration properties that should be applied (e.g. enable full disc encryption, immutable image, second stage bootloader provider, purge documentation etc.).
 
 
 Before you can build OS images you need to build the toolchain and make sure to
-[**install pre-requisite tools (Ubuntu)**](../../toolkit/docs/building/prerequisites-ubuntu.md).
+[**install pre-requisites (Ubuntu)**](../../toolkit/docs/building/prerequisites-ubuntu.md).
 
 The toolkit can use prebuilt packages for building the OS images. This is the recommended
 approach as building the *entire toolchain* can take a lot of time. Adding
@@ -36,8 +36,7 @@ sudo make toolchain REBUILD_TOOLS=y
 
 ## Building the Default Microvisor Image
 
-Multiple image configurations exist under the `imageconfigs` directory. The diagram below
-outlines where `imageconfigs` are located in the directory structure.
+Multiple image configurations are located in the `imageconfigs` folder:
 
 ```bash
 microvisor/
@@ -67,17 +66,16 @@ sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfig
 ## Customizing an Image
 
 To add packages to the default image, you can define your own `packagelist` json file, pointing
-to `rpms` that should be included in the image. The `edge-image.json` file points include
-multiple `packagelist` files, located under `imageconfigs/packagelists`. There is no harm if
-same `rpms` are included in an `imageconfig` through the `packagelist` files. The resulting
-image will include the set of all rpms declared and included within the array of `packagelist`
+to `rpms` that should be included in the image. The `edge-image.json` file points to
+multiple `packagelist` files, located under `imageconfigs/packagelists`. Same `rpms` may be included in an `imageconfig` file through the `packagelist` files. The resulting
+image will include the set of all `rpms` specified within the array of `packagelist`
 files from the `imageconfig`.
 
 ### Example: Adding Nano
 
 The following example shows how to add `nano` as an alternative text editor to the image.
-You can add the packages for which SPEC files already exist by simply including them in an
-existing `packagelist` file, or creating a new `packagelist` and adding it to the `imageconfig`.
+You can add the packages for which .SPEC files already exist. Simply include them in an
+existing `packagelist` file, or create a new one and add it to the `imageconfig`.
 
 
 ```bash
@@ -108,7 +106,7 @@ EOF
 ...
 ```
 
-Then rebuild the image
+Then, rebuild the image:
 
 ```bash
 sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image.json
