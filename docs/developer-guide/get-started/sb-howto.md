@@ -59,13 +59,13 @@ This converts `certificate.der` into PEM-formatted file `certificate.pem`.
 
 ### Prerequisites
 
-**Install Required Packages**: Install the necessary tools for signing and building packages:
+**Install Required Tools** for signing and building packages:
 
 ```bash
 sudo tdnf install dnf-utils pesign nss-tools efivar rpmdevtools openssl kernel-devel keyutils
 ```
 
-**Add User to pesign Group**: Add your user to the pesign group:
+**Add User to the pesign Group**:
 
 ```bash
 sudo usermod -a -G pesign $(whoami)
@@ -75,7 +75,7 @@ Log out and log back in for the changes to take effect.
 
 ### Step 1: Generate Local Signing Certificates
 
-Follow these steps to create local self-signed certificates:
+Follow the steps below to create local self-signed certificates:
 
 **Download the pesign source package**:
 
@@ -92,7 +92,7 @@ tar xvf pesign-*.tar.bz2
 cd pesign-*/src/certs
 ```
 
-**Create a self-signed CA and signing certificate**:
+**Create a self-signed CA and a signing certificate**:
 
 ```bash
 export KEY=KeyInShim
@@ -104,11 +104,11 @@ pk12util -d /etc/pki/pesign -i $KEY.p12
 certutil -d /etc/pki/pesign -A -i $KEY.crt -n $KEY -t u
 ```
 
-Repeat the above steps for additional keys, such as `KeyInDB`.
+Repeat the steps above for additional keys such as `KeyInDB`.
 
 ```bash
 export KEY=KeyInDB
-# Repeat above steps
+# Repeat the steps above.
 ```
 
 ### Step 2: Rebuild the shim-unsigned Package
@@ -173,12 +173,11 @@ Disable secure boot on your test system. For a VM under QEMU using OVMF, run:
 sudo systemctl reboot --firmware-setup
 ```
 
-Navigate to:
+Navigate to secure boot configuration and disable the option for secure boot.
 
-```bash
-Device Manager → Secure Boot Configuration → Attempt Secure Boot (set to [ ]).
-Note: This path can vary between vendors.
-```
+> **NOTE:**
+  The location of this option may vary between vendors.
+
 
 ### Step 5: Install the new shim-x64 Package
 
@@ -225,13 +224,9 @@ sudo cp key-in-db.der /boot/efi/EFI/
 sudo systemctl reboot --firmware-setup
 ```
 
-Navigate to:
+Navigate to secure boot configuration and set the secure boot mode to *Custom Mode*.
 
-```bash
-Device Manager → Secure Boot Configuration → Secure Boot Mode (set to <Custom Mode>).
-
-Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signature Using File.
-```
+Under *Custom Secure Boot Options* go to *DB Options*, then select the option to enroll signature from the `key-in-db.der` file into the database.
 
 ### Step 8: Enable Secure Boot and Test
 
