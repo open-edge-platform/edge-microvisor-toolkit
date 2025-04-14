@@ -7,8 +7,7 @@ design-driven. Before implementation, all significant changes must be first
 discussed, formally documented, and agreed upon.
 This document describes the whole process.
 
-To learn more about the different components please check
-the [Edge Microvisor Toolkit](https://docs.openedgeplatform.intel.com/edge-microvisor-toolkit/3.0/docs/index.html)
+To learn more about Edge Microvisor Toolkit, check the [Edge Microvisor Toolkit documentation](https://docs.openedgeplatform.intel.com/edge-microvisor-toolkit/3.0/docs/index.html)
 
 ## The Proposal Process
 
