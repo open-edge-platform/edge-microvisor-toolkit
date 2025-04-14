@@ -7,8 +7,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        <br>To expedite issue processing please search open and closed issues before submitting a new one. Existing issues often contain information about workarounds, resolution, or progress updates.
-        <br>The Design Proposal process is described in the [Design Proposal](https://github.com/open-edge-platform/edge-microvisor-toolkit/design-proposals/README.md)
+        <br>Before creating the request, see the existing issues to check if your case has not been addressed already. If it has, you may also find information about workarounds, resolution, and progress.
+        <br>The Design Proposal process is described in the [Design Proposal document](https://github.com/open-edge-platform/edge-microvisor-toolkit/design-proposals/README.md).
 
   - type: textarea
     attributes:
