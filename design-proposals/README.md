@@ -15,8 +15,8 @@ the [Edge Microvisor Toolkit](https://docs.openedgeplatform.intel.com/edge-micro
 
 ## The Proposal Process
 
-The proposal process is the process for reviewing a proposal and reaching
-a decision about whether to accept or decline the proposal.
+The proposal process focuses on reviewing the proposed changes and deciding
+if they should be accepted.
 
 1. The author of the proposal creates [a Github issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues) 
 with the `Feature Request` template, briefly describing the new feature.
