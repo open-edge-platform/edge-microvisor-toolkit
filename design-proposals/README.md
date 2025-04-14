@@ -91,9 +91,9 @@ If in doubt, do file a proposal.
 As noted above, some (but not all) proposals need to be elaborated on in a design
 document.
 
-- The design document should be checked in
-  to [the proposal directory](https://github.com/open-edge-platform/edge-microvisor-toolkit/design-proposals/) as `EMT-shortname.md`, and `shortname` is a short name (a
-  few dash-separated words at most).
+- The design document should be checked in to 
+  [the proposal directory](https://github.com/open-edge-platform/edge-microvisor-toolkit/design-proposals/)
+  as `EMT-shortname.md`, where `shortname` is a few dash-separated words at most.
 
 - The design doc should follow [the template](./design-proposal-template.md).
 
