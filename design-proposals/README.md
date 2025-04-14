@@ -44,9 +44,8 @@ with the `Feature Request` template, briefly describing the new feature.
     - Accept design document and related feature by merging the Pull Request.
     - Decline proposal, by closing the Pull Request without merging.
 
-1. If the Pull request with the Design Document is merged, it means the design
-is accepted in the form it's described and it becomes an
-**ADR, Architecture Decision Record**.
+5. If the pull request with the Design Document is merged, it means the design is accepted
+   as described there, and it becomes an **ADR, Architecture Decision Record**.
 
 After the Pull Request is merged or closed and it's corresponding design is
 accepted or declined (whether after step 2 or step 4), implementation work
