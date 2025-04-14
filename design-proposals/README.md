@@ -125,8 +125,8 @@ pull request status to 'Active', 'Accepted', or 'Declined'.
 
 #### Active
 
-Issues in the Active column are reviewed weekly in the different teams to watch
-for emerging consensus in the discussions. The mantainers may also comment, make
+Issues in the Active column are reviewed weekly by different teams. Track them
+to see emerging consensus in the discussions. The maintainers may also comment, make
 suggestions, ask clarifying questions, and try to restate the proposals to make
 sure everyone agrees about what exactly is being discussed.
 
