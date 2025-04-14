@@ -142,8 +142,8 @@ Toolkit is going to include the proposal.
 #### Declined
 
 A proposal is marked as Declined if a complete re-work is needed, change is not
-required anymore or not applicable. Once a proposal is Declined, the Pull
-request or the Feature Request it is closed.
+required anymore or not applicable. Once a proposal is Declined, the pull
+request or the Feature Request is closed.
 
 ## Help
 
