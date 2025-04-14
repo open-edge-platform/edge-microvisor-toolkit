@@ -23,12 +23,11 @@ with the `Feature Request` template, briefly describing the new feature.
 
    >Note: There is no need for a design proposal document at this point.
 
-1. A discussion on the issue aims to triage the Feature Request with the
-   maintainers of the overall project into one of three outcomes:
-    - accept the feature request, or
-    - decline the feature request, or
-    - ask for a [Design Document](#design-documents), which if merged
-      becomes an `Architecture Decision Record` (ADR).
+2. Maintainers of the overall project discuss the issue and decide on one of three outcomes:
+    - Accept the feature request.
+    - Decline the feature request.
+    - Ask for a [Design Document](#design-documents) that, if merged, becomes an 
+      `Architecture Decision Record` (ADR).
 
    If the feature request is accepted or declined, the process is done.
    Otherwise the discussion is expected to identify concerns that
