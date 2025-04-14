@@ -3,9 +3,8 @@
 ## Introduction
 
 The development process of components in the Open Edge Platform is
-design-driven. Significant changes to the components, installation
-scripts, packages, image configurations, or tools must be first
-discussed, formally documented and agreed upon before they can be implemented.
+design-driven. Before implementation, all significant changes must be first
+discussed, formally documented, and agreed upon.
 
 This document describes the process for proposing, documenting, and
 implementing changes.
