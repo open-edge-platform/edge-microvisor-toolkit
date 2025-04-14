@@ -73,7 +73,7 @@ proposal needs more careful explanation and consideration.
 ### Scope
 
 The proposal process should be used for any notable change or addition to the
-language, libraries and tools. “Notable” includes (but is not limited to):
+language, libraries, and tools. “Notable” includes (but is not limited to):
 
 - New features, such as the addition of a new component or a feature.
 - Build infrastructure changes
