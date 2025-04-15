@@ -11,10 +11,7 @@ There are many areas in which you can contribute, such as:
 
 ## New Features
 
-New feature requests should always be made by opening an Architecture Decision Record (ADR) GitHub issue, regardless of whether you want to contribute directly or just file a request. To do so, use this template and provide as much information as possible. This
-helps maintainers and stakeholders to review, better understand, and prioritize the request.
-
-<!--**TODO**: Add link to Andrea's suggested ADR template-->
+New feature requests should always be made by opening an Architecture Decision Record (ADR) GitHub issue, regardless of whether you want to contribute directly or just file a request. To do so, use the [Design Proposal](/design-proposals/design-propsal-template.md) template and provide as much information as possible. This helps maintainers and stakeholders to review, better understand, and prioritize the request.
 
 ## Contribution Flow
 
