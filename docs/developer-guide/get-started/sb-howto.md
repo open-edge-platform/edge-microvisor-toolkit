@@ -75,7 +75,7 @@ Log out and log back in for the changes to take effect.
 
 ### Step 1: Generate Local Signing Certificates
 
-Follow the steps below to create local self-signed certificates:
+Complete the following steps to create local self-signed certificates:
 
 **Download the pesign source package**:
 
@@ -104,11 +104,11 @@ pk12util -d /etc/pki/pesign -i $KEY.p12
 certutil -d /etc/pki/pesign -A -i $KEY.crt -n $KEY -t u
 ```
 
-Repeat the steps above for additional keys such as `KeyInDB`.
+Repeat the steps for additional keys, such as `KeyInDB`.
 
 ```bash
 export KEY=KeyInDB
-# Repeat the steps above.
+# Repeat the steps.
 ```
 
 ### Step 2: Rebuild the shim-unsigned Package
