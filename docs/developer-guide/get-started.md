@@ -4,22 +4,20 @@ Edge Microvisor Toolkit is a lightweight, container-first Linux distribution
 optimized for Intel® architecture. It provides a secure and high-performing environment for
 deploying edge workloads across multiple deployment models.
 
-This section provides its overview in terms of both the Operating System and the build pipeline.
-See what usage scenarios you can choose, in the description below, and move on to:
+The section provides an overview of both the operating system and build pipelines.
+Once you have decided on the usage scenarios presented below, you can move on to:
 
-* [Build an Edge Microvisor Toolkit Image](./get-started/building-howto.md)
-* [Install Edge Microvisor Toolkit](./get-started/installation-howto.md)
-
-
+- [Build an Edge Microvisor Toolkit Image.](./get-started/building-howto.md)
+- [Install Edge Microvisor Toolkit.](./get-started/installation-howto.md)
 
 ## Usage Scenarios
 
-Edge Microvisor Toolkit can be used for standalone edge node deployments or with Edge
-Orchestrator, a complete integrated system providing full lifecycle management for your edge
-devices, including remote deployment and management of Kubernetes applications.
-
 This section outlines the key usage models intended for the initial release of
 Edge Microvisor Toolkit.
+
+It can be used for standalone edge node deployments or with Edge
+Orchestrator, a complete integrated system providing full lifecycle management for your edge
+devices, including remote deployment and management of Kubernetes applications.
 
 ### Standalone Developer Edge Node
 
@@ -27,7 +25,7 @@ To create a custom developer build of Edge Microvisor Toolkit, follow the steps 
 
 - Install the mutable OS via ISO image that includes only essential pre-installed packages, providing a ready-to-use base environment.
 - Install additional RPM packages, using DNF to tailor the OS to your specific needs.
-- Update installed RPMs regularly to stay up-to-date in the OS, for package updates, kernel updates, security vulnerability fixes and bug fixes
+- Update installed RPMs regularly to stay up-to-date in the OS, for package updates, kernel updates, security vulnerability fixes and bug fixes.
 - Build a custom OS image, using the OS toolkit and available packages, which enables you to:
   - Configure the system for specialized workloads or environments.
   - Experiment with simplified or enhanced configurations tailored for your specific workloads.
@@ -49,7 +47,9 @@ The supported package repository offers additional `rpm` for tailoring the image
 
 ### Standalone Edge Node
 
-The standalone edge node uses the standard immutable build and provides an ISO image that can be flashed to a USB device and installed on edge nodes. It installs the microvisor and Kubernetes to the edge node with the essential functionality to run a single node cluster. The edge node will serve as both control- and worker node. Additional worker nodes can be added to the cluster through Kubernetes. Future releases will allow standalone edge nodes to join an existing Edge Orchestrator Toolkit backend deployed on-prem or in the cloud to support scale out and management of larger infrastructures. The Standalone Edge Node enables you to quickly get an edge node up and running without deploying backend services, ready to deploy Kubernetes applications through `kubectl`, `helm`, or Kubernetes web dashboard.
+The standalone edge node uses the standard immutable build and provides an ISO image that can be flashed to a USB device and installed on edge nodes. It installs the microvisor and Kubernetes to the edge node with the essential functionality to run a single node cluster. The edge node will serve as both control and worker node. Additional worker nodes can be added to the cluster through Kubernetes.
+
+Future releases will enable standalone edge nodes to join an existing Edge Orchestrator Toolkit backend deployed on-prem or in the cloud to support scale out and management of larger infrastructures. The Standalone Edge Node enables you to quickly get an edge node up and running without deploying backend services, ready to deploy Kubernetes applications through `kubectl`, `helm`, or Kubernetes web dashboard.
 
 ```{admonition} The standalone edge node does not support the real-time version currently.
 :class: note

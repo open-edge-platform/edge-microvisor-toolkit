@@ -11,11 +11,11 @@ Edge Microvisor Toolkit is produced and maintained in several versions, in both 
 mutable images. It enables users to quickly deploy and run their workloads on Intel® platforms,
 offering quick solutions to multiple scenarios.
 
-- ISO installer with a mutable image using GRUB as the second-stage bootloader
-- ISO installer - mutable image, GRUB as the second-stage bootloader
-- RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader
+- ISO installer with a mutable image using GRUB as the second-stage bootloader.
+- ISO installer - mutable image, GRUB as the second-stage bootloader.
+- RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader.
 - RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader, with real-time
-  support
+  support.
 
 Two flavors of immutable microvisor are available, integrating the Intel® kernel and
 enabling the software and features offered by Intel® Open Edge Platform. Check out this
@@ -53,7 +53,7 @@ The Linux `perf` tool is a powerful, integrated suite for performance analysis t
 `perf` can measure a wide range of performance events, including CPU cycles, instructions, cache misses, branch mispredictions, and more. This granular data is invaluable for identifying performance bottlenecks in both kernel and user-space applications.
 
 - **Multiple Modes of Operation**
-`perf` provides multiple modes of operation that enable one to capture a quick summary of performance counters over different periods. It provides insights into overall system performance with its reports, as well as visualization of real-time performance data (using a `top` command).
+`perf` provides multiple modes of operation that enable capturing a quick summary of performance counters over different periods. It provides insights into overall system performance with its reports, as well as visualization of real-time performance data (using the `top` command).
 
 ### turbostat
 
@@ -76,13 +76,13 @@ performance and power consumption.
 
 - **Frequency Management** enables you to view current CPU frequencies and adjust settings using various governors (like performance, powersave, or on demand).
 - **Power Saving Adjustments** helps in tuning system’s energy usage by adjusting parameters such as frequency limits and enabling/disabling turbo boost.
-- **Dynamic Control** provides commands such as cpupower frequency-info (to display current frequency information) and cpupower frequency-set (to adjust CPU frequency settings).
+- **Dynamic Control** provides commands such as `cpupower frequency-info` (to display current frequency information) and `cpupower frequency-set` (to adjust CPU frequency settings).
 
 
 ### Kernel Command Line
 
-The kernel command line for the RT kernel can be customized to tune specifically for customer workloads. Currently, there is only one command line argument configured that affects real-time
-performance: `idle`.
+The kernel command line for the RT kernel can be customized to tune specifically for customer workloads. Currently, `idle` is the only configured command line argument that affects real-time
+performance.
 
 - **idle=poll**
 Forces the CPU to actively poll for work when idle, rather than entering low-power idle states. In RT systems, this can reduce latency by ensuring the CPU is always ready to handle high-priority tasks immediately, at the cost of higher power consumption.
@@ -101,10 +101,10 @@ Enables full tickless (nohz) mode on specified cores, reducing periodic timer in
 Offloads RCU (Read-Copy-Update) callbacks from the specified CPUs, reducing interference on cores that need to be as responsive as possible.
 
 - **threadirqs**
-Forces interrupts to be handled by dedicated threads rather than in interrupt context, which can improve the predictability and scheduling granularity of RT tasks.
+Forces interrupts to be handled by dedicated threads rather than in interrupt context, which can improve the predictability and granularity of scheduling RT tasks.
 
 - **nosmt**
-Disables simultaneous multi-threading (hyperthreading). This can prevent contention between sibling threads sharing the same physical core, leading to more predictable performance.
+Disables simultaneous multi-threading (hyperthreading). This can prevent contention between sibling threads that share the same physical core, leading to more predictable performance.
 
 - **numa_balancing=0**
 Disables automatic NUMA balancing. While NUMA awareness is important, automatic migration of processes can introduce latency. Disabling it helps maintain predictable memory locality.
@@ -117,17 +117,17 @@ Limits deep idle states on Intel® CPUs, reducing wake-up latencies that can adv
 Each build of Edge Microvisor Toolkit produces several build artifacts based on
 the image configuration used. The artifacts come with associated `sha256` files.
 
-- Unique build ID
-- Manifest containing version, kernel version, size, release details and CVE manifest
-- Software BOM package manifests (included packages, dependencies, patches)
-- Signed Image in raw.gz format
-- Image in VHD format
-- Signing key
+- Unique build ID.
+- Manifest containing version, kernel version, size, release details and CVE manifest.
+- Software BOM package manifests (included packages, dependencies, and patches).
+- Signed Image in `raw.gz` format.
+- Image in VHD format.
+- Signing key.
 
 
 ## Packaging
 
-The image is compressed and packaged as a raw image file that consists of
+The image is compressed and packaged as a RAW image file that consists of
 the bootloader, kernel, and root filesystem, ready to be flashed to a
 drive directly. The image consists of three partitions:
 
@@ -138,12 +138,12 @@ Device          Start    End      Sectors   Size  Type
 ...raw3         3145728  4192255  1046528   511M  Linux filesystem
 ```
 
-- The first partition is the EFI boot partition
-- The second partition contains the read-only rootfs filesystem
-- The third partition contains the persistent filesystem
+- The first partition is the EFI boot partition.
+- The second partition contains the read-only `rootfs` filesystem.
+- The third partition contains the persistent filesystem.
 
 UKI (Unified Kernel Image) is an EFI executable that bundles several components, reducing
-the number of artifacts and making updates to the operating system easier to manage.
+the number of artifacts and simplifying management of operating system updates.
 
 ```bash
 .
@@ -195,8 +195,8 @@ The `layout.env` defines the `tmpfs` and persistent bind mounts for the image. B
   /etc/otelcol
 ```
 
-- The `/var` directory requires to be writable as its content changes during normal operation (logs, cache, OS runtime data, persistent application data and temporary files)
-- The `/etc/lp` holds assets and configuration for the system's printing subsystem
+- The `/var` directory requires to be writable as its content changes during normal operation (logs, cache, OS runtime data, persistent application data and temporary files).
+- The `/etc/lp` holds assets and configuration for the system's printing subsystem.
 - The `/etc/node-agent` and `/etc/cluster-agent` and `/etc/health-check` are required for the Open Edge Platform's baremetal agents for configuration data.
 - The `/etc/telegraf` and `/etc/otelcol` are for telemetry data and configuration for the `telemetry-agent` and `observability-agent` required by the Open Edge Platform.
 - `/etc/caddy` is the ephemeral data required by the reverse-proxy required by the Open Edge Platform to communicate with the backend service(s).
@@ -225,8 +225,8 @@ PERSISTENT_BIND_PATHS="
   /var/lib/rancher"
 ```
 
-- Several key directories required for the OS to be writable for normal system operations are kept as persistent bind paths such as `/etc/fstab`, `/etc/environemnt`, `/etc/hosts`, `/etc/pki`, `/etc/ssh`, `/etc/systemd`, `/etc/udev`, `/etc/sysconfig`, `/etc/netplan`
-- The Kubernetes distribution used for Open Edge platform uses Rancher's RKE2 and requires additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`, `/var/lib/rancher`
+- Several key directories required for the OS to be writable for normal system operations are kept as persistent bind paths such as `/etc/fstab`, `/etc/environemnt`, `/etc/hosts`, `/etc/pki`, `/etc/ssh`, `/etc/systemd`, `/etc/udev`, `/etc/sysconfig`, `/etc/netplan`.
+- The Kubernetes distribution used for Open Edge platform uses Rancher's RKE2 and requires additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`, `/var/lib/rancher`.
 
 ## Bare Metal Agents
 
@@ -275,10 +275,14 @@ One partition is designated as active and is used during system boot via EFI and
 When a new update is available, the following steps occur:
 
 - The new image is downloaded and then verified for integrity and authenticity.
-Once verified, the new image is written to the inactive partition.
+
+  Once verified, the new image is written to the inactive partition.
+
 - The bootloader (systemd-boot) is then reconfigured to boot from this updated partition, which will become the new active partition upon the next reboot.
+
 - Rollback Capability:
-Integrated within systemd-boot is the ability to detect boot failures. If the system fails to boot from the new image, the bootloader can automatically rollback to the previous, stable partition, ensuring continuous system availability.
+
+  Integrated within systemd-boot is the ability to detect boot failures. If the system fails to boot from the new image, the bootloader can automatically rollback to the previous, stable partition, ensuring continuous system availability.
 
 ### Benefits of This Approach
 

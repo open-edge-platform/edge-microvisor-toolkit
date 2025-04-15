@@ -1,12 +1,12 @@
 # Enable Secure Boot for Edge Microvisor Toolkit
 
 In most production scenarios, you should consider using Secure Boot for your system, ensuring
-it is protected against advanced attacks. Here are the steps required to do so using:
+it is protected against advanced attacks. Here are the steps required to do so, using:
 
-* [ISO Image](#iso-image) - manually sign extensible firmware interface (EFI) binaries,
+- [ISO Image](#iso-image) - manually sign extensible firmware interface (EFI) binaries,
   generating local signing certificates, rebuilding packages, and testing the secure boot
   functionality.
-* [RAW or VHD/X](#raw-and-vhd-image) - configure BIOS with signed production keys of
+- [RAW or VHD/X](#raw-and-vhd-image) - configure BIOS with signed production keys of
 a RAW/VHD Edge Microvisor image.
 
 ## RAW and VHD Image
@@ -32,40 +32,40 @@ Open a Terminal/Command Prompt. Run the following command:
 openssl x509 -in certificate.der -inform DER -out certificate.pem -outform PEM
 ```
 
-This converts certificate.der to a PEM-formatted file called certificate.pem.
+This converts `certificate.der` into PEM-formatted file `certificate.pem`.
 
 ### Step 3: Enroll the Certificate in the UEFI/BIOS
 
-* Restart Your Computer:
-  * Enter your UEFI/BIOS setup by pressing a key such as F2, Del, or Esc during startup (refer to your system's manual if needed).
-* Navigate to the Secure Boot or Security Section:
-  * Look for a menu labeled "Secure Boot," "Security," or similar.
-* Enroll the Custom Key:
-  * Find an option like "Manage Keys," "Enroll Key," or "Add Certificate."
-  * Choose the file selection option and locate your certificate file (use certificate.der or certificate.pem based on your firmware requirements).
-  * Follow the on-screen instructions to enroll the key
+- Restart Your Computer:
+  - Enter your UEFI/BIOS setup by pressing F2, Del, or Esc during startup (refer to your system's manual if needed).
+- Navigate to the *Secure Boot* or *Security* Section:
+  - Look for a menu labeled *Secure Boot*, *Security*, or similar.
+- Enroll the Custom Key:
+  - Find the key/certificate management option such as *Manage Keys*, *Enroll Key*, or *Add Certificate*.
+  - Choose the file selection option and locate your certificate file (use `certificate.der` or `certificate.pem` depending on your firmware requirements).
+  - Follow the on-screen instructions to enroll the key.
 
-### Step 4: Step 4: Enable Secure Boot
+### Step 4: Enable Secure Boot
 
-* Locate the Secure Boot Setting:
-  * Within the UEFI/BIOS menu, find the Secure Boot option.
-* Enable Secure Boot:
-  * Change the setting to “Enabled.”
-  * Save your changes and exit the UEFI/BIOS setup.
-* Reboot:
-  * Your system will now check the OS image signature against the enrolled certificate during boot
+- Locate the Secure Boot Setting:
+  - Within the UEFI/BIOS menu, find the *Secure Boot* option.
+- Enable Secure Boot:
+  - Change the setting to *Enabled*.
+  - Save your changes and exit the UEFI/BIOS setup.
+- Reboot:
+  - Your system will now check the OS image signature against the enrolled certificate during boot.
 
 ## ISO Image
 
 ### Prerequisites
 
-**Install Required Packages**: Install the necessary tools for signing and building packages:
+**Install Required Tools** for signing and building packages:
 
 ```bash
 sudo tdnf install dnf-utils pesign nss-tools efivar rpmdevtools openssl kernel-devel keyutils
 ```
 
-**Add User to pesign Group**: Add your user to the pesign group:
+**Add User to the pesign Group**:
 
 ```bash
 sudo usermod -a -G pesign $(whoami)
@@ -75,7 +75,7 @@ Log out and log back in for the changes to take effect.
 
 ### Step 1: Generate Local Signing Certificates
 
-Follow these steps to create local self-signed certificates:
+Follow the steps below to create local self-signed certificates:
 
 **Download the pesign source package**:
 
@@ -92,7 +92,7 @@ tar xvf pesign-*.tar.bz2
 cd pesign-*/src/certs
 ```
 
-**Create a self-signed CA and signing certificate**:
+**Create a self-signed CA and a signing certificate**:
 
 ```bash
 export KEY=KeyInShim
@@ -104,11 +104,11 @@ pk12util -d /etc/pki/pesign -i $KEY.p12
 certutil -d /etc/pki/pesign -A -i $KEY.crt -n $KEY -t u
 ```
 
-Repeat the above steps for additional keys, such as `KeyInDB`.
+Repeat the steps above for additional keys such as `KeyInDB`.
 
 ```bash
 export KEY=KeyInDB
-# Repeat above steps
+# Repeat the steps above.
 ```
 
 ### Step 2: Rebuild the shim-unsigned Package
@@ -167,22 +167,21 @@ sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
 
 ### Step 4: Disable Secure Boot
 
-Disable secure boot on your test system. For a VM under QEMU using OVMF:
+Disable secure boot on your test system. For a VM under QEMU using OVMF, run:
 
 ```bash
 sudo systemctl reboot --firmware-setup
 ```
 
-Navigate to:
+Navigate to secure boot configuration and disable the option for secure boot.
 
-```bash
-Device Manager → Secure Boot Configuration → Attempt Secure Boot (set to [ ]).
-Note: This path can vary between vendors.
-```
+> **NOTE:**
+  The location of this option may vary between vendors.
+
 
 ### Step 5: Install the new shim-x64 Package
 
-Install the new shim-x64 package and reboot with secure boot disabled:
+Install the new `shim-x64` package and reboot with secure boot disabled:
 
 ```bash
 sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
@@ -225,13 +224,9 @@ sudo cp key-in-db.der /boot/efi/EFI/
 sudo systemctl reboot --firmware-setup
 ```
 
-Navigate to:
+Navigate to secure boot configuration and set the secure boot mode to *Custom Mode*.
 
-```bash
-Device Manager → Secure Boot Configuration → Secure Boot Mode (set to <Custom Mode>).
-
-Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signature Using File.
-```
+Under *Custom Secure Boot Options* go to *DB Options*, then select the option to enroll signature from the `key-in-db.der` file into the database.
 
 ### Step 8: Enable Secure Boot and Test
 
