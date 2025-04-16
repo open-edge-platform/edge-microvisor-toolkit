@@ -30,7 +30,7 @@ following platforms.
 
 |      Atom             |               Core            |      Xeon      |
 | ----------------------| ----------------------------- | -------------- |
-| Intel® Atom® X Series | 12th Gen Intel® Core™         | 4th Gen Intel® Xeon® SP |
+| Intel Atom® X Series | 12th Gen Intel® Core™         | 4th Gen Intel® Xeon® SP |
 |                       | 13th Gen Intel® Core™         | 3rd Gen Intel® Xeon® SP |
 |                       | Intel® Core™ Ultra (Series 1) |                |
 
@@ -39,7 +39,7 @@ Microvisor Toolkit Developer.
 
 | Component    | Standalone Installation    |
 |--------------|----------------------------|
-| CPU          | Intel® Atom, Intel® Core™, or Intel® Xeon® |
+| CPU          | Intel Atom®, Intel® Core™, or Intel® Xeon® |
 | RAM          | 2GB minimum                |
 | Storage      | 32GB SSD/NVMe or eMMC      |
 | Networking   | 1GbE Ethernet or Wi-Fi     |
