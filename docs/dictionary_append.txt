@@ -2,6 +2,8 @@ auditable
 backend
 baremetal
 Baremetal
+bare-metal
+Bare-metal
 benchmarking
 bootable
 Bootloader

@@ -15,7 +15,8 @@ you can attach an existing VHD artifact produced by the build pipeline. See the 
 5. Select a virtual network switch, then press *Next* .
 6. Select *Create a virtual hard disk* and one of two options:
   - Select a location for your VHD(X) and set your desired disk size, then press *Next* .
-  - Select *Install an operating system from a bootable image file* and browse to your microvisor ISO.
+  - Select *Install an operating system from a bootable image file* and browse to your
+    microvisor ISO.
   - Press *Finish*.
 
   or
@@ -31,8 +32,10 @@ you can attach an existing VHD artifact produced by the build pipeline. See the 
 4. Select *Apply* to apply all changes.
 5. Right click your VM and select *Connect...*. Select *Start*.
 6. Follow the Installer prompts to install your image.
-7. When installation completes, select *Restart* to reboot the machine. The installation ISO will be automatically ejected.
-8. When prompted, sign in to your Edge Microvisor Toolkit using the username and password provisioned through the Installer.
+7. When installation completes, select *Restart* to reboot the machine. The installation ISO
+   will be automatically ejected.
+8. When prompted, sign in to your Edge Microvisor Toolkit using the username and password
+   provisioned through the Installer.
 
 > **Note:**
   When using an existing VHD, the default username/password is root/root.
@@ -45,13 +48,14 @@ you can attach an existing VHD artifact produced by the build pipeline. See the 
 4. Under *Operating System*, select *Linux*, sub-type *Fedora (64-bit)*.
 5. Configure the number of CPUs and the amount of memory to allocate to the virtual machine.
 6. Enable EFI.
-7. Create the virtual disk image. If you use a pre-existing disk image (VHD or RAW), convert it to VDI first.
+7. Create the virtual disk image. If you use a pre-existing disk image (VHD or RAW), convert
+  it to VDI first.
 
 ### Converting Image File to VDI
 
-You can convert a VHD or RAW image to the VDI format, which is natively supported by VirtualBox.
-Simply, navigate to the installation folder of VirtualBox, e.g. `C:\Program Files\Oracle\VirtualBox`
-and run the commands below in a terminal to convert:
+You can convert a VHD or RAW image to the VDI format, which is natively supported by
+VirtualBox. Simply, navigate to the installation folder of VirtualBox, e.g.
+`C:\Program Files\Oracle\VirtualBox` and run the commands below in a terminal to convert:
 
 a VHD disk image:
 
@@ -67,7 +71,10 @@ VBoxManage convertfromraw <input-vhd-image.img> <output-vdi-image.vdi> --format 
 
 ## Virtual Machine with KVM
 
-On Linux you can install and use Edge Microvisor Toolkit directly with KVM using the graphical `virt-manager` and `virsh`. You can install the OS using the ISO image, or the image file. On KVM it is preferred to use a RAW image, although it does support multiple image formats.
+On Linux you can install and use Edge Microvisor Toolkit directly with KVM using the
+graphical `virt-manager` and `virsh`. You can install the OS using the ISO image, or the
+image file. On KVM it is preferred to use a RAW image, although it does support multiple
+image formats.
 
 On Ubuntu, install `virt-manager` or `virsh`:
 
@@ -81,32 +88,38 @@ sudo usermod -a -G libvirt $(whoami)
 
 1. Start `virt-manager`.
 2. Create a *New Virtual Machine*.
-3. Select *Local installation media* (ISO image) or alternatively *Import existing disk image* and select the RAW disk image.
-4. Deselect *Automatically detect from the installation /source* and choose the *Fedora* OS type manually.
+3. Select *Local installation media* (ISO image) or alternatively *Import existing disk
+   image* and select the RAW disk image.
+4. Deselect *Automatically detect from the installation /source* and choose the *Fedora* OS
+   type manually.
 5. Configure the number of CPUs and the amount of memory to allocate to the virtual machine.
 6. Create the virtual disk image.
 7. Create a name for the virtual machine and configure network as desired.
 
-| Image | Support |
-| ----- | ------- |
-| RAW (.img, .raw)| ✅ Best performance, directly supported|
-| QCOW2 (.qcow2)  | ✅ KVM's native format, supports snapshots and compression|
-| VHD (.vhd, .vpc)| ⚠️ Limited. Direct use is unreliable, conversion is recommended.|
-| VDI (.vdi)      | ❌ No |
+| Image              | Support                                                              |
+| ------------------ | -------------------------------------------------------------------- |
+| RAW (.img, .raw)   | ✅ Best performance, directly supported                              |
+| QCOW2 (.qcow2)     | ✅ KVM's native format, supports snapshots and compression           |
+| VHD (.vhd, .vpc)   | ⚠️ Limited. Direct use is unreliable, conversion is recommended.     |
+| VDI (.vdi)         | ❌ No                                                                |
 
 ## Bare metal with ISO
 
 ### Linux
 
-Follow the steps below to create a bootable USB device to install Edge Microvisor Toolkit bare metal on your system.
+Follow the steps below to create a bootable USB device to install Edge Microvisor Toolkit
+on your bare metal system.
 
-Ensure you have the microvisor ISO file you want to flash saved on your system. Insert the USB drive and identify it.
+Ensure you have the microvisor ISO file you want to flash saved on your system. Insert the
+USB drive and identify it.
 
 ```bash
 lsblk
 ```
 
-Compare the output before and after inserting your USB to identify its device name (e.g., /dev/sdb). Flash the ISO Image. Use the `dd` command to write the ISO image. Replace `/path/to/your.iso` with the ISO’s location and `/dev/sdb` with your USB device.
+Compare the output before and after inserting your USB to identify its device name
+(e.g., /dev/sdb). Flash the ISO Image. Use the `dd` command to write the ISO image.
+Replace `/path/to/your.iso` with the ISO’s location and `/dev/sdb` with your USB device.
 
 ```bash
 sudo dd if=/path/to/your.iso of=/dev/sdb bs=4M status=progress oflag=sync
@@ -133,8 +146,9 @@ Make sure you follow the steps below:
 5. Click *START* to begin writing the ISO to the USB device.
 6. Eject the USB device when Rufus has completed writing the ISO.
 
-Install the Edge Microvisor Toolkit using the live installer ISO and follow the on-screen configuration instructions. Optionally, you can enable
-the option for Full Disc Encryption (FDE).
+Install the Edge Microvisor Toolkit using the live installer ISO and follow the on-screen
+configuration instructions. Optionally, you can enable the option for Full Disc Encryption
+(FDE).
 
 ## Next
 

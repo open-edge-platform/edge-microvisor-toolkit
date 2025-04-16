@@ -4,8 +4,8 @@ This section provides additional tips and suggestions for common questions
 and issues users may run into.
 
 ````{dropdown} How do I verify the integrity of a microvisor image?
-Each build artifact is deployed with a corresponding SHA256 checksum file
-that can be used to ensure the integrity of the original image file.
+Each build artifact offers a corresponding SHA256 checksum file that can be used to ensure
+the integrity of the original image file.
 
 - Linux
   ```bash
@@ -16,7 +16,9 @@ that can be used to ensure the integrity of the original image file.
   85b137474ec0b9bd79f8573af56f80888cef2f34e6c0649da79dfb58aa28a3bb  20250320.0243/full-3.0.20250320.0243.iso
   ```
 
-  > **Note:** When using `sha256sum` with the `-c` option, ensure that the image is located in the expected directory. In this case `/20250320.0243`.
+  > **Note:**
+    When using `sha256sum` with the `-c` option, ensure that the image is located in the
+    expected directory. In this case `/20250320.0243`.
 
 - Windows
   ```winbatch
@@ -47,8 +49,8 @@ a single CPU core with 1024MB of memory.
 
 
 ````{dropdown} How much CPU and memory does Edge Microvisor Toolkit consume when idle?
-With a *single* CPU core, you should see idle consumption
-to be around 300MB of memory and on average 3-7% CPU utilization.
+With a *single* CPU core, you should see idle consumption to be around 300MB of memory and
+on average 3-7% CPU utilization.
 ````
 
 
@@ -60,8 +62,8 @@ images are preallocated with 2GB across the partitions.
 
 
 ````{dropdown} How do I install additional rpm packages?
-The immutable images (RAW, VHD) have a read-only filesystem and you cannot
-install any additional packages to the root filesystem.
+The immutable images (RAW, VHD) have a read-only filesystem and you cannot install any
+additional packages to the root filesystem.
 
 - You can install the ISO image and additional rpm packages from the Open
   Edge repository that are pre-configured in the image. There are over 3000
@@ -96,16 +98,15 @@ tdnf makecache
 
 
 ````{dropdown} Will my home directory be saved if I perform an update of Edge Microvisor Toolkit?
-Yes, the entire `/home` directory is configured as a persistent
-bind mount and will be kept across updates. This is true for other key
-directories as well.
+Yes, the entire `/home` directory is configured as a persistent bind mount and will be kept
+across updates. This is true for other key directories as well.
 ````
 
 
 ````{dropdown} Is virtualization supported in Edge Microvisor Toolkit?
-Yes, Edge Microvisor Toolkit offers native support for virtualization through
-KVM/qemu. You can install it bare metal on a host
-and run guest operating systems on top.
+Yes, Edge Microvisor Toolkit offers native support for virtualization through KVM/qemu.
+You can install it as a bare-metal or a host operating system and run guest operating systems
+on top.
 ````
 
 
@@ -120,8 +121,8 @@ NVIDIA GPUs are not currently supported.
 
 
 ````{dropdown} Are the microvisor images signed?
-Yes, the production images are signed by Intel. Since the UKI is
-signed, BIOS needs to be configured with the signing keys.
+Yes, the production images are signed by Intel®. Since the UKI is signed, BIOS needs to be
+configured with these keys.
 ````
 
 
@@ -154,10 +155,11 @@ It depends on which microvisor image you are using.
 ````
 
 ````{dropdown} What do the many JSON files in imageconfigs do? Which needs to be modified for the ISO or the immutable OS image?
-For more details, see the [Build an Edge Microvisor Toolkit Image](./get-started/building-howto.md) article.
-The `imageconfigs` folder includes a set of different image files that define different
-image types the Buildkit can produce. For different validated images, Edge Microvisor Toolkit uses the `edge-image.json`,
-`edge-image-rt.json`, and image types the Buildkit can produce.
+For more details, see the [Build an Edge Microvisor Toolkit Image](./get-started/building-howto.md)
+article. The `imageconfigs` folder includes a set of different image files that define
+different image types the Buildkit can produce. For different validated images,
+Edge Microvisor Toolkit uses the `edge-image.json`, `edge-image-rt.json`, and image types the
+Buildkit can produce.
 ````
 
 ````{dropdown} Which BIOS settings should I change to support Edge Microvisor Toolkit?

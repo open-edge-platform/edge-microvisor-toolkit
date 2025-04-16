@@ -3,15 +3,20 @@
 Edge Microvisor Toolkit is a downstream of Azure Linux. It is composed of multiple modules to
 facilitate creating `rpm` based OS images supporting a variety of different image formats.
 
-The toolkit has an `imageconfig` construct in the JSON format that defines the characteristics of the resulting image, such as:
+The toolkit has an `imageconfig` construct in the JSON format that defines the characteristics
+of the resulting image, such as:
 
 - Type and size of partitioning table.
 - Partitions, their types (such as EFI, rootfs, etc.), settings, file system, and size.
-- Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in the image.
-- Additional configuration files that should be embedded in the image (e.g. network-, systemd configurations).
-- Any required post-installation scripts that should be executed once the image has been generated.
+- Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in
+  the image.
+- Additional configuration files that should be embedded in the image (e.g. network-, systemd
+  configurations).
+- Any required post-installation scripts that should be executed once the image has been
+  generated.
 - Kernel and command line options.
-- Final configuration properties that should be applied (e.g. enable full disc encryption, immutable image, second stage bootloader provider, purge documentation etc.).
+- Final configuration properties that should be applied (e.g. enable full disc encryption,
+  immutable image, second stage bootloader provider, purge documentation etc.).
 
 
 Before you can build OS images you need to build the toolchain and make sure to
@@ -57,7 +62,8 @@ microvisor/
   ...
 ```
 
-To build the default microvisor image based on its `imageconfig` file, run the following command:
+To build the default microvisor image based on its `imageconfig` file, run the following
+command:
 
 ```bash
 sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image.json
@@ -65,11 +71,12 @@ sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfig
 
 ## Customizing an Image
 
-To add packages to the default image, you can define your own `packagelist.json`  file, pointing
-to `rpms` that should be included in the image. The `edge-image.json` file points to
-multiple `packagelist` files, located under `imageconfigs/packagelists`. The same `rpms` may be included in an `imageconfig` file through the `packagelist` files. The resulting
-image will include the set of all `rpms` specified within the array of `packagelist`
-files from the `imageconfig`.
+To add packages to the default image, you can define your own `packagelist.json`  file,
+pointing to `rpms` that should be included in the image. The `edge-image.json` file points to
+multiple `packagelist` files, located under `imageconfigs/packagelists`. The same `rpms` may
+be included in an `imageconfig` file through the `packagelist` files. The resulting image
+will include the set of all `rpms` specified within the array of `packagelist` files from the
+`imageconfig`.
 
 ### Example: Adding Nano
 

@@ -1,5 +1,5 @@
 Edge Microvisor Toolkit Documentation
-===============================================================================================
+=============================================================================================
 
 .. Content Requirements:
    1. Clearly define the OS purpose and its target users.
@@ -8,55 +8,66 @@ Edge Microvisor Toolkit Documentation
 
 Edge Microvisor Toolkit is an open-source, lightweight operating system based on Azure Linux,
 and optimized for Intel® architecture. As a container-first, immutable OS, it is a perfect
-foundation for high-performance edge computing workloads that benefit from scalability and ease
-of management. Integrated with Open Edge Platform's Edge Orchestrator, it supports
-various deployment models, from standalone evaluation to large-scale, production-grade rollouts.
+foundation for high-performance edge computing workloads that benefit from scalability and
+ease of management. It supports various deployment models, from standalone evaluation to
+large production-grade systems (large-scale rollouts are possible with Open Edge Platform's
+Edge Orchestrator integration).
 
 Edge Microvisor Toolkit is designed to enable the full potential of Intel® platform
 portfolio by integrating the Intel® kernel and offering the most recent features as soon as
-possible. It will unlock new functionalities before mainstream Linux distributions, while also
-including the existing functionality not downstreamed in the existing distributions.
+possible. It will unlock new functionalities before mainstream Linux distributions, while
+also including the existing functionality not downstreamed in the existing distributions.
 
 Currently published default versions are:
 
 - Immutable Edge Microvisor Toolkit for Intel® Core™ and Xeon®.
 - Immutable Edge Microvisor Toolkit with real time extensions for Intel® Core™ and Xeon®.
-- ISO Edge Microvisor Toolkit installer for standalone edge nodes Intel® Core™ and Xeon® platforms.
+- ISO Edge Microvisor Toolkit installer for standalone edge nodes Intel® Core™ and Xeon®
+  platforms.
 - ISO Edge Microvisor Toolkit installer for developers for Intel® Core™ and Xeon® platforms.
 
-If you need more than that, the build infrastructure of Edge Microvisor Toolkit enables you to create
-your own, custom images.
+If you need more than that, the build infrastructure of Edge Microvisor Toolkit enables you
+to create your own, custom images.
 
 
 Why Use Edge Microvisor Toolkit
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-| **Flexible**: Build, customize and optimize the Microvisor to suit your specific requirements
-|      with a powerful build toolkit and validated images tailored to meet most demands.
-| **Secure**: Security opt-in methodology, allowing you to pick and choose what security
-|      features to enable, from Secure Boot, dm-verity for integrity protection or
-|      Full Disc Encryption for security-at-rest.
-| **Small Footprint**: Microvisor has a small (350MB compressed, 750MB uncompressed)
-|      footprint allowing for short deployment times and reduced attack surface.
-| **Flexible Deployments**: Edge Microvisor supports deployment as containers, virtual
-|      machines and as Kubernetes workloads, ensuring support for modern cloud-edge native,
-|      as well as legacy applications.
-| **Atomic Updates**: Immutable images support A/B updates with short boot-up and update times
-|      ensuring integrity, eliminating configuration drift and minimizing downtime of workloads.
-| **Automatic Rollback**: Automatic rollback support provides operational assurance and
-|      recovery in case of failed updates.
-| **Fully managed OS lifecycle**: Integration with Edge Orchestrator enables automated
-|      deployments, updates, and rollbacks without manual intervention.
-| **Immutable design for security**: Read-only system partitions prevent tampering, ensuring
-|      system integrity.
-| **Optimized for Intel hardware**: Delivers performance enhancements tailored to Intel®
-|      silicon, ensuring maximum efficiency.
-| **Scalability for large fleets**: Centralized control through Edge Orchestrator simplifies
-|      management across thousands of edge nodes.
+| **Flexible**
+|      Build, customize and optimize the Microvisor to suit your specific requirements with a
+       powerful build toolkit and validated images tailored to meet most demands.
+| **Secure**
+|      Security opt-in methodology, enabling you to pick and choose what security features to
+       enable, from Secure Boot, dm-verity for integrity protection or Full Disc Encryption
+       for security-at-rest.
+| **Small Footprint**
+|      Microvisor has a small footprint (350MB compressed, 750MB uncompressed), allowing for
+       short deployment times and reduced attack vectors.
+| **Flexible Deployments**
+|      Edge Microvisor supports deployment as containers, virtual machines and as Kubernetes
+       workloads, ensuring support for modern cloud-edge native, as well as legacy
+       applications.
+| **Atomic Updates**
+|      Immutable images support A/B updates with short boot-up and update times ensuring
+       integrity, eliminating configuration drift and minimizing downtime of workloads.
+| **Automatic Rollback**
+|      Automatic rollback support provides operational assurance and recovery in case of
+       failed updates.
+| **Fully managed OS lifecycle**
+|      Integration with Edge Orchestrator enables automated deployments, updates, and
+       rollbacks without manual intervention.
+| **Immutable design for security**
+|      Read-only system partitions prevent tampering, ensuring system integrity.
+| **Optimized for Intel® hardware**
+|      Delivers performance enhancements tailored to Intel® silicon, ensuring maximum
+       efficiency.
+| **Scalability for large fleets**
+|      Centralized control through Edge Orchestrator simplifies management across thousands
+       of edge nodes.
 
 
 Customers Highlights
------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
 
 - Edge Microvisor Toolkit as the edge OS with and without real time support.
 - Built-in support for Intel® platform features, Ethernet and GPU support.
@@ -66,18 +77,18 @@ Customers Highlights
 - Can be deployed with Edge Orchestrator or as a standalone OS.
 
 Developers Highlights
------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
 
 - Flexible build infrastructure for creating custom images from a large set
   of pre-provisioned packages via .spec files.
-- Support for multiple image formats for use on bare metal systems, virtual machines and
+- Support for multiple image formats for use on bare-metal systems, virtual machines and
   containers (ISO, VHD, VHDX, RAW).
 - Supporting UKI (Unified Kernel Image) format with or without second stage bootloaders
   (GRUB, systemd-boot).
 - Supporting mutable developer ISO builds.
 
 Key Performance Indicators
------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
 
 - Boot time of less than 8 seconds on entry level Intel® Core™ platforms.
 - Fast A/B image updates (<30s) with automatic rollback support on Edge Microvisor Toolkit.
@@ -88,7 +99,7 @@ Key Performance Indicators
 
 
 License Information
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. Content Requirements:
    1. Clearly state the license type and link to the LICENSE file.
@@ -100,7 +111,7 @@ Edge Microvisor Toolkit is open source and licensed under the MIT License.
 See the [LICENSE](../LICENSE) file for more details.
 
 Next Steps
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 :doc:`Architecture Overview <./architecture-overview>`
 

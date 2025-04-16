@@ -23,34 +23,48 @@ devices, including remote deployment and management of Kubernetes applications.
 
 To create a custom developer build of Edge Microvisor Toolkit, follow these steps:
 
-- Download the mutable host ISO image from [Edge Software Catalog](https://edgesoftwarecatalog.intel.com/)
-- Install the mutable host via ISO image that includes only essential pre-installed packages, providing a ready-to-use base environment.
+- Download the mutable host ISO image from
+  [Edge Software Catalog](https://edgesoftwarecatalog.intel.com/)
+- Install the mutable host via ISO image that includes only essential pre-installed packages,
+  providing a ready-to-use base environment.
 - Install additional RPM packages, using DNF to tailor the OS to your specific needs.
-- Update installed RPMs regularly to stay up-to-date in the OS in terms of package updates, kernel updates, security vulnerability fixes and bug fixes.
+- Update installed RPMs regularly to stay up-to-date in the OS in terms of package updates,
+  kernel updates, security vulnerability fixes and bug fixes.
 - Use the OS toolkit and available packages to build a custom OS image, which enables you to:
   - Configure the system for specialized workloads or environments.
   - Experiment with simplified or enhanced configurations tailored for your specific workloads.
   - Explore - use built-in monitoring tools to track system performance, resource
     usage, and log data for deeper insights into operational behavior.
 
-| Item | Details |
-| -------------| ------- |
-| Packages     | approximately ~400    |
-| Core system tools | bash, coreutils, util-linux, tar, gzip|
-| Networking | curl, wget, iproute2, iptables, openssh |
-| Package Management | tdnf, rpm |
-| Development | gcc, make, python3, perl, cmake, git |
-| Security | openssl, gnupg, selinux, cryptsetup, tpm2-tools |
-| Filesystem | e2fsprogs, mount |
+| Item              | Details                                         |
+| ------------------| ----------------------------------------------- |
+| Packages          | approximately ~400                              |
+| Core system tools | bash, coreutils, util-linux, tar, gzip          |
+| Networking        | curl, wget, iproute2, iptables, openssh         |
+| Package Management | tdnf, rpm                                      |
+| Development       | gcc, make, python3, perl, cmake, git            |
+| Security          | openssl, gnupg, selinux, cryptsetup, tpm2-tools |
+| Filesystem        | e2fsprogs, mount                                |
 | Included in kernel | iGPU, dGPU (Intel® Arc&trade;), SRIOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
 
-The supported package repository offers additional `rpm` for tailoring the image to specific needs of container runtime, virtualization, orchestration software, monitoring tools, standard cloud-edge (CNCF) software, and more.
+
+The supported package repository offers additional `rpm` for tailoring the image to specific
+needs of container runtime, virtualization, orchestration software, monitoring tools,
+standard cloud-edge (CNCF) software, and more.
 
 ### Edge Microvisor Toolkit Standalone
 
-The standalone edge node uses the standard immutable build and provides an ISO image that can be flashed to a USB device and installed on edge nodes. It installs Microvisor and Kubernetes to the edge node with the essential functionality to run a single node cluster. The edge node will serve as both the control and worker node. Additional worker nodes can be added to the cluster through Kubernetes.
+The standalone edge node uses the standard immutable build and provides an ISO image that
+can be flashed to a USB device and installed on edge nodes. It installs the microvisor and
+Kubernetes to the edge node with the essential functionality to run a single node cluster.
+The edge node will serve as both the control and worker node. Additional worker nodes can be
+added to the cluster through Kubernetes.
 
-Future releases will enable standalone edge nodes to join an existing Edge Orchestrator Toolkit backend, deployed on-prem or in the cloud to support scale out and management of larger infrastructures. The Standalone Edge Node enables you to quickly get an edge node up and running without deploying backend services, ready to deploy Kubernetes applications through `kubectl`, `helm`, or Kubernetes web dashboard.
+Future releases will enable standalone edge nodes to join an existing Edge Orchestrator
+Toolkit backend, deployed on-prem or in the cloud to support scale out and management of
+larger infrastructures. The Standalone Edge Node enables you to quickly get an edge node up
+and running without deploying backend services, ready to deploy Kubernetes applications
+through `kubectl`, `helm`, or Kubernetes web dashboard.
 
 ```{admonition} The standalone edge node does not support the real-time version currently.
 :class: note
@@ -82,7 +96,7 @@ differences between those.
 
 |  Feature         | Edge Microvisor Toolkit Developer | Edge Microvisor Toolkit Standalone & Orchestrated                                   |
 | -----------------| -------------------- | ------------------------------------------------- |
-| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with toolkit to build image with an opt-in data integrity and security features.</li></ul> | <ul><li>Designed for Open Edge Platforms and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on baremetal and as guest OS.</li><li>Fast atomic updates & rollback support with small image footprint and short boot time.|
+| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with toolkit to build image with an opt-in data integrity and security features.</li></ul> | <ul><li>Designed for Open Edge Platforms and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare-metal and as guest OS.</li><li>Fast atomic updates & rollback support with small image footprint and short boot time.|
 | Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
 | Update Mechanism | RPM package updates with TDNF | Image based A/B updates + Rollback       |
 | Linux Kernel     | Intel® Kernel 6.12   | Intel® Kernel 6.12                                |

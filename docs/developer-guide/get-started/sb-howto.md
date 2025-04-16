@@ -18,8 +18,9 @@ to enroll your certificate into the firmware’s trusted key database.
 
 ### Step 1: Verify your Certificate File
 
-Make sure you have the certificate file, for example, `edge-readonly-3.0.20250401.0515-signed.der`, which contains your public key. Many systems accept DER format,
-but some firmware might require PEM.
+Make sure you have the certificate file, for example, `edge-readonly-3.0.20250401.0515-signed.der`,
+which contains your public key. Many systems accept DER format, but some firmware might
+require PEM.
 
 ### Step 2: Convert DER to PEM (if necessary)
 
@@ -37,12 +38,15 @@ This converts `certificate.der` into PEM-formatted file `certificate.pem`.
 ### Step 3: Enroll the Certificate in the UEFI/BIOS
 
 - Restart Your Computer:
-  - Enter your UEFI/BIOS setup by pressing F2, Del, or Esc during startup (refer to your system's manual if needed).
+  - Enter your UEFI/BIOS setup by pressing F2, Del, or Esc during startup (refer to your
+    system's manual if needed).
 - Navigate to the *Secure Boot* or *Security* Section:
   - Look for a menu labeled *Secure Boot*, *Security*, or similar.
 - Enroll the Custom Key:
-  - Find the key/certificate management option such as *Manage Keys*, *Enroll Key*, or *Add Certificate*.
-  - Choose the file selection option and locate your certificate file (use `certificate.der` or `certificate.pem` depending on your firmware requirements).
+  - Find the key/certificate management option such as *Manage Keys*, *Enroll Key*, or
+    *Add Certificate*.
+  - Choose the file selection option and locate your certificate file (use `certificate.der`
+    or `certificate.pem` depending on your firmware requirements).
   - Follow the on-screen instructions to enroll the key.
 
 ### Step 4: Enable Secure Boot
@@ -53,7 +57,8 @@ This converts `certificate.der` into PEM-formatted file `certificate.pem`.
   - Change the setting to *Enabled*.
   - Save your changes and exit the UEFI/BIOS setup.
 - Reboot:
-  - Your system will now check the OS image signature against the enrolled certificate during boot.
+  - Your system will now check the OS image signature against the enrolled certificate
+    during boot.
 
 ## ISO Image
 
@@ -226,7 +231,8 @@ sudo systemctl reboot --firmware-setup
 
 Navigate to secure boot configuration and set the secure boot mode to *Custom Mode*.
 
-Under *Custom Secure Boot Options* go to *DB Options*, then select the option to enroll signature from the `key-in-db.der` file into the database.
+Under *Custom Secure Boot Options* go to *DB Options*, then select the option to enroll
+signature from the `key-in-db.der` file into the database.
 
 ### Step 8: Enable Secure Boot and Test
 
