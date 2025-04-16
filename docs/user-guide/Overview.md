@@ -7,7 +7,7 @@ The Edge Microvisor Toolkit Developer is a package that contains mutable Edge Mi
 Intel, incorporating all the latest kernel and user patches.
 
 The Edge Microvisor Toolkit Developer has undergone extensive validation across
-all Intel platforms such as Xeon®, Intel® Core™ Ultra, Intel Core™ and Intel®
+all Intel platforms such as Intel® Xeon®, Intel® Core™ Ultra, Intel® Core™ and Intel
 Atom®. The Edge Microvisor Toolkit Developer Node allows users to quickly deploy
 and run their solutions for multiple scenarios like benchmarking and validation
 of Edge AI computing workloads. The Edge Microvisor Toolkit Developer is
