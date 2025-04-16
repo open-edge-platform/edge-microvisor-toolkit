@@ -23,7 +23,8 @@ devices, including remote deployment and management of Kubernetes applications.
 
 To create a custom developer build of Edge Microvisor Toolkit, follow the steps below:
 
-- Install the mutable OS via ISO image that includes only essential pre-installed packages, providing a ready-to-use base environment.
+- Download the mutable host ISO image from [Edge Software Catalog](https://edgesoftwarecatalog.intel.com/)
+- Install the mutable host via ISO image that includes only essential pre-installed packages, providing a ready-to-use base environment.
 - Install additional RPM packages, using DNF to tailor the OS to your specific needs.
 - Update installed RPMs regularly to stay up-to-date in the OS, for package updates, kernel updates, security vulnerability fixes and bug fixes.
 - Build a custom OS image, using the OS toolkit and available packages, which enables you to:
@@ -41,7 +42,7 @@ To create a custom developer build of Edge Microvisor Toolkit, follow the steps 
 | Development | gcc, make, python3, perl, cmake, git |
 | Security | openssl, gnupg, selinux, cryptsetup, tpm2-tools |
 | Filesystem | e2fsprogs, mount |
-| Included in kernel | iGPU, dGPU (Intel® Arc), SRIOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
+| Included in kernel | iGPU, dGPU (Intel® Arc&trade;), SRIOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
 
 The supported package repository offers additional `rpm` for tailoring the image to specific needs of container runtime, virtualization, orchestration software, monitoring tools, standard cloud-edge (CNCF) software, and more.
 
