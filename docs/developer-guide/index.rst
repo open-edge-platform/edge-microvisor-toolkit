@@ -6,42 +6,43 @@ Edge Microvisor Toolkit Documentation
    2. Highlight key features that differentiate this OS.
    3. Include any unique design principles or philosophies.
 
-Edge Microvisor Toolkit is an open-source, lightweight operating system, based on Azure Linux
-and optimized for Intel® architecture. As a container-first and immutable OS, it is a perfect
+Edge Microvisor Toolkit is an open-source, lightweight operating system based on Azure Linux,
+and optimized for Intel® architecture. As a container-first, immutable OS, it is a perfect
 foundation for high-performance edge computing workloads that benefit from scalability and ease
-of management. It supports various deployment models, from standalone evaluation to
-large-scale, production-grade rollouts, when integrated with Open Edge Platform's
-Edge Orchestrator.
+of management. Integrated with Open Edge Platform's Edge Orchestrator, it supports
+various deployment models, from standalone evaluation to large-scale, production-grade rollouts.
 
 Edge Microvisor Toolkit is designed to enable the full potential of Intel® platform
 portfolio by integrating the Intel® kernel and offering the most recent features as soon as
 possible. It will unlock new functionalities before mainstream Linux distributions, while also
 including the existing functionality not downstreamed in the existing distributions.
 
-With its build infrastructure, you can create your own, custom images, if you need more
-than the default versions currently published:
+Currently published default versions are:
 
 - Immutable Edge Microvisor Toolkit for Intel® Core™ and Xeon®.
 - Immutable Edge Microvisor Toolkit with real time extensions for Intel® Core™ and Xeon®.
 - ISO Edge Microvisor Toolkit installer for standalone edge nodes Intel® Core™ and Xeon® platforms.
 - ISO Edge Microvisor Toolkit installer for developers for Intel® Core™ and Xeon® platforms.
 
+If you need more than that, the build infrastructure of Edge Microvisor Toolkit enables you to create
+your own, custom images.
+
 
 Why Use Edge Microvisor Toolkit
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-| **Flexible**: Build, customize, optimize the Microvisor to suit your specific requirements
+| **Flexible**: Build, customize and optimize the Microvisor to suit your specific requirements
 |      with a powerful build toolkit and validated images tailored to meet most demands.
-| **Secure**: Security opt-in methodology enabling you to pick and choose what security
+| **Secure**: Security opt-in methodology, allowing you to pick and choose what security
 |      features to enable, from Secure Boot, dm-verity for integrity protection or
 |      Full Disc Encryption for security-at-rest.
-| **Small Footprint**: The Microvisor has a small (350MB compressed, 750MB uncompressed)
-|      footprint enabling deployment times and reduced attack surface.
-| **Flexible Deployments**: Edge Microvisor supports deployments as containers, virtual
-|      machines and as Kubernetes workloads ensuring support for modern cloud-edge native,
+| **Small Footprint**: Microvisor has a small (350MB compressed, 750MB uncompressed)
+|      footprint allowing for short deployment times and reduced attack surface.
+| **Flexible Deployments**: Edge Microvisor supports deployment as containers, virtual
+|      machines and as Kubernetes workloads, ensuring support for modern cloud-edge native,
 |      as well as legacy applications.
-| **Atomic Updates**: The immutable images support A/B updates with fast boot-up and updates
-|      ensuring integrity, eliminating configuration drift and minimizes downtime of workloads.
+| **Atomic Updates**: Immutable images support A/B updates with short boot-up and update times
+|      ensuring integrity, eliminating configuration drift and minimizing downtime of workloads.
 | **Automatic Rollback**: Automatic rollback support provides operational assurance and
 |      recovery in case of failed updates.
 | **Fully managed OS lifecycle**: Integration with Edge Orchestrator enables automated
@@ -60,15 +61,15 @@ Customers Highlights
 - Edge Microvisor Toolkit as the edge OS with and without real time support.
 - Built-in support for Intel® platform features, Ethernet and GPU support.
 - Immutable OS with support for atomic (A/B) updates with Open Edge Platform.
-- Secure the edge platform with an opt-in security model with support for Secure Boot,
-  Full Disc Encryption, dm-verity with TPM 2.0 support.
+- Secure the edge platform with an opt-in security model supporting Secure Boot,
+  Full Disc Encryption, dm-verity with TPM 2.0.
 - Can be deployed with Edge Orchestrator or as a standalone OS.
 
 Developers Highlights
 -----------------------------------------------------------------------------------------------
 
 - Flexible build infrastructure for creating custom images from a large set
-  of pre-provisioned packages via .SPEC files.
+  of pre-provisioned packages via .spec files.
 - Support for multiple image formats for use on bare metal systems, virtual machines and
   containers (ISO, VHD, VHDX, RAW).
 - Supporting UKI (Unified Kernel Image) format with or without second stage bootloaders
@@ -78,7 +79,7 @@ Developers Highlights
 Key Performance Indicators
 -----------------------------------------------------------------------------------------------
 
-- Boot time less than 8 seconds on entry level Intel® Core™ platforms.
+- Boot time of less than 8 seconds on entry level Intel® Core™ platforms.
 - Fast A/B image updates (<30s) with automatic rollback support on Edge Microvisor Toolkit.
 - Small footprint with less than 750MB of disk space required for the OS and under 350MB
   compressed RAW image size.

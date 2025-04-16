@@ -7,13 +7,13 @@ Content Requirements:
 3. Ensure clarity for different installation environments (e.g., virtual machines, embedded systems).
 -->
 
-The hardware and software requirements outlined below are reflective of Edge Microvisor Toolkit itself. Specific requirements will, for the most part, depend on the deployment (e.g. container, VM, K8s workload), type and number of workloads deployed on a node. Consider the requirements & KPIs by the applications/workloads intended to run on the edge devices to ensure sufficient residual compute is available when choosing hardware device, microvisor image and how the workload is packaged.
+General hardware and software requirements outlined apply to Edge Microvisor Toolkit itself. Specific requirements will mostly depend on specific deployment (container, VM, K8s workload), as well as type and number of workloads deployed on a node. When choosing the hardware device, microvisor image and the workload packaging method, consider the requirements & KPIs of the intended applications/workloads, to ensure that sufficient local compute capability is available.
 
 ## Hardware Requirements
 
 Edge Microvisor Toolkit is designed to support all Intel® platforms with the latest
-Intel® kernel to provide all available features for application
-and workloads. The microvisor has been validated on the following platforms:
+Intel® kernel to provide all available features for applications
+and workloads. Microvisor has been validated on the following platforms:
 
 |      Atom             |               Core            |      Xeon      |
 | ----------------------| ----------------------------- | -------------- |

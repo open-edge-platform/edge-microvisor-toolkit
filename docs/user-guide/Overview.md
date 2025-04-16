@@ -37,7 +37,7 @@ following platforms.
 The following outlines the recommended hardware configuration to run Edge
 Microvisor Toolkit Developer.
 
-| Component    | Standalone Installation    |
+| Component    | Edge Microvisor Toolkit Developer    |
 |--------------|----------------------------|
 | CPU          | Intel Atom®, Intel® Core™, or Intel® Xeon® |
 | RAM          | 2GB minimum                |
