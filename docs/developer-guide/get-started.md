@@ -61,7 +61,7 @@ filesystem. Image and orchestration system updates are not enabled natively, at 
 ```
 
 The ISO installer for the standalone Edge Node is available for download at
-[Intel® Edge Software Hub](TODO/add/link/to/download).
+[Intel® Edge Software Catalog](TODO/add/link/to/download).
 
 ### Edge Node with Edge Orchestrator
 
