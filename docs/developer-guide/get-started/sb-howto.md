@@ -64,7 +64,7 @@ This converts `certificate.der` into PEM-formatted file `certificate.pem`.
 
 ### Prerequisites
 
-**Expecting Secure Boot is disabled.**
+**Make sure Secure Boot is disabled.**
 
 **Install Required Tools** for signing and building packages:
 
@@ -158,7 +158,7 @@ base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' 
 package=$(tdnf repoquery --source shim | tail -1)
 wget $base_url/SRPMS/$package.rpm
 
-#install the recently downloaded sim rpm (ex: shim-15.8-5.emt3.src.rpm)
+#Install the recently downloaded shim RPM package (for example, shim-15.8-5.emt3.src.rpm).
 rpm -i shim-<version>.src.rpm
 ```
 
@@ -179,7 +179,7 @@ rpmbuild -bb SPECS/shim.spec
 ```bash
 sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
 ```
-Ensure that the shim-<verion>.x86_64.rpm package is installed properly. If you  encounter any message, such as "Nothing to do," you can attempt to reinstall the package.
+Ensure that the `shim-<version>.x86_64.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
 
 ```bash
 sudo tdnf reinstall --allowerasing shim-15.8-5.emt3.x86_64.rpm
