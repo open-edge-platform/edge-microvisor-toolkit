@@ -45,5 +45,6 @@ jobs:
           VALIDATE_PYTHON: true
           VALIDATE_GO: true
           VALIDATE_BASH: true
+          VALIDATE_MARKDOWN: true
           SHELLCHECK_OPTS: "--severity=error"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

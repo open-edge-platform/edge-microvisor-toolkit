@@ -14,15 +14,15 @@ you can attach an existing VHD artifact produced by the build pipeline. See the 
 4. Set the desired amount of memory to allocate, then press *Next* .
 5. Select a virtual network switch, then press *Next* .
 6. Select *Create a virtual hard disk* and one of two options:
-  - Select a location for your VHD(X) and set your desired disk size, then press *Next* .
-  - Select *Install an operating system from a bootable image file* and browse to your
-    microvisor ISO.
-  - Press *Finish*.
+   - Select a location for your VHD(X) and set your desired disk size, then press *Next*.
+   - Select *Install an operating system from a bootable image file* and browse to your
+     microvisor ISO.
+   - Press *Finish*.
 
-  or
+   or
 
-  - Select *Use existing VHD* to proceed with the VHD(X) produced by the build infrastructure.
-  - This option does not need the ISO, just press *Next* and *Finish*.
+   - Select *Use existing VHD* to proceed with the VHD(X) produced by the build infrastructure.
+   - This option does not need the ISO, just press *Next* and *Finish*.
 
 [Gen2/VHDX Only] Fix Boot Options
 

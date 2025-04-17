@@ -14,7 +14,7 @@ To learn more about Edge Microvisor Toolkit, check the [Edge Microvisor Toolkit 
 The proposal process focuses on reviewing the proposed changes and deciding
 if they should be accepted.
 
-1. The author of the proposal creates [a Github issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues) 
+1. The author of the proposal creates [a Github issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues)
 with the `Feature Request` template, briefly describing the new feature.
 
    >Note: There is no need for a design proposal document at this point.
@@ -22,7 +22,7 @@ with the `Feature Request` template, briefly describing the new feature.
 2. Maintainers of the overall project discuss the issue and decide on one of three outcomes:
     - Accept the feature request.
     - Decline the feature request.
-    - Ask for a [Design Document](#design-documents) that, if merged, becomes an 
+    - Ask for a [Design Document](#design-documents) that, if merged, becomes an
       `Architecture Decision Record` (ADR).
 
    If the feature request is accepted or declined, the process is done.
@@ -87,7 +87,7 @@ If in doubt, do file a proposal.
 As noted above, some (but not all) proposals need to be elaborated on in a design
 document.
 
-- The design document should be checked in to 
+- The design document should be checked in to
   [the proposal directory](https://github.com/open-edge-platform/edge-microvisor-toolkit/design-proposals/)
   as `EMT-shortname.md`, where `shortname` is a few dash-separated words at most.
 
