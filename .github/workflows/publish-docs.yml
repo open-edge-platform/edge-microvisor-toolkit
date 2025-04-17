@@ -1,0 +1,19 @@
+name: Publish Docs
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which target to build'
+        type: choice
+        options:
+        - all-documentation
+        - microvisor-toolkit
+
+jobs:
+  build_microvisor-toolkit:
+    if: ${{ (github.event.inputs.target == 'microvisor-toolkit') || (github.event.inputs.target == 'all-documentation') }}
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    secrets: inherit
+    with:
+      docs_directory: docs
