@@ -100,7 +100,8 @@ document.
   revisions.
 
 - For ease of review with Github, design documents should be compliant with
-  the `markdownlit` rules express in this.
+  the `markdownlit` rules expressed in this repo (you can check conformance
+  by issuing the `make lint` command).
 
 ### Quick Start for Experienced Committers
 
@@ -141,8 +142,8 @@ request or the Feature Request is closed.
 
 ## Help
 
-If you need help with this process, please contact the Project's mantainers
-contributors by posting to the [Discussions](https://github.com/open-edge-platform/edge-manageability-framework/discussions).
+If you need help with this process, please contact the project maintainers
+by posting to the [Discussions](https://github.com/open-edge-platform/edge-manageability-framework/discussions).
 
 To learn about contributing to Edge Microvisor Toolkit in general, see the
 [contribution guidelines](https://docs.openedgeplatform.intel.com/edge-microvisor-toolkit/3.0/docs/developer-guide/contribution/index.html).
