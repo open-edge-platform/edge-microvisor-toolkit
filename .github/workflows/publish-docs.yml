@@ -1,3 +1,4 @@
+---
 name: Publish Docs
 
 on:
@@ -7,13 +8,18 @@ on:
         description: 'Which target to build'
         type: choice
         options:
-        - all-documentation
-        - microvisor-toolkit
+          - all-documentation
+          - microvisor-toolkit
+
+permissions: {}
 
 jobs:
   build_microvisor-toolkit:
     if: ${{ (github.event.inputs.target == 'microvisor-toolkit') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@71b2d18e566fe0c8b2a41228b750f449c1649072
-    secrets: inherit
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@2fc4c75be6b7f308dd95bdf5a822e466437734ac
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+      DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: docs
