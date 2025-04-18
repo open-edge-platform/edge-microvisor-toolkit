@@ -122,6 +122,12 @@ export KEY=KeyInDB
 ```bash
 cd your/working/dir
 ```
+Make sure your rpm %_topdir is ~/rpmbuild; if not you should edit your ~/.rpmmacros to include: 
+```bash
+mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+%_topdir %(echo $HOME)/rpmbuild
+```
+
 ### Step 2: Rebuild the shim-unsigned Package
 
 **Extract KeyInShim to a DER file**:
@@ -138,7 +144,7 @@ base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' 
 package=$(tdnf repoquery --source shim-unsigned-x64 | tail -1)
 wget $base_url/SRPMS/$package.rpm
 
-rpm -i shim-unsigned-x64-*.src.rpm
+rpm -i shim-unsigned-x64-<version>.src.rpm
 cd ~/rpmbuild
 cp ~/key-in-shim.der SOURCES/azurelinux-ca-20230216.der
 rpmbuild -bb SPECS/shim-unsigned-x64.spec
@@ -177,12 +183,12 @@ rpmbuild -bb SPECS/shim.spec
 **Install the resulting RPM**:
 
 ```bash
-sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
+sudo tdnf install RPMS/x86_64/shim-<version>.x86_64.rpm
 ```
 Ensure that the `shim-<version>.x86_64.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
 
 ```bash
-sudo tdnf reinstall --allowerasing shim-15.8-5.emt3.x86_64.rpm
+sudo tdnf reinstall --allowerasing shim-<version>.x86_64.rpm
 ```
 
 ```bash
