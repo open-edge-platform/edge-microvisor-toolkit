@@ -13,7 +13,7 @@ on:
 jobs:
   build_microvisor-toolkit:
     if: ${{ (github.event.inputs.target == 'microvisor-toolkit') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@main
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@71b2d18e566fe0c8b2a41228b750f449c1649072
     secrets: inherit
     with:
       docs_directory: docs
