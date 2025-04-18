@@ -78,7 +78,7 @@ sudo tdnf install dnf-utils pesign nss-tools efivar rpmdevtools openssl kernel-d
 sudo usermod -a -G pesign $(whoami)
 ```
 ```bash
-cd your/working/di
+cd ~
 ```
 Log out and log back in for the changes to take effect.
 
