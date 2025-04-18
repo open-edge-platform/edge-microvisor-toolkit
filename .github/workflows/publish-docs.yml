@@ -11,7 +11,7 @@ on:
           - all-documentation
           - microvisor-toolkit
 
-permissions: {}
+permissions: { }
 
 jobs:
   build_microvisor-toolkit:
