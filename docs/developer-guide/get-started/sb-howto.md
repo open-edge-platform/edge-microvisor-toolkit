@@ -201,7 +201,7 @@ cd ~
 
 ```bash
 sudo cp /boot/efi/EFI/BOOT/grubx64.efi .
-sudo cp /boot/vmlinuz-<version> .
+sudo sh -c 'cp /boot/vmlinuz-* .'.
 ```
 
 **Sign the binaries**:
@@ -209,7 +209,7 @@ sudo cp /boot/vmlinuz-<version> .
 ```bash
 sudo pesign -s -i grubx64.efi -o /boot/efi/EFI/BOOT/grubx64.efi -c KeyInShim --force
 
-sudo pesign -s -i vmlinuz-<version> -o /boot/vmlinuz-<version> -c KeyInShim --force
+sudo sh -c 'pesign -s -i vmlinuz-* -o /boot/vmlinuz-* -c KeyInShim --force'
 ```
 
 ### Step 5: Enroll KeyInDB into UEFI DB
