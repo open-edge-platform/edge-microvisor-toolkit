@@ -78,7 +78,7 @@ sudo tdnf install dnf-utils pesign nss-tools efivar rpmdevtools openssl kernel-d
 sudo usermod -a -G pesign $(whoami)
 ```
 ```bash
-cd your/working/dir
+cd your/working/di
 ```
 Log out and log back in for the changes to take effect.
 
@@ -120,7 +120,7 @@ export KEY=KeyInDB
 # Repeat the steps.
 ```
 ```bash
-cd your/working/dir
+cd ~
 ```
 Make sure your rpm %_topdir is ~/rpmbuild; if not you should edit your ~/.rpmmacros to include: 
 ```bash
@@ -151,7 +151,7 @@ rpmbuild -bb SPECS/shim-unsigned-x64.spec
 sudo tdnf install RPMS/x86_64/shim-unsigned-x64-<version>.x86_64.rpm
 ```
 ```bash
-cd your/working/dir
+cd ~
 ```
 
 ### Step 3: Build the shim Package
@@ -192,7 +192,7 @@ sudo tdnf reinstall --allowerasing shim-<version>.x86_64.rpm
 ```
 
 ```bash
-cd your/working/dir
+cd ~
 ```
 
 ### Step 4: Sign the Boot Loader and Kernel
@@ -232,10 +232,11 @@ sudo cp key-in-db.der /boot/efi/EFI/
 sudo systemctl reboot --firmware-setup
 ```
 
-Navigate to secure boot configuration and set the secure boot mode to *Custom Mode*.
+Navigate to:
 
-Under *Custom Secure Boot Options* go to *DB Options*, then select the option to enroll
-signature from the `key-in-db.der` file into the database.
+Device Manager → Secure Boot Configuration → Secure Boot Mode (set to <Custom Mode>).
+
+Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signature Using File.
 
 ### Step 6: Enable Secure Boot and Test
 
