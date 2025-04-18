@@ -11,7 +11,8 @@ on:
           - all-documentation
           - microvisor-toolkit
 
-permissions: { }
+permissions:
+  contents: read
 
 jobs:
   build_microvisor-toolkit:
