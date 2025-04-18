@@ -10,19 +10,18 @@ you can attach an existing VHD artifact produced by the build pipeline. See the 
 
 1. From Hyper-V select *Action-> New-> Virtual Machine*.
 2. Provide a name for your VM and press *Next*.
-3. Select *Generation 1 (VHD)* or *Generation 2 (VHDX)*, then press *Next* .
-4. Set the desired amount of memory to allocate, then press *Next* .
-5. Select a virtual network switch, then press *Next* .
+3. Select *Generation 1 (VHD)* or *Generation 2 (VHDX)*, then press *Next*.
+4. Set the desired amount of memory to allocate, then press *Next*.
+5. Select a virtual network switch, then press *Next*.
 6. Select *Create a virtual hard disk* and one of two options:
-   - Select a location for your VHD(X) and set your desired disk size, then press *Next*.
-   - Select *Install an operating system from a bootable image file* and browse to your
-     microvisor ISO.
-   - Press *Finish*.
-
-   or
-
-   - Select *Use existing VHD* to proceed with the VHD(X) produced by the build infrastructure.
-   - This option does not need the ISO, just press *Next* and *Finish*.
+   - either:
+     1. Select a location for your VHD(X) and set your desired disk size, then press *Next*.
+     2. Select *Install an operating system from a bootable image file* and browse to your
+      microvisor ISO.
+     3. Press *Finish*.
+   - or:
+     1. Select *Use existing VHD* to proceed with the VHD(X) produced by the build infrastructure.
+     2. This option does not need the ISO, just press *Next* and *Finish*.
 
 [Gen2/VHDX Only] Fix Boot Options
 
