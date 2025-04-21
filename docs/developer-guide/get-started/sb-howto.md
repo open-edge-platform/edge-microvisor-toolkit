@@ -1,4 +1,4 @@
-# Enable Secure Boot for Edge Microvisor Toolkit
+![image](https://github.com/user-attachments/assets/f689dffa-6e68-4376-b82a-7f949d542d5f)# Enable Secure Boot for Edge Microvisor Toolkit
 
 In most production scenarios, you should consider using Secure Boot for your system, ensuring
 it is protected against advanced attacks. Here are the steps required to do so, using:
@@ -144,11 +144,11 @@ base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' 
 package=$(tdnf repoquery --source shim-unsigned-x64 | tail -1)
 wget $base_url/SRPMS/$package.rpm
 
-rpm -i shim-unsigned-x64-<version>.src.rpm
+rpm -i shim-unsigned-x64-*.src.rpm
 cd ~/rpmbuild
 cp ~/key-in-shim.der SOURCES/azurelinux-ca-20230216.der
 rpmbuild -bb SPECS/shim-unsigned-x64.spec
-sudo tdnf install RPMS/x86_64/shim-unsigned-x64-<version>.x86_64.rpm
+sudo tdnf install RPMS/x86_64/shim-unsigned-x64-*.x86_64.rpm
 ```
 ```bash
 cd ~
@@ -179,6 +179,7 @@ pesign -s -i /usr/share/shim/*/x64/fbx64.efi -o SOURCES/fbx64.efi -c KeyInShim -
 pesign -s -i /usr/share/shim/*/x64/shimx64.efi -o SOURCES/shimx64.efi -c KeyInDB --force
 rpmbuild -bb SPECS/shim.spec
 ```
+### Step 4: Install the new shim Package
 
 **Install the resulting RPM**:
 
@@ -195,13 +196,13 @@ sudo tdnf reinstall --allowerasing RPMS/x86_64/shim-<version>.x86_64.rpm
 cd ~
 ```
 
-### Step 4: Sign the Boot Loader and Kernel
+### Step 5: Sign the Boot Loader and Kernel
 
 **Copy the EFI binaries**:
 
 ```bash
 sudo cp /boot/efi/EFI/BOOT/grubx64.efi .
-sudo sh -c 'cp /boot/vmlinuz-* .'.
+sudo cp /boot/vmlinuz-* .
 ```
 
 **Sign the binaries**:
@@ -212,7 +213,7 @@ sudo pesign -s -i grubx64.efi -o /boot/efi/EFI/BOOT/grubx64.efi -c KeyInShim --f
 sudo sh -c 'pesign -s -i vmlinuz-* -o /boot/vmlinuz-* -c KeyInShim --force'
 ```
 
-### Step 5: Enroll KeyInDB into UEFI DB
+### Step 6: Enroll KeyInDB into UEFI DB
 
 **Export KeyInDB to a DER file**:
 
@@ -234,11 +235,11 @@ sudo systemctl reboot --firmware-setup
 
 Navigate to:
 
-Device Manager → Secure Boot Configuration → Secure Boot Mode (set to <Custom Mode>).
+System Bios Settings → System Security → Secure Boot Configuration → Secure Boot Mode (set to <Custom Mode>).
 
-Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signature Using File.
+Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signature Using `key-in-db.der` file into the database.
 
-### Step 6: Enable Secure Boot and Test
+### Step 7: Enable Secure Boot and Test
 
 Re-enable secure boot in the firmware menu and reboot. Verify that the system boots
 successfully with secure boot enabled.
