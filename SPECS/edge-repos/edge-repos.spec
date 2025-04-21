@@ -55,7 +55,7 @@ gpg --batch --yes --delete-keys 84910237BDFAAD16C4F9D44411FF864ABDCE8692
 
 %changelog
 * Mon Apr 21 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 3.0-4
-- Update Intel rpm gpg key.
+- Update Intel rpm gpg key and repo URL.
 
 * Wed Mar 12 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 3.0-3
 - Update Intel gpg key.
