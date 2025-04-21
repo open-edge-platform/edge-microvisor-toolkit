@@ -188,7 +188,7 @@ sudo tdnf install RPMS/x86_64/shim-<version>.x86_64.rpm
 Ensure that the `shim-<version>.x86_64.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
 
 ```bash
-sudo tdnf reinstall --allowerasing shim-<version>.x86_64.rpm
+sudo tdnf reinstall --allowerasing RPMS/x86_64/shim-<version>.x86_64.rpm
 ```
 
 ```bash
