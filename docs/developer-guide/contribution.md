@@ -24,8 +24,6 @@ to the Edge Microvisor Toolkit repository:
 
 ![Contribution Flow](assets/contribution-flow.drawio.svg)
 
-General contribution guidelines to Open Edge platform can be found [TODO]
-(/provide/link/to/umbrella contribution guidelines).
 
 ### Update of Edge Node Agents
 

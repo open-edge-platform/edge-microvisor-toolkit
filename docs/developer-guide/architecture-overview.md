@@ -7,12 +7,12 @@ architectural details of the OS itself.
 
 ## Edge Microvisor Toolkit
 
-Edge Microvisor Toolkit is produced and maintained in several versions, in both immutable and
+Edge Microvisor Toolkit is produced and maintained in several editions, in both immutable and
 mutable images. It enables users to quickly deploy and run their workloads on Intel®
 platforms, offering quick solutions to multiple scenarios. Currently, it is deployed as:
 
 - ISO installer with a mutable image using GRUB as the second-stage bootloader.
-- ISO installer - mutable image, GRUB as the second-stage bootloader.
+- ISO installer with an immutable image, systemd-boot as the second-stage bootloader with Kubernetes.
 - RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader.
 - RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader, with
   real-time support.

@@ -18,7 +18,7 @@ The currently published versions are:
 * Edge Microvisor Toolkit with real time extensions (immutable)
 * Edge Microvisor Toolkit Standalone (immutable)
 * Edge Microvisor Toolkit Developer (mutable)
-
+  
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
 platforms such as  Xeon®, Intel® Core Ultra™, Intel Core™ and Intel® Atom®. It
 provides robust support for integrated and Intel discrete GPU cards, as well as

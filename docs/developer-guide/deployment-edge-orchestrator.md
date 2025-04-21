@@ -36,4 +36,4 @@ management. The key components involved in the update process include:
 ## Learn More
 
 - [Edge Microvisor Toolkit Architecture](architecture-overview.md)
-- [Edge Orchestrator Documentation](#) <!--**TODO**: Add url-->
+- [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)

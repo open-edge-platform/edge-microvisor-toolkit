@@ -18,7 +18,6 @@ of the resulting image, such as:
 - Final configuration properties that should be applied (e.g. enable full disc encryption,
   immutable image, second stage bootloader provider, purge documentation etc.).
 
-
 Before you can build OS images you need to build the toolchain and make sure to
 [**install pre-requisites (Ubuntu)**](/toolkit/docs/building/prerequisites-ubuntu.md).
 
@@ -83,7 +82,6 @@ will include the set of all `rpms` specified within the array of `packagelist` f
 The following example shows how to add `nano` as an alternative text editor to the image.
 You can add the packages for which `.spec` files already exist. Simply include them in an
 existing `packagelist` file, or create a new one and add it to the `imageconfig`.
-
 
 ```bash
 # Create a new packagelist called utilities.json
