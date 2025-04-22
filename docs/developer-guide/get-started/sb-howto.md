@@ -244,5 +244,5 @@ Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signat
 
 ### Step 7: Enable Secure Boot and Test
 
-Re-enable secure boot in the firmware menu and reboot. 
-Verify that the system boots successfully with secure boot enabled.
+Re-enable secure boot in the firmware menu and reboot. Verify that the system boots successfully with secure boot enabled.
+
