@@ -66,13 +66,13 @@ larger infrastructures. The Standalone Edge Node enables you to quickly get an e
 and running without deploying backend services, ready to deploy Kubernetes applications
 through `kubectl`, `helm`, or Kubernetes web dashboard.
 
-```{admonition} The standalone edge node does not support the real-time version currently.
+:::{admonition} The standalone edge node does not support the real-time version currently.
 :class: note
 
 The immutable OS image does not include the Kubernetes software and
 extensions. After the OS is installed, they are deployed on a writable section of the
 filesystem. Image and orchestration system updates are currently not natively enabled.
-```
+:::
 
 The ISO installer for the standalone Edge Node is available for download at
 [Intel® Edge Software Hub](https://edgesoftwarecatalog.intel.com/).
@@ -113,8 +113,8 @@ differences between those.
 - [Production Deployment with Edge Orchestrator](./deployment-edge-orchestrator.md)
 
 
-```{toctree}
+:::{toctree}
 ./get-started/building-howto.md
 ./get-started/installation-howto.md
 ./get-started/sb-howto.md
-```
+:::
