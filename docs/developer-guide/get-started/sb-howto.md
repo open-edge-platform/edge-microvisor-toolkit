@@ -124,6 +124,11 @@ export KEY=KeyInDB
 ```bash
 cd ~
 ```
+Make sure your rpm %_topdir is ~/rpmbuild; if not you should edit your ~/.rpmmacros to include:
+```bash
+mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+%_topdir %(echo $HOME)/rpmbuild
+```
 
 ### Step 2: Rebuild the shim-unsigned Package
 
