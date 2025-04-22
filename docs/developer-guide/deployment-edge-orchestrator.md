@@ -1,11 +1,11 @@
 # Production Deployment with Edge Orchestrator
 
-Edge Microvisor Toolkit integrates with Edge Orchestrator for scalable, secure, reliable,
-and automated management of edge infrastructure. It provides centralized control for
-OS provisioning, automated updates, and lifecycle management across distributed edge
-environments.
+Edge Microvisor Toolkit integrates with Edge Manageability Framework for
+scalable, secure, reliable, and automated management of edge infrastructure. It
+provides centralized control for OS provisioning, automated updates, and
+lifecycle management across distributed edge environments.
 
-| **Benefit** | **Edge Microvisor Toolkit** | **Edge Orchestrator** | **Outcome** |
+| **Benefit** | **Edge Microvisor Toolkit** | **Edge Manageability Framework** | **Outcome** |
 |-------------|-----------------------------|-----------------------|-------------|
 | **Security-First OS Management**  | Enforces read-only system partitions and signed OS updates to prevent unauthorized changes. | Automates OS deployment with policy-based enforcement and zero-trust security models. | System integrity, reduced attack vectors or unauthorized modifications. |
 | **Automated & Fail-Safe Updates** | Uses A/B partitioning for seamless updates with rollback capabilities. | Manages update policies, schedules maintenance windows, and provides status tracking for fleet-wide OS updates. | Minimized downtime and safe updates, preventing failures in production environments. |
@@ -15,8 +15,9 @@ environments.
 
 ## OS Deployment and Update Workflow
 
-Edge Orchestrator provides centralized control over OS installation, updates, and rollback
-management. The key components involved in the update process include:
+Edge Manageability Framework provides centralized control over OS installation,
+updates, and rollback management. The key components involved in the update
+process include:
 
 - **OS Resource Manager**: Detects and manages available OS versions.
 - **Maintenance Manager**: Schedules updates during maintenance windows.

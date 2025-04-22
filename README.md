@@ -1,6 +1,6 @@
 # Edge Microvisor Toolkit
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE) ![go-test-coverage](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/go-test-coverage.yml/badge.svg?branch=3.0) ![lint](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/lint.yml/badge.svg?branch=3.0)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 The Edge Microvisor Toolkit is a streamlined container host that
 showcases the Intel silicon optimizations. Built on Azure Linux, it features a
@@ -43,7 +43,7 @@ Check out these articles to quickly learn how to work with Edge Microvisor Toolk
   for an immutable container host with essential functionality.
 * [Build or customize the Edge Microvisor](./docs/developer-guide/get-started/building-howto.md)
   for maximum control over the system you want to deploy.
-* [Edge Orchestrator integration](./docs/developer-guide/deployment-edge-orchestrator.md)
+* [Edge Manageability Framework integration](./docs/developer-guide/deployment-edge-orchestrator.md)
   for scalable, secure, reliable, and automated management of edge infrastructure.
 * [Understand the security features of the Edge Microvisor](./docs/developer-guide/security.md)
   to ensure security for workloads and data.

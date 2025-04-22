@@ -24,7 +24,6 @@ to the Edge Microvisor Toolkit repository:
 
 ![Contribution Flow](assets/contribution-flow.drawio.svg)
 
-
 ### Update of Edge Node Agents
 
 1. If a new package has to be released, follow these steps to ensure the package is available
@@ -35,7 +34,7 @@ to the Edge Microvisor Toolkit repository:
     c. Invoke `make tarball`.
     d. Upload tarball from `build/artifacts` to the tarball repository.
 
-2. Update the respective .spec file in SPECS/<agent-name> directory. Example: `SPECS/node-agent`.
+2. Update the respective .spec file in SPECS/`package` directory. Example: `SPECS/node-agent`.
 
 3. Bump the release number declared in the top section of the .spec file if on the same
    version. Otherwise, update the release version and set the number to 1.
@@ -64,6 +63,7 @@ Example : `sha256sum ./SPECS/node-agent/env_wrapper.sh`
     python3 -m pip install -r ./toolkit/scripts/requirements.txt
     python3 ./toolkit/scripts/update_cgmanifest.py first cgmanifest.json ./SPECS/node-agent/node-agent.spec
     ```
+
 > **Note:**
   This guide applies to `rpm` package addition in general for Edge Microvisor.
 
@@ -76,13 +76,16 @@ of the planned releases.
 Edge Microvisor Toolkit releases every 6 weeks. Here are the details:
 
 **Every 6 weeks:**
+
 - RPM updates including new RPMs or patches to existing RPMs.
 - Exception releases to address critical bugs/CVEs.
 
 **Every 12 weeks:**
+
 - ISO image + RPM release.
 
 **Every quarter:**
+
 - RAW/VHD (+RPMs delta) image release.
 
 ## Contribution license
