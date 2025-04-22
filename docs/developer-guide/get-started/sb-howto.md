@@ -64,16 +64,21 @@ This converts `certificate.der` into PEM-formatted file `certificate.pem`.
 
 ### Prerequisites
 
+**Make sure Secure Boot is disabled.**
+
 **Install Required Tools** for signing and building packages:
 
 ```bash
-sudo tdnf install dnf-utils pesign nss-tools efivar rpmdevtools openssl kernel-devel keyutils
+sudo tdnf install dnf-utils pesign nss-tools efivar rpmdevtools openssl kernel-devel keyutils dos2unix vim-extra
 ```
 
 **Add User to the pesign Group**:
 
 ```bash
 sudo usermod -a -G pesign $(whoami)
+```
+```bash
+cd ~
 ```
 
 Log out and log back in for the changes to take effect.
@@ -116,6 +121,10 @@ export KEY=KeyInDB
 # Repeat the steps.
 ```
 
+```bash
+cd ~
+```
+
 ### Step 2: Rebuild the shim-unsigned Package
 
 **Extract KeyInShim to a DER file**:
@@ -129,14 +138,17 @@ certutil -d /etc/pki/pesign -L -n KeyInShim -r > ~/key-in-shim.der
 ```bash
 base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' | sed 's/^[ \t]*//')
 
-package=$(tdnf repoquery --source shim-unsigned-x64 | tail -1)
-wget $base_url/SRPMS/$package.rpm
+shim_unsigned_package=$(tdnf repoquery --source shim-unsigned-x64 | tail -1)
+wget $base_url/SRPMS/$shim_unsigned_package.rpm
 
 rpm -i shim-unsigned-x64-*.src.rpm
 cd ~/rpmbuild
 cp ~/key-in-shim.der SOURCES/azurelinux-ca-20230216.der
 rpmbuild -bb SPECS/shim-unsigned-x64.spec
-sudo tdnf install RPMS/x86_64/shim-unsigned-x64-$VERSION.x86_64.rpm
+sudo tdnf install RPMS/x86_64/shim-unsigned-x64-*.x86_64.rpm
+```
+```bash
+cd ~
 ```
 
 ### Step 3: Build the shim Package
@@ -146,10 +158,10 @@ sudo tdnf install RPMS/x86_64/shim-unsigned-x64-$VERSION.x86_64.rpm
 ```bash
 base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' | sed 's/^[ \t]*//')
 
-package=$(tdnf repoquery --source shim | tail -1)
-wget $base_url/SRPMS/$package.rpm
+shim_package=$(tdnf repoquery --source shim | grep -v "unsigned" | tail -1)
+wget $base_url/SRPMS/$shim_package.rpm
 
-rpm -i shim-x64-*.src.rpm
+rpm -i $shim_package.rpm
 ```
 
 **Sign the binaries**:
@@ -164,41 +176,31 @@ pesign -s -i /usr/share/shim/*/x64/shimx64.efi -o SOURCES/shimx64.efi -c KeyInDB
 rpmbuild -bb SPECS/shim.spec
 ```
 
-**Install the resulting RPM**:
+### Step 4: Install the new shim-x64 Package
+
+Install the new package and reboot with secure boot disabled:
 
 ```bash
-sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
+sudo tdnf install RPMS/x86_64/$shim_package.rpm
 ```
-
-### Step 4: Disable Secure Boot
-
-Disable secure boot on your test system. For a VM under QEMU using OVMF, run:
+Ensure that the `$shim_package.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
 
 ```bash
-sudo systemctl reboot --firmware-setup
+sudo tdnf reinstall --allowerasing RPMS/x86_64/$shim_package.rpm
 ```
-
-Navigate to secure boot configuration and disable the option for secure boot.
-
-> **NOTE:**
-  The location of this option may vary between vendors.
-
-
-### Step 5: Install the new shim-x64 Package
-
-Install the new `shim-x64` package and reboot with secure boot disabled:
 
 ```bash
-sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
+cd ~
 ```
 
-### Step 6: Sign the Boot Loader and Kernel
+
+### Step 5: Sign the Boot Loader and Kernel
 
 **Copy the EFI binaries**:
 
 ```bash
 sudo cp /boot/efi/EFI/BOOT/grubx64.efi .
-sudo cp /boot/vmlinuz-$VERSION .
+sudo sh -c 'cp /boot/vmlinuz-* .'
 ```
 
 **Sign the binaries**:
@@ -206,10 +208,10 @@ sudo cp /boot/vmlinuz-$VERSION .
 ```bash
 sudo pesign -s -i grubx64.efi -o /boot/efi/EFI/BOOT/grubx64.efi -c KeyInShim --force
 
-sudo pesign -s -i vmlinuz-$VERSION -o /boot/vmlinuz-$VERSION -c KeyInShim --force
+udo sh -c 'pesign -s -i vmlinuz-* -o /boot/vmlinuz-* -c KeyInShim --force'
 ```
 
-### Step 7: Enroll KeyInDB into UEFI DB
+### Step 6: Enroll KeyInDB into UEFI DB
 
 **Export KeyInDB to a DER file**:
 
@@ -229,12 +231,13 @@ sudo cp key-in-db.der /boot/efi/EFI/
 sudo systemctl reboot --firmware-setup
 ```
 
-Navigate to secure boot configuration and set the secure boot mode to *Custom Mode*.
+Navigate to:
 
-Under *Custom Secure Boot Options* go to *DB Options*, then select the option to enroll
-signature from the `key-in-db.der` file into the database.
+System Bios Settings → System Security → Secure Boot Configuration → Secure Boot Mode (set to `<Custom Mode>`).
 
-### Step 8: Enable Secure Boot and Test
+Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signature Using `key-in-db.der` file into the database.
 
-Re-enable secure boot in the firmware menu and reboot. Verify that the system boots
-successfully with secure boot enabled.
+### Step 7: Enable Secure Boot and Test
+
+Re-enable secure boot in the firmware menu and reboot. 
+Verify that the system boots successfully with secure boot enabled.
