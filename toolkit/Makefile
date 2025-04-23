@@ -143,7 +143,8 @@ SOURCE_URL         ?= https://files-rs.edgeorchestration.intel.com/files-edge-or
 # assignments do not take affect without using 'override'. This means that all of the following PACKAGE_URL_LIST values will
 # be ignored if the user sets any value.
 ##help:var:PACKAGE_URL_LIST:<urls_list>=Space-separated list of URLs to download toolchain RPM packages from, used to populate the toolchain packages if `REBUILD_TOOLCHAIN=n'. The URLs will replace the default set of URLs. Print default list with 'make -s printvar-PACKAGE_URL_LIST'.
-PACKAGE_URL_LIST   ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/x86_64/
+PACKAGE_URL_LIST   ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/
+PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/x86_64/
 PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/noarch/
 PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/debuginfo/
 
