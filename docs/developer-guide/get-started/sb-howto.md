@@ -1,12 +1,12 @@
 # Enable Secure Boot for Edge Microvisor Toolkit
 
 In most production scenarios, you should consider using Secure Boot for your system, ensuring
-it is protected against advanced attacks. Here are the steps required to do so using:
+it is protected against advanced attacks. Here are the steps required to do so, using:
 
-* [ISO Image](#iso-image) - manually sign extensible firmware interface (EFI) binaries,
+- [ISO Image](#iso-image) - manually sign extensible firmware interface (EFI) binaries,
   generating local signing certificates, rebuilding packages, and testing the secure boot
   functionality.
-* [RAW or VHD/X](#raw-and-vhd-image) - configure BIOS with signed production keys of
+- [RAW or VHD/X](#raw-and-vhd-image) - configure BIOS with signed production keys of
 a RAW/VHD Edge Microvisor image.
 
 ## RAW and VHD Image
@@ -18,8 +18,9 @@ to enroll your certificate into the firmware’s trusted key database.
 
 ### Step 1: Verify your Certificate File
 
-Make sure you have the certificate file, for example, `edge-readonly-3.0.20250401.0515-signed.der`, which contains your public key. Many systems accept DER format,
-but some firmware might require PEM.
+Make sure you have the certificate file, for example, `edge-readonly-3.0.20250401.0515-signed.der`,
+which contains your public key. Many systems accept DER format, but some firmware might
+require PEM.
 
 ### Step 2: Convert DER to PEM (if necessary)
 
@@ -32,50 +33,59 @@ Open a Terminal/Command Prompt. Run the following command:
 openssl x509 -in certificate.der -inform DER -out certificate.pem -outform PEM
 ```
 
-This converts certificate.der to a PEM-formatted file called certificate.pem.
+This converts `certificate.der` into PEM-formatted file `certificate.pem`.
 
 ### Step 3: Enroll the Certificate in the UEFI/BIOS
 
-* Restart Your Computer:
-  * Enter your UEFI/BIOS setup by pressing a key such as F2, Del, or Esc during startup (refer to your system's manual if needed).
-* Navigate to the Secure Boot or Security Section:
-  * Look for a menu labeled "Secure Boot," "Security," or similar.
-* Enroll the Custom Key:
-  * Find an option like "Manage Keys," "Enroll Key," or "Add Certificate."
-  * Choose the file selection option and locate your certificate file (use certificate.der or certificate.pem based on your firmware requirements).
-  * Follow the on-screen instructions to enroll the key
+- Restart Your Computer:
+  - Enter your UEFI/BIOS setup by pressing F2, Del, or Esc during startup (refer to your
+    system's manual if needed).
+- Navigate to the *Secure Boot* or *Security* Section:
+  - Look for a menu labeled *Secure Boot*, *Security*, or similar.
+- Enroll the Custom Key:
+  - Find the key/certificate management option such as *Manage Keys*, *Enroll Key*, or
+    *Add Certificate*.
+  - Choose the file selection option and locate your certificate file (use `certificate.der`
+    or `certificate.pem` depending on your firmware requirements).
+  - Follow the on-screen instructions to enroll the key.
 
-### Step 4: Step 4: Enable Secure Boot
+### Step 4: Enable Secure Boot
 
-* Locate the Secure Boot Setting:
-  * Within the UEFI/BIOS menu, find the Secure Boot option.
-* Enable Secure Boot:
-  * Change the setting to “Enabled.”
-  * Save your changes and exit the UEFI/BIOS setup.
-* Reboot:
-  * Your system will now check the OS image signature against the enrolled certificate during boot
+- Locate the Secure Boot Setting:
+  - Within the UEFI/BIOS menu, find the *Secure Boot* option.
+- Enable Secure Boot:
+  - Change the setting to *Enabled*.
+  - Save your changes and exit the UEFI/BIOS setup.
+- Reboot:
+  - Your system will now check the OS image signature against the enrolled certificate
+    during boot.
 
 ## ISO Image
 
 ### Prerequisites
 
-**Install Required Packages**: Install the necessary tools for signing and building packages:
+**Make sure Secure Boot is disabled.**
+
+**Install Required Tools** for signing and building packages:
 
 ```bash
-sudo tdnf install dnf-utils pesign nss-tools efivar rpmdevtools openssl kernel-devel keyutils
+sudo tdnf install dnf-utils pesign nss-tools efivar rpmdevtools openssl kernel-devel keyutils dos2unix vim-extra
 ```
 
-**Add User to pesign Group**: Add your user to the pesign group:
+**Add User to the pesign Group**:
 
 ```bash
 sudo usermod -a -G pesign $(whoami)
+```
+```bash
+cd ~
 ```
 
 Log out and log back in for the changes to take effect.
 
 ### Step 1: Generate Local Signing Certificates
 
-Follow these steps to create local self-signed certificates:
+Complete the following steps to create local self-signed certificates:
 
 **Download the pesign source package**:
 
@@ -92,7 +102,7 @@ tar xvf pesign-*.tar.bz2
 cd pesign-*/src/certs
 ```
 
-**Create a self-signed CA and signing certificate**:
+**Create a self-signed CA and a signing certificate**:
 
 ```bash
 export KEY=KeyInShim
@@ -104,11 +114,20 @@ pk12util -d /etc/pki/pesign -i $KEY.p12
 certutil -d /etc/pki/pesign -A -i $KEY.crt -n $KEY -t u
 ```
 
-Repeat the above steps for additional keys, such as `KeyInDB`.
+Repeat the steps for additional keys, such as `KeyInDB`.
 
 ```bash
 export KEY=KeyInDB
-# Repeat above steps
+# Repeat the steps.
+```
+
+```bash
+cd ~
+```
+Make sure your rpm %_topdir is ~/rpmbuild; if not you should edit your ~/.rpmmacros to include:
+```bash
+mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+%_topdir %(echo $HOME)/rpmbuild
 ```
 
 ### Step 2: Rebuild the shim-unsigned Package
@@ -124,14 +143,17 @@ certutil -d /etc/pki/pesign -L -n KeyInShim -r > ~/key-in-shim.der
 ```bash
 base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' | sed 's/^[ \t]*//')
 
-package=$(tdnf repoquery --source shim-unsigned-x64 | tail -1)
-wget $base_url/SRPMS/$package.rpm
+shim_unsigned_package=$(tdnf repoquery --source shim-unsigned-x64 | tail -1)
+wget $base_url/SRPMS/$shim_unsigned_package.rpm
 
 rpm -i shim-unsigned-x64-*.src.rpm
 cd ~/rpmbuild
 cp ~/key-in-shim.der SOURCES/azurelinux-ca-20230216.der
 rpmbuild -bb SPECS/shim-unsigned-x64.spec
-sudo tdnf install RPMS/x86_64/shim-unsigned-x64-$VERSION.x86_64.rpm
+sudo tdnf install RPMS/x86_64/shim-unsigned-x64-*.x86_64.rpm
+```
+```bash
+cd ~
 ```
 
 ### Step 3: Build the shim Package
@@ -141,10 +163,10 @@ sudo tdnf install RPMS/x86_64/shim-unsigned-x64-$VERSION.x86_64.rpm
 ```bash
 base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' | sed 's/^[ \t]*//')
 
-package=$(tdnf repoquery --source shim | tail -1)
-wget $base_url/SRPMS/$package.rpm
+shim_package=$(tdnf repoquery --source shim | grep -v "unsigned" | tail -1)
+wget $base_url/SRPMS/$shim_package.rpm
 
-rpm -i shim-x64-*.src.rpm
+rpm -i $shim_package.rpm
 ```
 
 **Sign the binaries**:
@@ -159,42 +181,31 @@ pesign -s -i /usr/share/shim/*/x64/shimx64.efi -o SOURCES/shimx64.efi -c KeyInDB
 rpmbuild -bb SPECS/shim.spec
 ```
 
-**Install the resulting RPM**:
+### Step 4: Install the new shim-x64 Package
+
+Install the new package and reboot with secure boot disabled:
 
 ```bash
-sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
+sudo tdnf install RPMS/x86_64/$shim_package.rpm
 ```
-
-### Step 4: Disable Secure Boot
-
-Disable secure boot on your test system. For a VM under QEMU using OVMF:
+Ensure that the `$shim_package.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
 
 ```bash
-sudo systemctl reboot --firmware-setup
+sudo tdnf reinstall --allowerasing RPMS/x86_64/$shim_package.rpm
 ```
-
-Navigate to:
 
 ```bash
-Device Manager → Secure Boot Configuration → Attempt Secure Boot (set to [ ]).
-Note: This path can vary between vendors.
+cd ~
 ```
 
-### Step 5: Install the new shim-x64 Package
 
-Install the new shim-x64 package and reboot with secure boot disabled:
-
-```bash
-sudo tdnf install RPMS/x86_64/shim-x64-*.x86_64.rpm
-```
-
-### Step 6: Sign the Boot Loader and Kernel
+### Step 5: Sign the Boot Loader and Kernel
 
 **Copy the EFI binaries**:
 
 ```bash
 sudo cp /boot/efi/EFI/BOOT/grubx64.efi .
-sudo cp /boot/vmlinuz-$VERSION .
+sudo sh -c 'cp /boot/vmlinuz-* .'
 ```
 
 **Sign the binaries**:
@@ -202,10 +213,10 @@ sudo cp /boot/vmlinuz-$VERSION .
 ```bash
 sudo pesign -s -i grubx64.efi -o /boot/efi/EFI/BOOT/grubx64.efi -c KeyInShim --force
 
-sudo pesign -s -i vmlinuz-$VERSION -o /boot/vmlinuz-$VERSION -c KeyInShim --force
+udo sh -c 'pesign -s -i vmlinuz-* -o /boot/vmlinuz-* -c KeyInShim --force'
 ```
 
-### Step 7: Enroll KeyInDB into UEFI DB
+### Step 6: Enroll KeyInDB into UEFI DB
 
 **Export KeyInDB to a DER file**:
 
@@ -227,13 +238,11 @@ sudo systemctl reboot --firmware-setup
 
 Navigate to:
 
-```bash
-Device Manager → Secure Boot Configuration → Secure Boot Mode (set to <Custom Mode>).
+System Bios Settings → System Security → Secure Boot Configuration → Secure Boot Mode (set to `<Custom Mode>`).
 
-Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signature Using File.
-```
+Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signature Using `key-in-db.der` file into the database.
 
-### Step 8: Enable Secure Boot and Test
+### Step 7: Enable Secure Boot and Test
 
-Re-enable secure boot in the firmware menu and reboot. Verify that the system boots
-successfully with secure boot enabled.
+Re-enable secure boot in the firmware menu and reboot. Verify that the system boots successfully with secure boot enabled.
+

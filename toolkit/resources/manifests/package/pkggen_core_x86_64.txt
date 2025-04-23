@@ -213,8 +213,8 @@ libltdl-2.4.7-1.emt3.x86_64.rpm
 libltdl-devel-2.4.7-1.emt3.x86_64.rpm
 lua-5.4.6-1.emt3.x86_64.rpm
 lua-libs-5.4.6-1.emt3.x86_64.rpm
-edge-repos-3.0-3.emt3.noarch.rpm
-edge-repos-shared-3.0-3.emt3.noarch.rpm
+edge-repos-3.0-4.emt3.noarch.rpm
+edge-repos-shared-3.0-4.emt3.noarch.rpm
 tdnf-3.5.8-10.emt3.x86_64.rpm
 tdnf-cli-libs-3.5.8-10.emt3.x86_64.rpm
 tdnf-devel-3.5.8-10.emt3.x86_64.rpm

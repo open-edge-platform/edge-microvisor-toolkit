@@ -137,18 +137,19 @@ IMAGES_DIR      ?= $(OUT_DIR)/images
 PRECACHER_SNAPSHOT   ?= $(rpms_snapshot)
 
 # External source server
-SOURCE_URL         ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/sources/
+SOURCE_URL         ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/sources
 
 # Note on order of precedence: When a variable is passed from the commandline (i.e., make PACKAGE_URL_LIST="my list"), append
 # assignments do not take affect without using 'override'. This means that all of the following PACKAGE_URL_LIST values will
 # be ignored if the user sets any value.
 ##help:var:PACKAGE_URL_LIST:<urls_list>=Space-separated list of URLs to download toolchain RPM packages from, used to populate the toolchain packages if `REBUILD_TOOLCHAIN=n'. The URLs will replace the default set of URLs. Print default list with 'make -s printvar-PACKAGE_URL_LIST'.
-PACKAGE_URL_LIST   ?= http://rpm-edgemicrovisor.intel.com/3.0/RPMS/x86_64/
-PACKAGE_URL_LIST   += http://rpm-edgemicrovisor.intel.com/3.0/RPMS/noarch/
-PACKAGE_URL_LIST   += http://rpm-edgemicrovisor.intel.com/3.0/RPMS//debuginfo/
+PACKAGE_URL_LIST   ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)
+PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/x86_64
+PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/noarch
+PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/debuginfo
 
 REPO_LIST          ?=
-SRPM_URL_LIST      ?= http://rpm-edgemicrovisor.intel.com/3.0/SRPMS/
+SRPM_URL_LIST      ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/SRPMS
 
 ##help:var:VALIDATE_TOOLCHAIN_GPG={y,n}=Enable or disable GPG validation of the toolchain RPMs. If enabled toolchain RPMs will be validated against the GPG keys in the TOOLCHAIN_GPG_VALIDATION_KEYS variable. On by default when using upstream toolchain RPMs.
 # Based on REBUILD_TOOLCHAIN and DAILY_BUILD_ID. If REBUILD_TOOLCHAIN is set to 'y' or DAILY_BUILD_ID is set to any non-empty value, then GPG validation is disabled by default.

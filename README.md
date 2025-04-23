@@ -1,6 +1,6 @@
 # Edge Microvisor Toolkit
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE) ![go-test-coverage](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/go-test-coverage.yml/badge.svg?branch=3.0) ![lint](https://github.com/open-edge-platform/edge-microvisor-toolkit/actions/workflows/lint.yml/badge.svg?branch=3.0)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 The Edge Microvisor Toolkit is a streamlined container host that
 showcases the Intel silicon optimizations. Built on Azure Linux, it features a
@@ -18,7 +18,7 @@ The currently published versions are:
 * Edge Microvisor Toolkit with real time extensions (immutable)
 * Edge Microvisor Toolkit Standalone (immutable)
 * Edge Microvisor Toolkit Developer (mutable)
-
+  
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
 platforms such as  Xeon®, Intel® Core Ultra™, Intel Core™ and Intel® Atom®. It
 provides robust support for integrated and Intel discrete GPU cards, as well as
@@ -38,12 +38,12 @@ Check out these articles to quickly learn how to work with Edge Microvisor Toolk
   [Install on a Virtual Machine](./docs/developer-guide/get-started/installation-howto.md#virtual-machine-with-hyper-v)
   to learn how to install Edge Microvisor Toolkit.
 * [Install the developer ISO image](./docs/developer-guide/get-started.md#standalone-developer-edge-node)
-  for a mutable operating system providing only minimum functionality.
+  for a mutable container host providing only minimum functionality.
 * [Install the production RAW image]( ./docs/developer-guide/get-started.md#standalone-edge-node)
-  for an immutable operating system with essential functionality.
+  for an immutable container host with essential functionality.
 * [Build or customize the Edge Microvisor](./docs/developer-guide/get-started/building-howto.md)
   for maximum control over the system you want to deploy.
-* [Edge Orchestrator integration](./docs/developer-guide/deployment-edge-orchestrator.md)
+* [Edge Manageability Framework integration](./docs/developer-guide/deployment-edge-orchestrator.md)
   for scalable, secure, reliable, and automated management of edge infrastructure.
 * [Understand the security features of the Edge Microvisor](./docs/developer-guide/security.md)
   to ensure security for workloads and data.
