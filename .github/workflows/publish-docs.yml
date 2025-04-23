@@ -12,7 +12,9 @@ on:
           - microvisor-toolkit
 
 permissions:
-  contents: read
+  contents: read          # needed for actions/checkout
+  pull-requests: read     # needed for gh pr list
+  issues: write           # needed to post PR comment
 
 jobs:
   build_microvisor-toolkit:
