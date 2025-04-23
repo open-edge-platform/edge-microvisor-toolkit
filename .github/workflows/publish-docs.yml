@@ -17,7 +17,7 @@ permissions:
 jobs:
   build_microvisor-toolkit:
     if: ${{ (github.event.inputs.target == 'microvisor-toolkit') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@f6daea43ff4711b5c8cc12032eab94aa59ccb3b7
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@4ecba6bd86b92c842c88dec9e53cf782f523a746
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
