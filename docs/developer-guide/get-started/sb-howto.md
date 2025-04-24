@@ -126,12 +126,13 @@ cd ~
 ```
 Make sure your rpm %_topdir is ~/rpmbuild; if not you should edit your ~/.rpmmacros to include:
 
-Check for the file ~/.rpmmacros in your home directory, if not Create a file named .rpmmacros in your home directory.
-
-example: ```bash vim ~/.rpmmacros ```
 ```bash
 mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 %_topdir %(echo $HOME)/rpmbuild
+```
+If file ~/.rpmmacros does not exist in home directory, create one:
+```bash
+vi ~/.rpmmacros
 ```
 
 ### Step 2: Rebuild the shim-unsigned Package
@@ -154,7 +155,7 @@ rpm -i $shim_unsigned_package.src.rpm
 cd ~/rpmbuild
 cp ~/key-in-shim.der SOURCES/azurelinux-ca-20230216.der
 rpmbuild -bb SPECS/shim-unsigned-x64.spec
-sudo tdnf install RPMS/x86_64/$shim_unsigned_package.rpm
+sudo tdnf install RPMS/x86_64/$shim_unsigned_package.x86_64.rpm
 ```
 ```bash
 cd ~
@@ -190,12 +191,12 @@ rpmbuild -bb SPECS/shim.spec
 Install the new package and reboot with secure boot disabled:
 
 ```bash
-sudo tdnf install RPMS/x86_64/$shim_package.rpm
+sudo tdnf install RPMS/x86_64/$shim_package.x86_64.rpm
 ```
-Ensure that the `$shim_package.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
+Ensure that the `$shim_package.x86_64.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
 
 ```bash
-sudo tdnf reinstall --allowerasing RPMS/x86_64/$shim_package.rpm
+sudo tdnf reinstall --allowerasing RPMS/x86_64/$shim_package.x86_64.rpm
 ```
 
 ```bash
