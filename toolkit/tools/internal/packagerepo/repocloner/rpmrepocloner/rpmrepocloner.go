@@ -182,11 +182,6 @@ func (r *RpmRepoCloner) initialize(destinationDir, tmpDir, workerTar, existingRp
 		return
 	}
 
-	files := []safechroot.FileToCopy{
-		{Src: "/etc/resolv.conf", Dest: "/etc/resolv.conf"},
-	}
-	err = r.chroot.AddFiles(files...)
-
 	// The 'cacheRepoDir' repo is only used during Docker based builds, which don't
 	// use overlay so cache repo must be explicitly initialized.
 	// We make sure it's present during all builds to avoid noisy TDNF error messages in the logs.
