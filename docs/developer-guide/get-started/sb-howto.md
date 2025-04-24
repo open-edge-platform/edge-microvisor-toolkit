@@ -218,7 +218,7 @@ sudo sh -c 'cp /boot/vmlinuz-* .'
 ```bash
 sudo pesign -s -i grubx64.efi -o /boot/efi/EFI/BOOT/grubx64.efi -c KeyInShim --force
 
-udo sh -c 'pesign -s -i vmlinuz-* -o /boot/vmlinuz-* -c KeyInShim --force'
+sudo sh -c 'pesign -s -i vmlinuz-* -o /boot/vmlinuz-* -c KeyInShim --force'
 ```
 
 ### Step 6: Enroll KeyInDB into UEFI DB
