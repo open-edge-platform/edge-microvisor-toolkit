@@ -26,3 +26,5 @@ jobs:
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
       docs_directory: docs
+      branch_pattern: '^3\.0$'
+
