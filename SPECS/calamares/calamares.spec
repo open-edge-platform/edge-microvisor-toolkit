@@ -7,7 +7,7 @@ Summary:        Installer from a live CD/DVD/USB to disk
 # https://github.com/calamares/calamares/issues/1051
 Name:           calamares
 Version:        3.3.1
-Release:        10%{?dist}
+Release:        11%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -233,6 +233,9 @@ install -p -m 644 %{SOURCE21} %{buildroot}%{_sysconfdir}/calamares/settings.conf
 %{_libdir}/libcalamaresui.so
 
 %changelog
+* Wed April 25 2025 Samuel Taripin <samuel.taripin@intel.com> - 3.3.1-11
+- UI redesign.
+
 * Wed Mar 26 2025 Samuel Taripin <samuel.taripin@intel.com> - 3.3.1-10
 - change completion time format from seconds to minutes.
 
