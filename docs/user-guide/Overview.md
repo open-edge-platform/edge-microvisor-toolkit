@@ -3,12 +3,12 @@ orphan: true
 ---
 # Overview
 
-The Edge Microvisor Toolkit Developer is a package that contains mutable Edge Microvisor Toolkit in an `ISO` installer format. Edge Microvisor Toolkit is a streamlined container operating system that showcases the Intel silicon optimizations. Built on Azure Linux, it features a Linux Kernel maintained by
+The Edge Microvisor Toolkit Developer is a package that contains mutable Edge Microvisor Toolkit in an `ISO` installer format. Edge Microvisor Toolkit is a streamlined container operating system that showcases the Intel® silicon optimizations. Built on Azure Linux, it features a Linux Kernel maintained by
 Intel, incorporating all the latest kernel and user patches.
 
 The Edge Microvisor Toolkit Developer has undergone extensive validation across
-all Intel platforms such as Xeon®, Intel® Core Ultra™, Intel Core™ and Intel®
-Atom®. The Edge Microvisor Toolkit Developer Node allows users to quickly deploy
+all Intel® platforms such as Intel® Xeon®, Intel® Core™ Ultra, Intel® Core™ and Intel® Atom®.
+The Edge Microvisor Toolkit Developer Node enables users to quickly deploy
 and run their solutions for multiple scenarios like benchmarking and validation
 of Edge AI computing workloads. The Edge Microvisor Toolkit Developer is
 available to download from the Open-source repository.
@@ -30,7 +30,7 @@ following platforms.
 
 |      Atom             |               Core            |      Xeon      |
 | ----------------------| ----------------------------- | -------------- |
-| Intel® Atom® X Series | 12th Gen Intel® Core™         | 4th Gen Intel® Xeon® SP |
+| Intel Atom® X Series | 12th Gen Intel® Core™         | 4th Gen Intel® Xeon® SP |
 |                       | 13th Gen Intel® Core™         | 3rd Gen Intel® Xeon® SP |
 |                       | Intel® Core™ Ultra (Series 1) |                |
 
@@ -39,14 +39,14 @@ Microvisor Toolkit Developer.
 
 | Component    | Edge Microvisor Toolkit Developer    |
 |--------------|----------------------------|
-| CPU          | Intel® Atom, Core, or Xeon |
+| CPU          | Intel Atom®, Intel® Core™, or Intel® Xeon® |
 | RAM          | 2GB minimum                |
 | Storage      | 32GB SSD/NVMe or eMMC      |
 | Networking   | 1GbE Ethernet or Wi-Fi     |
 
 ### Installation Instructions
 
-You can download the Edge Microvisor Toolkit Developer from [Intel Edge Catalog](https://edgesoftwarecatalog.intel.com/)
+You can download the Edge Microvisor Toolkit Developer from [Edge Software Catalog](https://edgesoftwarecatalog.intel.com/)
 
 > TODO: Add step by step guide to download the ISO image from ESC with screenshots
 

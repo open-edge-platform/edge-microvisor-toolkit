@@ -1,6 +1,6 @@
 {
  "Signatures": {
-  "edge-base.repo": "3fb7b64c5202ea464f3961eada4b67df225d92c59692f3db6ac05b1db64faa67",
-  "INTEL-RPM-GPG-KEY": "e0578c55a4560beb7365027c86529da35ce89af07747bb5a62f7bd2f85c3eddc"
+  "edge-base.repo": "5193b38582bd23705715df7c23a5a4cc6e0fbf7ffe5ced82b0ebe5297382a7c6",
+  "INTEL-RPM-GPG-KEY": "90cf27d0aff4e69a11cc3da2e492a383e05e681cafff23525e796c6494d58336"
  }
 }

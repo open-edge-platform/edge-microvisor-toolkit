@@ -7,7 +7,7 @@ Summary:        Installer from a live CD/DVD/USB to disk
 # https://github.com/calamares/calamares/issues/1051
 Name:           calamares
 Version:        3.3.1
-Release:        10%{?dist}
+Release:        11%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -41,6 +41,9 @@ Source42:       calamares-auto_de.ts
 Source43:       calamares-auto_it.ts
 Source52:       emt-welcome.png
 #Source53:       emt-eula
+Source54:        arrow.svg
+Source55:        product.svg
+Source56:        wait.png
 # adjust some default settings (default shipped .conf files)
 Patch0:         Azure-Linux-Calamares-Conf-Patch-3.3.1.patch
 #Patch3:         round-to-full-disk-size.patch
@@ -54,6 +57,7 @@ Patch4:         serialize-read-access.patch
 Patch6:          modules-set-OS-to-EdgeMicrovisorToolkit.patch
 Patch7:          reword-welcome-screen.patch
 Patch8:          change-completion-from-second-to-minute.patch
+Patch9:          ui_redesign.patch
 # Compilation tools
 BuildRequires:  cmake
 BuildRequires:  extra-cmake-modules
@@ -142,6 +146,7 @@ done
 
 # Apply custom license config
 #mv %{SOURCE20} src/modules/license/license.conf
+mv %{SOURCE56} data/images/wait.png
 
 %patch -P 0 -p1
 #%patch3 -p1
@@ -150,6 +155,7 @@ done
 %patch -P 6 -p1
 %patch -P 7 -p1
 %patch -P 8 -p1
+%patch -P 9 -p1
 
 %build
 %cmake_kf \
@@ -174,6 +180,8 @@ install -p -m 644 %{SOURCE22} %{buildroot}%{_datadir}/calamares/branding/EdgeMic
 install -p -m 644 %{SOURCE23} %{buildroot}%{_datadir}/calamares/branding/EdgeMicrovisorToolkit/branding.desc
 install -p -m 644 %{SOURCE25} %{buildroot}%{_datadir}/calamares/branding/EdgeMicrovisorToolkit/stylesheet.qss
 install -p -m 644 %{SOURCE52} %{buildroot}%{_datadir}/calamares/branding/EdgeMicrovisorToolkit/emt-welcome.png
+install -p -m 644 %{SOURCE54} %{buildroot}%{_datadir}/calamares/branding/EdgeMicrovisorToolkit/arrow.svg
+install -p -m 644 %{SOURCE55} %{buildroot}%{_datadir}/calamares/branding/EdgeMicrovisorToolkit/product.svg
 
 mkdir -p %{buildroot}%{_sysconfdir}/calamares
 
@@ -194,6 +202,8 @@ install -p -m 644 %{SOURCE21} %{buildroot}%{_sysconfdir}/calamares/settings.conf
 %{_bindir}/calamares
 %{_datadir}/applications/calamares.desktop
 %{_datadir}/calamares/branding/EdgeMicrovisorToolkit/emt-welcome.png
+%{_datadir}/calamares/branding/EdgeMicrovisorToolkit/arrow.svg
+%{_datadir}/calamares/branding/EdgeMicrovisorToolkit/product.svg
 %{_datadir}/calamares/branding/EdgeMicrovisorToolkit/branding.desc
 %{_datadir}/calamares/branding/EdgeMicrovisorToolkit/lang/
 %{_datadir}/calamares/branding/EdgeMicrovisorToolkit/show.qml
@@ -223,19 +233,22 @@ install -p -m 644 %{SOURCE21} %{buildroot}%{_sysconfdir}/calamares/settings.conf
 %{_libdir}/libcalamaresui.so
 
 %changelog
+* Wed April 25 2025 Samuel Taripin <samuel.taripin@intel.com> - 3.3.1-11
+- UI redesign.
+
 * Wed Mar 26 2025 Samuel Taripin <samuel.taripin@intel.com> - 3.3.1-10
 - change completion time format from seconds to minutes.
 
-* Thu Mar 13 2024 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-9
+* Thu Mar 13 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-9
 - remove logo, update welcome picture and text.
 
-* Wed Mar 12 2024 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-8
+* Wed Mar 12 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-8
 - update welcome image
 
-* Tue Mar 4 2024 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-7
+* Tue Mar 4 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-7
 - remove EULA and custom license for ISO installer.
 
-* Thu Feb 13 2024 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-6
+* Thu Feb 13 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-6
 - Update installer to match Edge Microvisor Toolkit.
 
 * Wed Mar 20 2024 Sam Meluch <sammeluch@microsfot.com> - 3.3.1-5

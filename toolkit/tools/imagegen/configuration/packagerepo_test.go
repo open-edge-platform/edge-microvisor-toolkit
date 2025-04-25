@@ -18,7 +18,7 @@ var (
 	validPackageRepos = []PackageRepo{
 		{
 			Name:         "edge-official-base",
-			BaseUrl:      "http://rpm-edgemicrovisor.intel.com/3.0/",
+			BaseUrl:      "https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/",
 			Install:      false,
 			GPGCheck:     true,
 			RepoGPGCheck: true,
@@ -26,7 +26,7 @@ var (
 		},
 		{
 			Name:         "edge-official-preview",
-			BaseUrl:      "http://rpm-edgemicrovisor.intel.com/3.0/",
+			BaseUrl:      "https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/",
 			Install:      true,
 			GPGCheck:     true,
 			RepoGPGCheck: true,
@@ -37,7 +37,7 @@ var (
 	validRepoContent = []string{
 		"[edge-official-base]",
 		"name=edge-official-base",
-		"baseurl=http://rpm-edgemicrovisor.intel.com/3.0/",
+		"baseurl=https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/",
 		"gpgkey=file:///etc/pki/rpm-gpg/INTEL-RPM-GPG-KEY",
 		"gpgcheck=1",
 		"repo_gpgcheck=1",
@@ -46,10 +46,10 @@ var (
 		"sslverify=1",
 	}
 
-	validRepoJson          = `{"name":"edge-official-base","baseurl":"http://rpm-edgemicrovisor.intel.com/3.0/","install":false}`
-	validRepoNoGPGJson     = `{"name":"edge-official-base","baseurl":"http://rpm-edgemicrovisor.intel.com/3.0/","install":false,"gpgcheck":false}`
-	validRepoNoRepoGPGJson = `{"name":"edge-official-base","baseurl":"http://rpm-edgemicrovisor.intel.com/3.0/","install":false,"RepoGPGCheck":false}`
-	validRepoCustomKey     = `{"name":"edge-official-base","baseurl":"http://rpm-edgemicrovisor.intel.com/3.0/","install":true,"gpgkeys":"file:///etc/pki/rpm-gpg/my-custom-key"}`
+	validRepoJson          = `{"name":"edge-official-base","baseurl":"https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/","install":false}`
+	validRepoNoGPGJson     = `{"name":"edge-official-base","baseurl":"https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/","install":false,"gpgcheck":false}`
+	validRepoNoRepoGPGJson = `{"name":"edge-official-base","baseurl":"https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/","install":false,"RepoGPGCheck":false}`
+	validRepoCustomKey     = `{"name":"edge-official-base","baseurl":"https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/","install":true,"gpgkeys":"file:///etc/pki/rpm-gpg/my-custom-key"}`
 )
 
 func TestShouldPassParsingValidPackageRepos_PackageRepo(t *testing.T) {
