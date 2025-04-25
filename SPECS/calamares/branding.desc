@@ -15,8 +15,7 @@ strings:
 welcomeExpandingLogo:   false
 
 images:
-#    productLogo:         "emt-logo.png"
-#    productIcon:         "emt-logo.png"
+    productLogo:         "product.svg"
     productWelcome:      "emt-welcome.png"
 
 # The slideshow is displayed during execution steps (e.g. when the
@@ -24,8 +23,7 @@ images:
 slideshow:               "show.qml"
 
 style:
-   sidebarBackground:    "#292F34"
-   sidebarText:          "#FFFFFF"
-   sidebarTextSelect:    "#292F34"
-   sidebarTextHighlight: "#00A4EF"
-
+   SidebarBackground:    "#F7F7F8"
+   SidebarText:          "#2B2C30"
+   SidebarBackgroundCurrent: "#5400C0"
+   SidebarTextCurrent: "#FFFFFF"
