@@ -37,4 +37,14 @@ update_otelcol_config() {
 
 update_otelcol_config
 
+while true
+do
+	if [ -f /etc/intel_edge_node/tokens/platform-observability-agent/access_token ]; then
+		echo "Starting Platform Observability Collector Service"
+		break
+	else
+		sleep 10
+	fi
+done
+
 exec "$@"

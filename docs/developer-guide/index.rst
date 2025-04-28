@@ -11,7 +11,7 @@ and optimized for Intel® architecture. As a container-first, immutable OS, it i
 foundation for high-performance edge computing workloads that benefit from scalability and
 ease of management. It supports various deployment models, from standalone evaluation to
 large production-grade systems (large-scale rollouts are possible with Open Edge Platform's
-Edge Orchestrator integration).
+Edge Manageability Framework integration).
 
 Edge Microvisor Toolkit is designed to enable the full potential of Intel® platform
 portfolio by integrating the Intel® kernel and offering the most recent features as soon as
@@ -54,16 +54,16 @@ Why Use Edge Microvisor Toolkit
 |      Automatic rollback support provides operational assurance and recovery in case of
        failed updates.
 | **Fully managed OS lifecycle**
-|      Integration with Edge Orchestrator enables automated deployments, updates, and
-       rollbacks without manual intervention.
+|      Integration with Edge Manageability Framework enables automated
+       deployments, updates, and rollbacks without manual intervention.
 | **Immutable design for security**
 |      Read-only system partitions prevent tampering, ensuring system integrity.
 | **Optimized for Intel® hardware**
 |      Delivers performance enhancements tailored to Intel® silicon, ensuring maximum
        efficiency.
 | **Scalability for large fleets**
-|      Centralized control through Edge Orchestrator simplifies management across thousands
-       of edge nodes.
+|      Centralized control through Edge Manageability Framework simplifies 
+       management across thousands of edge nodes.
 
 
 Customers Highlights
@@ -74,7 +74,7 @@ Customers Highlights
 - Immutable OS with support for atomic (A/B) updates with Open Edge Platform.
 - Secure the edge platform with an opt-in security model supporting Secure Boot,
   Full Disc Encryption, dm-verity with TPM 2.0.
-- Can be deployed with Edge Orchestrator or as a standalone OS.
+- Can be deployed with Edge Manageability Framework or as a standalone OS.
 
 Developers Highlights
 ---------------------------------------------------------------------------------------------

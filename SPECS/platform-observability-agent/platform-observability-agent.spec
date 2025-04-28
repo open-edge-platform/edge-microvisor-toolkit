@@ -1,7 +1,7 @@
 Summary:        Platform Observability Agent
 Name:           platform-observability-agent
 Version:        1.8.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -46,6 +46,7 @@ install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
 install -m 744 %{SOURCE5} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-collector
 install -m 744 %{SOURCE6} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-health-check
 install -m 744 %{SOURCE7} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-logging
+install -m 744 %{SOURCE7} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-metrics
 
 mkdir -p %{buildroot}%{_sysconfdir}/fluent-bit
 cp configs/fluent-bit.conf %{buildroot}%{_sysconfdir}/fluent-bit
@@ -82,6 +83,7 @@ mkdir -p %{buildroot}%{_rundir}/platform-observability-agent/fluent-bit
 %config %attr(-, platform-observability-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/platform-observability-collector
 %config %attr(-, platform-observability-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/platform-observability-health-check
 %config %attr(-, platform-observability-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/platform-observability-logging
+%config %attr(-, platform-observability-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/platform-observability-metrics
 %config %attr(-, platform-observability-agent, bm-agents) %{_sysconfdir}/fluent-bit/fluent-bit.conf
 %config %attr(-, platform-observability-agent, bm-agents) %{_sysconfdir}/health-check/health-check.conf
 %config %attr(-, platform-observability-agent, bm-agents) %{_sysconfdir}/telegraf/telegraf.d/poa-telegraf.conf
@@ -128,6 +130,9 @@ mkdir -p %{buildroot}%{_rundir}/platform-observability-agent/fluent-bit
 %{systemd_postun_with_restart platform-observability-metrics.service}
 
 %changelog
+* Fri Apr 11 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.8.0-2
+- Update log and metrics service to start after collector service
+
 * Wed Apr 02 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.8.0-1
 - Upgrade agent version
 

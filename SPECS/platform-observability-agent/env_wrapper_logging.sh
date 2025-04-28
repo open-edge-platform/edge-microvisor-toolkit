@@ -19,4 +19,14 @@ update_fluentbit_config() {
 
 update_fluentbit_config
 
+while true
+do
+	if [ -e /run/platform-observability-agent/agent-logs.sock ]; then
+		echo "Starting Platform Observability Logging Service"
+		break
+	else
+		sleep 10
+	fi
+done
+
 exec "$@"

@@ -1,6 +1,6 @@
 [edge-base]
 name=Edge Base $releasever $basearch
-baseurl=http://rpm-edgemicrovisor.intel.com/3.0/
+baseurl=https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/
 gpgkey=file:///etc/pki/rpm-gpg/INTEL-RPM-GPG-KEY
 gpgcheck=1
 repo_gpgcheck=0

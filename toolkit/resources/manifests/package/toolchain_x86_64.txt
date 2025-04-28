@@ -10,8 +10,8 @@ audit-libs-3.1.2-1.emt3.x86_64.rpm
 autoconf-2.72-2.emt3.noarch.rpm
 automake-1.16.5-2.emt3.noarch.rpm
 edge-check-macros-3.0-2.emt3.noarch.rpm
-edge-repos-3.0-3.emt3.noarch.rpm
-edge-repos-shared-3.0-3.emt3.noarch.rpm
+edge-repos-3.0-4.emt3.noarch.rpm
+edge-repos-shared-3.0-4.emt3.noarch.rpm
 edge-rpm-macros-3.0-2.emt3.noarch.rpm
 bash-5.2.15-3.emt3.x86_64.rpm
 bash-debuginfo-5.2.15-3.emt3.x86_64.rpm
