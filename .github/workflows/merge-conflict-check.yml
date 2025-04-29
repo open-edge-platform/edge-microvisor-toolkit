@@ -7,6 +7,8 @@ on:
   pull_request:
     branches: [main, 3.0*]
 
+permissions: read-all
+
 jobs:
   spec-check:
     name: Github Merge Conflict Check
@@ -16,13 +18,18 @@ jobs:
       # Checkout the branch of our repo that triggered this action
       - name: Workflow trigger checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Get base commit for PRs
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          git fetch origin ${{ github.base_ref }}
-          echo "base_sha=$(git rev-parse origin/${{ github.base_ref }})" >> $GITHUB_ENV
-          echo "Merging ${{ github.sha }} into ${{ github.base_ref }}"
+          base_ref="${BASE_REF}"
+          git fetch origin $base_ref
+          echo "base_sha=$(git rev-parse origin/$base_ref)" >> $GITHUB_ENV
+          echo "Merging ${{ github.sha }} into $base_ref"
+        env:
+          BASE_REF: ${{ github.base_ref }}
 
       - name: Get base commit for Pushes
         if: ${{ github.event_name == 'push' }}

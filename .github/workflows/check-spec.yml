@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       # For consistency, we use the same major/minor version of Python that Azure Linux ships
       - name: Setup Python 3.12
@@ -37,15 +38,18 @@ jobs:
       - name: Get base commit for PRs
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo "base_sha=$(git rev-parse origin/${{ github.base_ref }})" >> "$GITHUB_ENV"
-          echo "Merging ${{ github.sha }} into ${{ github.base_ref }}"
+          base_ref="${BASE_REF}"
+          echo "base_sha=$(git rev-parse origin/$base_ref)" >> "$GITHUB_ENV"
+          echo "Merging ${{ github.sha }} into $base_ref"
+        env:
+          BASE_REF: ${{ github.base_ref }}
 
       - name: Get base commit for Pushes
         if: ${{ github.event_name == 'push' }}
         run: |
           echo "base_sha=${{ github.event.before }}" >> "$GITHUB_ENV"
           echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
-
+        
       - name: Get the changed files
         run: |
           git config --global --add safe.directory '*'
@@ -63,6 +67,7 @@ jobs:
         with:
           ref: '3.0'
           path: '3.0-checkout'
+          persist-credentials: false
 
       - name: Verify .spec files
         if: ${{ env.updated-specs != '' }}

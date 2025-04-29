@@ -16,6 +16,8 @@ on:
       - "**.spec"
       - "**.patch"
 
+permissions: read-all
+
 jobs:
   lint:
     name: Lint Workflows and Code
@@ -32,6 +34,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+
       - name: Lint
         uses: github/super-linter/slim@v7
         env:

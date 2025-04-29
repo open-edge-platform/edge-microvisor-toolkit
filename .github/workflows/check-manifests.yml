@@ -22,6 +22,8 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v4
+      with:
+          persist-credentials: false
 
     # This PR runner uses an older Ubuntu with rpm version 4.17, which doesn't understand some newer macros like %bcond
     - name: Define missing rpm macros
