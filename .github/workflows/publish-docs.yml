@@ -12,15 +12,19 @@ on:
           - microvisor-toolkit
 
 permissions:
-  contents: read
+  contents: read          # needed for actions/checkout
+  pull-requests: read     # needed for gh pr list
+  issues: write           # needed to post PR comment
 
 jobs:
   build_microvisor-toolkit:
     if: ${{ (github.event.inputs.target == 'microvisor-toolkit') || (github.event.inputs.target == 'all-documentation') }}
-    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@2fc4c75be6b7f308dd95bdf5a822e466437734ac
+    uses: open-edge-platform/orch-ci/.github/workflows/publish-documentation.yml@81b923cd8456c3efb633808611e09b4aed8ae3b1
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
       DOC_AWS_ACCESS_KEY_ID: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
       DOC_AWS_SECRET_ACCESS_KEY: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
     with:
-      docs_directory: docs
+      docs_directory: '.'
+      branch_pattern: '^3\.0.*$'
+
