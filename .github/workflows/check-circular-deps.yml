@@ -11,7 +11,7 @@ on:
       - .github/workflows/check-circular-deps.yml
       - '**.spec'
 
-permissions: {}
+permissions: read-all
 
 jobs:
   spec-check:
