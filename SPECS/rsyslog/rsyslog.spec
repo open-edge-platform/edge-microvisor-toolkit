@@ -3,7 +3,7 @@
 Summary:        Rocket-fast system for log processing
 Name:           rsyslog
 Version:        8.2308.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        GPLv3+ AND ASL 2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -17,6 +17,7 @@ Source3:        rsyslog.conf
 Source4:        https://www.rsyslog.com/files/download/rsyslog/%{name}-doc-%{base_version}.0.tar.gz
 Source5:        rsyslog.logrotate
 Source6:        00rsyslog.conf
+Patch0:         issue5158.patch
 BuildRequires:  autogen
 BuildRequires:  curl-devel
 BuildRequires:  gnutls-devel
@@ -81,6 +82,7 @@ BuildRequires: net-snmp-devel
 %prep
 # Unpack the code source tarball
 %setup -q
+%patch 0 -p1
 # Unpack the documentation tarball in the folder created above
 %setup -q -a 4 -T -D
 # Remove documentation sources
@@ -210,6 +212,10 @@ fi
 %{_libdir}/rsyslog/omsnmp.so
 
 %changelog
+* Thu Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 8.2308.0-5
+- Bump up the version on merge frm AZL tag 3.0.20250423-3.0
+- Add patch to fix upstream issue #5158
+
 * Thu Sep 19 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 8.2308.0-4
 - Rename log files required to rancher setup
 

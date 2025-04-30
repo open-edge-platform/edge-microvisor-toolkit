@@ -153,15 +153,15 @@ SRPM_URL_LIST      ?= https://files-rs.edgeorchestration.intel.com/files-edge-or
 
 ##help:var:VALIDATE_TOOLCHAIN_GPG={y,n}=Enable or disable GPG validation of the toolchain RPMs. If enabled toolchain RPMs will be validated against the GPG keys in the TOOLCHAIN_GPG_VALIDATION_KEYS variable. On by default when using upstream toolchain RPMs.
 # Based on REBUILD_TOOLCHAIN and DAILY_BUILD_ID. If REBUILD_TOOLCHAIN is set to 'y' or DAILY_BUILD_ID is set to any non-empty value, then GPG validation is disabled by default.
-#ifeq ($(REBUILD_TOOLCHAIN),y)
+ifeq ($(REBUILD_TOOLCHAIN),y)
 VALIDATE_TOOLCHAIN_GPG ?= n
-#else
-#ifneq ($(DAILY_BUILD_ID),)
-#VALIDATE_TOOLCHAIN_GPG ?= n
-#else
-#VALIDATE_TOOLCHAIN_GPG ?= y
-#endif
-#endif
+else
+ifneq ($(DAILY_BUILD_ID),)
+VALIDATE_TOOLCHAIN_GPG ?= n
+else
+VALIDATE_TOOLCHAIN_GPG ?= y
+endif
+endif
 
 TOOLCHAIN_GPG_VALIDATION_KEYS ?= $(wildcard $(PROJECT_ROOT)/SPECS/edge-repos/INTEL-*-GPG-KEY) $(wildcard $(toolkit_root)/repos/INTEL-*-GPG-KEY)
 
