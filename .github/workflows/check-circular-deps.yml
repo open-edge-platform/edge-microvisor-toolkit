@@ -11,6 +11,8 @@ on:
       - .github/workflows/check-circular-deps.yml
       - '**.spec'
 
+permissions: read-all
+
 jobs:
   spec-check:
     name: Circular dependency check
@@ -20,6 +22,8 @@ jobs:
       # Checkout the branch of our repo that triggered this action
       - name: Workflow trigger checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Check for circular dependencies
         run: |

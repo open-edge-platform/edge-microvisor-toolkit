@@ -24,13 +24,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Get base commit for PRs
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo "base_sha=$(git rev-parse origin/${{ github.base_ref }})" >> "$GITHUB_ENV"
-          echo "Merging ${{ github.sha }} into ${{ github.base_ref }}"
-
+          base_ref="${BASE_REF}"
+          echo "base_sha=$(git rev-parse origin/$base_ref)" >> "$GITHUB_ENV"
+          echo "Merging ${{ github.sha }} into $base_ref"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          
       - name: Get base commit for Pushes
         if: ${{ github.event_name == 'push' }}
         run: |
@@ -50,6 +54,7 @@ jobs:
         with:
           ref: '3.0'
           path: '3.0-checkout'
+          persist-credentials: false
 
       # Our linter is based on the spec-cleaner tool from the folks at openSUSE
       # We apply a patch to modify it for our needs
@@ -59,6 +64,7 @@ jobs:
           repository: 'rpm-software-management/spec-cleaner'
           ref: 'spec-cleaner-1.2.0'
           path: 'spec-cleaner'
+          persist-credentials: false
 
       # For consistency, we use the same major/minor version of Python that Azure Linux ships
       - name: Setup Python 3.12
