@@ -7,7 +7,7 @@
 Summary:        GRand Unified Bootloader
 Name:           grub2
 Version:        2.06
-Release:        23%{?dist}
+Release:        24%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -39,7 +39,6 @@ Patch0115:      0115-x86-efi-Use-bounce-buffers-for-reading-to-addresses-.patch
 Patch0116:      0116-x86-efi-Re-arrange-grub_cmd_linux-a-little-bit.patch
 Patch0117:      0117-x86-efi-Make-our-own-allocator-for-kernel-stuff.patch
 Patch0118:      0118-x86-efi-Allow-initrd-params-cmdline-allocations-abov.patch
-Patch0119:      0119-Fix-4GB-memory-be-filtered-out-by-filter_memory_map.patch
 Patch0148:      0148-efi-Set-image-base-address-before-jumping-to-the-PE-.patch
 Patch0149:      0149-tpm-Don-t-propagate-TPM-measurement-errors-to-the-ve.patch
 Patch0150:      0150-x86-efi-Reduce-maximum-bounce-buffer-size-to-16-MiB.patch
@@ -108,6 +107,30 @@ Patch:          sbat-4-0006-fs-ntfs-Make-code-more-readable.patch
 # time optimizes the code incorrectly, leading to network traffic getting
 # dropped in scenarios like PXE booting.
 Patch:          disable-checksum-code-optimization.patch
+# Ported from rhboot to fix grub initrd out-of-memory.
+Patch:          rhboot-efi-allocate-kernel-as-code.patch
+Patch:          rhboot-efi-enumerated-array-for-allocation-choice.patch
+Patch:          rhboot-efi-split-allocation-policy.patch
+Patch:          rhboot-efi-allocate-in-kernel-bounds.patch
+Patch:          rhboot-efi-allocate-kernel-as-code-for-real.patch
+Patch:          rhboot-efi-fix-incorrect-array-size.patch
+Patch:          rhboot-mm-Clarify-grub_real_malloc.patch
+Patch:          rhboot-mm-grub_real_malloc-Make-small-allocs-comment-match-.patch
+Patch:          rhboot-mm-Document-grub_free.patch
+Patch:          rhboot-mm-Document-grub_mm_init_region.patch
+Patch:          rhboot-kern-Remove-trailing-whitespaces.patch
+Patch:          rhboot-mm-Document-GRUB-internal-memory-management-structur.patch
+Patch:          rhboot-mm-Assert-that-we-preserve-header-vs-region-alignmen.patch
+Patch:          rhboot-mm-When-adding-a-region-merge-with-region-after-as-w.patch
+Patch:          rhboot-mm-Debug-support-for-region-operations.patch
+Patch:          rhboot-mm-Drop-unused-unloading-of-modules-on-OOM.patch
+Patch:          rhboot-mm-Allow-dynamically-requesting-additional-memory-re.patch
+Patch:          rhboot-kern-efi-mm-Always-request-a-fixed-number-of-pages-o.patch
+Patch:          rhboot-kern-efi-mm-Extract-function-to-add-memory-regions.patch
+Patch:          rhboot-kern-efi-mm-Pass-up-errors-from-add_memory_regions.patch
+Patch:          rhboot-kern-efi-mm-Implement-runtime-addition-of-pages.patch
+Patch:          rhboot-efi-Increase-default-memory-allocation-to-32-MiB.patch
+Patch:          rhboot-mm-Try-invalidate-disk-caches-last-when-out-of-memor.patch
 BuildRequires:  autoconf
 BuildRequires:  device-mapper-devel
 BuildRequires:  python3
@@ -434,6 +457,9 @@ cp $GRUB_PXE_MODULE_SOURCE $EFI_BOOT_DIR/$GRUB_PXE_MODULE_NAME
 %config(noreplace) %{_sysconfdir}/grub.d/41_custom
 
 %changelog
+* Fri Apr 11 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 2.06-24
+- Backport 2.12 memory management patches from rhboot grub.
+
 * Mon Apr 07 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 2.06-23
 - Add patch to remove the 2GB limitation in memory map.
 

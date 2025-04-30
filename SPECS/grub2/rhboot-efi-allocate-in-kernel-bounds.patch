@@ -1,0 +1,60 @@
+From 06ae262f091641086447897c81e4f3e98b9d9f1c Mon Sep 17 00:00:00 2001
+From: Peter Jones <pjones@redhat.com>
+Date: Mon, 1 Aug 2022 14:07:50 -0400
+Subject: [PATCH] efi: allocate the initrd within the bounds expressed by the
+ kernel
+
+Currently on x86, only linux kernels built with CONFIG_RELOCATABLE for
+x86_64 can be loaded above 4G, but the maximum address for the initramfs
+is specified via a HdrS field.  This allows us to utilize that value,
+and unless loading the kernel above 4G, uses the value present there.
+If loading kernel above 4G is allowed, we assume loading the initramfs
+above 4G also works; in practice this has been true in the kernel code
+for quite some time.
+
+Resolves: rhbz#2112134
+
+Signed-off-by: Peter Jones <pjones@redhat.com>
+---
+ grub-core/loader/i386/efi/linux.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/grub-core/loader/i386/efi/linux.c b/grub-core/loader/i386/efi/linux.c
+index 1d7ced3d1..a798da334 100644
+--- a/grub-core/loader/i386/efi/linux.c
++++ b/grub-core/loader/i386/efi/linux.c
+@@ -182,6 +182,8 @@ grub_linuxefi_unload (void *data)
+   kernel_free(kernel_mem, kernel_size);
+   kernel_free(params, sizeof(*params));
+ 
++  max_addresses[INITRD_MAX_ADDRESS].addr = GRUB_EFI_MAX_ALLOCATION_ADDRESS;
++
+   return GRUB_ERR_NONE;
+ }
+ 
+@@ -409,11 +411,13 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
+     }
+ #endif
+ 
++  max_addresses[INITRD_MAX_ADDRESS].addr = lh->initrd_addr_max;
+ #if defined(__x86_64__)
+   if (lh->xloadflags & LINUX_XLF_CAN_BE_LOADED_ABOVE_4G)
+     {
+       grub_dprintf ("linux", "Loading kernel above 4GB is supported; enabling.\n");
+       max_addresses[KERNEL_NO_LIMIT].addr = GRUB_EFI_MAX_USABLE_ADDRESS;
++      max_addresses[INITRD_MAX_ADDRESS].addr = GRUB_EFI_MAX_USABLE_ADDRESS;
+     }
+   else
+     {
+@@ -542,6 +546,8 @@ fail:
+ 
+   if (!loaded)
+     {
++      max_addresses[INITRD_MAX_ADDRESS].addr = GRUB_EFI_MAX_ALLOCATION_ADDRESS;
++
+       if (lh)
+ 	kernel_free (linux_cmdline, lh->cmdline_size + 1);
+ 
+-- 
+2.43.0
+
