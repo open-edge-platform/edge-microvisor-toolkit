@@ -49,6 +49,7 @@ jobs:
         run: |
           echo "base_sha=${{ github.event.before }}" >> "$GITHUB_ENV"
           echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
+
       - name: Get the changed files
         run: |
           git config --global --add safe.directory '*'
