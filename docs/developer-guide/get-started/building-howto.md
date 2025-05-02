@@ -132,7 +132,7 @@ a new package for Edge Microvisor Toolkit.
 1. Defining the SPEC file and add it into the `/SPECS` directory
 1. Creating the source archive and generating the sha256sum for the package
 1. Uploading the tar.gz package to the source package repository
-1. Add the SPEC file /SPEC directory and updating the `cgmanifest.json` file
+1. Add the SPEC file in /SPECS directory and updating the `cgmanifest.json` file
 
 You need to first install the required build tools for `rpm`. On Fedora you
 can simply install the required packages with:
