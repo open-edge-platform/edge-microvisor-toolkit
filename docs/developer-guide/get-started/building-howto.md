@@ -131,8 +131,9 @@ a new package for Edge Microvisor Toolkit.
 
 1. Defining the SPEC file and add it into the `/SPECS` directory
 1. Creating the source archive and generating the sha256sum for the package
-1. Uploading the tar.gz package to the source package repository
 1. Add the SPEC file in /SPECS directory and updating the `cgmanifest.json` file
+1. Build an image with the package included and test locally
+1. Uploading the tar.gz package to the source package repository after is has been tested locally
 
 You need to first install the required build tools for `rpm`. On Fedora you
 can simply install the required packages with:
@@ -221,8 +222,6 @@ cp helloworld.spec ~/rpmbuild/SPECS/
 rpmbuild -ba ~/rpmbuild/SPECS/helloworld.spec
 ```
 
-**Uploading the archive**: Upload the tar.gz archive to [TBD].
-
 **Adding the SPEC**: Add the `helloworld.spec` and the 'helloworld.spec.signature`
 file to the `/SPECS` directory. Finally update the `cgmanifest` by using the
 provided `python` script.
@@ -231,6 +230,17 @@ provided `python` script.
     python3 -m pip install -r ./toolkit/scripts/requirements.txt
     python3 ./toolkit/scripts/update_cgmanifest.py first cgmanifest.json ./SPECS/helloworld.spec
 ```
+
+**Local Build and Testing**:  If testing is complete and you are ready to contribute this package,
+please raise a PR and work with a code owner to upload the source tarball to package source mirror.
+
+```bash
+make build-packages # to rebuild the packages
+```
+Follow the steps under [Customizing an image](./building-howto.md#Customizing-an-Image) to create
+an image with the your new package.
+
+**Uploading the archive**: Intel will upload the tar.gz archive to the mirror.
 
 ### Update an agent
 
