@@ -1,0 +1,6 @@
+{
+    "packages": [
+        "moby-engine",
+	"docker-cli"
+    ]
+}

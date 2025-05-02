@@ -64,6 +64,7 @@
                 }
             ],
             "PackageLists": [
+                "packagelists/docker.json",
                 "packagelists/core-packages-image-systemd-boot.json",
                 "packagelists/ssh-server.json",
                 "packagelists/virtualization-host-packages.json",
@@ -76,6 +77,12 @@
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json"
             ],
+	    "Users": [
+  	    	{
+      		"Name": "guest",
+      		"Password": "intel@123"
+  	    	}
+	    ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
                 "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network",
