@@ -130,7 +130,7 @@ contains all required information for the build infrastructure to generate the
 a new package for Edge Microvisor Toolkit.
 
 1. Defining the SPEC file and add it into the `/SPECS` directory
-1. Create the source archive and generate the sha256sum for the package
+1. Creating the source archive and generating the sha256sum for the package
 1. Uploading the tar.gz package to the source package repository
 1. Add the SPEC file /SPEC directory and updating the `cgmanifest.json` file
 
