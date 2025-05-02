@@ -127,7 +127,7 @@ sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfig
 To add a new package you need to generate a `SPEC` file for the package which
 contains all required information for the build infrastructure to generate the
 `SRPM` and `RPM` for the package. There are a few steps involved to create
-a new package for the EMT.
+a new package for Edge Microvisor Toolkit.
 
 1. Defining the SPEC file and add it into the `/SPECS` directory
 1. Create the source archive and generate the sha256sum for the package
