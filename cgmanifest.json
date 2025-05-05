@@ -1847,8 +1847,8 @@
         "type": "other",
         "other": {
           "name": "cluster-agent",
-          "version": "1.6.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.6.1.tar.gz"
+          "version": "1.6.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.6.2.tar.gz"
         }
       }
     },
@@ -14462,8 +14462,8 @@
         "type": "other",
         "other": {
           "name": "node-agent",
-          "version": "1.6.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.6.2.tar.gz"
+          "version": "1.6.3",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.6.3.tar.gz"
         }
       }
     },
