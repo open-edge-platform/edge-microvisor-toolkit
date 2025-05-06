@@ -104,7 +104,16 @@ sudo usermod -a -G libvirt $(whoami)
 
 ## Bare metal with ISO
 
-### Linux
+### Requirements
+
+You will need:
+
+- [EMT-D 3.0](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso) latest release
+- USB flash drive (min. 8GB)
+- Access to the target machine
+- Optional: Monitor and keyboard, or BMC/iDRAC/iKVM access
+
+### Create Bootable USB (Linux)
 
 Follow the steps below to create a bootable USB device to install Edge Microvisor Toolkit
 on your bare metal system.
@@ -133,21 +142,53 @@ sudo sync
 
 Then, safely remove the USB drive.
 
-### Windows
+### Create Bootable USB (Windows)
 
-On Windows, download and install an ISO writer software such as [Rufus](https://rufus.ie).
-Make sure you follow the steps below:
+On Windows, download and install an ISO writer software such as [Rufus](https://rufus.ie/en).
 
-1. Plug in the USB device.
-2. Launch Rufus and select the USB drive from the dropdown list.
-3. Choose the ISO file by clicking *SELECT* under *Boot Selection*.
-4. Select *GPT* as the partitioning scheme.
-5. Click *START* to begin writing the ISO to the USB device.
-6. Eject the USB device when Rufus has completed writing the ISO.
+1. Insert the USB device (8GB or more)
+1. Launch Rufus
+1. Select the USB drive from the dropdown list
+1. Boot selection: Select your EMT 3.0 iso file
+1. Image option: Leave default or choose 'Standard Installation'
+1. Partition scheme: MBR (for legacy BIOS) or GPT (for UEFI)
+1. File system: FAT32 (recommended)
+1. Click Start
+1. Confirm warnings about data being erased
+1. Wait for completion and safely eject the USB
 
-Install the Edge Microvisor Toolkit using the live installer ISO and follow the on-screen
-configuration instructions. Optionally, you can enable the option for Full Disc Encryption
-(FDE).
+### Boot and Install Edge Microvisor Toolkit
+
+**Boot from USB**
+1. Insert the USB into the target machine
+1. Enter BIOS/Boot menu
+1. Choose USB drive as the boot device
+
+**Select Installer**
+1. Choose 'Terminal Installer' or 'Graphical Installer' when prompted
+
+**Follow Installation Prompts**
+1. Accept license
+1. Select target disc to install EMT on
+1. Skip disc encryption (optional)
+1. Host name - keep as default
+1. Create username and password
+1. Confirm and begin installation
+
+**Restart the System**
+1. After completion, click Restart
+1. EMT image will boot from the installed disc
+
+### Post Installation Check
+
+After reboot, login and check the EMT OS version. Run the following command
+
+```bash
+cat /etc/os-release
+```
+
+You should see Azure base EMT image version. **Installation Complete**. You are
+now ready to use the EMT 3.0 image!
 
 ## Next
 
