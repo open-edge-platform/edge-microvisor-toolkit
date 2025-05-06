@@ -1,7 +1,7 @@
 Summary:        Platform Observability Agent
 Name:           platform-observability-agent
 Version:        1.8.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -43,10 +43,10 @@ cp %{SOURCE3} %{buildroot}%{_unitdir}/platform-observability-logging.service
 cp %{SOURCE4} %{buildroot}%{_unitdir}/platform-observability-metrics.service
 
 install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
-install -m 744 %{SOURCE5} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-collector
-install -m 744 %{SOURCE6} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-health-check
-install -m 744 %{SOURCE7} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-logging
-install -m 744 %{SOURCE7} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-metrics
+install -m 740 %{SOURCE5} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-collector
+install -m 740 %{SOURCE6} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-health-check
+install -m 740 %{SOURCE7} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-logging
+install -m 740 %{SOURCE7} %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-observability-metrics
 
 mkdir -p %{buildroot}%{_sysconfdir}/fluent-bit
 cp configs/fluent-bit.conf %{buildroot}%{_sysconfdir}/fluent-bit
@@ -130,6 +130,9 @@ mkdir -p %{buildroot}%{_rundir}/platform-observability-agent/fluent-bit
 %{systemd_postun_with_restart platform-observability-metrics.service}
 
 %changelog
+* Tue May 06 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.8.0-3
+- Update file permissions for agent wrapper scripts
+
 * Fri Apr 11 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.8.0-2
 - Update log and metrics service to start after collector service
 
