@@ -344,6 +344,10 @@ exit 0
 selinuxenabled && semodule -nB
 exit 0
 %changelog
+* Thu Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.20240226-18
+- Bump up the version on merge frm AZL tag 3.0.20250423-3.0
+- Add tmpfs fix for cloud-utils-growpart.
+
 * Fri Mar 07 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.20240226-17
 - Bump up the version on merge frm AZL tag 3.0.20250206-3.0
 - Enable SELinux for LiveOS ISO.
