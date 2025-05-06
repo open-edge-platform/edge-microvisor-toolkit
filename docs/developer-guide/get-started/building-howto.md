@@ -129,9 +129,9 @@ contains all required information for the build infrastructure to generate the
 `SRPM` and `RPM` for the package. There are a few steps involved to create
 a new package for Edge Microvisor Toolkit.
 
-1. Defining the SPEC file and add it into the `/SPECS` directory
+1. Creating a folder, defining the SPEC file and add it into the `/SPECS` directory
 1. Creating the source archive and generating the sha256sum for the package
-1. Add the SPEC file in /SPECS directory and updating the `cgmanifest.json` file
+1. Updating the `cgmanifest.json` file
 1. Build an image with the package included and test locally
 1. Uploading the tar.gz package to the source package repository after is has been tested locally
 
@@ -198,20 +198,27 @@ install -m 0644 helloworld.signature.json %{buildroot}/usr/share/helloworld/
 make it executable.
 
 ```bash
-mkdir helloworld-1.0
-
-cat <<EOF > ./helloworld-1.0/helloworld.sh
+# 1. Make your source tree and tarball
+mkdir -p ~/helloworld-1.0
+cat > ~/helloworld-1.0/helloworld.sh <<'EOF'
 #!/bin/bash
 echo "Hello, world!"
 EOF
-
-chmod +x ./helloworld-1.0/helloworld.sh
-
-sha256sum helloworld-1.0/helloworld.sh | awk '{print $1}' > sum.txt
-read sum < sum.txt
-echo "{\"file\": \"helloworld.sh\", \"sha256\": \"$sum\"}" > helloworld-1.0/helloworld.signature.json
+chmod +x ~/helloworld-1.0/helloworld.sh
 
 tar -czf helloworld-1.0.tar.gz helloworld-1.0/
+
+# 2. Compute its SHA-256
+sum=$(sha256sum helloworld-1.0.tar.gz | awk '{print $1}')
+
+# 3. Write the JSON signature for the tarball
+cat > helloworld-1.0.tar.gz.signature.json <<EOF
+{
+  "file": "helloworld-1.0.tar.gz",
+  "sha256": "$sum"
+}
+EOF
+
 ```
 
 Copy and build the `rpm` package to the rpm building directory.
