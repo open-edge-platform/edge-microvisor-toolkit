@@ -64,7 +64,6 @@
                 }
             ],
             "PackageLists": [
-                "packagelists/docker.json",
                 "packagelists/core-packages-image-systemd-boot.json",
                 "packagelists/ssh-server.json",
                 "packagelists/virtualization-host-packages.json",
@@ -75,7 +74,8 @@
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base.json",
                 "packagelists/intel-wireless.json",
-                "packagelists/os-ab-update.json"
+                "packagelists/os-ab-update.json",
+                "packagelists/docker.json" 
             ],
 	    "Users": [
   	    	{
