@@ -221,7 +221,7 @@ EOF
 
 ```
 
-Copy and build the `rpm` package to the rpm building directory.
+Copy the RPM package to the building directory and build it.
 
 ```bash
 cp helloworld-1.0.tar.gz ~/rpmbuild/SOURCES/
