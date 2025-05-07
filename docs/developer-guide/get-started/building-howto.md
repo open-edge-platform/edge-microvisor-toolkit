@@ -129,8 +129,8 @@ contains all required information for the build infrastructure to generate the
 `SRPM` and `RPM` for the package. There are a few steps involved in creating
 a new package for Edge Microvisor Toolkit.
 
-1. Create a folder, defining the SPEC file and add it into the `/SPECS` directory.
-2. Create the source archive and generating the sha256sum for the package.
+1. Create a folder, define the SPEC file and add it into the `/SPECS` directory.
+2. Create the source archive and generate the sha256sum for the package.
 3. Update the `cgmanifest.json` file.
 4. Build an image with the package included and test locally.
 5. Upload the tar.gz package to the source package repository after is has been tested locally.
