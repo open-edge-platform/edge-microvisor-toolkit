@@ -165,18 +165,21 @@ On Windows, download and install an ISO writer software such as [Rufus](https://
 1. Choose USB drive as the boot device
 
 **Select Installer**
-1. Choose 'Terminal Installer' or 'Graphical Installer' when prompted
+1. Choose 'Terminal Installer' or 'Graphical Installer' when prompted ![Select installer](../assets/01-select-installer.png)
 
 **Follow Installation Prompts**
 1. Accept license
 1. Select target disc to install EMT on
+   ![Partition](../assets/02-partition-config.png)
 1. Skip disc encryption (optional)
 1. Host name - keep as default
+   ![System config](../assets/03-system-config.png)
 1. Create username and password
 1. Confirm and begin installation
 
 **Restart the System**
 1. After completion, click Restart
+   ![Complete](../assets/04-install-complete.png)
 1. EMT image will boot from the installed disc
 
 ### Post Installation Check
