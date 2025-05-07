@@ -126,14 +126,14 @@ sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfig
 
 To add a new package you need to generate a `SPEC` file for the package which
 contains all required information for the build infrastructure to generate the
-`SRPM` and `RPM` for the package. There are a few steps involved to create
+`SRPM` and `RPM` for the package. There are a few steps involved in creating
 a new package for Edge Microvisor Toolkit.
 
-1. Creating a folder, defining the SPEC file and add it into the `/SPECS` directory
-1. Creating the source archive and generating the sha256sum for the package
-1. Updating the `cgmanifest.json` file
-1. Build an image with the package included and test locally
-1. Uploading the tar.gz package to the source package repository after is has been tested locally
+1. Create a folder, defining the SPEC file and add it into the `/SPECS` directory.
+2. Create the source archive and generating the sha256sum for the package.
+3. Update the `cgmanifest.json` file.
+4. Build an image with the package included and test locally.
+5. Upload the tar.gz package to the source package repository after is has been tested locally.
 
 You need to first install the required build tools for `rpm`. On Fedora you
 can simply install the required packages with:
@@ -153,7 +153,7 @@ echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
 ```
 
 **Defining the SPEC file**
-Define and test that the SPEC file works as expected and is locally generating
+Define the SPEC file and test that it works as expected and generates locally the required artifacts.
 the required artifacts. This example builds a simple hello world `rpm` package
 which contains a bash scripts that prints hello world.
 
@@ -245,7 +245,7 @@ please raise a PR and work with a code owner to upload the source tarball to pac
 make build-packages # to rebuild the packages
 ```
 Follow the steps under [Customizing an image](./building-howto.md#Customizing-an-Image) to create
-an image with the your new package.
+an image with your new package.
 
 **Uploading the archive**: Intel will upload the tar.gz archive to the mirror.
 
