@@ -348,7 +348,7 @@ start_record_timestamp "build packages/install"
 # Download JDK rpm
 echo "Downloading MsOpenJDK rpm"
 MSOPENJDK_FILENAME="msopenjdk-17-17.0.12-1.$(uname -m).rpm"
-MSOPENJDK_URL="https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/RPM/$(uname -m)/$MSOPENJDK_FILENAME"
+MSOPENJDK_URL="https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/3.0/RPMS/$(uname -m)/$MSOPENJDK_FILENAME"
 case $(uname -m) in
     x86_64)  MSOPENJDK_EXPECTED_HASH="ec41e3ccf6f78c49f2ee2373df80b375ed3c2d5d97eac412b7ade0f045b0d9f4" ;;
     aarch64) MSOPENJDK_EXPECTED_HASH="0532d42d5c010152c09e88971f9aecd84af54f935973bbf0f1eba2c1c6839726" ;;
