@@ -190,7 +190,7 @@ After reboot, login and check the EMT OS version. Run the following command
 cat /etc/os-release
 ```
 
-You should see Azure base EMT image version. **Installation Complete**. You are
+You should see EMT image version. **Installation Complete**. You are
 now ready to use the EMT 3.0 image!
 
 ## Next
