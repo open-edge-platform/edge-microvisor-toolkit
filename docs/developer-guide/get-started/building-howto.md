@@ -77,7 +77,7 @@ be included in an `imageconfig` file through the `packagelist` files. The result
 will include the set of all `rpms` specified within the array of `packagelist` files from the
 `imageconfig`.
 
-### Example: Adding an existing rpm (Nano)
+### Example: Adding an existing RPM (Nano)
 
 The following example shows how to add `nano` as an alternative text editor to the image.
 You can add the packages for which `.spec` files already exist. Simply include them in an
