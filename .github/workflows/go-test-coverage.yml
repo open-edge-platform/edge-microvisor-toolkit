@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
+---
 name: Go Test Coverage
 
 on:
@@ -18,7 +18,7 @@ env:
 jobs:
   build:
     name: Go Test Coverage
-    runs-on: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
 
     steps:
         #- name: Set up Go 1.x
@@ -31,80 +31,79 @@ jobs:
         #run: |
         #go version && which go
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
-      with:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v4
+        with:
           persist-credentials: false
 
-    - name: Check go.mod
-      run: |
-        if grep -q "go $EXPECTED_GO_VERSION" ./toolkit/tools/go.mod; then
-          echo "go.mod has correct version ($EXPECTED_GO_VERSION)"
-        else
-          actual_version="$(grep -E '^go [0-9]+\.[0-9]+' ./toolkit/tools/go.mod)"
-          echo "go.mod has bad version expected:$EXPECTED_GO_VERSION, found: $actual_version"
-          echo "UPDATE ./github/workflows/go-test-coverage.yml AND prerequisite documentation if minimum go version changed"
-          exit 1
-        fi
+      - name: Check go.mod
+        run: |
+          if grep -q "go $EXPECTED_GO_VERSION" ./toolkit/tools/go.mod; then
+            echo "go.mod has correct version ($EXPECTED_GO_VERSION)"
+          else
+            actual_version="$(grep -E '^go [0-9]+\.[0-9]+' ./toolkit/tools/go.mod)"
+            echo "go.mod has bad version expected:$EXPECTED_GO_VERSION, found: $actual_version"
+            echo "UPDATE ./github/workflows/go-test-coverage.yml AND prerequisite documentation if minimum go version changed"
+            exit 1
+          fi
 
         #- name: Install prerequisites
         #run: |
         #  sudo apt-get update
         #  sudo apt -y install qemu-utils
 
-    - name: Check for bad go formatting
-      run: |
-        pushd toolkit
-        sudo --preserve-env=PATH make go-fmt-all
-        changes=$(git diff ./*.go)
-        if [ -n "$changes" ]; then
-          echo Unformatted go files!
-          git diff ./*.go
-          exit 1
-        fi
-      shell: bash
+      - name: Check for bad go formatting
+        run: |
+          pushd toolkit
+          sudo --preserve-env=PATH make go-fmt-all
+          changes=$(git diff ./*.go)
+          if [ -n "$changes" ]; then
+            echo Unformatted go files!
+            git diff ./*.go
+            exit 1
+          fi
+        shell: bash
 
-    - name: Check for out of date go modules
-      run: |
-        pushd toolkit
-        sudo make go-mod-tidy
-        modchanges=$(git diff tools/go.mod)
-        sumchanges=$(git diff tools/go.sum)
-        if [ -n "$modchanges$sumchanges" ]; then
-          echo Module files out of date!
-          git diff tools/go.mod
-          git diff tools/go.sum
-          exit 1
-        fi
-      shell: bash
+      - name: Check for out of date go modules
+        run: |
+          pushd toolkit
+          sudo make go-mod-tidy
+          modchanges=$(git diff tools/go.mod)
+          sumchanges=$(git diff tools/go.sum)
+          if [ -n "$modchanges$sumchanges" ]; then
+            echo Module files out of date!
+            git diff tools/go.mod
+            git diff tools/go.sum
+            exit 1
+          fi
+        shell: bash
 
-    - name: Check for missing tests
-      run: |
-        pushd toolkit
-        sudo make go-test-coverage
-        noTestCount=$(sudo make go-test-coverage | grep -c "no test files")
-        echo "$noTestCount"
-        if [ "$noTestCount" -ne "0" ]; then
-          sudo  make go-test-coverage | grep "no test files"
-          echo Missing "$noTestCount" Go Tests!
-        fi
-      shell: bash
+      - name: Check for missing tests
+        run: |
+          pushd toolkit
+          sudo make go-test-coverage
+          noTestCount=$(sudo make go-test-coverage | grep -c "no test files")
+          echo "$noTestCount"
+          if [ "$noTestCount" -ne "0" ]; then
+            sudo  make go-test-coverage | grep "no test files"
+            echo Missing "$noTestCount" Go Tests!
+          fi
+        shell: bash
 
-    - name: Evaluate test coverage
-      run: |
-        pushd toolkit
-        sudo make go-test-coverage
-      shell: bash
+      - name: Evaluate test coverage
+        run: |
+          pushd toolkit
+          sudo make go-test-coverage
+        shell: bash
 
-    - name: Upload test coverage
-      uses: actions/upload-artifact@v4
-      with:
-        name: TestCoverage
-        path: toolkit/out/tools/test_coverage_report.html
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestCoverage
+          path: toolkit/out/tools/test_coverage_report.html
 
-    - name: Ensure all tools build
-      run: |
-        pushd toolkit
-        sudo make go-tools REBUILD_TOOLS=y
-      shell: bash
-
+      - name: Ensure all tools build
+        run: |
+          pushd toolkit
+          sudo make go-tools REBUILD_TOOLS=y
+        shell: bash
