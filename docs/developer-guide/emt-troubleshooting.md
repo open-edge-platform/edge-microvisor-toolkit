@@ -155,7 +155,7 @@ It depends on which microvisor image you are using.
 ::::
 
 ::::{dropdown} What do the many JSON files in imageconfigs do? Which needs to be modified for the ISO or the immutable OS image?
-For more details, see the [Build an Edge Microvisor Toolkit Image](./get-started/building-howto.md)
+For more details, see the [Build an Edge Microvisor Toolkit Image](./get-started/emt-building-howto.md)
 article. The `imageconfigs` folder includes a set of different image files that define
 different image types the Buildkit can produce. For different validated images,
 Edge Microvisor Toolkit uses the `edge-image.json`, `edge-image-rt.json`, and image types the
@@ -166,5 +166,5 @@ Buildkit can produce.
 To install from a USB device, you need to update BIOS to include the
 USB boot option and make sure USB boot has highest precedence in the
 boot order list. You also need to configure BIOS with the Platform Keys (PK) to enable
-[secure boot](./get-started/sb-howto.md) for Edge Microvisor Toolkit.
+[secure boot](./get-started/emt-sb-howto.md) for Edge Microvisor Toolkit.
 ::::

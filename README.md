@@ -57,7 +57,7 @@ If you encounter bugs, have feature requests, or need assistance,
 
 Before submitting a new report, check the existing issues to see if a similar one has not
 been filed already. If no matching issue is found, feel free to file the issue as described
-in the [contribution guide](./docs/developer-guide/contribution.md).
+in the [contribution guide](./docs/developer-guide/emt-contribution.md).
 
 For security-related concerns, please refer to [SECURITY.md](./SECURITY.md).
 
@@ -69,7 +69,7 @@ Microvisor Toolkit repository, for easier access.
 
 As an open-source project, Edge Microvisor Toolkit always looks for community-driven
 improvements. If you are interested in making the product even better, see how you can
-help in the [contribution guide](./docs/developer-guide/contribution.md).
+help in the [contribution guide](./docs/developer-guide/emt-contribution.md).
 
 ## License Information
 
