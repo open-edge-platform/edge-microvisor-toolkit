@@ -8,8 +8,8 @@ This section provides an overview of both the operating system and build
 pipelines. Once you have decided on the usage scenarios presented below, you can
 move on to:
 
-- [Build an Edge Microvisor Toolkit Image.](./get-started/building-howto.md)
-- [Install Edge Microvisor Toolkit.](./get-started/installation-howto.md)
+- [Build an Edge Microvisor Toolkit Image.](./get-started/emt-building-howto.md)
+- [Install Edge Microvisor Toolkit.](./get-started/emt-installation-howto.md)
 
 ## Usage Scenarios
 
@@ -89,7 +89,7 @@ Manageability Framework:
 - Microvisor Immutable Image with Real Time
 
 For details on deploying Microvisor with Edge Manageability Framework, refer to
-the [Edge Manageability Framework deployment guide](../user-guide/deployment-edge-orchestrator.md).
+the [Edge Manageability Framework deployment guide](../user-guide/emt-deployment-edge-orchestrator.md).
 
 ## Image Support
 
@@ -112,10 +112,10 @@ outlines the key differences between those.
 ## Next Steps
 
 - [System Requirements](./introduction)
-- [Production Deployment with Edge Manageability Framework](./deployment-edge-orchestrator.md)
+- [Production Deployment with Edge Manageability Framework](./emt-deployment-edge-orchestrator.md)
 
 :::{toctree}
-./get-started/building-howto.md
-./get-started/installation-howto.md
-./get-started/sb-howto.md
+./get-started/emt-building-howto.md
+./get-started/emt-installation-howto.md
+./get-started/emt-sb-howto.md
 :::

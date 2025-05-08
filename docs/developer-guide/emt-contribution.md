@@ -22,7 +22,7 @@ review, better understand, and prioritize the request.
 The following diagram outlines the general workflow for pull requests made
 to the Edge Microvisor Toolkit repository:
 
-![Contribution Flow](assets/contribution-flow.drawio.svg)
+![Contribution Flow](assets/emt-contribution-flow.drawio.svg)
 
 ### Update of Edge Node Agents
 

@@ -125,4 +125,4 @@ sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfig
 
 ## Next
 
-- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](sb-howto.md).
+- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](emt-sb-howto.md).
