@@ -21,7 +21,7 @@ The two immutable image microvisor versions integrate the Intel® kernel and
 enable the software and features offered by Intel® Open Edge Platform. Check out the
 overview of key software components:
 
-![overview of key software components](./assets/architecture-key-components.drawio.svg)
+![overview of key software components](./assets/emt-architecture-key-components.drawio.svg)
 
 ## Edge Microvisor Toolkit Real Time
 
@@ -404,7 +404,7 @@ nodes. While the update will only occur during these maintenance windows, new im
 downloaded in the background as soon as they become available. The diagram below shows the
 overall update flow and state transitions.
 
-![update flow and state transitions](./assets/architecture-update-flow.drawio.svg)
+![update flow and state transitions](./assets/emt-architecture-update-flow.drawio.svg)
 
 The Edge Microvisor Toolkit may also be updated as a standalone solution, through a manual
 update procedure, without the automation offered by Open Edge Platform. You can download the

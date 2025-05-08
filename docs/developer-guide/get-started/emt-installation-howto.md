@@ -151,5 +151,5 @@ configuration instructions. Optionally, you can enable the option for Full Disc 
 
 ## Next
 
-- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](sb-howto.md).
-- Learn how to customize and manually [build microvisor images](building-howto.md).
+- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](emt-sb-howto.md).
+- Learn how to customize and manually [build microvisor images](emt-building-howto.md).
