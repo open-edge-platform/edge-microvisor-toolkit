@@ -3,7 +3,7 @@
 
 Summary:        An agent for updating the OS and bare metal agents packages
 Name:           platform-update-agent
-Version:        1.4.1
+Version:        1.4.3
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -133,6 +133,10 @@ rm -rf %{_var}/edge-node/pua
 echo "Successfully purged platform-update-agent"
 
 %changelog
+* Fri Apr 18 2025  Yeng Liong Wong <yeng.liong.wong@intel.com> - 1.4.3-1
+- Upgrade agent version to 1.4.3
+- Improve the PUA startup time
+
 * Thu Apr 03 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.4.1-1
 - Update common to 1.6.8
 
