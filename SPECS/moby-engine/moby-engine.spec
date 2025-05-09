@@ -7,8 +7,8 @@ Release: 12%{?dist}
 License: ASL 2.0
 Group:   Tools/Container
 URL: https://mobyproject.org
-Vendor: Microsoft Corporation
-Distribution: Azure Linux
+Vendor: Intel Corporation
+Distribution: Edge Microvisor Toolkit
 
 Source0: https://github.com/moby/moby/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1: docker.service
