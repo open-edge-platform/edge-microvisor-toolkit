@@ -2,7 +2,7 @@
     "Disks": [
         {
             "PartitionTableType": "gpt",
-            "MaxSize": 2048,
+            "MaxSize": 3072,
             "Artifacts": [
                 {
                     "Name": "edge-readonly-rt-dev",
@@ -22,22 +22,22 @@
                         "boot"
                     ],
                     "Start": 1,
-                    "End": 300,
+                    "End": 512,
                     "FsType": "fat32",
                     "Type": "esp"
                 },
                 {
                     "Name": "rootfs",
                     "ID": "rootfs",
-                    "Start": 300,
-                    "End": 1536,
+                    "Start": 512,
+                    "End": 2048,
                     "FsType": "ext4",
                     "Type": "linux-root-amd64"
                 },
                 {
                     "Name": "edge_persistent",
                     "ID": "opt",
-                    "Start": 1536,
+                    "Start": 2048,
                     "End": 0,
                     "FsType": "ext4"
                 }
@@ -74,7 +74,8 @@
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base-rt.json",
                 "packagelists/intel-wireless.json",
-                "packagelists/os-ab-update.json"
+                "packagelists/os-ab-update.json",
+                "packagelists/docker.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
