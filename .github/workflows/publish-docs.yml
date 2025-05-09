@@ -27,4 +27,3 @@ jobs:
     with:
       docs_directory: '.'
       branch_pattern: '^3\.0.*$'
-

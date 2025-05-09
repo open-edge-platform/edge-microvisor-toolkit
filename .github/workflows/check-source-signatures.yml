@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
+---
 name: Source Signature Check
 
 on:
@@ -16,7 +16,7 @@ permissions: read-all
 jobs:
   spec-check:
     name: Source Signature Check
-    runs-on: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         specs-dir: [SPECS, SPECS-EXTENDED]

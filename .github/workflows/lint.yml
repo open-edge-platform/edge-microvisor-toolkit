@@ -6,9 +6,11 @@
 # Documentation: https://github.com/github/super-linter                       #
 ###############################################################################
 
+---
 name: Linter
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [3.0, 3.0-dev]
     paths-ignore:
@@ -21,7 +23,7 @@ permissions: read-all
 jobs:
   lint:
     name: Lint Workflows and Code
-    runs-on: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
@@ -39,15 +41,22 @@ jobs:
       - name: Lint
         uses: github/super-linter/slim@v7
         env:
-          # the default branch for this stream is 3.0. github.event.repository.default_branch will return main which is not correct
+          # the default branch for this stream is 3.0.
+          #github.event.repository.default_branch will return main which is not correct
           DEFAULT_BRANCH: '3.0'
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_GITHUB_ACTIONS: true
-          GITHUB_ACTIONS_COMMAND_ARGS: -ignore SC2043 -ignore SC2011 -ignore SC2035 -ignore SC2156 -ignore SC2038 -ignore SC2061 -ignore SC2129 -ignore '".+" section is missing in workflow' -ignore 'unexpected key ".+" for "workflow" section'
+          GITHUB_ACTIONS_COMMAND_ARGS: >-
+            -ignore SC2043 -ignore SC2011 -ignore SC2035
+            -ignore SC2156 -ignore SC2038 -ignore SC2061
+            -ignore SC2129 -ignore '".+" section is missing in workflow'
+            -ignore 'unexpected key ".+" for "workflow" section'
           VALIDATE_YAML: true
           VALIDATE_JSON: true
           VALIDATE_PYTHON: true
           VALIDATE_BASH: true
           VALIDATE_MARKDOWN: true
           SHELLCHECK_OPTS: "--severity=error"
+          LINTER_RULES_PATH: .
+          YAML_CONFIG_FILE: .yamllint.yaml
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
