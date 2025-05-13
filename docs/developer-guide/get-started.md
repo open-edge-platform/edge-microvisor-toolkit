@@ -26,7 +26,7 @@ applications.
 To create a custom developer build of Edge Microvisor Toolkit, follow these steps:
 
 - Download the mutable host ISO image from
-  [Edge Software Catalog](https://edgesoftwarecatalog.intel.com/)
+  [Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node).
 - Install the mutable host via ISO image that includes only essential pre-installed packages,
   providing a ready-to-use base environment.
 - Install additional RPM packages, using DNF to tailor the OS to your specific needs.
@@ -55,6 +55,9 @@ monitoring tools, standard cloud-edge (CNCF) software, and more.
 
 ### Edge Microvisor Toolkit Standalone
 
+The ISO installer for the standalone Edge Node is available for download at
+[Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/package/edge_microvisor_toolkit_standalone_node).
+
 The standalone edge node uses the standard immutable build and provides an ISO
 image that can be flashed to a USB device and installed on edge nodes. It
 installs the microvisor and Kubernetes to the edge node with the essential
@@ -76,9 +79,6 @@ The immutable OS image does not include the Kubernetes software and
 extensions. After the OS is installed, they are deployed on a writable section of the
 filesystem. Image and orchestration system updates are currently not natively enabled.
 :::
-
-The ISO installer for the standalone Edge Node is available for download at
-[Intel® Edge Software Hub](https://edgesoftwarecatalog.intel.com/).
 
 ### Edge Microvisor Toolkit with Edge Manageability Framework
 

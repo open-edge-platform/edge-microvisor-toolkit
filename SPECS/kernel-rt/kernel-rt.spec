@@ -1,13 +1,13 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
-Version:        6.12.20
+Version:        6.12.23
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/linux-intel-lts
-Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.20-edge-250324T192946Z.tar.gz
+Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.23-emt-250415T094615Z.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -18,6 +18,8 @@ Patch0:         CVE-2025-21751.patch
 Patch1:         CVE-2025-21709.patch
 Patch2:         CVE-2025-21807.patch
 Patch3:         CVE-2025-21817.patch
+Patch4:         CVE-2025-21884.patch
+Patch5:         CVE-2025-21884-1.patch
 
 
 %global security_hardening none
@@ -165,7 +167,7 @@ This package contains the bpftool, which allows inspection and simple
 manipulation of eBPF programs and maps.
 
 %prep
-%autosetup -p1 -n lts-v6.12.20-edge-250324T192946Z
+%autosetup -p1 -n lts-v6.12.23-emt-250415T094615Z
 # %patch 0 -p1
 make mrproper
 
@@ -437,6 +439,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Mon Apr 21 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.23-1
+- Update kernel to 6.12.23
+
 * Thu Mar 27 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.20-1
 - Update kernel to 6.12.20
 

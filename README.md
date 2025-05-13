@@ -18,7 +18,7 @@ The currently published versions are:
 * Edge Microvisor Toolkit with real time extensions (immutable)
 * Edge Microvisor Toolkit Standalone (immutable) ([Download link](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node))
 * Edge Microvisor Toolkit Developer (mutable) ([Download link](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node))
-  
+
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
 platforms such as  Xeon®, Intel® Core Ultra™, Intel Core™ and Intel® Atom®. It
 provides robust support for integrated and Intel discrete GPU cards, as well as
@@ -34,13 +34,13 @@ Check out these articles to quickly learn how to work with Edge Microvisor Toolk
 
 * [System requirements](./docs/developer-guide/system-requirements.md)
   for the hardware and software requirements.
+* [Download](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node) and [install the developer ISO image](./docs/developer-guide/get-started.md#edge-microvisor-toolkit-developer)
+  for a mutable container host providing only minimum functionality.
+* [Download](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node) and [install the production RAW image]( ./docs/developer-guide/get-started.md#edge-microvisor-toolkit-standalone)
+  for an immutable container host with essential functionality.
 * [Install on bare metal edge node](./docs/developer-guide/get-started/installation-howto.md#baremetal-with-iso) or
   [Install on a Virtual Machine](./docs/developer-guide/get-started/installation-howto.md#virtual-machine-with-hyper-v)
   to learn how to install Edge Microvisor Toolkit.
-* [Install the developer ISO image](./docs/developer-guide/get-started.md#standalone-developer-edge-node)
-  for a mutable container host providing only minimum functionality.
-* [Install the production RAW image]( ./docs/developer-guide/get-started.md#standalone-edge-node)
-  for an immutable container host with essential functionality.
 * [Build or customize the Edge Microvisor](./docs/developer-guide/get-started/building-howto.md)
   for maximum control over the system you want to deploy.
 * [Edge Manageability Framework integration](./docs/developer-guide/deployment-edge-orchestrator.md)

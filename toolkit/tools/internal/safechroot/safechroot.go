@@ -99,6 +99,8 @@ var defaultChrootEnv = []string{
 	"HOME=/root",
 	fmt.Sprintf("SHELL=%s", os.Getenv("SHELL")),
 	fmt.Sprintf("TERM=%s", os.Getenv("TERM")),
+	fmt.Sprintf("https_proxy=%s", os.Getenv("https_proxy")),
+	fmt.Sprintf("no_proxy=%s", os.Getenv("no_proxy")),
 	"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
 }
 
