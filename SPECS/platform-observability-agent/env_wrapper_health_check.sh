@@ -19,4 +19,14 @@ update_health_check_config() {
 
 update_health_check_config
 
+while true
+do
+	if [ -e /run/platform-observability-agent/agent-logs.sock ]; then
+		echo "Starting Platform Observability Health Check Service"
+		break
+	else
+		sleep 10
+	fi
+done
+
 exec "$@"

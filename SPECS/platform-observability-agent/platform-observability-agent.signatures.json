@@ -4,10 +4,11 @@
     "platform-observability-collector.service": "11ebad24cbbae4a24b70c11087124aba4e7077390ee4dd4496fdd42e226d4333",
     "platform-observability-health-check.service": "121f3d26944952b45f018ca9b7bbeb7a3d55a89f8d32d4ef6a04b67a5497101e",
     "platform-observability-logging.service": "4b375f9fbdd2ddc1d7b0c1021593d02fd02156e28a1474c156a7b698a07db5e3",
-    "platform-observability-metrics.service": "72342f501d3e46265c065c0b7b756056a0fcf5f4414cdb148bf37dd7b5766749",
-    "env_wrapper_collector.sh": "452a07045fc9418c19771f91b55b61714538e2abe0607f6417b079dd4d7c7a97",
-    "env_wrapper_health_check.sh": "fb205586dfb9b1dc0f9a506ccbf42b0ba17da57e03dfeb944e866acc154e4eb1",
-    "env_wrapper_logging.sh": "eebd8a386a4b6c7f6fe9307fa0f7c2c6258023b0d95a561a1b7639ea737a8dda",
+    "platform-observability-metrics.service": "cd3fa0f8b7ea28e533317ce493add7c8e3a9c2d0e40c1e18ee14ead762b98c40",
+    "env_wrapper_collector.sh": "61561f8256dd47f9d60e55113822946744d3fe2b4d0d76803a22e3ea148660fe",
+    "env_wrapper_health_check.sh": "5289d3af3097a6cc2164faa370c812b42aee999ebb1ce8c1e0773dc5592a1db4",
+    "env_wrapper_logging.sh": "96593d401b7447d0d997b661f71ba54d60eacc14811956300df9ef0f3ef33758",
+    "env_wrapper_metrics.sh": "ab5997b5a67c9edb2e56208cf2db8a79fbfb9e1ae7cf5653bf9aae5b99049eee",
     "platform-observability-agent.conf": "1b4d3b7fd155a6f543748e1017e04aed535bd1bbfc0520d9d5e53f5b0b45eb32"
   }
 }

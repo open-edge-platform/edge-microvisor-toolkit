@@ -1,0 +1,56 @@
+{
+    "Disks": [
+        {
+            "PartitionTableType": "gpt",
+            "MaxSize": 1560,
+            "Artifacts": [
+                {
+                    "Name": "edge-readonly-tink",
+                    "Compression": "tar.gz"
+                }
+            ]
+        }
+    ],
+    "SystemConfigs": [
+        {
+            "Name": "Standard",
+            "BootType": "efi",
+            "PackageLists": [
+                "packagelists/tink-packages.json",
+                "packagelists/minimal-os-packages.json"
+            ],
+            "AdditionalFiles": {
+                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network",
+                "additionalconfigs/systemd-networkd-wait-online-override.conf": "/etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf"
+            },
+            "PostInstallScripts": [
+                {
+                        "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                        "Path": "additionalconfigs/add-sudoer.sh"
+                }
+            ],
+            "KernelOptions": {
+                "default": "kernel"
+            },
+            "FinalizeImageScripts": [
+                {
+                    "Path": "scripts/cleanup.sh"
+                }
+            ],
+            "KernelCommandLine": {
+                "ExtraCommandLine": "quiet splash"
+            },
+            "Hostname": "EdgeMicrovisorToolkitTink",
+            "DisableRpmDocs": true,
+            "Users": [
+                {
+                    "Name": "root",
+                    "Password": "$6$h06k1YSGP1nz$TVrHZZQS/rf2xo3.gb80GJKkkUzaylHPz/Ofvl/L5seczLeM98man/0zZoY4m.OEuvE2znG2jo909xvIv3FrL1",
+                    "PasswordHashed": true
+                }
+            ]
+        }
+    ]
+}

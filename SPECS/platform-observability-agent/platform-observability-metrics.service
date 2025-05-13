@@ -8,7 +8,7 @@ AmbientCapabilities=CAP_SYS_RAWIO CAP_DAC_READ_SEARCH CAP_SYS_ADMIN
 Environment="SF_OCSP_RESPONSE_CACHE_DIR=/opt/telegraf/"
 EnvironmentFile=-/etc/sysconfig/telegraf
 EnvironmentFile=-/etc/default/telegraf
-ExecStart=/usr/bin/telegraf --config /etc/telegraf/telegraf.d/poa-telegraf.conf
+ExecStart=/etc/edge-node/node/confs/platform-observability-metrics /usr/bin/telegraf --config /etc/telegraf/telegraf.d/poa-telegraf.conf
 StandardOutput=null
 StandardError=journal
 RestartSec=60
