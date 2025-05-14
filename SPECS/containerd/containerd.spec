@@ -98,9 +98,6 @@ fi
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.7.13-7
 - Bump release to rebuild
 
-* Fri Mar 21 2025 Dallas Delaney <dadelan@microsoft.com> - 1.7.13-7
-- Fix CVE-2025-27144
-
 * Fri Feb 14 2025 Kanishk Bansal <kanbansal@microsoft.com> - 1.7.13-6
 - Fix CVE-2024-28180, CVE-2023-45288
 

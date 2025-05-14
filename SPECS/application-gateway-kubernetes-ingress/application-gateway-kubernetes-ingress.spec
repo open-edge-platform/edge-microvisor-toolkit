@@ -52,9 +52,6 @@ cp appgw-ingress %{buildroot}%{_bindir}/
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.7.7-2
 - Bump release to rebuild
 
-* Sat Mar 29 2025 Kanishk Bansal <kanbansal@microsoft.com> - 1.7.7-2
-- Patch CVE-2025-30204
-
 * Tue Feb 04 2025 Gary Swalling <gaswal@microsoft.com> - 1.7.7-1
 - Upgrade to v1.7.7 with golang.org/x/net v0.33.0 for CVE-2023-39325, CVE-2023-44487,
 - CVE-2023-45288, CVE-2024-51744, CVE-2024-35255, CVE-2023-3978

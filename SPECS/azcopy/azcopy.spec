@@ -72,9 +72,6 @@ go test -mod=vendor
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 10.25.1-3
 - Bump release to rebuild
 
-* Fri Mar 28 2025 Kanishk Bansal <kanbansal@microsoft.com> - 10.25.1-3
-- Patch CVE-2025-30204
-
 * Tue Mar 04 2025 Kanishk Bansal <kanbansal@microsoft.com> - 10.25.1-2
 - Fix CVE-2025-22868 with an upstream patch
 
