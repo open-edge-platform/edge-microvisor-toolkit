@@ -1,6 +1,6 @@
 Summary:        Edge node registration and trust management
 Name:           node-agent
-Version:        1.6.3
+Version:        1.7.0
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -218,7 +218,7 @@ chmod 750 %{_sysconfdir}/caddy
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
-* Mon May 05 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.6.3-1
+* Wed May 14 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.7.0-1
 - Update release service token handling for anonymous
 
 * Thu Apr 03 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.6.2-1
