@@ -1665,8 +1665,8 @@
                 "python-aiodns",
                 "python-aiohttp",
                 "python-alsa",
-                "python-archspec",
                 "python-apscheduler",
+                "python-archspec",
                 "python-argcomplete",
                 "python-argparse-manpage",
                 "python-astroid",
@@ -2537,11 +2537,27 @@
         "NVIDIA": {
             "license": "[ASL 2.0 License and spec specific licenses](http://www.apache.org/licenses/LICENSE-2.0)",
             "specs": [
+                "fwctl-signed",
+                "ibarr",
+                "ibsim",
+                "iser-signed",
+                "isert-signed",
+                "knem-modules-signed",
                 "libnvidia-container",
+                "mlnx-ethtool",
+                "mlnx-iproute2",
                 "mlnx-nfsrdma-signed",
                 "mlnx-tools",
+                "mlx-steering-dump",
+                "multiperf",
                 "nvidia-container-toolkit",
-                "ofed-scripts"
+                "ofed-docs",
+                "ofed-scripts",
+                "perftest",
+                "rshim",
+                "sockperf",
+                "srp-signed",
+                "xpmem-modules-signed"
             ]
         },
         "NVIDIA (BSD)": {
@@ -2840,7 +2856,6 @@
                 "kernel",
                 "kernel-64k",
                 "kernel-headers",
-                "kernel-ipe",
                 "kernel-uvm",
                 "keyutils",
                 "kmod",
