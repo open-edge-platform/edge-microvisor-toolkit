@@ -28,12 +28,16 @@ approach, as building the *entire toolchain* may take a lot of time. Adding the
 ```bash
 # Clone the repository
 git clone <Microvisor git repo>
+# Example: git clone https://github.com/open-edge-platform/edge-microvisor-toolkit.git
+
+# Enter repository directory
 cd <Microvisor repo>
 
-# Checkout stable branch of Microvisor
-git checkout <latest stable>
+# Checkout stable tag of Microvisor
+git checkout <stable tag>
+# Example: git checkout 3.0.20250411
 
-# Build the tools
+# Enter toolkit folder and build the tools
 cd ./toolkit
 sudo make toolchain REBUILD_TOOLS=y
 ```
