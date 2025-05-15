@@ -5,7 +5,7 @@ describes in detail how to quickly install and try out Edge Microvisor Toolkit o
 
 ## Virtual Machine with Hyper-V
 
-When using Hyper-V you can install the ISO to a virtual hard drive that you create, or
+When using Hyper-V, you can install the ISO to a virtual hard drive that you create, or
 you can attach an existing VHD artifact produced by the build pipeline. See the steps below:
 
 1. From Hyper-V select *Action-> New-> Virtual Machine*.
@@ -30,11 +30,11 @@ you can attach an existing VHD artifact produced by the build pipeline. See the 
 3. Select *Firmware* and adjust the boot order so DVD is the first and Hard Drive is second.
 4. Select *Apply* to apply all changes.
 5. Right click your VM and select *Connect...*. Select *Start*.
-6. Follow the Installer prompts to install your image.
+6. Follow the installer prompts to install your image.
 7. When installation completes, select *Restart* to reboot the machine. The installation ISO
    will be automatically ejected.
 8. When prompted, sign in to your Edge Microvisor Toolkit using the username and password
-   provisioned through the Installer.
+   provisioned through the installer.
 
 > **Note:**
   When using an existing VHD, the default username/password is root/root.
@@ -53,7 +53,7 @@ you can attach an existing VHD artifact produced by the build pipeline. See the 
 ### Converting Image File to VDI
 
 You can convert a VHD or RAW image to the VDI format, which is natively supported by
-VirtualBox. Simply, navigate to the installation folder of VirtualBox, e.g.
+VirtualBox. Simply navigate to the installation folder of VirtualBox, e.g.
 `C:\Program Files\Oracle\VirtualBox` and run the commands below in a terminal to convert:
 
 a VHD disk image:
@@ -108,10 +108,10 @@ sudo usermod -a -G libvirt $(whoami)
 
 You will need:
 
-- [EMT-D 3.0](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso) latest release
-- USB flash drive (min. 8GB)
-- Access to the target machine
-- Optional: Monitor and keyboard, or BMC/iDRAC/iKVM access
+- [EMT-D 3.0](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso) latest release.
+- USB flash drive (min. 8GB).
+- Access to the target machine.
+- Optional: Monitor and keyboard, or BMC/iDRAC/iKVM access.
 
 ### Create Bootable USB (Linux)
 
@@ -126,7 +126,7 @@ lsblk
 ```
 
 Compare the output before and after inserting your USB to identify its device name
-(e.g., /dev/sdb). Flash the ISO Image. Use the `dd` command to write the ISO image.
+(e.g., `/dev/sdb`). Flash the ISO Image. Use the `dd` command to write the ISO image.
 Replace `/path/to/your.iso` with the ISO’s location and `/dev/sdb` with your USB device.
 
 ```bash
@@ -144,53 +144,53 @@ Then, safely remove the USB drive.
 
 ### Create Bootable USB (Windows)
 
-On Windows, download and install an ISO writer software such as [Rufus](https://rufus.ie/en).
+On Windows, download and install ISO writer software such as [Rufus](https://rufus.ie/en).
 
-1. Insert the USB device (8GB or more)
-1. Launch Rufus
-1. Select the USB drive from the dropdown list
-1. Boot selection: Select your EMT 3.0 iso file
-1. Image option: Leave default or choose 'Standard Installation'
-1. Partition scheme: MBR (for legacy BIOS) or GPT (for UEFI)
-1. File system: FAT32 (recommended)
-1. Click Start
-1. Confirm warnings about data being erased
-1. Wait for completion and safely eject the USB
+1. Insert the USB device (8GB or more).
+1. Launch Rufus.
+1. Select the USB drive from the dropdown list.
+1. Boot selection: Select your EMT 3.0 ISO file.
+1. Image option: Leave default or choose *Standard Installation*.
+1. Partition scheme: MBR (for legacy BIOS) or GPT (for UEFI).
+1. File system: FAT32 (recommended).
+1. Click *Start*.
+1. Confirm warnings about data being erased.
+1. Wait for completion and safely eject the USB.
 
 ### Boot and Install Edge Microvisor Toolkit
 
 **Boot from USB**
-1. Insert the USB into the target machine
-1. Enter BIOS/Boot menu
-1. Choose USB drive as the boot device
+1. Insert the USB into the target machine.
+1. Enter BIOS/Boot menu.
+1. Choose USB drive as the boot device.
 
 **Select Installer**
-1. Choose 'Terminal Installer' or 'Graphical Installer' when prompted ![Select installer](../assets/01-select-installer.png)
+1. Choose *Terminal Installer* or *Graphical Installer* when prompted ![Select installer](../assets/01-select-installer.png)
 
 **Follow Installation Prompts**
-1. Accept license
+1. Accept license.
 1. Select target disc to install EMT on
-   ![Partition](../assets/02-partition-config.png)
-1. Skip disc encryption (optional)
+   ![Partition](../assets/02-partition-config.png).
+1. Skip disc encryption (optional).
 1. Host name - keep as default
-   ![System config](../assets/03-system-config.png)
-1. Create username and password
-1. Confirm and begin installation
+   ![System config](../assets/03-system-config.png).
+1. Create username and password.
+1. Confirm and begin installation.
 
 **Restart the System**
-1. After completion, click Restart
-   ![Complete](../assets/04-install-complete.png)
-1. EMT image will boot from the installed disc
+1. After completion, click *Restart*
+   ![Complete](../assets/04-install-complete.png).
+1. EMT image will boot from the installed disc.
 
 ### Post Installation Check
 
-After reboot, login and check the EMT OS version. Run the following command
+After reboot, login and check the EMT OS version. Run the following command:
 
 ```bash
 cat /etc/os-release
 ```
 
-You should see EMT image version. **Installation Complete**. You are
+You should see the EMT image version. **Installation Complete**. You are
 now ready to use the EMT 3.0 image!
 
 ## Next
