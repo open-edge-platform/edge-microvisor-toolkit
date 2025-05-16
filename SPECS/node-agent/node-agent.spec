@@ -15,9 +15,6 @@ Source5:        node_agent.fc
 BuildRequires:  golang >= 1.24.1
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
-Requires:       caddy
-Requires:       incron
-Requires:       openssl
 Requires:       (%{name}-selinux if selinux-policy-targeted)
 
 %global debug_package   %{nil}
@@ -72,12 +69,6 @@ cp configs/san.conf %{buildroot}%{_sysconfdir}/edge-node/node/confs
 mkdir -p %{buildroot}%{_sysconfdir}/sudoers.d
 cp configs/sudoers.d/node-agent %{buildroot}%{_sysconfdir}/sudoers.d
 
-mkdir -p %{buildroot}%{_sysconfdir}/caddy
-cp configs/containerd.caddy %{buildroot}%{_sysconfdir}/caddy
-
-mkdir -p %{buildroot}%{_sysconfdir}/incron.d
-cp configs/incron-caddy.conf %{buildroot}%{_sysconfdir}/incron.d
-
 mkdir -p %{buildroot}%{_defaultlicensedir}/%{name}
 cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 
@@ -86,9 +77,6 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 
 mkdir -p %{buildroot}%{_rundir}/node-agent
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node
-mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/caddy
-mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/caddy/certs
-mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/caddy/.keys
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/client-credentials
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/attestation-manager
@@ -114,14 +102,9 @@ mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/release-service
 %config %attr(-, node-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 %config %attr(-, node-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/%{name}
 %config %{_sysconfdir}/sudoers.d/node-agent
-%config %{_sysconfdir}/caddy/containerd.caddy
-%config %{_sysconfdir}/incron.d/incron-caddy.conf
 
 %dir %attr(0750, node-agent, bm-agents) %{_rundir}/node-agent
 %dir %{_sysconfdir}/intel_edge_node
-%dir %{_sysconfdir}/intel_edge_node/caddy
-%dir %{_sysconfdir}/intel_edge_node/caddy/certs
-%dir %{_sysconfdir}/intel_edge_node/caddy/.keys
 %dir %{_sysconfdir}/intel_edge_node/client-credentials
 %dir %{_sysconfdir}/intel_edge_node/tokens
 %dir %{_sysconfdir}/intel_edge_node/tokens/attestation-manager
@@ -139,18 +122,11 @@ mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/release-service
 %pre
 %sysusers_create_package %{name} %{SOURCE3}
 
-%post
-if ! grep -q "EnvironmentFile" "%{_unitdir}/caddy.service"; then
-    sed -i '/^\[Service\]$/a EnvironmentFile=\/etc\/environment' %{_unitdir}/caddy.service
-    sed -i '/^\[Service\]$/a EnvironmentFile=\/etc\/edge-node\/node\/agent_variables' %{_unitdir}/caddy.service
-fi
-
 # Add node-agent to the list of allowed user to incron
 if [ ! -e "%{_sysconfdir}/incron.allow" ] || ! grep -q "node-agent" "%{_sysconfdir}/incron.allow"; then
     echo "node-agent" >> %{_sysconfdir}/incron.allow
 fi
 
-chmod -R 710 %{_sysconfdir}/intel_edge_node/caddy
 chmod 700 %{_sysconfdir}/intel_edge_node/client-credentials
 chmod 600 %{_sysconfdir}/intel_edge_node/client-credentials/*
 chmod -R 750 %{_sysconfdir}/intel_edge_node/tokens
@@ -163,42 +139,16 @@ chmod 750 %{_rundir}/node-agent
 touch %{_sysconfdir}/intel_edge_node/tokens/release-service/access_token
 chmod 640 %{_sysconfdir}/intel_edge_node/tokens/release-service/access_token
 
-# create self signed cert for Containerd with SAN
-if [ ! -e "%{_sysconfdir}/intel_edge_node/caddy/certs/caddy-containerd-cert.pem" ]; then
-    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout %{_sysconfdir}/intel_edge_node/caddy/.keys/caddy-containerd-key.pem -out %{_sysconfdir}/intel_edge_node/caddy/certs/caddy-containerd-cert.pem -config %{_sysconfdir}/edge-node/node/confs/san.conf -extensions 'v3_req'
-    cp %{_sysconfdir}/intel_edge_node/caddy/certs/caddy-containerd-cert.pem %{_sysconfdir}/pki/ca-trust/source/anchors/caddy-containerd-cert.crt
-fi
-
-chmod 600 %{_sysconfdir}/intel_edge_node/caddy/.keys/caddy-containerd-key.pem
-
 # Entry for containerd proxy, Not adding to no_proxy as .internal expected
 if ! grep -q "127.0.0.1 localhost.internal localhost" "%{_sysconfdir}/hosts"; then
     echo "127.0.0.1 localhost.internal localhost" >> %{_sysconfdir}/hosts
 fi
 
-update-ca-trust
-
-# Add single line in main Caddyfile to use the other *.caddy files
-echo "import %{_sysconfdir}/caddy/*.caddy" > %{_sysconfdir}/caddy/Caddyfile
-
 # Update file/dir ownership
 chown -R node-agent:bm-agents %{_sysconfdir}/intel_edge_node
-chown -R caddy:caddy %{_sysconfdir}/intel_edge_node/caddy
-usermod -a -G bm-agents caddy
-
-chmod 750 %{_sysconfdir}/caddy
-chmod 640 %{_sysconfdir}/caddy/*
-chown -R node-agent:bm-agents %{_sysconfdir}/caddy
-
-# Restart incron to ensure it loads the new rule
-systemctl restart incrond
-# Restart caddy as systemd service file is updated
-systemctl daemon-reload
-systemctl restart caddy
 
 chmod 644 %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 chmod 744 %{_sysconfdir}/edge-node/node/confs/%{name}
-chmod 750 %{_sysconfdir}/caddy
 
 %systemd_post %{name}.service
 
