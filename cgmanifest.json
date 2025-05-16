@@ -14462,8 +14462,8 @@
         "type": "other",
         "other": {
           "name": "node-agent",
-          "version": "1.6.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.6.2.tar.gz"
+          "version": "1.7.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.7.2.tar.gz"
         }
       }
     },
