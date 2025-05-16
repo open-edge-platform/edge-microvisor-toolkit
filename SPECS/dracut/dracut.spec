@@ -4,7 +4,7 @@
 Summary:        dracut to create initramfs
 Name:           dracut
 Version:        102
-Release:        12%{?dist}
+Release:        13%{?dist}
 # The entire source code is GPLv2+
 # except install/* which is LGPLv2+
 License:        GPLv2+ AND LGPLv2+
@@ -31,6 +31,8 @@ Source11:       50-noxattr.conf
 Source12:       90livenet/azl-liveos-artifacts-download.service
 Source13:       90livenet/azl-liveos-artifacts-download.sh
 Source14:       90overlayfs/azl-configure-selinux.sh
+Source15:       90tmpfsroot/tmpfsroot-module-setup.sh
+Source16:       90tmpfsroot/tmpfsroot-mount.sh
 
 # allow-liveos-overlay-no-user-confirmation-prompt.patch has been introduced by
 # the Azure Linux team to allow skipping the user confirmation prompt during
@@ -156,6 +158,13 @@ Requires:       %{name} = %{version}-%{release}
 %description systemd-cryptsetup
 This package contains dracut module needed to build an initramfs with systemd-cryptsetup enabled.
 
+%package tmpfsroot
+Summary:        dracut module to support root on tmpfs
+Requires:       %{name} = %{version}-%{release}
+
+%description tmpfsroot
+This package contains dracut module root on tmpfs.
+
 %package virtio
 Summary:        dracut configuration needed to build an initramfs with virtio guest drivers
 Requires:       %{name} = %{version}-%{release}
@@ -231,6 +240,10 @@ mkdir -p %{buildroot}%{dracutlibdir}/modules.d/20overlayfs/
 install -p -m 0755 %{SOURCE4} %{buildroot}%{dracutlibdir}/modules.d/20overlayfs/
 install -p -m 0755 %{SOURCE5} %{buildroot}%{dracutlibdir}/modules.d/20overlayfs/
 
+mkdir -p %{buildroot}%{dracutlibdir}/modules.d/90tmpfsroot/
+install -p -m 0755 %{SOURCE15} %{buildroot}%{dracutlibdir}/modules.d/90tmpfsroot/module-setup.sh
+install -p -m 0755 %{SOURCE16} %{buildroot}%{dracutlibdir}/modules.d/90tmpfsroot/
+
 touch %{buildroot}%{_var}/opt/%{name}/log/%{name}.log
 ln -srv %{buildroot}%{_var}/opt/%{name}/log/%{name}.log %{buildroot}%{_var}/log/
 
@@ -251,6 +264,7 @@ ln -srv %{buildroot}%{_bindir}/%{name} %{buildroot}%{_sbindir}/%{name}
 %exclude %{_libdir}/kernel
 %exclude %{dracutlibdir}/modules.d/20overlayfs
 %exclude %{dracutlibdir}/modules.d/90systemd-cryptsetup
+%exclude %{dracutlibdir}/modules.d/90tmpfsroot
 %{_libdir}/%{name}/%{name}-init.sh
 %{_datadir}/pkgconfig/%{name}.pc
 %{dracutlibdir}/%{name}-functions.sh
@@ -319,6 +333,10 @@ ln -srv %{buildroot}%{_bindir}/%{name} %{buildroot}%{_sbindir}/%{name}
 %dir %{dracutlibdir}/modules.d/90systemd-cryptsetup
 %{dracutlibdir}/modules.d/90systemd-cryptsetup/*
 
+%files tmpfsroot
+%dir %{dracutlibdir}/modules.d/90tmpfsroot
+%{dracutlibdir}/modules.d/90tmpfsroot/*
+
 %files virtio
 %defattr(-,root,root,0755)
 %{_sysconfdir}/dracut.conf.d/00-virtio.conf
@@ -337,6 +355,9 @@ ln -srv %{buildroot}%{_bindir}/%{name} %{buildroot}%{_sbindir}/%{name}
 %dir %{_sharedstatedir}/%{name}/overlay
 
 %changelog
+* Fri May 16 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 102-13
+- Add tmpfsroot dracut module
+
 * Thu Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 102-12
 - merge from Azure Linux tag 3.0.20250423-3.0
 - Add fix for systemd-cryptsetup module to be included in initramfs when needed
