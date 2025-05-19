@@ -1,6 +1,6 @@
 Summary:        Installs/uninstalls orchestration software on an edge node using command obtained from Cluster Orchestrator.
 Name:           cluster-agent
-Version:        1.7.0
+Version:        1.7.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
