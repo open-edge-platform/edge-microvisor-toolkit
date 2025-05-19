@@ -64,7 +64,6 @@ cp %{SOURCE1} %{buildroot}%{_unitdir}
 install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
 cp configs/node-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 cp %{SOURCE2} %{buildroot}%{_sysconfdir}/edge-node/node/confs/%{name}
-cp configs/san.conf %{buildroot}%{_sysconfdir}/edge-node/node/confs
 
 mkdir -p %{buildroot}%{_sysconfdir}/sudoers.d
 cp configs/sudoers.d/node-agent %{buildroot}%{_sysconfdir}/sudoers.d
