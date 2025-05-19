@@ -122,11 +122,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/release-service
 %pre
 %sysusers_create_package %{name} %{SOURCE3}
 
-# Add node-agent to the list of allowed user to incron
-if [ ! -e "%{_sysconfdir}/incron.allow" ] || ! grep -q "node-agent" "%{_sysconfdir}/incron.allow"; then
-    echo "node-agent" >> %{_sysconfdir}/incron.allow
-fi
-
+%post
 chmod 700 %{_sysconfdir}/intel_edge_node/client-credentials
 chmod 600 %{_sysconfdir}/intel_edge_node/client-credentials/*
 chmod -R 750 %{_sysconfdir}/intel_edge_node/tokens
@@ -134,15 +130,6 @@ chmod -R 750 %{_sysconfdir}/intel_edge_node/tokens
 # Ensure path exists when node-agent starts
 chown node-agent:bm-agents %{_rundir}/node-agent
 chmod 750 %{_rundir}/node-agent
-
-# Ensure file exists when incron starts
-touch %{_sysconfdir}/intel_edge_node/tokens/release-service/access_token
-chmod 640 %{_sysconfdir}/intel_edge_node/tokens/release-service/access_token
-
-# Entry for containerd proxy, Not adding to no_proxy as .internal expected
-if ! grep -q "127.0.0.1 localhost.internal localhost" "%{_sysconfdir}/hosts"; then
-    echo "127.0.0.1 localhost.internal localhost" >> %{_sysconfdir}/hosts
-fi
 
 # Update file/dir ownership
 chown -R node-agent:bm-agents %{_sysconfdir}/intel_edge_node
