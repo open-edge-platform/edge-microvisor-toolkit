@@ -89,7 +89,7 @@ update_manifest() {
     arch="$2"
     basename=$(basename "$filepath")
 
-    url="https://raw.githubusercontent.com/open-edge-platform/edge-microvisor-toolkit/commits/$GIT_COMMIT/toolkit/resources/manifests/package/${basename}"
+    url="https://raw.githubusercontent.com/open-edge-platform/edge-microvisor-toolkit/$GIT_COMMIT/toolkit/resources/manifests/package/${basename}"
     #url="https://raw.githubusercontent.com/microsoft/CBL-Mariner/$GIT_COMMIT/toolkit/resources/manifests/package/${basename}"
 
     echo "Checking for updates to $basename manifest from $url"

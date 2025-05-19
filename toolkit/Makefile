@@ -172,6 +172,10 @@ include $(SCRIPTS_DIR)/utils.mk
 
 ######## REMAINING BUILD FLAGS ########
 
+# Set the variables for build number, distro tag, etc
+include $(SCRIPTS_DIR)/build_tag.mk
+include $(SCRIPTS_DIR)/build_tag_imagecustomizer.mk
+
 # Daily build ID and repo configuration
 include $(SCRIPTS_DIR)/daily_build.mk
 
@@ -205,10 +209,6 @@ include $(SCRIPTS_DIR)/timestamp.mk
 
 # Profiling & Tracing feature
 include $(SCRIPTS_DIR)/profile.mk
-
-# Set the variables for build number, distro tag, etc
-include $(SCRIPTS_DIR)/build_tag.mk
-include $(SCRIPTS_DIR)/build_tag_imagecustomizer.mk
 
 # go utilities with:
 #   go-tools, clean-go-tools, go-tidy-all (tidy go utilities before committing) go-test-coverage
