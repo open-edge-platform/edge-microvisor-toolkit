@@ -55,8 +55,7 @@ monitoring tools, standard cloud-edge (CNCF) software, and more.
 
 ### Edge Microvisor Toolkit Standalone
 
-The ISO installer for the standalone Edge Node is available for download at
-[Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/package/edge_microvisor_toolkit_standalone_node).
+[Go to Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/package/edge_microvisor_toolkit_standalone_node) and download a standalone Edge Node ISO installer.
 
 The standalone edge node uses the standard immutable build and provides an ISO
 image that can be flashed to a USB device and installed on edge nodes. It
