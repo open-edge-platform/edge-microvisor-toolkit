@@ -136,6 +136,9 @@ chown -R node-agent:bm-agents %{_sysconfdir}/intel_edge_node
 chmod 644 %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 chmod 744 %{_sysconfdir}/edge-node/node/confs/%{name}
 
+# Remove client-proxy from monitoring
+sed -i '/client-proxy/{N;d;}' %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
+
 %systemd_post %{name}.service
 
 %preun
