@@ -1,7 +1,7 @@
 Summary:        The command line for DC/OS
 Name:           dcos-cli
 Version:        1.2.0
-Release:        17%{?dist}
+Release:        18%{?dist}
 License:        Apache-2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -10,6 +10,7 @@ URL:            https://github.com/dcos/dcos-cli
 Source0:        https://github.com/dcos/dcos-cli/archive/refs/tags/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Patch0:         CVE-2020-26160.patch
 Patch1:         CVE-2024-28180.patch
+Patch2:         CVE-2025-27144.patch
 BuildRequires:  golang >= 1.17.1
 BuildRequires:  git
 %global debug_package %{nil}
@@ -46,6 +47,10 @@ go test -mod=vendor
 %{_bindir}/dcos
 
 %changelog
+* Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.2.0-18
+- merge from Azure Linux 3.0.20250423.
+- Fix CVE-2025-27144 with an upstream patch
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.2.0-17
 - Bump Release to rebuild
 

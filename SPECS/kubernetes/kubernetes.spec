@@ -10,7 +10,7 @@
 Summary:        Microsoft Kubernetes
 Name:           kubernetes
 Version:        1.30.10
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        ASL 2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -23,6 +23,7 @@ Patch1:         CVE-2024-45338.patch
 Patch2:         CVE-2025-27144.patch
 Patch3:         CVE-2025-22868.patch
 Patch4:         CVE-2025-22869.patch
+Patch5:         CVE-2025-30204.patch
 BuildRequires:  flex-devel
 BuildRequires:  glibc-static >= 2.38-9%{?dist}
 BuildRequires:  golang
@@ -95,8 +96,7 @@ Summary:        Kubernetes pause
 Pause component for Microsoft Kubernetes %{version}.
 
 %prep
-%setup -q -c -n %{name}
-%autopatch -p1
+%autosetup -p1 -c -n %{name}
 
 %build
 # set version information
@@ -275,6 +275,10 @@ fi
 %{_exec_prefix}/local/bin/pause
 
 %changelog
+* Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.30.10-5
+- merge from Azure Linux tag 3.0.20250423-3.0
+- Patch CVE-2025-30204
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.30.10-4
 - Bump Release to rebuild
 

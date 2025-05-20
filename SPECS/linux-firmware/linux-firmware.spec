@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20250311
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -80,6 +80,7 @@ cp -r rsi %{buildroot}%{_firmwarepath}
 cp rsi_91x.fw %{buildroot}%{_firmwarepath}
 cp -r ath10k %{buildroot}%{_firmwarepath}
 cp -r i915 %{buildroot}%{_firmwarepath}
+cp -r xe %{buildroot}%{_firmwarepath}
 cp -r intel %{buildroot}%{_firmwarepath}
 cp iwlwifi-8000C-*.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-so-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
@@ -115,6 +116,7 @@ cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %license LICENSE.ipu3_firmware LICENCE.ibt_firmware LICENCE.fw_sst_0f28
 %license LICENCE.IntcSST2 LICENCE.adsp_sst LICENSE.ice
 %{_firmwarepath}/i915
+%{_firmwarepath}/xe
 %{_firmwarepath}/intel
 
 %files i915
@@ -132,6 +134,8 @@ cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/i915/adls_dmc_ver2_01.bin
 %{_firmwarepath}/i915/dg2_dmc_ver2_08.bin
 %{_firmwarepath}/i915/mtl_gsc_1.bin
+%{_firmwarepath}/xe/bmg_guc_70.bin
+%{_firmwarepath}/xe/bmg_huc.bin
 
 %files iwlwifi
 %defattr(-,root,root)
@@ -145,6 +149,9 @@ cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/intel/ice
 
 %changelog
+* Fri May 16 2025 Junxiao Chang <junxiao.chang@intel.com> - 20250311-3
+- Added B580 GPU firmware.
+
 * Fri Mar 21 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 20250311-2
 - Added ice package for Intel Ethernet controller.
 

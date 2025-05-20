@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
+---
 name: Spec Linting
 
 on:
@@ -16,7 +16,7 @@ permissions: read-all
 jobs:
   spec-lint:
     name: Spec Linting
-    runs-on: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
 
     steps:
       # Checkout the branch of our repo that triggered this action
@@ -34,7 +34,7 @@ jobs:
           echo "Merging ${{ github.sha }} into $base_ref"
         env:
           BASE_REF: ${{ github.base_ref }}
-          
+
       - name: Get base commit for Pushes
         if: ${{ github.event_name == 'push' }}
         run: |
