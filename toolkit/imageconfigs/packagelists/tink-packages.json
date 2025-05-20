@@ -5,6 +5,7 @@
         "fluent-bit",
         "caddy",
         "rng-tools",
+        "tink-worker",
         "containerd"
     ]
 }

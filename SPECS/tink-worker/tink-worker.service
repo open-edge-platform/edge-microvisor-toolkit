@@ -1,0 +1,16 @@
+[Unit]
+Description=tinkerbell worker Service
+Documentation=https://github.com/tinkerbell/tink
+After=network.target
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/tink-worker
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600s
+RestartSec=30
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
