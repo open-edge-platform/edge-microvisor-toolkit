@@ -50,7 +50,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        27%{?dist}
+Release:        28%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -1233,6 +1233,9 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+* Tue May 20 2025 kintali Jayanth <kintalix.jayanth@intel.com> - 255-28
+- Change value of kernel.yama.ptrace_scope to 0 (Normal ptrace security permissions).
+
 * Fri Mar 07 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 255-27
 - Bump up the version on merge frm AZL tag 3.0.20250206-3.0
 - adding patch for enhancing DNSSEC signature validation integrity
