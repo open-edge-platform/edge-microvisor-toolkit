@@ -9,7 +9,7 @@ on:
 permissions: {}
 
 jobs:
-  zizmor:
+  run-zizmor-scan:
     name: zizmor latest via PyPI
     runs-on: ubuntu-latest
     permissions:
