@@ -74,7 +74,8 @@
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base-rt.json",
                 "packagelists/intel-wireless.json",
-                "packagelists/os-ab-update.json"
+                "packagelists/os-ab-update.json",
+                "packagelists/docker.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
