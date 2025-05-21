@@ -2607,6 +2607,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "device-discovery",
+          "version": "1.17.2",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tinker-actions/1.17.2.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "device-mapper-multipath",
           "version": "0.9.6",
           "downloadUrl": "https://github.com/opensvc/multipath-tools/archive/refs/tags/0.9.6.tar.gz"
@@ -3380,6 +3390,16 @@
           "name": "erlang",
           "version": "26.2.5.9",
           "downloadUrl": "https://github.com/erlang/otp/archive/OTP-26.2.5.9/otp-OTP-26.2.5.9.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "erofs-utils",
+          "version": "1.8.5",
+          "downloadUrl": "https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/snapshot/erofs-utils-1.8.5.tar.gz"
         }
       }
     },
@@ -16182,16 +16202,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "erofs-utils",
-          "version": "1.8.5",
-          "downloadUrl": "https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/snapshot/erofs-utils-1.8.5.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "pcaudiolib",
           "version": "1.2",
           "downloadUrl": "https://github.com/espeak-ng/pcaudiolib/archive/1.2.tar.gz"
@@ -16432,16 +16442,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "perl-BDB",
-          "version": "1.92",
-          "downloadUrl": "https://cpan.metacpan.org/authors/id/M/ML/MLEHMANN/BDB-1.92.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "perl-B-Debug",
           "version": "1.26",
           "downloadUrl": "https://cpan.metacpan.org/authors/id/R/RU/RURBAN/B-Debug-1.26.tar.gz"
@@ -16495,6 +16495,16 @@
           "name": "perl-bareword-filehandles",
           "version": "0.007",
           "downloadUrl": "https://cpan.metacpan.org/authors/id/I/IL/ILMARI/bareword-filehandles-0.007.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "perl-BDB",
+          "version": "1.92",
+          "downloadUrl": "https://cpan.metacpan.org/authors/id/M/ML/MLEHMANN/BDB-1.92.tar.gz"
         }
       }
     },
@@ -25202,16 +25212,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "python-sphinxygen",
-          "version": "1.0.2",
-          "downloadUrl": "https://gitlab.com/drobilla/sphinxygen/-/archive/v1.0.2/sphinxygen-v1.0.2.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "python-sphinx-epytext",
           "version": "0.0.4",
           "downloadUrl": "https://files.pythonhosted.org/packages/source/s/sphinx-epytext/sphinx-epytext-0.0.4.tar.gz"
@@ -25345,6 +25345,16 @@
           "name": "python-sphinxcontrib-websupport",
           "version": "1.2.7",
           "downloadUrl": "https://github.com/sphinx-doc/sphinxcontrib-websupport/archive/1.2.7.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "python-sphinxygen",
+          "version": "1.0.2",
+          "downloadUrl": "https://gitlab.com/drobilla/sphinxygen/-/archive/v1.0.2/sphinxygen-v1.0.2.tar.gz"
         }
       }
     },
