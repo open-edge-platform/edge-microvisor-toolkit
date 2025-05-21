@@ -426,7 +426,7 @@
         "other": {
           "name": "apache-commons-logging",
           "version": "1.2",
-          "downloadUrl": "http://www.apache.org/dist/commons/logging/source/commons-logging-1.2-src.tar.gz"
+          "downloadUrl": "https://archive.apache.org/dist/commons/logging/source/commons-logging-1.2-src.tar.gz"
         }
       }
     },
@@ -1178,7 +1178,7 @@
         "other": {
           "name": "bmon",
           "version": "4.0",
-          "downloadUrl": "https://github.com/tgraf/bmon/archive/bmon-4.0.tar.gz"
+          "downloadUrl": "https://github.com/tgraf/bmon/releases/download/v4.0/bmon-4.0.tar.gz"
         }
       }
     },
@@ -1847,8 +1847,8 @@
         "type": "other",
         "other": {
           "name": "cluster-agent",
-          "version": "1.7.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.7.0.tar.gz"
+          "version": "1.7.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.7.1.tar.gz"
         }
       }
     },
@@ -2639,7 +2639,7 @@
         "other": {
           "name": "dialog",
           "version": "1.3",
-          "downloadUrl": "ftp://ftp.invisible-island.net/dialog/dialog-1.3-20180621.tgz"
+          "downloadUrl": "https://invisible-island.net/archives/dialog/dialog-1.3-20180621.tgz"
         }
       }
     },
@@ -3589,7 +3589,7 @@
         "other": {
           "name": "file",
           "version": "5.45",
-          "downloadUrl": "http://ftp.astron.com/pub/file/file-5.45.tar.gz"
+          "downloadUrl": "http://astron.com/pub/file/file-5.45.tar.gz"
         }
       }
     },
@@ -3901,7 +3901,7 @@
         "other": {
           "name": "freetds",
           "version": "1.4.10",
-          "downloadUrl": "ftp://ftp.freetds.org/pub/freetds/stable/freetds-1.4.10.tar.bz2"
+          "downloadUrl": "https://www.freetds.org/files/stable/freetds-1.4.10.tar.bz2"
         }
       }
     },
@@ -4420,8 +4420,8 @@
         "type": "other",
         "other": {
           "name": "glib",
-          "version": "2.78.1",
-          "downloadUrl": "https://ftp.gnome.org/pub/gnome/sources/glib/2.78/glib-2.78.1.tar.xz"
+          "version": "2.78.6",
+          "downloadUrl": "https://ftp.gnome.org/pub/gnome/sources/glib/2.78/glib-2.78.6.tar.xz"
         }
       }
     },
@@ -7712,7 +7712,7 @@
         "other": {
           "name": "ipxe",
           "version": "1.21.1",
-          "downloadUrl": "https://github.com/ipxe/ipxe/archive/ipxe-1.21.1.tar.gz"
+          "downloadUrl": "https://github.com/ipxe/ipxe/archive/refs/tags/v1.21.1.tar.gz"
         }
       }
     },
@@ -12251,8 +12251,8 @@
         "type": "other",
         "other": {
           "name": "libxslt",
-          "version": "1.1.39",
-          "downloadUrl": "https://download.gnome.org/sources/libxslt/1.1/libxslt-1.1.39.tar.xz"
+          "version": "1.1.43",
+          "downloadUrl": "https://download.gnome.org/sources/libxslt/1.1/libxslt-1.1.43.tar.xz"
         }
       }
     },
@@ -13913,7 +13913,7 @@
         "other": {
           "name": "mtools",
           "version": "4.0.43",
-          "downloadUrl": "ftp://ftp.gnu.org/gnu/mtools/mtools-4.0.43.tar.gz"
+          "downloadUrl": "http://ftp.gnu.org/gnu/mtools/mtools-4.0.43.tar.gz"
         }
       }
     },
@@ -14572,8 +14572,8 @@
         "type": "other",
         "other": {
           "name": "node-agent",
-          "version": "1.7.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.7.1.tar.gz"
+          "version": "1.7.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.7.2.tar.gz"
         }
       }
     },
@@ -14784,6 +14784,16 @@
           "name": "nvidia-container-toolkit",
           "version": "1.17.4",
           "downloadUrl": "https://github.com/NVIDIA/nvidia-container-toolkit/archive/v1.17.4.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "nvidia-data-center-driver",
+          "version": "570.133.20",
+          "downloadUrl": "https://us.download.nvidia.com/tesla/570.133.20/NVIDIA-Linux-x86_64-570.133.20.run"
         }
       }
     },
@@ -26725,7 +26735,7 @@
         "other": {
           "name": "rt-tests",
           "version": "2.6",
-          "downloadUrl": "https://mirrors.edge.kernel.org/pub/linux/utils/rt-tests/rt-tests-2.6.tar.xz"
+          "downloadUrl": "https://mirrors.edge.kernel.org/pub/linux/utils/rt-tests/older/rt-tests-2.6.tar.gz"
         }
       }
     },

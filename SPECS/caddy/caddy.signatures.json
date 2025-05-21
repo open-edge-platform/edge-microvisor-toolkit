@@ -1,7 +1,7 @@
 {
   "Signatures": {
     "Caddyfile": "c6e7715a31ed0f848905aa014683aa2c6f21e67309ba6c3a56d4726a6ddc1671",
-    "caddy.service": "83802e1a5284d492c3f3efd851b176b26856b321389e95bfbb751b6c9e4be216",
+    "caddy.service": "8ae211e682bb4dfe4c9f3638824661cd2748b448dcb26271f0a1a9f59590c4c3",
     "caddy-api.service": "15e8707b9d2db29bbd0d1d36cad04835512f60bfb567f76997b902457083e431",
     "caddy.sysusers": "b244d33b92833a3c3c186337579cb24ce29289d7c6a72ebde447b3ae1c79fd4f",
     "create-vendor-tarball.sh": "70b325f869e53dc297cf003bc8eabe43fcf00fcfaf457b178ed45e1127aaf662",
@@ -9,7 +9,6 @@
     "poweredby-white.png": "e128419a13a91428ea9985fd54c91b8e80061c4d72b4ee913e616b3c823fcdd6",
     "0001-Disable-commands-that-can-alter-the-binary.patch": "1ef152b99af5a3a549254c845145ea9142abd571fb92c370acb3604dc77a1415",
     "caddy-2.9.1.tar.gz": "beb52478dfb34ad29407003520d94ee0baccbf210d1af72cebf430d6d7dd7b63",
-    "caddy-2.9.1-vendor.tar.gz": "3a7bc2b669f1cc55273d9486fd651473ca5de02131c4de292bffac0aaab82837",
-    "post-caddy.sh": "0cdf19b839f16a0108466d79d7d98a5da30c094c207026c9336ada586e256fbb"
+    "caddy-2.9.1-vendor.tar.gz": "3a7bc2b669f1cc55273d9486fd651473ca5de02131c4de292bffac0aaab82837"
   }
 }

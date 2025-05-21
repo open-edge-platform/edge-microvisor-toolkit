@@ -3,7 +3,7 @@
 Summary:        Web server with automatic HTTPS
 Name:           caddy
 Version:        2.9.1
-Release:        10%{?dist}
+Release:        11%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 # main source code is Apache-2.0
@@ -15,7 +15,6 @@ Source0:        https://%{goipath}/archive/v%{version}/caddy-%{version}.tar.gz
 # vendored dependencies
 Source1:        caddy-%{version}-vendor.tar.gz
 Source2:        create-vendor-tarball.sh
-Source3:        post-caddy.sh
 
 # based on reference files upstream
 # https://github.com/caddyserver/dist
@@ -351,10 +350,6 @@ install -D -p -m 0755 -t %{buildroot}%{_bindir} bin/caddy
 install -D -p -m 0644 %{S:10} %{buildroot}%{_sysconfdir}/caddy/Caddyfile
 install -d -m 0755 %{buildroot}%{_sysconfdir}/caddy/Caddyfile.d
 
-# Copy post-caddy script to expected path
-install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
-cp %{SOURCE3} %{buildroot}%{_sysconfdir}/edge-node/node/confs
-
 # systemd units
 install -D -p -m 0644 -t %{buildroot}%{_unitdir} %{S:20} %{S:21}
 
@@ -391,8 +386,6 @@ cd src/%{goipath}
 %pre
 %sysusers_create_compat %{S:22}
 
-%post
-chmod +x %{_sysconfdir}/edge-node/node/confs/%{SOURCE3}
 %systemd_post caddy.service
 
 if [ -x %{_sbindir}/getsebool ]; then
@@ -456,9 +449,11 @@ fi
 %{_datadir}/bash-completion/completions/caddy
 %{_datadir}/zsh/site-functions/_caddy
 %{_datadir}/fish/vendor_completions.d/caddy.fish
-%attr(0755,caddy,caddy) %{_sysconfdir}/edge-node/node/confs/post-caddy.sh
 
 %changelog
+* Mon May 19 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 2.9.1-11
+- Drop post-caddy.sh for service
+
 * Wed Apr 09 2025 Tan Jia Yong <jia.yong.tan@intel.com> - 2.9.1-10
 - Include patch for CVE-2024-45339
 
