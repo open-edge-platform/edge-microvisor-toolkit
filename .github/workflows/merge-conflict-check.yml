@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
+---
 name: Github Merge Conflict Check
 
 on:
@@ -12,7 +12,7 @@ permissions: read-all
 jobs:
   spec-check:
     name: Github Merge Conflict Check
-    runs-on: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
 
     steps:
       # Checkout the branch of our repo that triggered this action

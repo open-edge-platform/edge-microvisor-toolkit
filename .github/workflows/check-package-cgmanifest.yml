@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
+---
 name: Check Package CGManifests
 
 on:
@@ -20,44 +20,44 @@ jobs:
     runs-on: [ubuntu-latest]
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v4
-      with:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
           persist-credentials: false
 
-    # This PR runner uses an older Ubuntu with rpm version 4.17, which doesn't understand some newer macros like %bcond
-    - name: Define missing rpm macros
-      run: |
-        if [[ -n $(rpm --eval '%bcond test 1') ]]; then
-          echo '%bcond() %[ (%{2}) ? "%{expand:%%bcond_without %{1}}" : "%{expand:%%bcond_with %{1}}" ]' > ~/.rpmmacros
-        fi
+      # This PR runner uses an older Ubuntu with rpm version 4.17, which doesn't understand some newer macros like %bcond
+      - name: Define missing rpm macros
+        run: |
+          if [[ -n $(rpm --eval '%bcond test 1') ]]; then
+            echo '%bcond() %[ (%{2}) ? "%{expand:%%bcond_without %{1}}" : "%{expand:%%bcond_with %{1}}" ]' > ~/.rpmmacros
+          fi
 
-    - name: Get base commit for PRs
-      if: ${{ github.event_name == 'pull_request' }}
-      run: |
-        base_ref="${BASE_REF}"
-        git fetch origin $base_ref
-        echo "base_sha=$(git rev-parse origin/$base_ref)" >> "$GITHUB_ENV"
-        echo "Merging ${{ github.sha }} into $base_ref"
-      env:
-        BASE_REF: ${{ github.base_ref }}
+      - name: Get base commit for PRs
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          base_ref="${BASE_REF}"
+          git fetch origin $base_ref
+          echo "base_sha=$(git rev-parse origin/$base_ref)" >> "$GITHUB_ENV"
+          echo "Merging ${{ github.sha }} into $base_ref"
+        env:
+          BASE_REF: ${{ github.base_ref }}
 
-    - name: Get base commit for Pushes
-      if: ${{ github.event_name == 'push' }}
-      run: |
-        git fetch origin ${{ github.event.before }}
-        echo "base_sha=${{ github.event.before }}" >> "$GITHUB_ENV"
-        echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
+      - name: Get base commit for Pushes
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          git fetch origin ${{ github.event.before }}
+          echo "base_sha=${{ github.event.before }}" >> "$GITHUB_ENV"
+          echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
 
-    - name: Get the changed files
-      run: |
-        echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }})'"
-        changed_specs=$(git diff-tree --diff-filter=d  --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }} | { grep "SPECS.*/.*\.spec$" || test $? = 1; } | awk '{printf "%s ", $0}') 
-        echo "Files to validate: '${changed_specs}'"
-        echo "updated-specs=${changed_specs}" >> "$GITHUB_ENV"
+      - name: Get the changed files
+        run: |
+          echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }})'"
+          changed_specs=$(git diff-tree --diff-filter=d  --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }} | { grep "SPECS.*/.*\.spec$" || test $? = 1; } | awk '{printf "%s ", $0}')
+          echo "Files to validate: '${changed_specs}'"
+          echo "updated-specs=${changed_specs}" >> "$GITHUB_ENV"
 
-    - name: Check each spec
-      run: |
-        .github/workflows/overwrite_shell_link.sh
-        .github/workflows/validate-cg-manifest.sh ${{ env.updated-specs }}
-      shell: bash
+      - name: Check each spec
+        run: |
+          .github/workflows/overwrite_shell_link.sh
+          .github/workflows/validate-cg-manifest.sh ${{ env.updated-specs }}
+        shell: bash
