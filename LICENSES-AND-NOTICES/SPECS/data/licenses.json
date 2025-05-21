@@ -2263,6 +2263,7 @@
                 "intel-npu-firmware",
                 "intel-xpu-smi",
                 "node-agent",
+                "nvidia-data-center-driver",
                 "os-ab-update",
                 "otelcol-contrib",
                 "persistent-mount",
