@@ -10,15 +10,13 @@ License:        Apache-2.0
 URL:            https://tinkerbell.org
 Source0:        https://%{tinkworkergitpath}/archive/v%{version}/tink-%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1:        tink-worker.service
-Source2:        vendor.tar.gz
+Source2:        tink-worker-%{version}-vendor.tar.gz
 Patch0:         tink-worker.patch
 
 %{?systemd_requires}
 
 BuildRequires:  golang >= 1.23
 BuildRequires:  systemd-rpm-macros
-
-%global debug_package   %{nil}
 
 %description
 The tink-worker will parse the /proc/cmdline in order to retrieve the specific configuration to start for the current/correct machine.
@@ -31,7 +29,7 @@ It will begin to execute the workflow/actions associated with that machine.
 
 %build
 tar -xzvf %{SOURCE2} -C .
-CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-s -w -extldflags "-static"' -o tink-worker ./cmd/tink-worker
+CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -o tink-worker ./cmd/tink-worker
 
 %install
 # command
@@ -43,9 +41,6 @@ cp %{SOURCE1} %{buildroot}%{_unitdir}
 
 %post
 %systemd_post tink-worker.service
-# The package is allowed to autostart:
-systemctl enable tink-worker.service >/dev/null 2>&1
-systemctl start tink-worker.service >/dev/null 2>&1
 
 %files
 %{_bindir}/tink-worker

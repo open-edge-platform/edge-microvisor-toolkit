@@ -1,11 +1,11 @@
 {
     "packages": [
-        "dracut-tmpfsroot",
-        "tar",
-        "fluent-bit",
         "caddy",
+        "containerd",
+        "dracut-tmpfsroot",
+        "fluent-bit",
         "rng-tools",
-        "tink-worker",
-        "containerd"
+        "tar",
+        "tink-worker"
     ]
 }
