@@ -8,8 +8,8 @@ This section provides an overview of both the operating system and build
 pipelines. Once you have decided on the usage scenarios presented below, you can
 move on to:
 
-- [Build an Edge Microvisor Toolkit Image.](./get-started/building-howto.md)
-- [Install Edge Microvisor Toolkit.](./get-started/installation-howto.md)
+- [Build a new Edge Microvisor Toolkit Image.](./get-started/building-howto.md)
+- [Install Edge Microvisor Toolkit from existing image.](./get-started/installation-howto.md)
 
 ## Usage Scenarios
 
@@ -25,8 +25,8 @@ applications.
 
 To create a custom developer build of Edge Microvisor Toolkit, follow these steps:
 
-- Download the mutable host ISO image from
-  [Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node).
+- [Download the mutable host ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso) from
+  Intel® Edge Software Catalog.
 - Install the mutable host via ISO image that includes only essential pre-installed packages,
   providing a ready-to-use base environment.
 - Install additional RPM packages, using DNF to tailor the OS to your specific needs.
@@ -55,8 +55,7 @@ monitoring tools, standard cloud-edge (CNCF) software, and more.
 
 ### Edge Microvisor Toolkit Standalone
 
-The ISO installer for the standalone Edge Node is available for download at
-[Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/package/edge_microvisor_toolkit_standalone_node).
+[Go to Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/package/edge_microvisor_toolkit_standalone_node) and download a standalone Edge Node ISO installer.
 
 The standalone edge node uses the standard immutable build and provides an ISO
 image that can be flashed to a USB device and installed on edge nodes. It
