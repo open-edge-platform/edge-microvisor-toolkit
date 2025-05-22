@@ -10,7 +10,7 @@ License:        Apache-2.0
 URL:            https://tinkerbell.org
 Source0:        https://%{infraonboarding_gitpath}/archive/refs/tags/tinker-actions/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1:        device-discovery.service
-Source2:        vendor.tar.gz
+Source2:        device-discovery-1.17.2-vendor.tar.gz
 
 %{?systemd_requires}
 
@@ -18,7 +18,6 @@ BuildRequires:  golang >= 1.23
 BuildRequires:  systemd-rpm-macros
 Requires: curl
 
-%global debug_package   %{nil}
 
 %description
 The Device Discovery Agent for Edge Node in order to retrieve the specific configuration to start for the current/correct machine.
@@ -30,7 +29,7 @@ The Device Discovery Agent for Edge Node in order to retrieve the specific confi
 %build
 cd hook-os/device_discovery
 tar -xzvf %{SOURCE2} -C .
-CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-s -w -extldflags "-static"' -gcflags=all="-l -B" -o device-discovery
+CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -gcflags=all="-l -B" -o device-discovery
 
 %install
 # command
@@ -44,9 +43,6 @@ cp %{SOURCE1} %{buildroot}%{_unitdir}
 
 %post
 %systemd_post device-discovery.service
-# The package is allowed to autostart:
-systemctl enable device-discovery.service >/dev/null 2>&1
-systemctl start device-discovery.service >/dev/null 2>&1
 
 %files
 %{_bindir}/device-discovery/*
