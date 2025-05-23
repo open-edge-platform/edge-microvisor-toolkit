@@ -1,4 +1,3 @@
-
 # We ship a .pc file but don't want to have a dep on pkg-config. We
 # strip the automatically generated dep here and instead co-own the
 # directory.
@@ -50,7 +49,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        28%{?dist}
+Release:        29%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -1237,6 +1236,10 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+* Tue May 23 2025 kintali Jayanth <kintalix.jayanth@intel.com> - 255-29
+- Change value of kernel.yama.ptrace_scope to 0 (Normal ptrace
+  security permissions)
+
 * Tue May 20 2025 Basavaraj unniche <basavarajx.unniche@intel.com> - 255-28
 - Add kernel command to disable TCP timestamps.
 
