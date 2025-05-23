@@ -34,7 +34,7 @@ Check out these articles to quickly learn how to work with Edge Microvisor Toolk
 
 **Edge Microvisor Toolkit Developer Node**
 
-* [Downloading and installing the developer tookit ISO image](./docs/developer-guide/get-started.md#edge-microvisor-toolkit-developer).
+* [Downloading and installing the developer toolkit ISO image](./docs/developer-guide/get-started.md#edge-microvisor-toolkit-developer)
 * [Building a custom Edge Microvisor Toolkit image](./docs/developer-guide/get-started/building-howto.md)
 
 **Edge Microvisor Toolkit Standalone Node**
