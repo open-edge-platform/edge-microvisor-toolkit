@@ -19,7 +19,7 @@ of the resulting image, such as:
   immutable image, second stage bootloader provider, purge documentation etc.).
 
 Before you can build OS images you need to build the toolchain and make sure to
-[**install pre-requisites (Ubuntu)**](/toolkit/docs/building/prerequisites-ubuntu.md).
+[**install pre-requisites (Ubuntu)**](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md).
 
 > **Note:**
   Use the *stable* tag instead of *latest* for building the OS images with prebuilt packages.
@@ -359,4 +359,4 @@ Example : `sha256sum ./SPECS/node-agent/env_wrapper.sh`
 ## Next
 
 - Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](sb-howto.md).
-- See the detailed description of how to [create a full build and customize it](/toolkit/docs/building/add-package.md).
+- See the detailed description of how to [create a full build and customize it](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/add-package.md).
