@@ -114,13 +114,13 @@ document.
 Next Steps
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-:doc:`Architecture Overview <./architecture-overview>`
+:doc:`Architecture Overview <./emt-architecture-overview>`
 
 .. toctree::
-    get-started
-    architecture-overview
-    deployment-edge-orchestrator
-    security
-    contribution
-    troubleshooting
-    system-requirements
+    emt-get-started
+    emt-architecture-overview
+    emt-deployment-edge-orchestrator
+    emt-security
+    emt-contribution
+    emt-troubleshooting
+    emt-system-requirements
