@@ -32,14 +32,14 @@ Toolkit are available as Open-Source.
 
 Check out these articles to quickly learn how to work with Edge Microvisor Toolkit.
 
-**EMT Developer Toolkit**: 
+**EMT Developer Toolkit**
 
-* [Downloading and installing the developer tookit ISO image](./docs/developer-guide/get-started.md#edge-microvisor-toolkit-developer).
+* [Downloading and installing the developer toolkit ISO image](./docs/developer-guide/get-started.md#edge-microvisor-toolkit-developer)
 * [Building a custom Edge Microvisor Toolkit image](./docs/developer-guide/get-started/building-howto.md)
 
 **EMT Standalone Toolkit**
 
-* [Downloading and installing the standalone toolkit RAW image]( ./docs/developer-guide/get-started.md#edge-microvisor-toolkit-standalone).
+* [Downloading and installing the standalone toolkit RAW image]( ./docs/developer-guide/get-started.md#edge-microvisor-toolkit-standalone)
 
 **Common**
 
