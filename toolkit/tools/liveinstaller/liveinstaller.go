@@ -162,17 +162,34 @@ func updateBootOrder(installDetails installationDetails) (err error) {
 func runBootEntryCreationCommand(installDetails installationDetails) (err error) {
 	const squashErrors = false
 	program := "efibootmgr"
+
 	cfg := installDetails.finalConfig
+
+	if cfg.DefaultSystemConfig.IsKickStartBoot {
+		logger.Log.Info("Unattended installation: parsing Kickstart file to get disk info")
+
+		kickstartPartitionFile := "/tmp/part-include"
+		disks, _, err := configuration.ParseKickStartPartitionScheme(kickstartPartitionFile)
+		logger.PanicOnError(err, "Failed to parse partition schema")
+
+		// Save config and partition settings
+		cfg.Disks = disks
+		if len(disks) == 0 {
+			return fmt.Errorf("Kickstart parsed disk list is empty")
+		}
+	}
 	bootPartIdx, bootPart := cfg.GetBootPartition()
 	bootDisk := cfg.GetDiskContainingPartition(bootPart)
+
 	commandArgs := []string{
 		"-c",                            // Create a new bootnum and place it in the beginning of the boot order
 		"-d", bootDisk.TargetDisk.Value, // Specify which disk the boot file is on
 		"-p", fmt.Sprintf("%d", bootPartIdx+1), // Specify which partition the boot file is on
-		"-l", "'\\EFI\\BOOT\\bootx64.efi'", // Specify the path for where the boot file is located on the partition
-		"-L", "Azure Linux", // Specify what label you would like to give this boot entry
+		"-l", "\\EFI\\BOOT\\bootx64.efi", // Specify the path for where the boot file is located on the partition
+		"-L", "Edge MicrovisorToolkit", // Specify what label you would like to give this boot entry
 		"-v", // Be verbose
 	}
+
 	err = shell.ExecuteLive(squashErrors, program, commandArgs...)
 	return
 }
@@ -180,14 +197,23 @@ func runBootEntryCreationCommand(installDetails installationDetails) (err error)
 func removeOldAzureLinuxBootTargets() (err error) {
 	const squashErrors = false
 	logger.Log.Info("Removing pre-existing 'Azure Linux' boot targets from efibootmgr")
-	program := "efibootmgr" // Default behavior when piped or called without options is to print current boot order in a human-readable format
-	commandArgs := []string{
-		"|", "grep", "\"Azure Linux\"", // Filter boot order for Azure Linux boot targets
-		"|", "sed", "'s/* Azure Linux//g'", // Pruning for just the bootnum
-		"|", "sed", "'s/Boot*//g'", // Pruning for just the bootnum
-		"|", "xargs", "-t", "-i", "efibootmgr", "-b", "{}", "-B", // Calling efibootmgr --delete-bootnum (aka `-B`) on each pre-existing bootnum with an Azure Linux label
+
+	// First, test if Azure Linux entries exist
+	testCmd := `efibootmgr | grep "Edge MicrovisorToolkit"`
+
+	// Actual deletion command
+	deleteCmd := `efibootmgr | grep "Edge MicrovisorToolkit" | awk '{print $1}' | sed 's/Boot//g' | sed 's/\*//g' | xargs -t -I {} efibootmgr -b {} -B`
+
+	// Run test command to check for matches
+	logger.Log.Infof("deletion test command: %s", testCmd)
+	err = shell.ExecuteLive(squashErrors, "sh", "-c", testCmd)
+
+	if err == nil {
+		// Azure Linux entries found and hence deleting the entries
+		logger.Log.Infof("deletion execution command: %s", deleteCmd)
+		err = shell.ExecuteLive(squashErrors, "sh", "-c", deleteCmd)
+		return
 	}
-	err = shell.ExecuteLive(squashErrors, program, commandArgs...)
 	return
 }
 
