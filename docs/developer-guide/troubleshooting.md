@@ -127,8 +127,20 @@ docker version
 docker info
 docker run hello-world
 ```
-
 ::::
+
+::::{dropdown} How do I configure proxy settings in Edge Microvisor Toolkit?
+Most applications will pick up proxy environment variables, so you can export
+environment variables for `http_proxy`, `https_proxy`, `HTTP_PROXY`,
+`HTTPS_PROXY` and `no_proxy` to your `~/.bash_rc` profile.
+
+If you need to configure system wide proxy settings you can follow these steps:
+
+1. Create a file under `/etc/profile.d/proxy.sh`
+1. Export your proxy settings in the `proxy.sh` file
+1. Make the file executable `chmod +x /etc/profile.d/proxy.sh`
+::::
+
 
 ::::{dropdown} Will my home directory be saved if I perform an update of Edge Microvisor Toolkit?
 Yes, the entire `/home` directory is configured as a persistent bind mount and will be kept
