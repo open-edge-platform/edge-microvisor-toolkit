@@ -22,7 +22,7 @@
                         "boot"
                     ],
                     "Start": 1,
-                    "End": 512,
+                    "End": 300,
                     "FsType": "fat32",
                     "Type": "esp"
                 },
