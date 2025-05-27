@@ -71,11 +71,12 @@ ifneq ($(DAILY_BUILD_REPO),)
    $(warning $(PACKAGE_ROOT))
    $(warning ######################### WARNING #########################)
    $(warning )
-   override PACKAGE_URL_LIST  += $(PACKAGE_ROOT)/RPMS/x86_64 \
+   override PACKAGE_URL_LIST  := $(PACKAGE_ROOT)/RPMS/x86_64 \
                                  $(PACKAGE_ROOT)/RPMS/noarch \
-				 $(PACKAGE_ROOT)/RPMS/debuginfo
-   override SRPM_URL_LIST     += $(PACKAGE_ROOT)/SRPMS
-   override REPO_LIST         += $(DAILY_BUILD_REPO)
+				 $(PACKAGE_ROOT)/RPMS/debuginfo \
+				 $(PACKAGE_URL_LIST)
+   override SRPM_URL_LIST     := $(PACKAGE_ROOT)/SRPMS \
+				 $(SRPM_URL_LIST)
 endif
 
 # This does not use $(depend_DAILY_BUILD_ID) because that mechanism will not detect the conversion of "lkg" to a
