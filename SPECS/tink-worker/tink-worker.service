@@ -4,13 +4,12 @@ Documentation=https://github.com/tinkerbell/tink
 After=network.target
 
 [Service]
-Type=notify
+Type=oneshot
 ExecStart=/usr/bin/tink-worker
 StandardOutput=journal
 StandardError=journal
-TimeoutStartSec=600s
-RestartSec=30
-Restart=on-failure
+TimeoutSec=0
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
