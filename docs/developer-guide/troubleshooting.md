@@ -127,6 +127,13 @@ docker version
 docker info
 docker run hello-world
 ```
+
+Optionally, install docker compose
+
+```bash
+sudo dnf install docker-compose
+```
+
 ::::
 
 ::::{dropdown} How do I configure proxy settings in Edge Microvisor Toolkit?
