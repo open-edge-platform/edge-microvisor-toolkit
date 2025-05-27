@@ -22272,6 +22272,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "python-apscheduler",
+          "version": "3.10.4",
+          "downloadUrl": "https://github.com/agronholm/apscheduler/archive/refs/tags/3.10.4.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "python-archspec",
           "version": "0.2.5",
           "downloadUrl": "https://files.pythonhosted.org/packages/source/a/archspec/archspec-0.2.5.tar.gz"
