@@ -9,7 +9,7 @@
 Summary:        SELinux policy
 Name:           selinux-policy
 Version:        %{refpolicy_major}.%{refpolicy_minor}
-Release:        17%{?dist}
+Release:        18%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -73,6 +73,7 @@ Patch51:        0049-Fix-tpm2_abrmd-selinux-permission-denied.patch
 Patch52:        0050-Fix-fsadm-selinux-permission-denied.patch
 Patch53:        0051-Fix-ntpd-selinux-permission-denied.patch
 Patch54:        0038-enable-liveos-iso-flow.patch
+
 BuildRequires:  bzip2
 BuildRequires:  checkpolicy >= %{CHECKPOLICYVER}
 BuildRequires:  m4
@@ -344,6 +345,10 @@ exit 0
 selinuxenabled && semodule -nB
 exit 0
 %changelog
+* Thu Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.20240226-18
+- Bump up the version on merge frm AZL tag 3.0.20250423-3.0
+- Add tmpfs fix for cloud-utils-growpart.
+
 * Fri Mar 07 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.20240226-17
 - Bump up the version on merge frm AZL tag 3.0.20250206-3.0
 - Enable SELinux for LiveOS ISO.

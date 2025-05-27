@@ -51,7 +51,7 @@ Microvisor Toolkit Developer.
 | Storage      | 32GB SSD/NVMe or eMMC      |
 | Networking   | 1GbE Ethernet or Wi-Fi     |
 
-### Installation Instructions
+### Download the Toolkit
 
 You can download the Edge Microvisor Toolkit Developer Node [here](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso)
 

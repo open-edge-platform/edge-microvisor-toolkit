@@ -4,6 +4,7 @@
 # This action checks that certain groups of specs have matching tags.
 # The main use case is to ensure that signed specs have the same Version and
 #   Release tags as their unsigned counterparts
+---
 name: Spec Entanglement Mismatch Check
 
 on:
@@ -22,8 +23,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-          
-      # For consistency, we use the same major/minor version of Python that Azure Linux ships
+
+      # We use the same major/minor version of Python that Azure Linux ships
       - name: Setup Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -32,5 +33,9 @@ jobs:
       - name: Get Python dependencies
         run: python3 -m pip install -r toolkit/scripts/requirements.txt
 
-      - name: Run entanglement checking script
+      # Run unit test for check_entangled_specs.py before invoking it
+      - name: Unit test for spec entanglement check
+        run: PYTHONPATH=toolkit/scripts python3 toolkit/scripts/tests/test_check_entangled_specs.py
+
+      - name: Run spec entanglement checking script
         run: python3 toolkit/scripts/check_entangled_specs.py .
