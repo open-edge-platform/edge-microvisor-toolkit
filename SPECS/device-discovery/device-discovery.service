@@ -4,13 +4,12 @@ Documentation=https://github.com/open-edge-platform/infra-onboarding
 After=network.target
 
 [Service]
-Type=notify
+Type=oneshot
 ExecStart=/usr/bin/device-discovery/device-discovery
 StandardOutput=journal
 StandardError=journal
-TimeoutStartSec=600s
-RestartSec=30
-Restart=on-failure
+TimeoutSec=0
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
