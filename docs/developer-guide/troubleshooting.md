@@ -97,6 +97,39 @@ tdnf makecache
 ::::
 
 
+::::{dropdown} How do I install docker and install containers?
+Packages can be installed on Edge Microvisor Toolkit Developer image with `tdnf`
+. Follow these steps to install the container runtime and the docker-cli.
+
+Install Docker (Moby)
+
+```bash
+sudo tdnf install -y moby-engine moby-cli containerd
+```
+Enable and start the Docker service
+
+```bash
+sudo systemctl enable docker
+sudo systemctl start docker
+```
+
+Optionally, add user to the docker group to avoid running as sudo
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+Verify installation
+
+```bash
+docker version
+docker info
+docker run hello-world
+```
+
+::::
+
 ::::{dropdown} Will my home directory be saved if I perform an update of Edge Microvisor Toolkit?
 Yes, the entire `/home` directory is configured as a persistent bind mount and will be kept
 across updates. This is true for other key directories as well.
