@@ -3,12 +3,12 @@
 Summary: The open-source application container engine
 Name:    moby-engine
 Version: 25.0.3
-Release: 13%{?dist}
+Release: 12%{?dist}
 License: ASL 2.0
 Group:   Tools/Container
 URL: https://mobyproject.org
-Vendor: Intel Corporation
-Distribution: Edge Microvisor Toolkit
+Vendor: Microsoft Corporation
+Distribution: Azure Linux
 
 Source0: https://github.com/moby/moby/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1: docker.service
@@ -89,11 +89,6 @@ GIT_COMMIT=%{commit_hash}
 DOCKER_GITCOMMIT=${GIT_COMMIT:0:7} DOCKER_BUILDTAGS='seccomp' hack/make.sh dynbinary
 
 %install
-# Create runtime/config directories
-mkdir -p %{buildroot}/var/lib/docker
-mkdir -p %{buildroot}/var/log/docker
-mkdir -p %{buildroot}%{_sysconfdir}/docker
-
 mkdir -p %{buildroot}%{_bindir}
 install -p -m 755 ./bundles/dynbinary-daemon/dockerd %{buildroot}%{_bindir}/dockerd
 
@@ -112,9 +107,6 @@ if ! grep -q "^docker:" /etc/group; then
     groupadd --system docker
 fi
 
-%{_bindir}/systemctl enable docker
-%{_bindir}/systemctl start docker
-
 %preun
 %systemd_preun docker.service
 
@@ -127,14 +119,8 @@ fi
 %{_libexecdir}/docker-proxy
 %{_sysconfdir}/*
 %{_unitdir}/*
-/var/lib/docker
-/var/log/docker
-%dir %{_sysconfdir}/docker
 
 %changelog
-* Wed May 21 2025 Teoh Suh Haw <suh.haw.teoh@intel.com> - 25.0.3-13
-- Enable Docker service to start during system initialization
-
 * Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 25.0.3-12
 - merge from Azure Linux tag 3.0.20250423-3.0
 - Patch CVE-2025-22868 & CVE-2025-22869

@@ -189,3 +189,5 @@ enable ephemeral-disk-warning.service
 
 enable rasdaemon.service
 enable incrond.service
+
+enable docker
