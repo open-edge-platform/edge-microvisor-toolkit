@@ -14,10 +14,10 @@ the existing infrastructure.
 
 The currently published versions are:
 
-* Edge Microvisor Toolkit (immutable)
-* Edge Microvisor Toolkit with real time extensions (immutable)
-* Edge Microvisor Toolkit Standalone (immutable) ([Download link](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node))
-* Edge Microvisor Toolkit Developer (mutable) ([Download link](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node))
+* [Edge Microvisor Toolkit Standalone (immutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node)
+* [Edge Microvisor Toolkit Developer (mutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node)
+* [Edge Microvisor Toolkit (immutable)](https://github.com/open-edge-platform/edge-manageability-framework)
+* [Edge Microvisor Toolkit with real time extensions (immutable)](https://github.com/open-edge-platform/edge-manageability-framework)
 
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
 platforms such as  Xeon®, Intel® Core Ultra™, Intel Core™ and Intel® Atom®. It
@@ -30,24 +30,25 @@ Toolkit are available as Open-Source.
 
 ## Get Started
 
-Check out these articles to quickly learn how to work with Edge Microvisor Toolkit:
+Check out these articles to quickly learn how to work with Edge Microvisor Toolkit.
 
-* [System requirements](./docs/developer-guide/system-requirements.md)
-  for the hardware and software requirements.
-* [Download](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node) and [install the developer ISO image](./docs/developer-guide/get-started.md#edge-microvisor-toolkit-developer)
-  for a mutable container host providing only minimum functionality.
-* [Download](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node) and [install the production RAW image]( ./docs/developer-guide/get-started.md#edge-microvisor-toolkit-standalone)
-  for an immutable container host with essential functionality.
-* [Install on bare metal edge node](./docs/developer-guide/get-started/installation-howto.md#baremetal-with-iso) or
-  [Install on a Virtual Machine](./docs/developer-guide/get-started/installation-howto.md#virtual-machine-with-hyper-v)
-  to learn how to install Edge Microvisor Toolkit.
-* [Build or customize the Edge Microvisor](./docs/developer-guide/get-started/building-howto.md)
-  for maximum control over the system you want to deploy.
-* [Edge Manageability Framework integration](./docs/developer-guide/deployment-edge-orchestrator.md)
-  for scalable, secure, reliable, and automated management of edge infrastructure.
-* [Understand the security features of the Edge Microvisor](./docs/developer-guide/security.md)
-  to ensure security for workloads and data.
-* [Troubleshooting](./docs/developer-guide/troubleshooting.md) provides you answers to commonly asked questions.
+**EMT Developer Toolkit**: 
+
+* [Downloading and installing the developer tookit ISO image](./docs/developer-guide/get-started.md#edge-microvisor-toolkit-developer).
+* [Building a custom Edge Microvisor Toolkit image](./docs/developer-guide/get-started/building-howto.md)
+
+**EMT Standalone Toolkit**
+
+* [Downloading and installing the standalone toolkit RAW image]( ./docs/developer-guide/get-started.md#edge-microvisor-toolkit-standalone).
+
+**Common**
+
+* [Hardware and software system requirements](./docs/developer-guide/system-requirements.md)
+* [Installing EMT on bare metal edge node](./docs/developer-guide/get-started/installation-howto.md#bare-metal-with-iso)
+* [Installing EMT on a Virtual Machine](./docs/developer-guide/get-started/installation-howto.md#virtual-machine-with-hyper-v)
+* [Integrating the Edge Manageability Framework](./docs/developer-guide/deployment-edge-orchestrator.md)
+* [Using the security features of the Edge Microvisor](./docs/developer-guide/security.md)
+* [Troubleshooting common issues](./docs/developer-guide/troubleshooting.md)
 
 ## Getting Help
 
