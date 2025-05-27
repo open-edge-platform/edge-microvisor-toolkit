@@ -1,6 +1,7 @@
 {
     "packages": [
         "moby-engine",
-        "docker-cli"
+        "docker-cli",
+        "docker-compose"
     ]
 }

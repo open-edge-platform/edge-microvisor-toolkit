@@ -25,7 +25,8 @@ function generate_images() {
 
     tar -xvf "/tmp/$arfname.tar.gz" -C "$outputdir" --strip-components=2 --wildcards ./boot/vmlinuz-*.emt3 ./boot/initramfs-*.emt3.img
     gunzip -f "/tmp/$arfname.tar.gz"
-    tar -vf "/tmp/$arfname.tar" --delete ./tmp ./boot
+    tar -vf "/tmp/$arfname.tar" --delete ./tmp
+    tar -vf "/tmp/$arfname.tar" --delete --wildcards ./boot/vmlinuz-*.emt3 ./boot/initramfs-*.emt3.img ./boot/System.map-*.emt3 ./boot/config-*.emt3
     gzip -f "/tmp/$arfname.tar"
     #cp "/tmp/$arfname.tar.gz" "$outputdir"
 
