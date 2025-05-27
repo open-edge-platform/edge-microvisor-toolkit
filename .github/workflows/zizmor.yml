@@ -10,7 +10,7 @@ permissions: {}
 
 jobs:
   run-zizmor-scan:
-    name: zizmor latest via PyPI
+    name: Run scan
     runs-on: ubuntu-latest
     permissions:
       security-events: write
