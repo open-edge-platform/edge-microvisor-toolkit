@@ -1,13 +1,13 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
-Version:        6.12.28
+Version:        6.12.30
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/linux-intel-lts
-Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.28-emt-250519T192106Z.tar.gz
+Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -40,11 +40,6 @@ Patch22:        CVE-2025-23131.patch
 Patch23:        CVE-2025-23137.patch
 Patch24:        CVE-2025-37746.patch
 Patch25:        CVE-2025-37746-1.patch
-Patch26:        CVE-2025-37821.patch
-Patch27:        CVE-2025-37821-1.patch
-Patch28:        CVE-2025-37821-2.patch
-Patch29:        CVE-2025-37821-3.patch
-Patch30:        CVE-2025-37821-4.patch
 
 
 %global security_hardening none
@@ -192,7 +187,7 @@ This package contains the bpftool, which allows inspection and simple
 manipulation of eBPF programs and maps.
 
 %prep
-%autosetup -p1 -n lts-v6.12.28-emt-250519T192106Z
+%autosetup -p1 -n lts-v6.12.30-emt-250524T131939Z
 # %patch 0 -p1
 make mrproper
 
@@ -464,6 +459,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Wed Mar 28 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.30-1
+- Update kernel to 6.12.30
+
 * Thu Mar 22 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.28-1
 - Update kernel to 6.12.28
 
