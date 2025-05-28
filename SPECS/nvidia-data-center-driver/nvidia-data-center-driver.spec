@@ -29,7 +29,7 @@ This kernel driver package contains Nvidia data center GPU driver.
 cp -p %{SOURCE0} .
 chmod 755 %{SOURCE0}
 rm -rf NVIDIA-Linux-x86_64-%{version}
-./NVIDIA-Linux-x86_64-%{version}.run -x
+sh ./NVIDIA-Linux-x86_64-%{version}.run -x
 
 %build
 export KERNEL_UNAME=%{kernel_ver}
