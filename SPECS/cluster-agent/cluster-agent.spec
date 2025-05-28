@@ -128,7 +128,7 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
-* Mon May 27 2025 Andy Bavier <andy.bavier@intel.com> - 1.7.2-1
+* Tue May 27 2025 Andy Bavier <andy.bavier@intel.com> - 1.7.2-1
 - Allow cluster-agent to exec base64 cmd
 
 * Mon May 19 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.7.1-1
