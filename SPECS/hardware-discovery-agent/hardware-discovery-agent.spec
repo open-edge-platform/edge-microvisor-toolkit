@@ -1,6 +1,6 @@
 Summary:        Edge node hardware information reporting
 Name:           hardware-discovery-agent
-Version:        1.6.1
+Version:        1.7.0
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -115,6 +115,10 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Tue May 27 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.7.0-1
+- Fix GPU detection when vendor information is empty
+- HW Discovery Agent version 1.7.0
+
 * Thu Apr 03 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.6.1-1
 - Update common to 1.6.8
 

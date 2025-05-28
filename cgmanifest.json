@@ -5230,8 +5230,8 @@
         "type": "other",
         "other": {
           "name": "hardware-discovery-agent",
-          "version": "1.6.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.6.1.tar.gz"
+          "version": "1.7.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.7.0.tar.gz"
         }
       }
     },
