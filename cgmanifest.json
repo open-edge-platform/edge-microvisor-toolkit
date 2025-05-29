@@ -1847,8 +1847,8 @@
         "type": "other",
         "other": {
           "name": "cluster-agent",
-          "version": "1.7.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.7.1.tar.gz"
+          "version": "1.7.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.7.2.tar.gz"
         }
       }
     },
@@ -5230,8 +5230,8 @@
         "type": "other",
         "other": {
           "name": "hardware-discovery-agent",
-          "version": "1.6.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.6.1.tar.gz"
+          "version": "1.7.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.7.0.tar.gz"
         }
       }
     },
@@ -14801,6 +14801,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "nvidia-data-center-driver",
+          "version": "570.133.20",
+          "downloadUrl": "https://us.download.nvidia.com/tesla/570.133.20/NVIDIA-Linux-x86_64-570.133.20.run"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "nvidia-modprobe",
           "version": "550.54.14",
           "downloadUrl": "https://github.com/NVIDIA/nvidia-modprobe/archive/550.54.14.tar.gz"
@@ -21513,8 +21523,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.4.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.4.1.tar.gz"
+          "version": "1.5.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.5.1.tar.gz"
         }
       }
     },
