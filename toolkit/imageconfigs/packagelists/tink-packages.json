@@ -5,6 +5,7 @@
         "dracut-tmpfsroot",
         "fluent-bit",
         "rng-tools",
+        "rpc",
         "tar",
         "tink-worker"
     ]
