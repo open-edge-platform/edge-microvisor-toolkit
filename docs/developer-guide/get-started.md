@@ -21,7 +21,7 @@ Framework - a complete integrated system providing full lifecycle management for
 your edge devices, including remote deployment and management of Kubernetes
 applications.
 
-### Edge Microvisor Toolkit Developer
+### Edge Microvisor Toolkit Developer Node
 
 To create a custom developer build of Edge Microvisor Toolkit, follow these steps:
 
@@ -53,7 +53,7 @@ The supported package repository offers additional `rpm` for tailoring the image
 to specific needs of container runtime, virtualization, orchestration software,
 monitoring tools, standard cloud-edge (CNCF) software, and more.
 
-### Edge Microvisor Toolkit Standalone
+### Edge Microvisor Toolkit Standalone Node
 
 [Go to the Edge Microvisor Toolkit Standalone Node repository](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node).
 
@@ -73,7 +73,7 @@ the [Edge Manageability Framework deployment guide](../user-guide/deployment-edg
 The toolkit comes pre-configured to produce different images, the table below
 outlines the key differences between those.
 
-|  Feature         | Edge Microvisor Toolkit Developer | Edge Microvisor Toolkit Standalone & Orchestrated                                   |
+|  Feature         | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit Standalone Node & Orchestrated                                   |
 | -----------------| -------------------- | ------------------------------------------------- |
 | Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with toolkit to build image with an opt-in data integrity and security features.</li></ul> | <ul><li>Designed for Open Edge Platforms and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare-metal and as guest OS.</li><li>Fast atomic updates & rollback support with small image footprint and short boot time.|
 | Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
