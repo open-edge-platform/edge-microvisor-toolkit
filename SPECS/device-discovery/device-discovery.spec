@@ -24,11 +24,12 @@ The Device Discovery Agent for Edge Node in order to retrieve the specific confi
 
 
 %prep
-%setup -q -n infra-onboarding-tinker-actions-%{version}
+%setup -q -n infra-onboarding-emt-uos
+cd hook-os/device_discovery
+tar -xzf %{SOURCE2} -C .
 
 %build
 cd hook-os/device_discovery
-tar -xzvf %{SOURCE2} -C .
 CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -gcflags=all="-l -B" -o device-discovery
 
 %install
