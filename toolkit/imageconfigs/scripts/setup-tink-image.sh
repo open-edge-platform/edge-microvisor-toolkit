@@ -18,7 +18,7 @@ if [ ! -f /etc/fluent-bit/fluent-bit.conf ]; then
 fi
 echo "$pprefix: fstab contents $(cat /etc/fstab)"
 echo 'tmpfs   /   tmpfs   defaults,size=1G   0   0' > /etc/fstab
-echo "$pprefix: $(du -h /usr/share)"
+echo "$pprefix: $(du -ah /usr/share)"
 find /usr/share -type f \
   ! -path "/usr/share/terminfo/v/vt100" \
   ! -path "/usr/share/terminfo/v/vt220" \
@@ -31,8 +31,9 @@ find /usr/share -type f \
   ! -path "/usr/share/pki/*" \
   ! -path "/usr/share/p11-kit/*" \
   ! -path "/usr/share/licenses/*" \
+  ! -path "/usr/share/*.cer" \
   -exec rm -f {} +
-echo "$pprefix: reduced $(du -h /usr/share)"
+echo "$pprefix: reduced $(du -ah /usr/share)"
 
 ramfs=$(find /boot -type f -name initramfs*img -printf '%f\n')
 # unzip initramfs
