@@ -7,7 +7,7 @@ Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
-URL:            https://tinkerbell.org
+URL:            https://github.com/open-edge-platform/infra-onboarding/tree/main/hook-os/device_discovery
 Source0:        https://%{infraonboarding_gitpath}/archive/refs/tags/tinker-actions/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1:        device-discovery.service
 Source2:        device-discovery-1.17.2-vendor.tar.gz
