@@ -60,3 +60,4 @@ jobs:
           LINTER_RULES_PATH: .
           YAML_CONFIG_FILE: .yamllint.yaml
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FILTER_REGEX_EXCLUDE: '.*LICENSES-AND-NOTICES.*'
