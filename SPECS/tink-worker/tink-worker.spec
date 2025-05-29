@@ -26,9 +26,9 @@ It will begin to execute the workflow/actions associated with that machine.
 %prep
 %setup -q -n tink-%{version}
 %patch 0 -p1
+tar -xzf %{SOURCE2} -C .
 
 %build
-tar -xzvf %{SOURCE2} -C .
 CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -o tink-worker ./cmd/tink-worker
 
 %install
