@@ -6,6 +6,12 @@
         "fluent-bit",
         "caddy",
         "rng-tools",
-        "containerd"
+        "containerd",
+        "gawk",
+        "efibootmgr",
+        "lvm2",
+        "parted",
+        "net-tools",
+        "cryptsetup"
     ]
 }
