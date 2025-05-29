@@ -55,29 +55,7 @@ monitoring tools, standard cloud-edge (CNCF) software, and more.
 
 ### Edge Microvisor Toolkit Standalone
 
-[Go to Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/package/edge_microvisor_toolkit_standalone_node) and download a standalone Edge Node ISO installer.
-
-The standalone edge node uses the standard immutable build and provides an ISO
-image that can be flashed to a USB device and installed on edge nodes. It
-installs the microvisor and Kubernetes to the edge node with the essential
-functionality to run a single node cluster. The edge node will serve as both the
-control and worker node. Additional worker nodes can be added to the cluster
-through Kubernetes.
-
-Future releases will enable standalone edge nodes to join an existing Edge
-Management Framework backend, deployed on-prem or in the cloud to support scale
-out and management of larger infrastructures. The Standalone Edge Node enables
-you to quickly get an edge node up and running without deploying backend
-services, ready to deploy Kubernetes applicationsthrough `kubectl`, `helm`, or
-Kubernetes web dashboard.
-
-:::{admonition} The standalone edge node does not support the real-time version currently.
-:class: note
-
-The immutable OS image does not include the Kubernetes software and
-extensions. After the OS is installed, they are deployed on a writable section of the
-filesystem. Image and orchestration system updates are currently not natively enabled.
-:::
+[Go to the Edge Microvisor Toolkit Standalone Node repository](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node).
 
 ### Edge Microvisor Toolkit with Edge Manageability Framework
 

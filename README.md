@@ -14,8 +14,8 @@ the existing infrastructure.
 
 The currently published versions are:
 
-* [Edge Microvisor Toolkit Standalone (immutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node)
-* [Edge Microvisor Toolkit Developer (mutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node)
+* [Edge Microvisor Toolkit Standalone Node (immutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node)
+* [Edge Microvisor Toolkit Developer Node (mutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node)
 * [Edge Microvisor Toolkit (immutable)](https://github.com/open-edge-platform/edge-manageability-framework)
 * [Edge Microvisor Toolkit with real time extensions (immutable)](https://github.com/open-edge-platform/edge-manageability-framework)
 
@@ -32,14 +32,14 @@ Toolkit are available as Open-Source.
 
 Check out these articles to quickly learn how to work with Edge Microvisor Toolkit.
 
-**EMT Developer Toolkit**
+**Edge Microvisor Toolkit Developer Node**
 
 * [Downloading and installing the developer toolkit ISO image](./docs/developer-guide/get-started.md#edge-microvisor-toolkit-developer)
 * [Building a custom Edge Microvisor Toolkit image](./docs/developer-guide/get-started/building-howto.md)
 
-**EMT Standalone Toolkit**
+**Edge Microvisor Toolkit Standalone Node**
 
-* [Downloading and installing the standalone toolkit RAW image]( ./docs/developer-guide/get-started.md#edge-microvisor-toolkit-standalone)
+* [Downloading and installing the standalone toolkit RAW image](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
 
 **Common**
 
