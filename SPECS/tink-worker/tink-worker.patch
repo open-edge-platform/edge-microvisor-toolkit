@@ -109,15 +109,16 @@ index 8dff15a38..2576dfe06 100644
  	}
 diff --git a/cmd/tink-worker/worker/containerd.go b/cmd/tink-worker/worker/containerd.go
 new file mode 100644
-index 000000000..591215f5e
+index 000000000..a6448b727
 --- /dev/null
 +++ b/cmd/tink-worker/worker/containerd.go
-@@ -0,0 +1,583 @@
+@@ -0,0 +1,605 @@
 +package worker
 +
 +import (
 +	"context"
 +	"fmt"
++	"math/rand"
 +	"os"
 +	"os/exec"
 +	"path/filepath"
@@ -151,12 +152,14 @@ index 000000000..591215f5e
 +		"/etc/resolv.conf",
 +		"/etc/localtime",
 +	}
-+	parser = volumemounts.NewLinuxParser()
++	parser  = volumemounts.NewLinuxParser()
++	randGen = rand.New(rand.NewSource(time.Now().UnixNano()))
 +)
 +
 +const (
-+	namespace  = "tinkerbell"
-+	socketPath = "/run/containerd/containerd.sock"
++	namespace   = "tinkerbell"
++	socketPath  = "/run/containerd/containerd.sock"
++	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 +)
 +
 +type containerdManager struct {
@@ -270,7 +273,7 @@ index 000000000..591215f5e
 +		opts = append(opts, oci.WithHostNamespace(specs.PIDNamespace))
 +	}
 +
-+	name := makeValidContainerName(fmt.Sprintf("%s-%s", wfID, action.GetName()))
++	name := newContainerName(action.GetName())
 +	snps := c.client.SnapshotService(containerd.DefaultSnapshotter)
 +	if _, err := snps.Stat(ctx, name); err == nil {
 +		l.Info("snapshot exists, removing snapshot", "snapshot", name)
@@ -505,8 +508,6 @@ index 000000000..591215f5e
 +func (l *containerdLogCapturer) CaptureLogs(ctx context.Context, id string) {}
 +
 +func Init() error {
-+	go rebootWatch()
-+
 +	if err := EnsureFolder("/worker"); err != nil {
 +		return err
 +	}
@@ -539,6 +540,8 @@ index 000000000..591215f5e
 +			return fmt.Errorf("failed to set environment variable %s: %w", kv[0], err)
 +		}
 +	}
++
++	go rebootWatch()
 +	return nil
 +}
 +
@@ -695,6 +698,25 @@ index 000000000..591215f5e
 +		mounts = append(mounts, m)
 +	}
 +	return mounts, nil
++}
++
++func truncateStr(s string, maxLen int) string {
++	if len(s) > maxLen {
++		return s[:maxLen]
++	}
++	return s
++}
++
++func randStr(n int) string {
++	b := make([]byte, n)
++	for i := range b {
++		b[i] = letterBytes[randGen.Intn(len(letterBytes))]
++	}
++	return string(b)
++}
++
++func newContainerName(name string) string {
++	return fmt.Sprintf("%s-%s", truncateStr(name, 60), randStr(10))
 +}
 diff --git a/cmd/tink-worker/worker/log_capturer.go b/cmd/tink-worker/worker/log_capturer.go
 index 3b4d7ed1f..09a36c978 100644
