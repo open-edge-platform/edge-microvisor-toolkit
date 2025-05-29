@@ -1,5 +1,6 @@
 {
     "packages": [
+        "rpc",
         "dracut-tmpfsroot",
         "tar",
         "fluent-bit",
