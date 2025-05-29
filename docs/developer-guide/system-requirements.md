@@ -28,7 +28,7 @@ and workloads. It has been validated on the following platforms:
 
 ## Recommended Hardware Configuration
 
-| Component    | Edge Microvisor Toolkit Developer | Edge Microvisor Toolkit (Open Edge Platform or Standalone) |
+| Component    | Edge Microvisor Toolkit Developer Node| Edge Microvisor Toolkit (Open Edge Platform or Standalone Node) |
 |--------------|-----------------------------|----------------------------------------------|
 | CPU          | Intel® Atom™, Core, or Xeon | Intel® Atom™, Core™, or Xeon                 |
 | RAM          | 2GB minimum                 | 8GB minimum                                  |
@@ -37,7 +37,7 @@ and workloads. It has been validated on the following platforms:
 
 ## Software Requirements
 
-| Component        | Edge Microvisor Toolkit Developer | Edge Microvisor Toolkit (Open Edge Platform or Standalone) |
+| Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Open Edge Platform or Standalone Node) |
 |------------------|-------------------------|-------------------------|
 | Kernel Version   | Intel® Kernel 6.12      | Intel® Kernel 6.12      |
 | Bootloader       | GRUB                    | Systemd-boot            |
