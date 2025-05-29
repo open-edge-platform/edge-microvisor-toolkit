@@ -75,7 +75,6 @@ ifneq ($(DAILY_BUILD_REPO),)
                                  $(PACKAGE_ROOT)/RPMS/noarch \
 				 $(PACKAGE_ROOT)/RPMS/debuginfo \
 				 $(PACKAGE_URL_LIST)
-   override REPO_LIST         += $(DAILY_BUILD_REPO)
    override SRPM_URL_LIST     := $(PACKAGE_ROOT)/SRPMS \
 				 $(SRPM_URL_LIST)
 endif
