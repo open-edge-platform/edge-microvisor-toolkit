@@ -15,6 +15,7 @@ import (
 	"github.com/microsoft/azurelinux/toolkit/tools/imagegen/attendedinstaller/uiutils"
 	"github.com/microsoft/azurelinux/toolkit/tools/imagegen/configuration"
 	"github.com/microsoft/azurelinux/toolkit/tools/internal/logger"
+	"github.com/microsoft/azurelinux/toolkit/tools/internal/shell"
 )
 
 // UI constants.
@@ -136,6 +137,14 @@ func (fv *FinishView) OnShow() {
 	// since the installation time is not known during Initialize().
 	// Force a focus change as the flex box has just been initialized in updateTextSize().
 	fv.app.SetFocus(fv.centeredFlex)
+
+	const squashErrors = false
+	program := "eject"
+	commandArgs := []string{
+		"--cdrom",
+		"--force",
+	}
+	shell.ExecuteLive(squashErrors, program, commandArgs...)
 }
 
 func (fv *FinishView) updateTextSize() {

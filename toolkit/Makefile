@@ -143,8 +143,7 @@ SOURCE_URL         ?= https://files-rs.edgeorchestration.intel.com/files-edge-or
 # assignments do not take affect without using 'override'. This means that all of the following PACKAGE_URL_LIST values will
 # be ignored if the user sets any value.
 ##help:var:PACKAGE_URL_LIST:<urls_list>=Space-separated list of URLs to download toolchain RPM packages from, used to populate the toolchain packages if `REBUILD_TOOLCHAIN=n'. The URLs will replace the default set of URLs. Print default list with 'make -s printvar-PACKAGE_URL_LIST'.
-PACKAGE_URL_LIST   ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)
-PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/x86_64
+PACKAGE_URL_LIST   ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/x86_64
 PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/noarch
 PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpm/$(RELEASE_MAJOR_ID)/RPMS/debuginfo
 
@@ -153,15 +152,15 @@ SRPM_URL_LIST      ?= https://files-rs.edgeorchestration.intel.com/files-edge-or
 
 ##help:var:VALIDATE_TOOLCHAIN_GPG={y,n}=Enable or disable GPG validation of the toolchain RPMs. If enabled toolchain RPMs will be validated against the GPG keys in the TOOLCHAIN_GPG_VALIDATION_KEYS variable. On by default when using upstream toolchain RPMs.
 # Based on REBUILD_TOOLCHAIN and DAILY_BUILD_ID. If REBUILD_TOOLCHAIN is set to 'y' or DAILY_BUILD_ID is set to any non-empty value, then GPG validation is disabled by default.
-#ifeq ($(REBUILD_TOOLCHAIN),y)
+ifeq ($(REBUILD_TOOLCHAIN),y)
 VALIDATE_TOOLCHAIN_GPG ?= n
-#else
-#ifneq ($(DAILY_BUILD_ID),)
-#VALIDATE_TOOLCHAIN_GPG ?= n
-#else
-#VALIDATE_TOOLCHAIN_GPG ?= y
-#endif
-#endif
+else
+ifneq ($(DAILY_BUILD_ID),)
+VALIDATE_TOOLCHAIN_GPG ?= n
+else
+VALIDATE_TOOLCHAIN_GPG ?= y
+endif
+endif
 
 TOOLCHAIN_GPG_VALIDATION_KEYS ?= $(wildcard $(PROJECT_ROOT)/SPECS/edge-repos/INTEL-*-GPG-KEY) $(wildcard $(toolkit_root)/repos/INTEL-*-GPG-KEY)
 
@@ -172,6 +171,10 @@ TOOLCHAIN_GPG_VALIDATION_KEYS ?= $(wildcard $(PROJECT_ROOT)/SPECS/edge-repos/INT
 include $(SCRIPTS_DIR)/utils.mk
 
 ######## REMAINING BUILD FLAGS ########
+
+# Set the variables for build number, distro tag, etc
+include $(SCRIPTS_DIR)/build_tag.mk
+include $(SCRIPTS_DIR)/build_tag_imagecustomizer.mk
 
 # Daily build ID and repo configuration
 include $(SCRIPTS_DIR)/daily_build.mk
@@ -206,10 +209,6 @@ include $(SCRIPTS_DIR)/timestamp.mk
 
 # Profiling & Tracing feature
 include $(SCRIPTS_DIR)/profile.mk
-
-# Set the variables for build number, distro tag, etc
-include $(SCRIPTS_DIR)/build_tag.mk
-include $(SCRIPTS_DIR)/build_tag_imagecustomizer.mk
 
 # go utilities with:
 #   go-tools, clean-go-tools, go-tidy-all (tidy go utilities before committing) go-test-coverage

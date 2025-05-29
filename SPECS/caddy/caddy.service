@@ -19,7 +19,6 @@ Type=notify
 User=caddy
 Group=caddy
 ExecStartPre=/usr/bin/caddy validate --config /etc/caddy/Caddyfile
-ExecStartPost=/etc/edge-node/node/confs/post-caddy.sh
 RestartSec=30
 Restart=on-failure
 ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile

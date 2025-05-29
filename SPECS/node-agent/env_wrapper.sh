@@ -43,33 +43,7 @@ update_node_urls() {
 	fi
 }
 
-update_containerd_caddy() {
-	if [ -n "$CADDY_REGISTRY_PROXY_URL" ]; then
-		local UPDATED_CADDY_REGISTRY_PROXY_URL
-		UPDATED_CADDY_REGISTRY_PROXY_URL=$(sed -e 's#reverse_proxy.*#reverse_proxy https://'"$CADDY_REGISTRY_PROXY_URL"' {#' /etc/caddy/containerd.caddy)
-		echo -E "${UPDATED_CADDY_REGISTRY_PROXY_URL}" > /etc/caddy/containerd.caddy
-	fi
-
-	if [ -n "$CADDY_REGISTRY_PROXY_PORT" ]; then
-		local UPDATED_CADDY_REGISTRY_PROXY_PORT
-		UPDATED_CADDY_REGISTRY_PROXY_PORT=$(sed -e 's#localhost\.internal.*#localhost\.internal:'"$CADDY_REGISTRY_PROXY_PORT"' {#' /etc/caddy/containerd.caddy)
-		echo -E "${UPDATED_CADDY_REGISTRY_PROXY_PORT}" > /etc/caddy/containerd.caddy
-
-		local UPDATED_REGISTRY_PROXY_PORT_CONFIG
-		UPDATED_REGISTRY_PROXY_PORT_CONFIG=$(sed -E 's#(url: oci://[^:]+):[0-9]+/#\1:'"$CADDY_REGISTRY_PROXY_PORT"'/#' /etc/edge-node/node/confs/node-agent.yaml)
-		echo -E "${UPDATED_REGISTRY_PROXY_PORT_CONFIG}" > /etc/edge-node/node/confs/node-agent.yaml
-	fi
-
-	if [ -n "$RS_TYPE" ]; then
-		if [ "$RS_TYPE" == "no-auth" ]; then
-			UPDATED_CADDY_REGISTRY_PROXY_SETTINGS=$(sed -e '/header_up Authorization.*/d' /etc/caddy/containerd.caddy)
-			echo -E "${UPDATED_CADDY_REGISTRY_PROXY_SETTINGS}" > /etc/caddy/containerd.caddy
-		fi
-	fi
-}
-
 update_uuid
 update_node_urls
-update_containerd_caddy
 
 exec "$@"

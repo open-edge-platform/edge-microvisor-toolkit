@@ -50,7 +50,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        27%{?dist}
+Release:        28%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -109,6 +109,7 @@ Source27:       99-magic-sysrq.conf
 Source28:       99-yama-ptrace.conf
 Source29:       99-net-core-bpf-jit-harden.conf
 Source30:       99-kernel.conf
+Source31:       99-tcp-timestamps.conf
 
 %if 0
 GIT_DIR=../../src/systemd/.git git format-patch-ab --no-signature -M -N v235..v235-stable
@@ -882,6 +883,9 @@ install -Dm0644 10-timeout-abort.conf.user %{buildroot}%{user_unit_dir}/service.
 # https://fedoraproject.org/wiki/Changes/IncreaseVmMaxMapCount
 install -Dm0644 -t %{buildroot}%{_prefix}/lib/sysctl.d/ %{SOURCE17}
 
+# Install TCP timestamp setting
+install -Dm0644 -t %{buildroot}%{_prefix}/lib/sysctl.d/ %{SOURCE31}
+
 %if 0%{?emt}
 install -Dm0644 -t %{buildroot}%{_prefix}/lib/sysctl.d/ %{SOURCE18}
 install -Dm0644 -t %{buildroot}%{_prefix}/lib/sysctl.d/ %{SOURCE26}
@@ -1233,6 +1237,9 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+* Tue May 20 2025 Basavaraj unniche <basavarajx.unniche@intel.com> - 255-28
+- Add kernel command to disable TCP timestamps.
+
 * Fri Mar 07 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 255-27
 - Bump up the version on merge frm AZL tag 3.0.20250206-3.0
 - adding patch for enhancing DNSSEC signature validation integrity

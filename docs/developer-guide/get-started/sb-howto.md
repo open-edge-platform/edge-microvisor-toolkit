@@ -125,9 +125,14 @@ export KEY=KeyInDB
 cd ~
 ```
 Make sure your rpm %_topdir is ~/rpmbuild; if not you should edit your ~/.rpmmacros to include:
+
 ```bash
 mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 %_topdir %(echo $HOME)/rpmbuild
+```
+If file ~/.rpmmacros does not exist in home directory, create one:
+```bash
+vi ~/.rpmmacros
 ```
 
 ### Step 2: Rebuild the shim-unsigned Package
@@ -143,14 +148,14 @@ certutil -d /etc/pki/pesign -L -n KeyInShim -r > ~/key-in-shim.der
 ```bash
 base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' | sed 's/^[ \t]*//')
 
-shim_unsigned_package=$(tdnf repoquery --source shim-unsigned-x64 | tail -1)
-wget $base_url/SRPMS/$shim_unsigned_package.rpm
+shim_unsigned_package=$(tdnf repoquery --source shim-unsigned-x64 | tail -1 | sed 's/\.src$//')
+wget $base_url/SRPMS/$shim_unsigned_package.src.rpm
 
-rpm -i shim-unsigned-x64-*.src.rpm
+rpm -i $shim_unsigned_package.src.rpm
 cd ~/rpmbuild
 cp ~/key-in-shim.der SOURCES/azurelinux-ca-20230216.der
 rpmbuild -bb SPECS/shim-unsigned-x64.spec
-sudo tdnf install RPMS/x86_64/shim-unsigned-x64-*.x86_64.rpm
+sudo tdnf install RPMS/x86_64/$shim_unsigned_package.x86_64.rpm
 ```
 ```bash
 cd ~
@@ -163,10 +168,10 @@ cd ~
 ```bash
 base_url=$(grep -E '^\s*baseurl' /etc/yum.repos.d/*.repo | awk -F= '{print $2}' | sed 's/^[ \t]*//')
 
-shim_package=$(tdnf repoquery --source shim | grep -v "unsigned" | tail -1)
-wget $base_url/SRPMS/$shim_package.rpm
+shim_package=$(tdnf repoquery --source shim | grep -v "unsigned" | tail -1 | sed 's/\.src$//')
+wget $base_url/SRPMS/$shim_package.src.rpm
 
-rpm -i $shim_package.rpm
+rpm -i $shim_package.src.rpm
 ```
 
 **Sign the binaries**:
@@ -186,12 +191,12 @@ rpmbuild -bb SPECS/shim.spec
 Install the new package and reboot with secure boot disabled:
 
 ```bash
-sudo tdnf install RPMS/x86_64/$shim_package.rpm
+sudo tdnf install RPMS/x86_64/$shim_package.x86_64.rpm
 ```
-Ensure that the `$shim_package.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
+Ensure that the `$shim_package.x86_64.rpm` package is installed properly. If you encounter any messages, such as "Nothing to do", you can attempt to reinstall the package.
 
 ```bash
-sudo tdnf reinstall --allowerasing RPMS/x86_64/$shim_package.rpm
+sudo tdnf reinstall --allowerasing RPMS/x86_64/$shim_package.x86_64.rpm
 ```
 
 ```bash
@@ -213,7 +218,7 @@ sudo sh -c 'cp /boot/vmlinuz-* .'
 ```bash
 sudo pesign -s -i grubx64.efi -o /boot/efi/EFI/BOOT/grubx64.efi -c KeyInShim --force
 
-udo sh -c 'pesign -s -i vmlinuz-* -o /boot/vmlinuz-* -c KeyInShim --force'
+sudo sh -c 'pesign -s -i vmlinuz-* -o /boot/vmlinuz-* -c KeyInShim --force'
 ```
 
 ### Step 6: Enroll KeyInDB into UEFI DB
