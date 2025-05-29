@@ -114,7 +114,7 @@ func installerFactory(forceAttended bool, configFile, templateConfigFile string)
 		unattendedExists, _ := file.PathExists(configFile)
 
 		if !unattendedExists {
-			logger.Log.Infof("Config file (%s) does not exist, using attended installation", configFile)
+			logger.Log.Debugf("Config file (%s) does not exist, using attended installation", configFile)
 			isAttended = true
 		}
 	}
@@ -124,6 +124,7 @@ func installerFactory(forceAttended bool, configFile, templateConfigFile string)
 		if !templateExists {
 			logger.Log.Panicf("Attended installation requires a template config file. Specified template (%s) does not exist.", templateConfigFile)
 		}
+		logger.Log.Info("attended_config exists, using attended installation")
 	}
 
 	if isAttended {

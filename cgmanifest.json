@@ -1847,8 +1847,8 @@
         "type": "other",
         "other": {
           "name": "cluster-agent",
-          "version": "1.7.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.7.1.tar.gz"
+          "version": "1.7.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.7.2.tar.gz"
         }
       }
     },
@@ -5230,8 +5230,8 @@
         "type": "other",
         "other": {
           "name": "hardware-discovery-agent",
-          "version": "1.6.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.6.1.tar.gz"
+          "version": "1.7.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.7.0.tar.gz"
         }
       }
     },
@@ -8391,8 +8391,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.23",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.23-emt-250415T094615Z.tar.gz"
+          "version": "6.12.28",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.28-emt-250519T192106Z.tar.gz"
         }
       }
     },
@@ -8411,8 +8411,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.23",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.23-emt-250415T094615Z.tar.gz"
+          "version": "6.12.28",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.28-emt-250519T192106Z.tar.gz"
         }
       }
     },
@@ -8441,8 +8441,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.23",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.23-emt-250415T094615Z.tar.gz"
+          "version": "6.12.28",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.28-emt-250519T192106Z.tar.gz"
         }
       }
     },
@@ -21523,8 +21523,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.4.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.4.1.tar.gz"
+          "version": "1.5.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.5.1.tar.gz"
         }
       }
     },
@@ -22275,6 +22275,16 @@
           "name": "python-appdirs",
           "version": "1.4.4",
           "downloadUrl": "https://github.com/ActiveState/appdirs/archive/refs/tags/1.4.4.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "python-apscheduler",
+          "version": "3.10.4",
+          "downloadUrl": "https://github.com/agronholm/apscheduler/archive/refs/tags/3.10.4.tar.gz"
         }
       }
     },

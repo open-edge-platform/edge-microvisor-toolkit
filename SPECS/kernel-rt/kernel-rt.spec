@@ -1,13 +1,13 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
-Version:        6.12.23
+Version:        6.12.28
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/linux-intel-lts
-Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.23-emt-250415T094615Z.tar.gz
+Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.28-emt-250519T192106Z.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -20,6 +20,31 @@ Patch2:         CVE-2025-21807.patch
 Patch3:         CVE-2025-21817.patch
 Patch4:         CVE-2025-21884.patch
 Patch5:         CVE-2025-21884-1.patch
+Patch6:         CVE-2025-22101.patch
+Patch7:         CVE-2025-22103.patch
+Patch8:         CVE-2025-22104.patch
+Patch9:         CVE-2025-22105.patch
+Patch10:        CVE-2025-22105-1.patch
+Patch11:        CVE-2025-22106.patch
+Patch12:        CVE-2025-22108.patch
+Patch13:        CVE-2025-22111.patch
+Patch14:        CVE-2025-22113.patch
+Patch15:        CVE-2025-22113-1.patch
+Patch16:        CVE-2025-22116.patch
+Patch17:        CVE-2025-22117.patch
+Patch18:        CVE-2025-22121.patch
+Patch19:        CVE-2025-22121-1.patch
+Patch20:        CVE-2025-22122.patch
+Patch21:        CVE-2025-22124.patch
+Patch22:        CVE-2025-23131.patch
+Patch23:        CVE-2025-23137.patch
+Patch24:        CVE-2025-37746.patch
+Patch25:        CVE-2025-37746-1.patch
+Patch26:        CVE-2025-37821.patch
+Patch27:        CVE-2025-37821-1.patch
+Patch28:        CVE-2025-37821-2.patch
+Patch29:        CVE-2025-37821-3.patch
+Patch30:        CVE-2025-37821-4.patch
 
 
 %global security_hardening none
@@ -167,7 +192,7 @@ This package contains the bpftool, which allows inspection and simple
 manipulation of eBPF programs and maps.
 
 %prep
-%autosetup -p1 -n lts-v6.12.23-emt-250415T094615Z
+%autosetup -p1 -n lts-v6.12.28-emt-250519T192106Z
 # %patch 0 -p1
 make mrproper
 
@@ -439,6 +464,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Thu Mar 22 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.28-1
+- Update kernel to 6.12.28
+
 * Mon Apr 21 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.23-1
 - Update kernel to 6.12.23
 

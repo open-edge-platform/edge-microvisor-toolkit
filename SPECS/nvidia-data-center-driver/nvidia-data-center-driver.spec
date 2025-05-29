@@ -29,7 +29,7 @@ This kernel driver package contains Nvidia data center GPU driver.
 cp -p %{SOURCE0} .
 chmod 755 %{SOURCE0}
 rm -rf NVIDIA-Linux-x86_64-%{version}
-./NVIDIA-Linux-x86_64-%{version}.run -x
+sh ./NVIDIA-Linux-x86_64-%{version}.run -x
 
 %build
 export KERNEL_UNAME=%{kernel_ver}
@@ -38,6 +38,7 @@ cd NVIDIA-Linux-x86_64-%{version}/kernel
 make %{?_smp_mflags} modules
 
 %install
+export KERNEL_UNAME=%{kernel_ver}
 cd NVIDIA-Linux-x86_64-%{version}/kernel
 make INSTALL_MOD_PATH=%{buildroot} modules_install
 
@@ -50,5 +51,5 @@ make INSTALL_MOD_PATH=%{buildroot} modules_install
 /sbin/depmod -a
 
 %changelog
-* Fri May 9 2025 Junxiao Chang <junxiao.chang@intel.com> 570.133.20-1
+* Mon May 26 2025 Junxiao Chang <junxiao.chang@intel.com> 570.133.20-1
 - Original version for Edge Microvisor Toolkit. License verified.

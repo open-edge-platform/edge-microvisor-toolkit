@@ -47,7 +47,7 @@ function retry {
     while [ $retry -lt $limit ]
     do
         eval "$@" && break
-        echo "$@" failed. Retrying...
+        echo "$@" Retrying...
         ((retry++))
         sleep $sleep_seconds
     done
@@ -83,7 +83,7 @@ else
     # the mount will fail and the retry loop would retry the mount repeatedly. This
     # is handled by the 'or' in the retry loop which will grep for the mount point and
     # break out of the loop if it is found.
-    retry "{ mount -L $LABEL -o ro $ISO_ROOT || grep -qs $ISO_ROOT /proc/mounts ; }"
+    retry "{ mount -L $LABEL -o ro $ISO_ROOT 2>/dev/null || grep -qs $ISO_ROOT /proc/mounts ; }"
 fi
 
 # If we are running unattended (i.e., have $UNATTENDED_CONFIG_FILE), we need to make sure that we only run once.
