@@ -20,11 +20,10 @@ also including the existing functionality not downstreamed in the existing distr
 
 Currently published default versions are:
 
-- Immutable Edge Microvisor Toolkit for Intel® Core™ and Xeon®.
-- Immutable Edge Microvisor Toolkit with real time extensions for Intel® Core™ and Xeon®.
-- ISO Edge Microvisor Toolkit installer for standalone edge nodes Intel® Core™ and Xeon®
-  platforms.
-- ISO Edge Microvisor Toolkit installer for developers for Intel® Core™ and Xeon® platforms.
+* `Edge Microvisor Toolkit Standalone Node (immutable) <https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node>`__
+* `Edge Microvisor Toolkit Developer Node (mutable) <https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node>`__
+* `Edge Microvisor Toolkit (immutable) <https://github.com/open-edge-platform/edge-manageability-framework>`__
+* `Edge Microvisor Toolkit with real time extensions (immutable) <https://github.com/open-edge-platform/edge-manageability-framework>`__
 
 If you need more than that, the build infrastructure of Edge Microvisor Toolkit enables you
 to create your own, custom images.
@@ -62,7 +61,7 @@ Why Use Edge Microvisor Toolkit
 |      Delivers performance enhancements tailored to Intel® silicon, ensuring maximum
        efficiency.
 | **Scalability for large fleets**
-|      Centralized control through Edge Manageability Framework simplifies 
+|      Centralized control through Edge Manageability Framework simplifies
        management across thousands of edge nodes.
 
 
@@ -95,9 +94,6 @@ Key Performance Indicators
 - Small footprint with less than 750MB of disk space required for the OS and under 350MB
   compressed RAW image size.
 
-
-
-
 License Information
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -107,17 +103,18 @@ License Information
    3. Provide guidance on how contributions are licensed.
 
 
-Edge Microvisor Toolkit is open source and licensed under the MIT License.
-See the [LICENSE](../LICENSE) file for more details.
+Edge Microvisor Toolkit is based on `Azure Linux <https://github.com/microsoft/azurelinux>`__,
+sharing its permissive open-source license:
+`MIT <https://github.com/microsoft/azurelinux/blob/3.0/LICENSE>`.
+
+For more details, see the
+`LICENSE <https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/LICENSE>`__
+document.
 
 Next Steps
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 :doc:`Architecture Overview <./architecture-overview>`
-
-
-
-
 
 .. toctree::
     get-started
