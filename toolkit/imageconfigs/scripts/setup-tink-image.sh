@@ -31,6 +31,7 @@ find /usr/share -type f \
   ! -path "/usr/share/pki/*" \
   ! -path "/usr/share/p11-kit/*" \
   ! -path "/usr/share/licenses/*" \
+  ! -path "/usr/share/dbus-1/*" \
   -exec rm -f {} +
 echo "$pprefix: reduced $(du -h /usr/share)"
 
