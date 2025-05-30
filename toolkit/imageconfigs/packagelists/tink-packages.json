@@ -3,6 +3,7 @@
         "caddy",
         "containerd",
         "cryptsetup",
+        "device-discovery",
         "dracut-tmpfsroot",
         "efibootmgr",
         "fluent-bit",

@@ -2254,6 +2254,7 @@
             "license": "[MIT License](/LICENSES-AND-NOTICES/LICENSE.md)",
             "specs": [
                 "cluster-agent",
+                "device-discovery",
                 "edge-release",
                 "edge-repos",
                 "edge-rpm-macros",

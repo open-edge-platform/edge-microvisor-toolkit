@@ -2607,6 +2607,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "device-discovery",
+          "version": "1.17.2",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tinker-actions/1.17.2.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "device-mapper-multipath",
           "version": "0.9.6",
           "downloadUrl": "https://github.com/opensvc/multipath-tools/archive/refs/tags/0.9.6.tar.gz"
