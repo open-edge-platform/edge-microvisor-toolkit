@@ -1847,8 +1847,8 @@
         "type": "other",
         "other": {
           "name": "cluster-agent",
-          "version": "1.7.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.7.1.tar.gz"
+          "version": "1.7.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.7.2.tar.gz"
         }
       }
     },
@@ -2600,6 +2600,16 @@
           "name": "desktop-file-utils",
           "version": "0.27",
           "downloadUrl": "https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-0.27.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "device-discovery",
+          "version": "1.17.2",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tinker-actions/1.17.2.tar.gz"
         }
       }
     },
@@ -21533,8 +21543,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.4.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.4.1.tar.gz"
+          "version": "1.5.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.5.1.tar.gz"
         }
       }
     },

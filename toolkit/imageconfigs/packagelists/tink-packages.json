@@ -1,10 +1,18 @@
 {
     "packages": [
-        "dracut-tmpfsroot",
-        "tar",
-        "fluent-bit",
         "caddy",
+        "containerd",
+        "cryptsetup",
+        "device-discovery",
+        "dracut-tmpfsroot",
+        "efibootmgr",
+        "fluent-bit",
+        "gawk",
+        "lvm2",
+        "net-tools",
+        "parted",
         "rng-tools",
-        "containerd"
+        "rpc",
+        "tar"
     ]
 }
