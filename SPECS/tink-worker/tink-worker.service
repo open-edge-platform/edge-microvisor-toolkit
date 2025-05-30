@@ -1,5 +1,5 @@
 [Unit]
-Description=tinkerbell worker Service
+Description=Tinkerbell Worker Service
 Documentation=https://github.com/tinkerbell/tink
 After=network.target
 

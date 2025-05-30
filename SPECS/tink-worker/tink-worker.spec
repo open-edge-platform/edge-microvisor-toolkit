@@ -32,12 +32,10 @@ tar -xzf %{SOURCE2} -C .
 CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -o tink-worker ./cmd/tink-worker
 
 %install
-# command
 install -D -p -m 0755 -t %{buildroot}%{_bindir} ./tink-worker
 
 # systemd units
-mkdir -p %{buildroot}%{_unitdir}
-cp %{SOURCE1} %{buildroot}%{_unitdir}
+install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/tink-worker.service
 
 %post
 %systemd_post tink-worker.service
