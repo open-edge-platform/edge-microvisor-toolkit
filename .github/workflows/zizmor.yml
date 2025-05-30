@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: MIT
+---
+name: GitHub Actions Security Analysis with zizmor 🌈
+
+on:
+  push:
+    branches: [3.0, 3.0-dev]
+  pull_request:
+    branches: [3.0, 3.0-dev]
+
+permissions: {}
+
+jobs:
+  run-zizmor-scan:
+    name: Run Zizmor scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      ZIZMOR_VERSION: 1.5.2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@c7f87aa956e4c323abf06d5dec078e358f6b4d04 # v6.0.0
+
+      - name: Run zizmor 🌈
+        run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@60168efe1c415ce0f5521ea06d5c2062adbeed1b  # v3.28.17
+        with:
+          sarif_file: zizmor_scan_report.sarif
