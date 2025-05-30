@@ -87,5 +87,5 @@ to file the issue as described in the contribution guide.
 
 ### License Information
 
-Edge Microvisor Toolkit Developer is based on [Azure Linux](https://github.com/microsoft/azurelinux), sharing its permissive open-source license:
+Edge Microvisor Toolkit Developer Node is based on [Azure Linux](https://github.com/microsoft/azurelinux), sharing its permissive open-source license:
 [MIT](https://github.com/microsoft/azurelinux/blob/3.0/LICENSE).

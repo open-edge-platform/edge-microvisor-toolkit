@@ -31,20 +31,20 @@ function generate_images() {
     #cp "/tmp/$arfname.tar.gz" "$outputdir"
 
     ramfs=$(find $outputdir -type f -name initramfs*img -printf '%f\n')
-    echo "pprefix: Original $ramfs $(sync;du -h $outputdir/$ramfs)"
+    echo "$pprefix: Original $ramfs $(sync;du -h $outputdir/$ramfs)"
     # unzip initramfs
     mkdir -p /tmp/initramfs
     cd /tmp/initramfs
-    echo "pprefix: inside $(pwd)"
-    echo "pprefix: unziping initial initramfs for repack"
+    echo "$pprefix: inside $(pwd)"
+    echo "$pprefix: unziping initial initramfs for repack"
     gunzip -c -k "$outputdir/$ramfs" | cpio -idmv --no-absolute-filenames
-    #echo "pprefix: free space $(df -h)"
+    #echo "$pprefix: free space $(df -h)"
 
     cp "/tmp/$arfname.tar.gz" /tmp/initramfs/
     find . | cpio -o -H newc | gzip > "$outputdir/$ramfs"
     cd -
 
-    echo "pprefix: $(sync;du -h $outputdir/$ramfs)"
+    echo "$pprefix: $(sync;du -h $outputdir/$ramfs)"
     rm -rf /tmp/initramfs
     chmod 0666 $outputdir/vmlinuz-*.emt3 $outputdir/initramfs-*.emt3.img
 }
