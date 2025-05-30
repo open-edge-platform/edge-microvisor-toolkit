@@ -1,5 +1,5 @@
 [Unit]
-Description=device discovery agent
+Description=Device Discovery Agent
 Documentation=https://github.com/open-edge-platform/infra-onboarding
 After=network.target
 

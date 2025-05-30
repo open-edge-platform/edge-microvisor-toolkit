@@ -33,14 +33,12 @@ cd hook-os/device_discovery
 CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -gcflags=all="-l -B" -o device-discovery
 
 %install
-# command
 install -d -m 0755 %{buildroot}%{_bindir}/device-discovery 
 install -m 0755 ./hook-os/device_discovery/device-discovery %{buildroot}%{_bindir}/device-discovery/device-discovery
 install -m 0755 ./hook-os/device_discovery/client-auth.sh %{buildroot}%{_bindir}/device-discovery/client-auth.sh
 
 # systemd units
-mkdir -p %{buildroot}%{_unitdir}
-cp %{SOURCE1} %{buildroot}%{_unitdir}
+install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/device-discovery.service
 
 %post
 %systemd_post device-discovery.service
