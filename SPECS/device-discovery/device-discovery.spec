@@ -3,7 +3,7 @@
 Summary:        Device Discovery Agent for Edge Node
 Name:           device-discovery
 Version:        1.17.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
@@ -24,7 +24,7 @@ The Device Discovery Agent for Edge Node in order to retrieve the specific confi
 
 
 %prep
-%setup -q -n infra-onboarding-emt-uos
+%setup -q -n infra-onboarding-tinker-actions-%{version}
 cd hook-os/device_discovery
 tar -xzf %{SOURCE2} -C .
 
@@ -48,5 +48,8 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/device-discovery.service
 %{_unitdir}/device-discovery.service
 
 %changelog
+* Fri May 30 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.17.2-2
+- Update the source directory name
+
 * Tue May 20 2025 Andy <andy.peng@intel.com> - 1.17.2-1
 - Original version for Edge Microvisor Toolkit. License verified.
