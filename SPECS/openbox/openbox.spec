@@ -2,7 +2,8 @@ Name:		    openbox
 Version:	    3.6.1
 Release:	    1%{?dist}
 Summary:	    A highly configurable and standards-compliant X11 window manager
-Distribution:   Edge Microvisor Toolkit
+Distribution:	    Edge Microvisor Toolkit
+Vendor:		    Intel Corporation
 License:	    GPL-2.0-or-later
 URL:		    http://openbox.org
 Source0:	    http://openbox.org/dist/%{name}/%{name}-%{version}.tar.xz
@@ -154,7 +155,7 @@ rm -rf %{buildroot}%{_datadir}/doc/%{name}
 
 %changelog
 * Tue May 27 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 3.6.1-1
-- Initial import from Fedora 43
+- Initial Edge Microvisor Toolkit import from Fedora 43 (license: MIT). License verified.
 - remove unrequired xdg-menu
 
 * Fri Jan 17 2025 Fedora Release Engineering <releng@fedoraproject.org> - 3.6.1-28
