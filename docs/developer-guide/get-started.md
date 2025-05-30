@@ -47,7 +47,7 @@ To create a custom developer build of Edge Microvisor Toolkit, follow these step
 | Development       | gcc, make, python3, perl, cmake, git            |
 | Security          | openssl, gnupg, selinux, cryptsetup, tpm2-tools |
 | Filesystem        | e2fsprogs, mount                                |
-| Included in kernel | iGPU, dGPU (Intel® Arc&trade;), SRIOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
+| Included in kernel | iGPU, dGPU (Intel® Arc&trade;), SR-IOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
 
 The supported package repository offers additional `rpm` for tailoring the image
 to specific needs of container runtime, virtualization, orchestration software,
