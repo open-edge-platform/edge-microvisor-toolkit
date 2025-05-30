@@ -102,6 +102,36 @@ sudo usermod -a -G libvirt $(whoami)
 | VHD (.vhd, .vpc)   | ⚠️ Limited. Direct use is unreliable, conversion is recommended.     |
 | VDI (.vdi)         | ❌ No                                                                |
 
+## Virtual Machine with QEMU and UEFI
+
+Instead of using `virt-manager` you can also use `qemu` commands directly:
+
+1. Create a virtual disk image, specifying a disk size appropriate for your usage and available storage:
+
+```bash
+qemu-img create -f qcow2 emt_rootfs.img 10G
+```
+
+2. Start the virtual machine
+
+Launch and install the Edge Microvisor Toolkit in a Virtual Machine with UEFI virtual machine firmware ([OVMF](https://github.com/tianocore/tianocore.github.io/wiki/OVMF)):
+
+```bash
+qemu-system-x86_64 \
+   -nodefaults -M accel=kvm -cpu host \
+   -device virtio-rng-pci \
+   -machine q35 -smp 2 -m 2048M \
+   -vga std \
+   -nic user \
+   -drive if=pflash,format=raw,readonly=on,file=/usr/share/ovmf/OVMF.fd \
+   -drive id=disk,file=/path/to/emt_rootfs.img,if=none,format=qcow2 \
+   -device virtio-blk-pci,drive=disk,bootindex=1 \
+   -drive id=cdrom,file=/path/to/EdgeMicrovisorToolkit-3.0.iso,if=none,media=cdrom \
+   -device ide-cd,drive=cdrom,bootindex=2
+```
+
+Use the appropriate acceleration based on your platform, such as `accel=kvm` for Linux or `accel=hvf` for macOS on Intel based Mac systems.  The path to the virtual machine firmware may vary depending on your operating system and qemu package.
+
 ## Bare metal with ISO
 
 ### Requirements
