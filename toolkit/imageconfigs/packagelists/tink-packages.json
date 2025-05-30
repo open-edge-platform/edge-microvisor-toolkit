@@ -12,6 +12,7 @@
         "lvm2",
         "parted",
         "net-tools",
-        "cryptsetup"
+        "cryptsetup",
+        "veritysetup"
     ]
 }
