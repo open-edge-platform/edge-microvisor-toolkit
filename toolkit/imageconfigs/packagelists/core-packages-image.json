@@ -1,6 +1,7 @@
 {
     "packages": [
         "shim",
+        "efibootmgr",
         "grub2-efi-binary",
         "ca-certificates",
         "cronie-anacron",

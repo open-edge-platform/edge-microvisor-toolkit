@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"regexp"
@@ -146,7 +147,7 @@ func updateBootOrder(installDetails installationDetails) (err error) {
 		return
 	}
 
-	err = removeOldAzureLinuxBootTargets()
+	err = removeOldEdgeMicrovisorToolkitBootTargets()
 	if err != nil {
 		return
 	}
@@ -164,32 +165,80 @@ func runBootEntryCreationCommand(installDetails installationDetails) (err error)
 	const squashErrors = false
 	program := "efibootmgr"
 	cfg := installDetails.finalConfig
+
+	if cfg.DefaultSystemConfig.IsKickStartBoot {
+		logger.Log.Info("Unattended installation: parsing Kickstart file to get disk info")
+
+		kickstartPartitionFile := "/tmp/part-include"
+		disks, _, err := configuration.ParseKickStartPartitionScheme(kickstartPartitionFile)
+		logger.PanicOnError(err, "Failed to parse partition schema")
+		// Save disk config settings
+		if len(disks) == 0 {
+			return fmt.Errorf("Kickstart parsed disk list is empty")
+		}
+		cfg.Disks = disks
+	}
 	bootPartIdx, bootPart := cfg.GetBootPartition()
 	bootDisk := cfg.GetDiskContainingPartition(bootPart)
+
 	commandArgs := []string{
 		"-c",                            // Create a new bootnum and place it in the beginning of the boot order
 		"-d", bootDisk.TargetDisk.Value, // Specify which disk the boot file is on
 		"-p", fmt.Sprintf("%d", bootPartIdx+1), // Specify which partition the boot file is on
-		"-l", "'\\EFI\\BOOT\\bootx64.efi'", // Specify the path for where the boot file is located on the partition
-		"-L", "Azure Linux", // Specify what label you would like to give this boot entry
+		"-l", "\\EFI\\BOOT\\bootx64.efi", // Specify the path for where the boot file is located on the partition
+		"-L", "Edge Microvisor Toolkit", // Specify what label you would like to give this boot entry
 		"-v", // Be verbose
 	}
 	err = shell.ExecuteLive(squashErrors, program, commandArgs...)
 	return
 }
 
-func removeOldAzureLinuxBootTargets() (err error) {
+func removeOldEdgeMicrovisorToolkitBootTargets() (err error) {
 	const squashErrors = false
-	logger.Log.Info("Removing pre-existing 'Azure Linux' boot targets from efibootmgr")
-	program := "efibootmgr" // Default behavior when piped or called without options is to print current boot order in a human-readable format
-	commandArgs := []string{
-		"|", "grep", "\"Azure Linux\"", // Filter boot order for Azure Linux boot targets
-		"|", "sed", "'s/* Azure Linux//g'", // Pruning for just the bootnum
-		"|", "sed", "'s/Boot*//g'", // Pruning for just the bootnum
-		"|", "xargs", "-t", "-i", "efibootmgr", "-b", "{}", "-B", // Calling efibootmgr --delete-bootnum (aka `-B`) on each pre-existing bootnum with an Azure Linux label
+
+	logger.Log.Info("Removing pre-existing 'Edge Microvisor Toolkit' boot targets from efibootmgr")
+
+	//Run the command and capture the EMT grep output from efibootmgr
+	outputBytes, err := exec.Command("sh", "-c", `efibootmgr | grep "Edge Microvisor Toolkit"`).CombinedOutput()
+	output := string(outputBytes)
+
+	if err != nil {
+		logger.Log.Warnf("No Edge Microvisor Toolkit boot entries found: %v, output: %s", err, output)
+		return nil
 	}
-	err = shell.ExecuteLive(squashErrors, program, commandArgs...)
-	return
+
+	//Parse boot IDs from output
+	lines := strings.Split(output, "\n")
+	var bootIDs []string
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		if len(fields) == 0 {
+			continue
+		}
+		id := fields[0]
+		id = strings.TrimPrefix(id, "Boot")
+		id = strings.TrimSuffix(id, "*")
+		if id != "" {
+			bootIDs = append(bootIDs, id)
+		}
+	}
+
+	if len(bootIDs) == 0 {
+		logger.Log.Info("No boot IDs found in output.")
+		return nil
+	}
+	logger.Log.Debugf("Parsed boot IDs to delete: %v", bootIDs)
+
+	//Delete each EMT boot entry
+	for _, id := range bootIDs {
+		err := shell.ExecuteLive(squashErrors, "efibootmgr", "-b", id, "-B")
+		if err != nil {
+			logger.Log.Errorf("Failed to delete boot entry Boot%s: %v", id, err)
+		} else {
+			logger.Log.Infof("Deleted boot entry Boot%s", id)
+		}
+	}
+	return nil
 }
 
 func ejectDisk() (err error) {
