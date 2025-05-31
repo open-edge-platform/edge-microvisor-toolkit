@@ -2268,6 +2268,7 @@
                 "hardware-discovery-agent",
                 "inbm",
                 "intel-igsc",
+                "intel-lms",
                 "intel-npu-firmware",
                 "intel-xpu-smi",
                 "node-agent",

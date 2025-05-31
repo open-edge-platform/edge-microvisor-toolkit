@@ -7510,6 +7510,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "intel-lms",
+          "version": "2506.0.0.0",
+          "downloadUrl": "https://github.com/intel/lms/archive/v2506.0.0.0/2506.0.0.0.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "intel-media-driver",
           "version": "24.2.5",
           "downloadUrl": "https://github.com/intel/media-driver/archive/refs/tags/intel-media-24.2.5.tar.gz"
