@@ -36,5 +36,5 @@ process include:
 
 ## Learn More
 
-- [Edge Microvisor Toolkit Architecture](architecture-overview.md)
+- [Edge Microvisor Toolkit Architecture](emt-architecture-overview.md)
 - [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
