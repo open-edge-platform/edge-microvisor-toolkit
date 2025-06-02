@@ -307,7 +307,7 @@ please raise a PR and work with a code owner to upload the source tarball to pac
 make build-packages # to rebuild the packages
 ```
 
-Follow the steps under [Customizing an image](./building-howto.md#Customizing-an-Image) to create
+Follow the steps under [Customizing an image](./emt-building-howto.md#Customizing-an-Image) to create
 an image with your new package.
 
 **Uploading the archive**
@@ -358,5 +358,5 @@ Example : `sha256sum ./SPECS/node-agent/env_wrapper.sh`
     ```
 ## Next
 
-- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](sb-howto.md).
+- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](emt-sb-howto.md).
 - See the detailed description of how to [create a full build and customize it](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/add-package.md).
