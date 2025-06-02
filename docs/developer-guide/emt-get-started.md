@@ -66,7 +66,7 @@ Manageability Framework:
 - Microvisor Immutable Image with Real Time
 
 For details on deploying Microvisor with Edge Manageability Framework, refer to
-the [Edge Manageability Framework deployment guide](../user-guide/emt-deployment-edge-orchestrator.md).
+the [Edge Manageability Framework deployment guide](./emt-deployment-edge-orchestrator.md).
 
 ## Image Support
 
