@@ -307,7 +307,7 @@ please raise a PR and work with a code owner to upload the source tarball to pac
 make build-packages # to rebuild the packages
 ```
 
-Follow the steps under [Customizing an image](./emt-building-howto.md#Customizing-an-Image) to create
+Follow the steps under [Customizing an image](./emt-building-howto.md#customizing-an-image) to create
 an image with your new package.
 
 **Uploading the archive**
