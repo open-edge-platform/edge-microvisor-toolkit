@@ -225,5 +225,5 @@ now ready to use the EMT 3.0 image!
 
 ## Next
 
-- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](sb-howto.md).
-- Learn how to customize and manually [build microvisor images](building-howto.md).
+- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](emt-sb-howto.md).
+- Learn how to customize and manually [build microvisor images](emt-building-howto.md).
