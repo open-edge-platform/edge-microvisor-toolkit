@@ -4,8 +4,6 @@
 name: GitHub Actions Security Analysis with zizmor 🌈
 
 on:
-  push:
-    branches: [3.0, 3.0-dev]
   pull_request:
     branches: [3.0, 3.0-dev]
 
