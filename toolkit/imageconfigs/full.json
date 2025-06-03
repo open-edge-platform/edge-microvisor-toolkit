@@ -1,7 +1,37 @@
 {
     "SystemConfigs": [
-        {
-            "Name": "Edge Microvisor Toolkit",
+	{
+            "Name": "Edge Microvisor Toolkit Base with RT Kernel + Docker",
+            "PackageLists": [
+                "packagelists/grub2-mkconfig.json",
+                "packagelists/developer-packages.json",
+                "packagelists/virtualization-host-packages.json",
+                "packagelists/core-packages-image.json",
+                "packagelists/core-tools-packages.json",
+                "packagelists/ssh-server.json",
+                "packagelists/selinux-full.json",
+                "packagelists/intel-gpu-base-rt.json",
+                "packagelists/drtm.json",
+                "packagelists/virt-guest-packages.json",
+		"packagelists/docker.json"
+            ],
+            "KernelCommandLine": {
+                "SELinux": "permissive"
+            },
+            "KernelOptions": {
+                "default": "kernel-rt"
+            },
+            "AdditionalFiles": {
+                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network"
+            },
+            "PostInstallScripts": [
+                {
+                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                }
+            ]
+        },
+	{
+            "Name": "Edge Microvisor Toolkit Base with Standard Kernel + Docker",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
@@ -12,7 +42,67 @@
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base.json",
                 "packagelists/drtm.json",
+                "packagelists/virt-guest-packages.json",
+	        "packagelists/docker.json"
+            ],
+            "KernelCommandLine": {
+                "SELinux": "permissive"
+            },
+            "KernelOptions": {
+                "default": "kernel"
+            },
+            "AdditionalFiles": {
+                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network"
+            },
+            "PostInstallScripts": [
+                {
+                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                }
+            ]
+        },
+        {
+	    "Name": "Edge Microvisor Toolkit Base with RT Kernel",
+            "PackageLists": [
+                "packagelists/grub2-mkconfig.json",
+                "packagelists/developer-packages.json",
+                "packagelists/virtualization-host-packages.json",
+                "packagelists/core-packages-image.json",
+                "packagelists/core-tools-packages.json",
+                "packagelists/ssh-server.json",
+                "packagelists/selinux-full.json",
+                "packagelists/intel-gpu-base-rt.json",
+                "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json"
+            ],
+            "KernelCommandLine": {
+                "SELinux": "permissive"
+            },
+            "KernelOptions": {
+                "default": "kernel-rt"
+            },
+            "AdditionalFiles": {
+                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network"
+            },
+            "PostInstallScripts": [
+                {
+                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                }
+            ]
+        },
+	{
+            "Name": "Edge Microvisor Toolkit Base with Standard Kernel",
+            "PackageLists": [
+                "packagelists/grub2-mkconfig.json",
+                "packagelists/developer-packages.json",
+                "packagelists/virtualization-host-packages.json",
+                "packagelists/core-packages-image.json",
+                "packagelists/core-tools-packages.json",
+                "packagelists/ssh-server.json",
+                "packagelists/selinux-full.json",
+                "packagelists/intel-gpu-base.json",
+                "packagelists/drtm.json",
+                "packagelists/virt-guest-packages.json",
+                "packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
