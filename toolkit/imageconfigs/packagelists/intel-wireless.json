@@ -1,5 +1,6 @@
 {
     "packages": [
-        "linux-firmware-iwlwifi"
+        "linux-firmware-iwlwifi",
+        "wireless-regdb"
     ]
 }

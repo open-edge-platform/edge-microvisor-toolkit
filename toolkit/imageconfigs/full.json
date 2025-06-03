@@ -12,7 +12,8 @@
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base.json",
                 "packagelists/drtm.json",
-                "packagelists/virt-guest-packages.json"
+                "packagelists/virt-guest-packages.json",
+                "packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
