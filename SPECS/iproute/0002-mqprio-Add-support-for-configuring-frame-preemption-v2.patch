@@ -1,0 +1,53 @@
+From 5b879815889dbcfabba4aec37a87654db44bc99d Mon Sep 17 00:00:00 2001
+From: "Looi, Hong Aun" <hong.aun.looi@intel.com>
+Date: Thu, 29 Aug 2024 23:26:55 +0800
+Subject: [PATCH] mqprio: Add support for configuring frame preemption
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+---
+ tc/q_mqprio.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/tc/q_mqprio.c b/tc/q_mqprio.c
+index 7a4417f5..65c939f8 100644
+--- a/tc/q_mqprio.c
++++ b/tc/q_mqprio.c
+@@ -62,6 +62,7 @@ static int mqprio_parse_opt(struct qdisc_util *qu, int argc,
+ 	__u16 shaper = TC_MQPRIO_SHAPER_DCB;
+ 	__u32 fp[TC_QOPT_MAX_QUEUE] = { };
+ 	__u16 mode = TC_MQPRIO_MODE_DCB;
++	__u32 preempt = UINT32_MAX;
+ 	bool have_tc_entries = false;
+ 	int num_fp_entries = 0;
+ 	int cnt_off_pairs = 0;
+@@ -197,6 +198,16 @@ static int mqprio_parse_opt(struct qdisc_util *qu, int argc,
+ 				return -1;
+ 			}
+ 			flags |= TC_MQPRIO_F_MAX_RATE;
++		} else if (strcmp(*argv, "preempt") == 0) {
++			NEXT_ARG();
++			if (preempt != UINT32_MAX) {
++				fprintf(stderr, "mqprio: duplicate \"preempt\" specification\n");
++				return -1;
++			}
++			if (get_u32(&preempt, *argv, 2)) {
++				PREV_ARG();
++				return -1;
++			}	
+ 		} else if (strcmp(*argv, "help") == 0) {
+ 			explain();
+ 			return -1;
+@@ -251,6 +262,10 @@ static int mqprio_parse_opt(struct qdisc_util *qu, int argc,
+ 		addattr_nest_end(n, start);
+ 	}
+ 
++	if (preempt != UINT32_MAX)
++		addattr_l(n, 1024, TCA_MQPRIO_PREEMPT_TCS,
++			  &preempt, sizeof(preempt));
++
+ 	tail->rta_len = (void *)NLMSG_TAIL(n) - (void *)tail;
+ 
+ 	return 0;
+-- 
+2.34.1
+

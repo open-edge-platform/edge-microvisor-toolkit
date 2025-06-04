@@ -1,0 +1,46 @@
+From a5543bde7747d6a33a65083d6d3a93a56444bcbc Mon Sep 17 00:00:00 2001
+From: Jose Abreu <Jose.Abreu@synopsys.com>
+Date: Tue, 17 Dec 2019 15:10:24 +0100
+Subject: [PATCH] taprio: Add support for the SetAndHold and SetAndRelease
+ commands
+
+Although this is already in kernel, currently the tool does not support
+them. We need these commands for full TSN features which are currently
+supported in Synopsys IPs such as QoS and XGMAC3.
+
+Signed-off-by: Jose Abreu <Jose.Abreu@synopsys.com>
+Date: Dec/18/2019, 23:05:13 (UTC+00:00)
+Date: Jan/03/2020, 22:24:14
+---
+ tc/q_taprio.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/tc/q_taprio.c b/tc/q_taprio.c
+index a248148a..07567277 100644
+--- a/tc/q_taprio.c
++++ b/tc/q_taprio.c
+@@ -99,6 +99,10 @@ static const char *entry_cmd_to_str(__u8 cmd)
+ 	switch (cmd) {
+ 	case TC_TAPRIO_CMD_SET_GATES:
+ 		return "S";
++	case TC_TAPRIO_CMD_SET_AND_HOLD:
++		return "H";
++	case TC_TAPRIO_CMD_SET_AND_RELEASE:
++		return "R";
+ 	default:
+ 		return "Invalid";
+ 	}
+@@ -108,6 +112,10 @@ static int str_to_entry_cmd(const char *str)
+ {
+ 	if (strcmp(str, "S") == 0)
+ 		return TC_TAPRIO_CMD_SET_GATES;
++	if (strcmp(str, "H") == 0)
++		return TC_TAPRIO_CMD_SET_AND_HOLD;
++	if (strcmp(str, "R") == 0)
++		return TC_TAPRIO_CMD_SET_AND_RELEASE;
+ 
+ 	return -1;
+ }
+-- 
+2.34.1
+
