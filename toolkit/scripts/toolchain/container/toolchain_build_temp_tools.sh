@@ -86,10 +86,10 @@ rm -rf gcc-13.2.0
 
 touch $LFS/logs/temptoolchain/status_gcc_pass1_complete
 
-KERNEL_VERSION="6.12.28"
+KERNEL_VERSION="6.12.30"
 echo Linux-${KERNEL_VERSION} API Headers
-tar xf lts-v6.12.28-emt-250519T192106Z.tar.gz
-pushd lts-v${KERNEL_VERSION}-emt-250519T192106Z
+tar xf lts-v6.12.30-emt-250524T131939Z.tar.gz
+pushd lts-v${KERNEL_VERSION}-emt-250524T131939Z
 make mrproper
 make headers
 find usr/include -type f ! -name '*.h' -delete

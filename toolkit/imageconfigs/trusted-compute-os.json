@@ -14,15 +14,16 @@
             "Name": "Trusted Compute VM",
             "BootType": "efi",
 	    "packages": [
-            "ca-certificates",
             "cronie-anacron",
             "logrotate",
-            "core-packages-base-image",
-            "dracut-hostonly",
             "dracut-vrf",
             "initramfs",
             "shadow-utils"
             ],
+            "PackageLists": [
+                "packagelists/minimal-os-packages.json"
+            ],
+
             "AdditionalFiles": {
                 "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network",
                 "additionalconfigs/systemd-networkd-wait-online-override.conf": "/etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf"

@@ -8401,8 +8401,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.28",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.28-emt-250519T192106Z.tar.gz"
+          "version": "6.12.30",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
         }
       }
     },
@@ -8421,8 +8421,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.28",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.28-emt-250519T192106Z.tar.gz"
+          "version": "6.12.30",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
         }
       }
     },
@@ -8451,8 +8451,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.28",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.28-emt-250519T192106Z.tar.gz"
+          "version": "6.12.30",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
         }
       }
     },
