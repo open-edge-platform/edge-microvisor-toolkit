@@ -3,6 +3,6 @@
     "tink-worker-0.10.0.tar.gz": "648137225766605fd637dd1b36d9d8b439dfa18a3351f6806f0ec8107e8136af",
     "tink-worker.service": "4539d667efc3daa69e1edb96fa73f7e3d30265b9f7680d57c97b0144e7ea196c",
     "tink-worker-0.10.0-vendor.tar.gz": "0e0bcfeacdd304a3e74c69eefbb1f01fef9ff7b4f376caf9ed166fba9499a5ff",
-    "tink-worker.patch": "6f282c89a76152f1c31e8bc686c6f31190e4e8b73bb3cbc2626a72f7ef5e1395"
+    "tink-worker.patch": "f7bd4b1d2fcbd040546176eeb72e7287447cb24b12eb2293e06228ecd11727ab"
   }
 }

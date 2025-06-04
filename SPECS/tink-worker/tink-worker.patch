@@ -109,10 +109,10 @@ index 8dff15a38..2576dfe06 100644
  	}
 diff --git a/cmd/tink-worker/worker/containerd.go b/cmd/tink-worker/worker/containerd.go
 new file mode 100644
-index 000000000..a6448b727
+index 000000000..1ac3efbc8
 --- /dev/null
 +++ b/cmd/tink-worker/worker/containerd.go
-@@ -0,0 +1,605 @@
+@@ -0,0 +1,631 @@
 +package worker
 +
 +import (
@@ -125,6 +125,8 @@ index 000000000..a6448b727
 +	"strings"
 +	"syscall"
 +	"time"
++
++	"slices"
 +
 +	"github.com/containerd/containerd"
 +	"github.com/containerd/containerd/cio"
@@ -143,6 +145,9 @@ index 000000000..a6448b727
 +	_ LogCapturer      = (*containerdLogCapturer)(nil)
 +
 +	mountExcluded = []string{
++		"/mnt",
++		"/sys",
++		"/dev/console",
 +		"/dev",
 +		"/worker",
 +		"/lib/modules",
@@ -207,6 +212,30 @@ index 000000000..a6448b727
 +
 +	mounts := []specs.Mount{
 +		{
++			Destination: "/sys",
++			Source:      "/sys",
++			Type:        "sysfs",
++			Options:     []string{"rbind", "rw"},
++		},
++		{
++			Source:      "/dev",
++			Destination: "/dev",
++			Type:        "bind",
++			Options:     []string{"rbind", "rw"},
++		},
++		{
++			Source:      "/mnt",
++			Destination: "/mnt",
++			Type:        "bind",
++			Options:     []string{"rbind", "rw"},
++		},
++		{
++			Source:      "/dev/console",
++			Destination: "/dev/console",
++			Type:        "bind",
++			Options:     []string{"rbind", "rw"},
++		},
++		{
 +			Source:      "/lib/modules",
 +			Destination: "/lib/modules",
 +			Type:        "bind",
@@ -249,6 +278,8 @@ index 000000000..a6448b727
 +	}
 +	// Create the container specification
 +	opts := []oci.SpecOpts{
++		oci.WithDefaultSpec(),
++		oci.WithDefaultUnixDevices,
 +		oci.WithImageConfig(image),
 +		oci.WithEnv(action.GetEnvironment()),
 +		oci.WithMounts(mounts),
@@ -669,12 +700,7 @@ index 000000000..a6448b727
 +}
 +
 +func isValidDst(dst string) bool {
-+	for _, excluded := range mountExcluded {
-+		if strings.HasPrefix(dst, excluded) {
-+			return false
-+		}
-+	}
-+	return true
++	return !slices.Contains(mountExcluded, dst)
 +}
 +
 +func parseVolumes(volumes []string) ([]specs.Mount, error) {
