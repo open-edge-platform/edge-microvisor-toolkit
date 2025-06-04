@@ -16,8 +16,8 @@ The currently published versions are:
 
 * [Edge Microvisor Toolkit Standalone Node (immutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node)
 * [Edge Microvisor Toolkit Developer Node (mutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node)
-* [Edge Microvisor Toolkit (immutable)](https://github.com/open-edge-platform/edge-manageability-framework)
-* [Edge Microvisor Toolkit with real time extensions (immutable)](https://github.com/open-edge-platform/edge-manageability-framework)
+* [Edge Microvisor Toolkit (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
+* [Edge Microvisor Toolkit with real time extensions (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
 
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
 platforms such as  Xeon®, Intel® Core Ultra™, Intel Core™ and Intel® Atom®. It
@@ -39,7 +39,7 @@ Check out these articles to quickly learn how to work with Edge Microvisor Toolk
 
 **Edge Microvisor Toolkit Standalone Node**
 
-* [Downloading and installing the standalone toolkit RAW image](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
+* [Get the tools required to build USB creator and install Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
 
 **Common**
 
