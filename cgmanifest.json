@@ -2609,7 +2609,7 @@
         "other": {
           "name": "device-discovery",
           "version": "1.17.2",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tinker-actions/1.17.2.tar.gz"
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/emt-uos.tar.gz"
         }
       }
     },
