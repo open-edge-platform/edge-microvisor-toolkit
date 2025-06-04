@@ -147,7 +147,7 @@ If you need to configure system wide proxy settings you can follow these steps:
 1. Export your proxy settings in the `proxy.sh` file
 1. Make the file executable `chmod +x /etc/profile.d/proxy.sh`
 
-The package managers supported, `dnf` and `tdnf` also need to have proxy settings
+The supported package managers, `dnf` and `tdnf` also need to have proxy settings
 configured. To add those, create or append the current file for each package manager
 under `/etc/dnf/dnf.conf` and `/etc/tdnf/tdnf.conf` respectively.
 
