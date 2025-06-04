@@ -1,0 +1,33 @@
+From 907b23b1c45912894bfe31c91ee04dc49e968f21 Mon Sep 17 00:00:00 2001
+From: Faizal Rahim <faizal.abdul.rahim@linux.intel.com>
+Date: Tue, 4 Jun 2024 04:21:48 -0400
+Subject: [PATCH 8/9] clock: Check priority1 not set to 255 as a requirement
+ for a grandmaster
+
+The fix is necessary because, according to IEEE 802.1AS-2020 standards
+Section 10.1.3 NOTE 1,the grandmaster-capable flag can be overridden
+and set to FALSE by adjusting the priority1 (a read/write attribute)
+to 255.
+
+Signed-off-by: Faizal Rahim <faizal.abdul.rahim@linux.intel.com>
+Signed-off-by: Choong Chwee Lin <chwee.lin.choong@intel.com>
+---
+ clock.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/clock.c b/clock.c
+index c999c83..c110bfa 100644
+--- a/clock.c
++++ b/clock.c
+@@ -1494,7 +1494,7 @@ int clock_free_running(struct clock *c)
+ 
+ int clock_gm_capable(struct clock *c)
+ {
+-	return c->grand_master_capable;
++	return c->grand_master_capable && c->dds.priority1 != 255;
+ }
+ 
+ struct ClockIdentity clock_identity(struct clock *c)
+-- 
+2.34.1
+
