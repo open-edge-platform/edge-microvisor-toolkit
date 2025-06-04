@@ -1,16 +1,18 @@
 Summary:        Libbpf library
 Name:           libbpf
 Version:        1.2.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        LGPLv2 OR BSD
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/%{name}/%{name}
 Source0:        https://github.com/%{name}/%{name}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 BuildRequires:  elfutils-devel
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:  gcc
 BuildRequires:  make
+
+Patch0:         0001-libbpf-add-txtime-field-in-xdp_desc-struct.patch
 
 %description
 A mirror of bpf-next linux tree bpf-next/tools/lib/bpf directory plus its
@@ -31,7 +33,7 @@ developing applications that use %{name}
 %global make_flags DESTDIR=%{buildroot} OBJDIR=%{_builddir} CFLAGS="%{build_cflags} -fPIC" LDFLAGS="%{build_ldflags} -Wl,--no-as-needed" LIBDIR=/%{_libdir} NO_PKG_CONFIG=1
 
 %prep
-%autosetup
+%autosetup -p1 -n %{name}-%{version}
 
 %build
 %make_build -C ./src %{make_flags}
@@ -50,6 +52,9 @@ find %{buildroot} -type f -name "*.a" -delete -print
 %{_libdir}/pkgconfig/libbpf.pc
 
 %changelog
+* Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 1.2.2-2
+- Add TSN patches/support
+
 * Fri Oct 27 2023 CBL-Mariner Servicing Account <cblmargh@microsoft.com> - 1.2.2-1
 - Auto-upgrade to 1.2.2 - Azure Linux 3.0 - package upgrades
 
