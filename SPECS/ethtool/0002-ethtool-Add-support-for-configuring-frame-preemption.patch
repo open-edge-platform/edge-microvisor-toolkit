@@ -1,0 +1,282 @@
+From 8b8282cacc9638522524a05448a5f44d24f00c22 Mon Sep 17 00:00:00 2001
+From: Aaron Chan <aaron.chun.yew.chan@intel.com>
+Date: Thu, 29 May 2025 11:55:58 +0800
+Subject: [PATCH 2/5] ethtool: Add support for configuring frame
+ preemptionethtool: Add support for configuring frame preemption
+
+The configuration knobs that can be set are:
+  - enabling/disabling frame preemption per-device;
+  - configuring the minimum fragment size;
+
+The values that can be retrieved from the hardware are:
+  - if frame preemption is enabled;
+  - the current minimum fragment size;
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+---
+ Makefile.am            |   1 +
+ ethtool.8.in           |  15 +++++
+ ethtool.c              |  12 ++++
+ netlink/desc-ethtool.c |   9 +++
+ netlink/extapi.h       |   4 ++
+ netlink/preempt.c      | 137 +++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 178 insertions(+)
+ create mode 100644 netlink/preempt.c
+
+diff --git a/Makefile.am b/Makefile.am
+index 3879138..a92181c 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -42,6 +42,7 @@ ethtool_SOURCES += \
+ 		  netlink/desc-ethtool.c netlink/desc-genlctrl.c \
+ 		  netlink/module-eeprom.c netlink/module.c netlink/rss.c \
+ 		  netlink/desc-rtnl.c netlink/cable_test.c netlink/tunnels.c \
++		  netlink/preempt.c \
+ 		  netlink/plca.c \
+ 		  netlink/pse-pd.c \
+ 		  uapi/linux/ethtool_netlink.h \
+diff --git a/ethtool.8.in b/ethtool.8.in
+index adf8900..0fad822 100644
+--- a/ethtool.8.in
++++ b/ethtool.8.in
+@@ -1560,6 +1560,21 @@ shown. Default is to show notifications for all devices.
+ Show tunnel-related device capabilities and state.
+ List UDP ports kernel has programmed the device to parse as VxLAN,
+ or GENEVE tunnels.
++.TP
++.B \-\-set\-frame\-preemption
++Configures frame preemption support for the specified network device.
++
++Frame preemption allows packets from higher priority queues, called
++express queues, to interrupt (preempt) the transmission of packets
++from lower priority queues.
++.RS 4
++.TP
++.B fp\ [ on | off ]
++Enables or disables frame preemption.
++.TP
++.B add\-frag\-size \ N
++Size, in bytes, of minimum non-final fragments of preempted packets
++supported by the receiver.
+ .RE
+ .TP
+ .B \-\-show\-module
+diff --git a/ethtool.c b/ethtool.c
+index b7d173b..2324215 100644
+--- a/ethtool.c
++++ b/ethtool.c
+@@ -6043,6 +6043,18 @@ static const struct option args[] = {
+ 		.help	= "Set FEC settings",
+ 		.xhelp	= "		[ encoding auto|off|rs|baser|llrs [...] ]\n"
+ 	},
++	{
++		.opts	= "--show-frame-preemption",
++		.nlfunc	= nl_get_preempt,
++		.help	= "Show Frame Preemption settings",
++	},
++	{
++		.opts	= "--set-frame-preemption",
++		.nlfunc	= nl_set_preempt,
++		.help	= "Set Frame Preemption settings",
++		.xhelp	= "		[ fp on|off ]\n"
++			  "		[ add-frag-size %d ]\n",
++	},
+ 	{
+ 		.opts	= "-Q|--per-queue",
+ 		.func	= do_perqueue,
+diff --git a/netlink/desc-ethtool.c b/netlink/desc-ethtool.c
+index 661de26..8e92839 100644
+--- a/netlink/desc-ethtool.c
++++ b/netlink/desc-ethtool.c
+@@ -496,6 +496,13 @@ static const struct pretty_nla_desc __mm_desc[] = {
+ 	NLATTR_DESC_NESTED(ETHTOOL_A_MM_STATS, mm_stat),
+ };
+ 
++static const struct pretty_nla_desc __preempt_desc[] = {
++	NLATTR_DESC_INVALID(ETHTOOL_A_PREEMPT_UNSPEC),
++	NLATTR_DESC_NESTED(ETHTOOL_A_PREEMPT_HEADER, header),
++	NLATTR_DESC_U8(ETHTOOL_A_PREEMPT_ENABLED),
++	NLATTR_DESC_U32(ETHTOOL_A_PREEMPT_ADD_FRAG_SIZE),
++};
++
+ const struct pretty_nlmsg_desc ethnl_umsg_desc[] = {
+ 	NLMSG_DESC_INVALID(ETHTOOL_MSG_USER_NONE),
+ 	NLMSG_DESC(ETHTOOL_MSG_STRSET_GET, strset),
+@@ -531,6 +538,8 @@ const struct pretty_nlmsg_desc ethnl_umsg_desc[] = {
+ 	NLMSG_DESC(ETHTOOL_MSG_MODULE_EEPROM_GET, module_eeprom),
+ 	NLMSG_DESC(ETHTOOL_MSG_STATS_GET, stats),
+ 	NLMSG_DESC(ETHTOOL_MSG_PHC_VCLOCKS_GET, phc_vclocks),
++	NLMSG_DESC(ETHTOOL_MSG_PREEMPT_GET, preempt),
++	NLMSG_DESC(ETHTOOL_MSG_PREEMPT_SET, preempt),
+ 	NLMSG_DESC(ETHTOOL_MSG_MODULE_GET, module),
+ 	NLMSG_DESC(ETHTOOL_MSG_MODULE_SET, module),
+ 	NLMSG_DESC(ETHTOOL_MSG_PSE_GET, pse),
+diff --git a/netlink/extapi.h b/netlink/extapi.h
+index e2d6b71..c7b3ebe 100644
+--- a/netlink/extapi.h
++++ b/netlink/extapi.h
+@@ -47,6 +47,8 @@ int nl_gmodule(struct cmd_context *ctx);
+ int nl_smodule(struct cmd_context *ctx);
+ int nl_monitor(struct cmd_context *ctx);
+ int nl_getmodule(struct cmd_context *ctx);
++int nl_get_preempt(struct cmd_context *ctx);
++int nl_set_preempt(struct cmd_context *ctx);
+ int nl_grss(struct cmd_context *ctx);
+ int nl_plca_get_cfg(struct cmd_context *ctx);
+ int nl_plca_set_cfg(struct cmd_context *ctx);
+@@ -120,6 +122,8 @@ nl_get_eeprom_page(struct cmd_context *ctx __maybe_unused,
+ #define nl_gstats_chk		NULL
+ #define nl_gstats		NULL
+ #define nl_getmodule		NULL
++#define nl_get_preempt		NULL
++#define nl_set_preempt		NULL
+ #define nl_gmodule		NULL
+ #define nl_smodule		NULL
+ #define nl_grss			NULL
+diff --git a/netlink/preempt.c b/netlink/preempt.c
+new file mode 100644
+index 0000000..75d4cfc
+--- /dev/null
++++ b/netlink/preempt.c
+@@ -0,0 +1,137 @@
++/*
++ * preempt.c - netlink implementation of frame preemption settings
++ *
++ * Implementation of "ethtool --{show,set}-frame-preemption <dev>"
++ */
++
++#include <errno.h>
++#include <string.h>
++#include <stdio.h>
++#include <linux/rtnetlink.h>
++#include <linux/if_link.h>
++
++#include "../internal.h"
++#include "../common.h"
++#include "netlink.h"
++#include "parser.h"
++
++/* PREEMPT_GET */
++
++static int preempt_get_prep_request(struct nl_socket *nlsk)
++{
++	int ret;
++
++	ret = nlsock_prep_get_request(nlsk, ETHTOOL_MSG_PREEMPT_GET,
++				      ETHTOOL_A_PREEMPT_HEADER, 0);
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
++int preempt_get_reply_cb(const struct nlmsghdr *nlhdr, void *data)
++{
++	const struct nlattr *tb[ETHTOOL_A_PREEMPT_MAX + 1] = {};
++	DECLARE_ATTR_TB_INFO(tb);
++	struct nl_context *nlctx = data;
++	int ret;
++
++	if (nlctx->is_dump || nlctx->is_monitor)
++		nlctx->no_banner = false;
++
++	ret = mnl_attr_parse(nlhdr, GENL_HDRLEN, attr_cb, &tb_info);
++	if (ret < 0)
++		return ret;
++
++	nlctx->devname = get_dev_name(tb[ETHTOOL_A_PREEMPT_HEADER]);
++	if (!dev_ok(nlctx))
++		return MNL_CB_OK;
++
++	printf("Frame preemption settings for %s:\n", nlctx->devname);
++
++	if (tb[ETHTOOL_A_PREEMPT_ENABLED]) {
++		int enabled = mnl_attr_get_u8(tb[ETHTOOL_A_PREEMPT_ENABLED]);
++
++		printf("\tenabled: %s\n", enabled ? "enabled" : "not enabled");
++	}
++	if (tb[ETHTOOL_A_PREEMPT_ADD_FRAG_SIZE]) {
++		uint32_t add_frag_size = mnl_attr_get_u32(
++			tb[ETHTOOL_A_PREEMPT_ADD_FRAG_SIZE]);
++
++		printf("\tadditional fragment size: %d\n", add_frag_size);
++	}
++	return MNL_CB_OK;
++}
++
++int nl_get_preempt(struct cmd_context *ctx)
++{
++	struct nl_context *nlctx = ctx->nlctx;
++	struct nl_socket *nlsk = nlctx->ethnl_socket;
++	int ret;
++
++	ret = preempt_get_prep_request(nlsk);
++	if (ret < 0)
++		return ret;
++	return nlsock_send_get_request(nlsk, preempt_get_reply_cb);
++}
++
++static const struct lookup_entry_u8 fp_values[] = {
++	{ .arg = "off",		.val = 0 },
++	{ .arg = "on",		.val = 1 },
++	{}
++};
++
++static const struct param_parser set_preempt_params[] = {
++	{
++		.arg		= "fp",
++		.group		= ETHTOOL_MSG_PREEMPT_SET,
++		.type		= ETHTOOL_A_PREEMPT_ENABLED,
++		.handler	= nl_parse_lookup_u8,
++		.handler_data	= fp_values,
++		.min_argc	= 1,
++	},
++	{
++		.arg		= "add-frag-size",
++		.group		= ETHTOOL_MSG_PREEMPT_SET,
++		.type		= ETHTOOL_A_PREEMPT_ADD_FRAG_SIZE,
++		.handler	= nl_parse_direct_u32,
++		.min_argc	= 1,
++	},
++	{}
++};
++
++int nl_set_preempt(struct cmd_context *ctx)
++{
++	struct nl_context *nlctx = ctx->nlctx;
++	struct nl_msg_buff *msgbuff;
++	struct nl_socket *nlsk;
++	int ret;
++
++	nlctx->cmd = "--set-frame-preemption";
++	nlctx->argp = ctx->argp;
++	nlctx->argc = ctx->argc;
++	nlctx->devname = ctx->devname;
++	nlsk = nlctx->ethnl_socket;
++	msgbuff = &nlsk->msgbuff;
++
++	ret = msg_init(nlctx, msgbuff, ETHTOOL_MSG_PREEMPT_SET,
++		       NLM_F_REQUEST | NLM_F_ACK);
++	if (ret < 0)
++		return 2;
++	if (ethnla_fill_header(msgbuff, ETHTOOL_A_PREEMPT_HEADER,
++			       ctx->devname, 0))
++		return -EMSGSIZE;
++
++	ret = nl_parser(nlctx, set_preempt_params, NULL, PARSER_GROUP_NONE, NULL);
++	if (ret < 0)
++		return 1;
++
++	ret = nlsock_sendmsg(nlsk, NULL);
++	if (ret < 0)
++		return 81;
++	ret = nlsock_process_reply(nlsk, nomsg_reply_cb, nlctx);
++	if (ret == 0)
++		return 0;
++	else
++		return nlctx->exit_code ?: 81;
++}
+\ No newline at end of file
+-- 
+2.34.1
+
