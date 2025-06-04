@@ -149,7 +149,7 @@ If you need to configure system wide proxy settings you can follow these steps:
 
 The package managers supported, `dnf` and `tdnf` also need to have proxy settings
 configured. To add those, create or append the current file for each package manager
-under `/etc/dnf/dnf.conf` and `/etc/tdnf/tdnf.conf`
+under `/etc/dnf/dnf.conf` and `/etc/tdnf/tdnf.conf` respectively.
 
 ```bash
 [main]
