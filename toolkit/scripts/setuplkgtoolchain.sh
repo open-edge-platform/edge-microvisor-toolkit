@@ -18,7 +18,8 @@ usage() {
 }
 
 get_lkg() {
-    wget -O $BUILD_FILENAME -nv https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/lkg/$BUILD_FILENAME
+    wget -O $BUILD_FILENAME -nv http://rpm-edgemicrovisor.intel.com/lkg/$BUILD_FILENAME || \
+        wget -O $BUILD_FILENAME -nv https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/lkg/$BUILD_FILENAME
     DAILY_BUILD_ID=$(jq -r .dailybuildid $BUILD_FILENAME | tr . -)
     GIT_COMMIT=$(jq -r .commit $BUILD_FILENAME)
 }
@@ -32,8 +33,8 @@ check_for_modified_manifests() {
 }
 
 update_manifests() {
-    wget -nv https://github.com/open-edge-platform/edge-microvisor-toolkit/$GIT_COMMIT/toolkit/resources/manifests/package/toolchain_${ARCHITECTURE}.txt -O $ROOT_FOLDER/toolkit/resources/manifests/package/toolchain_${ARCHITECTURE}.txt
-    wget -nv https://github.com/open-edge-platform/edge-microvisor-toolkit/$GIT_COMMIT/toolkit/resources/manifests/package/pkggen_core_${ARCHITECTURE}.txt -O $ROOT_FOLDER/toolkit/resources/manifests/package/pkggen_core_${ARCHITECTURE}.txt
+    wget -nv  https://raw.githubusercontent.com/open-edge-platform/edge-microvisor-toolkit/${GIT_COMMIT}/toolkit/resources/manifests/package/toolchain_${ARCHITECTURE}.txt -O $ROOT_FOLDER/toolkit/resources/manifests/package/toolchain_${ARCHITECTURE}.txt
+    wget -nv  https://raw.githubusercontent.com/open-edge-platform/edge-microvisor-toolkit/${GIT_COMMIT}/toolkit/resources/manifests/package/pkggen_core_${ARCHITECTURE}.txt -O $ROOT_FOLDER/toolkit/resources/manifests/package/pkggen_core_${ARCHITECTURE}.txt
 }
 
 cleanup() {
