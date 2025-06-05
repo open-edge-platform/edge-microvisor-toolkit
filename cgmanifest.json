@@ -44,6 +44,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "ace-tao",
+          "version": "8.0.3",
+          "downloadUrl": "http://download.dre.vanderbilt.edu/previous_versions/ACE+TAO-src-8.0.3.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "acl",
           "version": "2.3.1",
           "downloadUrl": "https://download.savannah.nongnu.org/releases/acl/acl-2.3.1.tar.gz"
@@ -7493,6 +7503,16 @@
           "name": "intel-level-zero",
           "version": "1.17.44",
           "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.17.44.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-lms",
+          "version": "2506.0.0.0",
+          "downloadUrl": "https://github.com/intel/lms/archive/v2506.0.0.0/2506.0.0.0.tar.gz"
         }
       }
     },
