@@ -4,7 +4,7 @@
 
 Summary:        An agent for managing and updating metric and log configurations
 Name:           platform-telemetry-agent
-Version:        1.3.1
+Version:        1.4.0
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -147,6 +147,9 @@ echo "Assigning KUBECONFIG End"
 %systemd_postun platform-telemetry-agent.service
 
 %changelog
+* Wed Jun 04 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.4.0-1
+- Add backoff/retry on northbound grpc interfaces
+
 * Thu Apr 03 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.3.1-1
 - Update common to 1.6.8
 

@@ -97,6 +97,71 @@ tdnf makecache
 ::::
 
 
+::::{dropdown} How do I install docker and install containers?
+Packages can be installed on Edge Microvisor Toolkit Developer image with `tdnf`
+. Follow these steps to install the container runtime and the docker-cli.
+
+Install Docker (Moby)
+
+```bash
+sudo tdnf install -y moby-engine moby-cli containerd
+```
+Enable and start the Docker service
+
+```bash
+sudo systemctl enable docker
+sudo systemctl start docker
+```
+
+Optionally, add user to the docker group to avoid running as sudo
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+Verify installation
+
+```bash
+docker version
+docker info
+docker run hello-world
+```
+
+Optionally, install docker compose
+
+```bash
+sudo dnf install docker-compose
+```
+
+::::
+
+::::{dropdown} How do I configure proxy settings in Edge Microvisor Toolkit?
+Most applications will pick up proxy environment variables, so you can export
+environment variables for `http_proxy`, `https_proxy`, `HTTP_PROXY`,
+`HTTPS_PROXY` and `no_proxy` to your `~/.bash_rc` profile.
+
+If you need to configure system wide proxy settings you can follow these steps:
+
+1. Create a file under `/etc/profile.d/proxy.sh`
+1. Export your proxy settings in the `proxy.sh` file
+1. Make the file executable `chmod +x /etc/profile.d/proxy.sh`
+
+The supported package managers, `dnf` and `tdnf` also need to have proxy settings
+configured. To add those, create or append the current file for each package manager
+under `/etc/dnf/dnf.conf` and `/etc/tdnf/tdnf.conf` respectively.
+
+```bash
+[main]
+...
+proxy=http://proxy.example.com:3128/
+proxy_username=myuser   # add if your proxy requires authentication
+proxy_password=mypass   # add if your proxy requires authentication
+```
+
+::::
+
+
 ::::{dropdown} Will my home directory be saved if I perform an update of Edge Microvisor Toolkit?
 Yes, the entire `/home` directory is configured as a persistent bind mount and will be kept
 across updates. This is true for other key directories as well.
@@ -155,7 +220,7 @@ It depends on which microvisor image you are using.
 ::::
 
 ::::{dropdown} What do the many JSON files in imageconfigs do? Which needs to be modified for the ISO or the immutable OS image?
-For more details, see the [Build an Edge Microvisor Toolkit Image](./get-started/building-howto.md)
+For more details, see the [Build an Edge Microvisor Toolkit Image](./get-started/emt-building-howto.md)
 article. The `imageconfigs` folder includes a set of different image files that define
 different image types the Buildkit can produce. For different validated images,
 Edge Microvisor Toolkit uses the `edge-image.json`, `edge-image-rt.json`, and image types the
@@ -166,5 +231,5 @@ Buildkit can produce.
 To install from a USB device, you need to update BIOS to include the
 USB boot option and make sure USB boot has highest precedence in the
 boot order list. You also need to configure BIOS with the Platform Keys (PK) to enable
-[secure boot](./get-started/sb-howto.md) for Edge Microvisor Toolkit.
+[secure boot](./get-started/emt-sb-howto.md) for Edge Microvisor Toolkit.
 ::::

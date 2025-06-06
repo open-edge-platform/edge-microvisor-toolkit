@@ -8,8 +8,8 @@ This section provides an overview of both the operating system and build
 pipelines. Once you have decided on the usage scenarios presented below, you can
 move on to:
 
-- [Build a new Edge Microvisor Toolkit Image.](./get-started/building-howto.md)
-- [Install Edge Microvisor Toolkit from existing image.](./get-started/installation-howto.md)
+- [Build a new Edge Microvisor Toolkit Image.](./get-started/emt-building-howto.md)
+- [Install Edge Microvisor Toolkit from existing image.](./get-started/emt-installation-howto.md)
 
 ## Usage Scenarios
 
@@ -47,7 +47,7 @@ To create a custom developer build of Edge Microvisor Toolkit, follow these step
 | Development       | gcc, make, python3, perl, cmake, git            |
 | Security          | openssl, gnupg, selinux, cryptsetup, tpm2-tools |
 | Filesystem        | e2fsprogs, mount                                |
-| Included in kernel | iGPU, dGPU (Intel® Arc&trade;), SRIOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
+| Included in kernel | iGPU, dGPU (Intel® Arc&trade;), SR-IOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
 
 The supported package repository offers additional `rpm` for tailoring the image
 to specific needs of container runtime, virtualization, orchestration software,
@@ -66,7 +66,7 @@ Manageability Framework:
 - Microvisor Immutable Image with Real Time
 
 For details on deploying Microvisor with Edge Manageability Framework, refer to
-the [Edge Manageability Framework deployment guide](../user-guide/deployment-edge-orchestrator.md).
+the [Edge Manageability Framework deployment guide](./emt-deployment-edge-orchestrator.md).
 
 ## Image Support
 
@@ -88,11 +88,11 @@ outlines the key differences between those.
 
 ## Next Steps
 
-- [System Requirements](./introduction)
-- [Production Deployment with Edge Manageability Framework](./deployment-edge-orchestrator.md)
+- [System Requirements](./emt-system-requirements)
+- [Production Deployment with Edge Manageability Framework](./emt-deployment-edge-orchestrator.md)
 
 :::{toctree}
-./get-started/building-howto.md
-./get-started/installation-howto.md
-./get-started/sb-howto.md
+./get-started/emt-building-howto.md
+./get-started/emt-installation-howto.md
+./get-started/emt-sb-howto.md
 :::

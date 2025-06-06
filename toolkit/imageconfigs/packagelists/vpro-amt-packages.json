@@ -1,0 +1,6 @@
+{
+    "packages": [
+      "rpc",
+      "intel-lms"
+    ]
+}
