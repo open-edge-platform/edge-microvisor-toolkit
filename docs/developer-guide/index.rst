@@ -105,7 +105,7 @@ License Information
 
 Edge Microvisor Toolkit is based on `Azure Linux <https://github.com/microsoft/azurelinux>`__,
 sharing its permissive open-source license:
-`MIT <https://github.com/microsoft/azurelinux/blob/3.0/LICENSE>`__.
+`MIT <https://github.com/microsoft/azurelinux/blob/3.0/LICENSE>`.
 
 For more details, see the
 `LICENSE <https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/LICENSE>`__
@@ -114,14 +114,13 @@ document.
 Next Steps
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-:doc:`Architecture Overview <./developer-guide/emt-architecture-overview>`
+:doc:`Architecture Overview <./emt-architecture-overview>`
 
 .. toctree::
-
-    developer-guide/emt-get-started
-    developer-guide/emt-architecture-overview
-    developer-guide/emt-deployment-edge-orchestrator
-    developer-guide/emt-security
-    developer-guide/emt-contribution
-    developer-guide/emt-troubleshooting
-    developer-guide/emt-system-requirements
+    emt-get-started
+    emt-architecture-overview
+    emt-deployment-edge-orchestrator
+    emt-security
+    emt-contribution
+    emt-troubleshooting
+    emt-system-requirements
