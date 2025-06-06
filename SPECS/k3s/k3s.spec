@@ -1,0 +1,57 @@
+Name:          k3s
+Summary:       K3s - Lightweight Kubernetes
+Version:       1.32.4
+Release:       1%{?dist}
+License:       ASL 2.0
+Vendor:        Intel Corporation
+Distribution:  Edge Microvisor Toolkit
+Group:         System Environment/Base
+URL:           https://k3s.io/
+Source0:       https://github.com/k3s-io/k3s/archive/refs/tags/v%{version}+k3s1.tar.gz#/%{name}-v%{version}.tar.gz
+Source1:       https://github.com/k3s-io/k3s/releases/download/v%{version}+k3s1/%{name}-v%{version}
+Source2:       https://github.com/k3s-io/k3s/releases/download/v%{version}+k3s1/%{name}-airgap-images-amd64.tar.zst#/%{name}-airgap-images-v%{version}.tar.zst
+
+%description
+K3s - Lightweight Kubernetes %{version}
+
+%prep
+%setup -n %{name}-%{version}-k3s1
+
+%install
+mkdir -p %{buildroot}/usr/local/bin
+install -m 0755 %{SOURCE1} %{buildroot}/usr/local/bin/k3s
+
+mkdir %{buildroot}/opt
+install -m 0755 install.sh %{buildroot}/opt/install.sh
+
+mkdir -p %{buildroot}/var/lib/rancher/k3s/agent/images
+install -m 0644 %{SOURCE2} %{buildroot}/var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
+
+%files
+/usr/local/bin/k3s
+/opt/install.sh
+/var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
+
+%changelog
+* Wed Apr 23 2025 Rafael <32229014+rafaelbreno@users.noreply.github.com> - v1.32.4+k3s1
+- Update to v1.32.4 (#12209)
+
+* Fri Mar 21 2025 Derek Nola <derek.nola@suse.com> - v1.32.3+k3s1
+- [Release-1.32] Fix upgrade test container version (#12000)
+- Fix upgrade test container version
+- Force docker test cleanup in CI
+- Bump skew test deployment times
+- Bump skew test timeout
+
+* Fri Feb 21 2025 Brad Davidson <brad.davidson@rancher.com> - v1.32.2+k3s1
+- Bump containerd for go-cni deadlock fix
+
+* Thu Jan 23 2025 Brad Davidson <brad.davidson@rancher.com> - v1.32.1+k3s1
+- Update tests
+- Also add an ordinal to subtests so its easier to figure out which one is failing
+
+* Tue Jan 7 2025 Hussein Galal <hussein.galal.ahmed.11@gmail.com> - v1.32.0+k3s1
+- Load kernel modules for nft in agent setup (#11527)
+- Initial Azure Linux import from the source project (license: same as "License" tag)
+- License verified
+

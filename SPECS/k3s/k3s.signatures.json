@@ -1,0 +1,7 @@
+{
+    "Signatures": {
+        "k3s-v1.32.4.tar.gz": "69ae56c0edb0390f9e98b7b93955f4e066165bf9800b9ce41ed489e8410f9ce6",
+        "k3s-v1.32.4": "f16989fc00c31a946a89ccb6320f540f4822e2748e758494d5305f20352026e9",
+        "k3s-airgap-images-v1.32.4.tar.zst": "2c27bf09b90459947dff497ca5028adefa8f8f3d2ae96a3164c11b8a5ed3bb86"
+    }
+}
