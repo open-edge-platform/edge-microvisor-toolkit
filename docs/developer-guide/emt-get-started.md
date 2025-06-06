@@ -9,6 +9,7 @@ pipelines. Once you have decided on the usage scenarios presented below, you can
 move on to:
 
 - [Build a new Edge Microvisor Toolkit Image.](./get-started/emt-building-howto.md)
+- [Flash Edge Microvisor Toolkit RAW Image to Storage Medium](./get-started/emt-flashing-raw-howto.md)
 - [Install Edge Microvisor Toolkit from existing image.](./get-started/emt-installation-howto.md)
 
 ## Usage Scenarios
