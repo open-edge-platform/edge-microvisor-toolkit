@@ -1,4 +1,4 @@
-# Contribute to Edge Microvisor Toolkit
+# Edge Microvisor Toolkit Contribution Guide
 
 Edge Microvisor Toolkit is open source and always welcomes an active
 community to support adding new features, optimizing, and improving security.
@@ -19,10 +19,15 @@ review, better understand, and prioritize the request.
 
 ## Contribution Flow
 
-The following diagram outlines the general workflow for pull requests made
-to the Edge Microvisor Toolkit repository:
+All contributing Pull Requests should target the **3.0-dev branch**, which is used for
+development. Periodically, the dev branch is merged to 3.0, the publishing branch for the
+project.
 
-![Contribution Flow](assets/emt-contribution-flow.drawio.svg)
+Following the [Azure LInux](https://github.com/microsoft/azurelinux/blob/3.0/CONTRIBUTING.md#packages)
+scheme for packages, Edge Microvisor Toolkit maintains two directories:
+* [SPECS](SPECS) - fully supported and published,
+* [SPECS-EXTENDED](SPECS-EXTENDED) - experimental, if you want to use these packages, you will
+  need to [run your own build](./get-started/emt-building-howto.md).
 
 ## Release Cadence
 
@@ -47,6 +52,6 @@ Edge Microvisor Toolkit releases every 6 weeks. Here are the details:
 
 ## Contribution license
 
-Since Edge Microvisor Toolkit is open source, by contributing to the project, you agree that
-your contributions will be licensed under the terms stated in the
-[LICENSE](../../LICENSE) file.
+Since Edge Microvisor Toolkit is licensed under the [MIT license](../../LICENSE),
+by contributing to the project, you confirm that your contribution is your own, it may legally
+be published under the same license, and you grant us the rights to do so.
