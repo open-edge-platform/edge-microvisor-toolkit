@@ -23,14 +23,7 @@ Source10:	linuxptp-testsuite-%{testsuite_ver}.tar.gz
 # simulator for test suite
 Source11:	clknetsim-%{clknetsim_ver}.tar.gz
 
-# fix handling of zero-length messages
-# Patch0:		linuxptp-zerolength.patch
-# revert phc2sys options needed by the older version of test suite
 Patch0:		clknetsim-phc2sys.patch
-
-# The following patch is a combination of multiple patches to enable HA in linuxptp
-# https://review.opendev.org/c/starlingx/integ/+/891638
-# Patch2:         enable-ha.patch
 
 # Time Sensitive Network patches (noble)
 Patch1:     0001-Add-a-CMLDS-enabled-example-config-based-on-gPTP.cfg.patch
