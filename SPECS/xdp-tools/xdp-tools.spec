@@ -37,7 +37,6 @@ Requires:         libxdp = %{version}-%{release}
 
 # TSN patches
 Patch0:           0001-if_xdp.h-add-txtime-field-in-xdp_desc-struct.patch
-Patch1:           0002-remove-prefix-version-9999.patch
 
 # find-debuginfo produces empty debugsourcefiles.list
 # disable the debug package to avoid rpmbuild error'ing out because of this
