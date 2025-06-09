@@ -23,7 +23,7 @@ All contributing Pull Requests should target the **3.0-dev branch**, which is us
 development. Periodically, the dev branch is merged to 3.0, the publishing branch for the
 project.
 
-Following the [Azure LInux](https://github.com/microsoft/azurelinux/blob/3.0/CONTRIBUTING.md#packages)
+Following the [Azure Linux](https://github.com/microsoft/azurelinux/blob/3.0/CONTRIBUTING.md#packages)
 scheme for packages, Edge Microvisor Toolkit maintains two directories:
 * [SPECS](SPECS) - fully supported and published,
 * [SPECS-EXTENDED](SPECS-EXTENDED) - experimental, if you want to use these packages, you will
