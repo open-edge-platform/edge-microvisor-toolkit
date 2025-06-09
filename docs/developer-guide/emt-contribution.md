@@ -25,8 +25,8 @@ project.
 
 Following the [Azure Linux](https://github.com/microsoft/azurelinux/blob/3.0/CONTRIBUTING.md#packages)
 scheme for packages, Edge Microvisor Toolkit maintains two directories:
-* [SPECS](SPECS) - fully supported and published,
-* [SPECS-EXTENDED](SPECS-EXTENDED) - experimental, if you want to use these packages, you will
+* [SPECS](./SPECS) - fully supported and published,
+* [SPECS-EXTENDED](./SPECS-EXTENDED) - experimental, if you want to use these packages, you will
   need to [run your own build](./get-started/emt-building-howto.md).
 
 ## Release Cadence
