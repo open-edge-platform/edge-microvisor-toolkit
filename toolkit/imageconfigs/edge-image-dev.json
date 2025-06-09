@@ -75,7 +75,8 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
-                "packagelists/docker.json"
+                "packagelists/docker.json",
+                "packagelists/k3s.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
