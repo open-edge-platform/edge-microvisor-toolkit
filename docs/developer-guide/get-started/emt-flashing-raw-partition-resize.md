@@ -170,7 +170,7 @@ sdb      8:16   0  1.7T  0 disk
 `-sdb3   8:19   0  1.7T  0 part /data
 ```
 
-### Update Kernel on size change
+### Update kernel on size change
 
 Run `sgdisk  -e /dev/sdb`:
 
@@ -327,7 +327,7 @@ Run `partprobe`
 
 Run `vi /etc/fstab`
 
-# Add back the /dev/sdb3 line with latest UUID and save the /etc/fstab file.
+### Add back the /dev/sdb3 line with latest UUID and save the /etc/fstab file
 
 You will find the UUID here: PARTUUID=**943f2318-b0e9-4632-8e6f-b57e3f29f6df** /data ext4 defaults 0 2
 
