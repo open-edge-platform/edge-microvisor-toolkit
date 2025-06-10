@@ -8,18 +8,35 @@ Distribution:  Edge Microvisor Toolkit
 Group:         System Environment/Base
 URL:           https://k3s.io/
 Source0:       https://github.com/k3s-io/k3s/archive/refs/tags/v%{version}+k3s1.tar.gz#/%{name}-v%{version}.tar.gz
-Source1:       https://github.com/k3s-io/k3s/releases/download/v%{version}+k3s1/%{name}-v%{version}
-Source2:       https://github.com/k3s-io/k3s/releases/download/v%{version}+k3s1/%{name}-airgap-images-amd64.tar.zst#/%{name}-airgap-images-v%{version}.tar.zst
+Source1:       https://github.com/k3s-io/k3s/releases/download/v%{version}+k3s1/k3s-airgap-images-amd64.tar.zst#/%{name}-airgap-images-v%{version}.tar.zst
+Source2:       %{name}-vendor-v%{version}.tar.gz
+Source3:       https://github.com/k3s-io/k3s-root/releases/download/v0.14.1/k3s-root-amd64.tar
+Source4:       https://github.com/opencontainers/runc/archive/refs/tags/v1.2.5.tar.gz#/runc-v1.2.5.tar.gz
+Source5:       https://github.com/k3s-io/containerd/archive/refs/tags/v2.0.4-k3s2.tar.gz#/containerd-v2.0.4-k3s2.tar.gz
+Source6:       https://k3s.io/k3s-charts/assets/traefik-crd/traefik-crd-34.2.1+up34.2.0.tgz
+Source7:       https://k3s.io/k3s-charts/assets/traefik/traefik-34.2.1+up34.2.0.tgz
+BuildRequires: git golang yq
 
 %description
 K3s - Lightweight Kubernetes %{version}
 
 %prep
 %setup -n %{name}-%{version}-k3s1
+mkdir -p build/src/github.com/opencontainers/runc build/src/github.com/containerd/containerd build/static/charts bin dist
+tar -xf %{SOURCE2} --no-same-owner
+tar -xf %{SOURCE3} --no-same-owner
+tar -xf %{SOURCE4} --no-same-owner -C build/src/github.com/opencontainers/runc
+tar -xf %{SOURCE5} --no-same-owner -C build/src/github.com/containerd/containerd
+mv %{SOURCE6} build/static/charts/
+mv %{SOURCE7} build/static/charts/
+
+%build
+./scripts/build
+./scripts/package-cli
 
 %install
 mkdir -p %{buildroot}/usr/local/bin
-install -m 0755 %{SOURCE1} %{buildroot}/usr/local/bin/k3s
+install -m 0755 dist/artifacts/k3s %{buildroot}/usr/local/bin/k3s
 
 mkdir %{buildroot}/opt
 install -m 0755 install.sh %{buildroot}/opt/install.sh
@@ -54,4 +71,3 @@ install -m 0644 %{SOURCE2} %{buildroot}/var/lib/rancher/k3s/agent/images/k3s-air
 - Load kernel modules for nft in agent setup (#11527)
 - Initial Azure Linux import from the source project (license: same as "License" tag)
 - License verified
-
