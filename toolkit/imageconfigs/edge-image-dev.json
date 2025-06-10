@@ -76,7 +76,7 @@
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
                 "packagelists/vpro-amt-packages.json",
-                "packagelists/docker.json"
+                "packagelists/docker.json",
                 "packagelists/k3s-standard.json"
             ],
             "AdditionalFiles": {
