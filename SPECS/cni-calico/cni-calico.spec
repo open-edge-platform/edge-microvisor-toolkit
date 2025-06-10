@@ -3,6 +3,9 @@ Version:        3.30.1
 Release:        1%{?dist}
 Summary:        Calico manifests and container images for k3s kubernetes cluster.
 
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
+
 License:        Apache-2.0
 URL:            https://github.com/projectcalico/calico
 Source0:        https://github.com/projectcalico/calico/releases/download/v%{version}/release-v%{version}.tgz
@@ -24,19 +27,21 @@ mkdir -p %{buildroot}/var/lib/rancher/k3s/server/manifests/00-calico
 mkdir -p %{buildroot}/var/lib/rancher/k3s/agent/images/00-calico
 
 # Copy calico manifest
-cp -r ./manifests/calico.yaml %{buildroot}/var/lib/rancher/k3s/server/manifests/00-calico
+install -m 644 ./manifests/calico.yaml %{buildroot}/var/lib/rancher/k3s/server/manifests/00-calico/
 
 # Calico manifest uses 3 images
 # docker.io/calico/cni:v3.30.1
 # docker.io/calico/node:v3.30.1
 # docker.io/calico/kube-controllers:v3.30.1
 
-cp ./images/calico-cni.tar %{buildroot}/var/lib/rancher/k3s/agent/images/00-calico
-cp ./images/calico-node.tar %{buildroot}/var/lib/rancher/k3s/agent/images/00-calico
-cp ./images/calico-kube-controllers.tar %{buildroot}/var/lib/rancher/k3s/agent/images/00-calico
+install -m 644 ./images/calico-cni.tar %{buildroot}/var/lib/rancher/k3s/agent/images/00-calico/
+install -m 644 ./images/calico-node.tar %{buildroot}/var/lib/rancher/k3s/agent/images/00-calico/
+install -m 644 ./images/calico-kube-controllers.tar %{buildroot}/var/lib/rancher/k3s/agent/images/00-calico/
 
 
 %files
+%dir /var/lib/rancher/k3s/server/manifests/00-calico
+%dir /var/lib/rancher/k3s/agent/images/00-calico
 /var/lib/rancher/k3s/server/manifests/00-calico/calico.yaml
 /var/lib/rancher/k3s/agent/images/00-calico/calico-cni.tar
 /var/lib/rancher/k3s/agent/images/00-calico/calico-node.tar
