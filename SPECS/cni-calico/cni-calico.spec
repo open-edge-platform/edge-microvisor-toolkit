@@ -3,10 +3,10 @@ Version:        3.30.1
 Release:        1%{?dist}
 Summary:        Calico manifests and container images for k3s kubernetes cluster.
 
+License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 
-License:        Apache-2.0
 URL:            https://github.com/projectcalico/calico
 Source0:        https://github.com/projectcalico/calico/releases/download/v%{version}/release-v%{version}.tgz
 
@@ -49,4 +49,5 @@ install -m 644 ./images/calico-kube-controllers.tar %{buildroot}/var/lib/rancher
 
 %changelog
 * Mon Jun 09 2025 Julia Okuniewska <julia.okuniewska@intel.com> - 1.0.0
-- Initial package
+- Initial Azure Linux import from the source project (license: same as "License" tag).
+- License verified.
