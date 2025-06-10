@@ -32,6 +32,12 @@
                 "prometheus-process-exporter"
             ]
         },
+        "DOC group source": {
+            "license": "[DOC](https://www.dre.vanderbilt.edu/~schmidt/ACE-copying.html)",
+            "specs": [
+                "ace-tao"
+            ]
+        },
         "Fedora": {
             "license": "[Fedora MIT License Declaration](https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#License_of_Fedora_SPEC_Files)",
             "specs": [
@@ -1079,6 +1085,7 @@
                 "opal",
                 "open-vm-tools",
                 "openblas",
+                "openbox",
                 "opencc",
                 "opencl-filesystem",
                 "opencl-headers",
@@ -2261,6 +2268,7 @@
                 "hardware-discovery-agent",
                 "inbm",
                 "intel-igsc",
+                "intel-lms",
                 "intel-npu-firmware",
                 "intel-xpu-smi",
                 "node-agent",
