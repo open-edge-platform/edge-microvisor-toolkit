@@ -349,7 +349,7 @@ PARTUUID=0032e6d9-6c7f-4c28-8dd0-e53c99c3606a /data ext4 defaults 0 2
 proc /proc proc rw,nosuid,nodev,noexec,relatime,hidepid=2 0 0
 ```
 
-### Update kernel
+### Update the kernel
 
 Run `sgdisk -e /dev/sdb` and then `partprobe`
 
