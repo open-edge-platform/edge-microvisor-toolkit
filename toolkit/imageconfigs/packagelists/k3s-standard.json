@@ -1,0 +1,6 @@
+{
+    "packages": [
+        "cni-calico",
+        "network-policy"
+    ]
+}
