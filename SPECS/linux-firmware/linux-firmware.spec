@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20250311
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -85,6 +85,10 @@ cp -r intel %{buildroot}%{_firmwarepath}
 cp iwlwifi-8000C-*.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-so-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
+cp iwlwifi-ma-b0-gf-a0-83.ucode %{buildroot}%{_firmwarepath}
+cp iwlwifi-ma-b0-gf-a0-86.ucode %{buildroot}%{_firmwarepath}
+cp iwlwifi-ma-b0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
+cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 
 %files
 %defattr(-,root,root)
@@ -142,6 +146,10 @@ cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %license WHENCE LICENCE.iwlwifi_firmware
 %{_firmwarepath}/iwlwifi-so-a0-gf-a0-89.ucode
 %{_firmwarepath}/iwlwifi-so-a0-gf-a0.pnvm
+%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-83.ucode
+%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-86.ucode
+%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-89.ucode
+%{_firmwarepath}/iwlwifi-ma-b0-gf-a0.pnvm
 
 %files ice
 %defattr(-,root,root)
@@ -149,6 +157,9 @@ cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/intel/ice
 
 %changelog
++* Tue June 10 2025 shalinix singhal <shalinix.singhal@intel.com> - 20250311-4
++- Added iwlwifi ucode file in firmware
+
 * Fri May 16 2025 Junxiao Chang <junxiao.chang@intel.com> - 20250311-3
 - Added B580 GPU firmware.
 
