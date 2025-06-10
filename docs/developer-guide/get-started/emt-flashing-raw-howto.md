@@ -8,7 +8,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
    You can download the image by running the following command in the terminal:
 
-   ```
+   ```bash
    curl -k --noproxy "" https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250413.2200-prod-signed.raw.gz -o edge_microvisor_toolkit.raw.gz
    
    curl -k --noproxy "" https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250413.2200-prod-signed.raw.gz.sha256sum -o edge_microvisor_toolkit.raw.gz.sha256sum
@@ -18,7 +18,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
    Run:
 
-   ```
+   ```bash
    gzip -d edge_microvisor_toolkit.raw.gz
    chmod -Rf 777 edge_microvisor_toolkit.raw
    ```
@@ -26,7 +26,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 3. Flash the RAW image to a different, available storage device using the 'dd' command
 
    Run:
-   ```
+   ```bash
    sudo dd if=core-2.0.20240726.0106.raw of=/dev/sdc status=progress
    ```
 
@@ -40,7 +40,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
    Using the CLI method, run `sudo efibootmgr` and then `sudo efibootmgr -o 0012` and `sudo reboot`:
 
-   ```
+   ```bash
    sudo efibootmgr
    [sudo] password for linux-user:
    BootCurrent: 0002
@@ -79,7 +79,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
    Run:
 
-   ```
+   ```bash
    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
    ```
@@ -100,25 +100,25 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 1. Install the drivers manually:
 
-   ```
+   ```bash
    modprobe i40e
    ```
 
 2. Install vim tool to edit the ssh config file:
 
-   ```
+   ```bash
    tdnf install vim
    ```
 
 3. Install and Configure the SSH server
 
-   ```
+   ```bash
    tdnf install openssh-server
    ```
 
 4. Update the ssh configuration to ssh with the following information:
 
-   ```
+   ```bash
    vi /etc/ssh/sshd_config
 
    PermitRootLogin yes
@@ -128,13 +128,13 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 5. Restart sshd service
 
-   ```
+   ```bash
    systemctl restart sshd
    ```
 
    To debug, run only
 
-   ```
+   ```bash
    journalctl -u sshd -f
    ```
 
@@ -142,7 +142,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 1. Install and configure efibootmgr
 
-   ```
+   ```bash
    tdnf install efibootmgr
 
    ]# efibootmgr
@@ -158,13 +158,13 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 2. Select the required disk to boot
 
-   ```
+   ```bash
    efibootmgr -o 0002
    ```
 
 3. Reboot to change the OS to boot
 
-   ```
+   ```bash
    reboot
    ```
 

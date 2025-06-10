@@ -6,7 +6,7 @@ Follow these steps to modify the partition sizes in order to use the remaining f
 
 Run `tdnf install -y cloud-utils-growpart parted`
 
-```
+```bash
 tdnf install -y cloud-utils-growpart parted
 Loaded plugin: tdnfrepogpgcheck
 Package cloud-utils-growpart is already installed.
@@ -18,7 +18,7 @@ Nothing to do.
 
 Run `parted /dev/sdb`:
 
-```
+```bash
 parted /dev/sdb
 GNU Parted 3.4
 Using /dev/sdb
@@ -27,7 +27,7 @@ Welcome to GNU Parted! Type 'help' to view a list of commands.
 
 Run `p`:
 
-```
+```bash
 p
 Model: ATA MTFDDAK1T9TDS (scsi)
 Disk /dev/sdb: 1920GB
@@ -44,7 +44,7 @@ Number  Start   End     Size    File system  Name     Flags
 Run `rm 3`:
 
 
-```
+```bash
 rm 3
 Warning: Partition /dev/sdb3 is being used. Are you sure you want to continue?
 Yes/No?
@@ -52,7 +52,7 @@ Yes/No?
 
 Select `Yes`:
 
-```
+```bash
 Yes
 Error: Partition(s) 3 on /dev/sdb have been written, but we have been unable to
 inform the kernel of the change, probably because it/they are in use.  As a
@@ -63,7 +63,7 @@ Ignore/Cancel?
 
 Select `Ignore` and then `quit`:
 
-```
+```bash
 Ignore
 (parted) quit
 quit
@@ -74,7 +74,7 @@ Information: You may need to update /etc/fstab.
 
 Run `partprobe`:
 
-```
+```bash
 partprobe
 Error: Partition(s) 3 on /dev/sdb have been written, but we have been unable to inform the kernel of the change, probably because it/they are in use.  As a result, the old partition(s) will remain in use.  You should reboot now before making further changes.
 Warning: Not all of the space available to /dev/sdc appears to be used, you can fix the GPT to use all of the space (an extra 22075392 blocks) or continue with the current setting?
@@ -88,7 +88,7 @@ Run `lsblk`
 
 Run `parted /dev/sdb`:
 
-```
+```bash
 parted /dev/sdb
 GNU Parted 3.4
 Using /dev/sdb
@@ -100,7 +100,7 @@ Select `p`
 
 Result:
 
-```
+```bash
 Model: ATA MTFDDAK1T9TDS (scsi)
 Disk /dev/sdb: 1920GB
 Sector size (logical/physical): 512B/4096B
@@ -114,14 +114,14 @@ Number  Start   End     Size    File system  Name    Flags
 
 Run `resizepart 2 20GB`
 
-```
+```bash
 resizepart 2 20GB
 Warning: Partition /dev/sdb2 is being used. Are you sure you want to continue?
 Yes/No?
 ```
 Select `yes`.
 
-```
+```bash
 yes
 Error: Error informing the kernel about modifications to partition /dev/sdb2 --
 Device or resource busy.  This means Linux won't know about any changes you made
@@ -132,7 +132,7 @@ Ignore/Cancel?
 
 Select `Ignore`:
 
-```
+```bash
 Ignore
 Error: Partition(s) 3 on /dev/sdb have been written, but we have been unable to
 inform the kernel of the change, probably because it/they are in use.  As a
@@ -143,7 +143,7 @@ Ignore/Cancel?
 
 Select `Ignore` and run `p`:
 
-```
+```bash
 p
 Model: ATA MTFDDAK1T9TDS (scsi)
 Disk /dev/sdb: 1920GB
@@ -161,7 +161,7 @@ Number  Start   End     Size    File system  Name    Flags
 
 Run `lsblk /dev/sdb`
 
-```
+```bash
 lsblk /dev/sdb
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sdb      8:16   0  1.7T  0 disk
@@ -174,7 +174,7 @@ sdb      8:16   0  1.7T  0 disk
 
 Run `sgdisk  -e /dev/sdb`:
 
-```
+```bash
 sgdisk  -e /dev/sdb
 Warning: The kernel is still using the old partition table.
 The new table will be used at the next reboot or after you
@@ -201,7 +201,7 @@ Run `vi /etc/fstab`.
 Run `lsblk`
 
 
-```
+```bash
 lsblk
 NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sda                         8:0    0  1.7T  0 disk
@@ -221,7 +221,7 @@ sdc                         8:32   1 14.5G  0 disk
 
 Run `parted /dev/sdb`
 
-```
+```bash
 parted /dev/sdb
 GNU Parted 3.4
 Using /dev/sdb
@@ -230,7 +230,7 @@ Welcome to GNU Parted! Type 'help' to view a list of commands.
 
 Run `p`
 
-```
+```bash
 p
 Model: ATA MTFDDAK1T9TDS (scsi)
 Disk /dev/sdb: 1920GB
@@ -248,7 +248,7 @@ Run `mkpart primary ext4`
 For `Start` select `20GB`.
 For `End` select `100%`.
 
-```
+```bash
 (parted) mkpart primary ext4
 mkpart primary ext4
 Start? 20GB
@@ -265,7 +265,7 @@ Yes/No?
 
 Select `Yes`.
 
-```
+```bash
 Yes
 Warning: The resulting partition is not properly aligned for best performance:
 39062501s % 2048s != 0s
@@ -273,7 +273,7 @@ Warning: The resulting partition is not properly aligned for best performance:
 
 Run `p` to verify the result:
 
-```
+```bash
 p
 Model: ATA MTFDDAK1T9TDS (scsi)
 Disk /dev/sdb: 1920GB
@@ -289,14 +289,14 @@ Number  Start   End     Size    File system  Name     Flags
 
 Run `quit`:
 
-```
+```bash
 quit
 Information: You may need to update /etc/fstab.
 ```
 
 Run `lsblk`
 
-```
+```bash
 lsblk
 NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sda                         8:0    0  1.7T  0 disk
@@ -333,7 +333,7 @@ You will find the UUID here: PARTUUID=**943f2318-b0e9-4632-8e6f-b57e3f29f6df** /
 
 Run `blkid | grep sdb3`. The returned line should contain the new UUID:
 
-```
+```bash
 /dev/sdb3: PARTLABEL="primary" PARTUUID="0032e6d9-6c7f-4c28-8dd0-e53c99c3606a"
 ```
 
@@ -341,7 +341,7 @@ Run `blkid | grep sdb3`. The returned line should contain the new UUID:
 
 Run `cat /etc/fstab`:
 
-```
+```bash
 cat /etc/fstab
 PARTUUID=82df09a5-885c-48bc-95cf-1efaf35eab80 / ext4 defaults 0 1
 PARTUUID=2479d31c-60e8-4175-b6d6-f30db3470a04 /boot/efi vfat umask=0077 0 2
@@ -361,7 +361,7 @@ Run `reboot`.
 
 Run `lsblk`
 
-```
+```bash
 lsblk
 NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sda                         8:0    0  1.7T  0 disk
