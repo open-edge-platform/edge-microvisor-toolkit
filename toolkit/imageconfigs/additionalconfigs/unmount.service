@@ -1,0 +1,13 @@
+[Unit]
+Description=Force unmount of /var and /etc/udev
+DefaultDependencies=no
+Before=umount.target
+After=systemd-udevd.service systemd-journald.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/umount -l /var
+ExecStart=/bin/umount -l /etc/udev
+
+[Install]
+WantedBy=umount.target

@@ -82,7 +82,9 @@
                 "additionalconfigs/layout.env": "/etc/layout.env",
                 "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network",
                 "additionalconfigs/systemd-networkd-wait-online-override.conf": "/etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf",
-                "additionalconfigs/emt-cloud-init.cfg": "/etc/cloud/cloud.cfg"
+                "additionalconfigs/emt-cloud-init.cfg": "/etc/cloud/cloud.cfg",
+                "additionalconfigs/unmount.service": "/etc/systemd/system/unmount.service",
+                "additionalconfigs/systemd-udevd-override.conf": "/etc/systemd/system/systemd-udevd.service.d/override.conf"
             },
             "PostInstallScripts": [
                 {
@@ -90,6 +92,9 @@
                 },
                 {
                         "Path": "additionalconfigs/add-sudoer.sh"
+                },
+                {
+                        "Path": "additionalconfigs/enable-unmount.sh"
                 }
             ],
             "KernelOptions": {
