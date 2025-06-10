@@ -14481,6 +14481,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "network-policy",
+          "version": "1.1.4",
+          "downloadUrl": "https://github.com/open-edge-platform/cluster-extensions/archive/refs/tags/v1.1.4.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "networkd-dispatcher",
           "version": "2.2.4",
           "downloadUrl": "https://gitlab.com/craftyguy/networkd-dispatcher/-/archive/2.2.4/networkd-dispatcher-2.2.4.tar.gz"
