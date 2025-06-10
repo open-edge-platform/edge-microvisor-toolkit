@@ -29,7 +29,7 @@ It will begin to execute the workflow/actions associated with that machine.
 tar -xzf %{SOURCE2} -C .
 
 %build
-CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -o tink-worker ./cmd/tink-worker
+CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -gcflags="all=-spectre=all -l" -asmflags="all=-spectre=all" -o tink-worker ./cmd/tink-worker
 
 %install
 install -D -p -m 0755 -t %{buildroot}%{_bindir} ./tink-worker
