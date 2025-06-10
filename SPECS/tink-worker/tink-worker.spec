@@ -1,17 +1,16 @@
-%global tinkworkergitpath github.com/tinkerbell/tink
+%global tinkworkergitpath github.com/open-edge-platform/infra-onboarding
 
 Summary:        In-memory Operating System Installation Environment for Executing Tinkerbell Workflows
 Name:           tink-worker
-Version:        0.10.0
+Version:        1.0.0
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
-URL:            https://tinkerbell.org
-Source0:        https://%{tinkworkergitpath}/archive/v%{version}/tink-%{version}.tar.gz#/%{name}-%{version}.tar.gz
+URL:            github.com/open-edge-platform/infra-onboarding
+Source0:        https://%{tinkworkergitpath}/archive/refs/tags/%{name}/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
 Source1:        tink-worker.service
-Source2:        tink-worker-%{version}-vendor.tar.gz
-Patch0:         tink-worker.patch
+Source2:        tink-worker-v%{version}-vendor.tar.gz
 
 %{?systemd_requires}
 
@@ -24,11 +23,12 @@ It will begin to execute the workflow/actions associated with that machine.
 
 
 %prep
-%setup -q -n tink-%{version}
-%patch 0 -p1
+%setup -q -n infra-onboarding-%{name}-v%{version}
+cd tink-worker
 tar -xzf %{SOURCE2} -C .
 
 %build
+cd tink-worker
 CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -gcflags="all=-spectre=all -l" -asmflags="all=-spectre=all" -o tink-worker ./cmd/tink-worker
 
 %install
@@ -45,5 +45,5 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/tink-worker.service
 %{_unitdir}/tink-worker.service
 
 %changelog
-* Tue May 20 2025 Andy <andy.peng@intel.com> - 0.10.0-1
+* Tue May 20 2025 Andy <andy.peng@intel.com> - 1.0.0-1
 - Original version for Edge Microvisor Toolkit. License verified.
