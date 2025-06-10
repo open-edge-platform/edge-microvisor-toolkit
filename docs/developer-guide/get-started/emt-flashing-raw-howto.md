@@ -27,7 +27,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
    Run:
    ```bash
-   sudo dd if=core-2.0.20240726.0106.raw of=/dev/sdc status=progress
+   sudo dd if=edge_microvisor_toolkit.raw of=/dev/sdc status=progress
    ```
 
    > **Note:** Successful flashing of the image should produce partitions such as /dev/sdb and /dev/sdc
