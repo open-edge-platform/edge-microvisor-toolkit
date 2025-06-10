@@ -16,8 +16,6 @@ mkdir -p /etc/fluent-bit
 if [ ! -f /etc/fluent-bit/fluent-bit.conf ]; then
   touch /etc/fluent-bit/fluent-bit.conf
 fi
-echo "$pprefix: fstab contents $(cat /etc/fstab)"
-echo 'tmpfs   /   tmpfs   defaults,size=1G   0   0' > /etc/fstab
 echo "$pprefix: $(du -ah /usr/share)"
 find /usr/share -type f \
   ! -path "/usr/share/terminfo/v/vt100" \

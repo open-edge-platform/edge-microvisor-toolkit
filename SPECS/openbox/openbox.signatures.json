@@ -1,0 +1,10 @@
+{
+  "Signatures": {
+    "menu.xml": "8e14ed087fc7eb2ef4b1f097d8c96e83a7df0f9f51696dea775e4f341d752bd1",
+    "openbox-python3.patch": "fcc5fd72132900162bda0272973455360d464d03b3c371a886d839e771ea57b8",
+    "openbox-kf5menu.patch": "55d97a19a16cea289b551cf2afa9aa762f6024ca990101f5b8bd00eb7bb942b3",
+    "openbox-calc-layer.patch": "12b9f18ad77c6f39a707a2a0f0efed861f01911634244e4677701c47c8127b03",
+    "openbox-3.6.1.tar.xz": "abe75855cc5616554ffd47134ad15291fe37ebbebf1a80b69cbde9d670f0e26d"
+  }
+}
+

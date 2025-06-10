@@ -105,7 +105,7 @@ License Information
 
 Edge Microvisor Toolkit is based on `Azure Linux <https://github.com/microsoft/azurelinux>`__,
 sharing its permissive open-source license:
-`MIT <https://github.com/microsoft/azurelinux/blob/3.0/LICENSE>`.
+`MIT <https://github.com/microsoft/azurelinux/blob/3.0/LICENSE>`__.
 
 For more details, see the
 `LICENSE <https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/LICENSE>`__
