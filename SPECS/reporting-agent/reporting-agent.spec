@@ -51,8 +51,7 @@ install -d -m 755 -o reporting-agent -g bm-agents %{buildroot}%{_var}/log/edge-n
 install -Dm644 %{SOURCE3} %{buildroot}%{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
 
 %files
-%license LICENSE
-%doc README.md
+%{_sysusersdir}/%{name}.conf
 %{_bindir}/reporting-agent
 %config %{_sysconfdir}/sudoers.d/reporting-agent
 %config %{_sysconfdir}/cron.d/edge-node-metrics.cron
