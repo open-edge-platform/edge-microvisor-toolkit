@@ -2280,6 +2280,7 @@
                 "platform-telemetry-agent",
                 "platform-update-agent",
                 "python-snoop",
+                "reporting-agent",
                 "rpc",
                 "tink-worker",
                 "tpm-cryptsetup",

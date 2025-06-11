@@ -62,6 +62,8 @@ install -Dm644 %{SOURCE3} %{buildroot}%{_sysconfdir}/edge-node/metrics/reporting
 %pre
 %sysusers_create_package %{name} %{SOURCE1}
 
+%license %{_defaultlicensedir}/%{name}/copyright
+
 %changelog
 * Wed Jun 11 2025 Jakub Sikorski <jakub.sikorski@intel.com> - 0.0.3-1
-- Original version of reporting agent for Edge Microvisor Toolkit
+- Original version for Edge Microvisor Toolkit
