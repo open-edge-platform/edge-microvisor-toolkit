@@ -32,6 +32,7 @@ cd tink-worker
 CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -gcflags="all=-spectre=all -l" -asmflags="all=-spectre=all" -o tink-worker ./cmd/tink-worker
 
 %install
+cd tink-worker
 install -D -p -m 0755 -t %{buildroot}%{_bindir} ./tink-worker
 
 # systemd units
