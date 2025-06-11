@@ -2281,6 +2281,7 @@
                 "platform-update-agent",
                 "python-snoop",
                 "rpc",
+                "tink-worker",
                 "tpm-cryptsetup",
                 "tpm2-initramfs-tool"
             ]

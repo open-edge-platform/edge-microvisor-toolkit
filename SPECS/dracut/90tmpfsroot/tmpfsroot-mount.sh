@@ -3,7 +3,7 @@
 # Licensed under the MIT License.
 
 info "mount tmpfs for root"
-if ! mount -t tmpfs -o size=1G tmpfs $NEWROOT; then
+if ! mount -t tmpfs tmpfs $NEWROOT; then
   warn "Failed to mount tmpfs on $NEWROOT"
   die
 fi
