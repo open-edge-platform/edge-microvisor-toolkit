@@ -78,6 +78,7 @@ ifneq ($(DAILY_BUILD_REPO),)
 				 $(PACKAGE_URL_LIST)
    override SRPM_URL_LIST     := $(PACKAGE_ROOT)/SRPMS \
 				 $(SRPM_URL_LIST)
+   override REPO_LIST         += $(DAILY_BUILD_REPO)
 endif
 
 # This does not use $(depend_DAILY_BUILD_ID) because that mechanism will not detect the conversion of "lkg" to a
