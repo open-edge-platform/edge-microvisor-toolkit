@@ -31,13 +31,13 @@ make build
 %install
 # Create user
 mkdir -p %{buildroot}%{_sysusersdir}
-install -Dm644 %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
+cp %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
 
 # Install binary from the build directory
 install -Dm755 build/%{name} %{buildroot}%{_bindir}/%{name}
 
 # Install cron job
-install -Dm644 %{SOURCE2} %{buildroot}%{_sysconfdir}/cron.d/edge-node-metrics.cron
+cp %{SOURCE2} %{buildroot}%{_sysconfdir}/cron.d/edge-node-metrics.cron
 
 # Install sudoers file
 mkdir -p %{buildroot}%{_sysconfdir}/sudoers.d
@@ -48,7 +48,7 @@ install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/metrics
 install -d -m 755 %{buildroot}%{_var}/log/edge-node
 
 # Install config file
-install -Dm644 config/reporting-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
+install -m 644 config/reporting-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
 
 %files
 %{_sysusersdir}/%{name}.conf
