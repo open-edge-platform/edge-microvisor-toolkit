@@ -11,6 +11,7 @@ Source1:        %{name}.conf
 Source2:        edge-node-metrics.cron
 
 BuildRequires:  golang >= 1.24.1
+BuildRequires:  systemd-rpm-macros
 
 Requires(pre):  %{_bindir}/systemd-sysusers
 
