@@ -7,7 +7,7 @@ License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/open-edge-platform/cluster-extensions
-Source0:        https://github.com/open-edge-platform/cluster-extensions/archive/refs/tags/v%{cluster_extensions_version}.tar.gz
+Source0:        https://github.com/open-edge-platform/cluster-extensions/archive/refs/tags/v%{cluster_extensions_version}.tar.gz#/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 Requires:       helm
