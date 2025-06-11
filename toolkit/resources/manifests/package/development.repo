@@ -3,6 +3,6 @@ name=development Repo
 baseurl=http://rpm-edgemicrovisor.intel.com/3.0
 enabled=1
 gpgcheck=0
-skip_if_unavailable=1
+skip_if_unavailable=True
 sslverify=0
 priority=10
