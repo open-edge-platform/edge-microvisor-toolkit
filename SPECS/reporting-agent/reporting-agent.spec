@@ -37,6 +37,7 @@ cp %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
 install -Dm755 build/%{name} %{buildroot}%{_bindir}/%{name}
 
 # Install cron job
+mkdir -p %{buildroot}%{_sysconfdir}/cron.d
 cp %{SOURCE2} %{buildroot}%{_sysconfdir}/cron.d/edge-node-metrics.cron
 
 # Install sudoers file
