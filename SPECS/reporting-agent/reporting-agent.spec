@@ -20,6 +20,9 @@ Requires:       dmidecode
 Requires:       lsb-release
 Requires:       lshw
 
+%global debug_package   %{nil}
+%global _build_id_links none
+
 %description
 Reporting agent gathering statistics from Open Edge Platform installations. This agent is triggered by a cron job hourly and at system startup.
 
