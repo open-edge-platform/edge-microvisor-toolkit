@@ -9,7 +9,6 @@ URL:            https://github.com/open-edge-platform/edge-node-agents
 Source0:        %{url}/archive/refs/tags/%{name}/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1:        %{name}.conf
 Source2:        edge-node-metrics.cron
-Source3:        reporting-agent.yaml
 
 BuildRequires:  golang >= 1.24.1
 
@@ -48,7 +47,7 @@ install -d -m 755 -o reporting-agent -g bm-agents %{buildroot}%{_sysconfdir}/edg
 install -d -m 755 -o reporting-agent -g bm-agents %{buildroot}%{_var}/log/edge-node
 
 # Install config file
-install -Dm644 %{SOURCE3} %{buildroot}%{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
+install -Dm644 config/reporting-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
 
 %files
 %{_sysusersdir}/%{name}.conf
