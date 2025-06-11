@@ -44,8 +44,8 @@ mkdir -p %{buildroot}%{_sysconfdir}/sudoers.d
 cp config/sudoers.d/reporting-agent %{buildroot}%{_sysconfdir}/sudoers.d/
 
 # Create metrics and log directories with correct permissions
-install -d -m 755 -o reporting-agent -g bm-agents %{buildroot}%{_sysconfdir}/edge-node/metrics
-install -d -m 755 -o reporting-agent -g bm-agents %{buildroot}%{_var}/log/edge-node
+install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/metrics
+install -d -m 755 %{buildroot}%{_var}/log/edge-node
 
 # Install config file
 install -Dm644 config/reporting-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
