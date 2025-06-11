@@ -1,61 +1,34 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
-# Copyright (c) 2016-2020, Intel Corporation
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-#     * Redistributions of source code must retain the above copyright notice,
-#       this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above copyright
-#       notice, this list of conditions and the following disclaimer in the
-#       documentation and/or other materials provided with the distribution.
-#     * Neither the name of Intel Corporation nor the names of its contributors
-#       may be used to endorse or promote products derived from this software
-#       without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-%global libpqos_ver 6.0.0
+%global libpqos_ver 6.0.1
 %global desc %{expand: \
 This package provides basic support for Intel Resource Director Technology
 including, Cache Monitoring Technology (CMT), Memory Bandwidth Monitoring
 (MBM), Cache Allocation Technology (CAT), Code and Data Prioritization 
 (CDP) and Memory Bandwidth Allocation (MBA).}
 
-Name:		intel-cmt-cat
-Version:	24.05
-Release:	1%{?dist}
-Summary:	Intel cache monitoring and allocation technology config tool
+Summary:        Intel cache monitoring and allocation technology config tool
+Name:           intel-cmt-cat
+Version:        25.04
+Release:        2%{?dist}
+License:        BSD-3-Clause
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
+URL:            https://github.com/intel/intel-cmt-cat
+Source:         %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Patch0:         0001-alter-install-paths.patch
+Patch1:         0002-remove-build-and-install-of-examples.patch
+Patch2:         0003-allow-debian-flags-to-be-added.patch
 
-License:	BSD-3-Clause
-URL: 		https://github.com/intel/intel-cmt-cat
-Source: 	%{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+ExclusiveArch:  x86_64
 
-Patch0:		0001-alter-install-paths.patch
-Patch1:		0002-remove-build-and-install-of-examples.patch
-Patch2:		0003-allow-debian-flags-to-be-added.patch
-
-ExclusiveArch:	x86_64
-
-BuildRequires:	gcc
-BuildRequires:	make
+BuildRequires:  gcc
+BuildRequires:  make
 
 %description
 %{desc}
 
 %package devel
-Summary:	Development files for %{name}
-Requires:	%{name}%{?_isa} = %{version}-%{release}
+Summary:    Development files for %{name}
+Requires:   %{name}%{?_isa} = %{version}-%{release}
 
 %description devel %{desc}
 
@@ -68,7 +41,7 @@ Development files.
 %make_build
 
 %install
-%make_install
+%make_install BIN_DIR="%{buildroot}%{_bindir}" SBIN_DIR="%{buildroot}%{_sbindir}"
 
 %ldconfig_scriptlets
 
@@ -76,12 +49,12 @@ Development files.
 %license LICENSE
 %doc ChangeLog README.md
 %{_bindir}/membw
-%{_sbindir}/pqos
-%{_sbindir}/pqos-msr
-%{_sbindir}/pqos-os
-%{_sbindir}/rdtset
-%{_lib64dir}/libpqos.so.6
-%{_lib64dir}/libpqos.so.%{libpqos_ver}
+%{_bindir}/pqos
+%{_bindir}/pqos-msr
+%{_bindir}/pqos-os
+%{_bindir}/rdtset
+%{_libdir}/libpqos.so.6
+%{_libdir}/libpqos.so.%{libpqos_ver}
 %{_mandir}/man8/membw.8*
 %{_mandir}/man8/pqos.8*
 %{_mandir}/man8/pqos-msr.8*
@@ -90,15 +63,68 @@ Development files.
 
 %files -n %{name}-devel
 %{_includedir}/pqos.h
-%{_lib64dir}/libpqos.so
+%{_libdir}/libpqos.so
 
 %changelog
-* Mon Nov 11 2024 Sumit Jena <v-sumitjena@microsoft.com> - 24.05-1
-- Update to version 24.05
-- License verified.
+* Thu Jun 05 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 25.04-2
+- Initial Edge Microvisor Toolkit import from Fedora 43 (license: MIT). License verified.
 
-* Fri Oct 15 2021 Pawel Winogrodzki <pawelwi@microsoft.com> - 4.1.0-2
-- Initial CBL-Mariner import from Fedora 33 (license: MIT).
+* Tue Apr 29 2025 Ali Erdinc Koroglu <aekoroglu@fedoraproject.org> - 25.04-1
+- Update to 25.04
+
+* Wed Feb 12 2025 Ali Erdinc Koroglu <aekoroglu@fedoraproject.org> - 24.05-4
+- Merging upstream patches and Rawhide FTBFS fix
+
+* Fri Jan 17 2025 Fedora Release Engineering <releng@fedoraproject.org> - 24.05-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_42_Mass_Rebuild
+
+* Thu Jul 18 2024 Fedora Release Engineering <releng@fedoraproject.org> - 24.05-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
+* Wed Jun 26 2024 Ali Erdinc Koroglu <aekoroglu@fedoraproject.org> - 24.05-1
+- Update to 24.05
+
+* Wed Mar 13 2024 Ali Erdinc Koroglu <aekoroglu@fedoraproject.org> - 23.11.1-1
+- Update to 23.11.1
+
+* Wed Jan 24 2024 Fedora Release Engineering <releng@fedoraproject.org> - 23.11-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Sat Jan 20 2024 Fedora Release Engineering <releng@fedoraproject.org> - 23.11-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Mon Nov 13 2023 Ali Erdinc Koroglu <aekoroglu@fedoraproject.org> - 23.11-1
+- Update to 23.11
+
+* Thu Aug 31 2023 Ali Erdinc Koroglu <aekoroglu@fedoraproject.org> - 23.08-1
+- Update to 23.08
+
+* Thu Jul 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 4.5.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Mon Mar 06 2023 Raghavan Kanagaraj <raghavan.kanagaraj@intel.com> - 4.5.0-1
+- New release 4.5.0
+
+* Thu Jan 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 4.4.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Wed Oct 12 2022 Marcel cornu <marcel.d.cornu@intel.com> - 4.4.1-1
+- New release 4.4.1
+
+* Thu Jul 21 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.3.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Tue Mar 1 2022 Khawar Abbasi <khawar.abbasi@intel.com> - 4.3.0-1
+- New release 4.3.0
+
+* Thu Jan 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Thu Jul 22 2021 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Tue Jan 26 2021 Fedora Release Engineering <releng@fedoraproject.org> - 4.1.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
 
 * Fri Dec 18 2020 Khawar Abbasi <khawar.abbasi@intel.com> - 4.1.0-1
 - New release 4.1.0
@@ -108,9 +134,6 @@ Development files.
 
 * Tue Jul 21 2020 Khawar Abbasi <khawar.abbasi@intel.com> - 4.0.0-1
 - New release 4.0.0
-
-* Mon Feb 17 2020 Marcel Cornu <marcel.d.cornu@intel.com> - 3.1.1-3
-- Patched compilation issue on Fedora 32 (RhBug: 1799525)
 
 * Wed Jan 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 3.1.1-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild

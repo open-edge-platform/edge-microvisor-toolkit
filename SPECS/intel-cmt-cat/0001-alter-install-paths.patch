@@ -13,7 +13,7 @@ Index: intel-cmt-cat-24.05/lib/Makefile
  PREFIX ?= /usr/local
 -LIB_INSTALL_DIR ?= $(PREFIX)/lib
 -HDR_DIR ?= $(PREFIX)/include
-+LIB_INSTALL_DIR ?= $(DESTDIR)/usr/lib64
++LIB_INSTALL_DIR ?= $(DESTDIR)/usr/lib
 +HDR_DIR ?= $(DESTDIR)/usr/include
  DEPFILE = $(LIB).dep
 -NOLDCONFIG ?= n
