@@ -29,11 +29,12 @@ Reporting agent gathering statistics from Open Edge Platform installations. This
 make build
 
 %install
+# Create user
+mkdir -p %{buildroot}%{_sysusersdir}
+install -Dm644 %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
+
 # Install binary from the build directory
 install -Dm755 build/%{name} %{buildroot}%{_bindir}/%{name}
-
-# Create user
-install -Dm644 %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
 
 # Install cron job
 install -Dm644 %{SOURCE2} %{buildroot}%{_sysconfdir}/cron.d/edge-node-metrics.cron
