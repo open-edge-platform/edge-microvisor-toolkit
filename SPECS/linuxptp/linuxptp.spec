@@ -17,7 +17,6 @@ Source1:	phc2sys@.service
 Source2:	ptp4l@.service
 Source3:	timemaster.service
 Source4:	timemaster.conf
-Source5:	ptp4l.conf
 # external test suite
 Source10:	linuxptp-testsuite-%{testsuite_ver}.tar.gz
 # simulator for test suite
