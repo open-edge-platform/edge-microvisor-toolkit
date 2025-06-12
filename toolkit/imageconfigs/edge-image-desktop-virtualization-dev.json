@@ -75,6 +75,7 @@
                 "packagelists/persistent-mount-package.json",
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base.json",
+                "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
                 "packagelists/docker.json",
                 "packagelists/fs-tools.json"
