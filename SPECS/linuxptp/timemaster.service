@@ -1,7 +1,7 @@
 [Unit]
 Description=Synchronize system clock to NTP and PTP time sources
 After=chronyd.service ntpd.service ntpdate.service sntp.service network-online.target
-Conflicts=chronyd.service ntpd.service phc2sys.service ptp4l.service
+Conflicts=chronyd.service ntpd.service phc2sys@.service ptp4l@.service
 Wants=network-online.target
 
 [Service]

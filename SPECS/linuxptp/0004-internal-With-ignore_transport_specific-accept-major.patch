@@ -1,0 +1,75 @@
+From c0ed5738a01e0a6991b84ff313d29648162e63d3 Mon Sep 17 00:00:00 2001
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Date: Thu, 4 Apr 2024 01:25:02 +0000
+Subject: [PATCH 4/9] internal: With ignore_transport_specific accept
+ majorSdoId of 1
+
+Instead of accepting just any transportSpecific value when
+ignore_transport_specific=1, accept one of the two values: the current
+one, 2 << 4 and 1 << 4.  This cover the 802.1AS-2020 CMLDS requirement
+to respond to PTP instance-specific Pdelay_Requests, without breaking
+the Avnu tests 12.7 part A and B which test that messages with majorSdoId
+0 or 3 are ignored.  Not for upstreaming as this is a hacky workaround
+for a very specific scenario.
+
+This also covers the scenario TSN validation team is testing where CMLDS
+nodes interoperate with non-CMLDS (802.1AS-2011 or -2020) nodes.  I
+don't think this scenario is generally valid, I think it is valid only
+if the CMLDS-enabled node is the master for a given link, i.e. is closer
+to the GM.  In that case though, the Pdelay exchange only needs to be
+supported in one direction and there's no need to respond to
+Pdelay_Requests with majorSdoId==2 by the non-CMLDS node.  Nevertheless
+handle that because validation team asks for it.
+---
+ msg.h  | 1 +
+ port.c | 5 +++--
+ tc.c   | 5 +++--
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/msg.h b/msg.h
+index f6c74e1..ec4da36 100644
+--- a/msg.h
++++ b/msg.h
+@@ -39,6 +39,7 @@
+ 
+ /* Values for the transportSpecific field */
+ #define TS_IEEE_8021AS (1<<4)
++#define TS_CMLDS       (2<<4)
+ 
+ /* Values for the messageType field */
+ #define SYNC                  0x0
+diff --git a/port.c b/port.c
+index 3c2390d..e4e92d3 100644
+--- a/port.c
++++ b/port.c
+@@ -809,8 +809,9 @@ static int port_ignore(struct port *p, struct ptp_message *m)
+ 	if (path_trace_ignore(p, m)) {
+ 		return 1;
+ 	}
+-	if (p->match_transport_specific &&
+-	    msg_transport_specific(m) != p->transportSpecific) {
++	if (msg_transport_specific(m) != p->transportSpecific &&
++	    (p->match_transport_specific ||
++	     (msg_transport_specific(m) != TS_IEEE_8021AS && msg_transport_specific(m) != TS_CMLDS))) {
+ 		return 1;
+ 	}
+ 	if (pid_eq(&m->header.sourcePortIdentity, &p->portIdentity)) {
+diff --git a/tc.c b/tc.c
+index 20717c1..698cc0d 100644
+--- a/tc.c
++++ b/tc.c
+@@ -474,8 +474,9 @@ int tc_ignore(struct port *p, struct ptp_message *m)
+ {
+ 	struct ClockIdentity c1, c2;
+ 
+-	if (p->match_transport_specific &&
+-	    msg_transport_specific(m) != p->transportSpecific) {
++	if (msg_transport_specific(m) != p->transportSpecific &&
++	    (p->match_transport_specific ||
++	     (msg_transport_specific(m) != TS_IEEE_8021AS && msg_transport_specific(m) != TS_CMLDS))) {
+ 		return 1;
+ 	}
+ 	if (pid_eq(&m->header.sourcePortIdentity, &p->portIdentity)) {
+-- 
+2.34.1
+

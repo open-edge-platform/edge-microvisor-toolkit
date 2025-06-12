@@ -1,11 +1,10 @@
-Vendor:         Intel Corporation
-Distribution:   Edge Microvisor Toolkit
+%global _soversion 1.4.0
+Vendor:           Intel Corporation
+Distribution:     Edge Microvisor Toolkit
 Name:             xdp-tools
 Version:          1.4.2
-Release:          2%{?dist}
+Release:          3%{?dist}
 Summary:          Utilities and example programs for use with XDP
-%global _soversion 1.4.0
-
 License:          GPL-2.0-only
 URL:              https://github.com/xdp-project/%{name}
 Source0:          https://github.com/xdp-project/%{name}/releases/download/v%{version}/%{name}-%{version}.tar.gz
@@ -35,6 +34,9 @@ BuildRequires:    bpftool
 
 # Always keep xdp-tools and libxdp packages in sync
 Requires:         libxdp = %{version}-%{release}
+
+# TSN patches
+Patch0:           0001-if_xdp.h-add-txtime-field-in-xdp_desc-struct.patch
 
 # find-debuginfo produces empty debugsourcefiles.list
 # disable the debug package to avoid rpmbuild error'ing out because of this
@@ -84,6 +86,7 @@ The libxdp-static package contains the static library version of libxdp.
 %build
 export CFLAGS='%{build_cflags}'
 export LDFLAGS='%{build_ldflags}'
+export BPF_CFLAGS='-Wno-visibility -I%{_includedir}'
 export LIBDIR='%{_libdir}'
 export RUNDIR='%{_rundir}'
 export CLANG=%{_bindir}/clang
@@ -91,6 +94,7 @@ export LLC=%{_bindir}/llc
 export PRODUCTION=1
 export DYNAMIC_LIBXDP=1
 export FORCE_SYSTEM_LIBBPF=1
+export VERBOSE=1
 # AzLinux does not build emacs. Docs will not be available
 %if %{emt}
 export FORCE_EMACS=0
@@ -142,6 +146,9 @@ make install V=1
 %{_libdir}/pkgconfig/libxdp.pc
 
 %changelog
+* Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> 1.4.2-3
+- Add TSN patches/support
+
 * Fri Nov 08 2024 Rao Qiang <qiang.rao@intel.com> 1.4.2-2
 - Remove kernel-headers from libxdp Requires list.
 

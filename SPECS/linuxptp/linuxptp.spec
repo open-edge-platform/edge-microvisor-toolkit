@@ -1,36 +1,39 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 %global _hardened_build 1
 %global testsuite_ver ff37e2
 %global clknetsim_ver 9ed48d
 
 Name:		linuxptp
-Version:	3.1.1
+Version:	4.3
 Release:	1%{?dist}
 Summary:	PTP implementation for Linux
 
 License:	GPLv2+
 URL:		http://linuxptp.sourceforge.net/
 
-Source0:	https://sourceforge.net/projects/%{name}/files/v3.1/%{name}-%{version}.tgz
-Source1:	phc2sys.service
-Source2:	ptp4l.service
+Source0:	https://downloads.nwtime.org/%{name}/%{name}-%{version}.tgz
+Source1:	phc2sys@.service
+Source2:	ptp4l@.service
 Source3:	timemaster.service
 Source4:	timemaster.conf
-Source5:	ptp4l.conf
 # external test suite
 Source10:	linuxptp-testsuite-%{testsuite_ver}.tar.gz
 # simulator for test suite
 Source11:	clknetsim-%{clknetsim_ver}.tar.gz
 
-# fix handling of zero-length messages
-Patch0:		linuxptp-zerolength.patch
-# revert phc2sys options needed by the older version of test suite
-Patch1:		clknetsim-phc2sys.patch
+Patch0:		clknetsim-phc2sys.patch
 
-# The following patch is a combination of multiple patches to enable HA in linuxptp
-# https://review.opendev.org/c/starlingx/integ/+/891638
-Patch2:         enable-ha.patch
+# Time Sensitive Network patches (noble)
+Patch1:     0001-Add-a-CMLDS-enabled-example-config-based-on-gPTP.cfg.patch
+Patch2:     0002-Refactor-port-implement-gPTP-capable-TLV-signaling-m.patch
+Patch3:     0003-port-Implement-asCapableAcrossDomains-and-neighborGp.patch
+Patch4:     0004-internal-With-ignore_transport_specific-accept-major.patch
+Patch5:     0005-Filter-any-PTP-frames-with-the-source-MAC-of-the-loc.patch
+Patch6:     0006-port-Drop-Received-802.1AS-Packets-with-Invalid-tran.patch
+Patch7:     0007-port-Refactor-gPTP-capable-TLV-Signaling-Implementat.patch
+Patch8:     0008-clock-Check-priority1-not-set-to-255-as-a-requiremen.patch
+Patch9:     0009-port-Add-neighborGptpCapable-AS2011-backward-compati.patch
 
 BuildRequires:	gcc gcc-c++ make systemd
 
@@ -45,15 +48,24 @@ Supporting legacy APIs and other platforms is not a goal.
 
 %prep
 %setup -q -a 10 -a 11 -n %{name}-%{!?gitfullver:%{version}}%{?gitfullver}
-%patch 0 -p1 -b .zerolength
+
 mv linuxptp-testsuite-%{testsuite_ver}* testsuite
 mv clknetsim-%{clknetsim_ver}* testsuite/clknetsim
 
 pushd testsuite/clknetsim
-%patch 1 -p1 -R -b .phc2sys
+%patch 0 -p1 -R -b .phc2sys
 popd
 
-%patch 2 -p1 -b .pre-ha
+# Apply TSN patches
+%patch 1 -p1
+%patch 2 -p1
+%patch 3 -p1
+%patch 4 -p1
+%patch 5 -p1
+%patch 6 -p1
+%patch 7 -p1
+%patch 8 -p1
+%patch 9 -p1
 
 %build
 %{make_build} \
@@ -64,12 +76,13 @@ popd
 %makeinstall
 
 mkdir -p $RPM_BUILD_ROOT{%{_sysconfdir}/sysconfig,%{_unitdir},%{_mandir}/man5}
+install -m 644 -p configs/default.cfg $RPM_BUILD_ROOT%{_sysconfdir}/ptp4l.conf
 install -m 644 -p %{SOURCE1} %{SOURCE2} %{SOURCE3} $RPM_BUILD_ROOT%{_unitdir}
-install -m 644 -p %{SOURCE4} %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}
+install -m 644 -p %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}
 
 echo 'OPTIONS="-f /etc/ptp4l.conf"' > \
 	$RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/ptp4l
-echo 'OPTIONS="-a -r"' > $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/phc2sys
+echo 'OPTIONS="-w -s"' > $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/phc2sys
 
 echo '.so man8/ptp4l.8' > $RPM_BUILD_ROOT%{_mandir}/man5/ptp4l.conf.5
 echo '.so man8/timemaster.8' > $RPM_BUILD_ROOT%{_mandir}/man5/timemaster.conf.5
@@ -82,13 +95,13 @@ export CLKNETSIM_RANDOM_SEED=26743
 PATH=..:$PATH ./run
 
 %post
-%systemd_post phc2sys.service ptp4l.service timemaster.service
+%systemd_post phc2sys@.service ptp4l@.service timemaster.service
 
 %preun
-%systemd_preun phc2sys.service ptp4l.service timemaster.service
+%systemd_preun phc2sys@.service ptp4l@.service timemaster.service
 
 %postun
-%systemd_postun_with_restart phc2sys.service ptp4l.service timemaster.service
+%systemd_postun_with_restart phc2sys@.service ptp4l@.service timemaster.service
 
 %files
 %doc COPYING README.org configs
@@ -96,8 +109,8 @@ PATH=..:$PATH ./run
 %config(noreplace) %{_sysconfdir}/sysconfig/phc2sys
 %config(noreplace) %{_sysconfdir}/sysconfig/ptp4l
 %config(noreplace) %{_sysconfdir}/timemaster.conf
-%{_unitdir}/phc2sys.service
-%{_unitdir}/ptp4l.service
+%{_unitdir}/phc2sys@.service
+%{_unitdir}/ptp4l@.service
 %{_unitdir}/timemaster.service
 %{_sbindir}/hwstamp_ctl
 %{_sbindir}/nsm
@@ -107,10 +120,15 @@ PATH=..:$PATH ./run
 %{_sbindir}/ptp4l
 %{_sbindir}/timemaster
 %{_sbindir}/ts2phc
+%{_sbindir}/tz2alt
 %{_mandir}/man5/*.5*
 %{_mandir}/man8/*.8*
 
 %changelog
+* Wed Jun 07 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 4.3-1
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
+- Use ptp4l.conf from upstream and introduce TSN specific patches.
+
 * Thu Nov 16 2023 Harshit Gupta <guptaharshit@microsoft.com> - 3.1.1-1
 - Initial CBL-Mariner import from Fedora 37 (license: MIT).
 - License Verified.

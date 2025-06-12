@@ -1,0 +1,64 @@
+From 6d82c88b370cb7a463d76b49bc72e4627282fa54 Mon Sep 17 00:00:00 2001
+From: Aaron Chan <aaron.chun.yew.chan@intel.com>
+Date: Thu, 29 May 2025 11:34:09 +0800
+Subject: [PATCH 1/5] include/uapi: Update the local headers with Frame
+ Preemption support
+
+Until a kernel is released with frame preemption support we need to
+update the local copy of these headers manually.
+
+This commit should be removed before the usual process of updating the
+uapi headers.
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+---
+ uapi/linux/ethtool_netlink.h | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/uapi/linux/ethtool_netlink.h b/uapi/linux/ethtool_netlink.h
+index a8b0d79..65e2415 100644
+--- a/uapi/linux/ethtool_netlink.h
++++ b/uapi/linux/ethtool_netlink.h
+@@ -47,6 +47,8 @@ enum {
+ 	ETHTOOL_MSG_MODULE_EEPROM_GET,
+ 	ETHTOOL_MSG_STATS_GET,
+ 	ETHTOOL_MSG_PHC_VCLOCKS_GET,
++	ETHTOOL_MSG_PREEMPT_GET,
++	ETHTOOL_MSG_PREEMPT_SET,
+ 	ETHTOOL_MSG_MODULE_GET,
+ 	ETHTOOL_MSG_MODULE_SET,
+ 	ETHTOOL_MSG_PSE_GET,
+@@ -100,6 +102,8 @@ enum {
+ 	ETHTOOL_MSG_MODULE_EEPROM_GET_REPLY,
+ 	ETHTOOL_MSG_STATS_GET_REPLY,
+ 	ETHTOOL_MSG_PHC_VCLOCKS_GET_REPLY,
++	ETHTOOL_MSG_PREEMPT_GET_REPLY,
++	ETHTOOL_MSG_PREEMPT_NTF,
+ 	ETHTOOL_MSG_MODULE_GET_REPLY,
+ 	ETHTOOL_MSG_MODULE_NTF,
+ 	ETHTOOL_MSG_PSE_GET_REPLY,
+@@ -721,6 +725,21 @@ enum {
+ 	ETHTOOL_A_FEC_STAT_MAX = (__ETHTOOL_A_FEC_STAT_CNT - 1)
+ };
+ 
++/* FRAME PREEMPTION */
++
++enum {
++	ETHTOOL_A_PREEMPT_UNSPEC,
++	ETHTOOL_A_PREEMPT_HEADER,			/* nest - _A_HEADER_* */
++	ETHTOOL_A_PREEMPT_ENABLED,			/* u8 */
++	ETHTOOL_A_PREEMPT_ADD_FRAG_SIZE,		/* u32 */
++	ETHTOOL_A_PREEMPT_DISABLE_VERIFY,		/* u8 */
++	ETHTOOL_A_PREEMPT_VERIFIED,			/* u8 */
++
++	/* add new constants above here */
++	__ETHTOOL_A_PREEMPT_CNT,
++	ETHTOOL_A_PREEMPT_MAX = (__ETHTOOL_A_PREEMPT_CNT - 1)
++};
++
+ /* MODULE EEPROM */
+ 
+ enum {
+-- 
+2.34.1
+

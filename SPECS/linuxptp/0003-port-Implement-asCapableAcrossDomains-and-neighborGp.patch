@@ -1,0 +1,243 @@
+From fa404a1d5f8ec6603c1ef0ef02467e5f58b593e7 Mon Sep 17 00:00:00 2001
+From: chweelinchoong <chwee.lin.choong@intel.com>
+Date: Wed, 14 Feb 2024 16:02:01 +0800
+Subject: [PATCH 3/9] port: Implement asCapableAcrossDomains and
+ neighborGptpCapable (#14)
+
+This commit implements asCapableAcrossDomains and neighborGptpCapable,
+as specified in IEEE 802.1AS-2020 Section 11.2.2.
+
+In scenario with multiple PTP domains, a domain is asCapable only
+when both asCapableAcrossDomains and neighborGptpCapable are TRUE.
+The determination of asCapableAcrossDomains relies on the
+Common Mean Link Delay Service (CMLDS). Simultaneously,
+neighborGptpCapable is set to TRUE upon receiving periodic
+gPTP-Capable TLV signaling messages from the peer,
+adhering to the logGptpCapableMessageInterval value set in the
+message.
+
+The introduction of the `domain_zero_capable` function ensures
+backward compatibility with AS-2011, specifically addressing
+Condition (f)(2) of IEEE 802.1AS-2020  Section 11.2.2.
+
+v2: Refactor and rebase on top of CMLDS v3 implementation
+v3: Revise coding style
+
+Signed-off-by: Tan Tee Min <tee.min.tan@linux.intel.com>
+Signed-off-by: Chwee-Lin Choong <chwee.lin.choong@intel.com>
+---
+ port.c         | 67 +++++++++++++++++++++++++++++++++++---------------
+ port_private.h |  2 ++
+ 2 files changed, 49 insertions(+), 20 deletions(-)
+
+diff --git a/port.c b/port.c
+index 38bb12c..3c2390d 100644
+--- a/port.c
++++ b/port.c
+@@ -693,6 +693,13 @@ static int peer_prepare_and_send(struct port *p, struct ptp_message *msg,
+ 	return 0;
+ }
+ 
++void domain_zero_capable(struct port *p, struct ptp_message *msg) {
++	if (clock_domain_number(p->clock) == 0x0 &&
++        	msg_transport_specific(msg) == 0x10) {
++        	p->neighborGptpCapable = TRUE;
++    	}
++}
++
+ int port_capable(struct port *p)
+ {
+ 	if (!port_is_ieee8021as(p)) {
+@@ -701,12 +708,13 @@ int port_capable(struct port *p)
+ 	}
+ 
+ 	if (p->delayMechanism == DM_COMMON_P2P) {
+-		/* asCapable is calculated by the CMLDS. */
+-		return p->asCapable != NOT_CAPABLE ? 1 : 0;
++		if (p->asCapableAcrossDomains != NOT_CAPABLE)
++			goto capable;
++		goto not_capable;
+ 	}
+ 
+ 	if (tmv_to_nanoseconds(p->peer_delay) >	p->neighborPropDelayThresh) {
+-		if (p->asCapable)
++		if (p->asCapableAcrossDomains)
+ 			pr_debug("%s: peer_delay (%" PRId64 ") > neighborPropDelayThresh "
+ 				"(%" PRId32 "), resetting asCapable", p->log_name,
+ 				tmv_to_nanoseconds(p->peer_delay),
+@@ -715,7 +723,7 @@ int port_capable(struct port *p)
+ 	}
+ 
+ 	if (tmv_to_nanoseconds(p->peer_delay) <	p->min_neighbor_prop_delay) {
+-		if (p->asCapable)
++		if (p->asCapableAcrossDomains)
+ 			pr_debug("%s: peer_delay (%" PRId64 ") < min_neighbor_prop_delay "
+ 				"(%" PRId32 "), resetting asCapable", p->log_name,
+ 				tmv_to_nanoseconds(p->peer_delay),
+@@ -724,44 +732,57 @@ int port_capable(struct port *p)
+ 	}
+ 
+ 	if (p->pdr_missing > p->allowedLostResponses) {
+-		if (p->asCapable)
++		if (p->asCapableAcrossDomains)
+ 			pr_debug("%s: missed %d peer delay resp, "
+ 				"resetting asCapable", p->log_name, p->pdr_missing);
+ 		goto not_capable;
+ 	}
+ 
+ 	if (p->multiple_seq_pdr_count > p->allowedLostResponses) {
+-		if (p->asCapable)
++		if (p->asCapableAcrossDomains)
+ 			pr_debug("%s: received %d multiple sequential peer delay resp, "
+ 				"resetting asCapable", p->log_name, p->multiple_seq_pdr_count);
+ 		goto not_capable;
+ 	}
+ 
+ 	if (!p->peer_portid_valid && p->multiple_pdr_detected == 0) {
+-		if (p->asCapable)
++		if (p->asCapableAcrossDomains)
+ 			pr_debug("%s: invalid peer port id, "
+ 				"resetting asCapable", p->log_name);
+ 		goto not_capable;
+ 	}
+ 
+ 	if (!p->nrate.ratio_valid) {
+-		if (p->asCapable)
++		if (p->asCapableAcrossDomains)
+ 			pr_debug("%s: invalid nrate, "
+ 				"resetting asCapable", p->log_name);
+ 		goto not_capable;
+ 	}
+ 
+ capable:
+-	if (p->asCapable == NOT_CAPABLE) {
++	if (p->asCapableAcrossDomains == NOT_CAPABLE) {
+ 		pr_debug("%s: setting asCapable", p->log_name);
+-		p->asCapable = AS_CAPABLE;
++		p->asCapableAcrossDomains = AS_CAPABLE;
+ 		port_notify_event(p, NOTIFY_CMLDS);
+ 	}
+-	return 1;
++
++       if (p->asCapable == ALWAYS_CAPABLE) {
++               return 1;
++       }
++
++       if (p->neighborGptpCapable) {
++               p->asCapable = AS_CAPABLE;
++               return 1;
++       } else {
++               p->asCapable = NOT_CAPABLE;
++               return 0;
++       }
+ 
+ not_capable:
+-	if (p->asCapable)
++	if (p->asCapable || p->asCapableAcrossDomains) {
+ 		port_nrate_initialize(p);
++	}
++	p->asCapableAcrossDomains = NOT_CAPABLE;
+ 	p->asCapable = NOT_CAPABLE;
+ 	port_notify_event(p, NOTIFY_CMLDS);
+ 	return 0;
+@@ -1141,7 +1162,7 @@ static int port_management_fill_response(struct port *target,
+ 		cmlds->meanLinkDelay = target->peerMeanPathDelay;
+ 		cmlds->scaledNeighborRateRatio =
+ 			(Integer32) (target->nrate.ratio * POW2_41 - POW2_41);
+-		cmlds->as_capable = target->asCapable;
++		cmlds->as_capable = target->asCapableAcrossDomains;
+ 		datalen = sizeof(*cmlds);
+ 		break;
+ 	default:
+@@ -1593,7 +1614,7 @@ static enum fsm_event port_cmlds_timeout(struct port *p)
+ 	}
+ 	p->cmlds.timer_count++;
+ 	if (p->cmlds.timer_count > p->allowedLostResponses) {
+-		p->asCapable = NOT_CAPABLE;
++		p->asCapableAcrossDomains = NOT_CAPABLE;
+ 		err = port_cmlds_renew(p, now.tv_sec);
+ 		if (err) {
+ 			return EV_FAULT_DETECTED;
+@@ -1646,9 +1667,8 @@ static int port_pdelay_request(struct port *p)
+ 	}
+ 
+ 	if (p->peer_delay_req) {
+-		if (port_capable(p)) {
+-			p->pdr_missing++;
+-		}
++		p->pdr_missing++;
++		port_capable(p);
+ 		msg_put(p->peer_delay_req);
+ 	}
+ 	p->peer_delay_req = msg;
+@@ -2263,7 +2283,7 @@ static int process_cmlds(struct port *p)
+ 		p->peer_delay = nanoseconds_to_tmv(cmlds->meanLinkDelay >> 16);
+ 		p->peerMeanPathDelay = cmlds->meanLinkDelay;
+ 		p->nrate.ratio = 1.0 + (double) cmlds->scaledNeighborRateRatio / POW2_41;
+-		p->asCapable = cmlds->as_capable;
++		p->asCapableAcrossDomains = cmlds->as_capable;
+ 		p->cmlds.timer_count = 0;
+ 		if (p->state == PS_UNCALIBRATED || p->state == PS_SLAVE) {
+ 			const tmv_t tx = tmv_zero();
+@@ -2487,6 +2507,8 @@ int process_pdelay_req(struct port *p, struct ptp_message *m)
+ 			pid2str(&p->peer_portid));
+ 	}
+ 
++	domain_zero_capable(p, m);
++
+ 	rsp = msg_allocate();
+ 	if (!rsp) {
+ 		return -1;
+@@ -2668,8 +2690,9 @@ int process_pdelay_resp(struct port *p, struct ptp_message *m)
+                         p->multiple_seq_pdr_count++;
+                 }
+                 if (p->multiple_seq_pdr_count > p->allowedLostResponses) {
+-                        p->last_fault_type = FT_BAD_PEER_NETWORK;
+-                        return -1;
++			port_capable(p);
++                	p->last_fault_type = FT_BAD_PEER_NETWORK;
++                	return -1;
+                 }
+         }
+ 
+@@ -2693,6 +2716,8 @@ int process_pdelay_resp(struct port *p, struct ptp_message *m)
+ 			pid2str(&p->peer_portid));
+ 	}
+ 
++	domain_zero_capable(p, m);
++
+ 	if (p->peer_delay_resp) {
+ 		msg_put(p->peer_delay_resp);
+ 	}
+@@ -2708,6 +2733,8 @@ void process_pdelay_resp_fup(struct port *p, struct ptp_message *m)
+ 		return;
+ 	}
+ 
++	domain_zero_capable(p, m);
++
+ 	if (p->peer_delay_fup) {
+ 		msg_put(p->peer_delay_fup);
+ 	}
+diff --git a/port_private.h b/port_private.h
+index 9a0d63d..7e03f23 100644
+--- a/port_private.h
++++ b/port_private.h
+@@ -110,6 +110,7 @@ struct port {
+ 	enum port_state     state; /*portState*/
+ 	Integer64           asymmetry;
+ 	enum as_capable     asCapable;
++	bool		    asCapableAcrossDomains;
+ 	Integer8            logMinDelayReqInterval;
+ 	TimeInterval        peerMeanPathDelay;
+ 	Integer8            initialLogAnnounceInterval;
+@@ -186,6 +187,7 @@ enum fsm_event p2p_event(struct port *p, int fd_index);
+ 
+ int clear_fault_asap(struct fault_interval *faint);
+ void delay_req_prune(struct port *p);
++void domain_zero_capable(struct port *p, struct ptp_message *msg);
+ void fc_clear(struct foreign_clock *fc);
+ void flush_delay_req(struct port *p);
+ void flush_last_sync(struct port *p);
+-- 
+2.34.1
+
