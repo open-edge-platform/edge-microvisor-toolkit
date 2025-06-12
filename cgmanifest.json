@@ -7441,8 +7441,8 @@
         "type": "other",
         "other": {
           "name": "intel-cmt-cat",
-          "version": "24.05",
-          "downloadUrl": "https://github.com/intel/intel-cmt-cat/archive/v24.05/intel-cmt-cat-24.05.tar.gz"
+          "version": "25.04",
+          "downloadUrl": "https://github.com/intel/intel-cmt-cat/archive/v25.04/intel-cmt-cat-25.04.tar.gz"
         }
       }
     },
@@ -12451,8 +12451,8 @@
         "type": "other",
         "other": {
           "name": "linuxptp",
-          "version": "3.1.1",
-          "downloadUrl": "https://sourceforge.net/projects/linuxptp/files/v3.1/linuxptp-3.1.1.tgz"
+          "version": "4.3",
+          "downloadUrl": "https://downloads.nwtime.org/linuxptp/linuxptp-4.3.tgz"
         }
       }
     },
@@ -15605,16 +15605,6 @@
           "name": "openblas",
           "version": "0.3.26",
           "downloadUrl": "https://github.com/OpenMathLib/OpenBLAS/archive/v0.3.26/openblas-0.3.26.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "openbox",
-          "version": "3.6.1",
-          "downloadUrl": "http://openbox.org/dist/openbox/openbox-3.6.1.tar.xz"
         }
       }
     },
@@ -29598,6 +29588,16 @@
           "name": "tini",
           "version": "0.19.0",
           "downloadUrl": "https://github.com/krallin/tini/archive/v0.19.0.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "tink-worker",
+          "version": "1.0.0",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.0.0.tar.gz"
         }
       }
     },

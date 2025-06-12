@@ -11,6 +11,7 @@
                 "packagelists/ssh-server.json",
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base-rt.json",
+                "packagelists/intel-rdt.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
 		"packagelists/docker.json"
@@ -71,6 +72,7 @@
                 "packagelists/ssh-server.json",
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base-rt.json",
+                "packagelists/intel-rdt.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json"
             ],

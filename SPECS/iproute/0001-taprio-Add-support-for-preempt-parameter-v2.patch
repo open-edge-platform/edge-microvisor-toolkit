@@ -1,0 +1,116 @@
+From e92c7baa40c762677b34f7cbab3755a533c06ee9 Mon Sep 17 00:00:00 2001
+From: "Looi, Hong Aun" <hong.aun.looi@intel.com>
+Date: Thu, 29 Aug 2024 21:50:52 +0800
+Subject: [PATCH] taprio: Add support for 'preempt' parameter v2
+
+Adds the 'preempt' parameter to taprio, so the user can select which
+traffic classes are marked as preemptible (1) and which are marked as
+express (0).
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+---
+ include/uapi/linux/pkt_sched.h |  8 +++++---
+ tc/q_taprio.c                  | 33 ++++++++++++++++++++++++++++++++-
+ 2 files changed, 37 insertions(+), 4 deletions(-)
+
+diff --git a/include/uapi/linux/pkt_sched.h b/include/uapi/linux/pkt_sched.h
+index 00f6ff0a..0dfcefac 100644
+--- a/include/uapi/linux/pkt_sched.h
++++ b/include/uapi/linux/pkt_sched.h
+@@ -753,8 +753,9 @@ enum {
+ 	TCA_MQPRIO_SHAPER,
+ 	TCA_MQPRIO_MIN_RATE64,
+ 	TCA_MQPRIO_MAX_RATE64,
+-	TCA_MQPRIO_TC_ENTRY,
+-	__TCA_MQPRIO_MAX,
++    TCA_MQPRIO_PREEMPT_TCS,
++    TCA_MQPRIO_TC_ENTRY,
++    __TCA_MQPRIO_MAX,
+ };
+ 
+ #define TCA_MQPRIO_MAX (__TCA_MQPRIO_MAX - 1)
+@@ -1282,7 +1283,8 @@ enum {
+ 	TCA_TAPRIO_ATTR_SCHED_CYCLE_TIME_EXTENSION, /* s64 */
+ 	TCA_TAPRIO_ATTR_FLAGS, /* u32 */
+ 	TCA_TAPRIO_ATTR_TXTIME_DELAY, /* u32 */
+-	TCA_TAPRIO_ATTR_TC_ENTRY, /* nest */
++    TCA_TAPRIO_ATTR_PREEMPT_TCS, /* u32 */
++    TCA_TAPRIO_ATTR_TC_ENTRY, /* nest */
+ 	__TCA_TAPRIO_ATTR_MAX,
+ };
+ 
+diff --git a/tc/q_taprio.c b/tc/q_taprio.c
+index ef8fc7a0..8be47b08 100644
+--- a/tc/q_taprio.c
++++ b/tc/q_taprio.c
+@@ -186,6 +186,7 @@ static int taprio_parse_opt(struct qdisc_util *qu, int argc,
+ 	struct tc_mqprio_qopt opt = { };
+ 	__s64 cycle_time_extension = 0;
+ 	struct list_head sched_entries;
++    __u32 preempt = UINT32_MAX;
+ 	bool have_tc_entries = false;
+ 	int num_max_sdu_entries = 0;
+ 	struct rtattr *tail, *l;
+@@ -361,7 +362,16 @@ static int taprio_parse_opt(struct qdisc_util *qu, int argc,
+ 				PREV_ARG();
+ 				return -1;
+ 			}
+-
++        } else if (strcmp(*argv, "preempt") == 0) {
++			NEXT_ARG();
++			if (preempt != UINT32_MAX) {
++				fprintf(stderr, "taprio: duplicate \"preempt\" specification\n");
++				return -1;
++			}
++			if (get_u32(&preempt, *argv, 2)) {
++				PREV_ARG();
++				return -1;
++			}
+ 		} else if (strcmp(*argv, "help") == 0) {
+ 			explain();
+ 			return -1;
+@@ -401,6 +411,10 @@ static int taprio_parse_opt(struct qdisc_util *qu, int argc,
+ 	if (have_tc_entries)
+ 		add_tc_entries(n, max_sdu, num_max_sdu_entries, fp, num_fp_entries);
+ 
++    if (preempt != UINT32_MAX)
++		addattr_l(n, 1024, TCA_TAPRIO_ATTR_PREEMPT_TCS,
++			  &preempt, sizeof(preempt));
++
+ 	l = addattr_nest(n, 1024, TCA_TAPRIO_ATTR_SCHED_ENTRY_LIST | NLA_F_NESTED);
+ 
+ 	err = add_sched_list(&sched_entries, n);
+@@ -592,6 +606,7 @@ static int taprio_print_opt(struct qdisc_util *qu, FILE *f, struct rtattr *opt)
+ {
+ 	struct rtattr *tb[TCA_TAPRIO_ATTR_MAX + 1];
+ 	struct tc_mqprio_qopt *qopt = 0;
++    __u32 preempt = UINT32_MAX;
+ 	int i;
+ 
+ 	if (opt == NULL)
+@@ -624,6 +639,22 @@ static int taprio_print_opt(struct qdisc_util *qu, FILE *f, struct rtattr *opt)
+ 
+ 	print_nl();
+ 
++	if (tb[TCA_TAPRIO_ATTR_PREEMPT_TCS])
++		preempt = rta_getattr_u32(tb[TCA_TAPRIO_ATTR_PREEMPT_TCS]);
++
++	if (preempt != UINT32_MAX) {
++		open_json_array(PRINT_ANY, "preemptible");
++		for (i = 0; i < TC_QOPT_MAX_QUEUE; i++) {
++			open_json_object(NULL);
++			bool preemptible = preempt & BIT(i);
++			print_uint(PRINT_ANY, "queue", " %d", preemptible);
++			close_json_object();
++		}
++		close_json_array(PRINT_ANY, "");
++
++		print_nl();
++	}
++
+ 	if (tb[TCA_TAPRIO_ATTR_SCHED_CLOCKID]) {
+ 		__s32 clockid;
+ 
+-- 
+2.34.1
+

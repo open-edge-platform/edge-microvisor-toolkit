@@ -1,0 +1,6 @@
+{
+    "packages": [
+        "intel-cmt-cat",
+        "intel-cmt-cat-devel"
+    ]
+}

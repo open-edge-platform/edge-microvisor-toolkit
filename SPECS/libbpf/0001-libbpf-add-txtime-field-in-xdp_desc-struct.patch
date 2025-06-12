@@ -1,0 +1,28 @@
+From c23ca903e76b7a6a23b0e984fdd092826f930328 Mon Sep 17 00:00:00 2001
+From: "Mohamad Azman, Syaza Athirah" <syaza.athirah.mohamad.azman@intel.com>
+Date: Thu, 16 Jul 2020 18:00:51 -0400
+Subject: [PATCH] libbpf: add txtime field in xdp_desc struct
+
+Add a xdp_desc entry to specify packet LaunchTime for drivers
+that support the feature.
+
+Signed-off-by: Mohamad Azman, Syaza Athirah <syaza.athirah.mohamad.azman@intel.com>
+---
+ include/uapi/linux/if_xdp.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/uapi/linux/if_xdp.h b/include/uapi/linux/if_xdp.h
+index a78a809..7c5168c 100644
+--- a/include/uapi/linux/if_xdp.h
++++ b/include/uapi/linux/if_xdp.h
+@@ -104,6 +104,7 @@ struct xdp_desc {
+ 	__u64 addr;
+ 	__u32 len;
+ 	__u32 options;
++	__u64 txtime;
+ };
+ 
+ /* UMEM descriptor is __u64 */
+-- 
+2.34.1
+

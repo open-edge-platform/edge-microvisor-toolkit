@@ -16,6 +16,9 @@ mkdir -p /etc/fluent-bit
 if [ ! -f /etc/fluent-bit/fluent-bit.conf ]; then
   touch /etc/fluent-bit/fluent-bit.conf
 fi
+# update console msg
+sed -i 's\Toolkit\Toolkit-Tink\' /etc/issue
+sed -i 's\Toolkit\Toolkit-Tink\' /etc/issue.net
 echo "$pprefix: $(du -ah /usr/share)"
 find /usr/share -type f \
   ! -path "/usr/share/terminfo/v/vt100" \

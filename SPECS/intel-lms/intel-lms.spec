@@ -3,7 +3,7 @@
 Summary:        Intel Local Manageability Service allows applications to access the Intel Active Management Technology (AMT) firmware via the Intel Management Engine Interface (MEI).
 Name:           intel-lms
 Version:        2506.0.0.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
@@ -40,7 +40,7 @@ Intel Local Manageability Service allows applications to access the Intel Active
 export LMS_ROOT=$(pwd)
 mkdir -p build
 pushd build
-%cmake -Wno-dev -DBUILD_SHARED_LIBS=OFF $LMS_ROOT
+%cmake -Wno-dev -DBUILD_SHARED_LIBS=OFF -DNETWORK_NM=OFF -DNETWORK_CN=OFF -DCMAKE_INSTALL_PREFIX=%{_prefix} $LMS_ROOT
 %cmake_build
 popd
 
@@ -75,5 +75,8 @@ rm -rf %{buildroot}%{_docdir}/lms
 
 
 %changelog
+* Wed Jun 11 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 2506.0.0.0-2
+- Modified build flags.
+
 * Fri May 30 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 2506.0.0.0-1
 - Original version for Edge Microvisor Toolkit. (license: MIT). License verified.

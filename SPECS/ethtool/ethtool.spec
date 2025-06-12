@@ -1,13 +1,19 @@
 Summary:	    Standard Linux utility for controlling network drivers and hardware
 Name:		    ethtool
 Version:        6.4
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:	    GPLv2
 URL:		    https://www.kernel.org/pub/software/network/ethtool/
 Group:		    Productivity/Networking/Diagnostic
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Source0:	    https://www.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.xz
+
+# Time Sensitive Networking (TSN) Patches
+Patch0:         0001-include-uapi-Update-the-local-headers-with-Frame-Pre.patch
+Patch1:         0002-ethtool-Add-support-for-configuring-frame-preemption.patch
+Patch2:         0003-igc-Add-support-for-dumping-frame-preemption-stats-r.patch
+Patch3:         0004-preempt-Add-support-for-verifying-frame-preemption.patch
 
 BuildRequires: libmnl-devel
 
@@ -17,6 +23,7 @@ particularly for wired Ethernet devices
 
 %prep
 %setup -q
+%autosetup -p1
 
 %build
 autoreconf -fi
@@ -38,6 +45,9 @@ make %{?_smp_mflags} check
 %{_datadir}/bash-completion/completions/ethtool
 
 %changelog
+* Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 6.4-3
+- Add TSN patches/support
+
 * Thu May 16 2024 Daniel McIlvaney <damcilva@microsoft.com> - 6.4-2
 - Sanitize license files
 

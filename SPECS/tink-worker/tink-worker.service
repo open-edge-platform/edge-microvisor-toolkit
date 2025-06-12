@@ -1,0 +1,15 @@
+[Unit]
+Description=Tinkerbell Worker Service
+Documentation=https://github.com/open-edge-platform/infra-onboarding
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/tink-worker
+StandardOutput=journal
+StandardError=journal
+TimeoutSec=0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

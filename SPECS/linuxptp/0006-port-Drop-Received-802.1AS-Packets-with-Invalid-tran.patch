@@ -1,0 +1,39 @@
+From 2bac19acd9363787c07144ee894c7bee43473cba Mon Sep 17 00:00:00 2001
+From: "Choong, Chwee Lin" <chwee.lin.choong@intel.com>
+Date: Sun, 2 Jun 2024 17:22:53 +0800
+Subject: [PATCH 6/9] port: Drop Received 802.1AS Packets with Invalid
+ transportSpecific Values
+
+According to IEEE Std 1588-2019 Table 2 and IEEE Std 802.1AS-2020 Sections
+11.2.17.1 and 13.3.1.2.16, the permitted transportSpecific (or majorSdoId)
+values used by 802.1AS are 0x1 for a gPTP domain and 0x2 for CMLDS.
+Any message received with values other than these is not from an
+IEEE802.1AS-2020 PTP Instance and should be ignored.
+---
+ port.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/port.c b/port.c
+index e4e92d3..09267b6 100644
+--- a/port.c
++++ b/port.c
+@@ -809,9 +809,13 @@ static int port_ignore(struct port *p, struct ptp_message *m)
+ 	if (path_trace_ignore(p, m)) {
+ 		return 1;
+ 	}
+-	if (msg_transport_specific(m) != p->transportSpecific &&
+-	    (p->match_transport_specific ||
+-	     (msg_transport_specific(m) != TS_IEEE_8021AS && msg_transport_specific(m) != TS_CMLDS))) {
++	if (port_is_ieee8021as(p)) {
++		if (msg_transport_specific(m) != TS_IEEE_8021AS && msg_transport_specific(m) != TS_CMLDS) {
++			return 1;
++		}
++	}
++	if (p->match_transport_specific &&
++	    msg_transport_specific(m) != p->transportSpecific) {
+ 		return 1;
+ 	}
+ 	if (pid_eq(&m->header.sourcePortIdentity, &p->portIdentity)) {
+-- 
+2.34.1
+

@@ -1,0 +1,35 @@
+From b8407093bfc6c8f06e021080cfcbc28470ba5610 Mon Sep 17 00:00:00 2001
+From: "Choong, Chwee Lin" <chwee.lin.choong@intel.com>
+Date: Wed, 3 Jul 2024 10:33:21 +0800
+Subject: [PATCH 9/9] port: Add neighborGptpCapable AS2011 backward
+ compatibility
+
+This implementation includes backward compatibility with the 2011
+standard, as specified in IEEE 802.1AS-2020 Section 11.2.2
+condition (f)(2). It sets the neighborGptpCapable flag to TRUE
+for an AS2011 link partner that does not transmit gPTP-Capable
+signaling messages.
+---
+ port.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/port.c b/port.c
+index 54b3775..b165e86 100644
+--- a/port.c
++++ b/port.c
+@@ -3230,6 +3230,12 @@ static enum fsm_event bc_event(struct port *p, int fd_index)
+ 				       tmv_to_nanoseconds(msg->hwts.ts));
+ 		}
+ 	}
++	if (clock_domain_number(p->clock) == 0x0 && 
++		(msg_type(msg) == PDELAY_REQ || msg_type(msg) == PDELAY_RESP) && 
++		msg_transport_specific(msg) == TS_IEEE_8021AS) {
++		pr_debug("%s: setting neighborGptpCapable for legacy ieee821as neighbor", p->log_name);
++		p->neighborGptpCapable = TRUE;
++	}
+ 
+ 	switch (msg_type(msg)) {
+ 	case SYNC:
+-- 
+2.34.1
+
