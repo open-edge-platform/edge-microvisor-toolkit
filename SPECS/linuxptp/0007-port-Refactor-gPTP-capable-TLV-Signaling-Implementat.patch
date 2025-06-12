@@ -1,0 +1,142 @@
+From a3b4b2b8bba4cdbc5088b3cfdefca06bb185ded0 Mon Sep 17 00:00:00 2001
+From: "Choong, Chwee Lin" <chwee.lin.choong@intel.com>
+Date: Sun, 2 Jun 2024 18:31:34 +0800
+Subject: [PATCH 7/9] port: Refactor gPTP-capable TLV Signaling Implementation
+
+IEEE 802.1AS-2020 does not clearly specify whether gPTP-capable TLV
+signaling is mandatory. The previous implementation relied on the
+technical use of the signaling message to achieve asCapable per domain,
+sending the messages only when multiple time domains were active and
+when CMLDS was enabled.
+
+This update adds gPTP-capable signaling transmission and reception
+even when not using CMLDS on a single domain. This change aligns with
+P802.1ASdm D2.0, which makes gPTP-capable TLV signaling mandatory.
+
+Additionally, the implementation has been refactored to ensure it is
+only activated for IEEE 802.1AS.
+---
+ port.c           | 35 +++++++++++------------------------
+ port_private.h   |  1 -
+ port_signaling.c |  6 ++++++
+ 3 files changed, 17 insertions(+), 25 deletions(-)
+
+diff --git a/port.c b/port.c
+index 09267b6..54b3775 100644
+--- a/port.c
++++ b/port.c
+@@ -693,13 +693,6 @@ static int peer_prepare_and_send(struct port *p, struct ptp_message *msg,
+ 	return 0;
+ }
+ 
+-void domain_zero_capable(struct port *p, struct ptp_message *msg) {
+-	if (clock_domain_number(p->clock) == 0x0 &&
+-        	msg_transport_specific(msg) == 0x10) {
+-        	p->neighborGptpCapable = TRUE;
+-    	}
+-}
+-
+ int port_capable(struct port *p)
+ {
+ 	if (!port_is_ieee8021as(p)) {
+@@ -1358,23 +1351,23 @@ void port_show_transition(struct port *p, enum port_state next,
+ 
+ int port_set_gptp_capable_rx_tmo(struct port *p)
+ {
+-	if (p->delayMechanism == DM_COMMON_P2P) {
+-		return set_tmo_log(p->fda.fd[FD_GPTP_CAPABLE_RX_TIMER],
+-			p->gPtpCapableReceiptTimeout,
+-			p->logGptpCapableMessageInterval);
+-	}
++	if (p->transportSpecific != TS_IEEE_8021AS) {  	
++		return 0;
++ 	}
+ 
+-	return 0;
++	return set_tmo_log(p->fda.fd[FD_GPTP_CAPABLE_RX_TIMER],
++		p->gPtpCapableReceiptTimeout,
++		p->logGptpCapableMessageInterval);
+ }
+ 
+ int port_set_gptp_capable_tx_tmo(struct port *p)
+ {
+-	if (p->delayMechanism == DM_COMMON_P2P) {
+-		return set_tmo_log(p->fda.fd[FD_GPTP_CAPABLE_TX_TIMER], 1,
+-			p->logGptpCapableMessageInterval);
+-	}
++	if (p->transportSpecific != TS_IEEE_8021AS) {  	
++		return 0;
++ 	}
+ 
+-	return 0;
++	return set_tmo_log(p->fda.fd[FD_GPTP_CAPABLE_TX_TIMER], 1,
++		p->logGptpCapableMessageInterval);
+ }
+ 
+ static void port_slave_priority_warning(struct port *p)
+@@ -2512,8 +2505,6 @@ int process_pdelay_req(struct port *p, struct ptp_message *m)
+ 			pid2str(&p->peer_portid));
+ 	}
+ 
+-	domain_zero_capable(p, m);
+-
+ 	rsp = msg_allocate();
+ 	if (!rsp) {
+ 		return -1;
+@@ -2721,8 +2712,6 @@ int process_pdelay_resp(struct port *p, struct ptp_message *m)
+ 			pid2str(&p->peer_portid));
+ 	}
+ 
+-	domain_zero_capable(p, m);
+-
+ 	if (p->peer_delay_resp) {
+ 		msg_put(p->peer_delay_resp);
+ 	}
+@@ -2738,8 +2727,6 @@ void process_pdelay_resp_fup(struct port *p, struct ptp_message *m)
+ 		return;
+ 	}
+ 
+-	domain_zero_capable(p, m);
+-
+ 	if (p->peer_delay_fup) {
+ 		msg_put(p->peer_delay_fup);
+ 	}
+diff --git a/port_private.h b/port_private.h
+index 7e03f23..6f32885 100644
+--- a/port_private.h
++++ b/port_private.h
+@@ -187,7 +187,6 @@ enum fsm_event p2p_event(struct port *p, int fd_index);
+ 
+ int clear_fault_asap(struct fault_interval *faint);
+ void delay_req_prune(struct port *p);
+-void domain_zero_capable(struct port *p, struct ptp_message *msg);
+ void fc_clear(struct foreign_clock *fc);
+ void flush_delay_req(struct port *p);
+ void flush_last_sync(struct port *p);
+diff --git a/port_signaling.c b/port_signaling.c
+index 282e123..3daee55 100644
+--- a/port_signaling.c
++++ b/port_signaling.c
+@@ -130,6 +130,9 @@ static int process_interface_rate(struct port *p,
+ static int process_gptp_capable_message(struct port *p,
+ 					struct gptp_capable_tlv *r)
+ {
++	if (p->transportSpecific != TS_IEEE_8021AS) {  	
++        return 0;
++	}
+ 	/* clear gPTP Capable Rx TMO */
+ 	port_clr_tmo(p->fda.fd[FD_GPTP_CAPABLE_RX_TIMER]);
+ 
+@@ -276,6 +279,9 @@ int port_tx_gptp_capable(struct port *p, Integer8 msgInterval)
+ 	struct tlv_extra *extra;
+ 	int err;
+ 
++	if (p->transportSpecific != TS_IEEE_8021AS) {  	
++        return 0;
++	}
+ 	if (msgInterval == SIGNAL_STOP_SEND) {
+ 		return 0;
+ 	}
+-- 
+2.34.1
+
