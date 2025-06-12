@@ -2618,8 +2618,8 @@
         "type": "other",
         "other": {
           "name": "device-discovery",
-          "version": "1.17.2",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/emt-uos.tar.gz"
+          "version": "0.0.1",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/device-discovery/0.0.1.tar.gz"
         }
       }
     },
