@@ -10,7 +10,7 @@ URL:            https://github.com/open-edge-platform/cluster-extensions
 Source0:        https://github.com/open-edge-platform/cluster-extensions/archive/refs/tags/v%{cluster_extensions_version}.tar.gz#/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
-Requires:       helm
+BuildRequires:  helm
 
 %description
 This package provides a comprehensive set of Kubernetes and Calico network policies 
