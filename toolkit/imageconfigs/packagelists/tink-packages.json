@@ -12,7 +12,6 @@
         "net-tools",
         "parted",
         "rng-tools",
-        "rpc",
         "tar",
         "tink-worker",
         "veritysetup"
