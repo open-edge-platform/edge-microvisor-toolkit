@@ -1,6 +1,6 @@
 Summary:        Installs/uninstalls orchestration software on an edge node using command obtained from Cluster Orchestrator.
 Name:           cluster-agent
-Version:        1.7.2
+Version:        1.7.3
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -128,6 +128,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Wed Jun 04 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.7.3-1
+- Add backoff/retry on northbound grpc interfaces
+
 * Tue May 27 2025 Andy Bavier <andy.bavier@intel.com> - 1.7.2-1
 - Allow cluster-agent to exec base64 cmd
 

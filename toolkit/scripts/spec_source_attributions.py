@@ -12,6 +12,7 @@ VALID_SOURCE_ATTRIBUTIONS = {
     "CentOS":                         r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from CentOS \d+ \(license: MIT\)(\.|\n|$)',
     "Ceph source":                    r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from Ceph source \(license: LGPLv2.1\)(\.|\n|$)',
     "Debian":                         r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from Debian source package \(license: MIT\)(\.|\n|$)',
+    "DOC group source":               r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from Distributed Object Computing Group source \(license: DOC\)(\.|\n|$)',
     "Netplan source":                 r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from Netplan source \(license: GPLv3\)(\.|\n|$)',
     "Fedora":                         r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from Fedora \d+ \(license: MIT\)(\.|\n|$)',
     "Fedora (Copyright Remi Collet)": r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from Fedora \d+ \(license: CC-BY-SA\)(\.|\n|$)',

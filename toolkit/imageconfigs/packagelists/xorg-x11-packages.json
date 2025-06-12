@@ -1,5 +1,6 @@
 {
     "packages": [
+        "openbox",
         "xorg-x11-server-Xorg",
         "xorg-x11-apps",
         "xorg-x11-server-utils",

@@ -1,11 +1,14 @@
 [Unit]
 Description=Synchronize system clock or PTP hardware clock (PHC)
-After=ntpdate.service ptp4l.service
+Documentation=man:phc2sys
+Requires=ptp4l@.service
+After=ntpdate.service ptp4l@.service
+Before=time-sync.target
 
 [Service]
 Type=simple
 EnvironmentFile=-/etc/sysconfig/phc2sys
-ExecStart=/usr/sbin/phc2sys $OPTIONS
+ExecStart=/usr/sbin/phc2sys $OPTIONS %I
 
 [Install]
 WantedBy=multi-user.target

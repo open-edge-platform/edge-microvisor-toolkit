@@ -1,0 +1,76 @@
+From ccef461297dd775feb32bbfdb5f5ae408124022c Mon Sep 17 00:00:00 2001
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Date: Tue, 5 Dec 2023 16:44:05 -0800
+Subject: [PATCH 1/9] Add a CMLDS-enabled example config based on gPTP.cfg
+
+---
+ configs/gptp-cmlds.cfg    | 20 ++++++++++++++++++++
+ configs/gptp-domain-0.cfg | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+)
+ create mode 100644 configs/gptp-cmlds.cfg
+ create mode 100644 configs/gptp-domain-0.cfg
+
+diff --git a/configs/gptp-cmlds.cfg b/configs/gptp-cmlds.cfg
+new file mode 100644
+index 0000000..b4220e9
+--- /dev/null
++++ b/configs/gptp-cmlds.cfg
+@@ -0,0 +1,20 @@
++#
++# Common Mean Link Delay Service (CMLDS) example configuration,
++# containing those attributes which differ from the defaults.
++# See the file default.cfg for the complete list of available options.
++#
++[global]
++# Set this for CMLDS regardless of actual port roles on this node
++clientOnly			1
++free_running			1
++assume_two_step			1
++follow_up_info			1
++network_transport		L2
++uds_address			/var/run/master-cmlds
++# Reply to non-CMLDS Pdelay_Reqs for compatibility
++ignore_transport_specific	1
++
++transportSpecific		2
++clockIdentity			000001.0000.800000
++
++delay_mechanism			P2P
+diff --git a/configs/gptp-domain-0.cfg b/configs/gptp-domain-0.cfg
+new file mode 100644
+index 0000000..f80eac5
+--- /dev/null
++++ b/configs/gptp-domain-0.cfg
+@@ -0,0 +1,29 @@
++#
++# 802.1AS configuration example for a single domain out of many (or not
++# so many) on a multidomain-capable node.  Uses a local CMLDS instance,
++# see configs/gptp-cmlds.cfg.
++#
++[global]
++gmCapable			1
++priority1			248
++priority2			248
++logAnnounceInterval		0
++logSyncInterval			-3
++syncReceiptTimeout		3
++neighborPropDelayThresh		800
++min_neighbor_prop_delay		-20000000
++assume_two_step			1
++path_trace_enabled		1
++follow_up_info			1
++network_transport		L2
++
++uds_address			/var/run/master-domain-0
++cmlds.server_address		/var/run/master-cmlds
++# FIXME: must set client_address per port
++cmlds.client_address		/var/run/master-client-0
++
++domainNumber			0
++transportSpecific		1
++clockIdentity			000001.0000.000000
++
++delay_mechanism			COMMON_P2P
+-- 
+2.34.1
+

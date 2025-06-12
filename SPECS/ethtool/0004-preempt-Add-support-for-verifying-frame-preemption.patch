@@ -1,0 +1,67 @@
+From 62f6b33fb04f6f547dcf7abe60d5a3a436ea30a5 Mon Sep 17 00:00:00 2001
+From: Aaron Chan <aaron.chun.yew.chan@intel.com>
+Date: Thu, 29 May 2025 12:06:12 +0800
+Subject: [PATCH 4/5] preempt: Add support for verifying frame preemption
+
+Add support for displaying the verification status in a link, and for
+disabling verification with the link partner.
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+---
+ netlink/preempt.c            | 20 ++++++++++++++++++++
+ uapi/linux/ethtool_netlink.h |  1 +
+ 2 files changed, 21 insertions(+)
+
+diff --git a/netlink/preempt.c b/netlink/preempt.c
+index 75d4cfc..5103088 100644
+--- a/netlink/preempt.c
++++ b/netlink/preempt.c
+@@ -60,6 +60,18 @@ int preempt_get_reply_cb(const struct nlmsghdr *nlhdr, void *data)
+ 
+ 		printf("\tadditional fragment size: %d\n", add_frag_size);
+ 	}
++if (tb[ETHTOOL_A_PREEMPT_VERIFIED]) {
++	uint32_t verified = mnl_attr_get_u8(
++		tb[ETHTOOL_A_PREEMPT_VERIFIED]);
++
++	printf("\tverified: %d\n", verified);
++}
++if (tb[ETHTOOL_A_PREEMPT_DISABLE_VERIFY]) {
++	uint32_t disable_verify = mnl_attr_get_u8(
++		tb[ETHTOOL_A_PREEMPT_DISABLE_VERIFY]);
++
++	printf("\tverification disabled: %d\n", disable_verify);
++}
+ 	return MNL_CB_OK;
+ }
+ 
+@@ -97,6 +109,14 @@ static const struct param_parser set_preempt_params[] = {
+ 		.handler	= nl_parse_direct_u32,
+ 		.min_argc	= 1,
+ 	},
++	{
++		.arg		= "disable-verify",
++		.group		= ETHTOOL_MSG_PREEMPT_SET,
++		.type		= ETHTOOL_A_PREEMPT_DISABLE_VERIFY,
++		.handler	= nl_parse_lookup_u8,
++		.handler_data	= fp_values,
++		.min_argc	= 1,
++	},
+ 	{}
+ };
+ 
+diff --git a/uapi/linux/ethtool_netlink.h b/uapi/linux/ethtool_netlink.h
+index 65e2415..ee398d7 100644
+--- a/uapi/linux/ethtool_netlink.h
++++ b/uapi/linux/ethtool_netlink.h
+@@ -731,6 +731,7 @@ enum {
+ 	ETHTOOL_A_PREEMPT_UNSPEC,
+ 	ETHTOOL_A_PREEMPT_HEADER,			/* nest - _A_HEADER_* */
+ 	ETHTOOL_A_PREEMPT_ENABLED,			/* u8 */
++	ETHTOOL_A_PREEMPT_PREEMPTIBLE_MASK,		/* u32 */
+ 	ETHTOOL_A_PREEMPT_ADD_FRAG_SIZE,		/* u32 */
+ 	ETHTOOL_A_PREEMPT_DISABLE_VERIFY,		/* u8 */
+ 	ETHTOOL_A_PREEMPT_VERIFIED,			/* u8 */
+-- 
+2.34.1
+

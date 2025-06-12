@@ -1,0 +1,358 @@
+From 61ff667abf4ed40a367a97fd84a354f96965f296 Mon Sep 17 00:00:00 2001
+From: chweelinchoong <chwee.lin.choong@intel.com>
+Date: Wed, 14 Feb 2024 16:00:23 +0800
+Subject: [PATCH 2/9] [Refactor] port: implement gPTP-capable TLV signaling
+ message processing (#15)
+
+* port: Implement gPTP-capable TLV signaling message processing
+
+Implementation of the transmission and reception of gPTP-capable TLV
+signaling messages is crucial for determining per-domain asCapable
+when Common Mean Link Delay Service (CMLDS) is enabled, as mandated
+by the IEEE802.1AS-2020 standard.
+
+For transmission, each active PTP domain now periodically sends
+gPTP-capable signaling messages with the gPTP-capable TLV at
+intervals specified by the `logGptpCapableMessageInterval`
+configuration parameter (as per IEEE802.1AS-2020 sections 10.4.1.3
+and 10.6.4.4).
+
+For reception, the mechanism is responsible for setting per domain
+neighborGptpCapable to TRUE when a gPTP-capable TLV signaling
+message specific to the corresponding PTP domain is received.
+Conversely, it sets neighborGptpCapable to FALSE if such a message
+is not received after gPtpCapableReceiptTimeout
+(as per IEEE802.1AS-2020 sections 10.4.2.2 and 10.7.3.3, 14.8.41).
+
+v2: Refactor and rebase on top of Richard's CMLDS v3 changes
+v3: Revise coding style
+
+Signed-off-by: Tan Tee Min <tee.min.tan@linux.intel.com>
+Signed-off-by: Chwee-Lin Choong <chwee.lin.choong@intel.com>
+
+* change Boolean to bool for neighborGptpCapable
+
+---------
+
+Signed-off-by: Tan Tee Min <tee.min.tan@linux.intel.com>
+Signed-off-by: Chwee-Lin Choong <chwee.lin.choong@intel.com>
+---
+ config.c         |  2 ++
+ fd.h             |  4 ++-
+ msg.h            |  1 +
+ port.c           | 41 +++++++++++++++++++++++++++++++
+ port_private.h   |  6 +++++
+ port_signaling.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++
+ ptp4l.8          | 13 ++++++++++
+ tlv.h            | 10 ++++++++
+ 8 files changed, 139 insertions(+), 1 deletion(-)
+
+diff --git a/config.c b/config.c
+index be5f730..49c2942 100644
+--- a/config.c
++++ b/config.c
+@@ -274,6 +274,7 @@ struct config_item config_tab[] = {
+ 	GLOB_ITEM_INT("G.8275.defaultDS.localPriority", 128, 1, UINT8_MAX),
+ 	PORT_ITEM_INT("G.8275.portDS.localPriority", 128, 1, UINT8_MAX),
+ 	GLOB_ITEM_INT("gmCapable", 1, 0, 1),
++	PORT_ITEM_INT("gPtpCapableReceiptTimeout", 9, 1, UINT8_MAX),
+ 	GLOB_ITEM_ENU("hwts_filter", HWTS_FILTER_NORMAL, hwts_filter_enu),
+ 	PORT_ITEM_INT("hybrid_e2e", 0, 0, 1),
+ 	PORT_ITEM_INT("ignore_source_id", 0, 0, 1),
+@@ -287,6 +288,7 @@ struct config_item config_tab[] = {
+ 	GLOB_ITEM_INT("kernel_leap", 1, 0, 1),
+ 	GLOB_ITEM_STR("leapfile", NULL),
+ 	PORT_ITEM_INT("logAnnounceInterval", 1, INT8_MIN, INT8_MAX),
++	PORT_ITEM_INT("logGptpCapableMessageInterval", 0, INT8_MIN, INT8_MAX),
+ 	PORT_ITEM_INT("logMinDelayReqInterval", 0, INT8_MIN, INT8_MAX),
+ 	PORT_ITEM_INT("logMinPdelayReqInterval", 0, INT8_MIN, INT8_MAX),
+ 	PORT_ITEM_INT("logSyncInterval", 0, INT8_MIN, INT8_MAX),
+diff --git a/fd.h b/fd.h
+index 9a072ab..6ec4914 100644
+--- a/fd.h
++++ b/fd.h
+@@ -20,7 +20,7 @@
+ #ifndef HAVE_FD_H
+ #define HAVE_FD_H
+ 
+-#define N_TIMER_FDS 8
++#define N_TIMER_FDS 10
+ 
+ /*
+  * The order matters here.  The DELAY timer must appear before the
+@@ -39,6 +39,8 @@ enum {
+ 	FD_SYNC_TX_TIMER,
+ 	FD_UNICAST_REQ_TIMER,
+ 	FD_UNICAST_SRV_TIMER,
++	FD_GPTP_CAPABLE_TX_TIMER,
++	FD_GPTP_CAPABLE_RX_TIMER,
+ 	FD_CMLDS,
+ 	FD_RTNL,
+ 	N_POLLFD,
+diff --git a/msg.h b/msg.h
+index 9c80f45..f6c74e1 100644
+--- a/msg.h
++++ b/msg.h
+@@ -71,6 +71,7 @@
+  */
+ #define SIGNAL_NO_CHANGE   -128
+ #define SIGNAL_SET_INITIAL 126
++#define SIGNAL_STOP_SEND   127
+ 
+ enum timestamp_type {
+ 	TS_SOFTWARE,
+diff --git a/port.c b/port.c
+index 957c5fe..38bb12c 100644
+--- a/port.c
++++ b/port.c
+@@ -1330,6 +1330,27 @@ void port_show_transition(struct port *p, enum port_state next,
+ 	}
+ }
+ 
++int port_set_gptp_capable_rx_tmo(struct port *p)
++{
++	if (p->delayMechanism == DM_COMMON_P2P) {
++		return set_tmo_log(p->fda.fd[FD_GPTP_CAPABLE_RX_TIMER],
++			p->gPtpCapableReceiptTimeout,
++			p->logGptpCapableMessageInterval);
++	}
++
++	return 0;
++}
++
++int port_set_gptp_capable_tx_tmo(struct port *p)
++{
++	if (p->delayMechanism == DM_COMMON_P2P) {
++		return set_tmo_log(p->fda.fd[FD_GPTP_CAPABLE_TX_TIMER], 1,
++			p->logGptpCapableMessageInterval);
++	}
++
++	return 0;
++}
++
+ static void port_slave_priority_warning(struct port *p)
+ {
+ 	const char *n = p->log_name;
+@@ -2009,11 +2030,14 @@ int port_initialize(struct port *p)
+ 	p->min_neighbor_prop_delay = config_get_int(cfg, p->name, "min_neighbor_prop_delay");
+ 	p->delay_response_timeout  = config_get_int(cfg, p->name, "delay_response_timeout");
+ 	p->iface_rate_tlv 	   = config_get_int(cfg, p->name, "interface_rate_tlv");
++	p->gPtpCapableReceiptTimeout = config_get_int(cfg, p->name, "gPtpCapableReceiptTimeout");
++	p->logGptpCapableMessageInterval = config_get_int(cfg, p->name, "logGptpCapableMessageInterval");
+ 
+ 	if (config_get_int(cfg, p->name, "asCapable") == AS_CAPABLE_TRUE) {
+ 		p->asCapable = ALWAYS_CAPABLE;
+ 	} else {
+ 		p->asCapable = NOT_CAPABLE;
++		p->asCapableAcrossDomains = NOT_CAPABLE;
+ 	}
+ 
+ 	p->inhibit_delay_req = config_get_int(cfg, p->name, "inhibit_delay_req");
+@@ -2053,6 +2077,12 @@ int port_initialize(struct port *p)
+ 		goto no_tmo;
+ 	}
+ 
++	if (!port_is_uds(p)) {
++		if (port_set_gptp_capable_tx_tmo(p)) {
++			goto no_tmo;
++		}
++	}
++
+ 	/* No need to open rtnl socket on UDS port. */
+ 	if (!port_is_uds(p)) {
+ 		/*
+@@ -3124,6 +3154,17 @@ static enum fsm_event bc_event(struct port *p, int fd_index)
+ 			return EV_FAULT_DETECTED;
+ 		else
+ 			return EV_NONE;
++
++	case FD_GPTP_CAPABLE_TX_TIMER:
++		pr_debug("%s: gPTP Capable tx timeout", p->log_name);
++		port_set_gptp_capable_tx_tmo(p);
++		return port_tx_gptp_capable(p, p->logGptpCapableMessageInterval);
++
++	case FD_GPTP_CAPABLE_RX_TIMER:
++		pr_info("%s: gPTP Capable rx timeout", p->log_name);
++		port_clr_tmo(p->fda.fd[FD_GPTP_CAPABLE_RX_TIMER]);
++		p->neighborGptpCapable = FALSE;
++		return EV_NONE;
+ 	}
+ 
+ 	msg = msg_allocate();
+diff --git a/port_private.h b/port_private.h
+index 4f158cd..9a0d63d 100644
+--- a/port_private.h
++++ b/port_private.h
+@@ -151,6 +151,9 @@ struct port {
+ 	Integer64	    portAsymmetry;
+ 	struct PortStats    stats;
+ 	struct PortServiceStats    service_stats;
++	Integer8            logGptpCapableMessageInterval;
++	Integer8            gPtpCapableReceiptTimeout;
++	bool		    neighborGptpCapable;
+ 	/* foreignMasterDS */
+ 	LIST_HEAD(fm, foreign_clock) foreign_masters;
+ 	/* TC book keeping */
+@@ -197,6 +200,8 @@ int port_set_announce_tmo(struct port *p);
+ int port_set_delay_tmo(struct port *p);
+ int port_set_qualification_tmo(struct port *p);
+ int port_set_sync_rx_tmo(struct port *p);
++int port_set_gptp_capable_tx_tmo(struct port *p);
++int port_set_gptp_capable_rx_tmo(struct port *p);
+ void port_show_transition(struct port *p, enum port_state next,
+ 			  enum fsm_event event);
+ struct ptp_message *port_signaling_uc_construct(struct port *p,
+@@ -207,6 +212,7 @@ int port_tx_interval_request(struct port *p,
+ 			     Integer8 announceInterval,
+ 			     Integer8 timeSyncInterval,
+ 			     Integer8 linkDelayInterval);
++int port_tx_gptp_capable(struct port *p, Integer8 msgInterval);
+ int port_tx_sync(struct port *p, struct address *dst, uint16_t sequence_id);
+ int process_announce(struct port *p, struct ptp_message *m);
+ void process_delay_resp(struct port *p, struct ptp_message *m);
+diff --git a/port_signaling.c b/port_signaling.c
+index ca4202f..282e123 100644
+--- a/port_signaling.c
++++ b/port_signaling.c
+@@ -127,12 +127,26 @@ static int process_interface_rate(struct port *p,
+        return 0;
+ }
+ 
++static int process_gptp_capable_message(struct port *p,
++					struct gptp_capable_tlv *r)
++{
++	/* clear gPTP Capable Rx TMO */
++	port_clr_tmo(p->fda.fd[FD_GPTP_CAPABLE_RX_TIMER]);
++
++	p->neighborGptpCapable = TRUE;
++	pr_debug("%s: Received gptp_capable signaling message", p->log_name);
++
++	/* start gPTP Capable timer for next expected gPTP-Capable signaling msg */
++	return port_set_gptp_capable_rx_tmo(p);
++}
++
+ int process_signaling(struct port *p, struct ptp_message *m)
+ {
+ 	struct tlv_extra *extra;
+ 	struct organization_tlv *org;
+ 	struct msg_interval_req_tlv *r;
+ 	struct msg_interface_rate_tlv *rate;
++	struct gptp_capable_tlv *gc;
+ 	int err = 0, result;
+ 
+ 	switch (p->state) {
+@@ -198,6 +212,14 @@ int process_signaling(struct port *p, struct ptp_message *m)
+ 				err = process_interface_rate(p, rate);
+ 			}
+ 			break;
++		case TLV_ORGANIZATION_EXTENSION_DO_NOT_PROPAGATE:
++			gc = (struct gptp_capable_tlv *)extra->tlv;
++
++			if (0 == memcmp(gc->id, ieee8021_id, sizeof(ieee8021_id)) &&
++			    gc->subtype[0] == 0 && gc->subtype[1] == 0 && gc->subtype[2] == 4) {
++				err = process_gptp_capable_message(p, gc);
++			}
++			break;
+ 		}
+ 	}
+ 	return err;
+@@ -245,3 +267,44 @@ out:
+ 	msg_put(msg);
+ 	return err;
+ }
++
++int port_tx_gptp_capable(struct port *p, Integer8 msgInterval)
++{
++	struct gptp_capable_tlv *gc;
++	struct PortIdentity tpid;
++	struct ptp_message *msg;
++	struct tlv_extra *extra;
++	int err;
++
++	if (msgInterval == SIGNAL_STOP_SEND) {
++		return 0;
++	}
++
++	memset(&tpid, 0xff, sizeof(tpid));
++	msg = port_signaling_construct(p, &tpid);
++	if (!msg) {
++		return -1;
++	}
++	extra = msg_tlv_append(msg, sizeof(*gc));
++	if (!extra) {
++		err = -1;
++		goto out;
++	}
++	gc = (struct gptp_capable_tlv *) extra->tlv;
++	gc->type = TLV_ORGANIZATION_EXTENSION_DO_NOT_PROPAGATE;
++	gc->length = sizeof(*gc) - sizeof(gc->type) - sizeof(gc->length);
++	memcpy(gc->id, ieee8021_id, sizeof(ieee8021_id));
++	gc->subtype[2] = 4;
++	gc->gPTPCapableMsgInterval = msgInterval;
++	gc->flags = 0;
++
++	err = port_prepare_and_send(p, msg, TRANS_GENERAL);
++	if (err) {
++		pr_err("%s: send gptp_capable signaling failed", p->log_name);
++	}
++	pr_debug("%s: send gptp_capable signaling message", p->log_name);
++
++out:
++	msg_put(msg);
++	return err;
++}
+diff --git a/ptp4l.8 b/ptp4l.8
+index a683239..b9ffaac 100644
+--- a/ptp4l.8
++++ b/ptp4l.8
+@@ -663,6 +663,13 @@ If this option is enabled, then the local clock is able to become grand master.
+ This is only for use with 802.1AS clocks and has no effect on 1588 clocks.
+ The default is 1 (enabled).
+ 
++.TP
++.B gPtpCapableReceiptTimeout
++The number of gPTP-capable message intervals to wait without receiving from its
++neighbor a Signaling message containing a gPTP-capable TLV, before determining
++that its neighbor is no longer invoking gPTP.
++The default is 9.
++
+ .TP
+ .B ignore_source_id
+ This will disable source port identity checking for Sync and Follow_Up
+@@ -718,6 +725,12 @@ Relevant only with software time stamping. The default is 1 (enabled).
+ The maximum logging level of messages which should be printed.
+ The default is 6 (LOG_INFO).
+ 
++.TP
++.B logGptpCapableMessageInterval
++The time interval desired by the PTP Port that sends this TLV, between successive
++Signaling messages that contain the gPTP-capable TLV. This option is specified as
++a power of two in seconds, and the default value is 0 (1 second).
++
+ .TP
+ .B manufacturerIdentity
+ The manufacturer id which should be an OUI owned by the manufacturer.
+diff --git a/tlv.h b/tlv.h
+index d8875b3..fe46e70 100644
+--- a/tlv.h
++++ b/tlv.h
+@@ -383,6 +383,16 @@ struct msg_interval_req_tlv {
+ 	Octet         reserved[2];
+ } PACKED;
+ 
++struct gptp_capable_tlv {
++	Enumeration16 type;
++	UInteger16    length;
++	Octet         id[3];
++	Octet         subtype[3];
++	Integer8      gPTPCapableMsgInterval;
++	Octet         flags;
++	Octet         reserved[4];
++} PACKED;
++
+ struct time_status_np {
+ 	int64_t       master_offset; /*nanoseconds*/
+ 	int64_t       ingress_time;  /*nanoseconds*/
+-- 
+2.34.1
+
