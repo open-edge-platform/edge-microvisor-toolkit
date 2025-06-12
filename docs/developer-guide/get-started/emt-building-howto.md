@@ -74,7 +74,7 @@ microvisor/
 
 Different image types can be built by using differend JSON config files and parameters.
 
-To build the ISO image, run to following command: 
+To build the ISO image, run to following command:
 ```bash
 sudo make iso -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/full.json
 ```
