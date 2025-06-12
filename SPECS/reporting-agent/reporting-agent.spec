@@ -64,8 +64,6 @@ install -m 644 config/reporting-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/
 %config(noreplace) %{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
 %dir %attr(0755,reporting-agent,bm-agents) %{_var}/log/edge-node
 
-%license %{_defaultlicensedir}/%{name}/copyright
-
 %pre
 %sysusers_create_package %{name} %{SOURCE1}
 
