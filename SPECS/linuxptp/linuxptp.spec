@@ -127,7 +127,8 @@ PATH=..:$PATH ./run
 
 %changelog
 * Wed Jun 07 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 4.3-1
-- Initial Edge Microvisor Toolkit import from Ubuntu noble (license: GNU GPL). License verified.
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
+- Use ptp4l.conf from upstream and introduce TSN specific patches.
 
 * Thu Nov 16 2023 Harshit Gupta <guptaharshit@microsoft.com> - 3.1.1-1
 - Initial CBL-Mariner import from Fedora 37 (license: MIT).
