@@ -8350,6 +8350,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "k3s-network-policy",
+          "version": "0.2.0",
+          "downloadUrl": "https://github.com/open-edge-platform/cluster-extensions/archive/refs/tags/v1.1.4.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "kata-containers",
           "version": "3.2.0.azl5",
           "downloadUrl": "https://github.com/microsoft/kata-containers/archive/refs/tags/3.2.0.azl5.tar.gz"
@@ -15582,16 +15592,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "openbox",
-          "version": "3.6.1",
-          "downloadUrl": "http://openbox.org/dist/openbox/openbox-3.6.1.tar.xz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "opal",
           "version": "3.10.11",
           "downloadUrl": "https://sourceforge.net/projects/opalvoip/files/v3.10%20Luyten/Stable%2011/opal-3.10.11.tar.bz2"
@@ -15615,6 +15615,16 @@
           "name": "openblas",
           "version": "0.3.26",
           "downloadUrl": "https://github.com/OpenMathLib/OpenBLAS/archive/v0.3.26/openblas-0.3.26.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "openbox",
+          "version": "3.6.1",
+          "downloadUrl": "http://openbox.org/dist/openbox/openbox-3.6.1.tar.xz"
         }
       }
     },

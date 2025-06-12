@@ -1,6 +1,6 @@
 %global cluster_extensions_version 1.1.4
 Summary:        network-policy for k3s
-Name:           network-policy
+Name:           k3s-network-policy
 Version:        0.2.0
 Release:        1%{?dist}
 License:        Apache-2.0
