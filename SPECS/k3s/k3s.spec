@@ -1,3 +1,5 @@
+%define debug_package %{nil}
+
 Name:          k3s
 Summary:       K3s - Lightweight Kubernetes
 Version:       1.32.4
@@ -15,20 +17,28 @@ Source4:       https://github.com/opencontainers/runc/archive/refs/tags/v1.2.5.t
 Source5:       https://github.com/k3s-io/containerd/archive/refs/tags/v2.0.4-k3s2.tar.gz#/containerd-v2.0.4-k3s2.tar.gz
 Source6:       https://k3s.io/k3s-charts/assets/traefik-crd/traefik-crd-34.2.1+up34.2.0.tgz
 Source7:       https://k3s.io/k3s-charts/assets/traefik/traefik-34.2.1+up34.2.0.tgz
-BuildRequires: git golang yq
+Source8:       https://github.com/rancher/plugins/archive/refs/tags/v1.6.0-k3s1.tar.gz#/rancher-plugins-v1.6.0-k3s1.tar.gz
+Source9:       https://github.com/flannel-io/cni-plugin/archive/refs/tags/v1.6.0-flannel1.tar.gz#/flannel-v1.6.0-flannel1.tar.gz
+Patch0:        k3s-build.patch
+Patch1:        flannel.patch
+BuildRequires: yq golang libseccomp-devel
 
 %description
 K3s - Lightweight Kubernetes %{version}
 
 %prep
 %setup -n %{name}-%{version}-k3s1
-mkdir -p build/src/github.com/opencontainers/runc build/src/github.com/containerd/containerd build/static/charts bin dist
+mkdir -p build/src/github.com/opencontainers/runc build/src/github.com/containerd/containerd  build/static/charts build/src/github.com/containernetworking/plugins bin dist
 tar -xf %{SOURCE2} --no-same-owner
 tar -xf %{SOURCE3} --no-same-owner
-tar -xf %{SOURCE4} --no-same-owner -C build/src/github.com/opencontainers/runc
-tar -xf %{SOURCE5} --no-same-owner -C build/src/github.com/containerd/containerd
+tar -xf %{SOURCE4} --no-same-owner --strip-components 1 -C build/src/github.com/opencontainers/runc
+tar -xf %{SOURCE5} --no-same-owner --strip-components 1 -C build/src/github.com/containerd/containerd
 mv %{SOURCE6} build/static/charts/
 mv %{SOURCE7} build/static/charts/
+tar -xf %{SOURCE8} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins
+rm -rf build/src/github.com/containernetworking/plugins/plugins/meta/flannel/*
+tar -xf %{SOURCE9} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins/plugins/meta/flannel
+%autopatch -v -p0
 
 %build
 ./scripts/build
