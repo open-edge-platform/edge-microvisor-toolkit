@@ -1,6 +1,6 @@
 {
     "packages": [
         "cni-calico",
-        "network-policy"
+        "k3s-network-policy"
     ]
 }
