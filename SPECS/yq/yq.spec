@@ -3,8 +3,8 @@ Summary:        yq is a portable command-line YAML, JSON, XML, CSV, TOML and pro
 Version:        4.45.4
 Release:        1%{?dist}
 License:        MIT
-Distribution:   Azure Linux
-Vendor:         Microsoft Corporation
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          Applications/System
 URL:            https://mikefarah.gitbook.io/yq
 Source0:        https://github.com/mikefarah/yq/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
