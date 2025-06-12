@@ -1936,16 +1936,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "cni-calico",
-          "version": "3.30.1",
-          "downloadUrl": "https://github.com/projectcalico/calico/releases/download/v3.30.1/release-v3.30.1.tgz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "cni-plugins",
           "version": "1.4.0",
           "downloadUrl": "https://github.com/containernetworking/plugins/archive/v1.4.0.tar.gz"
@@ -8350,6 +8340,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "k3s-calico",
+          "version": "3.30.1",
+          "downloadUrl": "https://github.com/projectcalico/calico/releases/download/v3.30.1/release-v3.30.1.tgz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "k3s-network-policy",
           "version": "0.2.0",
           "downloadUrl": "https://github.com/open-edge-platform/cluster-extensions/archive/refs/tags/v1.1.4.tar.gz"
@@ -14484,16 +14484,6 @@
           "name": "nettle",
           "version": "3.9.1",
           "downloadUrl": "https://ftp.gnu.org/gnu/nettle/nettle-3.9.1.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "network-policy",
-          "version": "0.2.0",
-          "downloadUrl": "https://github.com/open-edge-platform/cluster-extensions/archive/refs/tags/v1.1.4.tar.gz"
         }
       }
     },

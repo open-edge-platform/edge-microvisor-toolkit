@@ -1,4 +1,4 @@
-Name:           cni-calico
+Name:           k3s-calico
 Version:        3.30.1
 Release:        1%{?dist}
 Summary:        Calico manifests and container images for k3s kubernetes cluster.
@@ -8,10 +8,9 @@ Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 
 URL:            https://github.com/projectcalico/calico
-Source0:        https://github.com/projectcalico/calico/releases/download/v%{version}/release-v%{version}.tgz
+Source0:        https://github.com/projectcalico/calico/releases/download/v%{version}/release-v%{version}.tgz#/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
-# Requires:     k3s # Add this requirement later
 
 %description
 This package provides Calico manifests and container images for k3s kubernetes cluster.

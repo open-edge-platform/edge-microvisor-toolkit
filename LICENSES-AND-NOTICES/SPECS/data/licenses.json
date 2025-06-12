@@ -3200,7 +3200,7 @@
         "Source project": {
             "license": "Same as the source project.",
             "specs": [
-                "cni-calico",
+                "k3s-calico",
                 "python-nocaselist"
             ]
         },
