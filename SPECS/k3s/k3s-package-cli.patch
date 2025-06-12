@@ -1,0 +1,10 @@
+--- scripts/package-cli
++++ scripts/package-cli
+@@ -75,7 +75,6 @@
+ LDFLAGS="
+     -X github.com/k3s-io/k3s/pkg/version.Version=$VERSION
+     -X github.com/k3s-io/k3s/pkg/version.GitCommit=${COMMIT:0:8}
+-    -w -s
+ "
+ TAGS="urfave_cli_no_docs"
+ STATIC="-extldflags '-static'"

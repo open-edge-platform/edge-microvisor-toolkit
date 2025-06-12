@@ -1,5 +1,14 @@
 --- scripts/build
 +++ scripts/build
+@@ -57,7 +57,7 @@
+ if [ -n "${DEBUG}" ]; then
+   GCFLAGS="-N -l"
+ else
+-  LDFLAGS="-w -s"
++  LDFLAGS=""
+ fi
+ 
+ STATIC=""
 @@ -159,15 +159,10 @@
  if [ ! -x ${INSTALLBIN}/cni${BINARY_POSTFIX} ]; then
  (

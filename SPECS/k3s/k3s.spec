@@ -20,7 +20,8 @@ Source7:       https://k3s.io/k3s-charts/assets/traefik/traefik-34.2.1+up34.2.0.
 Source8:       https://github.com/rancher/plugins/archive/refs/tags/v1.6.0-k3s1.tar.gz#/rancher-plugins-v1.6.0-k3s1.tar.gz
 Source9:       https://github.com/flannel-io/cni-plugin/archive/refs/tags/v1.6.0-flannel1.tar.gz#/flannel-v1.6.0-flannel1.tar.gz
 Patch0:        k3s-build.patch
-Patch1:        flannel.patch
+Patch1:        k3s-package-cli.patch
+Patch2:        flannel.patch
 BuildRequires: yq golang libseccomp-devel
 
 %description
