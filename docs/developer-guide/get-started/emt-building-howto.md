@@ -73,6 +73,7 @@ microvisor/
 ```
 
 Different image types can be built by using different JSON config files and parameters.
+You can find more information about specific parameters [here.](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables)
 
 To build an ISO image, run the following command:
 
