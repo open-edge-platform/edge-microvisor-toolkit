@@ -38,11 +38,11 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 1. Configure the server to reboot with required disk/OS/partition
 
-   Using the CLI method, run `sudo efibootmgr` and then `sudo efibootmgr -o 0012` and `sudo reboot`:
-
+   Using the CLI method:
+   
+   Run `sudo efibootmgr`:
+     
    ```bash
-   sudo efibootmgr
-   [sudo] password for linux-user:
    BootCurrent: 0002
    BootOrder: 0002,0012,0014,0015
    Boot0002* ubuntu
@@ -51,11 +51,9 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    Boot0015  NIC in Slot 2 Port 2 Partition 1
    MirroredPercentageAbove4G: 0.00
    MirrorMemoryBelow4GB: false
-
-   sudo efibootmgr -o 0012
-
-   sudo reboot
    ```
+
+   Find the ID of EMT boot device and run `sudo efibootmgr -o <ID of EMT boot device>`. Then run `sudo reboot`
 
    You can also reboot and go to the boot manager to select the flashed partition:
 
@@ -140,11 +138,9 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 - **Switching between multiple OS disks**
 
-1. Install and configure efibootmgr
+1. Install and configure efibootmgr. Run `tdnf install efibootmgr`:
 
    ```bash
-   tdnf install efibootmgr
-
    ]# efibootmgr
    BootCurrent: 0000
    BootOrder: 0000,0005,0006,0002
@@ -156,10 +152,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    MirrorMemoryBelow4GB: false
    ```
 
-2. Select the required disk to boot
-
-   ```bash
-   efibootmgr -o 0002
+2. Select the boot device with the desired OS and run `efibootmgr -o <ID of boot device>`
    ```
 
 3. Reboot to change the OS to boot
