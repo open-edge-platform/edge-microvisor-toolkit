@@ -223,7 +223,6 @@ For `Start` select `20GB`.
 For `End` select `100%`.
 
 ```bash
-mkpart primary ext4
 Start? 20GB
 20GB
 End? 100%
@@ -261,7 +260,6 @@ Number  Start   End     Size    File system  Name     Flags
 Select `quit` and then run `lsblk`:
 
 ```bash
-lsblk
 NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sda                         8:0    0  1.7T  0 disk
 |-sda1                      8:1    0    1G  0 part

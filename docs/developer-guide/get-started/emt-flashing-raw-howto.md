@@ -41,7 +41,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    Using the CLI method:
    
    Run `sudo efibootmgr`:
-     
+   
    ```bash
    BootCurrent: 0002
    BootOrder: 0002,0012,0014,0015
@@ -63,7 +63,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
    Run `sudo date080509312024`.
 
-   The string of numbers after `date` is the date in time in the following format: Month:08 Date:05 Hour:09 Minute:31 Year: 2024
+   The string of numbers after `date` is the date in time in the following format: Month:08 Day:05 Hour:09 Minute:31 Year: 2024
 
 3. Install openssh-server package
 
@@ -108,7 +108,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    tdnf install vim
    ```
 
-3. Install and Configure the SSH server
+3. Install and Configure the SSH server:
 
    ```bash
    tdnf install openssh-server
@@ -124,13 +124,13 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    PasswordAuthentication yes
    ```
 
-5. Restart sshd service
+5. Restart sshd service:
 
    ```bash
    systemctl restart sshd
    ```
 
-   To debug, run only
+   To debug, run only:
 
    ```bash
    journalctl -u sshd -f
@@ -141,7 +141,6 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 1. Install and configure efibootmgr. Run `tdnf install efibootmgr`:
 
    ```bash
-   ]# efibootmgr
    BootCurrent: 0000
    BootOrder: 0000,0005,0006,0002
    Boot0000* EFI Fixed Disk Boot Device 2
@@ -153,7 +152,6 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    ```
 
 2. Select the boot device with the desired OS and run `efibootmgr -o <ID of boot device>`
-   ```
 
 3. Reboot to change the OS to boot
 
