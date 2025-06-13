@@ -26,6 +26,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 3. Flash the RAW image to a different, available storage device using the 'dd' command
 
    Run:
+
    ```bash
    sudo dd if=edge_microvisor_toolkit.raw of=/dev/sdc status=progress
    ```
@@ -39,9 +40,9 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 1. Configure the server to reboot with required disk/OS/partition
 
    Using the CLI method:
-   
+
    Run `sudo efibootmgr`:
-   
+
    ```bash
    BootCurrent: 0002
    BootOrder: 0002,0012,0014,0015
