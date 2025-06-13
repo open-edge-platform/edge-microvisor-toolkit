@@ -46,7 +46,6 @@ Before you can build OS images you need to build the toolchain and make sure to
 3. Build the tools.
 
    ```bash
-   cd ./toolkit
    sudo make toolchain REBUILD_TOOLS=y
    ```
 
@@ -73,11 +72,26 @@ microvisor/
   ...
 ```
 
-To build the default microvisor image based on its `imageconfig` file, run the following
-command:
+Different image types can be built by using different JSON config files and parameters.
+You can find more information about specific parameters [here.](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables)
+
+To build an ISO image, run the following command:
+
+```bash
+sudo make iso -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/full.json
+```
+
+To build a RAW image without real-time extensions, run the following command:
+
 
 ```bash
 sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image.json
+```
+
+To build a RAW image with real-time extensions, use the following command:
+
+```bash
+RT build command: sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image-rt.json
 ```
 
 ## Customizing an Image
