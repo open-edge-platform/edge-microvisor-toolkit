@@ -516,7 +516,7 @@
         "other": {
           "name": "apr",
           "version": "1.7.5",
-          "downloadUrl": "https://dlcdn.apache.org/apr/apr-1.7.5.tar.gz"
+          "downloadUrl": "https://archive.apache.org/dist/apr/apr-1.7.5.tar.gz"
         }
       }
     },
@@ -3559,7 +3559,7 @@
         "other": {
           "name": "fakeroot",
           "version": "1.32.2",
-          "downloadUrl": "https://cdn-aws.deb.debian.org/debian/pool/main/f/fakeroot/fakeroot_1.32.2.orig.tar.gz"
+          "downloadUrl": "https://mirror.math.princeton.edu/pub/macports/distfiles/fakeroot/fakeroot_1.32.2.orig.tar.gz"
         }
       }
     },
@@ -5241,7 +5241,7 @@
         "other": {
           "name": "hardening-check",
           "version": "2.6",
-          "downloadUrl": "http://ftp.debian.org/debian/pool/main/h/hardening-wrapper/hardening-wrapper_2.6.tar.xz"
+          "downloadUrl": "https://ftp.up.pt/debian-archive/debian/pool/main/h/hardening-wrapper/hardening-wrapper_2.6.tar.xz"
         }
       }
     },
@@ -5341,7 +5341,7 @@
         "other": {
           "name": "help2man",
           "version": "1.49.3",
-          "downloadUrl": "ftp://ftp.gnu.org/gnu/help2man/help2man-1.49.3.tar.xz"
+          "downloadUrl": "https://ftp.gnu.org/gnu/help2man/help2man-1.49.3.tar.xz"
         }
       }
     },
@@ -9022,7 +9022,7 @@
         "other": {
           "name": "libatomic_ops",
           "version": "7.8.2",
-          "downloadUrl": "https://github.com/ivmai/libatomic_ops/releases/download/v7.8.2/libatomic_ops-7.8.2.tar.gz"
+          "downloadUrl": "https://github.com/bdwgc/libatomic_ops/releases/download/v7.8.2/libatomic_ops-7.8.2.tar.gz"
         }
       }
     },
@@ -21824,7 +21824,7 @@
         "other": {
           "name": "postfix",
           "version": "3.9.0",
-          "downloadUrl": "ftp://ftp.porcupine.org/mirrors/postfix-release/official/postfix-3.9.0.tar.gz"
+          "downloadUrl": "https://ghostarchive.org/postfix/postfix-release/official/postfix-3.9.0.tar.gz"
         }
       }
     },
@@ -29577,7 +29577,7 @@
         "other": {
           "name": "time",
           "version": "1.9",
-          "downloadUrl": "ftp://ftp.gnu.org/gnu/time/time-1.9.tar.gz"
+          "downloadUrl": "https://ftp.gnu.org/gnu/time/time-1.9.tar.gz"
         }
       }
     },
@@ -31358,8 +31358,8 @@
         "type": "other",
         "other": {
           "name": "xorg-x11-drv-libinput",
-          "version": "0.30.0",
-          "downloadUrl": "ftp://ftp.x.org/pub/individual/driver/xf86-input-libinput-0.30.0.tar.bz2"
+          "version": "1.5.0",
+          "downloadUrl": "https://ftp.x.org/pub/individual/driver/xf86-input-libinput-1.5.0.tar.xz"
         }
       }
     },
