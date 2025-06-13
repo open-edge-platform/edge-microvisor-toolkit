@@ -1,6 +1,6 @@
 Summary:        An agent gathering statistics from Open Edge Platform installations
 Name:           reporting-agent
-Version:        0.0.3
+Version:        0.0.4
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -55,6 +55,10 @@ install -d -m 755 %{buildroot}%{_var}/log/edge-node
 # Install config file
 install -m 644 config/reporting-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
 
+# Copy license
+mkdir -p %{buildroot}%{_defaultlicensedir}/%{name}
+cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
+
 %files
 %{_sysusersdir}/%{name}.conf
 %{_bindir}/reporting-agent
@@ -64,9 +68,11 @@ install -m 644 config/reporting-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/
 %config(noreplace) %{_sysconfdir}/edge-node/metrics/reporting-agent.yaml
 %dir %attr(0755,reporting-agent,bm-agents) %{_var}/log/edge-node
 
+%license %{_defaultlicensedir}/%{name}/copyright
+
 %pre
 %sysusers_create_package %{name} %{SOURCE1}
 
 %changelog
-* Wed Jun 11 2025 Jakub Sikorski <jakub.sikorski@intel.com> - 0.0.3-1
+* Wed Jun 11 2025 Jakub Sikorski <jakub.sikorski@intel.com> - 0.0.4-1
 - Original version for Edge Microvisor Toolkit. License verified
