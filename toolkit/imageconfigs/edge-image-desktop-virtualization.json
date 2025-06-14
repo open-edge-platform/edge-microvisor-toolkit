@@ -78,7 +78,8 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
-                "packagelists/fs-tools.json"
+                "packagelists/fs-tools.json",
+		"packagelists/idv-solution.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
@@ -92,6 +93,9 @@
                 },
                 {
                         "Path": "additionalconfigs/add-sudoer.sh"
+                },
+		{
+                        "Path": "additionalconfigs/idv-service-config.sh"
                 }
             ],
             "KernelOptions": {
