@@ -3,7 +3,7 @@
 Summary:        Web server with automatic HTTPS
 Name:           caddy
 Version:        2.9.1
-Release:        11%{?dist}
+Release:        12%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 # main source code is Apache-2.0
@@ -29,6 +29,7 @@ Source31:       poweredby-black.png
 Patch1:         0001-Disable-commands-that-can-alter-the-binary.patch
 Patch2:         CVE-2025-22869.patch
 Patch3:         CVE-2024-45339.patch
+Patch4:         CVE-2025-22872.patch
 BuildRequires:  go-rpm-macros
 # https://github.com/caddyserver/caddy/commit/2028da4e74cd41f0f7f94222c6599da1a371d4b8
 BuildRequires:  golang >= 1.22.3
@@ -451,6 +452,9 @@ fi
 %{_datadir}/fish/vendor_completions.d/caddy.fish
 
 %changelog
+* Fri Jun 13 2025 Tham Jing Hui <jing.hui.tham@intel.com> - 2.9.1-12
+- Include patch for CVE-2025-22872
+
 * Mon May 19 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 2.9.1-11
 - Drop post-caddy.sh for service
 
