@@ -88,7 +88,7 @@ outlines the key differences between those.
 
 ## Next Steps
 
-- [System Requirements](./emt-system-requirements)
+- [System Requirements](./emt-system-requirements.md)
 - [Production Deployment with Edge Manageability Framework](./emt-deployment-edge-orchestrator.md)
 
 :::{toctree}
