@@ -1,5 +1,3 @@
-%define debug_package %{nil}
-
 Name:          k3s
 Summary:       K3s - Lightweight Kubernetes
 Version:       1.32.4
@@ -22,7 +20,9 @@ Source9:       https://github.com/flannel-io/cni-plugin/archive/refs/tags/v1.6.0
 Patch0:        k3s-build.patch
 Patch1:        k3s-package-cli.patch
 Patch2:        flannel.patch
-BuildRequires: yq golang libseccomp-devel
+BuildRequires: yq
+BuildRequires: golang
+BuildRequires: libseccomp-devel
 
 %description
 K3s - Lightweight Kubernetes %{version}
@@ -46,8 +46,8 @@ tar -xf %{SOURCE9} --no-same-owner --strip-components 1 -C build/src/github.com/
 ./scripts/package-cli
 
 %install
-mkdir -p %{buildroot}/usr/local/bin
-install -m 0755 dist/artifacts/k3s %{buildroot}/usr/local/bin/k3s
+mkdir -p %{buildroot}%{_bindir}
+install -m 0755 dist/artifacts/k3s %{buildroot}%{_bindir}
 
 mkdir %{buildroot}/opt
 install -m 0755 install.sh %{buildroot}/opt/install.sh
@@ -56,7 +56,7 @@ mkdir -p %{buildroot}/var/lib/rancher/k3s/agent/images
 install -m 0644 %{SOURCE2} %{buildroot}/var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %files
-/usr/local/bin/k3s
+ %{_bindir}/k3s
 /opt/install.sh
 /var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 

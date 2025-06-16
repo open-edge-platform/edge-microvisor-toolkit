@@ -1,3 +1,4 @@
+# This patch is for the k3s build system to use the flannel package.
 --- build/src/github.com/containernetworking/plugins/plugins/meta/flannel/flannel.go
 +++ build/src/github.com/containernetworking/plugins/plugins/meta/flannel/flannel.go
 @@ -16,7 +16,7 @@

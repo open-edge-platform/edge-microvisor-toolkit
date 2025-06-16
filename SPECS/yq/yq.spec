@@ -22,13 +22,13 @@ tar -xf %{SOURCE1} --no-same-owner
 go build
 
 %install
-mkdir -p %{buildroot}/usr/local/bin
-install -m 0755 yq %{buildroot}/usr/local/bin/yq
+mkdir -p %{buildroot}%{_bindir}
+install -m 0755 yq %{buildroot}%{_bindir}
 
 %files
-/usr/local/bin/yq
+ %{_bindir}/yq
 
 %changelog
 * Sun May 11 2025 Mike Farah <mikefarah@gmail.com> - v4.45.4
-- Initial Azure Linux import from the source project (license: same as "License" tag)
+- Initial Edge Microvisor Toolkit import from the source project (license: same as "License" tag)
 - License verified
