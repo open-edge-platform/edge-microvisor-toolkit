@@ -1,6 +1,5 @@
 {
     "packages": [
-        "k3s-calico",
         "k3s-network-policy"
     ]
 }
