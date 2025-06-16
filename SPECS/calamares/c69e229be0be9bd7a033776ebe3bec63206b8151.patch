@@ -1,0 +1,54 @@
+From c69e229be0be9bd7a033776ebe3bec63206b8151 Mon Sep 17 00:00:00 2001
+From: Adriaan de Groot <groot@kde.org>
+Date: Thu, 22 Feb 2024 20:26:56 +0100
+Subject: [PATCH] [calamares] Use a "real" slot for UniqueConnection
+
+Multiple reports of the following fatal error:
+    WARNING (Qt): QObject::connect(QItemSelectionModel, PartitionPage):
+    unique connections require a pointer to member function of a QObject subclass
+suggest to replace the unique lambda by a "real" slot.
+---
+ src/calamares/progresstree/ProgressTreeView.cpp | 17 +++++++++++------
+ src/calamares/progresstree/ProgressTreeView.h   |  3 +++
+ 2 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/src/calamares/progresstree/ProgressTreeView.cpp b/src/calamares/progresstree/ProgressTreeView.cpp
+index 900dd5028d..9d49ea288e 100644
+--- a/src/calamares/progresstree/ProgressTreeView.cpp
++++ b/src/calamares/progresstree/ProgressTreeView.cpp
+@@ -47,10 +47,15 @@ ProgressTreeView::setModel( QAbstractItemModel* model )
+ 
+     QListView::setModel( model );
+ 
+-    connect(
+-        Calamares::ViewManager::instance(),
+-        &Calamares::ViewManager::currentStepChanged,
+-        this,
+-        [ this ]() { viewport()->update(); },
+-        Qt::UniqueConnection );
++    connect( Calamares::ViewManager::instance(),
++             &Calamares::ViewManager::currentStepChanged,
++             this,
++             &ProgressTreeView::update,
++             Qt::UniqueConnection );
++}
++
++void
++ProgressTreeView::update()
++{
++    viewport()->update();
+ }
+diff --git a/src/calamares/progresstree/ProgressTreeView.h b/src/calamares/progresstree/ProgressTreeView.h
+index 00decb6c3d..d845cc715b 100644
+--- a/src/calamares/progresstree/ProgressTreeView.h
++++ b/src/calamares/progresstree/ProgressTreeView.h
+@@ -31,6 +31,9 @@ class ProgressTreeView : public QListView
+      * @brief setModel assigns a model to this view.
+      */
+     void setModel( QAbstractItemModel* model ) override;
++
++public Q_SLOTS:
++    void update();
+ };
+ 
+ #endif  // PROGRESSTREEVIEW_H
