@@ -46,7 +46,7 @@ When raising a PR, make sure that:
   cd toolkit
   sudo make input-srpms REBUILD_TOOLS=y SRPM_FILE_SIGNATURE_HANDLING=update
   
-* The baseline branch for the pull request is ste to `3.0-dev`. 
+* The baseline branch for the pull request is ste to `3.0-dev`.
 
 
 ## Release Cadence
