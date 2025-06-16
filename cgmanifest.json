@@ -7466,6 +7466,26 @@
         }
       }
     },
+        {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-idv-device-plugin",
+          "version": "0.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/dv-device-plugin.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-idv-kubevirt",
+          "version": "0.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/kubevirt.tar.gz"
+        }
+      }
+    },
     {
       "component": {
         "type": "other",

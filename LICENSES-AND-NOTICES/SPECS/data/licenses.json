@@ -2267,6 +2267,8 @@
                 "hardware-discovery-agent",
                 "inbm",
                 "intel-igsc",
+                "intel-idv-kubevirt",
+                "intel-idv-device-plugin",
                 "intel-lms",
                 "intel-npu-firmware",
                 "intel-xpu-smi",

@@ -78,7 +78,8 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
-                "packagelists/fs-tools.json"
+                "packagelists/fs-tools.json",
+                "packagelists/intel-desktop-virtualization-k3s.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
