@@ -105,7 +105,7 @@
                 }
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "quiet splash sysctl.vm.overcommit_memory=1 sysctl.kernel.panic=10 sysctl.kernel.panic_on_oops=1 sysctl.fs.inotify.max_user_instances=8192 rd.shell=0 rd.timeout=200 rd.emergency=reboot udmabuf.list_limit=8192 i915.enable_guc=3 i915.max_vfs=7 intel_iommu=on iommu=pt i915.force_probe=*",
+                "ExtraCommandLine": "quiet splash sysctl.vm.overcommit_memory=1 sysctl.kernel.panic=10 sysctl.kernel.panic_on_oops=1 sysctl.fs.inotify.max_user_instances=8192 rd.shell=0 rd.timeout=200 rd.emergency=reboot udmabuf.list_limit=8192 i915.enable_guc=3 i915.max_vfs=7 intel_iommu=on i915.force_probe=*",
             "SELinux": "permissive"
             },
             "Hostname": "EdgeMicrovisorToolkit",
