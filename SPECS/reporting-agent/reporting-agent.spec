@@ -19,6 +19,7 @@ Requires:       cronie
 Requires:       dmidecode
 Requires:       lsb-release
 Requires:       lshw
+Requires:       util-linux
 
 %global debug_package   %{nil}
 %global _build_id_links none
