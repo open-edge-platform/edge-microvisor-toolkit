@@ -1,0 +1,155 @@
+# Edge Microvisor Toolkit Tink (µOS)
+
+Edge Microvisor Toolkit Tink (µOS) is a custom, minimal build of Edge Microvisor Toolkit.
+It is intended for use in the workflows of Edge Manageability Framework and Edge Microvisor
+Toolkit Standalone Node. The µOS has been introduced to replace previously used HookOS in
+builds. It runs in RAM memory and installs the Edge Microvisor Toolkit operating system.
+
+## Building the µOS image
+
+Edge Microvisor Toolkit Tink is built from the same baseline as other microvisor OS images
+and is generated as a set of `initramfs` and `vmlinuz` image files. The characteristics of
+the resulting image are defined in [edge-image-tink.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-tink.json) configuration file. The µOS includes
+[base OS packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/packagelists/minimal-os-packages.json),
+as well as
+[Tink specific packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/packagelists/tink-packages.json).
+
+Before you can build the µOS image, make sure you have [installed prerequisites and built the toolchain](./get-started/emt-building-howto.md).
+To build the µOS image, run the following command:
+
+```bash
+sudo -E make image -j8 REBUILD_TOOLS=y DAILY_BUILD_REPO=./resources/manifests/package/development.repo VALIDATE_TOOLCHAIN_GPG=n REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image-tink.json REPO_LIST+=./resources/manifests/package/development.repo
+```
+
+The build results in a compressed `emt-tink.tar.gz` file.
+
+The Edge Microvisor Toolkit Tink image files can be extracted from `emt-tink.tar.gz` by running
+the [generate-tink-initramfs.sh](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/scripts/generate-tink-initramfs.sh) bash script. See the usage example:
+
+```bash
+sudo toolkit/imageconfigs/scripts/generate-tink-initramfs.sh \
+  -f <emt-tink.tar.gz> -o <output_images_dir>
+```
+
+* The `<emt-tink.tar.gz>` by the default is generated as "rootfs.tar.gz".
+* The `<output_images_dir>` is the folder where output `vmlinuz`/`initramfs` files will be placed.
+
+To boot with the `vmlinuz` and `initramfs` images, the following additional
+kernel parameters are required:
+
+```text
+root=tmpfs rootflags=mode=0755 rd.skipfsck noresume modules-load=nbd
+```
+
+The generated `initramfs` and `vmlinuz` images can be used for implementing required
+customizations in [Edge Manageability Framework](#orchestrator-build-with-µOS-new-workflow)
+or [Edge Microvisor Toolkit Standalone Node](#microvisor-build-with-µOS-new-workflow) builds.
+
+## Integration with Edge Manageability Framework and Edge Microvisor Toolkit Standalone Node
+
+The primary components in Edge Microvisor Toolkit Tink, that is *device-discovery*,
+*tink-worker* are required for provisioning of Edge Manageability Framework (orchestrator)
+and are built as RPMs (from open source) and included in an output *emt-tink.tar.gz* image file by
+standard image build process of Edge Microvisor Toolkit (microvisor).
+
+The output image file can then be transformed into `initramfs` and `vmlinuz` images required
+to boot as a transitionary OS during provisioning workflows of Edge Manageability Framework
+and Standalone Node. Then, the generated `initramfs` and `vmlinuz` images are used in
+Edge Manageability Framework and Standalone Node image build processes, where specific
+customizations for an edge node are also included. In result, the final signed images are
+generated and can be used in provisioning of the orchestrator (Edge Manageability Framework) and
+the microvisor (Edge Microvisor Toolkit Standalone Node).
+
+See the diagram for more details:
+
+![emf_build_flow](./assets/emf-emt-s-build-workflow.drawio.svg)
+
+## Edge Manageability Framework (orchestrator) Specific Builds
+
+### Orchestrator Build with HookOS (previous workflow)
+
+In the 3.0 release, in the build workflow of Edge Manageability Framework (orchestrator),
+to generate customized `initramfs` and `vmlinuz` images, the following were implemented
+directly into the HookOS image:
+
+- [Caddy Docker image + Caddy configuration for HookOS](https://github.com/open-edge-platform/infra-onboarding/blob/69402c21b34eefa430f3d0eb2540f1949a1b8a33/hook-os/hook.yaml#L276https://github.com/open-edge-platform/infra-onboarding/blob/69402c21b34eefa430f3d0eb2540f1949a1b8a33/hook-os/hook.yaml#L275)
+- [Device discovery agent Docker image](https://github.com/open-edge-platform/infra-onboarding/tree/main/hook-os/device_discovery)
+- [Fluent Bit Docker image + Fluent Bit configuration for HookOS](https://github.com/open-edge-platform/infra-onboarding/tree/main/hook-os/fluent-bit)
+
+Generated customized HookOS `initramfs` and `vmlinuz` images were then downloaded to an edge
+node over PXE boot. HookOS pulled tink-worker container image after booting to start the
+Tinkerbell workflow. In case of HookOS, tink-worker was a container which ran other
+containers in a docker-in-docker scenario.
+
+### Orchestrator Build with µOS (new workflow)
+
+When using Edge Microvisor Toolkit Tink (µOS) in the build workflow, the following RPM
+packages are run as native systemd services in the Edge Microvisor Toolkit OS:
+
+* Caddy and Fluent Bit are existing RPM packages which are included in µOS.
+* [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery/device-discovery.spec)
+  - from [Edge Infrastructure Manager](https://github.com/open-edge-platform/infra-onboarding)
+  of the Edge Manageability Framework is built as an RPM package to run as systemd service
+  and is included in the OS image.
+* [Tinkerbell tink-worker](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/tink-worker/tink-worker.spec)
+  - patched to directly run containers via containerd only, without
+  dependency on docker and avoiding a docker-in-docker use case.
+
+µOS provides `vmlinuz` and `initramfs` images for use in installer builds of Edge
+Manageability Framework (orchestrator) and Edge Microvisor Toolkit Standalone Node (microvisor).
+The orchestrator build requires additional configuration to create a customized `initramfs`
+file during the building process:
+
+- Configuration files for:
+  - Caddy for Edge Manageability Framework
+  - Fluent Bit configuration files
+  - Environment configuration file
+- Cert files
+
+## Edge Microvisor Toolkit Standalone Node Specific Builds
+
+### Microvisor Build with HookOS (previous workflow)
+
+In [Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node),
+HookOS sources, separate from the ones in Edge Manageability Framework, were implemented to
+generate required HookOS images to be used in the installer. The
+[installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/hook_os/files/install-os.sh)
+from Edge Microvisor Toolkit Standalone Node were built into the OS image and set up to run
+automatically in bash on boot.
+
+The customized HookOS `initramfs` and `vmlinuz` were then used to generate the required
+ISO for the USB installer of
+[Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node).
+
+### Microvisor Build with µOS (new workflow)
+
+The `initramfs` and `vmlinuz` images are required to run entirely in RAM memory. For that purpose,
+these images are extracted from the generated "rootfs.tar.gz". Then, the "rootfs.tar.gz"
+file is added into the extracted `initramfs` image, which in turn will be extracted to
+`tmpfs` by the `90tmpfsrootfs` dracut module.
+
+The dracut module decompresses the "tar.gz" file to `tmpfs` to run as root during boot stage
+of `initramfs`.
+
+When using Edge Microvisor Toolkit Tink (µOS) in the build workflow, the following
+components are added to run as native systemd services in the `initramfs` image:
+
+- The [installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/provisioning_scripts/install-os.sh) from Edge Microvisor Toolkit Standalone Node
+- Tink specific RPM packages:
+
+  - [90tmpfsroot dracut module RPM subpackage](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/SPECS/dracut/90tmpfsroot)
+  - [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery/device-discovery.spec)
+  - [Tinkerbell tink-worker](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/tink-worker/tink-worker.spec) -
+    is a modified version of open source [Tink](https://github.com/tinkerbell/tink) and is maintained in
+    [Edge Infrastructure Manager](https://github.com/open-edge-platform/infra-onboarding/tree/main/tink-worker)
+    repository.
+
+
+> **NOTE**: Before generating the final ISO image for the USB installer, the build of
+  [Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
+  will require additional adjustments to the `initramfs`:
+>
+> - Include packages: efibootmgr, gawk, lvm2, net-tools, parted
+> - Inject required OS installer bash scripts and systemd service to run it as service
+> - Disable tink-worker, Caddy, Fluent Bit, device discovery agent services
+
