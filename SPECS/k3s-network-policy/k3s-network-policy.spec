@@ -16,11 +16,11 @@ designed to ensure reliable k3s cluster operation within the Edge Microvisor Too
 
 %install
 # copy manifests and install them under /var/lib/rancher/k3s/server/manifests/network-policy/*.yaml
-mkdir -p  %{buildroot}/var/lib/rancher/k3s/server/manifests/network-policy
-install %{_sourcedir}/00-kube-system.yaml  %{buildroot}/var/lib/rancher/k3s/server/manifests/network-policy
+mkdir -p  %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/network-policy
+install %{_sourcedir}/00-kube-system.yaml  %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/network-policy
 
 %files
-/var/lib/rancher/k3s/server/manifests/network-policy/00-kube-system.yaml
+%{_sharedstatedir}/rancher/k3s/server/manifests/network-policy/00-kube-system.yaml
 
 %changelog
 * Tue Jun 17 2025 Julia Okuniewska <julia.okuniewska@intel.com> - 0.1.0
