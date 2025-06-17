@@ -25,7 +25,7 @@ VALID_SOURCE_ATTRIBUTIONS = {
     "Photon":                         r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from Photon \(license: Apache2\)(\.|\n|$)',
     "Sysbench source":                r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from Sysbench source \(license: GPLv2\+\)(\.|\n|$)',
     "RPM software management source": r'\n-\s+Initial (Edge Microvisor Toolkit|CBL-Mariner|Azure Linux) import from RPM software management source \(license: GPLv2\+\)(\.|\n|$)',
-    "Source project":                 r'\n-\s+Initial Azure Linux import from the source project \(license: same as "License" tag\)(\.|\n|$)',
+    "Source project":                 r'\n-\s+Initial (Edge Microvisor Toolkit|Azure Linux) import from the source project \(license: same as "License" tag\)(\.|\n|$)',
 
 }
 
