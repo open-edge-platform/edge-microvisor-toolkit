@@ -29,6 +29,6 @@ install -m 0755 yq %{buildroot}%{_bindir}
  %{_bindir}/yq
 
 %changelog
-* Sun May 11 2025 Mike Farah <mikefarah@gmail.com> - v4.45.4
+* Sun May 11 2025 Mike Farah <mikefarah@gmail.com> - 4.45.4-1
 - Initial Edge Microvisor Toolkit import from the source project (license: same as "License" tag)
 - License verified
