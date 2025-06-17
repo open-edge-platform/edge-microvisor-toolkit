@@ -62,7 +62,7 @@ install -m 0644 %{SOURCE2} %{buildroot}/var/lib/rancher/k3s/agent/images/k3s-air
 
 %changelog
 * Tue Jun 17 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4-1
-- Initial Edge Microvisor Toolkit import from the source project. License verified.
+- Initial Edge Microvisor Toolkit import from the source project (license: same as "License" tag).
 
 * Wed Apr 23 2025 Rafael <32229014+rafaelbreno@users.noreply.github.com> - v1.32.4+k3s1
 - Update to v1.32.4 (#12209)
