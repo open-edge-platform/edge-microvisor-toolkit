@@ -1,7 +1,7 @@
 {
     "SystemConfigs": [
 	{
-            "Name": "Edge Microvisor Toolkit Base with RT Kernel + Docker",
+            "Name": "RT Kernel + Docker + K3s",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
@@ -14,7 +14,8 @@
                 "packagelists/intel-rdt.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-		"packagelists/docker.json"
+		"packagelists/docker.json",
+		"packagelists/k3s.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
@@ -32,7 +33,7 @@
             ]
         },
 	{
-            "Name": "Edge Microvisor Toolkit Base with Standard Kernel + Docker",
+            "Name": "Standard Kernel + Docker + K3s",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
@@ -44,7 +45,8 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-	        "packagelists/docker.json"
+	        "packagelists/docker.json",
+		"packagelists/k3s.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
@@ -62,7 +64,7 @@
             ]
         },
         {
-	    "Name": "Edge Microvisor Toolkit Base with RT Kernel",
+	    "Name": "RT Kernel",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
@@ -92,7 +94,7 @@
             ]
         },
 	{
-            "Name": "Edge Microvisor Toolkit Base with Standard Kernel",
+            "Name": "Standard Kernel",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",

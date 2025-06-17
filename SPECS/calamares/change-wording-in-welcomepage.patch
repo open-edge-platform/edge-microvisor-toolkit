@@ -1,0 +1,26 @@
+From bfd8b744cb4668a797467367039b90608316350b Mon Sep 17 00:00:00 2001
+From: Tan Jia Yong <jia.yong.tan@intel.com>
+Date: Fri, 6 Jun 2025 16:13:55 +0800
+Subject: [PATCH] change wording in welcomepage
+
+Signed-off-by: Tan Jia Yong <jia.yong.tan@intel.com>
+---
+ src/modules/welcome/WelcomePage.ui | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/modules/welcome/WelcomePage.ui b/src/modules/welcome/WelcomePage.ui
+index 0796646..168786c 100644
+--- a/src/modules/welcome/WelcomePage.ui
++++ b/src/modules/welcome/WelcomePage.ui
+@@ -41,7 +41,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
+        <item>
+         <widget class="QLabel" name="skuLabel">
+          <property name="text">
+-          <string>Installation type:</string>
++          <string>Install the microvisor with:</string>
+          </property>
+         </widget>
+        </item>
+-- 
+2.37.3
+
