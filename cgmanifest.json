@@ -8370,6 +8370,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "k3s",
+          "version": "1.32.4",
+          "downloadUrl": "https://github.com/k3s-io/k3s/archive/refs/tags/v1.32.4+k3s1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "kbd",
           "version": "2.2.0",
           "downloadUrl": "http://ftp.altlinux.org/pub/people/legion/kbd/kbd-2.2.0.tar.xz"
@@ -31781,6 +31791,16 @@
           "name": "ypserv",
           "version": "4.1",
           "downloadUrl": "https://github.com/thkukuk/ypserv/archive/v4.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "yq",
+          "version": "4.45.4",
+          "downloadUrl": "https://github.com/mikefarah/yq/archive/refs/tags/v4.45.4.tar.gz"
         }
       }
     },
