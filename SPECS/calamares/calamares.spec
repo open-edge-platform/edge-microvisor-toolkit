@@ -7,7 +7,7 @@ Summary:        Installer from a live CD/DVD/USB to disk
 # https://github.com/calamares/calamares/issues/1051
 Name:           calamares
 Version:        3.3.1
-Release:        12%{?dist}
+Release:        13%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -59,6 +59,7 @@ Patch7:          reword-welcome-screen.patch
 Patch8:          change-completion-from-second-to-minute.patch
 Patch9:          ui_redesign.patch
 Patch10:         c69e229be0be9bd7a033776ebe3bec63206b8151.patch
+Patch11:         change-wording-in-welcomepage.patch
 # Compilation tools
 BuildRequires:  cmake
 BuildRequires:  extra-cmake-modules
@@ -158,6 +159,7 @@ mv %{SOURCE56} data/images/wait.png
 %patch -P 8 -p1
 %patch -P 9 -p1
 %patch -P 10 -p1
+%patch -P 11 -p1
 
 %build
 %cmake_kf \
@@ -235,6 +237,9 @@ install -p -m 644 %{SOURCE21} %{buildroot}%{_sysconfdir}/calamares/settings.conf
 %{_libdir}/libcalamaresui.so
 
 %changelog
+* Tue June 17 2025 Tan Jia Yong <jia.yong.tan@intel.com> - 3.3.1-13
+- Change welcome page wording.
+
 * Tue June 10 2025 kintalix jayanth <kintalix.jayanth@intel.com> - 3.3.1-12
 - Fixed sidebar update issue from upstream.
 
