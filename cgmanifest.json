@@ -7466,6 +7466,16 @@
         }
       }
     },
+        {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-gpu-dp",
+          "version": "0.32.1",
+          "downloadUrl": "https://github.com/intel/intel-device-plugins-for-kubernetes/archive/refs/tags/v0.32.1.tar.gz"
+        }
+      }
+    },
     {
       "component": {
         "type": "other",
