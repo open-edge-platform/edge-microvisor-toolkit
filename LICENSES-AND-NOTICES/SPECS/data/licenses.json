@@ -3201,7 +3201,9 @@
         "Source project": {
             "license": "Same as the source project.",
             "specs": [
-                "python-nocaselist"
+                "k3s",
+                "python-nocaselist",
+                "yq"
             ]
         },
         "Sysbench source": {
