@@ -26532,6 +26532,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "reporting-agent",
+          "version": "0.0.4",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.0.4.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "resource-agents",
           "version": "4.10.0",
           "downloadUrl": "https://github.com/ClusterLabs/resource-agents/archive/refs/tags/v4.10.0.tar.gz"

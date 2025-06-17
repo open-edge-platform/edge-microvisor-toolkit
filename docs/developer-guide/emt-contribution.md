@@ -19,9 +19,9 @@ review, better understand, and prioritize the request.
 
 ## Contribution Flow
 
-All contributing Pull Requests should target the **3.0-dev branch**, which is used for
-development. Periodically, the dev branch is merged to 3.0, the publishing branch for the
-project.
+All contributing Pull Requests should target the `3.0-dev` branch. This branch is used for
+development, testing, and validation. It is merged to the `3.0` release branch by project
+maintainers, at their discretion. The `3.0` branch is used for publishing official releases of the EMT images.
 
 Following the [Azure Linux](https://github.com/microsoft/azurelinux/blob/3.0/CONTRIBUTING.md#packages)
 scheme for packages, Edge Microvisor Toolkit maintains two directories:
@@ -44,7 +44,8 @@ When raising a PR, make sure that:
   ```bash
   cd toolkit
   sudo make input-srpms REBUILD_TOOLS=y SRPM_FILE_SIGNATURE_HANDLING=update
-  ```
+  
+* The baseline branch for the pull request is set to `3.0-dev`.
 
 
 ## Release Cadence
