@@ -24,7 +24,7 @@ mkdir -p %{buildroot}/var/lib/rancher/k3s/server/manifests/00-intel-gpu
 mkdir -p %{buildroot}/var/lib/rancher/k3s/agent/images/00-intel-gpu
 
 # Copy the device plugin manifest (assume it's named intel-gpu-plugin.yaml)
-cp ./deployments/gpu_plugin/intel-gpu-plugin.yaml %{buildroot}/var/lib/rancher/k3s/server/manifests/00-intel-gpu
+cp ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml %{buildroot}/var/lib/rancher/k3s/server/manifests/00-intel-gpu
 
 # Copy the pre-pulled image tarball (must be prepared separately)
 cp ./images/intel-gpu-plugin.tar %{buildroot}/var/lib/rancher/k3s/agent/images/00-intel-gpu
