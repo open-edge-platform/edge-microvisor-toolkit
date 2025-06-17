@@ -20,7 +20,7 @@ mkdir -p  %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/network-po
 install %{_sourcedir}/00-kube-system.yaml  %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/network-policy
 
 %files
-/var/lib/rancher/k3s/server/manifests/network-policy/00-kube-system.yaml
+%{_sharedstatedir}/rancher/k3s/server/manifests/network-policy/00-kube-system.yaml
 
 %changelog
 * Tue Jun 17 2025 Julia Okuniewska <julia.okuniewska@intel.com> - 0.1.0
