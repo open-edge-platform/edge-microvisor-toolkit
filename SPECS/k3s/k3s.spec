@@ -54,7 +54,7 @@ mkdir %{buildroot}/opt
 install -m 0755 install.sh %{buildroot}/opt/install.sh
 
 mkdir -p %{buildroot}/var/lib/rancher/k3s/agent/images
-install -m 0644 %{SOURCE2} %{buildroot}/var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
+install -m 0644 %{SOURCE1} %{buildroot}/var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %files
  %{_bindir}/k3s
