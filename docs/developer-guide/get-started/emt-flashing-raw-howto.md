@@ -10,7 +10,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
    ```bash
    curl -k --noproxy "" https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250413.2200-prod-signed.raw.gz -o edge_microvisor_toolkit.raw.gz
-   
+
    curl -k --noproxy "" https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250413.2200-prod-signed.raw.gz.sha256sum -o edge_microvisor_toolkit.raw.gz.sha256sum
    ```
 
@@ -26,6 +26,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 3. Flash the RAW image to a different, available storage device using the 'dd' command
 
    Run:
+
    ```bash
    sudo dd if=edge_microvisor_toolkit.raw of=/dev/sdc status=progress
    ```
@@ -38,11 +39,11 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 1. Configure the server to reboot with required disk/OS/partition
 
-   Using the CLI method, run `sudo efibootmgr` and then `sudo efibootmgr -o 0012` and `sudo reboot`:
+   Using the CLI method:
+
+   Run `sudo efibootmgr`:
 
    ```bash
-   sudo efibootmgr
-   [sudo] password for linux-user:
    BootCurrent: 0002
    BootOrder: 0002,0012,0014,0015
    Boot0002* ubuntu
@@ -51,11 +52,9 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    Boot0015  NIC in Slot 2 Port 2 Partition 1
    MirroredPercentageAbove4G: 0.00
    MirrorMemoryBelow4GB: false
-
-   sudo efibootmgr -o 0012
-
-   sudo reboot
    ```
+
+   Find the ID of EMT boot device and run `sudo efibootmgr -o <ID of EMT boot device>`. Then run `sudo reboot`
 
    You can also reboot and go to the boot manager to select the flashed partition:
 
@@ -63,19 +62,12 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 2. Check date
 
-   Run `sudo date080509312024`.
+   Run `sudo date 080509312024`.
 
-   The string of numbers after `date` is the date in time in the following format: Month:08 Date:05 Hour:09 Minute:31 Year: 2024
+   The string of numbers after `date` is the date in time in the following format: Month:08 Day:05 Hour:09 Minute:31 Year: 2024
 
-3. Install openssh-server package
 
-   Run `tdnf install openssh-server`.
-
-4. Install vim package
-
-   Run `tdnf install vim`.
-
-5. Configure and enable ssh
+3. Configure and enable ssh
 
    Run:
 
@@ -84,7 +76,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
    ```
 
-6. Restart sshd service to apply changes
+4. Restart sshd service to apply changes
 
    Run `sudo systemctl restart sshd`.
 
@@ -104,19 +96,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    modprobe i40e
    ```
 
-2. Install vim tool to edit the ssh config file:
-
-   ```bash
-   tdnf install vim
-   ```
-
-3. Install and Configure the SSH server
-
-   ```bash
-   tdnf install openssh-server
-   ```
-
-4. Update the ssh configuration to ssh with the following information:
+2. Update the ssh configuration to ssh with the following information:
 
    ```bash
    vi /etc/ssh/sshd_config
@@ -126,13 +106,13 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    PasswordAuthentication yes
    ```
 
-5. Restart sshd service
+3. Restart sshd service:
 
    ```bash
    systemctl restart sshd
    ```
 
-   To debug, run only
+   To debug, run only:
 
    ```bash
    journalctl -u sshd -f
@@ -140,12 +120,9 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 - **Switching between multiple OS disks**
 
-1. Install and configure efibootmgr
+1. Configure efibootmgr. Run `sudo efibootmgr`:
 
    ```bash
-   tdnf install efibootmgr
-
-   ]# efibootmgr
    BootCurrent: 0000
    BootOrder: 0000,0005,0006,0002
    Boot0000* EFI Fixed Disk Boot Device 2
@@ -156,15 +133,10 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    MirrorMemoryBelow4GB: false
    ```
 
-2. Select the required disk to boot
-
-   ```bash
-   efibootmgr -o 0002
-   ```
+2. Select the boot device with the desired OS and run `efibootmgr -o <ID of boot device>`
 
 3. Reboot to change the OS to boot
 
    ```bash
    reboot
    ```
-
