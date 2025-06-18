@@ -1,5 +1,5 @@
 Name:           intel-desktop-virtualization-k3s
-Version:        v0.1
+Version:        0.1
 Release:        1%{?dist}
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
