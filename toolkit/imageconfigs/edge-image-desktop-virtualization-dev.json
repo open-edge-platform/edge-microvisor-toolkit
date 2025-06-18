@@ -77,6 +77,7 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
+                "packagelists/k3s.json",
                 "packagelists/fs-tools.json"
             ],
             "AdditionalFiles": {
