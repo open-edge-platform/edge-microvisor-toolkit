@@ -4,15 +4,16 @@ Release:        1%{?dist}
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/open-edge-platform/edge-desktop-virtualization
-Summary:        Installs Kubevirt (v1.5.0 enabled with GTK libarary support and Intel SR-IOV patched QEMU in Virt-Launcher identified as v1.5.0_DV) and Device Plugin(v1) for enabling support of local GTK display using pre-built container tar files
+Summary:        Provides Kubevirt (enabled with GTK libarary support and Intel SR-IOV patched QEMU in Virt-Launcher) and IDV Device Plugin for enabling support of local GTK display using pre-built container tar files
 
 License:        Apache-2.0
 Source0:        https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/intel-idv-kubevirt-v0.1.tar.gz
 Source1:        https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/intel-idv-device-plugin-v0.1.tar.gz
 BuildArch:      x86_64
+Requires:       k3s
 
 %description
-This RPM Installs Kubevirt (v1.5.0 enabled with GTK libarary support and Intel SR-IOV patched QEMU in Virt-Launcher identified as v1.5.0_DV) and Device Plugin(v1) for enabling support of local GTK display using pre-built container tar files
+Provides Kubevirt (enabled with GTK libarary support and Intel SR-IOV patched QEMU in Virt-Launcher) and IDV Device Plugin for enabling support of local GTK display using pre-built container tar files
 
 %prep
 
@@ -28,7 +29,6 @@ cp -a %{SOURCE1} %{buildroot}/usr/share/%{name}/
 /usr/share/%{name}/intel-idv-device-plugin-v0.1.tar.gz
 
 %post
-
 
 %changelog
 * Thu Jun 5 2025 D M, Karthik <karthik.d.m@intel.com> - v0.1
