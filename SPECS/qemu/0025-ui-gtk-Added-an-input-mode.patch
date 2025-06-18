@@ -1,0 +1,183 @@
+From 778b324c2cc18be6be284d747d8641114ac96cb0 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Wed, 30 Oct 2024 22:11:37 -0700
+Subject: [PATCH 25/50] ui/gtk: Added an input mode
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+In a multi-seat scenario where multiple keyboards and mice are
+connected to the host but some are dedicated for the guests only
+(through pass through mode) and some are only for the host, there
+is a strong use case where a customer does not want a HID device
+connected to the host to be able to control the guest.
+
+In such a scenario, neither should we bind any input events to
+Qemu UI, nor should we show menu options like "Grab on Hover" or
+"Grab Input". This patch adds a GTK command line option called
+"input". It can be set like this:
+
+  gtk,input=off/on
+
+If set to on or completely left out, it will default to normal
+operation where host HID devices can control the guests. However,
+if turned off, then host HID devices will not be able to control
+the guest windows.
+
+Cc: Dongwon Kim <dongwon.kim@intel.com>
+Cc: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>>
+Cc: Daniel P. Berrangé <berrange@redhat.com>
+Signed-off-by: Satyeshwar Singh <satyeshwar.singh@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ qapi/ui.json    |  9 ++++++--
+ qemu-options.hx |  4 ++++
+ ui/gtk.c        | 60 ++++++++++++++++++++++++++++++++-----------------
+ 3 files changed, 50 insertions(+), 23 deletions(-)
+
+diff --git a/qapi/ui.json b/qapi/ui.json
+index 8e2b36fa38..0262329b0c 100644
+--- a/qapi/ui.json
++++ b/qapi/ui.json
+@@ -1361,7 +1361,11 @@
+ #     (Since Pending)
+ #
+ # @hw-cursor: Blend guest cursor plane (default: off).
+-#     (Since: Pending)
++#     (Since Pending)
++#
++# @input: Don't let host's HID devices control the guest. Defaults to
++#     "on" so they can control the guest.
++#     (Since Pending)
+ #
+ # Since: 2.12
+ ##
+@@ -1372,7 +1376,8 @@
+                 '*show-menubar'  : 'bool',
+                 '*connectors'    : ['str'],
+                 '*show-fps'      : 'bool',
+-                '*hw-cursor'     : 'bool' } }
++                '*hw-cursor'     : 'bool',
++                '*input'         : 'bool' } }
+ 
+ ##
+ # @DisplayEGLHeadless:
+diff --git a/qemu-options.hx b/qemu-options.hx
+index 07c5262223..dd972180cd 100644
+--- a/qemu-options.hx
++++ b/qemu-options.hx
+@@ -2101,6 +2101,7 @@ DEF("display", HAS_ARG, QEMU_OPTION_display,
+     "            [,show-menubar=on|off][,zoom-to-fit=on|off]\n"
+     "            [,connectors.<index>=<connector name>]\n"
+     "            [,show-fps=on|off][,hw-cursor=on|off]\n"
++    "            [,input=on|off]\n"
+ #endif
+ #if defined(CONFIG_VNC)
+     "-display vnc=<display>[,<optargs>]\n"
+@@ -2207,6 +2208,9 @@ SRST
+         ``hw-cursor=on|off`` : Blend cursor plane from the guest with the guest display
+                                output.
+ 
++        ``input=on|off``        : Don't let host's HID devices control the guest
++                                  if set to "off", defaults to "on"
++
+     ``curses[,charset=<encoding>]``
+         Display video output via curses. For graphics device models
+         which support a text mode, QEMU can display this output using a
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 6ee39b4816..fe2610b90f 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -2461,6 +2461,20 @@ static void gd_connect_vc_gfx_signals(VirtualConsole *vc)
+                          G_CALLBACK(gd_resize_event), vc);
+     }
+ #endif
++    if (qemu_console_is_graphic(vc->gfx.dcl.con)) {
++        g_signal_connect(vc->gfx.drawing_area, "configure-event",
++                         G_CALLBACK(gd_configure), vc);
++    }
++
++    /*
++     * Don't configure input events if the user has provided an option
++     * for input and explicitly set it to off. In this case, they want
++     * passthrough HID devices to control the guest.
++     */
++    if (vc->s->opts->u.gtk.has_input && !vc->s->opts->u.gtk.input ) {
++        return;
++    }
++
+     if (qemu_console_is_graphic(vc->gfx.dcl.con)) {
+         g_signal_connect(vc->gfx.drawing_area, "event",
+                          G_CALLBACK(gd_event), vc);
+@@ -2485,8 +2499,6 @@ static void gd_connect_vc_gfx_signals(VirtualConsole *vc)
+                          G_CALLBACK(gd_focus_in_event), vc);
+         g_signal_connect(vc->gfx.drawing_area, "focus-out-event",
+                          G_CALLBACK(gd_focus_out_event), vc);
+-        g_signal_connect(vc->gfx.drawing_area, "configure-event",
+-                         G_CALLBACK(gd_configure), vc);
+         g_signal_connect(vc->gfx.drawing_area, "grab-broken-event",
+                          G_CALLBACK(gd_grab_broken_event), vc);
+     } else {
+@@ -2529,8 +2541,10 @@ static void gd_connect_signals(GtkDisplayState *s)
+                      G_CALLBACK(gd_menu_zoom_fixed), s);
+     g_signal_connect(s->zoom_fit_item, "activate",
+                      G_CALLBACK(gd_menu_zoom_fit), s);
+-    g_signal_connect(s->grab_item, "activate",
+-                     G_CALLBACK(gd_menu_grab_input), s);
++    if (!s->opts->u.gtk.has_input || s->opts->u.gtk.input) {
++        g_signal_connect(s->grab_item, "activate",
++                         G_CALLBACK(gd_menu_grab_input), s);
++    }
+     g_signal_connect(s->notebook, "switch-page",
+                      G_CALLBACK(gd_change_page), s);
+     if (s->opts->u.gtk.has_connectors) {
+@@ -2735,23 +2749,27 @@ static GtkWidget *gd_create_menu_view(GtkDisplayState *s, DisplayOptions *opts)
+     s->zoom_fit_item = gtk_check_menu_item_new_with_mnemonic(_("Zoom To _Fit"));
+     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), s->zoom_fit_item);
+ 
+-    separator = gtk_separator_menu_item_new();
+-    gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), separator);
+-
+-    s->grab_on_hover_item = gtk_check_menu_item_new_with_mnemonic(_("Grab On _Hover"));
+-    gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), s->grab_on_hover_item);
+-
+-    s->grab_item = gtk_check_menu_item_new_with_mnemonic(_("_Grab Input"));
+-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(s->grab_item),
+-                                 "<QEMU>/View/Grab Input");
+-    gtk_accel_map_add_entry("<QEMU>/View/Grab Input", GDK_KEY_g,
+-                            HOTKEY_MODIFIERS);
+-    gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), s->grab_item);
+-    gtk_accel_group_connect(s->accel_group, GDK_KEY_g, HOTKEY_MODIFIERS, 0,
+-                        g_cclosure_new_swap(G_CALLBACK(gd_accel_grab_input), s, NULL));
+-    gtk_accel_label_set_accel(
+-                             GTK_ACCEL_LABEL(gtk_bin_get_child(GTK_BIN(s->grab_item))),
+-                             GDK_KEY_g, HOTKEY_MODIFIERS);
++    if (!s->opts->u.gtk.has_input || s->opts->u.gtk.input) {
++        separator = gtk_separator_menu_item_new();
++        gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), separator);
++
++        s->grab_on_hover_item = gtk_check_menu_item_new_with_mnemonic(
++                                                          _("Grab On _Hover"));
++        gtk_menu_shell_append(GTK_MENU_SHELL(view_menu),
++                              s->grab_on_hover_item);
++
++        s->grab_item = gtk_check_menu_item_new_with_mnemonic(_("_Grab Input"));
++        gtk_menu_item_set_accel_path(GTK_MENU_ITEM(s->grab_item),
++                                     "<QEMU>/View/Grab Input");
++        gtk_accel_map_add_entry("<QEMU>/View/Grab Input", GDK_KEY_g,
++                                HOTKEY_MODIFIERS);
++        gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), s->grab_item);
++        gtk_accel_group_connect(s->accel_group, GDK_KEY_g, HOTKEY_MODIFIERS, 0,
++                g_cclosure_new_swap(G_CALLBACK(gd_accel_grab_input), s, NULL));
++        gtk_accel_label_set_accel(
++                     GTK_ACCEL_LABEL(gtk_bin_get_child(GTK_BIN(s->grab_item))),
++                     GDK_KEY_g, HOTKEY_MODIFIERS);
++    }
+ 
+     separator = gtk_separator_menu_item_new();
+     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), separator);
+-- 
+2.35.3
+

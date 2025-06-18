@@ -1,0 +1,62 @@
+From ac59d2c7a275021a9b54c57e8478ac9a6626fb41 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 7 Nov 2024 12:34:19 -0800
+Subject: [PATCH 26/50] ui/gtk: Scanout flush only if guest framebuffer exist
+
+Draw should be done only if guest framebuffer exist.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk-egl.c     | 6 ++++--
+ ui/gtk-gl-area.c | 6 ++++--
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index 1c05b4a7b4..6b9ae3b3b2 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -96,7 +96,8 @@ void gd_egl_draw(VirtualConsole *vc)
+             }
+ 
+             if (!dmabuf ||
+-                (dmabuf && qemu_dmabuf_get_render_sync(dmabuf))) {
++                (dmabuf && qemu_dmabuf_get_render_sync(dmabuf) &&
++                vc->gfx.guest_fb.framebuffer)) {
+                 gd_egl_scanout_flush(&vc->gfx.dcl, 0, 0, vc->gfx.w, vc->gfx.h);
+             }
+         }
+@@ -435,7 +436,8 @@ void gd_egl_flush(DisplayChangeListener *dcl,
+ #ifdef CONFIG_GBM
+     QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
+     if (dmabuf) {
+-        if (!qemu_dmabuf_get_draw_submitted(dmabuf)) {
++        if (!qemu_dmabuf_get_draw_submitted(dmabuf) &&
++            vc->gfx.guest_fb.framebuffer) {
+             graphic_hw_gl_block(vc->gfx.dcl.con, true);
+             gtk_egl_set_scanout_mode(vc, true);
+             if (!qemu_dmabuf_get_render_sync(dmabuf)) {
+diff --git a/ui/gtk-gl-area.c b/ui/gtk-gl-area.c
+index 4ac364bddf..4a2f9538ef 100644
+--- a/ui/gtk-gl-area.c
++++ b/ui/gtk-gl-area.c
+@@ -290,13 +290,15 @@ void gd_gl_area_scanout_flush(DisplayChangeListener *dcl,
+ #ifdef CONFIG_GBM
+     QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
+ 
+-    if (dmabuf && !qemu_dmabuf_get_draw_submitted(dmabuf)) {
++    if (dmabuf && !qemu_dmabuf_get_draw_submitted(dmabuf) &&
++        vc->gfx.guest_fb.framebuffer) {
+         gtk_gl_area_make_current(GTK_GL_AREA(vc->gfx.drawing_area));
+         graphic_hw_gl_block(vc->gfx.dcl.con, true);
+         qemu_dmabuf_set_draw_submitted(dmabuf, true);
+         gtk_gl_area_set_scanout_mode(vc, true);
+         if (!qemu_dmabuf_get_render_sync(dmabuf)) {
+-            int ws = gdk_window_get_scale_factor(gtk_widget_get_window(vc->gfx.drawing_area));
++            int ws = gdk_window_get_scale_factor(gtk_widget_get_window(
++                                                 vc->gfx.drawing_area));
+             int ww = gtk_widget_get_allocated_width(vc->gfx.drawing_area) * ws;
+             int wh = gtk_widget_get_allocated_height(vc->gfx.drawing_area) * ws;
+             int y1 = vc->gfx.y0_top ? 0 : vc->gfx.h;
+-- 
+2.35.3
+

@@ -1,0 +1,46 @@
+From 9b9ff8214f9a0319d395e764e1718464b6c9bc3d Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Fri, 17 Jan 2025 01:57:02 -0800
+Subject: [PATCH 33/50] virtio-gpu: Update cursor data only if it is valid
+
+Cursor blob image buffer could have already been ummapped by
+the time the cursor update request is received. In such case,
+it should be ignored to prevent any possible segfault.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ hw/display/virtio-gpu.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/hw/display/virtio-gpu.c b/hw/display/virtio-gpu.c
+index d8b45d844b..d1d1659ffc 100644
+--- a/hw/display/virtio-gpu.c
++++ b/hw/display/virtio-gpu.c
+@@ -62,12 +62,14 @@ void virtio_gpu_update_cursor_data(VirtIOGPU *g,
+             return;
+         }
+         data = res->blob;
+-    } else {
++    } else if (res->image) {
+         if (pixman_image_get_width(res->image)  != s->current_cursor->width ||
+             pixman_image_get_height(res->image) != s->current_cursor->height) {
+             return;
+         }
+         data = pixman_image_get_data(res->image);
++    } else {
++        return;
+     }
+ 
+     pixels = s->current_cursor->width * s->current_cursor->height;
+@@ -935,6 +937,8 @@ void virtio_gpu_cleanup_mapping(VirtIOGPU *g,
+ 
+     if (res->blob) {
+         virtio_gpu_fini_udmabuf(res);
++        res->blob = NULL;
++        res->blob_size = 0;
+     }
+ }
+ 
+-- 
+2.35.3
+

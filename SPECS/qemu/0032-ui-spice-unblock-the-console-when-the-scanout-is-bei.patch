@@ -1,0 +1,43 @@
+From 51c0bf81db85021aa79929299d2c6b947cfe5f58 Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Sun, 12 Jan 2025 20:59:17 -0800
+Subject: [PATCH 32/50] ui/spice: unblock the console when the scanout is being
+ disabled
+
+When the scanout is being disabled, we need to check to see if the
+console is blocked or not. If it is, we need to unblock it to let
+the newer updates to take effect.
+
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+---
+ ui/spice-display.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/ui/spice-display.c b/ui/spice-display.c
+index d8f58b10b6..0d75bb57fe 100644
+--- a/ui/spice-display.c
++++ b/ui/spice-display.c
+@@ -951,6 +951,20 @@ static void spice_gl_switch(DisplayChangeListener *dcl,
+     bool ret;
+     int fd;
+ 
++    /*
++     * We need to check for the case of "lost" updates, where a gl_draw
++     * was not submitted because the timer did not get a chance to run.
++     * One case where this happens is when the Guest VM is getting
++     * rebooted. If the console is blocked in this situation, we need
++     * to unblock it. Otherwise, newer updates would not take effect.
++     */
++    if (qemu_console_is_gl_blocked(ssd->dcl.con)) {
++        if (remote_client && ssd->gl_updates && ssd->have_scanout) {
++            ssd->gl_updates = 0;
++            qemu_spice_gl_block(ssd, false);
++        }
++    }
++
+     if (ssd->ds) {
+         surface_gl_destroy_texture(ssd->gls, ssd->ds);
+     }
+-- 
+2.35.3
+

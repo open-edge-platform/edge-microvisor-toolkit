@@ -1,0 +1,56 @@
+From 4b073c5a5c61206561ae07979e722e08564931f3 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 7 Nov 2024 12:45:15 -0800
+Subject: [PATCH 27/50] virtio-gpu: Replace the surface with null surface only
+ when resetting
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Update the current surface with a place holder surface only when
+virtio-gpu device is being reset. It is required to keep the most
+recent frame on the display even if the resource associated with it
+is unreferenced. Otherwise, frequent blnking will happen whenever
+the resource associated with the scanout is unreferenced.
+
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ hw/display/virtio-gpu.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/hw/display/virtio-gpu.c b/hw/display/virtio-gpu.c
+index 363e8ea9e5..6a553bc4a5 100644
+--- a/hw/display/virtio-gpu.c
++++ b/hw/display/virtio-gpu.c
+@@ -393,7 +393,6 @@ static void virtio_gpu_disable_scanout(VirtIOGPU *g, int scanout_id)
+         res->scanout_bitmask &= ~(1 << scanout_id);
+     }
+ 
+-    dpy_gfx_replace_surface(scanout->con, NULL);
+     scanout->resource_id = 0;
+     scanout->ds = NULL;
+     scanout->width = 0;
+@@ -1559,6 +1558,7 @@ void virtio_gpu_reset(VirtIODevice *vdev)
+ {
+     VirtIOGPU *g = VIRTIO_GPU(vdev);
+     struct virtio_gpu_ctrl_command *cmd;
++    int i = 0;
+ 
+     if (qemu_in_vcpu_thread()) {
+         g->reset_finished = false;
+@@ -1583,6 +1583,10 @@ void virtio_gpu_reset(VirtIODevice *vdev)
+         g_free(cmd);
+     }
+ 
++    for (i = 0; i < g->parent_obj.conf.max_outputs; i++) {
++         dpy_gfx_replace_surface(g->parent_obj.scanout[i].con, NULL);
++    }
++
+     virtio_gpu_base_reset(VIRTIO_GPU_BASE(vdev));
+ }
+ 
+-- 
+2.35.3
+
