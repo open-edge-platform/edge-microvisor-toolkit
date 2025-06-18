@@ -2,17 +2,6 @@
 
 Follow these steps to modify the partition sizes in order to use the remaining free space on your bootable medium.
 
-## Install required tools
-
-Run `tdnf install -y cloud-utils-growpart parted`
-
-```bash
-Loaded plugin: tdnfrepogpgcheck
-Package cloud-utils-growpart is already installed.
-Package parted is already installed.
-Nothing to do.
-```
-
 ## Delete /data partition /dev/sdb3 or /data
 
 Run `parted /dev/sdb`:

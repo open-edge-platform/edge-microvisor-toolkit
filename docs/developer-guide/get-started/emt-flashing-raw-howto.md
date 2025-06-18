@@ -62,19 +62,12 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 2. Check date
 
-   Run `sudo date080509312024`.
+   Run `sudo date 080509312024`.
 
    The string of numbers after `date` is the date in time in the following format: Month:08 Day:05 Hour:09 Minute:31 Year: 2024
 
-3. Install openssh-server package
 
-   Run `tdnf install openssh-server`.
-
-4. Install vim package
-
-   Run `tdnf install vim`.
-
-5. Configure and enable ssh
+3. Configure and enable ssh
 
    Run:
 
@@ -83,7 +76,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
    ```
 
-6. Restart sshd service to apply changes
+4. Restart sshd service to apply changes
 
    Run `sudo systemctl restart sshd`.
 
@@ -103,19 +96,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    modprobe i40e
    ```
 
-2. Install vim tool to edit the ssh config file:
-
-   ```bash
-   tdnf install vim
-   ```
-
-3. Install and Configure the SSH server:
-
-   ```bash
-   tdnf install openssh-server
-   ```
-
-4. Update the ssh configuration to ssh with the following information:
+2. Update the ssh configuration to ssh with the following information:
 
    ```bash
    vi /etc/ssh/sshd_config
@@ -125,7 +106,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
    PasswordAuthentication yes
    ```
 
-5. Restart sshd service:
+3. Restart sshd service:
 
    ```bash
    systemctl restart sshd
@@ -139,7 +120,7 @@ This guide will help you flash an Edge Microvisor Toolkit RAW image to the stora
 
 - **Switching between multiple OS disks**
 
-1. Install and configure efibootmgr. Run `tdnf install efibootmgr`:
+1. Configure efibootmgr. Run `sudo efibootmgr`:
 
    ```bash
    BootCurrent: 0000
