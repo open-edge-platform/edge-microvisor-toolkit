@@ -1,5 +1,5 @@
 --- scripts/version.sh
-+++ scripts/version.sh.new
++++ scripts/version.sh
 @@ -79,7 +79,7 @@
  VERSION_ROOT="v0.14.1"
  
