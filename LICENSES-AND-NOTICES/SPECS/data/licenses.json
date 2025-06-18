@@ -2270,6 +2270,7 @@
                 "intel-lms",
                 "intel-npu-firmware",
                 "intel-xpu-smi",
+                "k3s-network-policy",
                 "node-agent",
                 "nvidia-data-center-driver",
                 "os-ab-update",
