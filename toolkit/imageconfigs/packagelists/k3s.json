@@ -1,6 +1,7 @@
 {
     "packages": [
-        "k3s"
+        "k3s",
+        "k3s-network-policy"
     ],
     "_comment": "K3s packages for lightweight Kubernetes deployment."
 }
