@@ -20,13 +20,13 @@ Provides Kubevirt (enabled with GTK libarary support and Intel SR-IOV patched QE
 %build
 
 %install
-mkdir -p %{buildroot}/usr/share/%{name}
-cp -a %{SOURCE0} %{buildroot}/usr/share/%{name}/
-cp -a %{SOURCE1} %{buildroot}/usr/share/%{name}/
+mkdir -p %{buildroot}%{_datadir}/%{name}
+cp -a %{SOURCE0} %{buildroot}%{_datadir}/%{name}/
+cp -a %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
 
 %files
-/usr/share/%{name}/intel-idv-kubevirt-v0.1.tar.gz
-/usr/share/%{name}/intel-idv-device-plugin-v0.1.tar.gz
+%{_datadir}/%{name}/intel-idv-kubevirt-v0.1.tar.gz
+%{_datadir}/%{name}/intel-idv-device-plugin-v0.1.tar.gz
 
 %post
 
