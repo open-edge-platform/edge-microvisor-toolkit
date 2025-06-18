@@ -1,4 +1,6 @@
 Name:           intel-gpu-device-plugin
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Version:        0.32.1
 Release:        1%{?dist}
 Summary:        Intel GPU device plugin manifests and container images for k3s Kubernetes cluster.
@@ -35,4 +37,4 @@ cp ./images/intel-gpu-plugin.tar %{buildroot}/var/lib/rancher/k3s/agent/images/0
 
 %changelog
 * Tue Jun 17 2025 Krishnamurthy Jambur <krishna.j.murthy@intel.com> - 0.32.1-1
-- Initial package
+- Original version for Edge Microvisor Toolkit. License verified.
