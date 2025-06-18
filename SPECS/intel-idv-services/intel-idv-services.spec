@@ -1,10 +1,15 @@
-Name:           idv-solution
-Version:        1.0
-Release:        1%{?dist}
-Summary:        A package to install scripts and systemd services
+%define systemd_user_dir %{buildroot}/usr/lib/systemd/user
+%define systemd_system_dir %{buildroot}/etc/systemd/system
 
-License:        Proprietary
-Source0:        https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/%{name}-%{version}.tar.gz
+Name:           intel-idv-services
+Version:        0.1
+Release:        1%{?dist}
+Summary:        A package to install scripts and systemd services for Intelligent Desktop Virtualization
+Distribution:   Edge Microvisor Toolkit
+Vendor:         Intel Corporation
+License:        Apache-2.0
+URL:            https://github.com/open-edge-platform/edge-desktop-virtualization
+Source0:        https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 Requires(post): systemd
@@ -24,20 +29,14 @@ mkdir -p %{buildroot}/opt/idv
 cp -r init %{buildroot}/opt/idv
 cp -r launcher %{buildroot}/opt/idv
 
-# Create log file
-touch %{buildroot}/opt/idv/launcher/start_all_vms.log
-
-# Install the idv-init service
-mkdir -p %{buildroot}/usr/lib/systemd/user/
-install -m 644 idv-init.service %{buildroot}/usr/lib/systemd/user/idv-init.service
-
-# Install the idv-launcher service
-mkdir -p %{buildroot}/usr/lib/systemd/user/
-install -m 644 idv-launcher.service %{buildroot}/usr/lib/systemd/user/idv-launcher.service
+# Install the idv-init service and idv-launcher service
+mkdir -p %{systemd_user_dir}
+install -m 644 idv-init.service %{systemd_user_dir}/idv-init.service
+install -m 644 idv-launcher.service %{systemd_user_dir}/idv-launcher.service
 
 # Install the autologin.conf file
-mkdir -p %{buildroot}/etc/systemd/system/getty@tty1.service.d
-install -m 644 autologin.conf %{buildroot}/etc/systemd/system/getty@tty1.service.d/autologin.conf
+mkdir -p %{systemd_system_dir}/getty@tty1.service.d
+install -m 644 autologin.conf %{systemd_system_dir}/getty@tty1.service.d/autologin.conf
 
 %files
 /opt/idv/
@@ -65,5 +64,14 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
-* Sat Jun 14 2025 Dhanya A <dhanya.a@intel.com> - 1.0-1
+* Wed Jun 18 2025 Dhanya A <dhanya.a@intel.com> - 0.1-4
+- Use custom macros for standard path
+
+* Tue Jun 17 2025 Dhanya A <dhanya.a@intel.com> - 0.1-3
+- Remove command to create logs file.
+
+* Mon Jun 16 2025 Dhanya A <dhanya.a@intel.com> - 0.1-2
+- Initial Edge Microvisor Toolkit import from Fedora 43 (license: MIT). License verified.
+
+* Fri Jun 13 2025 Dhanya A <dhanya.a@intel.com> - 0.1-1
 - Initial RPM package for scripts and systemd services

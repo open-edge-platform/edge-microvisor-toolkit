@@ -7270,16 +7270,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "idv-solution",
-          "version": "1.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/idv-solution-1.0.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "iftop",
           "version": "1.0",
           "downloadUrl": "http://www.ex-parrot.com/~pdw/iftop/download/iftop-1.0pre4.tar.gz"
@@ -7473,6 +7463,16 @@
           "name": "intel-gmmlib",
           "version": "22.5.1",
           "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.5.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-idv-services",
+          "version": "0.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/intel-idv-services-0.1.tar.gz"
         }
       }
     },
