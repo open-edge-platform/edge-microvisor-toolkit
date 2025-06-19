@@ -1,0 +1,2 @@
+enable idv-init.service
+enable idv-launcher.service
