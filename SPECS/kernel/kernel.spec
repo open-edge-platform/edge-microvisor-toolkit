@@ -1,13 +1,13 @@
 Summary:        Linux Kernel
 Name:           kernel
-Version:        6.12.30
+Version:        6.12.33
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/linux-intel-lts
-Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz
+Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -34,12 +34,13 @@ Patch16:        CVE-2025-22116.patch
 Patch17:        CVE-2025-22117.patch
 Patch18:        CVE-2025-22121.patch
 Patch19:        CVE-2025-22121-1.patch
-Patch20:        CVE-2025-22122.patch
-Patch21:        CVE-2025-22124.patch
-Patch22:        CVE-2025-23131.patch
-Patch23:        CVE-2025-23137.patch
-Patch24:        CVE-2025-37746.patch
-Patch25:        CVE-2025-37746-1.patch
+Patch20:        CVE-2025-22124.patch
+Patch21:        CVE-2025-23131.patch
+Patch22:        CVE-2025-23137.patch
+Patch23:        CVE-2025-37746.patch
+Patch24:        CVE-2025-37746-1.patch
+Patch25:        CVE-2025-37906.patch
+Patch26:        CVE-2025-37984.patch
 
 
 %global security_hardening none
@@ -188,7 +189,7 @@ This package contains the bpftool, which allows inspection and simple
 manipulation of eBPF programs and maps.
 
 %prep
-%autosetup -p1 -n lts-v6.12.30-emt-250524T131939Z
+%autosetup -p1 -n lts-v6.12.33-emt-250618T100026Z
 # %patch 0 -p1
 make mrproper
 
@@ -434,6 +435,9 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Thu Jun 19 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.33-1
+- Update kernel to 6.12.33
+
 * Wed Mar 28 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.30-1
 - Update kernel to 6.12.30
 
