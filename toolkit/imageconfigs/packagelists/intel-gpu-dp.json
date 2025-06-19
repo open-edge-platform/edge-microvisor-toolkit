@@ -1,0 +1,6 @@
+{
+    "packages": [
+        "intel-gpu-device-plugin"
+    ],
+    "_comment": "Intel gpu device plugin container image and manifest."
+}
