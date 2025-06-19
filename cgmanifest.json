@@ -9200,6 +9200,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libclc",
+          "version": "18.1.2",
+          "downloadUrl": "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.2/libclc-18.1.2.src.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libcdio",
           "version": "2.1.8",
           "downloadUrl": "http://ftp.gnu.org/gnu/libcdio/libcdio-2.1.8.tar.gz"
