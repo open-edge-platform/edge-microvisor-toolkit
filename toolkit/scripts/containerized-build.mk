@@ -46,6 +46,10 @@ ifeq ($(QUIET),y)
 containerized_build_args += -q
 endif
 
+ifneq ($(EXTRA_ARGS),)
+containerized_build_args += -a "$(EXTRA_ARGS)"
+endif
+
 ##help:target:containerized-rpmbuild=Launch containerized shell for inner-loop RPM building/testing.
 containerized-rpmbuild: $(no_repo_acl)
 	$(SCRIPTS_DIR)/containerized-build/create_container_build.sh $(containerized_build_args)
