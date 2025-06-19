@@ -6,8 +6,7 @@
         "platform-observability-agent",
         "platform-telemetry-agent",
         "platform-update-agent",
-        "inbm",
-        "reporting-agent"
+        "inbm"
     ],
     "_comment": "Agents for platform management and monitoring."
 }
