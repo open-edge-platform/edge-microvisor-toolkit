@@ -47,6 +47,6 @@ install -m 644 ./images/calico-kube-controllers.tar %{buildroot}%{_sharedstatedi
 %{_sharedstatedir}/rancher/k3s/agent/images/00-calico/calico-kube-controllers.tar
 
 %changelog
-* Mon Jun 09 2025 Julia Okuniewska <julia.okuniewska@intel.com> - 1.0.0
-- Initial Azure Linux import from the source project (license: same as "License" tag).
+* Mon Jun 09 2025 Julia Okuniewska <julia.okuniewska@intel.com> - 3.30.1-1
+- Initial Edge Microvisor Toolkit import from the source project (license: same as "License" tag).
 - License verified.
