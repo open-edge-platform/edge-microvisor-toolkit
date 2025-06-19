@@ -17,16 +17,16 @@ This package provides Intel GPU device plugin manifests and container images for
 %setup -q -n intel-device-plugins-for-kubernetes-%{version}
 
 %install
-mkdir -p %{buildroot}/var/lib/rancher/k3s/server/manifests/00-intel-gpu
-mkdir -p %{buildroot}/var/lib/rancher/k3s/agent/images/00-intel-gpu
+mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu
+mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/00-intel-gpu
 
 # Install the pre-pulled image tarball and manifest
 install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/00-intel-gpu/intel-gpu-plugin.tar
 install -m 0644 ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu/
 
 %files
-/var/lib/rancher/k3s/server/manifests/00-intel-gpu/intel-gpu-plugin.yaml
-/var/lib/rancher/k3s/agent/images/00-intel-gpu/intel-gpu-plugin.tar
+%{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu/intel-gpu-plugin.yaml
+%{_sharedstatedir}/rancher/k3s/agent/images/00-intel-gpu/intel-gpu-plugin.tar
 
 %changelog
 * Tue Jun 17 2025 Krishnamurthy Jambur <krishna.j.murthy@intel.com> - 0.32.1-1
