@@ -5,7 +5,7 @@
 Name:           intel-idv-services
 Version:        0.1
 Release:        1%{?dist}
-Summary:        A package to install scripts and systemd services
+Summary:        A package to install scripts and systemd services for Intelligent Desktop Virtualization
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
