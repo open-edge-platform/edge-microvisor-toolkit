@@ -8,6 +8,7 @@ License:        Apache-2.0
 URL:            https://github.com/intel/intel-device-plugins-for-kubernetes
 Source0:        https://github.com/intel/intel-device-plugins-for-kubernetes/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
 Source1:        %{name}-image-v%{version}.tar
+Requires: k3s
 
 %description
 This package provides Intel GPU device plugin manifests and container images for k3s Kubernetes cluster.
