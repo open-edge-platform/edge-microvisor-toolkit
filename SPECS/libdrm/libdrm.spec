@@ -49,11 +49,11 @@ end}
 %endif
 Summary:        Direct Rendering Manager runtime library
 Name:           libdrm
-Version:        2.4.120
+Version:        2.4.122
 Release:        1%{?dist}
 License:        MIT
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://dri.freedesktop.org
 Source0:        %{url}/libdrm/%{name}-%{version}.tar.xz
 Source1:        README.rst
