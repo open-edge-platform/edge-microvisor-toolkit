@@ -79,8 +79,7 @@
                 "packagelists/os-ab-update.json",
                 "packagelists/fs-tools.json",
                 "packagelists/openbox.json",
-		            "packagelists/intel-idv-services.json"
-                "packagelists/k3s.json"
+		"packagelists/intel-idv-services.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
