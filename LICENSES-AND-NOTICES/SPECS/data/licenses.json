@@ -529,6 +529,7 @@
                 "intel-cmt-cat",
                 "intel-compute-runtime",
                 "intel-gmmlib",
+                "intel-idv-services",
                 "intel-igc",
                 "intel-ipsec-mb",
                 "intel-level-zero",
