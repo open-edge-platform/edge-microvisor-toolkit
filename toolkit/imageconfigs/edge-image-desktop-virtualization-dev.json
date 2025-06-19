@@ -79,7 +79,6 @@
                 "packagelists/os-ab-update.json",
 		"packagelists/k3s.json",
                 "packagelists/fs-tools.json",
-                "packagelists/openbox.json",
 		"packagelists/intel-idv-services.json"
             ],
             "AdditionalFiles": {
