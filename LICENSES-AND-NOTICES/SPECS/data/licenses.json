@@ -2270,7 +2270,6 @@
                 "intel-lms",
                 "intel-npu-firmware",
                 "intel-xpu-smi",
-                "k3s-network-policy",
                 "node-agent",
                 "nvidia-data-center-driver",
                 "os-ab-update",
@@ -3203,6 +3202,7 @@
             "license": "Same as the source project.",
             "specs": [
                 "k3s",
+                "k3s-calico",
                 "python-nocaselist",
                 "yq"
             ]
