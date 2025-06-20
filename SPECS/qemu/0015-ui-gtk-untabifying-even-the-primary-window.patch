@@ -1,0 +1,27 @@
+From a0b2944c7c3b5883ecb0f48e5f7458ea592e26a3 Mon Sep 17 00:00:00 2001
+From: "Kim, Dongwon" <dongwon.kim@intel.com>
+Date: Tue, 20 Aug 2024 08:43:33 +0800
+Subject: [PATCH 15/50] ui/gtk: untabifying even the primary window
+
+Signed-off-by: Kim, Dongwon <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 90caf7785b..5a2fb5a008 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -1571,7 +1571,8 @@ static void gd_menu_untabify(GtkMenuItem *item, void *opaque)
+         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(s->grab_item),
+                                        FALSE);
+     }
+-    if (!vc->window) {
++
++    if (!vc->window || (vc->window == s->window)) {
+         gd_tab_window_create(vc);
+     }
+ }
+-- 
+2.35.3
+

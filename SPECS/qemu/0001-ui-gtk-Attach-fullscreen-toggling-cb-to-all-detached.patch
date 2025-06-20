@@ -1,0 +1,79 @@
+From ccf7f89cd612541885a6919d113cf95a7743df69 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Wed, 26 Jun 2024 00:47:00 +0000
+Subject: [PATCH 01/50] ui/gtk: Attach fullscreen toggling cb to all detached
+ VCs
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Enable hotkey for toggling window fullscreening for all individual
+untabified VCs
+
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 39 +++++++++++++++++++++++++++++++++++----
+ 1 file changed, 35 insertions(+), 4 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 8e14c2ac81..bdd12246b9 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -1396,6 +1396,34 @@ static gboolean gd_win_grab(void *opaque)
+     return TRUE;
+ }
+ 
++static void gd_vc_fullscreen_toggle(void *opaque)
++{
++    VirtualConsole *vc = opaque;
++    GdkWindow *window;
++    GdkWindowState state;
++
++    if (!vc->window)
++        return;
++
++    window = gtk_widget_get_window(vc->window);
++    state = gdk_window_get_state(window);
++
++    if (state & GDK_WINDOW_STATE_FULLSCREEN) {
++        gtk_window_unfullscreen(GTK_WINDOW(vc->window));
++
++        if (vc->type == GD_VC_GFX) {
++            vc->gfx.scale_x = 1.0;
++            vc->gfx.scale_y = 1.0;
++            gd_update_windowsize(vc);
++        }
++    } else {
++        if (vc->type == GD_VC_GFX) {
++            gtk_widget_set_size_request(vc->gfx.drawing_area, -1, -1);
++        }
++        gtk_window_fullscreen(GTK_WINDOW(vc->window));
++    }
++}
++
+ static void gd_menu_untabify(GtkMenuItem *item, void *opaque)
+ {
+     GtkDisplayState *s = opaque;
+@@ -1428,10 +1456,13 @@ static void gd_menu_untabify(GtkMenuItem *item, void *opaque)
+         if (qemu_console_is_graphic(vc->gfx.dcl.con)) {
+             GtkAccelGroup *ag = gtk_accel_group_new();
+             gtk_window_add_accel_group(GTK_WINDOW(vc->window), ag);
+-
+-            GClosure *cb = g_cclosure_new_swap(G_CALLBACK(gd_win_grab),
+-                                               vc, NULL);
+-            gtk_accel_group_connect(ag, GDK_KEY_g, HOTKEY_MODIFIERS, 0, cb);
++            GClosure *cb_grab = g_cclosure_new_swap(G_CALLBACK(gd_win_grab),
++                                                    vc, NULL);
++            gtk_accel_group_connect(ag, GDK_KEY_g, HOTKEY_MODIFIERS, 0, cb_grab);
++            GClosure *cb_fs = g_cclosure_new_swap(
++                                             G_CALLBACK(gd_vc_fullscreen_toggle),
++                                             vc, NULL);
++            gtk_accel_group_connect(ag, GDK_KEY_f, HOTKEY_MODIFIERS, 0, cb_fs);
+         }
+ 
+         gd_update_geometry_hints(vc);
+-- 
+2.35.3
+

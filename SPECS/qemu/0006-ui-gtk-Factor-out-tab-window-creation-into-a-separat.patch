@@ -1,0 +1,113 @@
+From 44cbb8b9566e4843e504f2426b763a4145672928 Mon Sep 17 00:00:00 2001
+From: "Kim, Dongwon" <dongwon.kim@intel.com>
+Date: Sat, 17 Aug 2024 07:30:56 +0800
+Subject: [PATCH 06/50] ui/gtk: Factor out tab window creation into a separate
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Pull the code that creates a new window associated with a notebook
+tab into a separate function. This new function can be useful not
+just when user wants to detach a tab but also in the future when
+a new window creation is needed in other scenarios.
+
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Kim, Dongwon <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 71 +++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 39 insertions(+), 32 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index bdd12246b9..53030516b2 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -1424,6 +1424,44 @@ static void gd_vc_fullscreen_toggle(void *opaque)
+     }
+ }
+ 
++static void gd_tab_window_create(VirtualConsole *vc)
++{
++    GtkDisplayState *s = vc->s;
++
++    gtk_widget_set_sensitive(vc->menu_item, false);
++    vc->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
++#if defined(CONFIG_OPENGL)
++    if (vc->gfx.esurface) {
++        eglDestroySurface(qemu_egl_display, vc->gfx.esurface);
++        vc->gfx.esurface = NULL;
++    }
++    if (vc->gfx.ectx) {
++        eglDestroyContext(qemu_egl_display, vc->gfx.ectx);
++        vc->gfx.ectx = NULL;
++    }
++#endif
++    gd_widget_reparent(s->notebook, vc->window, vc->tab_item);
++
++    g_signal_connect(vc->window, "delete-event",
++                     G_CALLBACK(gd_tab_window_close), vc);
++    gtk_widget_show_all(vc->window);
++
++    if (qemu_console_is_graphic(vc->gfx.dcl.con)) {
++        GtkAccelGroup *ag = gtk_accel_group_new();
++        gtk_window_add_accel_group(GTK_WINDOW(vc->window), ag);
++        GClosure *cb_grab = g_cclosure_new_swap(G_CALLBACK(gd_win_grab),
++                                                vc, NULL);
++        gtk_accel_group_connect(ag, GDK_KEY_g, HOTKEY_MODIFIERS, 0, cb_grab);
++        GClosure *cb_fs = g_cclosure_new_swap(
++                                         G_CALLBACK(gd_vc_fullscreen_toggle),
++                                         vc, NULL);
++        gtk_accel_group_connect(ag, GDK_KEY_f, HOTKEY_MODIFIERS, 0, cb_fs);
++    }
++
++    gd_update_geometry_hints(vc);
++    gd_update_caption(s);
++}
++
+ static void gd_menu_untabify(GtkMenuItem *item, void *opaque)
+ {
+     GtkDisplayState *s = opaque;
+@@ -1435,38 +1473,7 @@ static void gd_menu_untabify(GtkMenuItem *item, void *opaque)
+                                        FALSE);
+     }
+     if (!vc->window) {
+-        gtk_widget_set_sensitive(vc->menu_item, false);
+-        vc->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+-#if defined(CONFIG_OPENGL)
+-        if (vc->gfx.esurface) {
+-            eglDestroySurface(qemu_egl_display, vc->gfx.esurface);
+-            vc->gfx.esurface = NULL;
+-        }
+-        if (vc->gfx.ectx) {
+-            eglDestroyContext(qemu_egl_display, vc->gfx.ectx);
+-            vc->gfx.ectx = NULL;
+-        }
+-#endif
+-        gd_widget_reparent(s->notebook, vc->window, vc->tab_item);
+-
+-        g_signal_connect(vc->window, "delete-event",
+-                         G_CALLBACK(gd_tab_window_close), vc);
+-        gtk_widget_show_all(vc->window);
+-
+-        if (qemu_console_is_graphic(vc->gfx.dcl.con)) {
+-            GtkAccelGroup *ag = gtk_accel_group_new();
+-            gtk_window_add_accel_group(GTK_WINDOW(vc->window), ag);
+-            GClosure *cb_grab = g_cclosure_new_swap(G_CALLBACK(gd_win_grab),
+-                                                    vc, NULL);
+-            gtk_accel_group_connect(ag, GDK_KEY_g, HOTKEY_MODIFIERS, 0, cb_grab);
+-            GClosure *cb_fs = g_cclosure_new_swap(
+-                                             G_CALLBACK(gd_vc_fullscreen_toggle),
+-                                             vc, NULL);
+-            gtk_accel_group_connect(ag, GDK_KEY_f, HOTKEY_MODIFIERS, 0, cb_fs);
+-        }
+-
+-        gd_update_geometry_hints(vc);
+-        gd_update_caption(s);
++        gd_tab_window_create(vc);
+     }
+ }
+ 
+-- 
+2.35.3
+

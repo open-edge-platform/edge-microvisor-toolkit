@@ -1,0 +1,103 @@
+From db25d97d5a50e705a0274691008005ccd5722377 Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Tue, 5 Sep 2023 14:53:37 -0700
+Subject: [PATCH 19/50] ui/spice: Submit the gl_draw requests at 60 FPS for
+ remote clients
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+In the specific case where the display layer (virtio-gpu) is using
+dmabuf, and if remote clients are enabled (-spice gl=on,port=xxxx),
+it makes sense to limit the maximum (streaming) rate to 60 FPS
+using the GUI timer. This matches the behavior of GTK UI where the
+display updates are submitted at 60 FPS (assuming the underlying
+mode is WxY@60).
+
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Frediano Ziglio <freddy77@gmail.com>
+Cc: Dongwon Kim <dongwon.kim@intel.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+---
+ ui/spice-display.c | 39 +++++++++++++++++++++++++++++----------
+ 1 file changed, 29 insertions(+), 10 deletions(-)
+
+diff --git a/ui/spice-display.c b/ui/spice-display.c
+index bf4caf0d1b..9a185d360d 100644
+--- a/ui/spice-display.c
++++ b/ui/spice-display.c
+@@ -842,12 +842,32 @@ static void qemu_spice_gl_block_timer(void *opaque)
+     warn_report("spice: no gl-draw-done within one second");
+ }
+ 
++static void spice_gl_draw(SimpleSpiceDisplay *ssd,
++                           uint32_t x, uint32_t y, uint32_t w, uint32_t h)
++{
++    uint64_t cookie;
++
++    cookie = (uintptr_t)qxl_cookie_new(QXL_COOKIE_TYPE_GL_DRAW_DONE, 0);
++    spice_qxl_gl_draw_async(&ssd->qxl, x, y, w, h, cookie);
++}
++
+ static void spice_gl_refresh(DisplayChangeListener *dcl)
+ {
+     SimpleSpiceDisplay *ssd = container_of(dcl, SimpleSpiceDisplay, dcl);
+-    uint64_t cookie;
+ 
+-    if (!ssd->ds || qemu_console_is_gl_blocked(ssd->dcl.con)) {
++    if (!ssd->ds) {
++        return;
++    }
++
++    if (qemu_console_is_gl_blocked(ssd->dcl.con)) {
++        if (remote_client && ssd->gl_updates && ssd->have_scanout) {
++            glFlush();
++            spice_gl_draw(ssd, 0, 0,
++                          surface_width(ssd->ds), surface_height(ssd->ds));
++            ssd->gl_updates = 0;
++            /* To stream at 60 FPS, the (GUI) timer delay needs to be ~17 ms */
++            dcl->update_interval = 1000 / (2 * GUI_REFRESH_INTERVAL_DEFAULT) + 1;
++        }
+         return;
+     }
+ 
+@@ -855,11 +875,8 @@ static void spice_gl_refresh(DisplayChangeListener *dcl)
+     if (ssd->gl_updates && ssd->have_surface) {
+         qemu_spice_gl_block(ssd, true);
+         glFlush();
+-        cookie = (uintptr_t)qxl_cookie_new(QXL_COOKIE_TYPE_GL_DRAW_DONE, 0);
+-        spice_qxl_gl_draw_async(&ssd->qxl, 0, 0,
+-                                surface_width(ssd->ds),
+-                                surface_height(ssd->ds),
+-                                cookie);
++        spice_gl_draw(ssd, 0, 0,
++                      surface_width(ssd->ds), surface_height(ssd->ds));
+         ssd->gl_updates = 0;
+     }
+ }
+@@ -1029,7 +1046,6 @@ static void qemu_spice_gl_update(DisplayChangeListener *dcl,
+     EGLint stride = 0, fourcc = 0;
+     bool render_cursor = false;
+     bool y_0_top = false; /* FIXME */
+-    uint64_t cookie;
+     int fd;
+     uint32_t width, height, texture;
+ 
+@@ -1107,8 +1123,11 @@ static void qemu_spice_gl_update(DisplayChangeListener *dcl,
+     trace_qemu_spice_gl_update(ssd->qxl.id, w, h, x, y);
+     qemu_spice_gl_block(ssd, true);
+     glFlush();
+-    cookie = (uintptr_t)qxl_cookie_new(QXL_COOKIE_TYPE_GL_DRAW_DONE, 0);
+-    spice_qxl_gl_draw_async(&ssd->qxl, x, y, w, h, cookie);
++    if (remote_client) {
++        ssd->gl_updates++;
++    } else {
++        spice_gl_draw(ssd, x, y, w, h);
++    }
+ }
+ 
+ static const DisplayChangeListenerOps display_listener_gl_ops = {
+-- 
+2.35.3
+

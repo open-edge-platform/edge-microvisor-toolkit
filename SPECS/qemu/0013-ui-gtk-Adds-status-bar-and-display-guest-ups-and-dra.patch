@@ -1,0 +1,224 @@
+From f2f294d2fca412a114e2cb93b38a789b198f6db2 Mon Sep 17 00:00:00 2001
+From: "Kim, Dongwon" <dongwon.kim@intel.com>
+Date: Tue, 20 Aug 2024 08:00:34 +0800
+Subject: [PATCH 13/50] ui/gtk: Adds status bar and display guest ups and draw
+ fps
+
+With a display option, "show-fps=on", qemu adds a status bar and print
+following performance numbers on the bar,
+
+ups = update per seconds - the rate the guest scanout is flushed
+fps = frame per seconds - the frame rate of actual draw done in QEMU
+
+One function, gd_gl_count_frame is added to count # frames
+and calculate ups and fps every 100 frames or guest scanout updates.
+
+Signed-off-by: Kim, Dongwon <dongwon.kim@intel.com>
+---
+ include/ui/gtk.h |  4 ++++
+ qapi/ui.json     |  8 +++++--
+ qemu-options.hx  |  5 +++++
+ ui/gtk-egl.c     |  2 ++
+ ui/gtk-gl-area.c |  1 +
+ ui/gtk.c         | 56 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 74 insertions(+), 2 deletions(-)
+
+diff --git a/include/ui/gtk.h b/include/ui/gtk.h
+index 3f78ee5996..07a65254ef 100644
+--- a/include/ui/gtk.h
++++ b/include/ui/gtk.h
+@@ -57,6 +57,8 @@ typedef struct VirtualGfxConsole {
+     bool y0_top;
+     bool scanout_mode;
+     bool has_dmabuf;
++    unsigned int ups_cnt;
++    unsigned int fps_cnt;
+ #endif
+ } VirtualGfxConsole;
+ 
+@@ -124,6 +126,7 @@ struct GtkDisplayState {
+     GtkWidget *show_tabs_item;
+     GtkWidget *untabify_item;
+     GtkWidget *show_menubar_item;
++    GtkWidget *status_bar;
+ 
+     GtkWidget *vbox;
+     GtkWidget *notebook;
+@@ -158,6 +161,7 @@ extern bool gtk_use_gl_area;
+ void gd_update_windowsize(VirtualConsole *vc);
+ void gd_update_monitor_refresh_rate(VirtualConsole *vc, GtkWidget *widget);
+ void gd_hw_gl_flushed(void *vc);
++void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups);
+ 
+ /* ui/gtk-egl.c */
+ void gd_egl_init(VirtualConsole *vc);
+diff --git a/qapi/ui.json b/qapi/ui.json
+index 40c1f61020..3b98d51e80 100644
+--- a/qapi/ui.json
++++ b/qapi/ui.json
+@@ -1355,7 +1355,10 @@
+ #     VCs can have a same connector name. In this case, all of those
+ #     VCs will be displayed on the same physical monitor. But multiple
+ #     different connector names can't be assigned to one VC.
+-#     (Since 9.1)
++#     (Since Pending)
++#
++# @show-fps: Enable showing frame update rate (default: off).
++#     (Since Pending)
+ #
+ # Since: 2.12
+ ##
+@@ -1364,7 +1367,8 @@
+                 '*zoom-to-fit'   : 'bool',
+                 '*show-tabs'     : 'bool',
+                 '*show-menubar'  : 'bool',
+-                '*connectors'    : ['str'] } }
++                '*connectors'    : ['str'],
++                '*show-fps'      : 'bool' } }
+ 
+ ##
+ # @DisplayEGLHeadless:
+diff --git a/qemu-options.hx b/qemu-options.hx
+index 575c72e9a5..e2dbf08b05 100644
+--- a/qemu-options.hx
++++ b/qemu-options.hx
+@@ -2100,6 +2100,7 @@ DEF("display", HAS_ARG, QEMU_OPTION_display,
+     "            [,show-tabs=on|off][,show-cursor=on|off][,window-close=on|off]\n"
+     "            [,show-menubar=on|off][,zoom-to-fit=on|off]\n"
+     "            [,connectors.<index>=<connector name>]\n"
++    "            [,show-fps=on|off]\n"
+ #endif
+ #if defined(CONFIG_VNC)
+     "-display vnc=<display>[,<optargs>]\n"
+@@ -2199,6 +2200,10 @@ SRST
+         ``connectors=<conn name>`` : VC to connector mappings to display the VC
+                                      window on a specific monitor
+ 
++        ``show-fps=on|off`` : Display Guest Scanout's update rate (UPS) and
++                              QEMU draw rate (FPS) on a status bar attached to
++                              QEMU window.
++
+     ``curses[,charset=<encoding>]``
+         Display video output via curses. For graphics device models
+         which support a text mode, QEMU can display this output using a
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index a5a439c1db..0bc6d08faa 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -390,11 +390,13 @@ void gd_egl_flush(DisplayChangeListener *dcl,
+             qemu_dmabuf_set_draw_submitted(dmabuf, true);
+             gtk_widget_queue_draw_area(area, x, y, w, h);
+         }
++        gd_gl_count_frame(&vc->gfx.dcl, 1);
+         return;
+     }
+ #endif
+ 
+     gd_egl_scanout_flush(&vc->gfx.dcl, x, y, w, h);
++    gd_gl_count_frame(&vc->gfx.dcl, 1);
+ }
+ 
+ void gtk_egl_init(DisplayGLMode mode)
+diff --git a/ui/gtk-gl-area.c b/ui/gtk-gl-area.c
+index cc4765403d..4ac364bddf 100644
+--- a/ui/gtk-gl-area.c
++++ b/ui/gtk-gl-area.c
+@@ -322,6 +322,7 @@ void gd_gl_area_scanout_flush(DisplayChangeListener *dcl,
+     }
+ #endif
+     gtk_gl_area_queue_render(GTK_GL_AREA(vc->gfx.drawing_area));
++    gd_gl_count_frame(&vc->gfx.dcl, 1);
+ }
+ 
+ void gd_gl_area_scanout_dmabuf(DisplayChangeListener *dcl,
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 79f6620803..7df9a98d6c 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -554,6 +554,55 @@ static void gd_switch(DisplayChangeListener *dcl,
+     }
+ }
+ 
++void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups)
++{
++    VirtualConsole *vc = container_of(dcl, VirtualConsole, gfx.dcl);
++    GtkDisplayState *s = vc->s;
++    gchar ups_fps_str[200];
++    static guint prev, curr, delta;
++    static guint status_bar_id;
++    struct timeval tv;
++    int offset = 0, i;
++
++    if (!s->opts->u.gtk.has_show_fps || !s->opts->u.gtk.show_fps) {
++        return;
++    }
++
++    if (prev == 0) {
++        gettimeofday(&tv, NULL);
++        prev = tv.tv_sec * 1000000 + tv.tv_usec;
++    }
++
++    if (ups) {
++        vc->gfx.ups_cnt++;
++    } else {
++        vc->gfx.fps_cnt++;
++    }
++
++    gettimeofday(&tv, NULL);
++    curr = tv.tv_sec * 1000000 + tv.tv_usec;
++
++    delta = curr - prev;
++    if (delta > 5000000) {
++        /* update rate is calculated and displayed at every 5 secs */
++        prev = curr;
++        for (i = 0; i < vc->s->nb_vcs; i++) {
++            vc = &s->vc[i];
++            offset += sprintf(ups_fps_str + offset,
++                              "%d [%0.2fu/s %0.2ff/s]  ", i,
++                              vc->gfx.ups_cnt * 1000000/(gfloat)delta,
++                              vc->gfx.fps_cnt * 1000000/(gfloat)delta);
++            vc->gfx.fps_cnt = 0;
++            vc->gfx.ups_cnt = 0;
++        }
++
++        status_bar_id = gtk_statusbar_get_context_id(GTK_STATUSBAR(vc->s->status_bar),
++                                                     "Display Update Rate");
++        gtk_statusbar_pop(GTK_STATUSBAR(vc->s->status_bar), status_bar_id);
++        gtk_statusbar_push(GTK_STATUSBAR(vc->s->status_bar), status_bar_id, ups_fps_str);
++     }
++}
++
+ static const DisplayChangeListenerOps dcl_ops = {
+     .dpy_name             = "gtk",
+     .dpy_gfx_update       = gd_update,
+@@ -605,6 +654,7 @@ void gd_hw_gl_flushed(void *vcon)
+         close(fence_fd);
+         qemu_dmabuf_set_fence_fd(dmabuf, -1);
+         graphic_hw_gl_block(vc->gfx.dcl.con, false);
++        gd_gl_count_frame(&vc->gfx.dcl, 0);
+     }
+ }
+ 
+@@ -2710,6 +2760,9 @@ static void gtk_display_init(DisplayState *ds, DisplayOptions *opts)
+     s->vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+     s->notebook = gtk_notebook_new();
+     s->menu_bar = gtk_menu_bar_new();
++    if (opts->u.gtk.has_show_fps && opts->u.gtk.show_fps) {
++        s->status_bar = gtk_statusbar_new();
++    }
+ 
+     s->free_scale = FALSE;
+ 
+@@ -2750,6 +2803,9 @@ static void gtk_display_init(DisplayState *ds, DisplayOptions *opts)
+ 
+     gtk_box_pack_start(GTK_BOX(s->vbox), s->menu_bar, FALSE, TRUE, 0);
+     gtk_box_pack_start(GTK_BOX(s->vbox), s->notebook, TRUE, TRUE, 0);
++    if (opts->u.gtk.has_show_fps && opts->u.gtk.show_fps) {
++        gtk_box_pack_start(GTK_BOX(s->vbox), s->status_bar, FALSE, TRUE, 0);
++    }
+ 
+     gtk_container_add(GTK_CONTAINER(s->window), s->vbox);
+ 
+-- 
+2.35.3
+

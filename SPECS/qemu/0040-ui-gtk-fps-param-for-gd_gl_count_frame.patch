@@ -1,0 +1,121 @@
+From 6838d90312f714b66c056a0e38bf4750b766116a Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 13 Mar 2025 16:36:47 -0700
+Subject: [PATCH 40/50] ui/gtk: fps param for gd_gl_count_frame
+
+Adding fps param separately for incrementing fps_cnt
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ include/ui/gtk.h | 2 +-
+ ui/gtk-egl.c     | 7 ++++---
+ ui/gtk-gl-area.c | 2 +-
+ ui/gtk.c         | 8 ++++----
+ 4 files changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/include/ui/gtk.h b/include/ui/gtk.h
+index 723958794d..df9eed24a9 100644
+--- a/include/ui/gtk.h
++++ b/include/ui/gtk.h
+@@ -166,7 +166,7 @@ extern bool gtk_use_gl_area;
+ void gd_update_windowsize(VirtualConsole *vc);
+ void gd_update_monitor_refresh_rate(VirtualConsole *vc, GtkWidget *widget);
+ void gd_hw_gl_flushed(void *vc);
+-void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups);
++void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups, bool fps);
+ 
+ /* ui/gtk-egl.c */
+ void gd_egl_init(VirtualConsole *vc);
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index 4d91792537..7e7938a0fc 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -167,6 +167,7 @@ void gd_egl_refresh(DisplayChangeListener *dcl)
+             vc, vc->window ? vc->window : vc->gfx.drawing_area);
+ 
+ #ifdef CONFIG_GBM
++    gd_gl_count_frame(&vc->gfx.dcl, false, false);
+     if (dmabuf && (qemu_dmabuf_get_fd(dmabuf) > 0) &&
+         qemu_dmabuf_get_draw_submitted(dmabuf) &&
+         qemu_dmabuf_get_render_sync(dmabuf)) {
+@@ -202,7 +203,7 @@ void gd_egl_refresh(DisplayChangeListener *dcl)
+         }
+ 
+         eglSwapBuffers(qemu_egl_display, vc->gfx.esurface);
+-        gd_gl_count_frame(&vc->gfx.dcl, 0);
++        gd_gl_count_frame(&vc->gfx.dcl, false, true);
+         vc->gfx.cursor_moved = false;
+         return;
+     }
+@@ -464,13 +465,13 @@ void gd_egl_flush(DisplayChangeListener *dcl,
+             qemu_dmabuf_set_draw_submitted(dmabuf, true);
+             gtk_widget_queue_draw_area(area, x, y, w, h);
+         }
+-        gd_gl_count_frame(&vc->gfx.dcl, 1);
++        gd_gl_count_frame(&vc->gfx.dcl, true, false);
+         return;
+     }
+ #endif
+ 
+     gd_egl_scanout_flush(&vc->gfx.dcl, x, y, w, h);
+-    gd_gl_count_frame(&vc->gfx.dcl, 1);
++    gd_gl_count_frame(&vc->gfx.dcl, true, false);
+ }
+ 
+ void gtk_egl_init(DisplayGLMode mode)
+diff --git a/ui/gtk-gl-area.c b/ui/gtk-gl-area.c
+index 4ba4bda62b..08afa9864a 100644
+--- a/ui/gtk-gl-area.c
++++ b/ui/gtk-gl-area.c
+@@ -326,7 +326,7 @@ void gd_gl_area_scanout_flush(DisplayChangeListener *dcl,
+     }
+ #endif
+     gtk_gl_area_queue_render(GTK_GL_AREA(vc->gfx.drawing_area));
+-    gd_gl_count_frame(&vc->gfx.dcl, 1);
++    gd_gl_count_frame(&vc->gfx.dcl, true, false);
+ }
+ 
+ void gd_gl_area_scanout_dmabuf(DisplayChangeListener *dcl,
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 179efd29be..db136fa90d 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -588,7 +588,7 @@ static void gd_switch(DisplayChangeListener *dcl,
+     }
+ }
+ 
+-void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups)
++void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups, bool fps)
+ {
+     VirtualConsole *vc = container_of(dcl, VirtualConsole, gfx.dcl);
+     GtkDisplayState *s = vc->s;
+@@ -609,7 +609,7 @@ void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups)
+ 
+     if (ups) {
+         vc->gfx.ups_cnt++;
+-    } else {
++    } else if (fps) {
+         vc->gfx.fps_cnt++;
+     }
+ 
+@@ -623,7 +623,7 @@ void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups)
+         for (i = 0; i < vc->s->nb_vcs; i++) {
+             vc = &s->vc[i];
+             offset += sprintf(ups_fps_str + offset,
+-                              "%d [%0.2fu/s %0.2ff/s]  ", i,
++                              "Disp%d[guest %0.1f fps / host %0.1f fps]  ", i,
+                               vc->gfx.ups_cnt * 1000000/(gfloat)delta,
+                               vc->gfx.fps_cnt * 1000000/(gfloat)delta);
+             vc->gfx.fps_cnt = 0;
+@@ -688,7 +688,7 @@ void gd_hw_gl_flushed(void *vcon)
+         close(fence_fd);
+         qemu_dmabuf_set_fence_fd(dmabuf, -1);
+         graphic_hw_gl_block(vc->gfx.dcl.con, false);
+-        gd_gl_count_frame(&vc->gfx.dcl, 0);
++        gd_gl_count_frame(&vc->gfx.dcl, false, true);
+     }
+ }
+ 
+-- 
+2.35.3
+

@@ -1,0 +1,136 @@
+From cb56b335d18133ce81fb68d675281a7b6239df31 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 27 Mar 2025 10:30:00 -0700
+Subject: [PATCH 45/50] ui/gtk: HPD handling disconnection immediately
+
+Display will be inactive immediately upon disconnection
+of the cable, so the monitor remove process should be kicked
+right away instead of waiting for 2 sec.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 59 ++++++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 45 insertions(+), 14 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 5499c32142..b7cee461b2 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -695,6 +695,10 @@ void gd_hw_gl_flushed(void *vcon)
+     QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
+     int fence_fd;
+ 
++    if (!dmabuf) {
++	return;
++    }
++
+     fence_fd = qemu_dmabuf_get_fence_fd(dmabuf);
+     if (fence_fd >= 0) {
+         qemu_set_fd_handler(fence_fd, NULL, NULL, NULL);
+@@ -795,7 +799,6 @@ static void gd_change_runstate(void *opaque, bool running, RunState state)
+             }
+ 
+ 	    if (dmabuf && qemu_dmabuf_get_fence_fd(dmabuf) >= 0) {
+-
+                 /* force flushing current scanout blob rendering process
+                  * just in case the fence is still not signaled */
+                 gd_hw_gl_flushed(vc);
+@@ -1755,27 +1758,17 @@ static gboolean gd_vc_is_misplaced(GdkDisplay *dpy, GdkMonitor *monitor,
+     return FALSE;
+ }
+ 
+-static void gd_vc_add_remove_monitor(GdkDisplay *dpy, GtkDisplayState *s)
++static void gd_vc_disconn_monitor(GdkDisplay *dpy, GtkDisplayState *s)
+ {
+     VirtualConsole *vc;
+-    GdkMonitor *monitor;
+     gint monitor_num;
+     int i;
+ 
+-    /*
+-     * We need to call gd_vc_is_misplaced() after a monitor is added to
+-     * ensure that the Host compositor has not moved our windows around.
+-     */
+     for (i = 0; i < s->nb_vcs; i++) {
+         vc = &s->vc[i];
+         if (vc->label) {
+             monitor_num = gd_monitor_lookup(dpy, vc->label);
+-            if (monitor_num >= 0) {
+-                monitor = gdk_display_get_monitor(dpy, monitor_num);
+-                if (gd_vc_is_misplaced(dpy, monitor, vc)) {
+-                    gd_window_show_on_monitor(dpy, vc, monitor_num);
+-                }
+-            } else {
++            if (monitor_num < 0) {
+ 		if (vc->monitor) {
+ 		    vc->monitor = NULL;
+ 		}
+@@ -1789,7 +1782,42 @@ static void gd_vc_add_remove_monitor(GdkDisplay *dpy, GtkDisplayState *s)
+ 
+                 /* if window exist, hide it */
+                 if (vc->window) {
++                    QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
+                     gdk_window_hide(gtk_widget_get_window(vc->window));
++
++                    if (dmabuf && qemu_dmabuf_get_draw_submitted(dmabuf)) {
++                        qemu_dmabuf_set_draw_submitted(dmabuf, false);
++                        graphic_hw_gl_block(vc->gfx.dcl.con, false);
++                    }
++
++                    /* force flushing current scanout blob rendering process
++                     * just in case the fence is still not signaled */
++                    gd_hw_gl_flushed(vc);
++                }
++            }
++        }
++    }
++}
++
++static void gd_vc_conn_monitor(GdkDisplay *dpy, GtkDisplayState *s)
++{
++    VirtualConsole *vc;
++    GdkMonitor *monitor;
++    gint monitor_num;
++    int i;
++
++    /*
++     * We need to call gd_vc_is_misplaced() after a monitor is added to
++     * ensure that the Host compositor has not moved our windows around.
++     */
++    for (i = 0; i < s->nb_vcs; i++) {
++        vc = &s->vc[i];
++        if (vc->label) {
++            monitor_num = gd_monitor_lookup(dpy, vc->label);
++            if (monitor_num >= 0) {
++                monitor = gdk_display_get_monitor(dpy, monitor_num);
++                if (gd_vc_is_misplaced(dpy, monitor, vc)) {
++                    gd_window_show_on_monitor(dpy, vc, monitor_num);
+                 }
+             }
+         }
+@@ -1801,18 +1829,21 @@ static void gd_monitors_reset_timer(void *opaque)
+     GtkDisplayState *s = opaque;
+     GdkDisplay *dpy = gdk_display_get_default();
+ 
+-    gd_vc_add_remove_monitor(dpy, s);
++    gd_vc_conn_monitor(dpy, s);
+ }
+ 
+ static void gd_monitors_changed(GdkScreen *scr, void *opaque)
+ {
+     GtkDisplayState *s = opaque;
++    GdkDisplay *dpy = gdk_display_get_default();
+     QEMUTimer *mon_reset_timer;
+ 
++    gd_vc_disconn_monitor(dpy, s);
+     mon_reset_timer = timer_new_ms(QEMU_CLOCK_REALTIME,
+                                    gd_monitors_reset_timer, s);
+     timer_mod(mon_reset_timer,
+               qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + 2000);
++
+ }
+ 
+ static VirtualConsole *gd_next_gfx_vc(GtkDisplayState *s)
+-- 
+2.35.3
+
