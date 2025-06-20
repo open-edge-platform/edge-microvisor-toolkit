@@ -1,0 +1,57 @@
+From f9a1573f2e318119c7d5957361c52ce6c76dd3ea Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Tue, 25 Mar 2025 11:00:27 -0700
+Subject: [PATCH 43/50] ui/gtk: show-fps works on GFX consoles
+
+show-fps causes stack overflow due to memory leak when
+there are default VCs (if '-nodefaults' option is not added).
+
+The fix is to add frame counters only for GFX-supported VCs.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 90fa4fb1a3..5499c32142 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -618,16 +618,28 @@ void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups, bool fps)
+ 
+     delta = curr - prev;
+     if (delta > 1000000) {
++	int d = 0;
+         /* update rate is calculated and displayed at every 1 secs */
+         prev = curr;
+         for (i = 0; i < vc->s->nb_vcs; i++) {
+             vc = &s->vc[i];
+-            offset += sprintf(ups_fps_str + offset,
+-                              "Disp%d[guest %0.1f fps / host %0.1f fps]  ", i,
+-                              vc->gfx.ups_cnt * 1000000/(gfloat)delta,
+-                              vc->gfx.fps_cnt * 1000000/(gfloat)delta);
+-            vc->gfx.fps_cnt = 0;
+-            vc->gfx.ups_cnt = 0;
++            if (vc->type == GD_VC_GFX &&
++                qemu_console_is_graphic(vc->gfx.dcl.con)) {
++                if (vc->label) {
++                    offset += sprintf(ups_fps_str + offset,
++                                      "%s[guest %0.1f fps / host %0.1f fps]  ",
++                                      vc->label,
++                                      vc->gfx.ups_cnt * 1000000/(gfloat)delta,
++                                      vc->gfx.fps_cnt * 1000000/(gfloat)delta);
++                } else {
++                    offset += sprintf(ups_fps_str + offset,
++                                      "Disp%d[guest %0.1f fps / host %0.1f fps]  ",
++                                      d++, vc->gfx.ups_cnt * 1000000/(gfloat)delta,
++                                      vc->gfx.fps_cnt * 1000000/(gfloat)delta);
++		}
++                vc->gfx.fps_cnt = 0;
++                vc->gfx.ups_cnt = 0;
++            }
+         }
+ 
+         status_bar_id = gtk_statusbar_get_context_id(GTK_STATUSBAR(vc->s->status_bar),
+-- 
+2.35.3
+

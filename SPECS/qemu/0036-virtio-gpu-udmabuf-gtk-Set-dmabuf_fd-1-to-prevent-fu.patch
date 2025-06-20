@@ -1,0 +1,105 @@
+From 6c96ea22eb47847ce647b22999a4f54cf62d41c8 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Tue, 25 Feb 2025 14:38:20 -0800
+Subject: [PATCH 36/50] virtio-gpu-udmabuf/gtk: Set dmabuf_fd -1 to prevent
+ further mapping/use
+
+Once the resource that is the source of udmabuf is destroyed, it
+should be assumed that pages behind the udmabuf are invalid and
+shouldn't be used anymore. For this, we mark dmabuf_fd -1 and also
+checking it before remapping the udmabuf or rendering the contents
+in it.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ hw/display/virtio-gpu-udmabuf.c |  3 ++-
+ ui/gtk-egl.c                    | 15 ++++++++++++---
+ ui/gtk-gl-area.c                |  6 ++++--
+ 3 files changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/hw/display/virtio-gpu-udmabuf.c b/hw/display/virtio-gpu-udmabuf.c
+index 2eef08d8bc..7b6d282824 100644
+--- a/hw/display/virtio-gpu-udmabuf.c
++++ b/hw/display/virtio-gpu-udmabuf.c
+@@ -252,7 +252,8 @@ void virtio_gpu_fini_udmabuf(VirtIOGPU *g, struct virtio_gpu_simple_resource *re
+     for (i = 0; i < g->parent_obj.conf.max_outputs; i++) {
+         if (g->dmabuf.primary[i] &&
+             qemu_dmabuf_get_fd(g->dmabuf.primary[i]->buf) == res->dmabuf_fd) {
+-            virtio_gpu_free_dmabuf(g, g->dmabuf.primary[i]);
++            /* preventing further mapping/use of the dmabuf */
++            qemu_dmabuf_set_fd(g->dmabuf.primary[i]->buf, -1);
+             g->dmabuf.primary[i] = NULL;
+         }
+     }
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index 8a3a0df5ba..fd9b05508b 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -165,13 +165,15 @@ void gd_egl_refresh(DisplayChangeListener *dcl)
+             vc, vc->window ? vc->window : vc->gfx.drawing_area);
+ 
+ #ifdef CONFIG_GBM
+-    if (dmabuf && qemu_dmabuf_get_draw_submitted(dmabuf) &&
++    if (dmabuf && (qemu_dmabuf_get_fd(dmabuf) > 0) &&
++        qemu_dmabuf_get_draw_submitted(dmabuf) &&
+         qemu_dmabuf_get_render_sync(dmabuf)) {
+         gd_egl_draw(vc);
+         return;
+     }
+ 
+-    if (dmabuf && cursor_updated) {
++    if (dmabuf && (qemu_dmabuf_get_fd(dmabuf) > 0)
++        && cursor_updated) {
+         eglMakeCurrent(qemu_egl_display, vc->gfx.esurface,
+                        vc->gfx.esurface, vc->gfx.ectx);
+ 
+@@ -382,6 +384,13 @@ void gd_egl_scanout_flush(DisplayChangeListener *dcl,
+     QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
+ #endif
+ 
++    if (!dmabuf) {
++        return;
++    }
++    if (qemu_dmabuf_get_fd(dmabuf) < 0) {
++        graphic_hw_gl_block(vc->gfx.dcl.con, false);
++        return;
++    }
+     if (!vc->gfx.scanout_mode) {
+         return;
+     }
+@@ -416,7 +425,7 @@ void gd_egl_scanout_flush(DisplayChangeListener *dcl,
+     }
+ 
+ #ifdef CONFIG_GBM
+-    if (dmabuf && qemu_dmabuf_get_fence_fd(dmabuf) == -1) {
++    if (qemu_dmabuf_get_fence_fd(dmabuf) == -1) {
+         int fence_fd = egl_dmabuf_create_fence_fd(dmabuf);
+         if (fence_fd >= 0) {
+             qemu_set_fd_handler(fence_fd, gd_hw_gl_flushed, NULL, vc);
+diff --git a/ui/gtk-gl-area.c b/ui/gtk-gl-area.c
+index 4a2f9538ef..4ba4bda62b 100644
+--- a/ui/gtk-gl-area.c
++++ b/ui/gtk-gl-area.c
+@@ -125,7 +125,8 @@ void gd_gl_area_refresh(DisplayChangeListener *dcl)
+     gd_update_monitor_refresh_rate(vc, vc->window ? vc->window : vc->gfx.drawing_area);
+ 
+ #ifdef CONFIG_GBM
+-    if (dmabuf && qemu_dmabuf_get_draw_submitted(dmabuf) &&
++    if (dmabuf && (qemu_dmabuf_get_fd(dmabuf) > 0) &&
++        qemu_dmabuf_get_draw_submitted(dmabuf) &&
+         qemu_dmabuf_get_render_sync(dmabuf)) {
+         gd_gl_area_draw(vc);
+         return;
+@@ -290,7 +291,8 @@ void gd_gl_area_scanout_flush(DisplayChangeListener *dcl,
+ #ifdef CONFIG_GBM
+     QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
+ 
+-    if (dmabuf && !qemu_dmabuf_get_draw_submitted(dmabuf) &&
++    if (dmabuf && (qemu_dmabuf_get_fd(dmabuf) > 0) &&
++        !qemu_dmabuf_get_draw_submitted(dmabuf) &&
+         vc->gfx.guest_fb.framebuffer) {
+         gtk_gl_area_make_current(GTK_GL_AREA(vc->gfx.drawing_area));
+         graphic_hw_gl_block(vc->gfx.dcl.con, true);
+-- 
+2.35.3
+

@@ -1,0 +1,46 @@
+From 5466f6fab7215da44caf9b1ecbc385d3738ad580 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Tue, 7 May 2024 01:01:34 +0000
+Subject: [PATCH 10/50] ui/gtk: Register shortcut key for grab_input to
+ accel_group
+
+To make the shortcut key when the window is fullscreened, it
+should be registered to s->accel_group.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 84e2f4bca5..79f6620803 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -1956,6 +1956,12 @@ static void gd_menu_grab_input(GtkMenuItem *item, void *opaque)
+     gd_update_cursor(vc);
+ }
+ 
++static void gd_accel_grab_input(void *opaque)
++{
++    GtkDisplayState *s = opaque;
++    gtk_menu_item_activate(GTK_MENU_ITEM(s->grab_item));
++}
++
+ static void gd_change_page(GtkNotebook *nb, gpointer arg1, guint arg2,
+                            gpointer data)
+ {
+@@ -2599,6 +2605,11 @@ static GtkWidget *gd_create_menu_view(GtkDisplayState *s, DisplayOptions *opts)
+     gtk_accel_map_add_entry("<QEMU>/View/Grab Input", GDK_KEY_g,
+                             HOTKEY_MODIFIERS);
+     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), s->grab_item);
++    gtk_accel_group_connect(s->accel_group, GDK_KEY_g, HOTKEY_MODIFIERS, 0,
++                        g_cclosure_new_swap(G_CALLBACK(gd_accel_grab_input), s, NULL));
++    gtk_accel_label_set_accel(
++                             GTK_ACCEL_LABEL(gtk_bin_get_child(GTK_BIN(s->grab_item))),
++                             GDK_KEY_g, HOTKEY_MODIFIERS);
+ 
+     separator = gtk_separator_menu_item_new();
+     gtk_menu_shell_append(GTK_MENU_SHELL(view_menu), separator);
+-- 
+2.35.3
+

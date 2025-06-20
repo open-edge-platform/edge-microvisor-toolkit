@@ -1,0 +1,282 @@
+From fbb9d2dd29343d60111bdef5db5c4c155243e901 Mon Sep 17 00:00:00 2001
+From: Pawan Kumar Tumkur Srinivasan <pawan.kumar.tumkur.srinivasan@intel.com>
+Date: Wed, 6 Mar 2024 20:44:12 -0800
+Subject: [PATCH 11/50] audio: Switch audio status with Guest VM switch from
+ QMP command
+
+Signed-off-by: Pawan Kumar Tumkur Srinivasan <pawan.kumar.tumkur.srinivasan@intel.com>
+Rebased-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ audio/audio.c             | 64 +++++++++++++++++++++++++++++++++++++++
+ audio/audio_int.h         |  2 ++
+ include/qemu/typedefs.h   |  1 +
+ include/sysemu/runstate.h |  8 +++++
+ monitor/qmp-cmds.c        |  8 +++++
+ qapi/misc.json            | 19 ++++++++++++
+ system/runstate.c         | 33 ++++++++++++++++++++
+ 7 files changed, 135 insertions(+)
+
+diff --git a/audio/audio.c b/audio/audio.c
+index af0ae33fed..062b15f611 100644
+--- a/audio/audio.c
++++ b/audio/audio.c
+@@ -1609,6 +1609,53 @@ static void audio_vm_change_state_handler (void *opaque, bool running,
+     audio_reset_timer (s);
+ }
+ 
++//This function handles Guest VM audio state during VM switch
++static void qemu_audio_status_change_handler (void *opaque, int status)
++{
++    AudioState *s = opaque;
++    HWVoiceOut *hwo = NULL;
++    HWVoiceIn *hwi = NULL;
++    Volume out_vol , in_vol ;
++
++    if (status > AUDIO_STATUS_ENABLE || status < AUDIO_STATUS_DISABLE)
++        return;
++
++    while ((hwo = audio_pcm_hw_find_any_enabled_out(s, hwo))) {
++        if (hwo->pcm_ops->enable_out) {
++            //This reference is taken from above vm_change_state
++            hwo->pcm_ops->enable_out(hwo, status);
++        }
++        else if (hwo->pcm_ops->volume_out) {
++            //paaudio doesn't support enable_out , hence muting out volume
++            memcpy(&out_vol,&(hwo->out_set_vol),sizeof(Volume));
++
++            if (status == AUDIO_STATUS_DISABLE)
++            {
++              //If disable then mute out volume
++               out_vol.mute = 1;
++            }
++            hwo->pcm_ops->volume_out(hwo,&out_vol);
++        }
++    }
++    while ((hwi = audio_pcm_hw_find_any_enabled_in(s, hwi))) {
++        if (hwi->pcm_ops->enable_in) {
++            //This reference is taken from above vm_change_state
++            hwi->pcm_ops->enable_in(hwi, status);
++        }
++        else if (hwi->pcm_ops->volume_in) {
++            //paaudio doesn't support enable_in , hence muting in volume
++            memcpy(&in_vol,&(hwi->in_set_vol),sizeof(Volume));
++            if (status == AUDIO_STATUS_DISABLE)
++            {
++                 //If disable then mute in volume
++                 in_vol.mute = 1;
++            }
++            hwi->pcm_ops->volume_in(hwi,&in_vol);
++        }
++    }
++    audio_reset_timer (s);
++}
++
+ static void free_audio_state(AudioState *s)
+ {
+     HWVoiceOut *hwo, *hwon;
+@@ -1721,6 +1768,7 @@ static AudioState *audio_init(Audiodev *dev, Error **errp)
+     int done = 0;
+     const char *drvname;
+     VMChangeStateEntry *vmse;
++    qemu_audio_status_notifiers *q = NULL;
+     AudioState *s;
+     struct audio_driver *driver;
+ 
+@@ -1782,6 +1830,12 @@ static AudioState *audio_init(Audiodev *dev, Error **errp)
+                "(Audio can continue looping even after stopping the VM)\n");
+     }
+ 
++    q = qemu_add_audio_status_change_notifier (qemu_audio_status_change_handler, s);
++    if (!q) {
++        dolog ("warning: Could not register audio change state handler\n"
++               "(Audio state toggle wont happen during VM switch)\n");
++    }
++
+     QTAILQ_INSERT_TAIL(&audio_states, s, list);
+     QLIST_INIT (&s->card_head);
+     vmstate_register_any(NULL, &vmstate_audio, s);
+@@ -1959,6 +2013,11 @@ void audio_set_volume_out(SWVoiceOut *sw, Volume *vol)
+         sw->vol.r = nominal_volume.l * vol->vol[vol->channels > 1 ? 1 : 0] /
+             255;
+ 
++        hw->out_set_vol.mute = vol->mute;
++        hw->out_set_vol.channels = vol->channels;
++        hw->out_set_vol.vol[0] = vol->vol[0];
++        hw->out_set_vol.vol[1] = vol->vol[1];
++
+         if (hw->pcm_ops->volume_out) {
+             hw->pcm_ops->volume_out(hw, vol);
+         }
+@@ -1981,6 +2040,11 @@ void audio_set_volume_in(SWVoiceIn *sw, Volume *vol)
+         sw->vol.r = nominal_volume.r * vol->vol[vol->channels > 1 ? 1 : 0] /
+             255;
+ 
++        hw->in_set_vol.mute = vol->mute;
++        hw->in_set_vol.channels = vol->channels;
++        hw->in_set_vol.vol[0] = vol->vol[0];
++        hw->in_set_vol.vol[1] = vol->vol[1];
++
+         if (hw->pcm_ops->volume_in) {
+             hw->pcm_ops->volume_in(hw, vol);
+         }
+diff --git a/audio/audio_int.h b/audio/audio_int.h
+index 2d079d00a2..9a6e04f259 100644
+--- a/audio/audio_int.h
++++ b/audio/audio_int.h
+@@ -68,6 +68,7 @@ typedef struct HWVoiceOut {
+     int pending_disable;
+     struct audio_pcm_info info;
+ 
++    Volume out_set_vol;
+     f_sample *clip;
+     uint64_t ts_helper;
+ 
+@@ -88,6 +89,7 @@ typedef struct HWVoiceIn {
+     int poll_mode;
+     struct audio_pcm_info info;
+ 
++    Volume in_set_vol;
+     t_sample *conv;
+ 
+     size_t total_samples_captured;
+diff --git a/include/qemu/typedefs.h b/include/qemu/typedefs.h
+index 9d222dc376..5938fbad28 100644
+--- a/include/qemu/typedefs.h
++++ b/include/qemu/typedefs.h
+@@ -117,6 +117,7 @@ typedef struct VirtIODevice VirtIODevice;
+ typedef struct Visitor Visitor;
+ typedef struct VMChangeStateEntry VMChangeStateEntry;
+ typedef struct VMStateDescription VMStateDescription;
++typedef struct qemu_audio_status_notifiers qemu_audio_status_notifiers;
+ 
+ /*
+  * Pointer types
+diff --git a/include/sysemu/runstate.h b/include/sysemu/runstate.h
+index 11c7ff3ffb..3bd3c8af82 100644
+--- a/include/sysemu/runstate.h
++++ b/include/sysemu/runstate.h
+@@ -4,6 +4,9 @@
+ #include "qapi/qapi-types-run-state.h"
+ #include "qemu/notify.h"
+ 
++#define AUDIO_STATUS_ENABLE (1)
++#define AUDIO_STATUS_DISABLE (0)
++
+ bool runstate_check(RunState state);
+ void runstate_set(RunState new_state);
+ RunState runstate_get(void);
+@@ -11,8 +14,13 @@ bool runstate_is_running(void);
+ bool runstate_needs_reset(void);
+ void runstate_replay_enable(void);
+ 
++typedef void qemu_audio_handler(void *opaque, int status);
+ typedef void VMChangeStateHandler(void *opaque, bool running, RunState state);
+ 
++qemu_audio_status_notifiers* qemu_add_audio_status_change_notifier(
++                                   qemu_audio_handler *cb, void *opaque);
++void qemu_audio_status_change_notify(int status);
++
+ VMChangeStateEntry *qemu_add_vm_change_state_handler(VMChangeStateHandler *cb,
+                                                      void *opaque);
+ VMChangeStateEntry *qemu_add_vm_change_state_handler_prio(
+diff --git a/monitor/qmp-cmds.c b/monitor/qmp-cmds.c
+index f84a0dc523..d56a58f956 100644
+--- a/monitor/qmp-cmds.c
++++ b/monitor/qmp-cmds.c
+@@ -208,3 +208,11 @@ static void __attribute__((__constructor__)) monitor_init_qmp_commands(void)
+                          qmp_marshal_qmp_capabilities,
+                          QCO_ALLOW_PRECONFIG, 0);
+ }
++
++void qmp_toggle_audio_status(int64_t value, Error **errp)
++{
++    if (value > AUDIO_STATUS_ENABLE || value < AUDIO_STATUS_DISABLE)
++       return;
++
++    qemu_audio_status_change_notify(value);
++}
+diff --git a/qapi/misc.json b/qapi/misc.json
+index 559b66f201..7a03210132 100644
+--- a/qapi/misc.json
++++ b/qapi/misc.json
+@@ -151,6 +151,25 @@
+ ##
+ { 'command': 'stop' }
+ 
++##
++# @toggle-audio-status:
++#
++# @value: 1 for Enable , 0 for Disable
++#
++# TOGGLE_AUDIO_STATUS
++#
++# Since: 2.9
++#
++# .. note:: Enables audio functionality on or off for guest VM switch
++#    when done
++#
++# .. example::
++#
++#    -> { "execute": "toggle-audio-status","arguments": { "value": 1 } }
++#    <- { "return": {} }
++##
++{ 'command': 'toggle-audio-status', 'data': {'value': 'int'} }
++
+ ##
+ # @cont:
+ #
+diff --git a/system/runstate.c b/system/runstate.c
+index a0e2a5fd22..61176a60fc 100644
+--- a/system/runstate.c
++++ b/system/runstate.c
+@@ -293,6 +293,13 @@ void qemu_system_vmstop_request(RunState state)
+     qemu_mutex_unlock(&vmstop_lock);
+     qemu_notify_event();
+ }
++
++struct qemu_audio_status_notifiers {
++    qemu_audio_handler *cb;
++    void *opaque;
++    QTAILQ_ENTRY(qemu_audio_status_notifiers) entries;
++};
++
+ struct VMChangeStateEntry {
+     VMChangeStateHandler *cb;
+     VMChangeStateHandler *prepare_cb;
+@@ -304,6 +311,32 @@ struct VMChangeStateEntry {
+ static QTAILQ_HEAD(, VMChangeStateEntry) vm_change_state_head =
+     QTAILQ_HEAD_INITIALIZER(vm_change_state_head);
+ 
++static QTAILQ_HEAD(, qemu_audio_status_notifiers) qemu_audio_status_notifiers_head =
++     QTAILQ_HEAD_INITIALIZER(qemu_audio_status_notifiers_head);
++
++qemu_audio_status_notifiers* qemu_add_audio_status_change_notifier(
++                                       qemu_audio_handler *cb, void *opaque)
++{
++       qemu_audio_status_notifiers *e = NULL;
++       e = g_malloc0(sizeof(*e));
++
++       if (e != NULL) {
++           e->cb = cb;
++           e->opaque = opaque;
++           QTAILQ_INSERT_TAIL(&qemu_audio_status_notifiers_head, e, entries);
++       }
++
++       return e;
++}
++
++void qemu_audio_status_change_notify(int status)
++{
++        qemu_audio_status_notifiers *e = NULL, *next = NULL;
++        QTAILQ_FOREACH_SAFE(e, &qemu_audio_status_notifiers_head, entries, next){
++                e->cb(e->opaque, status);
++        }
++}
++
+ /**
+  * qemu_add_vm_change_state_handler_prio:
+  * @cb: the callback to invoke
+-- 
+2.35.3
+

@@ -1,0 +1,36 @@
+From 3ad17114b9bd99f0e29ef0f2fc9f2407ea3f6c0d Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Mon, 13 Jan 2025 09:10:14 -0800
+Subject: [PATCH 31/50] gtk: Skip to configure the size only in HPD case
+
+Size shouldn't be reconfigured in case width and height
+are both zeros, as this combination indicates disconnected
+guest display. But this protocol is only valid in HPD use
+case where connectors array param is provided.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index fe2610b90f..29782093aa 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -2195,10 +2195,11 @@ static gboolean gd_configure(GtkWidget *widget,
+ 
+     info = *dpy_get_ui_info(vc->gfx.dcl.con);
+ 
+-    if (info.width || info.height) {
+-        gd_set_ui_size(vc, cfg->width, cfg->height);
++    if (vc->s->opts->u.gtk.has_connectors && !info.width && !info.height) {
++        return FALSE;
+     }
+ 
++    gd_set_ui_size(vc, cfg->width, cfg->height);
+     return FALSE;
+ }
+ 
+-- 
+2.35.3
+

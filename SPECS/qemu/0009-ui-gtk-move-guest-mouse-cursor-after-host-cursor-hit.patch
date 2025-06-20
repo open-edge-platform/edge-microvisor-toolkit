@@ -1,0 +1,76 @@
+From 6ea532059ec648f379b136ac52a5a5316d67de77 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Mon, 5 Feb 2024 13:42:44 -0800
+Subject: [PATCH 09/50] ui/gtk: move guest mouse cursor after host cursor hits
+ the edge of the display
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When the host mouse cursor hits the boundary of the surface, the guest
+mouse cursor also stops moving to one direction even if it is still in
+the middle of the guest display. This is because dX and/or dY won't be
+generated anymore. So it is needed to create those delta position data
+artificially when the mouse cursor is still in move.
+
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 26 +++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 32050533b7..84e2f4bca5 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -889,6 +889,8 @@ static gboolean gd_motion_event(GtkWidget *widget, GdkEventMotion *motion,
+ {
+     VirtualConsole *vc = opaque;
+     GtkDisplayState *s = vc->s;
++    GdkDisplay *dpy = gtk_widget_get_display(vc->gfx.drawing_area);
++    GdkWindow *window = gtk_widget_get_window(vc->gfx.drawing_area);
+     int x, y;
+     int mx, my;
+     int fbh, fbw;
+@@ -938,8 +940,27 @@ static gboolean gd_motion_event(GtkWidget *widget, GdkEventMotion *motion,
+                              0, surface_height(vc->gfx.ds));
+         qemu_input_event_sync();
+     } else if (s->last_set && s->ptr_owner == vc) {
+-        qemu_input_queue_rel(vc->gfx.dcl.con, INPUT_AXIS_X, x - s->last_x);
+-        qemu_input_queue_rel(vc->gfx.dcl.con, INPUT_AXIS_Y, y - s->last_y);
++        GdkMonitor *monitor = gdk_display_get_monitor_at_window(dpy, window);
++        int dx = x - s->last_x;
++        int dy = y - s->last_y;
++        GdkRectangle curr_geometry;
++
++        monitor = gdk_display_get_monitor_at_point(dpy, motion->x_root, motion->y_root);
++        gdk_monitor_get_geometry(monitor, &curr_geometry);
++
++        if (motion->x_root <= curr_geometry.x) {
++            dx = -5;
++        } else if (motion->x_root >= curr_geometry.x + curr_geometry.width - 1) {
++            dx = 5;
++        }
++
++        if (motion->y_root <= curr_geometry.y) {
++            dy = -5;
++        } else if (motion->y_root >= curr_geometry.y + curr_geometry.height - 1) {
++            dy = 5;
++        }
++        qemu_input_queue_rel(vc->gfx.dcl.con, INPUT_AXIS_X, dx);
++        qemu_input_queue_rel(vc->gfx.dcl.con, INPUT_AXIS_Y, dy);
+         qemu_input_event_sync();
+     }
+     s->last_x = x;
+@@ -948,7 +969,6 @@ static gboolean gd_motion_event(GtkWidget *widget, GdkEventMotion *motion,
+ 
+     if (!qemu_input_is_absolute(vc->gfx.dcl.con) && s->ptr_owner == vc) {
+         GdkScreen *screen = gtk_widget_get_screen(vc->gfx.drawing_area);
+-        GdkDisplay *dpy = gtk_widget_get_display(widget);
+         GdkWindow *win = gtk_widget_get_window(widget);
+         GdkMonitor *monitor = gdk_display_get_monitor_at_window(dpy, win);
+         GdkRectangle geometry;
+-- 
+2.35.3
+
