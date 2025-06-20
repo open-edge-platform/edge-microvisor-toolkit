@@ -1,0 +1,31 @@
+From 49a600fb668678520ae2c4c09a1315ae37133e44 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Wed, 9 Apr 2025 11:29:29 -0700
+Subject: [PATCH 46/50] ui/gtk-egl: Cursor image texture filtering using
+ GL_NEAREST
+
+For the faster rendering and avoiding an artifact (grey line)
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk-egl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index 42582d054a..aeaad34d72 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -140,8 +140,8 @@ static void gd_egl_cursor_texture(VirtualConsole *vc)
+ 
+     glGenTextures(1, &texture);
+     glBindTexture(GL_TEXTURE_2D, texture);
+-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
++    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+ 
+     glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);
+     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, vc->gfx.cursor_fb.width,
+-- 
+2.35.3
+

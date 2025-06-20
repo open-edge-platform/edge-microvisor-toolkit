@@ -1,0 +1,25 @@
+From 56e56600ff5124349e9798f7058937c0e00bec8e Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 13 Mar 2025 16:29:25 -0700
+Subject: [PATCH 38/50] ui/gtk: Refreshing is also counted when calculating FPS
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk-egl.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index 8f84b3a19c..4d91792537 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -202,6 +202,7 @@ void gd_egl_refresh(DisplayChangeListener *dcl)
+         }
+ 
+         eglSwapBuffers(qemu_egl_display, vc->gfx.esurface);
++        gd_gl_count_frame(&vc->gfx.dcl, 0);
+         vc->gfx.cursor_moved = false;
+         return;
+     }
+-- 
+2.35.3
+

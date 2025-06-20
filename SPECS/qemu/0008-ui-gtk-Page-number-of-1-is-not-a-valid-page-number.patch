@@ -1,0 +1,53 @@
+From 368de9a98fa35f2d91561d8f542919704ed0b12f Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Fri, 3 May 2024 23:42:39 +0000
+Subject: [PATCH 08/50] ui/gtk: Page number of '-1' is not a valid page number
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Page number of '-1' means the page does not belong to the
+notebook so it shouldn't be used as a valid page number in
+gd_vc_find_by_page. It should just return null if that is
+the case.
+
+This change, however, will cause a segfault during detaching
+/untabifying process in gtk_release_modifiers because the
+current VC's page number suddenly becomes '-1' as soon as
+it is detached then this invalid page number will eventually
+bring in a null VC. So gtk_relaese_modifiers should do the
+null check on the VC and just returns if VC == null.
+
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 421cc7fae5..32050533b7 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -165,7 +165,7 @@ static VirtualConsole *gd_vc_find_by_page(GtkDisplayState *s, gint page)
+     for (i = 0; i < s->nb_vcs; i++) {
+         vc = &s->vc[i];
+         p = gtk_notebook_page_num(GTK_NOTEBOOK(s->notebook), vc->tab_item);
+-        if (p == page) {
++        if (p >= 0 && p == page) {
+             return vc;
+         }
+     }
+@@ -358,7 +358,7 @@ static void gtk_release_modifiers(GtkDisplayState *s)
+ {
+     VirtualConsole *vc = gd_vc_find_current(s);
+ 
+-    if (vc->type != GD_VC_GFX ||
++    if (!vc || vc->type != GD_VC_GFX ||
+         !qemu_console_is_graphic(vc->gfx.dcl.con)) {
+         return;
+     }
+-- 
+2.35.3
+

@@ -1,0 +1,110 @@
+From dabaf87efa72f31ed4ac0361ec7aaf3cfb78ae41 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Wed, 22 Jan 2025 10:42:18 -0800
+Subject: [PATCH 34/50] virtio-gpu: Freeing udmabuf and make dmabuf NULL when
+ resource is destroyed
+
+DMABUF attached to the scanout needs to be freed and the field
+should be reset to NULL when the associated resources are destroyed
+as the backing buffers are all invalid from that point.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ hw/display/virtio-gpu-udmabuf.c | 21 +++++++++++++++++----
+ hw/display/virtio-gpu.c         |  4 ++--
+ include/hw/virtio/virtio-gpu.h  |  3 ++-
+ ui/gtk-egl.c                    |  2 +-
+ 4 files changed, 22 insertions(+), 8 deletions(-)
+
+diff --git a/hw/display/virtio-gpu-udmabuf.c b/hw/display/virtio-gpu-udmabuf.c
+index a843d5cf9e..2eef08d8bc 100644
+--- a/hw/display/virtio-gpu-udmabuf.c
++++ b/hw/display/virtio-gpu-udmabuf.c
+@@ -245,18 +245,31 @@ void virtio_gpu_init_udmabuf(struct virtio_gpu_simple_resource *res)
+     res->blob = pdata;
+ }
+ 
+-void virtio_gpu_fini_udmabuf(struct virtio_gpu_simple_resource *res)
++void virtio_gpu_fini_udmabuf(VirtIOGPU *g, struct virtio_gpu_simple_resource *res)
+ {
+-    if (res->remapped) {
+-        virtio_gpu_destroy_udmabuf(res);
++    int i;
++
++    for (i = 0; i < g->parent_obj.conf.max_outputs; i++) {
++        if (g->dmabuf.primary[i] &&
++            qemu_dmabuf_get_fd(g->dmabuf.primary[i]->buf) == res->dmabuf_fd) {
++            virtio_gpu_free_dmabuf(g, g->dmabuf.primary[i]);
++            g->dmabuf.primary[i] = NULL;
++        }
+     }
++
++    virtio_gpu_destroy_udmabuf(res);
+ }
+ 
+-static void virtio_gpu_free_dmabuf(VirtIOGPU *g, VGPUDMABuf *dmabuf)
++void virtio_gpu_free_dmabuf(VirtIOGPU *g, VGPUDMABuf *dmabuf)
+ {
+     struct virtio_gpu_scanout *scanout;
+ 
+     scanout = &g->parent_obj.scanout[dmabuf->scanout_id];
++
++    if (!scanout->con || !dmabuf->buf) {
++        return;
++    }
++
+     dpy_gl_release_dmabuf(scanout->con, dmabuf->buf);
+     g_clear_pointer(&dmabuf->buf, qemu_dmabuf_free);
+     QTAILQ_REMOVE(&g->dmabuf.bufs, dmabuf, next);
+diff --git a/hw/display/virtio-gpu.c b/hw/display/virtio-gpu.c
+index d1d1659ffc..cf84c54ac3 100644
+--- a/hw/display/virtio-gpu.c
++++ b/hw/display/virtio-gpu.c
+@@ -936,7 +936,7 @@ void virtio_gpu_cleanup_mapping(VirtIOGPU *g,
+     res->addrs = NULL;
+ 
+     if (res->blob) {
+-        virtio_gpu_fini_udmabuf(res);
++        virtio_gpu_fini_udmabuf(g, res);
+         res->blob = NULL;
+         res->blob_size = 0;
+     }
+@@ -1621,7 +1621,7 @@ void virtio_gpu_reset(VirtIODevice *vdev)
+     }
+ 
+     for (i = 0; i < g->parent_obj.conf.max_outputs; i++) {
+-         dpy_gfx_replace_surface(g->parent_obj.scanout[i].con, NULL);
++        dpy_gfx_replace_surface(g->parent_obj.scanout[i].con, NULL);
+     }
+ 
+     virtio_gpu_base_reset(VIRTIO_GPU_BASE(vdev));
+diff --git a/include/hw/virtio/virtio-gpu.h b/include/hw/virtio/virtio-gpu.h
+index 9bcc572eab..e1737d106e 100644
+--- a/include/hw/virtio/virtio-gpu.h
++++ b/include/hw/virtio/virtio-gpu.h
+@@ -326,7 +326,8 @@ void virtio_gpu_update_cursor_data(VirtIOGPU *g,
+ /* virtio-gpu-udmabuf.c */
+ bool virtio_gpu_have_udmabuf(void);
+ void virtio_gpu_init_udmabuf(struct virtio_gpu_simple_resource *res);
+-void virtio_gpu_fini_udmabuf(struct virtio_gpu_simple_resource *res);
++void virtio_gpu_fini_udmabuf(VirtIOGPU *g, struct virtio_gpu_simple_resource *res);
++void virtio_gpu_free_dmabuf(VirtIOGPU *g, VGPUDMABuf *dmabuf);
+ int virtio_gpu_update_dmabuf(VirtIOGPU *g,
+                              uint32_t scanout_id,
+                              struct virtio_gpu_simple_resource *res,
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index 6b9ae3b3b2..8a3a0df5ba 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -171,7 +171,7 @@ void gd_egl_refresh(DisplayChangeListener *dcl)
+         return;
+     }
+ 
+-    if (cursor_updated) {
++    if (dmabuf && cursor_updated) {
+         eglMakeCurrent(qemu_egl_display, vc->gfx.esurface,
+                        vc->gfx.esurface, vc->gfx.ectx);
+ 
+-- 
+2.35.3
+

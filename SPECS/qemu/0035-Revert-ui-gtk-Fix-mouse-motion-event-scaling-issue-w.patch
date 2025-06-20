@@ -1,0 +1,60 @@
+From a8d5ef9cc46c1f5bbea476a942cbf8d8882fce92 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Wed, 26 Feb 2025 14:22:48 -0800
+Subject: [PATCH 35/50] Revert "ui/gtk: Fix mouse/motion event scaling issue
+ with GTK display backend"
+
+This reverts commit 37e91415018db3656b46cdea8f9e4d47b3ff130d.
+---
+ ui/gtk.c | 18 +++++-------------
+ 1 file changed, 5 insertions(+), 13 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 29782093aa..b84b759f95 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -978,7 +978,7 @@ static gboolean gd_motion_event(GtkWidget *widget, GdkEventMotion *motion,
+     int x, y;
+     int mx, my;
+     int fbh, fbw;
+-    int ww, wh;
++    int ww, wh, ws;
+ 
+     if (!vc->gfx.ds) {
+         return TRUE;
+@@ -986,15 +986,11 @@ static gboolean gd_motion_event(GtkWidget *widget, GdkEventMotion *motion,
+ 
+     fbw = surface_width(vc->gfx.ds) * vc->gfx.scale_x;
+     fbh = surface_height(vc->gfx.ds) * vc->gfx.scale_y;
++
+     ww = gtk_widget_get_allocated_width(widget);
+     wh = gtk_widget_get_allocated_height(widget);
++    ws = gtk_widget_get_scale_factor(widget);
+ 
+-    /*
+-     * `widget` may not have the same size with the frame buffer.
+-     * In such cases, some paddings are needed around the `vc`.
+-     * To achieve that, `vc` will be displayed at (mx, my)
+-     * so that it is displayed at the center of the widget.
+-     */
+     mx = my = 0;
+     if (ww > fbw) {
+         mx = (ww - fbw) / 2;
+@@ -1003,12 +999,8 @@ static gboolean gd_motion_event(GtkWidget *widget, GdkEventMotion *motion,
+         my = (wh - fbh) / 2;
+     }
+ 
+-    /*
+-     * `motion` is reported in `widget` coordinates
+-     * so translating it to the coordinates in `vc`.
+-     */
+-    x = (motion->x - mx) / vc->gfx.scale_x;
+-    y = (motion->y - my) / vc->gfx.scale_y;
++    x = (motion->x - mx) / vc->gfx.scale_x * ws;
++    y = (motion->y - my) / vc->gfx.scale_y * ws;
+ 
+     trace_gd_motion_event(ww, wh, gtk_widget_get_scale_factor(widget), x, y);
+ 
+-- 
+2.35.3
+

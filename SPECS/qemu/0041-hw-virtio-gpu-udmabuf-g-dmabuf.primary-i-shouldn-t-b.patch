@@ -1,0 +1,30 @@
+From f395c2318b69b27aad1636f95992463bdfa40599 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Tue, 18 Mar 2025 16:50:15 -0700
+Subject: [PATCH 41/50] hw/virtio-gpu-udmabuf: g->dmabuf.primary[i] shouldn't
+ be nullified
+
+g->dmabuf.primary[i] will be used to point to udmabuf when
+it is needed to be freed. So it shouldn't be nullified when
+resource is destroyed.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ hw/display/virtio-gpu-udmabuf.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/hw/display/virtio-gpu-udmabuf.c b/hw/display/virtio-gpu-udmabuf.c
+index 7b6d282824..005bfa67fa 100644
+--- a/hw/display/virtio-gpu-udmabuf.c
++++ b/hw/display/virtio-gpu-udmabuf.c
+@@ -254,7 +254,6 @@ void virtio_gpu_fini_udmabuf(VirtIOGPU *g, struct virtio_gpu_simple_resource *re
+             qemu_dmabuf_get_fd(g->dmabuf.primary[i]->buf) == res->dmabuf_fd) {
+             /* preventing further mapping/use of the dmabuf */
+             qemu_dmabuf_set_fd(g->dmabuf.primary[i]->buf, -1);
+-            g->dmabuf.primary[i] = NULL;
+         }
+     }
+ 
+-- 
+2.35.3
+

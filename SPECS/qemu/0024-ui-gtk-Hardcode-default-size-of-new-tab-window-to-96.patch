@@ -1,0 +1,51 @@
+From 4abcdf90835a14e33d2f4daa2fff1ea45971f4af Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Tue, 29 Oct 2024 19:17:49 -0700
+Subject: [PATCH 24/50] ui/gtk: Hardcode default size of new tab window to 960
+ by 540
+
+This is a WA to keep the display resolution from windows VM
+after waking up from S4.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/console.c | 4 ++--
+ ui/gtk.c     | 4 ++++
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/ui/console.c b/ui/console.c
+index 105a0e2c70..506e72d1eb 100644
+--- a/ui/console.c
++++ b/ui/console.c
+@@ -1204,8 +1204,8 @@ QemuConsole *graphic_console_init(DeviceState *dev, uint32_t head,
+ {
+     static const char noinit[] =
+         "Guest has not initialized the display (yet).";
+-    int width = 640;
+-    int height = 480;
++    int width = 960;
++    int height = 540;
+     QemuConsole *s;
+     DisplaySurface *surface;
+ 
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 7e7240b4fc..6ee39b4816 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -1574,9 +1574,13 @@ static gboolean gd_window_state_event(GtkWidget *widget, GdkEvent *event,
+ static void gd_tab_window_create(VirtualConsole *vc)
+ {
+     GtkDisplayState *s = vc->s;
++    int default_width = 960;
++    int default_height = 540;
+ 
+     gtk_widget_set_sensitive(vc->menu_item, false);
+     vc->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
++    gtk_window_set_default_size(GTK_WINDOW(vc->window),
++                                default_width, default_height);
+ #if defined(CONFIG_OPENGL)
+     if (vc->gfx.esurface) {
+         eglDestroySurface(qemu_egl_display, vc->gfx.esurface);
+-- 
+2.35.3
+

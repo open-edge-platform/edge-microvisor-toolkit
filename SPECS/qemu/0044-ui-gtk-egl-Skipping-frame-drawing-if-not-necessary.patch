@@ -1,0 +1,103 @@
+From 6d0c3ea7921233f460b880a9ee2aabeda95c7ee6 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Tue, 25 Mar 2025 11:54:14 -0700
+Subject: [PATCH 44/50] ui/gtk-egl: Skipping frame drawing if not necessary
+
+A flag 'new_cursor' would never be cleared in some corner case
+where the cursor is not inside the frame or is not moved in
+the next refresh cycle. This situation forces it to keep drawing
+the cursor-less frame at every refresh cycle. This is a buggy
+situation so needs to be adjusted as followed.
+
+1. Draw the cursor then blend it with the existing frame if
+   the cursor is moved AND the new location is inside the
+   frame
+
+2. Draw only the existing frame without cursor only if
+   the cursor is moved AND the cursor was drawn during the
+   previous cycle BUT the new location is not within the
+   frame boundary.
+
+3. Skipping redrawing anything otherwise.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ include/ui/gtk.h |  1 +
+ ui/gtk-egl.c     | 30 ++++++++++++++++++++++--------
+ 2 files changed, 23 insertions(+), 8 deletions(-)
+
+diff --git a/include/ui/gtk.h b/include/ui/gtk.h
+index df9eed24a9..3b95310795 100644
+--- a/include/ui/gtk.h
++++ b/include/ui/gtk.h
+@@ -56,6 +56,7 @@ typedef struct VirtualGfxConsole {
+     uint32_t *cursor_image;
+     bool cursor_moved;
+     bool new_cursor;
++    bool cursor_prev_drawn;
+     int cursor_x;
+     int cursor_y;
+     bool y0_top;
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index 7e7938a0fc..42582d054a 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -178,33 +178,47 @@ void gd_egl_refresh(DisplayChangeListener *dcl)
+     if (dmabuf && (qemu_dmabuf_get_fd(dmabuf) > 0)
+         && !qemu_dmabuf_get_draw_submitted(dmabuf)
+         && cursor_updated) {
++
+         if (vc->gfx.recently_updated) {
+             vc->gfx.recently_updated = 0;
+             return;
+         }
+ 
+-        eglMakeCurrent(qemu_egl_display, vc->gfx.esurface,
+-                       vc->gfx.esurface, vc->gfx.ectx);
+-
+-        egl_fb_blit(&vc->gfx.win_fb, &vc->gfx.guest_fb, !vc->gfx.y0_top);
+         if (vc->gfx.cursor_x > 0 &&
+             vc->gfx.cursor_x < vc->gfx.win_fb.width - 1 &&
+             vc->gfx.cursor_y > 0 &&
+             vc->gfx.cursor_y < vc->gfx.win_fb.height - 1) {
++
++            eglMakeCurrent(qemu_egl_display, vc->gfx.esurface,
++                           vc->gfx.esurface, vc->gfx.ectx);
++
+             if (vc->gfx.new_cursor) {
+                 gd_egl_cursor_texture(vc);
+                 vc->gfx.new_cursor = false;
+             }
+ 
++            egl_fb_blit(&vc->gfx.win_fb, &vc->gfx.guest_fb, !vc->gfx.y0_top);
+             egl_texture_blend(vc->gfx.gls, &vc->gfx.win_fb,
+                               &vc->gfx.cursor_fb, vc->gfx.y0_top,
+                               vc->gfx.cursor_x, vc->gfx.cursor_y,
+                               vc->gfx.scale_x, vc->gfx.scale_y);
+-        }
+ 
+-        eglSwapBuffers(qemu_egl_display, vc->gfx.esurface);
+-        gd_gl_count_frame(&vc->gfx.dcl, false, true);
+-        vc->gfx.cursor_moved = false;
++            eglSwapBuffers(qemu_egl_display, vc->gfx.esurface);
++            gd_gl_count_frame(&vc->gfx.dcl, false, true);
++            vc->gfx.cursor_moved = false;
++            vc->gfx.cursor_prev_drawn = true;
++        } else if (vc->gfx.cursor_prev_drawn) {
++            /* Cursor moved outside the window, so we need to redraw the
++             * window without the cursor */
++            eglMakeCurrent(qemu_egl_display, vc->gfx.esurface,
++                           vc->gfx.esurface, vc->gfx.ectx);
++
++            egl_fb_blit(&vc->gfx.win_fb, &vc->gfx.guest_fb, !vc->gfx.y0_top);
++            eglSwapBuffers(qemu_egl_display, vc->gfx.esurface);
++            gd_gl_count_frame(&vc->gfx.dcl, false, true);
++            vc->gfx.cursor_prev_drawn = false;
++	}
++
+         return;
+     }
+ #endif
+-- 
+2.35.3
+

@@ -1,0 +1,29 @@
+From e5ec0b10569b161057c138f26f0c594b28396bea Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 13 Mar 2025 16:30:54 -0700
+Subject: [PATCH 39/50] ui/gtk: FPS and UPS are updated every 1 sec instead of
+ 5 sec
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index b84b759f95..179efd29be 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -617,8 +617,8 @@ void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups)
+     curr = tv.tv_sec * 1000000 + tv.tv_usec;
+ 
+     delta = curr - prev;
+-    if (delta > 5000000) {
+-        /* update rate is calculated and displayed at every 5 secs */
++    if (delta > 1000000) {
++        /* update rate is calculated and displayed at every 1 secs */
+         prev = curr;
+         for (i = 0; i < vc->s->nb_vcs; i++) {
+             vc = &s->vc[i];
+-- 
+2.35.3
+

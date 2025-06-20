@@ -22,17 +22,20 @@ Distribution:   Edge Microvisor Toolkit
 %if 0%{?emt}
 %global excluded_targets moxie-softmmu
 %endif
+%define have_vmsr_helper 0
 %global have_memlock_limits 0
 %global need_qemu_kvm 0
 %ifarch %{ix86}
 %global kvm_package   system-x86
 # need_qemu_kvm should only ever be used by x86
 %global need_qemu_kvm 1
+%define have_vmsr_helper 1
 %endif
 %ifarch x86_64
 %global kvm_package   system-x86
 # need_qemu_kvm should only ever be used by x86
 %global need_qemu_kvm 1
+%define have_vmsr_helper 1
 %endif
 %ifarch %{power64}
 %global have_memlock_limits 1
@@ -64,7 +67,6 @@ Distribution:   Edge Microvisor Toolkit
 
 %global tools_only 0
 
-
 %global user_static 1
 %if 0%{?emt}
 %global user_static 0
@@ -77,9 +79,12 @@ Distribution:   Edge Microvisor Toolkit
 
 # On AzL numactl builds for arm and x86
 %global have_numactl 1
+%ifarch %{arm}
+%global have_numactl 0
+%endif
 
-%global have_spice 1
 # Matches spice ExclusiveArch
+%global have_spice 1
 %ifnarch %{ix86} x86_64 %{arm} aarch64
 %global have_spice 0
 %endif
@@ -89,21 +94,30 @@ Distribution:   Edge Microvisor Toolkit
 
 # Matches xen ExclusiveArch
 %global have_xen 0
+%if 0%{?fedora}
+%ifarch x86_64 aarch64
+%global have_xen 1
+%endif
+%endif
 
 %global have_liburing 0
 %if 0%{?emt}
+%ifnarch %{arm}
 %global have_liburing 1
 %endif
+%endif
 
-%global have_virgl 1
-# 2.0 has this set, disabled till dep is available in 3.0
-%if 0%{?emt}
 %global have_virgl 0
+%if 0%{?fedora}
+%global have_virgl 1
 %endif
 
 %global have_pmem 0
 %ifarch x86_64 %{power64}
 %global have_pmem 1
+%endif
+%if 0%{?rhel} >= 10
+%global have_pmem 0
 %endif
 
 %global have_jack 1
@@ -117,6 +131,9 @@ Distribution:   Edge Microvisor Toolkit
 %endif
 
 %global have_libblkio 0
+%if 0%{?fedora} >= 37
+%global have_libblkio 1
+%endif
 
 %global have_gvnc_devel %{defined fedora}
 %if 0%{?emt}
@@ -137,7 +154,7 @@ Distribution:   Edge Microvisor Toolkit
 
 # Matches edk2.spec ExclusiveArch
 %global have_edk2 0
-%ifarch %{ix86} x86_64 %{arm} aarch64
+%ifarch %{ix86} x86_64 %{arm} aarch64 riscv64
 %global have_edk2 1
 %endif
 %if 0%{?emt}
@@ -169,6 +186,9 @@ Distribution:   Edge Microvisor Toolkit
 %endif
 
 %define have_librdma 1
+%ifarch %{arm}
+%define have_librdma 0
+%endif
 
 %define have_libcacard 1
 # enable when dependency available in 3.0
@@ -177,6 +197,11 @@ Distribution:   Edge Microvisor Toolkit
 %endif
 
 %define have_rutabaga_gfx 0
+%if 0%{?fedora} >= 40
+%ifarch x86_64 aarch64
+%define have_rutabaga_gfx 1
+%endif
+%endif
 
 %global have_ui 1
 %if 0%{?emt_no_ui}
@@ -257,8 +282,12 @@ Distribution:   Edge Microvisor Toolkit
 %endif
 %define requires_audio_alsa Requires: %{name}-audio-alsa = %{evr}
 %define requires_audio_oss Requires: %{name}-audio-oss = %{evr}
+%if 0%{?emt}
 %if %{with pulseaudio}
 %define pa_drv pa,
+%endif
+%else
+%define requires_audio_pa Requires: %{name}-audio-pa = %{evr}
 %endif
 %if %{with pipewire}
 %define requires_audio_pipewire Requires: %{name}-audio-pipewire = %{evr}
@@ -283,7 +312,6 @@ Distribution:   Edge Microvisor Toolkit
 %define requires_device_display_virtio_gpu_pci Requires: %{name}-device-display-virtio-gpu-pci = %{evr}
 %define requires_device_display_virtio_gpu_ccw Requires: %{name}-device-display-virtio-gpu-ccw = %{evr}
 %define requires_device_display_virtio_vga Requires: %{name}-device-display-virtio-vga = %{evr}
-%define requires_device_display_virtio_vga_gl Requires: %{name}-device-display-virtio-vga-gl = %{evr}
 %define requires_package_qemu_pr_helper Requires: qemu-pr-helper
 %if 0%{emt}
 %define requires_package_virtiofsd Requires: vhostuser-backend(fs)
@@ -296,10 +324,12 @@ Distribution:   Edge Microvisor Toolkit
 %define requires_device_display_vhost_user_gpu Requires: %{name}-device-display-vhost-user-gpu = %{evr}
 %define requires_device_display_virtio_gpu_gl Requires: %{name}-device-display-virtio-gpu-gl = %{evr}
 %define requires_device_display_virtio_gpu_pci_gl Requires: %{name}-device-display-virtio-gpu-pci-gl = %{evr}
+%define requires_device_display_virtio_vga_gl Requires: %{name}-device-display-virtio-vga-gl = %{evr}
 %else
 %define requires_device_display_vhost_user_gpu %{nil}
 %define requires_device_display_virtio_gpu_gl %{nil}
 %define requires_device_display_virtio_gpu_pci_gl %{nil}
+%define requires_device_display_virtio_vga_gl %{nil}
 %endif
 
 %if %{have_rutabaga_gfx}
@@ -395,6 +425,8 @@ Obsoletes: %{name}-system-lm32 <= %{version}-%{release} \
 Obsoletes: %{name}-system-lm32-core <= %{version}-%{release} \
 Obsoletes: %{name}-system-moxie <= %{version}-%{release} \
 Obsoletes: %{name}-system-moxie-core <= %{version}-%{release} \
+Obsoletes: %{name}-system-nios2 <= %{version}-%{release} \
+Obsoletes: %{name}-system-nios2-core <= %{version}-%{release} \
 Obsoletes: %{name}-system-unicore32 <= %{version}-%{release} \
 Obsoletes: %{name}-system-unicore32-core <= %{version}-%{release} \
 Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
@@ -413,68 +445,21 @@ Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
 
 Summary: QEMU is a FAST! processor emulator
 Name: qemu
-Version: 8.2.0
-Release: 17%{?dist}
+Version: 9.1.0
+Release: 1%{?dist}
 License: Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND FSFAP AND GPL-1.0-or-later AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-2.0-or-later WITH GCC-exception-2.0 AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT AND LicenseRef-Fedora-Public-Domain AND CC-BY-3.0
 URL: http://www.qemu.org/
 
-Source0: https://download.qemu.org/%{name}-%{version}%{?rcstr}.tar.xz
+%global dlurl https://download.qemu.org
 
-# SRIOV patches
-Patch1: 0001-ui-gtk-skip-drawing-guest-scanout-when-associated-VC.patch
-Patch2: 0002-ui-gtk-set-the-ui-size-to-0-when-invisible.patch
-Patch3: 0003-ui-gtk-reset-visible-flag-when-window-is-minimized.patch
-Patch4: 0004-ui-gtk-Disable-the-scanout-when-a-detached-tab-is-cl.patch
-Patch5: 0005-ui-gtk-Factor-out-tab-window-creation-into-a-separat.patch
-Patch6: 0006-ui-gtk-Add-a-new-parameter-to-assign-connectors-moni.patch
-Patch7: 0007-ui-gtk-unblock-gl-if-draw-submitted-already-or-fence.patch
-Patch8: 0008-ui-gtk-skip-drawing-if-any-of-ctx-surface-image-don-.patch
-Patch9: 0009-ui-gtk-flush-display-pipeline-before-saving-vmstate-.patch
-Patch10: 0010-virtio-gpu-first-surface-update-with-blob-scanout-af.patch
-Patch11: 0011-ui-gtk-attach-fullscreen-hotkey-cb-to-new-vc-window.patch
-Patch12: 0012-ui-gtk-properly-handling-detached-VC-window.patch
-Patch13: 0013-virtio-gpu-replace-the-surface-with-null-surface-onl.patch
-Patch14: 0014-ui-gtk-negative-page_number-shouldn-t-be-processed.patch
-Patch15: 0015-ui-gtk-move-guest-mouse-cursor-after-host-cursor-hit.patch
-Patch16: 0016-ui-gtk-fullscreen-control-on-all-QEMU-windows.patch
-Patch17: 0017-ui-gtk-fullscreening-display-state-as-well.patch
-Patch18: 0018-ui-gtk-adds-status-bar-for-expressing-ups-and-fps.patch
-Patch19: 0019-virtio-gpu-call-dpy_gl_frame_counter-at-every-guest-.patch
-Patch20: 0020-ui-gtk-Added-an-input-mode.patch
-Patch21: 0021-usb-hid-added-new-type-for-touch-stylus.patch
-Patch22: 0022-ui-gtk-Handle-relative-mode-events-correctly-with-Wa.patch
-Patch23: 0023-ui-gtk-Consider-the-scaling-factor-when-getting-the-.patch
-Patch24: 0024-ui-gtk-gl-area-Don-t-forget-to-calculate-the-scaling.patch
-Patch25: 0025-virtio-gpu-Provide-position-info-x-y-to-the-Guest.patch
-Patch26: 0026-ui-gtk-Include-the-position-info-while-setting-the-u.patch
-Patch27: 0027-ui-gtk-enable-ungrabbing-fullscreened-widget.patch
-Patch28: 0028-ui-spice-Add-an-option-for-users-to-provide-a-prefer.patch
-Patch29: 0029-ui-spice-Enable-gl-on-option-for-non-local-or-remote.patch
-Patch30: 0030-ui-spice-Submit-the-gl_draw-requests-at-60-FPS-for-r.patch
-Patch31: 0031-Switch-audio-status-with-Guest-VM-switch-from-QMP-co.patch
-Patch32: 0032-ui-gtk-Enable-delay-in-gd-configure-while-resize-win.patch
-Patch33: 0033-ui-gtk-gd_ui_show-and-hide-only-when-ui_info-exists.patch
-Patch34: 0034-ui-gtk-Regrabbing-only-on-the-VC-which-owned-it-befo.patch
-Patch35: 0035-hw-display-virtio-gpu-udmabuf-dmabuf-fence_fd-should.patch
-Patch36: 0036-virtio-gpu-Enabling-performance-mode-for-blob-true-c.patch
-Patch37: 0037-gtk-untabifying-the-primary-window-as-well.patch
-Patch38: 0038-ui-console-gl-Add-a-helper-to-create-a-texture-with-.patch
-Patch39: 0039-ui-spice-Create-another-texture-with-linear-layout-w.patch
-Patch40: 0040-ui-spice-Blit-the-scanout-texture-if-its-memory-layo.patch
-Patch41: 0041-qemu-full-screening-in-case-the-window-was-shrunk-by.patch
-Patch42: 0042-ui-gtk-Hardcode-default-size-of-new-tab-window-to-96.patch
-Patch43: 0043-ui-gtk-Set-draw_submitted-only-if-render_sync-is-fal.patch
-Patch44: 0044-ui-gtk-Always-calculate-scale-factors.patch
-Patch45: 0045-ui-gtk-Enabling-HW-cursor.patch
-# Azure Linux own patches start below
+Source0: %{dlurl}/%{name}-%{version}%{?rcstr}.tar.xz
 
-# https://patchwork.kernel.org/project/qemu-devel/patch/20231128143647.847668-1-crobinso@redhat.com/
-# Fix pvh.img ld build failure on fedora rawhide
-Patch46: 0001-pc-bios-optionrom-Fix-pvh.img-ld-build-failure-on-fe.patch
-Patch47: 0002-Disable-failing-tests-on-azl.patch
-Patch48: CVE-2024-3567.patch
-Patch49: CVE-2023-6683.patch
-Patch50: CVE-2023-6693.patch
+# qemu 9.0.0 errors with:
+# RPM build errors:
+#     Missing build-id in /tmp/rpmbuild/BUILDROOT/qemu-9.0.0-1.rc2.fc41.x86_64/usr/share/qemu/hppa-firmware.img
+#     Missing build-id in /tmp/rpmbuild/BUILDROOT/qemu-9.0.0-1.rc2.fc41.x86_64/usr/share/qemu/hppa-firmware64.img
+#     Generating build-id links failed
+%global  _missing_build_ids_terminate_build    0
 
 Source10: qemu-guest-agent.service
 Source11: 99-qemu-guest-agent.rules
@@ -487,81 +472,141 @@ Source30: kvm-s390x.conf
 Source31: kvm-x86.conf
 Source36: README.tests
 
-BuildRequires: bison
-BuildRequires: cyrus-sasl-devel
-BuildRequires: flex
-BuildRequires: libaio-devel
-BuildRequires: libattr-devel
-%if %{have_libblkio}
-BuildRequires: libblkio-devel
-%endif
-BuildRequires: libbpf-devel >= 1.0.0
+# Skip failing test in copr
+# https://gitlab.com/qemu-project/qemu/-/issues/2541
+Patch1: 0001-Disable-9p-local-tests-that-fail-on-copr-aarch64.patch
 
-# For virtiofs
-BuildRequires: libcap-ng-devel
-BuildRequires: libiscsi-devel
-BuildRequires: libselinux-devel
-BuildRequires: libslirp-devel
-BuildRequires: libusbx-devel >= %{libusbx_version}
-# For network block driver
-BuildRequires: libcurl-devel
-%if %{have_fdt}
-BuildRequires: libfdt-devel >= %{libfdt_version}
-%endif
-%if %{have_pmem}
-BuildRequires: libpmem-devel
-%endif
-# For VNC PNG support
-BuildRequires: libpng-devel
-%if %{have_block_rbd}
-BuildRequires: librbd-devel
-%endif
+# https://patchwork.kernel.org/project/qemu-devel/patch/20231128143647.847668-1-crobinso@redhat.com/
+# Fix pvh.img ld build failure on fedora rawhide
+Patch2: 0001-pc-bios-optionrom-Fix-pvh.img-ld-build-failure-on-fe.patch
+#Patch3: 0002-Disable-failing-tests-on-azl.patch
 
-BuildRequires: libseccomp-devel >= %{libseccomp_version}
-%if %{with libssh}
-BuildRequires: libssh-devel
-%endif
+# SRIOV patches
+Patch4: 0001-ui-gtk-Attach-fullscreen-toggling-cb-to-all-detached.patch
+Patch5: 0002-ui-egl-helpers-Consolidates-create-sync-and-create-f.patch
+Patch6: 0003-ui-dmabuf-Remove-sync-from-QemuDmaBuf-struct.patch
+Patch7: 0004-hw-display-virtio-gpu-Introducing-render_sync-param.patch
+Patch8: 0005-ui-gtk-Start-rendering-of-guest-blob-scandout-if-ren.patch
+Patch9: 0006-ui-gtk-Factor-out-tab-window-creation-into-a-separat.patch
+Patch10: 0007-ui-gtk-Add-a-new-parameter-to-assign-connectors-moni.patch
+Patch11: 0008-ui-gtk-Page-number-of-1-is-not-a-valid-page-number.patch
+Patch12: 0009-ui-gtk-move-guest-mouse-cursor-after-host-cursor-hit.patch
+Patch13: 0010-ui-gtk-Register-shortcut-key-for-grab_input-to-accel.patch
+Patch14: 0011-audio-Switch-audio-status-with-Guest-VM-switch-from-.patch
+Patch15: 0012-usb-hid-added-new-type-for-touch-stylus.patch
+Patch16: 0013-ui-gtk-Adds-status-bar-and-display-guest-ups-and-dra.patch
+Patch17: 0014-ui-gtk-Refresh-grabbing-status-when-the-window-is-fo.patch
+Patch18: 0015-ui-gtk-untabifying-even-the-primary-window.patch
+Patch19: 0016-ui-gtk-Forcefully-full-screening-window.patch
+Patch20: 0017-ui-spice-Add-an-option-for-users-to-provide-a-prefer.patch
+Patch21: 0018-ui-spice-Enable-gl-on-option-for-non-local-or-remote.patch
+Patch22: 0019-ui-spice-Submit-the-gl_draw-requests-at-60-FPS-for-r.patch
+Patch23: 0020-ui-console-gl-Add-a-helper-to-create-a-texture-with-.patch
+Patch24: 0021-ui-spice-Create-another-texture-with-linear-layout-w.patch
+Patch25: 0022-ui-spice-Blit-the-scanout-texture-if-its-memory-layo.patch
+Patch26: 0023-ui-gtk-Enables-HW-cursor.patch
+Patch27: 0024-ui-gtk-Hardcode-default-size-of-new-tab-window-to-96.patch
+Patch28: 0025-ui-gtk-Added-an-input-mode.patch
+Patch29: 0026-ui-gtk-Scanout-flush-only-if-guest-framebuffer-exist.patch
+Patch30: 0027-virtio-gpu-Replace-the-surface-with-null-surface-onl.patch
+Patch31: 0028-virtio-gpu-Recreate-the-resource-s-dmabuf-if-new-bac.patch
+Patch32: 0029-virtio-gpu-Find-the-host-addr-given-gpa-associated-w.patch
+Patch33: 0030-virtio-gpu-udmabuf-Create-dmabuf-from-mr-associated-.patch
+Patch34: 0031-gtk-Skip-to-configure-the-size-only-in-HPD-case.patch
+Patch35: 0032-ui-spice-unblock-the-console-when-the-scanout-is-bei.patch
+Patch36: 0033-virtio-gpu-Update-cursor-data-only-if-it-is-valid.patch
+Patch37: 0034-virtio-gpu-Freeing-udmabuf-and-make-dmabuf-NULL-when.patch
+Patch38: 0035-Revert-ui-gtk-Fix-mouse-motion-event-scaling-issue-w.patch
+Patch39: 0036-virtio-gpu-udmabuf-gtk-Set-dmabuf_fd-1-to-prevent-fu.patch
+Patch40: 0037-ui-gtk-egl-Skip-refreshing-frame-and-hw-cursor-if-th.patch
+Patch41: 0038-ui-gtk-Refreshing-is-also-counted-when-calculating-F.patch
+Patch42: 0039-ui-gtk-FPS-and-UPS-are-updated-every-1-sec-instead-o.patch
+Patch43: 0040-ui-gtk-fps-param-for-gd_gl_count_frame.patch
+Patch44: 0041-hw-virtio-gpu-udmabuf-g-dmabuf.primary-i-shouldn-t-b.patch
+Patch45: 0042-ui-gtk-Unblock-zero-copy-display-pipeline-before-sav.patch
+Patch46: 0043-ui-gtk-show-fps-works-on-GFX-consoles.patch
+Patch47: 0044-ui-gtk-egl-Skipping-frame-drawing-if-not-necessary.patch
+Patch48: 0045-ui-gtk-HPD-handling-disconnection-immediately.patch
+Patch49: 0046-ui-gtk-egl-Cursor-image-texture-filtering-using-GL_N.patch
+Patch50: 0047-ui-gtk-Covering-render_sync-false-case-when-dealing-.patch
+Patch51: 0048-ui-gtk-egl-Cursor-texture-needs-to-be-re-created-whe.patch
+Patch52: 0049-Adding-default-docs.patch
+Patch53: 0050-gtk-Abort-if-there-is-no-connector-set-for-primary-w.patch
 
-# For compressed guest memory dumps
-BuildRequires: lzo-devel snappy-devel
-# qemu-pr-helper multipath support (requires libudev too)
-BuildRequires: device-mapper-multipath-devel
+BuildRequires: gnupg2
 BuildRequires: meson >= %{meson_version}
-# For NUMA memory binding
-%if %{have_numactl}
-BuildRequires: numactl-devel
-%endif
-BuildRequires: perl-Test-Harness
-# Hard requirement for version >= 1.3
-BuildRequires: pixman-devel
-%if %{have_opengl}
-BuildRequires: pkgconfig(epoxy)
-BuildRequires: pkgconfig(libdrm)
-BuildRequires: pkgconfig(gbm)
-%endif
-# qemu-keymap
-BuildRequires: pkgconfig(xkbcommon)
-
+BuildRequires: bison
+BuildRequires: flex
+BuildRequires: zlib-devel
+BuildRequires: glib2-devel
+BuildRequires: gnutls-devel
+BuildRequires: libselinux-devel
+BuildRequires: cyrus-sasl-devel
+BuildRequires: libaio-devel
 BuildRequires: python3-devel
+BuildRequires: libiscsi-devel
+BuildRequires: libattr-devel
+BuildRequires: libusbx-devel >= %{libusbx_version}
+%if %{have_usbredir}
+BuildRequires: usbredir-devel >= %{usbredir_version}
+%endif
 # Required for docs. Disable for AzLinux, to reduce python package dependencies
 %if ! 0%{?emt}
 BuildRequires: python3-sphinx
 BuildRequires: python3-sphinx_rtd_theme
 %endif
+BuildRequires: libseccomp-devel >= %{libseccomp_version}
+# For network block driver
+BuildRequires: libcurl-devel
+%if %{with libssh}
+BuildRequires: libssh-devel
+%endif
+%if %{have_block_rbd}
+BuildRequires: librbd-devel
+%endif
+# We need both because the 'stap' binary is probed for by configure
+BuildRequires: systemtap
+BuildRequires: systemtap-sdt-devel
+BuildRequires: /usr/bin/dtrace
+# For VNC PNG support
+BuildRequires: libpng-devel
+# For virtiofs
+BuildRequires: libcap-ng-devel
+# Hard requirement for version >= 1.3
+BuildRequires: pixman-devel
 # For rdma
 %if %{have_librdma}
 BuildRequires: rdma-core-devel
 %endif
+%if %{have_fdt}
+BuildRequires: libfdt-devel >= %{libfdt_version}
+%endif
+# For compressed guest memory dumps
+BuildRequires: lzo-devel snappy-devel
+# For NUMA memory binding
+%if %{have_numactl}
+BuildRequires: numactl-devel
+%endif
+# qemu-pr-helper multipath support (requires libudev too)
+BuildRequires: device-mapper-multipath-devel
 BuildRequires: systemd-devel
-# We need both because the 'stap' binary is probed for by configure
-BuildRequires: systemtap
-BuildRequires: systemtap-sdt-devel
-
-%if %{have_usbredir}
-BuildRequires: usbredir-devel >= %{usbredir_version}
+%if %{have_pmem}
+BuildRequires: libpmem-devel
+%endif
+# qemu-keymap
+BuildRequires: pkgconfig(xkbcommon)
+%if %{have_opengl}
+BuildRequires: pkgconfig(epoxy)
+BuildRequires: pkgconfig(libdrm)
+BuildRequires: pkgconfig(gbm)
+%endif
+BuildRequires: perl-Test-Harness
+BuildRequires: libslirp-devel
+BuildRequires: libbpf-devel >= 1.0.0
+%if %{have_libblkio}
+BuildRequires: libblkio-devel
 %endif
 
-BuildRequires: zlib-devel
 
 # Fedora specific
 %if "%{toolchain}" == "clang"
@@ -603,9 +648,6 @@ BuildRequires: brlapi-devel
 # gluster block driver
 BuildRequires: glusterfs-api-devel
 %endif
-BuildRequires: gnutls-devel
-# gtk related?
-BuildRequires: glib2-devel
 # GTK frontend
 BuildRequires: gtk3-devel
 BuildRequires: vte291-devel
@@ -636,7 +678,7 @@ BuildRequires: libudev-devel
 # qauth infrastructure
 BuildRequires: pam-devel
 %if %{have_liburing}
-# liburing support.
+# liburing support. Library isn't built for arm
 BuildRequires: liburing-devel
 %endif
 # zstd compression support
@@ -675,12 +717,19 @@ BuildRequires: libxdp-devel
 %if %{have_rutabaga_gfx}
 BuildRequires: rutabaga-gfx-ffi-devel
 %endif
+%if 0%{?emt}
+# Builds on centos-stream 9 require python-tomli
+BuildRequires: python-tomli
+%endif
 
 %if %{user_static}
 BuildRequires: glibc-static >= 2.38-9
-BuildRequires: glib2-static zlib-static
-BuildRequires: pcre2-static
+BuildRequires: glib2-static
+BuildRequires: zlib-static
+# -latomic added by GLib 2.81.0, 2024-06-28
+# BuildRequires: libatomic-static
 %endif
+
 
 # Requires for the Fedora 'qemu' metapackage
 Requires: %{name}-user = %{version}-%{release}
@@ -693,7 +742,6 @@ Requires: %{name}-system-loongarch64 = %{version}-%{release}
 Requires: %{name}-system-m68k = %{version}-%{release}
 Requires: %{name}-system-microblaze = %{version}-%{release}
 Requires: %{name}-system-mips = %{version}-%{release}
-Requires: %{name}-system-nios2 = %{version}-%{release}
 Requires: %{name}-system-or1k = %{version}-%{release}
 %if %{with ppc_support}
 Requires: %{name}-system-ppc = %{version}-%{release}
@@ -737,7 +785,6 @@ Requires: %{name}-ipxe = %{version}-%{release}
 %else
 Requires: ipxe-roms-qemu >= %{ipxe_version}
 %endif
-
 %description common
 %{name} is an open source virtualizer that provides hardware emulation for
 the KVM hypervisor.
@@ -750,6 +797,7 @@ Summary: %{name} documentation
 BuildArch: noarch
 %description docs
 %{name}-docs provides documentation files regarding %{name}.
+
 
 %package -n qemu-img
 Summary: QEMU command line tool for manipulating disk images
@@ -960,6 +1008,13 @@ Requires: %{name}-common%{?_isa} = %{version}-%{release}
 This package provides the additional Jack audio driver for QEMU.
 %endif
 
+
+%package  ui-curses
+Summary: QEMU curses UI driver
+Requires: %{name}-common%{?_isa} = %{version}-%{release}
+%description ui-curses
+This package provides the additional curses UI for QEMU.
+
 %if %{have_dbus_display}
 %package  ui-dbus
 Summary: QEMU D-Bus UI driver
@@ -967,12 +1022,6 @@ Requires: %{name}-common%{?_isa} = %{version}-%{release}
 %description ui-dbus
 This package provides the additional D-Bus UI for QEMU.
 %endif
-
-%package  ui-curses
-Summary: QEMU curses UI driver
-Requires: %{name}-common%{?_isa} = %{version}-%{release}
-%description ui-curses
-This package provides the additional curses UI for QEMU.
 
 %if %{have_ui}
 %package  ui-gtk
@@ -1015,6 +1064,7 @@ This package provides the virtio-gpu display device for QEMU.
 %package device-display-virtio-gpu-gl
 Summary: QEMU virtio-gpu-gl display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-gpu%{?_isa} = %{version}-%{release}
 %description device-display-virtio-gpu-gl
 This package provides the virtio-gpu-gl display device for QEMU.
 %endif
@@ -1023,6 +1073,7 @@ This package provides the virtio-gpu-gl display device for QEMU.
 %package device-display-virtio-gpu-rutabaga
 Summary: QEMU virtio-gpu-rutabaga display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-gpu%{?_isa} = %{version}-%{release}
 %description device-display-virtio-gpu-rutabaga
 This package provides the virtio-gpu-rutabaga display device for QEMU.
 %endif
@@ -1030,6 +1081,7 @@ This package provides the virtio-gpu-rutabaga display device for QEMU.
 %package device-display-virtio-gpu-pci
 Summary: QEMU virtio-gpu-pci display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-gpu%{?_isa} = %{version}-%{release}
 %description device-display-virtio-gpu-pci
 This package provides the virtio-gpu-pci display device for QEMU.
 
@@ -1037,6 +1089,8 @@ This package provides the virtio-gpu-pci display device for QEMU.
 %package device-display-virtio-gpu-pci-gl
 Summary: QEMU virtio-gpu-pci-gl display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-gpu-pci%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-gpu-gl%{?_isa} = %{version}-%{release}
 %description device-display-virtio-gpu-pci-gl
 This package provides the virtio-gpu-pci-gl display device for QEMU.
 %endif
@@ -1045,6 +1099,7 @@ This package provides the virtio-gpu-pci-gl display device for QEMU.
 %package device-display-virtio-gpu-pci-rutabaga
 Summary: QEMU virtio-gpu-pci-rutabaga display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-gpu-pci%{?_isa} = %{version}-%{release}
 %description device-display-virtio-gpu-pci-rutabaga
 This package provides the virtio-gpu-pci-rutabaga display device for QEMU.
 %endif
@@ -1052,25 +1107,31 @@ This package provides the virtio-gpu-pci-rutabaga display device for QEMU.
 %package device-display-virtio-gpu-ccw
 Summary: QEMU virtio-gpu-ccw display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-gpu%{?_isa} = %{version}-%{release}
 %description device-display-virtio-gpu-ccw
 This package provides the virtio-gpu-ccw display device for QEMU.
 
 %package device-display-virtio-vga
 Summary: QEMU virtio-vga display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-gpu%{?_isa} = %{version}-%{release}
 %description device-display-virtio-vga
 This package provides the virtio-vga display device for QEMU.
 
+%if %{have_virgl}
 %package device-display-virtio-vga-gl
 Summary: QEMU virtio-vga-gl display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-vga%{?_isa} = %{version}-%{release}
 %description device-display-virtio-vga-gl
 This package provides the virtio-vga-gl display device for QEMU.
+%endif
 
 %if %{have_rutabaga_gfx}
 %package device-display-virtio-vga-rutabaga
 Summary: QEMU virtio-vga-rutabaga display device
 Requires: %{name}-common%{?_isa} = %{version}-%{release}
+Requires: %{name}-device-display-virtio-vga%{?_isa} = %{version}-%{release}
 %description device-display-virtio-vga-rutabaga
 This package provides the virtio-vga-rutabaga display device for QEMU.
 %endif
@@ -1212,7 +1273,6 @@ Requires: qemu-user-static-loongarch64
 Requires: qemu-user-static-m68k
 Requires: qemu-user-static-microblaze
 Requires: qemu-user-static-mips
-Requires: qemu-user-static-nios2
 Requires: qemu-user-static-or1k
 Requires: qemu-user-static-ppc
 Requires: qemu-user-static-riscv
@@ -1221,6 +1281,8 @@ Requires: qemu-user-static-sh4
 Requires: qemu-user-static-sparc
 Requires: qemu-user-static-x86
 Requires: qemu-user-static-xtensa
+Obsoletes: qemu-user-static-nios2 <= %{version}-%{release}
+
 
 %description user-static
 This package provides the user mode emulation of qemu targets built as
@@ -1286,12 +1348,6 @@ Summary: QEMU user mode emulation of mips qemu targets static build
 This package provides the mips user mode emulation of qemu targets built as
 static binaries
 
-%package user-static-nios2
-Summary: QEMU user mode emulation of nios2 qemu targets static build
-%description user-static-nios2
-This package provides the nios2 user mode emulation of qemu targets built as
-static binaries
-
 %package user-static-or1k
 Summary: QEMU user mode emulation of or1k qemu targets static build
 %description user-static-or1k
@@ -1355,7 +1411,7 @@ Requires: %{name}-common = %{version}-%{release}
 %if %{have_edk2}
 Requires: edk2-aarch64
 %endif
-Requires:       %{name}-ipxe = %{version}-%{release}
+Requires: %{name}-ipxe = %{version}-%{release}
 
 %description system-aarch64-core
 This package provides the QEMU system emulator for AArch64.
@@ -1490,20 +1546,6 @@ Requires: %{name}-common = %{version}-%{release}
 This package provides the QEMU system emulator for MIPS systems.
 
 
-%package system-nios2
-Summary: QEMU system emulator for nios2
-Requires: %{name}-system-nios2-core = %{version}-%{release}
-%{requires_all_modules}
-%description system-nios2
-This package provides the QEMU system emulator for NIOS2.
-
-%package system-nios2-core
-Summary: QEMU system emulator for nios2
-Requires: %{name}-common = %{version}-%{release}
-%description system-nios2-core
-This package provides the QEMU system emulator for NIOS2.
-
-
 %package system-or1k
 Summary: QEMU system emulator for OpenRisc32
 Requires: %{name}-system-or1k-core = %{version}-%{release}
@@ -1545,6 +1587,9 @@ This package provides the QEMU system emulator for RISC-V systems.
 %package system-riscv-core
 Summary: QEMU system emulator for RISC-V
 Requires: %{name}-common = %{version}-%{release}
+%if %{have_edk2}
+Requires: edk2-riscv64
+%endif
 %description system-riscv-core
 This package provides the QEMU system emulator for RISC-V systems.
 
@@ -1645,7 +1690,7 @@ Requires: seavgabios-bin
 %if %{have_edk2}
 Requires: edk2-ovmf
 %endif
-Requires:       %{name}-ipxe = %{version}-%{release}
+Requires: %{name}-ipxe = %{version}-%{release}
 
 %description system-x86-core
 This package provides the QEMU system emulator for x86. When being run in a x86
@@ -1685,7 +1730,6 @@ mkdir -p %{static_builddir}
   --disable-attr                   \\\
   --disable-auth-pam               \\\
   --disable-avx2                   \\\
-  --disable-avx512f                \\\
   --disable-avx512bw               \\\
   --disable-blkio                  \\\
   --disable-block-drv-whitelist-in-tools \\\
@@ -1710,6 +1754,7 @@ mkdir -p %{static_builddir}
   --disable-debug-graph-lock       \\\
   --disable-debug-info             \\\
   --disable-debug-mutex            \\\
+  --disable-debug-remap            \\\
   --disable-debug-tcg              \\\
   --disable-dmg                    \\\
   --disable-docs                   \\\
@@ -1745,7 +1790,6 @@ mkdir -p %{static_builddir}
   --disable-linux-aio              \\\
   --disable-linux-io-uring         \\\
   --disable-linux-user             \\\
-  --disable-live-block-migration   \\\
   --disable-lto                    \\\
   --disable-lzfse                  \\\
   --disable-lzo                    \\\
@@ -1767,10 +1811,10 @@ mkdir -p %{static_builddir}
   --disable-pipewire               \\\
   --disable-pixman                 \\\
   --disable-plugins                \\\
-  --disable-pvrdma                 \\\
   --disable-qcow1                  \\\
   --disable-qed                    \\\
   --disable-qom-cast-debug         \\\
+  --disable-qpl                    \\\
   --disable-rbd                    \\\
   --disable-rdma                   \\\
   --disable-relocatable            \\\
@@ -1797,6 +1841,7 @@ mkdir -p %{static_builddir}
   --disable-tools                  \\\
   --disable-tpm                    \\\
   --disable-tsan                   \\\
+  --disable-uadk                   \\\
   --disable-u2f                    \\\
   --disable-usb-redir              \\\
   --disable-user                   \\\
@@ -1882,7 +1927,6 @@ run_configure \
   --enable-attr \
 %ifarch %{ix86} x86_64
   --enable-avx2 \
-  --enable-avx512f \
   --enable-avx512bw \
 %endif
 %if %{have_libblkio}
@@ -1907,7 +1951,6 @@ run_configure \
 %endif
   --enable-gettext \
   --enable-gnutls \
-  --enable-tools \
   --enable-guest-agent \
   --enable-iconv \
 %if %{have_jack}
@@ -1961,6 +2004,7 @@ run_configure \
   --enable-snappy \
   --enable-system \
   --enable-tcg \
+  --enable-tools \
   --enable-tpm \
 %if %{have_usbredir}
   --enable-usb-redir \
@@ -2010,12 +2054,8 @@ run_configure \
   --enable-linux-io-uring \
 %endif
   --enable-linux-user \
-  --enable-live-block-migration \
   --enable-multiprocess \
   --enable-parallels \
-%if %{have_librdma}
-  --enable-pvrdma \
-%endif
   --enable-qcow1 \
   --enable-qed \
   --enable-qom-cast-debug \
@@ -2084,6 +2124,9 @@ pushd %{static_builddir}
 run_configure \
   --enable-attr \
   --enable-linux-user \
+%ifnarch %{power64}
+  --enable-pie \
+%endif
   --enable-tcg \
   --disable-install-blobs \
   --static
@@ -2140,6 +2183,12 @@ install -D -m 0644 %{_sourcedir}/bridge.conf %{buildroot}%{_sysconfdir}/%{name}/
 # Install qemu-pr-helper service
 install -m 0644 contrib/systemd/qemu-pr-helper.service %{buildroot}%{_unitdir}
 install -m 0644 contrib/systemd/qemu-pr-helper.socket %{buildroot}%{_unitdir}
+
+%if %{have_vmsr_helper}
+# Install qemu-vmsr-helper service
+install -m 0644 contrib/systemd/qemu-vmsr-helper.service %{buildroot}%{_unitdir}
+install -m 0644 contrib/systemd/qemu-vmsr-helper.socket %{buildroot}%{_unitdir}
+%endif
 
 %if %{have_memlock_limits}
 install -D -p -m 644 %{_sourcedir}/95-kvm-memlock.conf %{buildroot}%{_sysconfdir}/security/limits.d/95-kvm-memlock.conf
@@ -2299,7 +2348,7 @@ for emu in %{buildroot}%{_bindir}/qemu-system-*; do
 ln -sf qemu.1.gz %{buildroot}%{_mandir}/man1/qemu-kvm.1.gz
 %endif
 ln -sf qemu-system-x86_64 %{buildroot}%{_bindir}/qemu-kvm
-%endif
+   %endif
 %else
 # Needed until CBL-Mariner starts cross-compiling 'ipxe', 'seabios' and 'sgabios' for other architectures.
 rm -rf %{buildroot}%{_bindir}/qemu-system-i386
@@ -2382,10 +2431,6 @@ echo "Testing %{name}-build"
 #   Added: 2022-06
 %ifnarch %{power64}
 %make_build check
-# For debugging tests use https://www.qemu.org/docs/master/devel/testing.html
-# e.g.
-# QTEST_LOG=1 make check-qtest-x86_64 V=1 OR
-# make check-qtest-x86_64 V=1 for runs with trace off
 %endif
 
 popd
@@ -2473,11 +2518,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %postun user-static-mips
 /bin/systemctl --system try-restart systemd-binfmt.service &>/dev/null || :
 
-%post user-static-nios2
-/bin/systemctl --system try-restart systemd-binfmt.service &>/dev/null || :
-%postun user-static-nios2
-/bin/systemctl --system try-restart systemd-binfmt.service &>/dev/null || :
-
 %post user-static-or1k
 /bin/systemctl --system try-restart systemd-binfmt.service &>/dev/null || :
 %postun user-static-or1k
@@ -2535,6 +2575,18 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_mandir}/man1/qemu-storage-daemon.1*
 %{_mandir}/man7/qemu-storage-daemon-qmp-ref.7*
 %endif
+%{_datadir}/systemtap/tapset/qemu-img.stp
+%{_datadir}/systemtap/tapset/qemu-img-log.stp
+%{_datadir}/systemtap/tapset/qemu-img-simpletrace.stp
+%{_datadir}/systemtap/tapset/qemu-io.stp
+%{_datadir}/systemtap/tapset/qemu-io-log.stp
+%{_datadir}/systemtap/tapset/qemu-io-simpletrace.stp
+%{_datadir}/systemtap/tapset/qemu-nbd.stp
+%{_datadir}/systemtap/tapset/qemu-nbd-log.stp
+%{_datadir}/systemtap/tapset/qemu-nbd-simpletrace.stp
+%{_datadir}/systemtap/tapset/qemu-storage-daemon.stp
+%{_datadir}/systemtap/tapset/qemu-storage-daemon-log.stp
+%{_datadir}/systemtap/tapset/qemu-storage-daemon-simpletrace.stp
 
 %files -n qemu-guest-agent
 %license COPYING COPYING.LIB LICENSE
@@ -2569,8 +2621,11 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_bindir}/qemu-edid
 %{_bindir}/qemu-trace-stap
 %{_datadir}/%{name}/simpletrace.py*
+%dir %{_datadir}/%{name}/tracetool/
 %{_datadir}/%{name}/tracetool/*.py*
+%dir %{_datadir}/%{name}/tracetool/backend/
 %{_datadir}/%{name}/tracetool/backend/*.py*
+%dir %{_datadir}/%{name}/tracetool/format/
 %{_datadir}/%{name}/tracetool/format/*.py*
 %{_datadir}/%{name}/dump-guest-memory.py*
 %{_datadir}/%{name}/trace-events-all
@@ -2593,6 +2648,7 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_datadir}/%{name}/keymaps/
 %{_datadir}/%{name}/linuxboot_dma.bin
 %attr(4755, -, -) %{_libexecdir}/qemu-bridge-helper
+%dir %{_libdir}/%{name}/
 %if ! %{emt}
 %{_mandir}/man1/%{name}.1*
 %{_mandir}/man7/qemu-block-drivers.7*
@@ -2679,12 +2735,13 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_libdir}/%{name}/audio-jack.so
 %endif
 
+
+%files ui-curses
+%{_libdir}/%{name}/ui-curses.so
 %if %{have_dbus_display}
 %files ui-dbus
 %{_libdir}/%{name}/ui-dbus.so
 %endif
-%files ui-curses
-%{_libdir}/%{name}/ui-curses.so
 %if %{have_ui}
 %files ui-gtk
 %{_libdir}/%{name}/ui-gtk.so
@@ -2711,6 +2768,8 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_libdir}/%{name}/chardev-baum.so
 %endif
 
+%files device-display-virtio-gpu
+%{_libdir}/%{name}/hw-display-virtio-gpu.so
 %if %{have_virgl}
 %files device-display-virtio-gpu-gl
 %{_libdir}/%{name}/hw-display-virtio-gpu-gl.so
@@ -2719,6 +2778,8 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %files device-display-virtio-gpu-rutabaga
 %{_libdir}/%{name}/hw-display-virtio-gpu-rutabaga.so
 %endif
+%files device-display-virtio-gpu-pci
+%{_libdir}/%{name}/hw-display-virtio-gpu-pci.so
 %if %{have_virgl}
 %files device-display-virtio-gpu-pci-gl
 %{_libdir}/%{name}/hw-display-virtio-gpu-pci-gl.so
@@ -2727,18 +2788,14 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %files device-display-virtio-gpu-pci-rutabaga
 %{_libdir}/%{name}/hw-display-virtio-gpu-pci-rutabaga.so
 %endif
-
-%files device-display-virtio-gpu
-%{_libdir}/%{name}/hw-display-virtio-gpu.so
-%files device-display-virtio-gpu-pci
-%{_libdir}/%{name}/hw-display-virtio-gpu-pci.so
 %files device-display-virtio-gpu-ccw
 %{_libdir}/%{name}/hw-s390x-virtio-gpu-ccw.so
 %files device-display-virtio-vga
 %{_libdir}/%{name}/hw-display-virtio-vga.so
+%if %{have_virgl}
 %files device-display-virtio-vga-gl
 %{_libdir}/%{name}/hw-display-virtio-vga-gl.so
-
+%endif
 %if %{have_rutabaga_gfx}
 %files device-display-virtio-vga-rutabaga
 %{_libdir}/%{name}/hw-display-virtio-vga-rutabaga.so
@@ -2803,7 +2860,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_bindir}/qemu-mips64el
 %{_bindir}/qemu-mipsn32
 %{_bindir}/qemu-mipsn32el
-%{_bindir}/qemu-nios2
 %{_bindir}/qemu-or1k
 %if %{with ppc_support}
 %{_bindir}/qemu-ppc
@@ -2880,9 +2936,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_datadir}/systemtap/tapset/qemu-mipsn32el.stp
 %{_datadir}/systemtap/tapset/qemu-mipsn32el-log.stp
 %{_datadir}/systemtap/tapset/qemu-mipsn32el-simpletrace.stp
-%{_datadir}/systemtap/tapset/qemu-nios2.stp
-%{_datadir}/systemtap/tapset/qemu-nios2-log.stp
-%{_datadir}/systemtap/tapset/qemu-nios2-simpletrace.stp
 %{_datadir}/systemtap/tapset/qemu-or1k.stp
 %{_datadir}/systemtap/tapset/qemu-or1k-log.stp
 %{_datadir}/systemtap/tapset/qemu-or1k-simpletrace.stp
@@ -3053,12 +3106,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_exec_prefix}/lib/binfmt.d/qemu-mipsel-static.conf
 %{_exec_prefix}/lib/binfmt.d/qemu-mipsn32-static.conf
 %{_exec_prefix}/lib/binfmt.d/qemu-mipsn32el-static.conf
-
-%files user-static-nios2
-%{_bindir}/qemu-nios2-static
-%{_datadir}/systemtap/tapset/qemu-nios2-log-static.stp
-%{_datadir}/systemtap/tapset/qemu-nios2-simpletrace-static.stp
-%{_datadir}/systemtap/tapset/qemu-nios2-static.stp
 
 %files user-static-or1k
 %{_bindir}/qemu-or1k-static
@@ -3235,6 +3282,7 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_mandir}/man1/qemu-system-hppa.1*
 %endif
 %{_datadir}/%{name}/hppa-firmware.img
+%{_datadir}/%{name}/hppa-firmware64.img
 
 
 %files system-loongarch64
@@ -3301,16 +3349,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_mandir}/man1/qemu-system-mips64.1*
 %endif
 
-
-%files system-nios2
-%files system-nios2-core
-%{_bindir}/qemu-system-nios2
-%{_datadir}/systemtap/tapset/qemu-system-nios2.stp
-%{_datadir}/systemtap/tapset/qemu-system-nios2-log.stp
-%{_datadir}/systemtap/tapset/qemu-system-nios2-simpletrace.stp
-%if ! %{emt}
-%{_mandir}/man1/qemu-system-nios2.1*
-%endif
 
 %files system-or1k
 %files system-or1k-core
@@ -3456,6 +3494,11 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_mandir}/man1/qemu-kvm.1*
 %endif
 %endif
+%if %{have_vmsr_helper}
+%{_bindir}/qemu-vmsr-helper
+%{_unitdir}/qemu-vmsr-helper.service
+%{_unitdir}/qemu-vmsr-helper.socket
+%endif
 %files system-i386
 %{_bindir}/qemu-system-i386
 %{_libdir}/%{name}/accel-tcg-i386.so
@@ -3487,6 +3530,10 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 
 
 %changelog
+* Wed Jun 18 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 9.1.0-1
+- Initial Edge Microvisor Toolkit import from Fedora (license: MIT).
+- For update from 8.2.0 to v9.1.0 and add SRIOV patches.
+
 * Tue Mar 18 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 8.2.0-17
 - Bump version for merge AZL tag: 3.0.20250311-3.0
 - Bump to rebuild with updated glibc

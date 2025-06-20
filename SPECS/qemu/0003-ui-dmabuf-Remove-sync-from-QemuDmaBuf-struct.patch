@@ -1,0 +1,79 @@
+From 479ab43b3d1c78b100be06d54f844be539793b2a Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Tue, 2 Jul 2024 20:25:09 +0000
+Subject: [PATCH 03/50] ui/dmabuf: Remove 'sync' from QemuDmaBuf struct
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Sync object is not used so removing it from QemuDmaBuf struct
+
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ include/ui/dmabuf.h |  2 --
+ ui/dmabuf.c         | 14 --------------
+ 2 files changed, 16 deletions(-)
+
+diff --git a/include/ui/dmabuf.h b/include/ui/dmabuf.h
+index dc74ba895a..7f0f7f3f6e 100644
+--- a/include/ui/dmabuf.h
++++ b/include/ui/dmabuf.h
+@@ -36,13 +36,11 @@ uint32_t qemu_dmabuf_get_y(QemuDmaBuf *dmabuf);
+ uint32_t qemu_dmabuf_get_backing_width(QemuDmaBuf *dmabuf);
+ uint32_t qemu_dmabuf_get_backing_height(QemuDmaBuf *dmabuf);
+ bool qemu_dmabuf_get_y0_top(QemuDmaBuf *dmabuf);
+-void *qemu_dmabuf_get_sync(QemuDmaBuf *dmabuf);
+ int32_t qemu_dmabuf_get_fence_fd(QemuDmaBuf *dmabuf);
+ bool qemu_dmabuf_get_allow_fences(QemuDmaBuf *dmabuf);
+ bool qemu_dmabuf_get_draw_submitted(QemuDmaBuf *dmabuf);
+ void qemu_dmabuf_set_texture(QemuDmaBuf *dmabuf, uint32_t texture);
+ void qemu_dmabuf_set_fence_fd(QemuDmaBuf *dmabuf, int32_t fence_fd);
+-void qemu_dmabuf_set_sync(QemuDmaBuf *dmabuf, void *sync);
+ void qemu_dmabuf_set_draw_submitted(QemuDmaBuf *dmabuf, bool draw_submitted);
+ void qemu_dmabuf_set_fd(QemuDmaBuf *dmabuf, int32_t fd);
+ 
+diff --git a/ui/dmabuf.c b/ui/dmabuf.c
+index df7a09703f..2332292a08 100644
+--- a/ui/dmabuf.c
++++ b/ui/dmabuf.c
+@@ -23,7 +23,6 @@ struct QemuDmaBuf {
+     uint32_t  backing_width;
+     uint32_t  backing_height;
+     bool      y0_top;
+-    void      *sync;
+     int       fence_fd;
+     bool      allow_fences;
+     bool      draw_submitted;
+@@ -170,13 +169,6 @@ bool qemu_dmabuf_get_y0_top(QemuDmaBuf *dmabuf)
+     return dmabuf->y0_top;
+ }
+ 
+-void *qemu_dmabuf_get_sync(QemuDmaBuf *dmabuf)
+-{
+-    assert(dmabuf != NULL);
+-
+-    return dmabuf->sync;
+-}
+-
+ int32_t qemu_dmabuf_get_fence_fd(QemuDmaBuf *dmabuf)
+ {
+     assert(dmabuf != NULL);
+@@ -210,12 +202,6 @@ void qemu_dmabuf_set_fence_fd(QemuDmaBuf *dmabuf, int32_t fence_fd)
+     dmabuf->fence_fd = fence_fd;
+ }
+ 
+-void qemu_dmabuf_set_sync(QemuDmaBuf *dmabuf, void *sync)
+-{
+-    assert(dmabuf != NULL);
+-    dmabuf->sync = sync;
+-}
+-
+ void qemu_dmabuf_set_draw_submitted(QemuDmaBuf *dmabuf, bool draw_submitted)
+ {
+     assert(dmabuf != NULL);
+-- 
+2.35.3
+

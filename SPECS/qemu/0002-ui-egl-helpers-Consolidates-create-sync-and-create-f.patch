@@ -1,0 +1,180 @@
+From 8d078f6518d985b079cee9127792cb04b98741ee Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Fri, 31 May 2024 19:53:45 +0000
+Subject: [PATCH 02/50] ui/egl-helpers: Consolidates create-sync and
+ create-fence
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+There is no reason to split those two operations so combining
+two functions - egl_dmabuf_create_sync and egl_dmabuf_create_fence.
+
+v2: egl_dmabuf_create_fence -> egl_dmabuf_create_fence_fd
+    (Marc-André Lureau <marcandre.lureau@redhat.com>)
+
+v3: create fence only if current QemuDmaBuf->fence_fd = -1
+    to make sure there is no fence currently bound to the
+    QemuDmaBuf
+
+v4: assert dmabuf->fence_fd before creating a fence
+
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ include/ui/egl-helpers.h |  3 +--
+ ui/egl-helpers.c         | 25 ++++++++++---------------
+ ui/gtk-egl.c             | 17 ++++-------------
+ ui/gtk-gl-area.c         | 12 +++---------
+ 4 files changed, 18 insertions(+), 39 deletions(-)
+
+diff --git a/include/ui/egl-helpers.h b/include/ui/egl-helpers.h
+index 4b8c0d2281..221548e3c9 100644
+--- a/include/ui/egl-helpers.h
++++ b/include/ui/egl-helpers.h
+@@ -51,8 +51,7 @@ int egl_get_fd_for_texture(uint32_t tex_id, EGLint *stride, EGLint *fourcc,
+ 
+ void egl_dmabuf_import_texture(QemuDmaBuf *dmabuf);
+ void egl_dmabuf_release_texture(QemuDmaBuf *dmabuf);
+-void egl_dmabuf_create_sync(QemuDmaBuf *dmabuf);
+-void egl_dmabuf_create_fence(QemuDmaBuf *dmabuf);
++int egl_dmabuf_create_fence_fd(QemuDmaBuf *dmabuf);
+ 
+ #endif
+ 
+diff --git a/ui/egl-helpers.c b/ui/egl-helpers.c
+index 99b2ebbe23..698a021823 100644
+--- a/ui/egl-helpers.c
++++ b/ui/egl-helpers.c
+@@ -371,9 +371,10 @@ void egl_dmabuf_release_texture(QemuDmaBuf *dmabuf)
+     qemu_dmabuf_set_texture(dmabuf, 0);
+ }
+ 
+-void egl_dmabuf_create_sync(QemuDmaBuf *dmabuf)
++int egl_dmabuf_create_fence_fd(QemuDmaBuf *dmabuf)
+ {
+     EGLSyncKHR sync;
++    int fence_fd = -1;
+ 
+     if (epoxy_has_egl_extension(qemu_egl_display,
+                                 "EGL_KHR_fence_sync") &&
+@@ -382,23 +383,17 @@ void egl_dmabuf_create_sync(QemuDmaBuf *dmabuf)
+         sync = eglCreateSyncKHR(qemu_egl_display,
+                                 EGL_SYNC_NATIVE_FENCE_ANDROID, NULL);
+         if (sync != EGL_NO_SYNC_KHR) {
+-            qemu_dmabuf_set_sync(dmabuf, sync);
++            assert(qemu_dmabuf_get_fence_fd(dmabuf) == -1);
++            fence_fd = eglDupNativeFenceFDANDROID(qemu_egl_display,
++                                                  sync);
++            if (fence_fd >= 0) {
++                qemu_dmabuf_set_fence_fd(dmabuf, fence_fd);
++            }
++            eglDestroySyncKHR(qemu_egl_display, sync);
+         }
+     }
+-}
+-
+-void egl_dmabuf_create_fence(QemuDmaBuf *dmabuf)
+-{
+-    void *sync = qemu_dmabuf_get_sync(dmabuf);
+-    int fence_fd;
+ 
+-    if (sync) {
+-        fence_fd = eglDupNativeFenceFDANDROID(qemu_egl_display,
+-                                              sync);
+-        qemu_dmabuf_set_fence_fd(dmabuf, fence_fd);
+-        eglDestroySyncKHR(qemu_egl_display, sync);
+-        qemu_dmabuf_set_sync(dmabuf, NULL);
+-    }
++    return fence_fd;
+ }
+ 
+ #endif /* CONFIG_GBM */
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index 9831c10e1b..9983b0423a 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -68,7 +68,6 @@ void gd_egl_draw(VirtualConsole *vc)
+     GdkWindow *window;
+ #ifdef CONFIG_GBM
+     QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
+-    int fence_fd;
+ #endif
+     int ww, wh, ws;
+ 
+@@ -98,14 +97,13 @@ void gd_egl_draw(VirtualConsole *vc)
+ 
+         glFlush();
+ #ifdef CONFIG_GBM
+-        if (dmabuf) {
+-            egl_dmabuf_create_fence(dmabuf);
+-            fence_fd = qemu_dmabuf_get_fence_fd(dmabuf);
++        if (dmabuf && qemu_dmabuf_get_fence_fd(dmabuf) == -1) {
++            int fence_fd = egl_dmabuf_create_fence_fd(dmabuf);
+             if (fence_fd >= 0) {
+                 qemu_set_fd_handler(fence_fd, gd_hw_gl_flushed, NULL, vc);
+-                return;
++            } else {
++                graphic_hw_gl_block(vc->gfx.dcl.con, false);
+             }
+-            graphic_hw_gl_block(vc->gfx.dcl.con, false);
+         }
+ #endif
+     } else {
+@@ -364,12 +362,6 @@ void gd_egl_scanout_flush(DisplayChangeListener *dcl,
+         egl_fb_blit(&vc->gfx.win_fb, &vc->gfx.guest_fb, !vc->gfx.y0_top);
+     }
+ 
+-#ifdef CONFIG_GBM
+-    if (vc->gfx.guest_fb.dmabuf) {
+-        egl_dmabuf_create_sync(vc->gfx.guest_fb.dmabuf);
+-    }
+-#endif
+-
+     eglSwapBuffers(qemu_egl_display, vc->gfx.esurface);
+ }
+ 
+@@ -387,7 +379,6 @@ void gd_egl_flush(DisplayChangeListener *dcl,
+         gtk_widget_queue_draw_area(area, x, y, w, h);
+         return;
+     }
+-
+     gd_egl_scanout_flush(&vc->gfx.dcl, x, y, w, h);
+ }
+ 
+diff --git a/ui/gtk-gl-area.c b/ui/gtk-gl-area.c
+index b628b35451..929bb49290 100644
+--- a/ui/gtk-gl-area.c
++++ b/ui/gtk-gl-area.c
+@@ -78,16 +78,9 @@ void gd_gl_area_draw(VirtualConsole *vc)
+                           0, 0, ww, wh,
+                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
+ #ifdef CONFIG_GBM
+-        if (dmabuf) {
+-            egl_dmabuf_create_sync(dmabuf);
+-        }
+-#endif
+-        glFlush();
+-#ifdef CONFIG_GBM
+-        if (dmabuf) {
++        if (dmabuf && qemu_dmabuf_get_fence_fd(dmabuf) == -1) {
+             int fence_fd;
+-            egl_dmabuf_create_fence(dmabuf);
+-            fence_fd = qemu_dmabuf_get_fence_fd(dmabuf);
++            fence_fd = egl_dmabuf_create_fence_fd(dmabuf);
+             if (fence_fd >= 0) {
+                 qemu_set_fd_handler(fence_fd, gd_hw_gl_flushed, NULL, vc);
+                 return;
+@@ -95,6 +88,7 @@ void gd_gl_area_draw(VirtualConsole *vc)
+             graphic_hw_gl_block(vc->gfx.dcl.con, false);
+         }
+ #endif
++        glFlush();
+     } else {
+         if (!vc->gfx.ds) {
+             return;
+-- 
+2.35.3
+

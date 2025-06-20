@@ -1,0 +1,394 @@
+From 0bb774b2deafb7be37c1a1970760c0e5f1d84ce1 Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Thu, 25 Apr 2024 19:24:26 +0000
+Subject: [PATCH 07/50] ui/gtk: Add a new parameter to assign
+ connectors/monitors
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The new parameter named "connector" can be used to assign physical
+monitors/connectors to individual GFX VCs such that when the monitor
+is connected or hotplugged, the associated GTK window would be
+moved to it. If the monitor is disconnected or unplugged, the
+associated GTK window would be hidden and a relevant disconnect
+event would be sent to the Guest.
+
+Usage: -device virtio-gpu-pci,max_outputs=2,blob=true,...
+       -display gtk,gl=on,connectors.0=eDP-1,connectors.1=DP-1.....
+
+v2: updated the description for 'connectors' param with more details
+
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Markus Armbruster <armbru@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ include/ui/gtk.h |   1 +
+ qapi/ui.json     |  26 ++++-
+ qemu-options.hx  |   4 +
+ ui/gtk.c         | 241 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 270 insertions(+), 2 deletions(-)
+
+diff --git a/include/ui/gtk.h b/include/ui/gtk.h
+index aa3d637029..3f78ee5996 100644
+--- a/include/ui/gtk.h
++++ b/include/ui/gtk.h
+@@ -83,6 +83,7 @@ typedef struct VirtualConsole {
+     GtkWidget *menu_item;
+     GtkWidget *tab_item;
+     GtkWidget *focus;
++    GdkMonitor *monitor;
+     VirtualConsoleType type;
+     union {
+         VirtualGfxConsole gfx;
+diff --git a/qapi/ui.json b/qapi/ui.json
+index 8c8464faac..40c1f61020 100644
+--- a/qapi/ui.json
++++ b/qapi/ui.json
+@@ -1334,13 +1334,37 @@
+ # @show-menubar: Display the main window menubar.  Defaults to "on".
+ #     (Since 8.0)
+ #
++# @connectors: List of physical monitor/connector names where the
++#     GTK windows containing the respective graphics virtual consoles
++#     (VCs) are to be placed. Index of the connector name in the list
++#     directly indicates the id of the VC. For example, with "-device
++#     gtk,connectors.0=DP-1, connectors.1=HDMI-2", a physical display
++#     connected to DP-1 will be the target monitor for VC0 and the one
++#     on HDMI-2 will be the target for VC1. If there is no valid
++#     connector name for a VC, it won't be displayed anywhere in any
++#     situations and the associated virtual display will be shown
++#     as disconnected in the guest. If a valid connector name exists for
++#     a VC but its display cable is not plugged in when guest is launched,
++#     the VC won't be displayed at first but will show up on the display
++#     as soon as the cable is plugged in. If the cable is disconnected
++#     again, the VC will immediately be hidden and guest will see its
++#     virtual display disconnected. When this list param is used, there
++#     shouldn't be any missing elements before the last one in the list.
++#     For example, if connectors.3 is specified, then connector names for
++#     connectors.0 through connectors.2 should also be given. Multiple
++#     VCs can have a same connector name. In this case, all of those
++#     VCs will be displayed on the same physical monitor. But multiple
++#     different connector names can't be assigned to one VC.
++#     (Since 9.1)
++#
+ # Since: 2.12
+ ##
+ { 'struct'  : 'DisplayGTK',
+   'data'    : { '*grab-on-hover' : 'bool',
+                 '*zoom-to-fit'   : 'bool',
+                 '*show-tabs'     : 'bool',
+-                '*show-menubar'  : 'bool'  } }
++                '*show-menubar'  : 'bool',
++                '*connectors'    : ['str'] } }
+ 
+ ##
+ # @DisplayEGLHeadless:
+diff --git a/qemu-options.hx b/qemu-options.hx
+index d94e2cbbae..575c72e9a5 100644
+--- a/qemu-options.hx
++++ b/qemu-options.hx
+@@ -2099,6 +2099,7 @@ DEF("display", HAS_ARG, QEMU_OPTION_display,
+     "-display gtk[,full-screen=on|off][,gl=on|off][,grab-on-hover=on|off]\n"
+     "            [,show-tabs=on|off][,show-cursor=on|off][,window-close=on|off]\n"
+     "            [,show-menubar=on|off][,zoom-to-fit=on|off]\n"
++    "            [,connectors.<index>=<connector name>]\n"
+ #endif
+ #if defined(CONFIG_VNC)
+     "-display vnc=<display>[,<optargs>]\n"
+@@ -2195,6 +2196,9 @@ SRST
+         ``zoom-to-fit=on|off`` : Expand video output to the window size,
+                                  defaults to "off"
+ 
++        ``connectors=<conn name>`` : VC to connector mappings to display the VC
++                                     window on a specific monitor
++
+     ``curses[,charset=<encoding>]``
+         Display video output via curses. For graphics device models
+         which support a text mode, QEMU can display this output using a
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 53030516b2..421cc7fae5 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -38,6 +38,7 @@
+ #include "qemu/cutils.h"
+ #include "qemu/error-report.h"
+ #include "qemu/main-loop.h"
++#include "qemu/option.h"
+ 
+ #include "ui/console.h"
+ #include "ui/gtk.h"
+@@ -1477,6 +1478,227 @@ static void gd_menu_untabify(GtkMenuItem *item, void *opaque)
+     }
+ }
+ 
++static void gd_window_show_on_monitor(GdkDisplay *dpy, VirtualConsole *vc,
++                                      gint monitor_num)
++{
++    GtkDisplayState *s = vc->s;
++    GdkMonitor *monitor = gdk_display_get_monitor(dpy, monitor_num);
++    GdkRectangle geometry;
++    GdkWindow *window;
++    QemuUIInfo info;
++
++    if (!vc->window) {
++        gd_tab_window_create(vc);
++    }
++
++    gdk_window_show(gtk_widget_get_window(vc->window));
++    gd_update_windowsize(vc);
++    gdk_monitor_get_geometry(monitor, &geometry);
++    /*
++     * Note: some compositors (mainly Wayland ones) may not honor a
++     * request to move to a particular location. The user is expected
++     * to drag the window to the preferred location in this case.
++     */
++    gtk_window_move(GTK_WINDOW(vc->window), geometry.x, geometry.y);
++
++    if (s->opts->has_full_screen && s->opts->full_screen) {
++        gtk_widget_set_size_request(vc->gfx.drawing_area, -1, -1);
++        gtk_window_fullscreen(GTK_WINDOW(vc->window));
++    } else if ((s->window == vc->window) && s->full_screen) {
++        gd_menu_show_tabs(GTK_MENU_ITEM(s->show_tabs_item), s);
++        if (gtk_check_menu_item_get_active(
++                    GTK_CHECK_MENU_ITEM(s->show_menubar_item))) {
++            gtk_widget_show(s->menu_bar);
++        }
++        s->full_screen = false;
++    }
++
++    vc->monitor = monitor;
++
++    window = gtk_widget_get_window(vc->gfx.drawing_area);
++    info = *dpy_get_ui_info(vc->gfx.dcl.con);
++    info.width = gdk_window_get_width(window);
++    info.height = gdk_window_get_height(window);
++    dpy_set_ui_info(vc->gfx.dcl.con, &info, false);
++
++    if (gd_is_grab_active(s)) {
++        gd_grab_keyboard(vc, "user-request-main-window");
++        gd_grab_pointer(vc, "user-request-main-window");
++    } else {
++        gd_ungrab_keyboard(s);
++        gd_ungrab_pointer(s);
++    }
++
++    gd_update_cursor(vc);
++}
++
++static int gd_monitor_lookup(GdkDisplay *dpy, char *label)
++{
++    GdkMonitor *monitor;
++    int total_monitors = gdk_display_get_n_monitors(dpy);
++    int i;
++
++    for (i = 0; i < total_monitors; i++) {
++        monitor = gdk_display_get_monitor(dpy, i);
++        if (monitor && !g_strcmp0(gdk_monitor_get_model(monitor), label)) {
++            return i;
++        }
++    }
++    return -1;
++}
++
++static gboolean gd_vc_is_misplaced(GdkDisplay *dpy, GdkMonitor *monitor,
++                                   VirtualConsole *vc)
++{
++    GdkWindow *window = gtk_widget_get_window(vc->gfx.drawing_area);
++    GdkMonitor *mon = gdk_display_get_monitor_at_window(dpy, window);
++    const char *monitor_name = gdk_monitor_get_model(monitor);
++
++    if (!vc->monitor) {
++        if (!g_strcmp0(monitor_name, vc->label)) {
++            return TRUE;
++        }
++    } else {
++        if (mon && mon != vc->monitor) {
++            return TRUE;
++        }
++    }
++    return FALSE;
++}
++
++static void gd_vc_add_remove_monitor(GdkDisplay *dpy, GtkDisplayState *s)
++{
++    VirtualConsole *vc;
++    GdkMonitor *monitor;
++    gint monitor_num;
++    int i;
++
++    /*
++     * We need to call gd_vc_is_misplaced() after a monitor is added to
++     * ensure that the Host compositor has not moved our windows around.
++     */
++    for (i = 0; i < s->nb_vcs; i++) {
++        vc = &s->vc[i];
++        if (vc->label) {
++            monitor_num = gd_monitor_lookup(dpy, vc->label);
++            if (monitor_num >= 0) {
++                monitor = gdk_display_get_monitor(dpy, monitor_num);
++                if (gd_vc_is_misplaced(dpy, monitor, vc)) {
++                    gd_window_show_on_monitor(dpy, vc, monitor_num);
++                }
++            } else {
++		if (vc->monitor) {
++		    vc->monitor = NULL;
++		}
++
++		if (dpy_ui_info_supported(vc->gfx.dcl.con)) {
++		    QemuUIInfo info = *dpy_get_ui_info(vc->gfx.dcl.con);
++                    info.width = 0;
++                    info.height = 0;
++                    dpy_set_ui_info(vc->gfx.dcl.con, &info, false);
++		}
++
++                /* if window exist, hide it */
++                if (vc->window) {
++                    gdk_window_hide(gtk_widget_get_window(vc->window));
++                }
++            }
++        }
++    }
++}
++
++static void gd_monitors_reset_timer(void *opaque)
++{
++    GtkDisplayState *s = opaque;
++    GdkDisplay *dpy = gdk_display_get_default();
++
++    gd_vc_add_remove_monitor(dpy, s);
++}
++
++static void gd_monitors_changed(GdkScreen *scr, void *opaque)
++{
++    GtkDisplayState *s = opaque;
++    QEMUTimer *mon_reset_timer;
++
++    mon_reset_timer = timer_new_ms(QEMU_CLOCK_REALTIME,
++                                   gd_monitors_reset_timer, s);
++    timer_mod(mon_reset_timer,
++              qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + 2000);
++}
++
++static VirtualConsole *gd_next_gfx_vc(GtkDisplayState *s)
++{
++    VirtualConsole *vc;
++    int i;
++
++    for (i = 0; i < s->nb_vcs; i++) {
++        vc = &s->vc[i];
++        if (vc->type == GD_VC_GFX &&
++            qemu_console_is_graphic(vc->gfx.dcl.con) &&
++            !vc->label) {
++            return vc;
++        }
++    }
++    return NULL;
++}
++
++static void gd_vc_free_labels(GtkDisplayState *s)
++{
++    VirtualConsole *vc;
++    int i;
++
++    for (i = 0; i < s->nb_vcs; i++) {
++        vc = &s->vc[i];
++        if (vc->type == GD_VC_GFX &&
++            qemu_console_is_graphic(vc->gfx.dcl.con)) {
++            g_free(vc->label);
++            vc->label = NULL;
++            if (dpy_ui_info_supported(vc->gfx.dcl.con)) {
++                QemuUIInfo info = *dpy_get_ui_info(vc->gfx.dcl.con);
++
++                info.width = 0;
++                info.height = 0;
++                dpy_set_ui_info(vc->gfx.dcl.con, &info, false);
++            }
++        }
++    }
++}
++
++static void gd_connectors_init(GdkDisplay *dpy, GtkDisplayState *s)
++{
++    VirtualConsole *vc;
++    QEMUTimer *mon_reset_timer;
++    strList *conn;
++    gint monitor_num;
++    gboolean first_vc = TRUE;
++
++    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(s->notebook), FALSE);
++    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(s->grab_item),
++                                   FALSE);
++    gd_vc_free_labels(s);
++    for (conn = s->opts->u.gtk.connectors; conn; conn = conn->next) {
++        vc = gd_next_gfx_vc(s);
++        if (!vc) {
++            break;
++        }
++        if (first_vc) {
++            vc->window = s->window;
++            first_vc = FALSE;
++        }
++
++        vc->label = g_strdup(conn->value);
++        monitor_num = gd_monitor_lookup(dpy, vc->label);
++        if (monitor_num >= 0) {
++            gd_window_show_on_monitor(dpy, vc, monitor_num);
++        }
++    }
++
++    mon_reset_timer = timer_new_ms(QEMU_CLOCK_REALTIME,
++                                   gd_monitors_reset_timer, s);
++    timer_mod(mon_reset_timer,
++              qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + 100);
++}
++
+ static void gd_menu_show_menubar(GtkMenuItem *item, void *opaque)
+ {
+     GtkDisplayState *s = opaque;
+@@ -1797,8 +2019,18 @@ static gboolean gd_configure(GtkWidget *widget,
+                              GdkEventConfigure *cfg, gpointer opaque)
+ {
+     VirtualConsole *vc = opaque;
++    QemuUIInfo info;
++
++    if (!dpy_ui_info_supported(vc->gfx.dcl.con)) {
++        return FALSE;
++    }
++
++    info = *dpy_get_ui_info(vc->gfx.dcl.con);
++
++    if (info.width || info.height) {
++        gd_set_ui_size(vc, cfg->width, cfg->height);
++    }
+ 
+-    gd_set_ui_size(vc, cfg->width, cfg->height);
+     return FALSE;
+ }
+ 
+@@ -2133,6 +2365,10 @@ static void gd_connect_signals(GtkDisplayState *s)
+                      G_CALLBACK(gd_menu_grab_input), s);
+     g_signal_connect(s->notebook, "switch-page",
+                      G_CALLBACK(gd_change_page), s);
++    if (s->opts->u.gtk.has_connectors) {
++        g_signal_connect(gdk_screen_get_default(), "monitors-changed",
++                         G_CALLBACK(gd_monitors_changed), s);
++    }
+ }
+ 
+ static GtkWidget *gd_create_menu_machine(GtkDisplayState *s)
+@@ -2520,6 +2756,9 @@ static void gtk_display_init(DisplayState *ds, DisplayOptions *opts)
+         opts->u.gtk.show_tabs) {
+         gtk_menu_item_activate(GTK_MENU_ITEM(s->show_tabs_item));
+     }
++    if (s->opts->u.gtk.has_connectors) {
++        gd_connectors_init(window_display, s);
++    }
+ #ifdef CONFIG_GTK_CLIPBOARD
+     gd_clipboard_init(s);
+ #endif /* CONFIG_GTK_CLIPBOARD */
+-- 
+2.35.3
+
