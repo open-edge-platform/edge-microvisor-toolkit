@@ -1,0 +1,2 @@
+@reboot reporting-agent [ ! -f /etc/edge-node/metrics/disabled ] && /usr/bin/reporting-agent -c /etc/edge-node/metrics/reporting-agent.yaml
+0 * * * * reporting-agent [ ! -f /etc/edge-node/metrics/disabled ] && /usr/bin/reporting-agent -c /etc/edge-node/metrics/reporting-agent.yaml --short

@@ -516,7 +516,7 @@
         "other": {
           "name": "apr",
           "version": "1.7.5",
-          "downloadUrl": "https://dlcdn.apache.org/apr/apr-1.7.5.tar.gz"
+          "downloadUrl": "https://archive.apache.org/dist/apr/apr-1.7.5.tar.gz"
         }
       }
     },
@@ -3559,7 +3559,7 @@
         "other": {
           "name": "fakeroot",
           "version": "1.32.2",
-          "downloadUrl": "https://cdn-aws.deb.debian.org/debian/pool/main/f/fakeroot/fakeroot_1.32.2.orig.tar.gz"
+          "downloadUrl": "https://mirror.math.princeton.edu/pub/macports/distfiles/fakeroot/fakeroot_1.32.2.orig.tar.gz"
         }
       }
     },
@@ -5241,7 +5241,7 @@
         "other": {
           "name": "hardening-check",
           "version": "2.6",
-          "downloadUrl": "http://ftp.debian.org/debian/pool/main/h/hardening-wrapper/hardening-wrapper_2.6.tar.xz"
+          "downloadUrl": "https://ftp.up.pt/debian-archive/debian/pool/main/h/hardening-wrapper/hardening-wrapper_2.6.tar.xz"
         }
       }
     },
@@ -5341,7 +5341,7 @@
         "other": {
           "name": "help2man",
           "version": "1.49.3",
-          "downloadUrl": "ftp://ftp.gnu.org/gnu/help2man/help2man-1.49.3.tar.xz"
+          "downloadUrl": "https://ftp.gnu.org/gnu/help2man/help2man-1.49.3.tar.xz"
         }
       }
     },
@@ -8360,6 +8360,26 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "k3s",
+          "version": "1.32.4",
+          "downloadUrl": "https://github.com/k3s-io/k3s/archive/refs/tags/v1.32.4+k3s1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "k3s-calico",
+          "version": "3.30.1",
+          "downloadUrl": "https://github.com/projectcalico/calico/releases/download/v3.30.1/release-v3.30.1.tgz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "kata-containers",
           "version": "3.2.0.azl5",
           "downloadUrl": "https://github.com/microsoft/kata-containers/archive/refs/tags/3.2.0.azl5.tar.gz"
@@ -8441,8 +8461,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.30",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
+          "version": "6.12.33",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
         }
       }
     },
@@ -8461,8 +8481,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.30",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
+          "version": "6.12.33",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
         }
       }
     },
@@ -8491,8 +8511,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.30",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
+          "version": "6.12.33",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
         }
       }
     },
@@ -8673,16 +8693,6 @@
           "name": "ksh",
           "version": "1.0.8",
           "downloadUrl": "https://github.com/ksh93/ksh/archive/refs/tags/v1.0.8.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "kube-vip-cloud-provider",
-          "version": "0.0.2",
-          "downloadUrl": "https://github.com/kube-vip/kube-vip-cloud-provider/archive/refs/tags/v0.0.2.tar.gz"
         }
       }
     },
@@ -9032,7 +9042,7 @@
         "other": {
           "name": "libatomic_ops",
           "version": "7.8.2",
-          "downloadUrl": "https://github.com/ivmai/libatomic_ops/releases/download/v7.8.2/libatomic_ops-7.8.2.tar.gz"
+          "downloadUrl": "https://github.com/bdwgc/libatomic_ops/releases/download/v7.8.2/libatomic_ops-7.8.2.tar.gz"
         }
       }
     },
@@ -12431,8 +12441,8 @@
         "type": "other",
         "other": {
           "name": "linux-firmware",
-          "version": "20250311",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20250311.tar.xz"
+          "version": "20250509",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20250509.tar.xz"
         }
       }
     },
@@ -18812,7 +18822,7 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "perl-match-simple",
+          "name": "perl-Match-Simple",
           "version": "0.012",
           "downloadUrl": "https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/match-simple-0.012.tar.gz"
         }
@@ -21834,7 +21844,7 @@
         "other": {
           "name": "postfix",
           "version": "3.9.0",
-          "downloadUrl": "ftp://ftp.porcupine.org/mirrors/postfix-release/official/postfix-3.9.0.tar.gz"
+          "downloadUrl": "https://ghostarchive.org/postfix/postfix-release/official/postfix-3.9.0.tar.gz"
         }
       }
     },
@@ -26552,6 +26562,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "reporting-agent",
+          "version": "0.0.4",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.0.4.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "resource-agents",
           "version": "4.10.0",
           "downloadUrl": "https://github.com/ClusterLabs/resource-agents/archive/refs/tags/v4.10.0.tar.gz"
@@ -29577,7 +29597,7 @@
         "other": {
           "name": "time",
           "version": "1.9",
-          "downloadUrl": "ftp://ftp.gnu.org/gnu/time/time-1.9.tar.gz"
+          "downloadUrl": "https://ftp.gnu.org/gnu/time/time-1.9.tar.gz"
         }
       }
     },
@@ -31358,8 +31378,8 @@
         "type": "other",
         "other": {
           "name": "xorg-x11-drv-libinput",
-          "version": "0.30.0",
-          "downloadUrl": "ftp://ftp.x.org/pub/individual/driver/xf86-input-libinput-0.30.0.tar.bz2"
+          "version": "1.5.0",
+          "downloadUrl": "https://ftp.x.org/pub/individual/driver/xf86-input-libinput-1.5.0.tar.xz"
         }
       }
     },
@@ -31781,6 +31801,16 @@
           "name": "ypserv",
           "version": "4.1",
           "downloadUrl": "https://github.com/thkukuk/ypserv/archive/v4.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "yq",
+          "version": "4.45.4",
+          "downloadUrl": "https://github.com/mikefarah/yq/archive/refs/tags/v4.45.4.tar.gz"
         }
       }
     },

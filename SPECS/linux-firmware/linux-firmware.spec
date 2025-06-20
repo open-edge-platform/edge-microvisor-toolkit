@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
-Version:        20250311
-Release:        4%{?dist}
+Version:        20250509
+Release:        1%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -157,6 +157,9 @@ cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/intel/ice
 
 %changelog
+* Wed Jun 18 2025 Junxiao Chang <junxiao.chang@intel.com> - 20250509-1
+- Upgrade i915 GuC firmware version to 70.44.1.
+
 +* Tue June 10 2025 shalinix singhal <shalinix.singhal@intel.com> - 20250311-4
 +- Added iwlwifi ucode file in firmware
 
