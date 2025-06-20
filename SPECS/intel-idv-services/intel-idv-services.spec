@@ -18,7 +18,7 @@ Requires(post): systemd
 Requires(preun): systemd
 
 %description
-This package installs the scripts folder to /usr/local/bin/idv, enables and starts a root-level systemd service, and enables and starts a user-level systemd service.
+This package installs the scripts folder to /usr/local/bin/idv
 
 %prep
 %setup -q
