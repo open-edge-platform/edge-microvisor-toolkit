@@ -18,6 +18,9 @@ Requires:       k3s
 %description
 This package provides Intel GPU device plugin manifests and container images for k3s Kubernetes cluster.
 
+# Define configurable namespace with a default value
+%{!?gpu_plugin_namespace: %global gpu_plugin_namespace intel-device-plugin}
+
 %prep
 %setup -q -n intel-device-plugins-for-kubernetes-%{version}
 
@@ -25,9 +28,27 @@ This package provides Intel GPU device plugin manifests and container images for
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/00-intel-gpu
 
+# Create a temporary file with the manifest
+install -m 0644 ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml %{_builddir}/intel-gpu-plugin-temp.yaml
+
+# Create temporary files in the build directory
+cat > %{_builddir}/namespace.yaml << EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: %{gpu_plugin_namespace}
+---
+EOF
+
+# Combine files
+cat %{_builddir}/namespace.yaml ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml > %{_builddir}/combined.yaml
+
+# Inject the namespace specifically after the top-level metadata section
+sed -i '/kind: DaemonSet/,/metadata:/s/metadata:/metadata:\n  namespace: %{gpu_plugin_namespace}/' %{_builddir}/combined.yaml
+
 # Install the pre-pulled image tarball and manifest
 install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/00-intel-gpu/intel-gpu-plugin.tar
-install -m 0644 ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu/
+install -m 0644 %{_builddir}/combined.yaml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu/intel-gpu-plugin.yaml
 
 %files
 %{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu/intel-gpu-plugin.yaml
