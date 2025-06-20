@@ -2,7 +2,7 @@
 
 Summary:        In-memory Operating System Installation Environment for Executing Tinkerbell Workflows
 Name:           tink-worker
-Version:        1.0.0
+Version:        1.1.1
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -14,7 +14,7 @@ Source2:        tink-worker-v%{version}-vendor.tar.gz
 
 %{?systemd_requires}
 
-BuildRequires:  golang >= 1.23
+BuildRequires:  golang >= 1.24.1
 BuildRequires:  systemd-rpm-macros
 
 %description
@@ -46,5 +46,11 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/tink-worker.service
 %{_unitdir}/tink-worker.service
 
 %changelog
+* Wed Jun 18 2025 Andy <andy.peng@intel.com> - 1.1.1-1
+- Update go version to 1.24.1
+
+* Tue Jun 17 2025 Andy <andy.peng@intel.com> - 1.1.0-1
+- Update version to fix grpc CVE
+
 * Tue May 20 2025 Andy <andy.peng@intel.com> - 1.0.0-1
 - Original version for Edge Microvisor Toolkit. License verified.
