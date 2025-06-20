@@ -18,7 +18,7 @@ Requires(post): systemd
 Requires(preun): systemd
 
 %description
-This package installs the scripts folder to /opt/idv, enables and starts a root-level systemd service, and enables and starts a user-level systemd service.
+This package installs the scripts folder to /usr/local/bin/idv, enables and starts a root-level systemd service, and enables and starts a user-level systemd service.
 
 %prep
 %setup -q
@@ -26,7 +26,7 @@ This package installs the scripts folder to /opt/idv, enables and starts a root-
 %build
 
 %install
-# Copy the scripts folder to /opt/idv
+# Copy the scripts folder to /usr/local/bin/idv
 mkdir -p %{local_bin_dir}/idv
 cp -r init /%{local_bin_dir}/idv
 cp -r launcher %{local_bin_dir}/idv
@@ -71,6 +71,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Fri Jun 20 2025 Dhanya A <dhanya.a@intel.com> - 0.1-6
+- Update comment in spec file
+
 * Thu Jun 19 2025 Dhanya A <dhanya.a@intel.com> - 0.1-5
 - Copy scripts to bin directory and add preset file
 
