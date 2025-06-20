@@ -7,6 +7,11 @@ Summary:        Intel GPU device plugin manifests and container images for k3s K
 License:        Apache-2.0
 URL:            https://github.com/intel/intel-device-plugins-for-kubernetes
 Source0:        https://github.com/intel/intel-device-plugins-for-kubernetes/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
+# Source1 is a pre-built container image tarball for the Intel gpu device plugin.
+# to avoid building container images as part of the RPM build process, 
+# the required image is built locally in advance and included as a tarball.
+# With `docker build` and `docker save` 
+# and uploaded to the source package repository after is has been tested locally.
 Source1:        %{name}-image-v%{version}.tar
 Requires:       k3s
 
