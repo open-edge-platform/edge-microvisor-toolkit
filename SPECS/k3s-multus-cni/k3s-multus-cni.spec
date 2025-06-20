@@ -11,6 +11,7 @@ URL:            https://github.com/k8snetworkplumbingwg/multus-cni
 Source0:        https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
 # Generate image tar by running `docker save ghcr.io/k8snetworkplumbingwg/multus-cni:version -o multus-cni.tar`
 Source1:        %{name}-image-v%{version}.tar
+Requires:       k3s
 
 BuildArch:      noarch
 
