@@ -8350,6 +8350,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "k3s-calico",
+          "version": "3.30.1",
+          "downloadUrl": "https://github.com/projectcalico/calico/releases/download/v3.30.1/release-v3.30.1.tgz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "kata-containers",
           "version": "3.2.0.azl5",
           "downloadUrl": "https://github.com/microsoft/kata-containers/archive/refs/tags/3.2.0.azl5.tar.gz"
@@ -8431,8 +8441,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.30",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
+          "version": "6.12.33",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
         }
       }
     },
@@ -8451,8 +8461,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.30",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
+          "version": "6.12.33",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
         }
       }
     },
@@ -8481,8 +8491,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.30",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.30-emt-250524T131939Z.tar.gz"
+          "version": "6.12.33",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
         }
       }
     },
@@ -8663,16 +8673,6 @@
           "name": "ksh",
           "version": "1.0.8",
           "downloadUrl": "https://github.com/ksh93/ksh/archive/refs/tags/v1.0.8.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "kube-vip-cloud-provider",
-          "version": "0.0.2",
-          "downloadUrl": "https://github.com/kube-vip/kube-vip-cloud-provider/archive/refs/tags/v0.0.2.tar.gz"
         }
       }
     },
@@ -18802,7 +18802,7 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "perl-match-simple",
+          "name": "perl-Match-Simple",
           "version": "0.012",
           "downloadUrl": "https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/match-simple-0.012.tar.gz"
         }
