@@ -8681,16 +8681,6 @@
         "type": "other",
         "other": {
           "name": "kube-vip-cloud-provider",
-          "version": "0.0.2",
-          "downloadUrl": "https://github.com/kube-vip/kube-vip-cloud-provider/archive/refs/tags/v0.0.2.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "kube-vip-cloud-provider",
           "version": "0.0.10",
           "downloadUrl": "https://github.com/kube-vip/kube-vip-cloud-provider/archive/refs/tags/v0.0.10.tar.gz"
         }
@@ -18812,7 +18802,7 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "perl-match-simple",
+          "name": "perl-Match-Simple",
           "version": "0.012",
           "downloadUrl": "https://cpan.metacpan.org/authors/id/T/TO/TOBYINK/match-simple-0.012.tar.gz"
         }
