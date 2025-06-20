@@ -1,2 +1,4 @@
+# Enable IDV user services by default
+
 enable idv-init.service
 enable idv-launcher.service

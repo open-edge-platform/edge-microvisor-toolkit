@@ -5,7 +5,7 @@
 Name:           intel-idv-services
 Version:        0.1
 Release:        1%{?dist}
-Summary:        A package to install scripts and systemd services for Intelligent Desktop Virtualization
+Summary:        A package to install scripts and systemd services for Intelligent Desktop Virtualization(IDV)
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
@@ -18,7 +18,7 @@ Requires(post): systemd
 Requires(preun): systemd
 
 %description
-This package installs the scripts folder to /usr/local/bin/idv
+This package installs the scripts and services that are needed to run IDV solution
 
 %prep
 %setup -q
@@ -28,25 +28,26 @@ This package installs the scripts folder to /usr/local/bin/idv
 %install
 # Copy the scripts folder to /usr/local/bin/idv
 mkdir -p %{local_bin_dir}/idv
-cp -r init /%{local_bin_dir}/idv
+cp -r init %{local_bin_dir}/idv
 cp -r launcher %{local_bin_dir}/idv
 
-# Install the idv-init service
+# Install the idv-init service. This service sets up the environment required for running virtual machines
 mkdir -p %{systemd_user_dir}
 install -m 644 idv-init.service %{systemd_user_dir}/idv-init.service
 
-# Install the idv-launcher service
+# Install the idv-launcher service. This service launches virtual machines based on the configuration specified in the launcher/vm.conf file.
 install -m 644 idv-launcher.service %{systemd_user_dir}/idv-launcher.service
 
-# Install the autologin.conf file
+# Install the autologin.conf file. This enables autologin for a specified user.
 mkdir -p %{systemd_system_dir}/getty@tty1.service.d
 install -m 644 autologin.conf %{systemd_system_dir}/getty@tty1.service.d/autologin.conf
 
 # Default presets for user
-install -Dm0644 %{SOURCE1} -t %{buildroot}/usr/lib/systemd/user-preset/
+mkdir -p %{buildroot}/usr/lib/systemd/user-preset
+install -m 644 %{SOURCE1} -t %{buildroot}/usr/lib/systemd/user-preset/
 
 %files
-/usr/local/bin/idv/
+/usr/local/bin/idv/*
 /usr/lib/systemd/user/idv-*.service
 %config(noreplace) /etc/systemd/system/getty@tty1.service.d/autologin.conf
 /usr/lib/systemd/user-preset/90-default.preset
@@ -55,6 +56,7 @@ install -Dm0644 %{SOURCE1} -t %{buildroot}/usr/lib/systemd/user-preset/
 systemctl daemon-reload
 
 %preun
+set -e
 # Stop and disable the idv-init service before uninstalling
 if [ $1 -eq 0 ]; then
     USER_ID=$(id -u $SUDO_USER)
@@ -66,8 +68,6 @@ if [ $1 -eq 0 ]; then
         sudo -u $SUDO_USER XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR systemctl --user stop idv-launcher.service
         sudo -u $SUDO_USER XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR systemctl --user disable idv-launcher.service
     fi
-    
-    rm -rf /usr/local/bin/idv/
 fi
 
 %changelog
