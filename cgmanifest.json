@@ -8360,6 +8360,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "k3s-multus-cni",
+          "version": "4.2.1",
+          "downloadUrl": "https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v4.2.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "kata-containers",
           "version": "3.2.0.azl5",
           "downloadUrl": "https://github.com/microsoft/kata-containers/archive/refs/tags/3.2.0.azl5.tar.gz"
