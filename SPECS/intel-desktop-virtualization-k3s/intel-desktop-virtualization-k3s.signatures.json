@@ -1,6 +1,6 @@
 {
  "Signatures": {
-  "intel-idv-device-plugin-v0.1.tar.gz": "e52e5296b4fa9b472f9827afcc3fd81ea7be7271cc9d85b4c29795e55b793d5f",
+  "intel-idv-device-plugin-v0.1.tar.gz": "65ac7476c5628396c009a97629d8e5f3c2baf5170e6aebdb037515975eccd7c8",
   "intel-idv-kubevirt-v0.1.tar.gz": "ff949d4805738d613bb475f003ffcfd953eb90932d19e914b02a9bfff5c7b492"
  }
 }
