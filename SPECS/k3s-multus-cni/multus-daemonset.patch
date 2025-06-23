@@ -1,6 +1,6 @@
---- multus-cni-4.2.1/deployments/multus-daemonset.yml	2025-05-13 05:32:26.000000000 -0700
-+++ multus-cni-4.2.1/deployments/multus-daemonset.yml	2025-06-20 00:18:09.162689132 -0700
-@@ -179,7 +179,7 @@
+--- multus-cni-4.2.1/deployments/multus-daemonset.yml	2025-06-23 12:01:23
++++ multus-cni-4.2.1/deployments/multus-daemonset.yml	2025-06-23 13:23:59
+@@ -179,12 +179,13 @@
        serviceAccountName: multus
        containers:
        - name: kube-multus
@@ -9,7 +9,13 @@
          command: ["/thin_entrypoint"]
          args:
          - "--multus-conf-file=auto"
-@@ -204,7 +204,7 @@
+         - "--multus-autoconfig-dir=/host/etc/cni/net.d"
+         - "--cni-conf-dir=/host/etc/cni/net.d"
++        - "--additional-bin-dir=/var/lib/rancher/k3s/data/cni"
+         resources:
+           requests:
+             cpu: "100m"
+@@ -204,7 +205,7 @@
            mountPath: /tmp/multus-conf
        initContainers:
          - name: install-multus-binary

@@ -1,6 +1,6 @@
 Name:           k3s-multus-cni
 Version:        4.2.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Multus manifests and container images for k3s kubernetes cluster.
 
 License:        Apache-2.0
@@ -45,6 +45,9 @@ install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/image
 %{_sharedstatedir}/rancher/k3s/agent/images/00-multus/multus-cni.tar
 
 %changelog
+* Mon Jun 23 2025 Hyunsun Moon <hyunsun.moon@intel.com> - 4.2.1-2
+- Update patch to configure additional cni bin path for k3s
+
 * Wed Jun 19 2025 Hyunsun Moon <hyunsun.moon@intel.com> - 4.2.1-1
 - Initial Edge Microvisor Toolkit import from the source project (license: same as "License" tag).
 - License verified.
