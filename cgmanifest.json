@@ -7490,6 +7490,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "intel-gpu-device-plugin",
+          "version": "0.32.1",
+          "downloadUrl": "https://github.com/intel/intel-device-plugins-for-kubernetes/archive/refs/tags/v0.32.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "intel-igc",
           "version": "1.0.17537.20",
           "downloadUrl": "https://github.com/intel/intel-graphics-compiler/archive/igc-1.0.17537.20/igc-1.0.17537.20.tar.gz"
