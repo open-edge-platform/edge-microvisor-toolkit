@@ -1,7 +1,8 @@
 {
     "packages": [
         "k3s",
-        "k3s-calico"
+        "k3s-calico",
+        "k3s-multus-cni"
     ],
     "_comment": "K3s packages for lightweight Kubernetes deployment."
 }

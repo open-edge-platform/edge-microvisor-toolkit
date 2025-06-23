@@ -3205,6 +3205,7 @@
             "specs": [
                 "k3s",
                 "k3s-calico",
+                "k3s-multus-cni",
                 "python-nocaselist",
                 "yq"
             ]

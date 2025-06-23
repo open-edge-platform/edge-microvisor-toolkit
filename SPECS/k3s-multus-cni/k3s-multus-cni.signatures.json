@@ -1,0 +1,6 @@
+{
+ "Signatures": {
+  "k3s-multus-cni-image-v4.2.1.tar": "5b09bb7d675b9f460f9198c253dc761744a15f9fb0d2afd569641fba0e4b6543",
+  "k3s-multus-cni-v4.2.1.tar.gz": "7c940f03099b9c9741bea641028859fe4e3e8f657ef922a9cb1c87ebd5e1fe28"
+ }
+}
