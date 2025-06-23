@@ -1,0 +1,214 @@
+From 111284a85a28320d10f7bc14cdfb2b615b482fe5 Mon Sep 17 00:00:00 2001
+From: "Kim, Dongwon" <dongwon.kim@intel.com>
+Date: Fri, 16 Aug 2024 05:49:17 +0800
+Subject: [PATCH 04/50] hw/display/virtio-gpu: Introducing render_sync param
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Introducing new virtio-gpu param, 'render_sync' when guest scanout blob
+is used (blob=true). The new param is used to specify when to start
+rendering a guest scanout frame.
+
+By default (and so far) rendering of the guest frame is started in
+the draw event to make sure guest display update is sychronized with
+host's vsync. But this method inevitably brings some extra wait because
+most of time, the draw event is not happening right after the guest
+scanout frame is flushed.
+
+This delay often makes the guest stuck at certain frame for too long and
+causes general performance degradation of graphic workloads on the guest's
+side especially when the display update rate is high. This unwanted perf
+drop can be reduced if the guest scanout frame is rendered as soon as it is
+flushed through 'VIRTIO_GPU_CMD_RESOURCE_FLUSH' msg. The gl display
+pipeline can be unblocked a lot earlier in this case so that guest can
+move to the next display frame right away.
+
+However, this "asynchrounous" render mode may cause some waste of resources
+as the guest could produce more frames than what are actually displayed
+on the host display. This is similar as running rendering apps with no vblank
+or vsync option. This is why this feature should stay as optional.
+
+The param 'render_sync' is set to 'true' by default and this is in line
+with traditional way while setting it to 'false' is basically enabling
+this asynchronouse mode.
+
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Signed-off-by: Kim, Dongwon <dongwon.kim@intel.com>
+---
+ hw/display/vhost-user-gpu.c     |  3 ++-
+ hw/display/virtio-gpu-udmabuf.c |  3 ++-
+ hw/display/virtio-gpu.c         |  2 ++
+ hw/vfio/display.c               |  3 ++-
+ include/hw/virtio/virtio-gpu.h  |  3 +++
+ include/ui/dmabuf.h             |  4 +++-
+ ui/dbus-listener.c              |  2 +-
+ ui/dmabuf.c                     | 11 ++++++++++-
+ 8 files changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/hw/display/vhost-user-gpu.c b/hw/display/vhost-user-gpu.c
+index c0c66910f1..0cdf0aec00 100644
+--- a/hw/display/vhost-user-gpu.c
++++ b/hw/display/vhost-user-gpu.c
+@@ -286,7 +286,8 @@ vhost_user_gpu_handle_display(VhostUserGPU *g, VhostUserGpuMsg *msg)
+                                  m->fd_width, m->fd_height,
+                                  m->fd_drm_fourcc, modifier,
+                                  fd, false, m->fd_flags &
+-                                 VIRTIO_GPU_RESOURCE_FLAG_Y_0_TOP);
++                                 VIRTIO_GPU_RESOURCE_FLAG_Y_0_TOP,
++                                 false);
+ 
+         dpy_gl_scanout_dmabuf(con, dmabuf);
+         g->dmabuf[m->scanout_id] = dmabuf;
+diff --git a/hw/display/virtio-gpu-udmabuf.c b/hw/display/virtio-gpu-udmabuf.c
+index c02ec6d37d..8fcc0c3055 100644
+--- a/hw/display/virtio-gpu-udmabuf.c
++++ b/hw/display/virtio-gpu-udmabuf.c
+@@ -176,6 +176,7 @@ static VGPUDMABuf
+                           struct virtio_gpu_rect *r)
+ {
+     VGPUDMABuf *dmabuf;
++    bool render_sync = virtio_gpu_render_sync_enabled(g->parent_obj.conf);
+ 
+     if (res->dmabuf_fd < 0) {
+         return NULL;
+@@ -185,7 +186,7 @@ static VGPUDMABuf
+     dmabuf->buf = qemu_dmabuf_new(r->width, r->height, fb->stride,
+                                   r->x, r->y, fb->width, fb->height,
+                                   qemu_pixman_to_drm_format(fb->format),
+-                                  0, res->dmabuf_fd, true, false);
++                                  0, res->dmabuf_fd, true, false, render_sync);
+     dmabuf->scanout_id = scanout_id;
+     QTAILQ_INSERT_HEAD(&g->dmabuf.bufs, dmabuf, next);
+ 
+diff --git a/hw/display/virtio-gpu.c b/hw/display/virtio-gpu.c
+index 3281842bfe..363e8ea9e5 100644
+--- a/hw/display/virtio-gpu.c
++++ b/hw/display/virtio-gpu.c
+@@ -1670,6 +1670,8 @@ static Property virtio_gpu_properties[] = {
+                      256 * MiB),
+     DEFINE_PROP_BIT("blob", VirtIOGPU, parent_obj.conf.flags,
+                     VIRTIO_GPU_FLAG_BLOB_ENABLED, false),
++    DEFINE_PROP_BIT("render_sync", VirtIOGPU, parent_obj.conf.flags,
++                    VIRTIO_GPU_FLAG_RENDER_SYNC_ENABLED, true),
+     DEFINE_PROP_SIZE("hostmem", VirtIOGPU, parent_obj.conf.hostmem, 0),
+     DEFINE_PROP_UINT8("x-scanout-vmstate-version", VirtIOGPU, scanout_vmstate_version, 2),
+     DEFINE_PROP_END_OF_LIST(),
+diff --git a/hw/vfio/display.c b/hw/vfio/display.c
+index ea87830fe0..5285758a2c 100644
+--- a/hw/vfio/display.c
++++ b/hw/vfio/display.c
+@@ -249,7 +249,8 @@ static VFIODMABuf *vfio_display_get_dmabuf(VFIOPCIDevice *vdev,
+     dmabuf->buf = qemu_dmabuf_new(plane.width, plane.height,
+                                   plane.stride, 0, 0, plane.width,
+                                   plane.height, plane.drm_format,
+-                                  plane.drm_format_mod, fd, false, false);
++                                  plane.drm_format_mod, fd, false,
++                                  false, false);
+ 
+     if (plane_type == DRM_PLANE_TYPE_CURSOR) {
+         vfio_display_update_cursor(dmabuf, &plane);
+diff --git a/include/hw/virtio/virtio-gpu.h b/include/hw/virtio/virtio-gpu.h
+index 7a59379f5a..9bcc572eab 100644
+--- a/include/hw/virtio/virtio-gpu.h
++++ b/include/hw/virtio/virtio-gpu.h
+@@ -97,6 +97,7 @@ enum virtio_gpu_base_conf_flags {
+     VIRTIO_GPU_FLAG_EDID_ENABLED,
+     VIRTIO_GPU_FLAG_DMABUF_ENABLED,
+     VIRTIO_GPU_FLAG_BLOB_ENABLED,
++    VIRTIO_GPU_FLAG_RENDER_SYNC_ENABLED,
+     VIRTIO_GPU_FLAG_CONTEXT_INIT_ENABLED,
+     VIRTIO_GPU_FLAG_RUTABAGA_ENABLED,
+ };
+@@ -111,6 +112,8 @@ enum virtio_gpu_base_conf_flags {
+     (_cfg.flags & (1 << VIRTIO_GPU_FLAG_DMABUF_ENABLED))
+ #define virtio_gpu_blob_enabled(_cfg) \
+     (_cfg.flags & (1 << VIRTIO_GPU_FLAG_BLOB_ENABLED))
++#define virtio_gpu_render_sync_enabled(_cfg) \
++    (_cfg.flags & (1 << VIRTIO_GPU_FLAG_RENDER_SYNC_ENABLED))
+ #define virtio_gpu_context_init_enabled(_cfg) \
+     (_cfg.flags & (1 << VIRTIO_GPU_FLAG_CONTEXT_INIT_ENABLED))
+ #define virtio_gpu_rutabaga_enabled(_cfg) \
+diff --git a/include/ui/dmabuf.h b/include/ui/dmabuf.h
+index 7f0f7f3f6e..07e8178d76 100644
+--- a/include/ui/dmabuf.h
++++ b/include/ui/dmabuf.h
+@@ -17,7 +17,8 @@ QemuDmaBuf *qemu_dmabuf_new(uint32_t width, uint32_t height,
+                             uint32_t y, uint32_t backing_width,
+                             uint32_t backing_height, uint32_t fourcc,
+                             uint64_t modifier, int dmabuf_fd,
+-                            bool allow_fences, bool y0_top);
++                            bool allow_fences, bool y0_top,
++                            bool render_sync);
+ void qemu_dmabuf_free(QemuDmaBuf *dmabuf);
+ 
+ G_DEFINE_AUTOPTR_CLEANUP_FUNC(QemuDmaBuf, qemu_dmabuf_free);
+@@ -39,6 +40,7 @@ bool qemu_dmabuf_get_y0_top(QemuDmaBuf *dmabuf);
+ int32_t qemu_dmabuf_get_fence_fd(QemuDmaBuf *dmabuf);
+ bool qemu_dmabuf_get_allow_fences(QemuDmaBuf *dmabuf);
+ bool qemu_dmabuf_get_draw_submitted(QemuDmaBuf *dmabuf);
++bool qemu_dmabuf_get_render_sync(QemuDmaBuf *dmabuf);
+ void qemu_dmabuf_set_texture(QemuDmaBuf *dmabuf, uint32_t texture);
+ void qemu_dmabuf_set_fence_fd(QemuDmaBuf *dmabuf, int32_t fence_fd);
+ void qemu_dmabuf_set_draw_submitted(QemuDmaBuf *dmabuf, bool draw_submitted);
+diff --git a/ui/dbus-listener.c b/ui/dbus-listener.c
+index a54123acea..d4f1078c68 100644
+--- a/ui/dbus-listener.c
++++ b/ui/dbus-listener.c
+@@ -456,7 +456,7 @@ static void dbus_scanout_texture(DisplayChangeListener *dcl,
+     }
+     dmabuf = qemu_dmabuf_new(w, h, stride, x, y, backing_width,
+                              backing_height, fourcc, modifier, fd,
+-                             false, backing_y_0_top);
++                             false, backing_y_0_top, false);
+ 
+     dbus_scanout_dmabuf(dcl, dmabuf);
+     qemu_dmabuf_close(dmabuf);
+diff --git a/ui/dmabuf.c b/ui/dmabuf.c
+index 2332292a08..0adaea0089 100644
+--- a/ui/dmabuf.c
++++ b/ui/dmabuf.c
+@@ -25,6 +25,7 @@ struct QemuDmaBuf {
+     bool      y0_top;
+     int       fence_fd;
+     bool      allow_fences;
++    bool      render_sync;
+     bool      draw_submitted;
+ };
+ 
+@@ -33,7 +34,7 @@ QemuDmaBuf *qemu_dmabuf_new(uint32_t width, uint32_t height,
+                             uint32_t y, uint32_t backing_width,
+                             uint32_t backing_height, uint32_t fourcc,
+                             uint64_t modifier, int32_t dmabuf_fd,
+-                            bool allow_fences, bool y0_top) {
++                            bool allow_fences, bool y0_top, bool render_sync) {
+     QemuDmaBuf *dmabuf;
+ 
+     dmabuf = g_new0(QemuDmaBuf, 1);
+@@ -50,6 +51,7 @@ QemuDmaBuf *qemu_dmabuf_new(uint32_t width, uint32_t height,
+     dmabuf->fd = dmabuf_fd;
+     dmabuf->allow_fences = allow_fences;
+     dmabuf->y0_top = y0_top;
++    dmabuf->render_sync = render_sync;
+     dmabuf->fence_fd = -1;
+ 
+     return dmabuf;
+@@ -190,6 +192,13 @@ bool qemu_dmabuf_get_draw_submitted(QemuDmaBuf *dmabuf)
+     return dmabuf->draw_submitted;
+ }
+ 
++bool qemu_dmabuf_get_render_sync(QemuDmaBuf *dmabuf)
++{
++    assert(dmabuf != NULL);
++
++    return dmabuf->render_sync;
++}
++
+ void qemu_dmabuf_set_texture(QemuDmaBuf *dmabuf, uint32_t texture)
+ {
+     assert(dmabuf != NULL);
+-- 
+2.35.3
+

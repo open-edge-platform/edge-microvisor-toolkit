@@ -1,0 +1,55 @@
+From 9e9dab144bb25f7482ea83f743ddfa1b289dc9b0 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Mon, 14 Apr 2025 11:09:46 -0700
+Subject: [PATCH 47/50] ui/gtk: Covering render_sync=false case when dealing
+ with fence
+
+There are a situation where fence_fd is positive or zero and
+draw_submitted is true when render_sync=false. Unblocking
+the display pipeline shouldn't be done when draw_submitted is
+found to be true in this case to prevent double unblocking.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index b7cee461b2..eeb41cb496 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -795,14 +795,14 @@ static void gd_change_runstate(void *opaque, bool running, RunState state)
+ 
+             if (dmabuf && qemu_dmabuf_get_draw_submitted(dmabuf)) {
+                 qemu_dmabuf_set_draw_submitted(dmabuf, false);
+-                graphic_hw_gl_block(vc->gfx.dcl.con, false);
++                if (qemu_dmabuf_get_render_sync(dmabuf)) {
++                    graphic_hw_gl_block(vc->gfx.dcl.con, false);
++                }
+             }
+ 
+-	    if (dmabuf && qemu_dmabuf_get_fence_fd(dmabuf) >= 0) {
+-                /* force flushing current scanout blob rendering process
+-                 * just in case the fence is still not signaled */
+-                gd_hw_gl_flushed(vc);
+-            }
++            /* force flushing current scanout blob rendering process
++             * just in case the fence is still not signaled */
++            gd_hw_gl_flushed(vc);
+         }
+     }
+ #endif
+@@ -1787,7 +1787,9 @@ static void gd_vc_disconn_monitor(GdkDisplay *dpy, GtkDisplayState *s)
+ 
+                     if (dmabuf && qemu_dmabuf_get_draw_submitted(dmabuf)) {
+                         qemu_dmabuf_set_draw_submitted(dmabuf, false);
+-                        graphic_hw_gl_block(vc->gfx.dcl.con, false);
++                        if (qemu_dmabuf_get_render_sync(dmabuf)) {
++                            graphic_hw_gl_block(vc->gfx.dcl.con, false);
++                        }
+                     }
+ 
+                     /* force flushing current scanout blob rendering process
+-- 
+2.35.3
+

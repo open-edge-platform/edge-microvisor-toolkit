@@ -1,0 +1,71 @@
+From 0ab0ac2bdb86c9c2287b0bbf052563fbf0c81aae Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Tue, 16 Jan 2024 23:02:37 -0800
+Subject: [PATCH 20/50] ui/console-gl: Add a helper to create a texture with
+ linear memory layout
+
+There are cases where we do not want the memory layout of a texture to
+be tiled as the component processing the texture would not know how to
+de-tile either via software or hardware. Therefore, ensuring that the
+memory backing the texture has a linear layout is absolutely necessary
+in these situations.
+
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+---
+ include/ui/console.h |  2 ++
+ ui/console-gl.c      | 26 ++++++++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
+
+diff --git a/include/ui/console.h b/include/ui/console.h
+index fa986ab97e..8010b17095 100644
+--- a/include/ui/console.h
++++ b/include/ui/console.h
+@@ -425,6 +425,8 @@ bool console_gl_check_format(DisplayChangeListener *dcl,
+                              pixman_format_code_t format);
+ void surface_gl_create_texture(QemuGLShader *gls,
+                                DisplaySurface *surface);
++void surface_gl_create_texture_from_fd(DisplaySurface *surface,
++                                       int fd, GLuint *texture);
+ void surface_gl_update_texture(QemuGLShader *gls,
+                                DisplaySurface *surface,
+                                int x, int y, int w, int h);
+diff --git a/ui/console-gl.c b/ui/console-gl.c
+index 103b954017..8ee882bc3c 100644
+--- a/ui/console-gl.c
++++ b/ui/console-gl.c
+@@ -96,6 +96,32 @@ void surface_gl_create_texture(QemuGLShader *gls,
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+ }
+ 
++void surface_gl_create_texture_from_fd(DisplaySurface *surface,
++                                       int fd, GLuint *texture)
++{
++    unsigned long size = surface_stride(surface) * surface_height(surface);
++    GLuint mem_obj;
++
++    if (!epoxy_has_gl_extension("GL_EXT_memory_object") ||
++        !epoxy_has_gl_extension("GL_EXT_memory_object_fd")) {
++        return;
++    }
++
++#ifdef GL_EXT_memory_object_fd
++    glCreateMemoryObjectsEXT(1, &mem_obj);
++    glImportMemoryFdEXT(mem_obj, size, GL_HANDLE_TYPE_OPAQUE_FD_EXT, fd);
++    if (!glIsMemoryObjectEXT(mem_obj)) {
++        return;
++    }
++
++    glGenTextures(1, texture);
++    glBindTexture(GL_TEXTURE_2D, *texture);
++    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_TILING_EXT, GL_LINEAR_TILING_EXT);
++    glTexStorageMem2DEXT(GL_TEXTURE_2D, 1, GL_RGBA8, surface_width(surface),
++                         surface_height(surface), mem_obj, 0);
++#endif
++}
++
+ void surface_gl_update_texture(QemuGLShader *gls,
+                                DisplaySurface *surface,
+                                int x, int y, int w, int h)
+-- 
+2.35.3
+

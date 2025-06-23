@@ -2281,6 +2281,7 @@
                 "platform-telemetry-agent",
                 "platform-update-agent",
                 "python-snoop",
+                "reporting-agent",
                 "rpc",
                 "tink-worker",
                 "tpm-cryptsetup",
@@ -3202,7 +3203,11 @@
         "Source project": {
             "license": "Same as the source project.",
             "specs": [
-                "python-nocaselist"
+                "k3s",
+                "k3s-calico",
+                "k3s-multus-cni",
+                "python-nocaselist",
+                "yq"
             ]
         },
         "Sysbench source": {

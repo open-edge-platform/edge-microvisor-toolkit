@@ -16,21 +16,39 @@ Requires:       k3s
 Provides Kubevirt (enabled with GTK libarary support and Intel SR-IOV patched QEMU in Virt-Launcher) and IDV Device Plugin for enabling support of local GTK display using pre-built container tar files
 
 %prep
+tar -xzf %{SOURCE0} -C .
+tar -xzf %{SOURCE1} -C .
 
 %build
 
 %install
-mkdir -p %{buildroot}%{_datadir}/%{name}
-cp -a %{SOURCE0} %{buildroot}%{_datadir}/%{name}/
-cp -a %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
+mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/
+cp *.tar %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/
+
+mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/
+cp *.yaml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/
 
 %files
-%{_datadir}/%{name}/intel-idv-kubevirt-v0.1.tar.gz
-%{_datadir}/%{name}/intel-idv-device-plugin-v0.1.tar.gz
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-api.tar
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-controller.tar
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-handler.tar
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-launcher.tar
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-operator.tar
+%{_sharedstatedir}/rancher/k3s/agent/images/busybox.tar
+%{_sharedstatedir}/rancher/k3s/agent/images/device-plugin.tar
+%{_sharedstatedir}/rancher/k3s/agent/images/sidecar-shim.tar
+%{_sharedstatedir}/rancher/k3s/server/manifests/device-plugin.yaml
+%{_sharedstatedir}/rancher/k3s/server/manifests/kubevirt-cr.yaml
+%{_sharedstatedir}/rancher/k3s/server/manifests/kubevirt-operator.yaml
+
 
 %post
 
 %changelog
-* Thu Jun 5 2025 D M, Karthik <karthik.d.m@intel.com> - v0.1
+* Fri Jun 20 2025 Dhanya A <dhanya.a@intel.com> - v0.1-2
+- Fixing extract directories for kubevirt and device-plugin
+
+* Thu Jun 5 2025 D M, Karthik <karthik.d.m@intel.com> - v0.1-1
 - Pre-release version of Kubevirt v1.5.0 with Display Virtualization and GTK library support identified as v1.5.0_DV
 - Pre-release version of Device Plugin v1 to support Display Virtualization on local display
+

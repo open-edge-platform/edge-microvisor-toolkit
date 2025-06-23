@@ -1,0 +1,34 @@
+From 5978331dd14f2914bc363d2c90b3afcbdf824864 Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Wed, 27 Mar 2024 17:49:21 -0700
+Subject: [PATCH 28/50] virtio-gpu: Recreate the resource's dmabuf if new
+ backing is attached
+
+There can be cases where a blob resource's backing might get
+detached and re-attached such as when the backing object might
+get migrated in the Guest. In this case, we need to create the
+dmabuf fd again by calling udmabuf_create.
+
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+---
+ hw/display/virtio-gpu.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hw/display/virtio-gpu.c b/hw/display/virtio-gpu.c
+index 6a553bc4a5..63b64a60ab 100644
+--- a/hw/display/virtio-gpu.c
++++ b/hw/display/virtio-gpu.c
+@@ -940,6 +940,10 @@ virtio_gpu_resource_attach_backing(VirtIOGPU *g,
+         cmd->error = VIRTIO_GPU_RESP_ERR_UNSPEC;
+         return;
+     }
++
++    if (res->blob_size && res->dmabuf_fd < 0) {
++        virtio_gpu_init_udmabuf(res);
++    }
+ }
+ 
+ static void
+-- 
+2.35.3
+
