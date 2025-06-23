@@ -68,6 +68,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Mon Jun 23 2025 Dhanya A <dhanya.a@intel.com> - 0.1-7
+- Use standard macro in spec file
+
 * Fri Jun 20 2025 Dhanya A <dhanya.a@intel.com> - 0.1-6
 - Update comment in spec file
 
