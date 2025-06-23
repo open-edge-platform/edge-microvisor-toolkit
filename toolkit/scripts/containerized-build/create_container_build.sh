@@ -25,7 +25,7 @@ print_error() {
 help() {
 echo "
 Usage:
-sudo make containerized-rpmbuild [REPO_PATH=/path/to/azurelinux] [MODE=test|build] [VERSION=2.0|3.0] [MOUNTS=/path/in/host:/path/in/container ...] [BUILD_MOUNT=/path/to/build/chroot/mount] [EXTRA_PACKAGES=pkg ...] [ENABLE_REPO=y] [KEEP_CONTAINER=y] [QUIET=y]
+sudo make containerized-rpmbuild [REPO_PATH=/path/to/azurelinux] [MODE=test|build] [VERSION=2.0|3.0] [MOUNTS=/path/in/host:/path/in/container ...] [BUILD_MOUNT=/path/to/build/chroot/mount] [EXTRA_PACKAGES=pkg ...] [ENABLE_REPO=y] [KEEP_CONTAINER=y] [QUIET=y] [EXTRA_ARGS=arg ...]
 
 Starts a docker container with the specified version of Azure Linux
 
@@ -43,6 +43,7 @@ Optional arguments:
     ENABLE_REPO:    Set to 'y' to use local RPMs to satisfy package dependencies. default: n
     KEEP_CONTAINER: Set to 'y' to not cleanup container upon exit. default: n
     QUIET:          Set to 'y' to suppress output. default: n
+    EXTRA_ARGS:     Space delimited extra arguments to pass when docker run. default: \"\"
 
     * User can override Azure Linux make definitions. Some useful overrides could be
                     SPECS_DIR: build specs from another directory like SPECS-EXTENDED by providing SPECS_DIR=path/to/SPECS-EXTENDED. default: $REPO_PATH/SPECS
@@ -97,6 +98,7 @@ while (( "$#")); do
     -r ) enable_local_repo=true; shift ;;
     -k ) keep_container=""; shift ;;
     -q ) STD_OUT_REDIRECT=/dev/null; shift ;;
+    -a ) extra_arg="$2"; shift 2 ;;
     -h ) help; exit 1 ;;
     ? ) echo -e "ERROR: INVALID OPTION.\n\n"; help; exit 1 ;;
   esac
@@ -276,6 +278,7 @@ echo "docker_image_tag is ${docker_image_tag}"
 
 bash -c "docker run $keep_container\
     ${mount_arg} \
+    ${extra_arg} \
     -it ${docker_image_tag} /bin/bash; \
     if [[ -d $RPMS_DIR/repodata ]]; then { rm -r $RPMS_DIR/repodata; echo 'Clearing repodata' ; }; fi
     "
