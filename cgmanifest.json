@@ -7460,19 +7460,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "intel-gmmlib",
-          "version": "22.5.1",
-          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.5.1.tar.gz"
-        }
-      }
-    },
-        {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "intel-idv-device-plugin",
+          "name": "intel-desktop-virtualization-k3s",
           "version": "0.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/dv-device-plugin.tar.gz"
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/intel-idv-kubevirt-v0.1.tar.gz"
         }
       }
     },
@@ -7480,9 +7470,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "intel-idv-kubevirt",
-          "version": "0.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/kubevirt.tar.gz"
+          "name": "intel-gmmlib",
+          "version": "22.5.1",
+          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.5.1.tar.gz"
         }
       }
     },
