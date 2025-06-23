@@ -1,13 +1,13 @@
-# Edge Microvisor Toolkit Tink (µOS)
+# Edge Microvisor Toolkit Micro (µOS)
 
-Edge Microvisor Toolkit Tink (µOS) is a custom, minimal build of Edge Microvisor Toolkit.
+Edge Microvisor Toolkit Micro (µOS) is a custom, minimal build of Edge Microvisor Toolkit.
 It is intended for use in the workflows of Edge Manageability Framework and Edge Microvisor
 Toolkit Standalone Node. The µOS has been introduced to replace previously used HookOS in
 builds. It runs in RAM memory and installs the Edge Microvisor Toolkit operating system.
 
 ## Building the µOS image
 
-Edge Microvisor Toolkit Tink is built from the same baseline as other microvisor OS images
+Edge Microvisor Toolkit Micro is built from the same baseline as other microvisor OS images
 and is generated as a set of `initramfs` and `vmlinuz` image files. The characteristics of
 the resulting image are defined in [edge-image-tink.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-tink.json) configuration file. The µOS includes
 [base OS packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/packagelists/minimal-os-packages.json),
@@ -23,7 +23,7 @@ sudo -E make image -j8 REBUILD_TOOLS=y DAILY_BUILD_REPO=./resources/manifests/pa
 
 The build results in a compressed `emt-tink.tar.gz` file.
 
-The Edge Microvisor Toolkit Tink image files can be extracted from `emt-tink.tar.gz` by running
+The Edge Microvisor Toolkit Micro image files can be extracted from `emt-tink.tar.gz` by running
 the [generate-tink-initramfs.sh](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/scripts/generate-tink-initramfs.sh) bash script. See the usage example:
 
 ```bash
@@ -42,12 +42,12 @@ root=tmpfs rootflags=mode=0755 rd.skipfsck noresume modules-load=nbd
 ```
 
 The generated `initramfs` and `vmlinuz` images can be used for implementing required
-customizations in [Edge Manageability Framework](#orchestrator-build-with-µOS-new-workflow)
-or [Edge Microvisor Toolkit Standalone Node](#microvisor-build-with-µOS-new-workflow) builds.
+customizations in [Edge Manageability Framework](#orchestrator-build-with-µos-new-workflow)
+or [Edge Microvisor Toolkit Standalone Node](#microvisor-build-with-µos-new-workflow) builds.
 
 ## Integration with Edge Manageability Framework and Edge Microvisor Toolkit Standalone Node
 
-The primary components in Edge Microvisor Toolkit Tink, that is *device-discovery*,
+The primary components in Edge Microvisor Toolkit Micro, that is *device-discovery*,
 *tink-worker* are required for provisioning of Edge Manageability Framework (orchestrator)
 and are built as RPMs (from open source) and included in an output *emt-tink.tar.gz* image file by
 standard image build process of Edge Microvisor Toolkit (microvisor).
@@ -62,7 +62,7 @@ the microvisor (Edge Microvisor Toolkit Standalone Node).
 
 See the diagram for more details:
 
-![emf_build_flow](./assets/emf-emt-s-build-workflow.drawio.svg)
+![build-workflow](./assets/emf-emt-s-build-workflow.drawio.svg)
 
 ## Edge Manageability Framework (orchestrator) Specific Builds
 
@@ -83,7 +83,7 @@ containers in a docker-in-docker scenario.
 
 ### Orchestrator Build with µOS (new workflow)
 
-When using Edge Microvisor Toolkit Tink (µOS) in the build workflow, the following RPM
+When using Edge Microvisor Toolkit Micro (µOS) in the build workflow, the following RPM
 packages are run as native systemd services in the Edge Microvisor Toolkit OS:
 
 * Caddy and Fluent Bit are existing RPM packages which are included in µOS.
@@ -131,7 +131,7 @@ file is added into the extracted `initramfs` image, which in turn will be extrac
 The dracut module decompresses the "tar.gz" file to `tmpfs` to run as root during boot stage
 of `initramfs`.
 
-When using Edge Microvisor Toolkit Tink (µOS) in the build workflow, the following
+When using Edge Microvisor Toolkit Micro (µOS) in the build workflow, the following
 components are added to run as native systemd services in the `initramfs` image:
 
 - The [installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/provisioning_scripts/install-os.sh) from Edge Microvisor Toolkit Standalone Node
