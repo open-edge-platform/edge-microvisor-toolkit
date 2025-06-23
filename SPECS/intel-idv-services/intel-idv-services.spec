@@ -40,8 +40,8 @@ mkdir -p %{buildroot}%{_sysconfdir}/systemd/system/getty@tty1.service.d
 install -m 644 autologin.conf %{buildroot}%{_sysconfdir}/systemd/system/getty@tty1.service.d/autologin.conf
 
 # Default presets for user
-mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset
-install -m 644 %{SOURCE1} -t %{buildroot}%{_prefix}/lib/systemd/user-preset/
+mkdir -p %{buildroot}%{_userpresetdir}
+install -m 644 %{SOURCE1} -t %{buildroot}%{_userpresetdir}/
 
 %files
 /usr/bin/idv/*
