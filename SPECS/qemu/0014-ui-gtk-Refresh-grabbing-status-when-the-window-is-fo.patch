@@ -1,0 +1,108 @@
+From f638f783fa16efcb7377597c7af56d2e6a589eab Mon Sep 17 00:00:00 2001
+From: "Kim, Dongwon" <dongwon.kim@intel.com>
+Date: Tue, 20 Aug 2024 08:41:38 +0800
+Subject: [PATCH 14/50] ui/gtk: Refresh grabbing status when the window is
+ focused
+
+The grabbing is lost when the window become invisible (e.g.
+windows minimization), so it is required to make it reacquire
+it when it is visible again.
+
+Signed-off-by: Kim, Dongwon <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 51 +++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 45 insertions(+), 6 deletions(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 7df9a98d6c..90caf7785b 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -1495,6 +1495,32 @@ static void gd_vc_fullscreen_toggle(void *opaque)
+     }
+ }
+ 
++static gboolean gd_window_state_event(GtkWidget *widget, GdkEvent *event,
++                                      void *opaque)
++{
++    VirtualConsole *vc = opaque;
++    GtkDisplayState *s = vc->s;
++
++    if (!vc) {
++        return TRUE;
++    }
++
++    if (event->window_state.new_window_state & GDK_WINDOW_STATE_FOCUSED) {
++        if (s->ptr_owner == vc && s->kbd_owner == vc) {
++            if (gd_is_grab_active(s)) {
++                s->ptr_owner = NULL;
++                s->kbd_owner = NULL;
++                gd_grab_keyboard(vc, "windows-focused");
++                gd_grab_pointer(vc, "windows-focused");
++            } else {
++                gd_ungrab_keyboard(s);
++                gd_ungrab_pointer(s);
++            }
++        }
++    }
++    return TRUE;
++}
++
+ static void gd_tab_window_create(VirtualConsole *vc)
+ {
+     GtkDisplayState *s = vc->s;
+@@ -1527,6 +1553,8 @@ static void gd_tab_window_create(VirtualConsole *vc)
+                                          G_CALLBACK(gd_vc_fullscreen_toggle),
+                                          vc, NULL);
+         gtk_accel_group_connect(ag, GDK_KEY_f, HOTKEY_MODIFIERS, 0, cb_fs);
++        g_signal_connect(vc->window, "window-state-event",
++                         G_CALLBACK(gd_window_state_event), vc);
+     }
+ 
+     gd_update_geometry_hints(vc);
+@@ -1548,6 +1576,9 @@ static void gd_menu_untabify(GtkMenuItem *item, void *opaque)
+     }
+ }
+ 
++static void gd_accel_grab_input(void *opaque);
++static void gd_grab_update(VirtualConsole *vc, bool kbd, bool ptr);
++
+ static void gd_window_show_on_monitor(GdkDisplay *dpy, VirtualConsole *vc,
+                                       gint monitor_num)
+ {
+@@ -1591,12 +1622,17 @@ static void gd_window_show_on_monitor(GdkDisplay *dpy, VirtualConsole *vc,
+     info.height = gdk_window_get_height(window);
+     dpy_set_ui_info(vc->gfx.dcl.con, &info, false);
+ 
+-    if (gd_is_grab_active(s)) {
+-        gd_grab_keyboard(vc, "user-request-main-window");
+-        gd_grab_pointer(vc, "user-request-main-window");
+-    } else {
+-        gd_ungrab_keyboard(s);
+-        gd_ungrab_pointer(s);
++    if (s->ptr_owner && s->kbd_owner &&
++        s->ptr_owner == vc && s->kbd_owner == vc) {
++        if (gd_is_grab_active(s)) {
++            s->ptr_owner = NULL;
++            s->kbd_owner = NULL;
++            gd_grab_keyboard(vc, "user-request-main-window");
++            gd_grab_pointer(vc, "user-request-main-window");
++        } else {
++            gd_ungrab_keyboard(s);
++            gd_ungrab_pointer(s);
++        }
+     }
+ 
+     gd_update_cursor(vc);
+@@ -2825,6 +2861,9 @@ static void gtk_display_init(DisplayState *ds, DisplayOptions *opts)
+     }
+ 
+     vc = gd_vc_find_current(s);
++    g_signal_connect(s->window, "window-state-event",
++                     G_CALLBACK(gd_window_state_event), vc);
++
+     gtk_widget_set_sensitive(s->view_menu, vc != NULL);
+ #ifdef CONFIG_VTE
+     gtk_widget_set_sensitive(s->copy_item,
+-- 
+2.35.3
+

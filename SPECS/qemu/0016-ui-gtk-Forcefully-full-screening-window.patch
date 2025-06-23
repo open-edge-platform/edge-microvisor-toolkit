@@ -1,0 +1,78 @@
+From 5724bb94775a585f68eed1a1dbbb7038c5c56c06 Mon Sep 17 00:00:00 2001
+From: "Kim, Dongwon" <dongwon.kim@intel.com>
+Date: Wed, 21 Aug 2024 02:26:55 +0800
+Subject: [PATCH 16/50] ui/gtk: Forcefully full-screening window
+
+Re-fullscreen the window if it was shrunk by the compositor after
+QEMU is launched.
+
+This is to WA the problem in Ubuntu 24.04
+
+Signed-off-by: Kim, Dongwon <dongwon.kim@intel.com>
+---
+ include/ui/gtk.h |  1 +
+ ui/gtk.c         | 17 +++++++++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/include/ui/gtk.h b/include/ui/gtk.h
+index 07a65254ef..e9cdb12ef2 100644
+--- a/include/ui/gtk.h
++++ b/include/ui/gtk.h
+@@ -87,6 +87,7 @@ typedef struct VirtualConsole {
+     GtkWidget *focus;
+     GdkMonitor *monitor;
+     VirtualConsoleType type;
++    bool full_screen;
+     union {
+         VirtualGfxConsole gfx;
+ #if defined(CONFIG_VTE)
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 5a2fb5a008..9df7e03094 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -1487,11 +1487,13 @@ static void gd_vc_fullscreen_toggle(void *opaque)
+             vc->gfx.scale_y = 1.0;
+             gd_update_windowsize(vc);
+         }
++	vc->full_screen = false;
+     } else {
+         if (vc->type == GD_VC_GFX) {
+             gtk_widget_set_size_request(vc->gfx.drawing_area, -1, -1);
+         }
+         gtk_window_fullscreen(GTK_WINDOW(vc->window));
++	vc->full_screen = true;
+     }
+ }
+ 
+@@ -1518,6 +1520,20 @@ static gboolean gd_window_state_event(GtkWidget *widget, GdkEvent *event,
+             }
+         }
+     }
++
++    /* WA to fullscreen window if it's forcefully un-fullscreened by
++     * the compositor */
++    if (!(event->window_state.new_window_state &
++          GDK_WINDOW_STATE_FULLSCREEN)) {
++        if (vc == gd_vc_find_current(vc->s) && vc->s->full_screen) {
++            vc->s->full_screen = false;
++            gtk_menu_item_activate(GTK_MENU_ITEM(vc->s->full_screen_item));
++        } else if (vc->full_screen) {
++            vc->full_screen = false;
++            gd_vc_fullscreen_toggle(vc);
++        }
++    }
++
+     return TRUE;
+ }
+ 
+@@ -1606,6 +1622,7 @@ static void gd_window_show_on_monitor(GdkDisplay *dpy, VirtualConsole *vc,
+     if (s->opts->has_full_screen && s->opts->full_screen) {
+         gtk_widget_set_size_request(vc->gfx.drawing_area, -1, -1);
+         gtk_window_fullscreen(GTK_WINDOW(vc->window));
++	vc->full_screen = true;
+     } else if ((s->window == vc->window) && s->full_screen) {
+         gd_menu_show_tabs(GTK_MENU_ITEM(s->show_tabs_item), s);
+         if (gtk_check_menu_item_get_active(
+-- 
+2.35.3
+

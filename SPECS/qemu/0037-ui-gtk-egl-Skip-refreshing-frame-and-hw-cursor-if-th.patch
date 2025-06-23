@@ -1,0 +1,56 @@
+From ac0f6b9351c3122ea5ba48c5009fc1a4e04931b4 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 13 Mar 2025 15:51:09 -0700
+Subject: [PATCH 37/50] ui/gtk-egl: Skip refreshing frame and hw-cursor if the
+ same frame was just rendered
+
+More optimization on refresh
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ include/ui/gtk.h | 1 +
+ ui/gtk-egl.c     | 8 ++++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/include/ui/gtk.h b/include/ui/gtk.h
+index 782484a374..723958794d 100644
+--- a/include/ui/gtk.h
++++ b/include/ui/gtk.h
+@@ -47,6 +47,7 @@ typedef struct VirtualGfxConsole {
+     QemuGLShader *gls;
+     EGLContext ectx;
+     EGLSurface esurface;
++    bool recently_updated;
+     int glupdates;
+     int x, y, w, h;
+     egl_fb guest_fb;
+diff --git a/ui/gtk-egl.c b/ui/gtk-egl.c
+index fd9b05508b..8f84b3a19c 100644
+--- a/ui/gtk-egl.c
++++ b/ui/gtk-egl.c
+@@ -95,6 +95,8 @@ void gd_egl_draw(VirtualConsole *vc)
+                 qemu_dmabuf_set_draw_submitted(dmabuf, false);
+             }
+ 
++            vc->gfx.recently_updated = true;
++
+             if (!dmabuf ||
+                 (dmabuf && qemu_dmabuf_get_render_sync(dmabuf) &&
+                 vc->gfx.guest_fb.framebuffer)) {
+@@ -173,7 +175,13 @@ void gd_egl_refresh(DisplayChangeListener *dcl)
+     }
+ 
+     if (dmabuf && (qemu_dmabuf_get_fd(dmabuf) > 0)
++        && !qemu_dmabuf_get_draw_submitted(dmabuf)
+         && cursor_updated) {
++        if (vc->gfx.recently_updated) {
++            vc->gfx.recently_updated = 0;
++            return;
++        }
++
+         eglMakeCurrent(qemu_egl_display, vc->gfx.esurface,
+                        vc->gfx.esurface, vc->gfx.ectx);
+ 
+-- 
+2.35.3
+

@@ -1,0 +1,66 @@
+From 9ca2d062e78faa8df8a23c5d61036a018e8402ae Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Sun, 23 Mar 2025 21:21:05 -0700
+Subject: [PATCH 42/50] ui/gtk: Unblock zero copy display pipeline before
+ saving/restoring VM
+
+System will be stuck if VM state is saved/restored in the middle of
+guest display rendering.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index db136fa90d..90fa4fb1a3 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -678,6 +678,7 @@ static void gd_gl_release_dmabuf(DisplayChangeListener *dcl,
+ 
+ void gd_hw_gl_flushed(void *vcon)
+ {
++#ifdef CONFIG_GBM
+     VirtualConsole *vc = vcon;
+     QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
+     int fence_fd;
+@@ -690,6 +691,7 @@ void gd_hw_gl_flushed(void *vcon)
+         graphic_hw_gl_block(vc->gfx.dcl.con, false);
+         gd_gl_count_frame(&vc->gfx.dcl, false, true);
+     }
++#endif
+ }
+ 
+ /** DisplayState Callbacks (opengl version) **/
+@@ -767,7 +769,28 @@ static const DisplayGLCtxOps egl_ctx_ops = {
+ static void gd_change_runstate(void *opaque, bool running, RunState state)
+ {
+     GtkDisplayState *s = opaque;
++#ifdef CONFIG_GBM
++    int i;
++
++    if (state == RUN_STATE_SAVE_VM || state == RUN_STATE_RESTORE_VM) {
++        for (i = 0; i < s->nb_vcs; i++) {
++            VirtualConsole *vc = &s->vc[i];
++            QemuDmaBuf *dmabuf = vc->gfx.guest_fb.dmabuf;
++
++            if (dmabuf && qemu_dmabuf_get_draw_submitted(dmabuf)) {
++                qemu_dmabuf_set_draw_submitted(dmabuf, false);
++                graphic_hw_gl_block(vc->gfx.dcl.con, false);
++            }
++
++	    if (dmabuf && qemu_dmabuf_get_fence_fd(dmabuf) >= 0) {
+ 
++                /* force flushing current scanout blob rendering process
++                 * just in case the fence is still not signaled */
++                gd_hw_gl_flushed(vc);
++            }
++        }
++    }
++#endif
+     gd_update_caption(s);
+ }
+ 
+-- 
+2.35.3
+

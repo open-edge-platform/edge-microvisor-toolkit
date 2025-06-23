@@ -1,0 +1,86 @@
+From 919dd0c928f7e6a858c6dcb2254f434359754792 Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Tue, 10 Jan 2023 12:59:21 -0800
+Subject: [PATCH 17/50] ui/spice: Add an option for users to provide a
+ preferred codec
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Giving users an option to choose a particular codec will enable
+them to make an appropriate decision based on their hardware and
+use-case.
+
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Frediano Ziglio <freddy77@gmail.com>
+Cc: Dongwon Kim <dongwon.kim@intel.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+---
+ qemu-options.hx |  5 +++++
+ ui/spice-core.c | 12 ++++++++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/qemu-options.hx b/qemu-options.hx
+index e2dbf08b05..cad6d85b8c 100644
+--- a/qemu-options.hx
++++ b/qemu-options.hx
+@@ -2290,6 +2290,7 @@ DEF("spice", HAS_ARG, QEMU_OPTION_spice,
+     "       [,streaming-video=[off|all|filter]][,disable-copy-paste=on|off]\n"
+     "       [,disable-agent-file-xfer=on|off][,agent-mouse=[on|off]]\n"
+     "       [,playback-compression=[on|off]][,seamless-migration=[on|off]]\n"
++    "       [,preferred-codec=<encoder>:<codec>\n"
+     "       [,gl=[on|off]][,rendernode=<file>]\n"
+     "                enable spice\n"
+     "                at least one of {port, tls-port} is mandatory\n",
+@@ -2378,6 +2379,10 @@ SRST
+     ``seamless-migration=[on|off]``
+         Enable/disable spice seamless migration. Default is off.
+ 
++    ``preferred-codec=<encoder>:<codec>``
++        Provide the preferred codec the Spice server should use.
++        Default would be spice:mjpeg.
++
+     ``gl=[on|off]``
+         Enable/disable OpenGL context. Default is off.
+ 
+diff --git a/ui/spice-core.c b/ui/spice-core.c
+index 15be640286..d7c57d49fe 100644
+--- a/ui/spice-core.c
++++ b/ui/spice-core.c
+@@ -488,6 +488,9 @@ static QemuOptsList qemu_spice_opts = {
+         },{
+             .name = "streaming-video",
+             .type = QEMU_OPT_STRING,
++        },{
++            .name = "preferred-codec",
++            .type = QEMU_OPT_STRING,
+         },{
+             .name = "agent-mouse",
+             .type = QEMU_OPT_BOOL,
+@@ -662,6 +665,7 @@ static void qemu_spice_init(void)
+     char *x509_key_file = NULL,
+         *x509_cert_file = NULL,
+         *x509_cacert_file = NULL;
++    const char *preferred_codec = NULL;
+     int port, tls_port, addr_flags;
+     spice_image_compression_t compression;
+     spice_wan_compression_t wan_compr;
+@@ -801,6 +805,14 @@ static void qemu_spice_init(void)
+         spice_server_set_streaming_video(spice_server, SPICE_STREAM_VIDEO_OFF);
+     }
+ 
++    preferred_codec = qemu_opt_get(opts, "preferred-codec");
++    if (preferred_codec) {
++        if (spice_server_set_video_codecs(spice_server, preferred_codec)) {
++            error_report("Preferred codec name is not valid");
++            exit(1);
++        }
++    }
++
+     spice_server_set_agent_mouse
+         (spice_server, qemu_opt_get_bool(opts, "agent-mouse", 1));
+     spice_server_set_playback_compression
+-- 
+2.35.3
+

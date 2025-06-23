@@ -1,0 +1,187 @@
+From 0951e54c6274b119961a346e44da6ebe4b195826 Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Mon, 25 Mar 2024 17:57:21 -0700
+Subject: [PATCH 30/50] virtio-gpu-udmabuf: Create dmabuf from mr associated
+ with a VFIO dev
+
+Once we have the ramblock and the associated mr, we try to find the
+VFIO device that owns the mr and also determine the relevant VFIO
+region and index. We then provide this info (i.e, region index)
+along with offsets and lengths to the VFIO PCI driver (via
+VFIO_DEVICE_FEATURE_GET | VFIO_DEVICE_FEATURE_DMA_BUF) to get
+a new dmabuf fd created.
+
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+---
+ hw/display/virtio-gpu-udmabuf.c | 97 ++++++++++++++++++++++++++++++++-
+ linux-headers/linux/vfio.h      | 25 +++++++++
+ 2 files changed, 121 insertions(+), 1 deletion(-)
+
+diff --git a/hw/display/virtio-gpu-udmabuf.c b/hw/display/virtio-gpu-udmabuf.c
+index 8fcc0c3055..a843d5cf9e 100644
+--- a/hw/display/virtio-gpu-udmabuf.c
++++ b/hw/display/virtio-gpu-udmabuf.c
+@@ -18,6 +18,7 @@
+ #include "ui/console.h"
+ #include "hw/virtio/virtio-gpu.h"
+ #include "hw/virtio/virtio-gpu-pixman.h"
++#include "hw/vfio/vfio-common.h"
+ #include "trace.h"
+ #include "exec/ramblock.h"
+ #include "sysemu/hostmem.h"
+@@ -26,6 +27,88 @@
+ #include "qemu/memfd.h"
+ #include "standard-headers/linux/udmabuf.h"
+ 
++static void vfio_create_dmabuf(struct virtio_gpu_simple_resource *res)
++{
++    g_autofree struct vfio_device_feature *feature;
++    struct vfio_device_feature_dma_buf *dma_buf;
++    VFIODevice *vbasedev = NULL;
++    VFIORegion *region = NULL;
++    ram_addr_t offset;
++    MemoryRegion *mr;
++    RAMBlock *rb;
++    size_t argsz;
++    int i;
++
++    if (res->iov_cnt <= 0) {
++        return;
++    }
++
++    argsz = sizeof(*feature) + sizeof (*dma_buf) +
++            sizeof(struct vfio_region_dma_range) * res->iov_cnt;
++    feature = g_malloc0(argsz);
++    dma_buf = (struct vfio_device_feature_dma_buf *)feature->data;
++
++    for (i = 0; i < res->iov_cnt; i++) {
++        rcu_read_lock();
++        rb = qemu_ram_block_from_host(res->iov[i].iov_base, false, &offset);
++        rcu_read_unlock();
++
++        if (!rb) {
++            return;
++        }
++
++        mr = rb->mr;
++        if (mr->ops != &vfio_region_ops) {
++            mr = mr->container;
++            if (mr->ops != &vfio_region_ops) {
++                return;
++            }
++        }
++
++        region = mr->opaque;
++
++        if (!region) {
++            return;
++        }
++
++        dma_buf->dma_ranges[i].region_index = region->nr;
++        dma_buf->dma_ranges[i].offset = offset;
++        dma_buf->dma_ranges[i].length = res->iov[i].iov_len;
++    }
++
++    dma_buf->nr_ranges = res->iov_cnt;
++    dma_buf->open_flags = O_RDONLY | O_CLOEXEC;
++    feature->argsz = argsz;
++    feature->flags = VFIO_DEVICE_FEATURE_GET | VFIO_DEVICE_FEATURE_DMA_BUF;
++
++    if (!vbasedev) {
++        vbasedev = region->vbasedev;
++    }
++
++    res->dmabuf_fd = ioctl(vbasedev->fd, VFIO_DEVICE_FEATURE, feature);
++
++    if (res->dmabuf_fd < 0) {
++        warn_report("%s: VFIO_DEVICE_FEATURE_DMA_BUF: %s", __func__,
++                    strerror(errno));
++    }
++}
++
++static bool is_device_owner_vfio(MemoryRegion *mr)
++{
++    VFIODevice *vdev;
++
++    if (QLIST_EMPTY(&vfio_device_list)) {
++        return false;
++    }
++
++    QLIST_FOREACH(vdev, &vfio_device_list, next) {
++        if (vdev->dev == mr->dev) {
++            return true;
++        }
++    }
++    return false;
++}
++
+ static void virtio_gpu_create_udmabuf(struct virtio_gpu_simple_resource *res)
+ {
+     struct udmabuf_create_list *list;
+@@ -129,6 +212,8 @@ bool virtio_gpu_have_udmabuf(void)
+ 
+ void virtio_gpu_init_udmabuf(struct virtio_gpu_simple_resource *res)
+ {
++    ram_addr_t offset;
++    RAMBlock *rb;
+     void *pdata = NULL;
+ 
+     res->dmabuf_fd = -1;
+@@ -136,7 +221,17 @@ void virtio_gpu_init_udmabuf(struct virtio_gpu_simple_resource *res)
+         res->iov[0].iov_len < 4096) {
+         pdata = res->iov[0].iov_base;
+     } else {
+-        virtio_gpu_create_udmabuf(res);
++        rb = qemu_ram_block_from_host(res->iov[0].iov_base, false, &offset);
++        if (rb && memory_region_is_ram_device(rb->mr)) {
++            if (!is_device_owner_vfio(rb->mr)) {
++                warn_report("Could not find device to create dmabuf");
++                return;
++            }
++            vfio_create_dmabuf(res);
++        } else {
++            virtio_gpu_create_udmabuf(res);
++        }
++
+         if (res->dmabuf_fd < 0) {
+             return;
+         }
+diff --git a/linux-headers/linux/vfio.h b/linux-headers/linux/vfio.h
+index b4be37b225..35d7992da5 100644
+--- a/linux-headers/linux/vfio.h
++++ b/linux-headers/linux/vfio.h
+@@ -1458,6 +1458,31 @@ struct vfio_device_feature_bus_master {
+ };
+ #define VFIO_DEVICE_FEATURE_BUS_MASTER 10
+ 
++/**
++ * Upon VFIO_DEVICE_FEATURE_GET create a dma_buf fd for the
++ * region selected.
++ *
++ * open_flags are the typical flags passed to open(2), eg O_RDWR, O_CLOEXEC,
++ * etc. offset/length specify a slice of the region to create the dmabuf from.
++ * If both are 0 then the whole region is used.
++ *
++ * Return: The fd number on success, -1 and errno is set on failure.
++ */
++#define VFIO_DEVICE_FEATURE_DMA_BUF 11
++
++struct vfio_region_dma_range {
++	__u32	region_index;
++	__u32	__pad;
++	__u64	offset;
++	__u64	length;
++};
++
++struct vfio_device_feature_dma_buf {
++	__u32	open_flags;
++	__u32	nr_ranges;
++	struct vfio_region_dma_range dma_ranges[];
++};
++
+ /* -------- API for Type1 VFIO IOMMU -------- */
+ 
+ /**
+-- 
+2.35.3
+
