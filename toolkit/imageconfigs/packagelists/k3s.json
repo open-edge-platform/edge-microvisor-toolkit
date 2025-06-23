@@ -2,7 +2,8 @@
     "packages": [
         "k3s",
         "k3s-calico",
-        "k3s-multus-cni"
+        "k3s-multus-cni",
+        "intel-gpu-device-plugin"
     ],
     "_comment": "K3s packages for lightweight Kubernetes deployment."
 }

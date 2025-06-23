@@ -2266,6 +2266,7 @@
                 "edge-rpm-macros",
                 "hardware-discovery-agent",
                 "inbm",
+                "intel-gpu-device-plugin",
                 "intel-igsc",
                 "intel-lms",
                 "intel-npu-firmware",
