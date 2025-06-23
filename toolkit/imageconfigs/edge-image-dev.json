@@ -52,7 +52,7 @@
                 {
                     "ID": "boot",
                     "MountPoint": "/boot/efi",
-                    "MountOptions": "umask=0077"
+                    "MountOptions" : "umask=0077"
                 },
                 {
                     "ID": "rootfs",
@@ -87,10 +87,10 @@
             },
             "PostInstallScripts": [
                 {
-                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                        "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
                 },
                 {
-                    "Path": "additionalconfigs/add-sudoer.sh"
+                        "Path": "additionalconfigs/add-sudoer.sh"
                 }
             ],
             "KernelOptions": {
@@ -125,6 +125,7 @@
                     "PasswordHashed": true
                 }
             ]
+
         }
     ]
 }
