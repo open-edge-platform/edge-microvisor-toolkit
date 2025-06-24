@@ -22,23 +22,24 @@ tar -xzf %{SOURCE1} -C .
 
 %install
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/
-cp *.tar %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/
+cp *.tar.zst %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/
 
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/
 cp *.yaml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/
 
 %files
-%{_sharedstatedir}/rancher/k3s/agent/images/virt-api.tar
-%{_sharedstatedir}/rancher/k3s/agent/images/virt-controller.tar
-%{_sharedstatedir}/rancher/k3s/agent/images/virt-handler.tar
-%{_sharedstatedir}/rancher/k3s/agent/images/virt-launcher.tar
-%{_sharedstatedir}/rancher/k3s/agent/images/virt-operator.tar
-%{_sharedstatedir}/rancher/k3s/agent/images/busybox.tar
-%{_sharedstatedir}/rancher/k3s/agent/images/device-plugin.tar
-%{_sharedstatedir}/rancher/k3s/agent/images/sidecar-shim.tar
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-api.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-controller.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-handler.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-launcher.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/virt-operator.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/busybox.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/device-plugin.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/sidecar-shim.tar.zst
 %{_sharedstatedir}/rancher/k3s/server/manifests/device-plugin.yaml
 %{_sharedstatedir}/rancher/k3s/server/manifests/kubevirt-cr.yaml
 %{_sharedstatedir}/rancher/k3s/server/manifests/kubevirt-operator.yaml
+%{_sharedstatedir}/rancher/k3s/server/manifests/kubevirt-cr-gfx-sriov.yaml
 
 
 %post
