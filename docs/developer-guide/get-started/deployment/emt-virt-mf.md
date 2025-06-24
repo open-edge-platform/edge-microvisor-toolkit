@@ -8,7 +8,7 @@ The sections below describe setup, running and configuration of Android VM using
 
 ### Setup Android VM
 
-#### Prerequisites
+#### Android VM Setup Prerequisites
 
 ##### Build requirements
 
@@ -18,21 +18,21 @@ The sections below describe setup, running and configuration of Android VM using
 
 ##### Celadon Development Environment Setup
 
-1.  Create a local `bin/` directory, download the repo tool to that directory, and make the binary executable with the following commands:
+1. Create a local `bin/` directory, download the repo tool to that directory, and make the binary executable with the following commands:
 
 ```bash
  mkdir -p ~/bin
-$ curl https://storage.googleapis.com/git-repo-downloads/repo > 
+curl https://storage.googleapis.com/git-repo-downloads/repo >
 ~/bin/repo
-$ chmod a+x ~/bin/repo
-$ export PATH=~/bin:$PATH
+chmod a+x ~/bin/repo
+export PATH=~/bin:$PATH
 ```
 
 2. Install the following required packages on your 64-bit Ubuntu 22.04 LTS development workstation prior to the compilation:
 
 ```bash
  sudo apt-get update
-$ sudo apt-get install -y wget openjdk-8-jdk git ccache \
+sudo apt-get install -y wget openjdk-8-jdk git ccache \
  automake lzop bison gperf build-essential zip curl \
  zlib1g-dev g++-multilib python3-networkx \
  libxml2-utils bzip2 libbz2-dev libbz2-1.0 \
@@ -46,24 +46,24 @@ $ sudo apt-get install -y wget openjdk-8-jdk git ccache \
  rsync vim python-six kmod glslang-tools \
  software-properties-common cpio python3-pip ninja-build \
  cutils cmake pkg-config xorriso mtools libjson-c-dev file
-$ sudo pip3 install meson==0.60.0 mako==1.1.0 dataclasses 
+sudo pip3 install meson==0.60.0 mako==1.1.0 dataclasses
 pycryptodome ply==3.11
 ```
 
 3. Setup git config required for `repo init` on the build server.
 
 ```bash
-# Setup git config with your name and email ID. Add proxy 
+# Setup git config with your name and email ID. Add proxy
 settings if behind a firewall
-$ cd /home/$USER
-$ vi /home/$USER/.gitconfig
+cd /home/$USER
+vi /home/$USER/.gitconfig
 # Append below lines to .gitconfig file
 [user]
 email = <your email>
 name = <your name>
 [http]
 proxy = <http_proxy>
-[https] 
+[https]
 proxy = <https_proxy>
 ```
 
@@ -77,14 +77,14 @@ proxy = <https_proxy>
 
 ```bash
 # Init with the default manifest
-$ repo init -u https://github.com/projectceladon/manifest.git
+repo init -u https://github.com/projectceladon/manifest.git
 # Copy RPL CIV manifest and use it
-$ cp <source path>/Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml 
+cp <source path>/Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml
 .repo/manifests/
-$ repo init -m Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml
+repo init -m Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml
 # Sync the code and setup
-$ repo sync -c -j16
-$ repo forall -c git lfs pull
+repo sync -c -j16
+repo forall -c git lfs pull
 ```
 
 > **Note:** Depending on network conditions, the sync may take several hours.
@@ -92,19 +92,19 @@ $ repo forall -c git lfs pull
 2. Build Android CIV release:
 
 ```bash
-# Perform the environment setup from directory where repo is 
+# Perform the environment setup from directory where repo is
 initialized
-$ source build/envsetup.sh
+source build/envsetup.sh
 # Select userdebug variant
-$ lunch caas-userdebug
+lunch caas-userdebug
 # Start the build
-$ make flashfiles BASE_LTS2020_YOCTO_KERNEL=true -j16
+make flashfiles BASE_LTS2020_YOCTO_KERNEL=true -j16
 ```
 3. Find the required output files for use in setup:
 
 ```bash
 # Get location of CIV build output
-$ find pub -name caas-releasefiles*.tar.gz
+find pub -name caas-releasefiles*.tar.gz
 pub/caas/userdebug/caas-releasefiles-userdebug.tar.gz
 ```
 
@@ -123,28 +123,28 @@ For Celadon Host OS hardening recommendations see [this document.](https://proje
 
 ```bash
 # Copy the artifact
-$ cp caas-releasefiles-userdebug.tar.gz /home/$USER
+cp caas-releasefiles-userdebug.tar.gz /home/$USER
 ```
 
 2. Extract the package:
 
 ```bash
 # Extract files
-$ cd /home/$USER
-$ tar xzvf caas-releasefiles-userdebug.tar.gz
+cd /home/$USER
+tar xzvf caas-releasefiles-userdebug.tar.gz
 ```
 
 3. Run the host setup:
 
 ```bash
 # Update the host
-$ sudo -E ./scripts/setup_host.sh
+sudo -E ./scripts/setup_host.sh
 ```
 
 4. After the setup has completed, reboot the host:
 
 ```bash
-$ sudo reboot
+sudo reboot
 ```
 
 #### Creating Android VM Image
@@ -153,19 +153,19 @@ Create Android CIV image for running as VM on the host device:
 
 ```bash
 # Change directory
-$ cd /home/$USER
+cd /home/$USER
 # Generate CIV disk image from caas-flashfiles.
-# The script and flashfiles have already been extracted from 
+# The script and flashfiles have already been extracted from
 caas-releasefiles-userdebug.tar.gz
 # Wait for "Flashing is completed" msg from script.
-$ sudo -E ./scripts/start_flash_usb.sh caas-flashfiles￾xxxxx.zip --display-off
+sudo -E ./scripts/start_flash_usb.sh caas-flashfiles￾xxxxx.zip --display-off
 ```
 
 ### Running Android VM
 
-#### Prerequisites
+#### Android VM Running Prerequisites
 
-##### Launch Scripts
+##### Android Guest VM Launch Scripts
 
 On the Ubuntu host OS download the launch script `ubuntu_kvm_multios_scripts.zip` from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
 
@@ -177,8 +177,8 @@ Run the following:
 
 ```bash
 # Launch the Android CIV Guest VM
-$ cd /home/$USER
-$ sudo -E vm-manager -b Android-CIV1
+cd /home/$USER
+sudo -E vm-manager -b Android-CIV1
 ```
 
 #### Launch Multiple Android Guest VM
@@ -191,7 +191,7 @@ $ sudo -E vm-manager -b Android-CIV1
 # (names will be Android-CIV2, Android-CIV3 etc.)
 #
 # Example to create 2 additional images
-$ sudo -E ./scripts/setup_multi_civ_vm.sh -c 2
+sudo -E ./scripts/setup_multi_civ_vm.sh -c 2
 ```
 
 2. Create a `start_all_android.sh` script to launch multiple guests as shown below.
@@ -201,7 +201,7 @@ $ sudo -E ./scripts/setup_multi_civ_vm.sh -c 2
 ```bash
 #!/bin/bash
 # Sample script to launch multiple Android guests
-# Remember to customise the launch commands according to HW 
+# Remember to customise the launch commands according to HW
 setup and use case:
 # - number of guests
 # - memory allocated
@@ -222,13 +222,13 @@ wait
 
 ```bash
 # Launch the guest VMs
-$ chmod +x ./start_all_android.sh
-$ ./start_all_android.sh
+chmod +x ./start_all_android.sh
+./start_all_android.sh
 ```
 
 #### Android Guest VM Configuration
 
-##### Changing Guest VM Memory and Number of CPUs
+##### Changing Android Guest VM Memory and Number of CPUs
 
 For Android 12 Guest VM edit the `memory` and `vcpu` sections of the configuration INI file at `/home/$USER/.intel/.civ/Android-CIV1.ini`
 
@@ -246,14 +246,14 @@ To enable USB Devices in the host VM you can use a passthrough that enables sele
 1. Find the PCI ID of the USB device:
 
 ```bash
-$ lspci -nn -D | grep USB
-0000:00:14.0 USB controller [0c03]: Intel Corporation Device 
+lspci -nn -D | grep USB
+0000:00:14.0 USB controller [0c03]: Intel Corporation Device
 [8086:7ae0] (rev 11)
-0000:00:14.1 USB controller [0c03]: Intel Corporation Device 
+0000:00:14.1 USB controller [0c03]: Intel Corporation Device
 [8086:7ae1] (rev 11)
-0000:05:00.0 USB controller [0c03]: Intel Corporation 
+0000:05:00.0 USB controller [0c03]: Intel Corporation
 Thunderbolt 4 NHI [Maple Ridge 4C 2020] [8086:1137]
-0000:07:00.0 USB controller [0c03]: Intel Corporation 
+0000:07:00.0 USB controller [0c03]: Intel Corporation
 Thunderbolt 4 USB Controller [Maple Ridge 4C 2020] [8086:1138]
 ```
 
@@ -261,7 +261,7 @@ Thunderbolt 4 USB Controller [Maple Ridge 4C 2020] [8086:1138]
 
 ```bash
 [passthrough]
-#specified the PCI id here if you want to passthrough it to 
+#specified the PCI id here if you want to passthrough it to
 guest, separate them with comma
 passthrough_pci=0000:00:14.0,0000:00:14.1,0000:05:00.0,0000:07:
 00.0,
@@ -272,8 +272,8 @@ passthrough_pci=0000:00:14.0,0000:00:14.1,0000:05:00.0,0000:07:
 1. Find the PCI ID of the Wi-Fi device:
 
 ```bash
-$ lspci -nn -D | grep Wi-Fi
-0000:02:00.0 Network controller [0280]: Intel Corporation Wi-Fi 
+lspci -nn -D | grep Wi-Fi
+0000:02:00.0 Network controller [0280]: Intel Corporation Wi-Fi
 6 AX210/AX211/AX411 160MHz [8086:2725] (rev 1a)
 ```
 
@@ -281,7 +281,7 @@ $ lspci -nn -D | grep Wi-Fi
 
 ```bash
 [passthrough]
-#specified the PCI id here if you want to passthrough it to 
+#specified the PCI id here if you want to passthrough it to
 guest, separate them with comma
 passthrough_pci=0000:02:00.0
 ```
@@ -293,7 +293,7 @@ passthrough_pci=0000:02:00.0
 ```bash
 [extra]
 cmd=-chardev socket,id=ch0,path=/tmp/civ1-
-console,server=on,wait=off,logfile=/tmp/civ1_serial.log -serial 
+console,server=on,wait=off,logfile=/tmp/civ1_serial.log -serial
 chardev:ch0
 ```
 
@@ -301,22 +301,22 @@ chardev:ch0
 
 ```bash
 # Connect to Celadon guest console
-$ sudo socat unix-connect:/tmp/civ1-console stdio
+sudo socat unix-connect:/tmp/civ1-console stdio
 ```
 
 ## Yocto
 
 The sections below describe setup, running and configuration of Yocto VM using EMT Virt.
 
-### Setup Yocto VM 
+### Setup Yocto VM
 
-#### Prerequisites
+#### Yocto VM Prerequisites
 
 ##### Build Yocto Project Image
 
-Refer to “Yocto Project-based Board Support Package for 13th Gen Intel® Core™ 
-Processors and Intel® Core™ Processors (14th Gen) for Edge Platforms Get Started 
-Guide” document [788647](https://cdrdv2.intel.com/v1/dl/getContent/788647) for prerequisites to build Yocto Project* - based BSP for 
+Refer to “Yocto Project-based Board Support Package for 13th Gen Intel® Core™
+Processors and Intel® Core™ Processors (14th Gen) for Edge Platforms Get Started
+Guide” document [788647](https://cdrdv2.intel.com/v1/dl/getContent/788647) for prerequisites to build Yocto Project* - based BSP for
 RPL platform
 
 <!-- 788647 RESTRICTED LINK - PUBLIC RESOURCE REQUIRED -->
@@ -326,26 +326,26 @@ RPL platform
 After the Yocto build has completed,rename the output image to yocto.wic and copy it to the RPL host device.
 
 ```bash
-$ cd ./build/tmp-x86-glibc/deploy/images/intel-corei7-64/
-$ sudo mv core-image-sato-sdk-intel-xxxx.wic 
+cd ./build/tmp-x86-glibc/deploy/images/intel-corei7-64/
+sudo mv core-image-sato-sdk-intel-xxxx.wic
 /home/$USER/yocto.wic
 ```
 
-##### Make a Separate Copy of OVMF
+##### Make a Separate Copy of OVMF for Yocto
 
 Create a separate copy of OVMF for Yocto Project VM use.
 
 ```bash
 # Make a copy of OVMF for Yocto guest
-$ ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
-$ cp ovmf/OVMF_VARS.fd OVMF_VARS_yocto.fd
+ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
+cp ovmf/OVMF_VARS.fd OVMF_VARS_yocto.fd
 ```
 
 ### Running Yocto VM
 
-#### Prerequisites
+#### Yocto VM Running Prerequisites
 
-##### Guest VM Launch Scripts
+##### Yocto Guest VM Launch Scripts
 
 On the Ubuntu host download the launch script `ubuntu_kvm_multios_scripts.zip` from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
 
@@ -356,14 +356,14 @@ scriptfiles should already be in the system.
 
 ```bash
 # Change directory
-$ cd /home/$USER
+cd /home/$USER
 # Launch the Yocto Guest VM
-$ sudo -E ./start_yocto.sh
+sudo -E ./start_yocto.sh
 ```
 
 #### Yocto VM Configuration Options
 
-##### Changing Guest VM Memory and Number of CPUs**
+##### Changing Yocto Guest VM Memory and Number of CPUs
 
 The default launch command without any parameters is for 2 cores and 2G RAM. You can change that with startup parameters.
 
@@ -372,7 +372,7 @@ Example guest start configuration for 4 cores, 4G RAM:
 ```bash
 # Add -m option to specify 4G of memory
 # Add -c option to specify 4 cpu cores for guest VM
-$ sudo -E ./start_yocto.sh -m 4G -c 4
+sudo -E ./start_yocto.sh -m 4G -c 4
 ```
 
 ##### Enabling USB Devices in Guest VM**
@@ -386,22 +386,22 @@ USB host passthrough parameter option can be added in the launch command to pass
 Add an additional parameter to the Guest VM launch command:
 
 ```bash
-# Note: all connected USB devices will be passthrough to the 
+# Note: all connected USB devices will be passthrough to the
 guest VM with USB host passthrough option
-$ sudo -E ./start_yocto.sh --passthrough-pci-usb
+sudo -E ./start_yocto.sh --passthrough-pci-usb
 ```
 
 2. Passthrough of specific USB Device
 
 An external command option can be used to passthrough only a few selected USB devices.
 
-Retrieve the `vendorid` and `productid` of USB device. In this example, ‘046d’ is vendor 
-ID, ‘c06a’ is product ID. 
+Retrieve the `vendorid` and `productid` of USB device. In this example, ‘046d’ is vendor
+ID, ‘c06a’ is product ID.
 
 ```bash
 # On target terminal.
-$ lsusb
-Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical 
+lsusb
+Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
 Mouse
 ```
 
@@ -409,7 +409,7 @@ Add an additonal parameter to the Guest VM launch command:
 
 ```bash
 # Add extra command when start guest
-$ sudo -E ./start_yocto.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
+sudo -E ./start_yocto.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
 ```
 
 > **Note:** A passthrough device option can only be used once because a device can be passed through to only 1 guest VM at a time.
@@ -420,22 +420,22 @@ For Yocto guest VMs, PCI Wi-Fi device passthrough can be setup by adding `--pass
 
 ```bash
 # Add --passthrough-pci-wifi for passing through Wifi adapter
-$ sudo -E ./start_yocto.sh --passthrough-pci-wifi
+sudo -E ./start_yocto.sh --passthrough-pci-wifi
 ```
 
 ## Windows 10
 
 The sections below describe setup, running and configuration of Windows 10 VM using EMT Virt.
 
-### Setup Windows 10 VM 
+### Setup Windows 10 VM
 
-#### Prerequisites
+#### Windows 10 VM Setup Prerequisites
 
-##### Windows Installation Image Required
+##### Windows 10 Installation Image Required
 
 Download the Windows 10 IOT Enterprise version 21H2 iso image, save it as windows.iso and copy it to the host
 
-##### Installation Script Required
+##### Windows 10 Guest VM - Required Installation Scripts
 
 Use the script `ubuntu_kvm_multios_scripts.zip` from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software￾kits/kit-details.html?kitId=839117)
 
@@ -446,18 +446,18 @@ Use the script `ubuntu_kvm_multios_scripts.zip` from the release package [RPL-S_
 1. Create an empty Windows Guest VM image file along with the Windows OVMF files:
 
 ```bash
-$ cd /home/$USER/
-$ qemu-img create -f qcow2 win.qcow2 80G
-$ ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
-$ cp ovmf/OVMF_VARS.fd OVMF_VARS_windows.fd
+cd /home/$USER/
+qemu-img create -f qcow2 win.qcow2 80G
+ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
+cp ovmf/OVMF_VARS.fd OVMF_VARS_windows.fd
 ```
 
 2. Run `install_windows.sh` to start Windows guest installation:
 
 ```bash
 # Start guest VM to install Windows
-$ cd /home/$USER/
-$ sudo ./install_windows.sh 
+cd /home/$USER/
+sudo ./install_windows.sh
 ```
 
 > **Note:** If you miss the `Press Any Key` message, press ESC key until you reach the EFI shell prompt, then type `reset` to start over again.
@@ -480,7 +480,7 @@ $ sudo ./install_windows.sh
 
   a. Open Settings.
   b. Click on Update & Security.
-  c. Click on Windows Update. 
+  c. Click on Windows Update.
   d. Click the Pause updates for 7 days button.
 
 8. Shut down the Windows guest.
@@ -495,8 +495,8 @@ $ sudo ./install_windows.sh
 
 ```bash
 # Start guest VM to install Windows drivers
-$ cd /home/$USER/ 
-$ sudo ./start_windows.sh
+cd /home/$USER/
+sudo ./start_windows.sh
 ```
 
 ##### Install Windows 10 Cumulative Update
@@ -508,7 +508,7 @@ based Systems** [KB5037768](https://catalog.s.download.windowsupdate.com/c/msdow
 
 3. After successful installation reboot the Windows Guest VM.
 
-4. Open a command prompt in administrator mode and enter `winver` to check the 
+4. Open a command prompt in administrator mode and enter `winver` to check the
 version. It should show **21H2 OS Builds 19044.4412**.
 
 ##### Install Graphics GFX Driver
@@ -601,7 +601,7 @@ C:\> .\ZeroCopyInstaller.exe /VERYSILENT /SUPPRESSMSGBOXES
 
 4. In **Device Manager**, expand the **System Devices** item in the device list.
 
-5. Right-click on the **DVServerKMD** device and select **Properties**. Switch to the 
+5. Right-click on the **DVServerKMD** device and select **Properties**. Switch to the
 **Driver** tab. Check that the **DVServerKMD** Device Driver version is **4.0.0.1716**.
 
 ![DVServerKMD Device Driver Version](../../assets/emt-virt-mf-win-12-1.png)
@@ -632,12 +632,12 @@ The installed graphics driver version has been verified to work with the Zero Co
 
 1. Type `gpedit.msc` in the search bar and launch the **Group Policy Editor**.
 
-2. On the left pane, navigate to **Computer Configuration -> Administrative 
+2. On the left pane, navigate to **Computer Configuration -> Administrative
 Templates -> System -> Device Installation -> Device Installation Restrictions**.
 
 ![Device Installation Restrictions](../../assets/emt-virt-mf-win-15.png)
 
-3. On the right pane, double-click on **Prevent installation of devices that match any 
+3. On the right pane, double-click on **Prevent installation of devices that match any
 of these device IDs** to display additional options to configure.
 
 ![Prevent installation of devices](../../assets/emt-virt-mf-win-16.png)
@@ -672,7 +672,7 @@ of these device IDs** to display additional options to configure.
 5. Use the following command to install **VIOSerial**"
 
 ```shell
-D:\> pnputil.exe /add-driver 
+D:\> pnputil.exe /add-driver
 .\vioserial\w10\amd64\vioser.inf /install
 ```
 
@@ -684,9 +684,9 @@ D:\> Start-Process .\guest-agent\qemu-ga-x86_64.msi
 
 ### Running Windows 10 VM
 
-#### Prerequisites
+#### Windows 10 VM Running Prerequisites
 
-##### Guest VM Launch Scripts
+##### Windows 10 Guest VM Launch Scripts
 
 On the Ubuntu host download the launch script `ubuntu_kvm_multios_scripts.zip` from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
 
@@ -696,9 +696,9 @@ On the Ubuntu host download the launch script `ubuntu_kvm_multios_scripts.zip` f
 
 ```bash
 # Change directory
-$ cd /home/$USER
+cd /home/$USER
 # Launch the Windows Guest VM
-$ sudo -E ./start_windows.sh
+sudo -E ./start_windows.sh
 ```
 
 #### Launching Multiple Windows Guest VMs
@@ -706,11 +706,11 @@ $ sudo -E ./start_windows.sh
 1. Create multiple copies of OVMF files:
 
 ```bash
-$ cd /home/$USER
-$ cp ./ovmf/OVMF_VARS.fd ./OVMF_VARS_windows.fd
-$ cp OVMF_VARS_windows.fd OVMF_VARS_windows2.fd
-$ cp OVMF_VARS_windows.fd OVMF_VARS_windows3.fd
-$ cp OVMF_VARS_windows.fd OVMF_VARS_windows4.fd
+cd /home/$USER
+cp ./ovmf/OVMF_VARS.fd ./OVMF_VARS_windows.fd
+cp OVMF_VARS_windows.fd OVMF_VARS_windows2.fd
+cp OVMF_VARS_windows.fd OVMF_VARS_windows3.fd
+cp OVMF_VARS_windows.fd OVMF_VARS_windows4.fd
 ```
 
 2. Follow the steps in section [Creating Windows VM Image](#creating-windows-vm-image) to create and setup the Windows guest images. Make sure that the images are named `win.qcow2`, `win2.qcow2`, `win3.qcow2` and `win4.qcow2`.
@@ -722,7 +722,7 @@ $ cp OVMF_VARS_windows.fd OVMF_VARS_windows4.fd
 ```bash
 #!/bin/bash
 # Sample script to launch multiple Windows guests
-# Remember to customise the launch commands according to HW 
+# Remember to customise the launch commands according to HW
 setup and use case:
 # - number of guests
 # - memory allocated
@@ -737,12 +737,12 @@ sudo ./start_windows.sh -m 2G -c 2 -n windows-vm2 -f
 OVMF_VARS_windows2.fd -d win2.qcow2 -p
 ssh=4445,winrdp=3390,winrm=5987 &
 echo "Starting Windows Guest3..."
-sudo ./start_windows.sh -m 2G -c 2 -n windows-vm3 -f 
-OVMF_VARS_windows3.fd -d win3.qcow2 -p 
+sudo ./start_windows.sh -m 2G -c 2 -n windows-vm3 -f
+OVMF_VARS_windows3.fd -d win3.qcow2 -p
 ssh=4446,winrdp=3391,winrm=5988 &
 echo "Starting Windows Guest4..."
-sudo ./start_windows.sh -m 2G -c 2 -n windows-vm4 -f 
-OVMF_VARS_windows4.fd -d win4.qcow2 -p 
+sudo ./start_windows.sh -m 2G -c 2 -n windows-vm4 -f
+OVMF_VARS_windows4.fd -d win4.qcow2 -p
 ssh=4447,winrdp=3392,winrm=5989 &
 wait
 ```
@@ -751,13 +751,13 @@ wait
 
 ```bash
 # Launch all the guest VMs
-$ chmod +x ./start_all_windows.sh
-$ ./start_all_windows.sh
+chmod +x ./start_all_windows.sh
+./start_all_windows.sh
 ```
 
-#### Windows VM Configuration Options
+#### Windows 10 VM Configuration Options
 
-##### Changing Guest VM Memory and Number of CPUs
+##### Changing Windows 10 Guest VM Memory and Number of CPUs
 
 The default launch command without any parameters is for 2 cores and 2G RAM. You can change that with startup parameters:
 
@@ -766,7 +766,7 @@ Example guest start configuration for 4 cores, 4G RAM:
 ```bash
 # Add -m option to specify 4G of memory
 # Add -c option to specify 4 cpu cores for guest VM
-$ sudo -E ./start_windows.sh -m 4G -c 4
+sudo -E ./start_windows.sh -m 4G -c 4
 ```
 
 ##### Enabling USB Devices in Windows Guest VM**
@@ -777,12 +777,12 @@ For Windows guest VMs, USB devices can be setup in two ways:
 
 USB host passthrough parameter option can be added in the launch command to passthrough all USB devices on the USB host.
 
-Add an additional parameter to the Guest VM launch command as shown below. 
+Add an additional parameter to the Guest VM launch command as shown below.
 
 ```bash
-# Note: all connected USB devices will be passthrough to the 
+# Note: all connected USB devices will be passthrough to the
 guest VM with USB host passthrough option
-$ sudo -E ./start_windows.sh --passthrough-pci-usb
+sudo -E ./start_windows.sh --passthrough-pci-usb
 ```
 
 2. Passthrough of Selected USB Devices
@@ -793,8 +793,8 @@ Retrieve the vendorid and productid of USB device. In this example, `046d` is ve
 
 ```bash
 # On target terminal.
-$ lsusb
-Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical 
+lsusb
+Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
 Mouse
 ```
 
@@ -802,7 +802,7 @@ Add an additonal parameter to the Guest VM launch command:
 
 ```bash
 # Add extra command when start guest
-$ sudo -E ./start_windows.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
+sudo -E ./start_windows.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
 ```
 
 > **Note:** A passthrough device option can only be used once because a device can be passthrough to only 1 guest VM at a time.
@@ -813,7 +813,7 @@ For Windows guest VMs, PCI Wi-Fi device passthrough can be setup by adding `--pa
 
 ```bash
 # Add --passthrough-pci-wifi for passing through Wifi adapter
-$ sudo -E ./start_windows.sh --passthrough-pci-wifi
+sudo -E ./start_windows.sh --passthrough-pci-wifi
 ```
 
 ## Ubuntu
@@ -822,7 +822,7 @@ The sections below describe setup, running and configuration of Ubuntu VM using 
 
 ### Setup Ubuntu VM
 
-#### Prerequisites
+#### Ubuntu VM Setup Prerequisites
 
 ##### Guest Operating System Requirements
 
@@ -834,21 +834,21 @@ Download [Ubuntu 24.04.2 LTS](https://releases.ubuntu.com/noble/ubuntu-24.04.2-d
 
 Obtain the `*.deb` kernel files that have been used for setting up the host.
 
-##### Installation Script Required
+##### Ubuntu Guest VM -  Required Installation Scripts
 
   - `sriov_patches.zip`
   - `ubuntu_kvm_multios_scripts.zip`
 
 Obtain the scripts from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
 
-##### Make a Separate Copy of OVMF
+##### Make a Separate Copy of OVMF for Ubuntu
 
 1. Create a separate copy of OVMF for Ubuntu VM use:
 
 ```bash
 # Make a copy of OVMF for Ubuntu guest
-$ ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
-$ cp ovmf/OVMF_VARS.fd OVMF_VARS_ubuntu.fd
+ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
+cp ovmf/OVMF_VARS.fd OVMF_VARS_ubuntu.fd
 ```
 
 #### Creating Ubuntu VM Image
@@ -858,27 +858,27 @@ $ cp ovmf/OVMF_VARS.fd OVMF_VARS_ubuntu.fd
 1. Copy the downloaded Ubuntu ISO file to the `/home/$USER/` directory:
 
 ```bash
-$ cd /home/$USER/
-$ cp <source path>/ubuntu-24.04.2-desktop-amd64.iso .
+cd /home/$USER/
+cp <source path>/ubuntu-24.04.2-desktop-amd64.iso .
 ```
 
 2. Create a symbolic link to the ISO file:
 
 ```bash
-$ ln -sf ubuntu-24.04.2-desktop-amd64.iso ubuntu.iso
+ln -sf ubuntu-24.04.2-desktop-amd64.iso ubuntu.iso
 ```
 
 3. Create an empty Ubuntu image file:
 
 ```bash
-$ qemu-img create -f qcow2 ubuntu.qcow2 64G
+qemu-img create -f qcow2 ubuntu.qcow2 64G
 ```
 
 4. Run `install_ubuntu.sh` to start Ubuntu guest installation.
 
 ```bash
 # Start guest VM to install Ubuntu
-$ sudo ./install_ubuntu.sh
+sudo ./install_ubuntu.sh
 ```
 
 > **Note:** If guest VM enters UEFI shell instead of Ubuntu, please type the following in EFI shell:
@@ -901,8 +901,8 @@ Then press enter and continue boot to Ubuntu as shown below.
 
 ```bash
 # Upgrade Ubuntu software
-$ sudo apt -y update
-$ sudo apt -y upgrade
+sudo apt -y update
+sudo apt -y upgrade
 ```
 
 > **Note:** If operating behind a corporate firewall, setup the proxy settings.
@@ -927,7 +927,7 @@ $ sudo apt -y upgrade
 # <host_ip>: the IP address of your host machine.
 # <host_source_dir>: source directory on the host
 # <guest_target_dir>: target directory on the guest
-$ scp -r <host_user>@<host_ip>:/home/<host_user>/{linux-
+scp -r <host_user>@<host_ip>:/home/<host_user>/{linux-
 *.deb,sriov_patches.zip,ubuntu_kvm_multios_scripts.zip,packages
 ,sriov_install} /home/$USER
 ```
@@ -936,27 +936,27 @@ $ scp -r <host_user>@<host_ip>:/home/<host_user>/{linux-
 
 ```bash
 # Extract files
-$ unzip sriov_patches.zip
-$ unzip -jo ubuntu_kvm_multios_scripts.zip
+unzip sriov_patches.zip
+unzip -jo ubuntu_kvm_multios_scripts.zip
 ```
 
 10. Run `sriov_setup_kernel.sh` in the Ubuntu guest VM:
 
 ```bash
 # This will install kernel and firmware, and update grub
-$ sudo ./sriov_setup_kernel.sh
+sudo ./sriov_setup_kernel.sh
 ```
 
 11. Reboot the VM:
 
 ```bash
-$ sudo reboot
+sudo reboot
 ```
 
 12. After reboot, check that the kernel is the installed version:
 
 ```bash
-$ uname -r
+uname -r
 6.6.50-lts2023-iotg
 ```
 
@@ -964,7 +964,7 @@ $ uname -r
 
 ```bash
 # This will install userspace libraries and tools
-$ sudo ./configure_ubuntu_guest.sh
+sudo ./configure_ubuntu_guest.sh
 ```
 
 14. After the installation has been completed, reboot the guest when prompted.
@@ -973,9 +973,9 @@ $ sudo ./configure_ubuntu_guest.sh
 
 ### Running Ubuntu VM
 
-#### Prerequisites
+#### Ubuntu VM Running Prerequisites
 
-##### Guest VM Launch Scripts
+##### Ubuntu Guest VM Launch Scripts
 
 On the Ubuntu host download the launch script `ubuntu_kvm_multios_scripts.zip` from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
 
@@ -985,9 +985,9 @@ On the Ubuntu host download the launch script `ubuntu_kvm_multios_scripts.zip` f
 
 ```bash
 # Change directory
-$ cd /home/$USER
+cd /home/$USER
 # Launch the Ubuntu Guest VM
-$ sudo -E ./start_ubuntu.sh
+sudo -E ./start_ubuntu.sh
 ```
 
 #### Launching Multiple Ubuntu Guest VMs
@@ -995,11 +995,11 @@ $ sudo -E ./start_ubuntu.sh
 1. Create multiple copies of OVMF files:
 
 ```bash
-$ cd /home/$USER
-$ cp ./ovmf/OVMF_VARS.fd ./OVMF_VARS_ubuntu.fd
-$ cp OVMF_VARS_ubuntu.fd OVMF_VARS_ubuntu2.fd
-$ cp OVMF_VARS_ubuntu.fd OVMF_VARS_ubuntu3.fd
-$ cp OVMF_VARS_ubuntu.fd OVMF_VARS_ubuntu4.fd
+cd /home/$USER
+cp ./ovmf/OVMF_VARS.fd ./OVMF_VARS_ubuntu.fd
+cp OVMF_VARS_ubuntu.fd OVMF_VARS_ubuntu2.fd
+cp OVMF_VARS_ubuntu.fd OVMF_VARS_ubuntu3.fd
+cp OVMF_VARS_ubuntu.fd OVMF_VARS_ubuntu4.fd
 ```
 
 2. Follow the steps in the section [Creating Ubuntu VM Image](#creating-ubuntu-vm-image) to create and setup the Ubuntu guest images. Make sure that the images are named as `ubuntu.qcow2`, `ubuntu2.qcow2`, `ubuntu3.qcow2` and `ubuntu4.qcow2`.
@@ -1011,7 +1011,7 @@ $ cp OVMF_VARS_ubuntu.fd OVMF_VARS_ubuntu4.fd
 ```bash
 #!/bin/bash
 # Sample script to launch multiple Ubuntu guests
-# Remember to customise the launch commands according to HW 
+# Remember to customise the launch commands according to HW
 setup and use case:
 # - number of guests
 # - memory allocated
@@ -1022,13 +1022,13 @@ trap 'trap " " SIGTERM; kill 0; wait' SIGINT SIGTERM
 echo "Starting Ubuntu Guest1..."
 sudo ./start_ubuntu.sh -m 2G -c 2 -n ubuntu-vm1 &
 echo "Starting Ubuntu Guest2..."
-sudo ./start_ubuntu.sh -m 2G -c 2 -n ubuntu-vm2 -f 
+sudo ./start_ubuntu.sh -m 2G -c 2 -n ubuntu-vm2 -f
 OVMF_VARS_ubuntu2.fd -d ubuntu2.qcow2 -p ssh=2223 &
 echo "Starting Ubuntu Guest3..."
-sudo ./start_ubuntu.sh -m 2G -c 2 -n ubuntu-vm3 -f 
+sudo ./start_ubuntu.sh -m 2G -c 2 -n ubuntu-vm3 -f
 OVMF_VARS_ubuntu3.fd -d ubuntu3.qcow2 -p ssh=2224 &
 echo "Starting Ubuntu Guest4..."
-sudo ./start_ubuntu.sh -m 2G -c 2 -n ubuntu-vm4 -f 
+sudo ./start_ubuntu.sh -m 2G -c 2 -n ubuntu-vm4 -f
 OVMF_VARS_ubuntu4.fd -d ubuntu4.qcow2 -p ssh=2225 &
 wait
 ```
@@ -1037,13 +1037,13 @@ wait
 
 ```bash
 # Launch all the guest VMs
-$ chmod +x ./start_all_ubuntu.sh
-$ ./start_all_ubuntu.sh
+chmod +x ./start_all_ubuntu.sh
+./start_all_ubuntu.sh
 ```
 
 #### Ubuntu Configuration Options
 
-##### Changing Guest VM Memory and Number of CPUs
+##### Changing Ubuntu Guest VM Memory and Number of CPUs
 
 The default launch command without any parameters is for 2 cores and 2G RAM. You can change that with startup parameters.
 
@@ -1052,7 +1052,7 @@ Example guest start configuration for 4 cores, 4G RAM:
 ```bash
 # Add -m option to specify 4G of memory
 # Add -c option to specify 4 cpu cores for guest VM
-$ sudo -E ./start_ubuntu.sh -m 4G -c 4
+sudo -E ./start_ubuntu.sh -m 4G -c 4
 ```
 
 ##### Enabling USB Devices in Guest VM
@@ -1066,22 +1066,22 @@ USB host passthrough parameter option can be added in the launch command to pass
 Add an additional parameter to the Guest VM launch command:
 
 ```bash
-# Note: all connected USB devices will be passthrough to the 
+# Note: all connected USB devices will be passthrough to the
 guest VM with USB host passthrough option
-$ sudo -E ./start_ubuntu.sh --passthrough-pci-usb
+sudo -E ./start_ubuntu.sh --passthrough-pci-usb
 ```
 
 2. Passthrough of Selected USB Devices
 
 An external command option can be used to passthrough only a few selected USB devices.
 
-Retrieve the vendorid and productid of USB device. In this example, ‘046d’ is vendor 
-ID, ‘c06a’ is product ID. 
+Retrieve the vendorid and productid of USB device. In this example, ‘046d’ is vendor
+ID, ‘c06a’ is product ID.
 
 ```bash
 # On target terminal.
-$ lsusb
-Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical 
+lsusb
+Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
 Mouse
 ```
 
@@ -1089,7 +1089,7 @@ Add an additonal parameter to the Guest VM launch command:
 
 ```bash
 # Add extra command when start guest
-$ sudo -E ./start_ubuntu.sh -e "-device usb-host,vendorid=0x046d,productid=0xc06a"
+sudo -E ./start_ubuntu.sh -e "-device usb-host,vendorid=0x046d,productid=0xc06a"
 ```
 
 > **Note:** A passthrough device option can only be used once because a device can be passthrough to only 1 guest VM at a time.
@@ -1100,5 +1100,5 @@ For Ubuntu guest VMs, PCI Wi-Fi device passthrough can be setup by adding `--pas
 
 ```bash
 # Add --passthrough-pci-wifi for passing through Wifi adapter
-$ sudo -E ./start_ubuntu.sh --passthrough-pci-wifi
+sudo -E ./start_ubuntu.sh --passthrough-pci-wifi
 ```
