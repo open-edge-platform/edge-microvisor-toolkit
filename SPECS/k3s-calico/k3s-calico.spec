@@ -9,6 +9,7 @@ Distribution:   Edge Microvisor Toolkit
 
 URL:            https://github.com/projectcalico/calico
 Source0:        https://github.com/projectcalico/calico/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
+# Generate tar.zst images by running `docker save <image> | zstd -T0 -16 -f --long=25 > <image>.tar.zst`
 Source1:        %{name}-cni-image-v%{version}.tar.zst
 Source2:        %{name}-node-image-v%{version}.tar.zst
 Source3:        %{name}-controllers-image-v%{version}.tar.zst
