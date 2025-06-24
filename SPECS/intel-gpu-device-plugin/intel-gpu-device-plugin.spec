@@ -30,5 +30,8 @@ install -m 0644 ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml %{buildroot}
 %{_sharedstatedir}/rancher/k3s/agent/images/00-intel-gpu/intel-gpu-plugin.tar.zst
 
 %changelog
+* Mon Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 0.32.1-2
+- Update Source1 to use a zstd-compressed image
+
 * Tue Jun 17 2025 Krishnamurthy Jambur <krishna.j.murthy@intel.com> - 0.32.1-1
 - Original version for Edge Microvisor Toolkit. License verified.

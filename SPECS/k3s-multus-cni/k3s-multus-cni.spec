@@ -45,6 +45,9 @@ install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/image
 %{_sharedstatedir}/rancher/k3s/agent/images/10-multus/multus-cni.tar.zst
 
 %changelog
+* Mon Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-3
+- Update Source1 to use a zstd-compressed image
+
 * Mon Jun 23 2025 Hyunsun Moon <hyunsun.moon@intel.com> - 4.2.1-2
 - Update patch to configure additional cni bin path for k3s
 - Compress multus cni image in the package

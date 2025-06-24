@@ -51,6 +51,10 @@ install -m 644 %{SOURCE3} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/image
 %{_sharedstatedir}/rancher/k3s/agent/images/00-calico/calico-kube-controllers.tar.zst
 
 %changelog
+* Mon Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 3.30.1-2
+- Update Source0 from release to source tarball
+- Add sources for zstd-compressed images replacing the uncompressed release images
+
 * Mon Jun 09 2025 Julia Okuniewska <julia.okuniewska@intel.com> - 3.30.1-1
 - Initial Edge Microvisor Toolkit import from the source project (license: same as "License" tag).
 - License verified.
