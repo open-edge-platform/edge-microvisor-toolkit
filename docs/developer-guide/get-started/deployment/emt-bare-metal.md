@@ -6,7 +6,7 @@ Below you will find all methods of deployment on Bare Metal with ISO image.
 
 You will need:
 
-- [EMT-D 3.0](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso) latest release.
+- [Edge Microvisor Toolkit Developer Node 3.0](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso).
 - USB flash drive (min. 8GB).
 - Access to the target machine.
 - Optional: Monitor and keyboard, or BMC/iDRAC/iKVM access.

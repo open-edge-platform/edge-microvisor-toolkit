@@ -539,7 +539,7 @@ version. It should show **21H2 OS Builds 19044.4412**.
 
 ##### Prepare SR-IOV Zero Copy Driver
 
-1. Download Windows Zero Copy Drivers Release 1716 [DVServer, DVServerKMD] [ ZCBuild_1716_MSFT_Signed_Installer.zip](https://www.intel.com/content/www/us/en/download/837886/display-virtualization-drivers-for-display-virtualization-drivers-for-alder-lake-s-beta-raptor-lake-ps-mr1-raptor-lake-sr-mr3-raptor-lake-s-mr5-raptor-lake-p-mr3-alder-lake-n-mr6-alder-lake-ps-mr7.html)
+1. Download Windows Zero Copy Drivers Release 1716 [DVServer, DVServerKMD] [ZCBuild_1716_MSFT_Signed_Installer.zip](https://www.intel.com/content/www/us/en/download/837886/display-virtualization-drivers-for-display-virtualization-drivers-for-alder-lake-s-beta-raptor-lake-ps-mr1-raptor-lake-sr-mr3-raptor-lake-s-mr5-raptor-lake-p-mr3-alder-lake-n-mr6-alder-lake-ps-mr7.html)
 
 Please make sure the correct **ZCBuild** version is chosen from the drop-down. By
 default, the latest **ZCBuild** version will be the first one.
@@ -836,8 +836,8 @@ Obtain the `*.deb` kernel files that have been used for setting up the host.
 
 ##### Ubuntu Guest VM -  Required Installation Scripts
 
-  - `sriov_patches.zip`
-  - `ubuntu_kvm_multios_scripts.zip`
+- `sriov_patches.zip`
+- `ubuntu_kvm_multios_scripts.zip`
 
 Obtain the scripts from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
 
@@ -909,11 +909,11 @@ sudo apt -y upgrade
 
 8. Copy the following files and directories from the `/home/$USER` directory of the host OS to the `/home/$USER/` directory of the guest OS:
 
-  - *.deb kernel packages
-  - sriov_patches.zip
-  - ubuntu_kvm_multios_scripts.zip.
-  - packages directory.
-  - sriov_install directory.
+- *.deb kernel packages
+- sriov_patches.zip
+- ubuntu_kvm_multios_scripts.zip.
+- packages directory.
+- sriov_install directory.
 
 ```bash
 # Format:
