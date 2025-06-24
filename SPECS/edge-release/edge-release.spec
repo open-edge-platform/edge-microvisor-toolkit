@@ -5,7 +5,7 @@
 Summary:        Edge Microvisor Toolkit release files
 Name:           edge-release
 Version:        %{dist_version}.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -118,6 +118,9 @@ install -Dm0644 %{SOURCE4} -t %{buildroot}%{_sysctldir}/
 %{_sysctldir}/*.conf
 
 %changelog
+* Tue Jun 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.0-4
+- bump version for release.
+
 * Fri Apr 11 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.0-3
 - bump version for release.
 
