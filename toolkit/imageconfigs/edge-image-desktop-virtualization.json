@@ -79,6 +79,7 @@
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
                 "packagelists/k3s.json",
+                "packagelists/k3s-cni-config.json",
                 "packagelists/calico.json",
                 "packagelists/multus.json",
                 "packagelists/intel-gpu-device-plugin.json",
