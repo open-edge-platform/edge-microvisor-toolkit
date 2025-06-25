@@ -8380,9 +8380,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "k3s-disable-cni",
-          "version": "0.0.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/README.md"
+          "name": "k3s-multus-cni",
+          "version": "4.2.1",
+          "downloadUrl": "https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v4.2.1.tar.gz"
         }
       }
     },
@@ -8390,9 +8390,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "k3s-multus-cni",
-          "version": "4.2.1",
-          "downloadUrl": "https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v4.2.1.tar.gz"
+          "name": "k3s-disable-cni",
+          "version": "0.0.1",
+          "downloadUrl": "00-disable-flannel.yaml"
         }
       }
     },
