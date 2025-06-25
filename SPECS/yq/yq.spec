@@ -9,7 +9,7 @@ Group:          Applications/System
 URL:            https://mikefarah.gitbook.io/yq
 Source0:        https://github.com/mikefarah/yq/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
 Source1:        %{name}-vendor-v%{version}.tar.gz
-BuildRequires:  golang
+BuildRequires:  golang-1.24.1
 
 %description
 yq is a portable command-line YAML, JSON, XML, CSV, TOML and properties processor.

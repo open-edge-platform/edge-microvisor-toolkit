@@ -1,6 +1,6 @@
 {
     "Signatures": {
         "intel-gpu-device-plugin-v0.32.1.tar.gz": "f098a0d5631027fd9efca5800c246a70817f6918c93e337ed5047c5533cea8a0",
-        "intel-gpu-device-plugin-image-v0.32.1.tar": "82055215bf82ef83e43398bc2275bbee39d745788ae0e35ace708df94d3f3c89"
+        "intel-gpu-device-plugin-image-v0.32.1.tar.zst": "ad9e107953f027331d7123235e36d49e4e810bc962e676d2682daff8cb721b48"
     }
 }

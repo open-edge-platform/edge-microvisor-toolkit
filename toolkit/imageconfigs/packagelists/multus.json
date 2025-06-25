@@ -1,0 +1,6 @@
+{
+    "packages": [
+        "k3s-multus-cni"
+    ],
+    "_comment": "Multus CNI addon for Kubernetes."
+}
