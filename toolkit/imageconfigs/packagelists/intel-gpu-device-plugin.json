@@ -1,0 +1,6 @@
+{
+    "packages": [
+        "intel-gpu-device-plugin"
+    ],
+    "_comment": "Intel GPU device plugin addon for Kubernetes."
+}

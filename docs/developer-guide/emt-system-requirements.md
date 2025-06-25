@@ -20,11 +20,21 @@ Edge Microvisor Toolkit is designed to support all Intel® platforms with the la
 Intel® kernel to provide all available features for applications
 and workloads. It has been validated on the following platforms:
 
+**CPU**
+
 |      Atom             |               Core™           |      Xeon®              |
 | ----------------------| ----------------------------- | ----------------------- |
-| Intel® Atom® X Series | 12th Gen Intel® Core™         | 4th Gen Intel® Xeon® SP |
-|                       | 13th Gen Intel® Core™         | 3rd Gen Intel® Xeon® SP |
-|                       | Intel® Core™ Ultra (Series 1) |                         |
+| Intel® Atom® X Series | 12th Gen Intel® Core™         | 5th Gen Intel® Xeon® SP |
+|                       | 13th Gen Intel® Core™         | 4th Gen Intel® Xeon® SP |
+|                       | Intel® Core™ Ultra (Series 1) | 3rd Gen Intel® Xeon® SP |
+
+**Discrete GPU**
+
+|        Intel®         |           NVIDIA®             |
+|-----------------------|-------------------------------|
+| Intel® Arc™ B580      | NVIDIA® Tesla® P100           |
+|                       | GeForce RTX™ 3090             |
+
 
 ## Recommended Hardware Configuration
 
