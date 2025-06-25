@@ -20,93 +20,94 @@ This section describes setup, running and configuration of an Android VM using E
 
 1. Create a local `bin/` directory, download the repo tool to that directory, and make the binary executable with the following commands:
 
-```bash
- mkdir -p ~/bin
-curl https://storage.googleapis.com/git-repo-downloads/repo >
-~/bin/repo
-chmod a+x ~/bin/repo
-export PATH=~/bin:$PATH
-```
+   ```bash
+    mkdir -p ~/bin
+   curl https://storage.googleapis.com/git-repo-downloads/repo >
+   ~/bin/repo
+   chmod a+x ~/bin/repo
+   export PATH=~/bin:$PATH
+   ```
 
 2. Install the following required packages on your 64-bit Ubuntu 22.04 LTS development workstation prior to the compilation:
 
-```bash
-sudo apt-get update
-sudo apt-get install -y wget openjdk-8-jdk git ccache \
-automake lzop bison gperf build-essential zip curl \
-zlib1g-dev g++-multilib python3-networkx \
-libxml2-utils bzip2 libbz2-dev libbz2-1.0 \
-libghc-bzlib-dev squashfs-tools pngcrush \
-schedtool dpkg-dev liblz4-tool make optipng maven \
-libssl-dev bc bsdmainutils gettext python3-mako \
-libelf-dev sbsigntool dosfstools mtools efitools \
-python3-pystache git-lfs python-is-python3 flex clang \
-libncurses5 fakeroot ncurses-dev xz-utils cryptsetup-bin \
-apt-transport-https ca-certificates curl lsb-release \
-rsync vim python-six kmod glslang-tools \
-software-properties-common cpio python3-pip ninja-build \
-cutils cmake pkg-config xorriso mtools libjson-c-dev file
-sudo pip3 install meson==0.60.0 mako==1.1.0 dataclasses
-pycryptodome ply==3.11
-```
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y wget openjdk-8-jdk git ccache \
+   automake lzop bison gperf build-essential zip curl \
+   zlib1g-dev g++-multilib python3-networkx \
+   libxml2-utils bzip2 libbz2-dev libbz2-1.0 \
+   libghc-bzlib-dev squashfs-tools pngcrush \
+   schedtool dpkg-dev liblz4-tool make optipng maven \
+   libssl-dev bc bsdmainutils gettext python3-mako \
+   libelf-dev sbsigntool dosfstools mtools efitools \
+   python3-pystache git-lfs python-is-python3 flex clang \
+   libncurses5 fakeroot ncurses-dev xz-utils cryptsetup-bin \
+   apt-transport-https ca-certificates curl lsb-release \
+   rsync vim python-six kmod glslang-tools \
+   software-properties-common cpio python3-pip ninja-build \
+   cutils cmake pkg-config xorriso mtools libjson-c-dev file
+   sudo pip3 install meson==0.60.0 mako==1.1.0 dataclasses
+   pycryptodome ply==3.11
+   ```
 
 3. Setup the git config required for `repo init` on the build server.
 
-```bash
-# Setup git config with your name and email ID. Add proxy
-settings if behind a firewall
-cd /home/$USER
-vi /home/$USER/.gitconfig
-# Append below lines to .gitconfig file
-[user]
-email = <your email>
-name = <your name>
-[http]
-proxy = <http_proxy>
-[https]
-proxy = <https_proxy>
-```
+   ```bash
+   # Setup git config with your name and email ID. Add proxy
+   settings if behind a firewall
+   cd /home/$USER
+   vi /home/$USER/.gitconfig
+   # Append below lines to .gitconfig file
+   [user]
+   email = <your email>
+   name = <your name>
+   [http]
+   proxy = <http_proxy>
+   [https]
+   proxy = <https_proxy>
+   ```
 
 ##### Celadon Source Requirements
 
-- `Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml` from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
+`Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml` from the release package [RPL-S_RPL-SR_KVM_MultiOS.zip](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
 
 ##### Building Celadon from Source
 
 1. Initialize the repository and sync Celadon source workspace:
 
-```bash
-# Init with the default manifest
-repo init -u https://github.com/projectceladon/manifest.git
-# Copy RPL CIV manifest and use it
-cp <source path>/Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml
-.repo/manifests/
-repo init -m Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml
-# Sync the code and setup
-repo sync -c -j16
-repo forall -c git lfs pull
-```
+   ```bash
+   # Init with the default manifest
+   repo init -u https://github.com/projectceladon/manifest.git
+   # Copy RPL CIV manifest and use it
+   cp <source path>/Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml
+   .repo/manifests/
+   repo init -m Vertical_RPL_SRIOV_CIV_WW2445_EXT.xml
+   # Sync the code and setup
+   repo sync -c -j16
+   repo forall -c git lfs pull
+   ```
 
 > **Note:** Depending on network conditions, the sync may take several hours.
 
 2. Build Android CIV release:
 
-```bash
-# Perform the environment setup from directory where repo is
-initialized
-source build/envsetup.sh
-# Select userdebug variant
-lunch caas-userdebug
-# Start the build
-make flashfiles BASE_LTS2020_YOCTO_KERNEL=true -j16
-```
+   ```bash
+   # Perform the environment setup from directory where repo is
+   initialized
+   source build/envsetup.sh
+   # Select userdebug variant
+   lunch caas-userdebug
+   # Start the build
+   make flashfiles BASE_LTS2020_YOCTO_KERNEL=true -j16
+   ```
+
 3. Find the required output files for use in setup:
 
-```bash
-# Get location of CIV build output
-find pub -name caas-releasefiles*.tar.gz
-pub/caas/userdebug/caas-releasefiles-userdebug.tar.gz
-```
+   ```bash
+   # Get location of CIV build output
+   find pub -name caas-releasefiles*.tar.gz
+   pub/caas/userdebug/caas-releasefiles-userdebug.tar.gz
+   ```
 
 4. Copy the `caas-releasefiles-userdebug.tar.gz` package file to the host.
 
@@ -121,31 +122,31 @@ For Celadon Host OS hardening recommendations see [this document.](https://proje
 
 1. Copy `caas-releasefiles-userdebug.tar.gz` to the host:
 
-```bash
-# Copy the artifact
-cp caas-releasefiles-userdebug.tar.gz /home/$USER
-```
+   ```bash
+   # Copy the artifact
+   cp caas-releasefiles-userdebug.tar.gz /home/$USER
+   ```
 
 2. Extract the package:
 
-```bash
-# Extract files
-cd /home/$USER
-tar xzvf caas-releasefiles-userdebug.tar.gz
-```
+   ```bash
+   # Extract files
+   cd /home/$USER
+   tar xzvf caas-releasefiles-userdebug.tar.gz
+   ```
 
 3. Run the host setup:
 
-```bash
-# Update the host
-sudo -E ./scripts/setup_host.sh
-```
+   ```bash
+   # Update the host
+   sudo -E ./scripts/setup_host.sh
+   ```
 
 4. After the setup has completed, reboot the host:
 
-```bash
-sudo reboot
-```
+   ```bash
+   sudo reboot
+   ```
 
 #### Creating Android VM Image
 
@@ -167,7 +168,8 @@ sudo -E ./scripts/start_flash_usb.sh caas-flashfiles￾xxxxx.zip --display-off
 
 ##### Android Guest VM Launch Scripts
 
-On the Ubuntu host OS, download the `ubuntu_kvm_multios_scripts.zip` launch script from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
+On the Ubuntu host OS, download the `ubuntu_kvm_multios_scripts.zip` launch script from the
+[RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
 
 > **Note:** If you have performed the Host kernel setup in Section 4.2, the ZIP files and all the script files should already be in the system.
 
@@ -185,46 +187,46 @@ sudo -E vm-manager -b Android-CIV1
 
 1. Create a second or subsequent images with the script shown below:
 
-```bash
-# Command is: sudo -E ./scripts/setup_multi_civ_vm.sh -c N
-# where N is the number of images to be created
-# (names will be Android-CIV2, Android-CIV3 etc.)
-#
-# Example to create 2 additional images
-sudo -E ./scripts/setup_multi_civ_vm.sh -c 2
-```
+   ```bash
+   # Command is: sudo -E ./scripts/setup_multi_civ_vm.sh -c N
+   # where N is the number of images to be created
+   # (names will be Android-CIV2, Android-CIV3 etc.)
+   #
+   # Example to create 2 additional images
+   sudo -E ./scripts/setup_multi_civ_vm.sh -c 2
+   ```
 
 2. Create a `start_all_android.sh` script to launch multiple guests as shown below.
 
-> **Note:** The amount of memory and cores allocated might be different according to each platform.
+   > **Note:** The amount of memory and cores allocated might be different according to each platform.
 
-```bash
-#!/bin/bash
-# Sample script to launch multiple Android guests
-# Remember to customise the launch commands according to HW
-setup and use case:
-# - number of guests
-# - memory allocated
-# - core allocated
-# Propagate signal to children
-trap 'trap " " SIGTERM; kill 0; wait' SIGINT SIGTERM
-# Start Android multi guests
-echo "Starting Android Guest1..."
-sudo -E vm-manager -b Android-CIV1 &
-echo "Starting Android Guest2..."
-sudo -E vm-manager -b Android-CIV2 &
-echo "Starting Android Guest3..."
-sudo -E vm-manager -b Android-CIV3 &
-wait
-```
+   ```bash
+   #!/bin/bash
+   # Sample script to launch multiple Android guests
+   # Remember to customise the launch commands according to HW
+   setup and use case:
+   # - number of guests
+   # - memory allocated
+   # - core allocated
+   # Propagate signal to children
+   trap 'trap " " SIGTERM; kill 0; wait' SIGINT SIGTERM
+   # Start Android multi guests
+   echo "Starting Android Guest1..."
+   sudo -E vm-manager -b Android-CIV1 &
+   echo "Starting Android Guest2..."
+   sudo -E vm-manager -b Android-CIV2 &
+   echo "Starting Android Guest3..."
+   sudo -E vm-manager -b Android-CIV3 &
+   wait
+   ```
 
 3. Launch the guest VMs:.
 
-```bash
-# Launch the guest VMs
-chmod +x ./start_all_android.sh
-./start_all_android.sh
-```
+   ```bash
+   # Launch the guest VMs
+   chmod +x ./start_all_android.sh
+   ./start_all_android.sh
+   ```
 
 #### Android Guest VM Configuration
 
@@ -245,64 +247,64 @@ To enable USB Devices in the host VM you can use a passthrough that enables sele
 
 1. Find the PCI ID of the USB device:
 
-```bash
-lspci -nn -D | grep USB
-0000:00:14.0 USB controller [0c03]: Intel Corporation Device
-[8086:7ae0] (rev 11)
-0000:00:14.1 USB controller [0c03]: Intel Corporation Device
-[8086:7ae1] (rev 11)
-0000:05:00.0 USB controller [0c03]: Intel Corporation
-Thunderbolt 4 NHI [Maple Ridge 4C 2020] [8086:1137]
-0000:07:00.0 USB controller [0c03]: Intel Corporation
-Thunderbolt 4 USB Controller [Maple Ridge 4C 2020] [8086:1138]
-```
+   ```bash
+   lspci -nn -D | grep USB
+   0000:00:14.0 USB controller [0c03]: Intel Corporation Device
+   [8086:7ae0] (rev 11)
+   0000:00:14.1 USB controller [0c03]: Intel Corporation Device
+   [8086:7ae1] (rev 11)
+   0000:05:00.0 USB controller [0c03]: Intel Corporation
+   Thunderbolt 4 NHI [Maple Ridge 4C 2020] [8086:1137]
+   0000:07:00.0 USB controller [0c03]: Intel Corporation
+   Thunderbolt 4 USB Controller [Maple Ridge 4C 2020] [8086:1138]
+   ```
 
 2. Edit the passthrough section of the `/home/$USER/.intel/.civ/Android-CIV1.ini` configuration file.
 
-```bash
-[passthrough]
-#specified the PCI id here if you want to passthrough it to
-guest, separate them with comma
-passthrough_pci=0000:00:14.0,0000:00:14.1,0000:05:00.0,0000:07:
-00.0,
-```
+   ```bash
+   [passthrough]
+   #specified the PCI id here if you want to passthrough it to
+   guest, separate them with comma
+   passthrough_pci=0000:00:14.0,0000:00:14.1,0000:05:00.0,0000:07:
+   00.0,
+   ```
 
 ##### Enabling PCIe Wi-Fi Adapter Device in Android Guest VM**
 
 1. Find the PCI ID of the Wi-Fi device:
 
-```bash
-lspci -nn -D | grep Wi-Fi
-0000:02:00.0 Network controller [0280]: Intel Corporation Wi-Fi
-6 AX210/AX211/AX411 160MHz [8086:2725] (rev 1a)
-```
+   ```bash
+   lspci -nn -D | grep Wi-Fi
+   0000:02:00.0 Network controller [0280]: Intel Corporation Wi-Fi
+   6 AX210/AX211/AX411 160MHz [8086:2725] (rev 1a)
+   ```
 
 2. Edit the passthrough section of the `/home/$USER/.intel/.civ/Android-CIV1.ini` configuration file.
 
-```bash
-[passthrough]
-#specified the PCI id here if you want to passthrough it to
-guest, separate them with comma
-passthrough_pci=0000:02:00.0
-```
+   ```bash
+   [passthrough]
+   #specified the PCI id here if you want to passthrough it to
+   guest, separate them with comma
+   passthrough_pci=0000:02:00.0
+   ```
 
 ##### Enabling Logging for Android 12 Guest VM**
 
 1. Ensure that the Android 12 guest VM is not running. Edit the extra section of the `/home/$USER/.intel/.civ/Android-CIV1.ini` configuration file.
 
-```bash
-[extra]
-cmd=-chardev socket,id=ch0,path=/tmp/civ1-
-console,server=on,wait=off,logfile=/tmp/civ1_serial.log -serial
-chardev:ch0
-```
+   ```bash
+   [extra]
+   cmd=-chardev socket,id=ch0,path=/tmp/civ1-
+   console,server=on,wait=off,logfile=/tmp/civ1_serial.log -serial
+   chardev:ch0
+   ```
 
 2. Connect to Android 12 Guest VM console for debugging:
 
-```bash
-# Connect to Celadon guest console
-sudo socat unix-connect:/tmp/civ1-console stdio
-```
+   ```bash
+   # Connect to Celadon guest console
+   sudo socat unix-connect:/tmp/civ1-console stdio
+   ```
 
 ## Yocto
 
@@ -347,7 +349,8 @@ cp ovmf/OVMF_VARS.fd OVMF_VARS_yocto.fd
 
 ##### Yocto Guest VM Launch Scripts
 
-On the Ubuntu host, download the `ubuntu_kvm_multios_scripts.zip`  launch script from the  [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
+On the Ubuntu host, download the `ubuntu_kvm_multios_scripts.zip` launch script from the
+[RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
 
 > **Note:** If you have performed the Host kernel setup in Section 4.2, the ZIP files and all the
 scriptfiles should already be in the system.
@@ -381,38 +384,38 @@ For Yocto guest VMs, USB devices can be setup in two ways:
 
 1. Passthrough of all USB Host Devices.
 
-USB host passthrough parameter option can be added in the launch command to passthrough all USB devices on the USB host.
+   USB host passthrough parameter option can be added in the launch command to passthrough all USB devices on the USB host.
 
-Add an additional parameter to the Guest VM launch command:
+   Add an additional parameter to the Guest VM launch command:
 
-```bash
-# Note: all connected USB devices will be passthrough to the
-guest VM with USB host passthrough option
-sudo -E ./start_yocto.sh --passthrough-pci-usb
-```
+   ```bash
+   # Note: all connected USB devices will be passthrough to the
+   guest VM with USB host passthrough option
+   sudo -E ./start_yocto.sh --passthrough-pci-usb
+   ```
 
 2. Passthrough of specific USB Device
 
-An external command option can be used to passthrough only a few selected USB devices.
+   An external command option can be used to passthrough only a few selected USB devices.
 
-Retrieve the `vendorid` and `productid` of USB device. In this example, ‘046d’ is vendor
-ID, ‘c06a’ is product ID.
+   Retrieve the `vendorid` and `productid` of USB device. In this example, ‘046d’ is vendor
+   ID, ‘c06a’ is product ID.
 
-```bash
-# On target terminal.
-lsusb
-Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
-Mouse
-```
+   ```bash
+   # On target terminal.
+   lsusb
+   Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
+   Mouse
+   ```
 
-Specify an additional parameter to the Guest VM launch command:
+   Specify an additional parameter to the Guest VM launch command:
 
-```bash
-# Add extra command when start guest
-sudo -E ./start_yocto.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
-```
+   ```bash
+   # Add extra command when start guest
+   sudo -E ./start_yocto.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
+   ```
 
-> **Note:** A passthrough device option can only be used once because a device can be passed through to only 1 guest VM at a time.
+   > **Note:** A passthrough device option can only be used once because a device can be passed through to only 1 guest VM at a time.
 
 ##### Enabling PCIe Wi-Fi Adapter Device in Yocto Guest VM
 
@@ -437,7 +440,8 @@ Download the Windows 10 IOT Enterprise version 21H2 ISO image, save it as `windo
 
 ##### Windows 10 Guest VM - Required Installation Scripts
 
-Use the `ubuntu_kvm_multios_scripts.zip` script  from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/softwarekits/kit-details.html?kitId=839117).
+Use the `ubuntu_kvm_multios_scripts.zip` script  from the
+[RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/softwarekits/kit-details.html?kitId=839117).
 
 #### Creating Windows VM Image
 
@@ -445,43 +449,43 @@ Use the `ubuntu_kvm_multios_scripts.zip` script  from the [RPL-S_RPL-SR_KVM_Mult
 
 1. Create an empty Windows Guest VM image file along with the Windows OVMF files:
 
-```bash
-cd /home/$USER/
-qemu-img create -f qcow2 win.qcow2 80G
-ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
-cp ovmf/OVMF_VARS.fd OVMF_VARS_windows.fd
-```
+   ```bash
+   cd /home/$USER/
+   qemu-img create -f qcow2 win.qcow2 80G
+   ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
+   cp ovmf/OVMF_VARS.fd OVMF_VARS_windows.fd
+   ```
 
 2. Run `install_windows.sh` to start Windows guest installation:
 
-```bash
-# Start guest VM to install Windows
-cd /home/$USER/
-sudo ./install_windows.sh
-```
+   ```bash
+   # Start guest VM to install Windows
+   cd /home/$USER/
+   sudo ./install_windows.sh
+   ```
 
 > **Note:** If you miss the `Press Any Key` message, press ESC key until you reach the EFI shell prompt, then type `reset` to start over again.
 
 3. Follow the Windows installation steps until you see the Windows Setup screen. Select **Windows 10 IoT Enterprise LTSC** option:
 
-![Select OS](../../assets/emt-virt-mf-win.png)
+   ![Select OS](../../assets/emt-virt-mf-win.png)
 
 4. Select **Custom: Install Windows only (advanced)**:
 
-![Select Custom Install](../../assets/emt-virt-mf-win-2.png)
+   ![Select Custom Install](../../assets/emt-virt-mf-win-2.png)
 
 5. Select **Drive 0 Unallocated Space** and click **Next**:
 
-![Select Destination Drive](../../assets/emt-virt-mf-win-3.png)
+   ![Select Destination Drive](../../assets/emt-virt-mf-win-3.png)
 
 6. Follow the usual Windows installation steps. Windows will be installed to `win.qcow2`.
 
 7. Once the installation is done, disable the automatic updates temporarily with the following steps:
 
-  a. Open Settings.
-  b. Click on Update & Security.
-  c. Click on Windows Update.
-  d. Click the Pause updates for 7 days button.
+    - Open Settings.
+    - Click on Update & Security.
+    - Click on Windows Update.
+    - Click the Pause updates for 7 days button.
 
 8. Shut down the Windows guest.
 
@@ -493,16 +497,16 @@ sudo ./install_windows.sh
 
 1. From Ubuntu GUI, launch the Windows guest VM by running `start_windows.sh`:
 
-```bash
-# Start guest VM to install Windows drivers
-cd /home/$USER/
-sudo ./start_windows.sh
-```
+   ```bash
+   # Start guest VM to install Windows drivers
+   cd /home/$USER/
+   sudo ./start_windows.sh
+   ```
 
 ##### Install Windows 10 Cumulative Update
 
-1. Download **2024-05 Cumulative Update for Windows 10 Version 21H2 for x64-
-based Systems** [KB5037768](https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037768-x64_a627ecbec3d8dad1754d541b7f89d534a6bdec69.msu)
+1. Download **2024-05 Cumulative Update for Windows 10 Version 21H2 for x64-based Systems**
+[KB5037768](https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2024/05/windows10.0-kb5037768-x64_a627ecbec3d8dad1754d541b7f89d534a6bdec69.msu)
 
 2. Double-click the MSU the update.
 
@@ -519,13 +523,13 @@ version. It should show **21H2 OS Builds 19044.4412**.
 
 3. Navigate into the install folder and double click on `installer.exe` to launch the installer.
 
-![Launch exe](../../assets/emt-virt-mf-win-4.png)
+   ![Launch exe](../../assets/emt-virt-mf-win-4.png)
 
 4. Click the **Begin installation** button.
 
 5. After the installation has completed, reboot the Windows guest VM.
 
-![Reboot the Guest VM](../../assets/emt-virt-mf-win-5.png)
+   ![Reboot the Guest VM](../../assets/emt-virt-mf-win-5.png)
 
 6. Launch the **Device Manager** to verify the installation.
 
@@ -533,18 +537,19 @@ version. It should show **21H2 OS Builds 19044.4412**.
 
 8. Right-click on the graphics device and select **Properties**. Click on the **Driver** tab. Check that the Intel® Graphics version is **32.0.101.5972**.
 
-![Driver Properties](../../assets/emt-virt-mf-win-6.png)
+   ![Driver Properties](../../assets/emt-virt-mf-win-6.png)
 
-> **Note:** If you see the yellow triangle with exclamation, install the driver manually by selecting the 32.0.101.5972 version. (Right-click to update the driver and select the option to point to the main installation directory.)
+   > **Note:** If you see the yellow triangle with exclamation, install the driver manually by selecting the 32.0.101.5972 version. (Right-click to update the driver and select the option to point to the main installation directory.)
 
 ##### Prepare SR-IOV Zero Copy Driver
 
-1. Download Windows Zero Copy Drivers Release 1716 [DVServer, DVServerKMD] [ZCBuild_1716_MSFT_Signed_Installer.zip](https://www.intel.com/content/www/us/en/download/837886/display-virtualization-drivers-for-display-virtualization-drivers-for-alder-lake-s-beta-raptor-lake-ps-mr1-raptor-lake-sr-mr3-raptor-lake-s-mr5-raptor-lake-p-mr3-alder-lake-n-mr6-alder-lake-ps-mr7.html)
+1. Download Windows Zero Copy Drivers Release 1716 (DVServer, DVServerKMD)
+[ZCBuild_1716_MSFT_Signed_Installer.zip](https://www.intel.com/content/www/us/en/download/837886/display-virtualization-drivers-for-display-virtualization-drivers-for-alder-lake-s-beta-raptor-lake-ps-mr1-raptor-lake-sr-mr3-raptor-lake-s-mr5-raptor-lake-p-mr3-alder-lake-n-mr6-alder-lake-ps-mr7.html)
 
-Make sure the correct **ZCBuild** version is chosen from the drop-down. By
-default, the latest **ZCBuild** version will be the first one.
+   Make sure the correct **ZCBuild** version is chosen from the drop-down. By
+   default, the latest **ZCBuild** version will be the first one.
 
-![Select ZCBuild version](../../assets/emt-virt-mf-win-7.png)
+   ![Select ZCBuild version](../../assets/emt-virt-mf-win-7.png)
 
 2. Use **File Explorer** to extract the ZIP file.
 
@@ -577,15 +582,15 @@ the command line. This section describes the steps to install it using command l
 
 3. Use the following command to perform the installation.
 
-```shell
-C:\> .\ZeroCopyInstaller.exe /VERYSILENT /SUPPRESSMSGBOXES
-```
+   ```shell
+   C:\> .\ZeroCopyInstaller.exe /VERYSILENT /SUPPRESSMSGBOXES
+   ```
 
-> **Option usage details**:
->
-> - `/VERYSILENT` Runs silently without displaying windows
-> - `/SUPPRESSMSGBOXES` Suppresses message boxes from displaying
-> - `/NORESTART` Avoids restarting the system after installation.
+   > **Option usage details**:
+   >
+   > - `/VERYSILENT` Runs silently without displaying windows
+   > - `/SUPPRESSMSGBOXES` Suppresses message boxes from displaying
+   > - `/NORESTART` Avoids restarting the system after installation.
 
 4. Wait for the the Windows guest OS to automatically restart.
 
@@ -653,12 +658,12 @@ of these device IDs** to display additional options to configure.
 
 ##### Resume Windows Update
 
-1. Resume the automatic Windows updates (excluding the Graphics driver) with the following steps:
+Resume the automatic Windows updates (excluding the Graphics driver) with the following steps:
 
-  a. Open Settings.
-  b. Click on Update & Security.
-  c. Click on Windows Update.
-  d. Click the Resume updates button.
+- Open Settings.
+- Click on Update & Security.
+- Click on Windows Update.
+- Click the Resume updates button.
 
 ##### Install Virtio Driver for Windows
 
@@ -689,7 +694,8 @@ of these device IDs** to display additional options to configure.
 
 ##### Windows 10 Guest VM Launch Scripts
 
-On the Ubuntu host, download the `ubuntu_kvm_multios_scripts.zip` launch script  from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
+On the Ubuntu host, download the `ubuntu_kvm_multios_scripts.zip` launch script from the
+[RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117)
 
 > **Note:** If you have performed the Host kernel setup the ZIP files and all the script files should already be in the system.
 
@@ -712,7 +718,7 @@ sudo -E ./start_windows.sh
    cp OVMF_VARS_windows.fd OVMF_VARS_windows2.fd
    cp OVMF_VARS_windows.fd OVMF_VARS_windows3.fd
    cp OVMF_VARS_windows.fd OVMF_VARS_windows4.fd
-```
+   ```
 
 2. Follow the steps in the [Creating Windows VM Image](#creating-windows-vm-image) section to create and setup the Windows guest images. Make sure that the images are named `win.qcow2`, `win2.qcow2`, `win3.qcow2` and `win4.qcow2`.
 
@@ -788,9 +794,9 @@ For Windows guest VMs, USB devices can be setup in two ways:
 
 2. Passthrough of Selected USB Devices
 
-  An external command option can be used to passthrough only a few selected USB devices.
+   An external command option can be used to passthrough only a few selected USB devices.
 
-    Retrieve the `vendorid` and `productid` of USB device. In this example, `046d` is vendor ID, `c06a` is product ID.
+   Retrieve the `vendorid` and `productid` of USB device. In this example, `046d` is vendor ID, `c06a` is product ID.
 
    ```bash
    # On target terminal.
@@ -808,14 +814,14 @@ For Windows guest VMs, USB devices can be setup in two ways:
 
    > **Note:** A passthrough device option can only be used once because a device can be passthrough to only 1 guest VM at a time.
 
-   ##### Enabling PCIe Wi-Fi Adapter Device in Windows Guest VM**
+##### Enabling PCIe Wi-Fi Adapter Device in Windows Guest VM**
 
-   For Windows guest VMs, PCI Wi-Fi device passthrough can be setup by adding `--passthrough-pci-wifi` parameter to guest VM launch command:
+For Windows guest VMs, PCI Wi-Fi device passthrough can be setup by adding `--passthrough-pci-wifi` parameter to guest VM launch command:
 
-   ```bash
-   # Add --passthrough-pci-wifi for passing through Wifi adapter
-   sudo -E ./start_windows.sh --passthrough-pci-wifi
-   ```
+```bash
+# Add --passthrough-pci-wifi for passing through Wifi adapter
+sudo -E ./start_windows.sh --passthrough-pci-wifi
+```
 
 ## Ubuntu
 
@@ -840,17 +846,18 @@ Obtain the `*.deb` kernel files that have been used for setting up the host.
 - `sriov_patches.zip`
 - `ubuntu_kvm_multios_scripts.zip`
 
-Obtain the scripts from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
+Obtain the scripts from the
+[RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
 
 ##### Make a Separate Copy of OVMF for Ubuntu
 
-1. Create a separate copy of OVMF for Ubuntu VM use:
+Create a separate copy of OVMF for Ubuntu VM use:
 
-   ```bash
-   # Make a copy of OVMF for Ubuntu guest
-   ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
-   cp ovmf/OVMF_VARS.fd OVMF_VARS_ubuntu.fd
-   ```
+```bash
+# Make a copy of OVMF for Ubuntu guest
+ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
+cp ovmf/OVMF_VARS.fd OVMF_VARS_ubuntu.fd
+```
 
 #### Creating Ubuntu VM Image
 
@@ -910,7 +917,7 @@ Obtain the scripts from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https
 
 8. Copy the following files and directories from the `/home/$USER` directory of the host OS to the `/home/$USER/` directory of the guest OS:
 
-   - *.deb kernel packages
+   - \*.deb kernel packages
    - sriov_patches.zip
    - ubuntu_kvm_multios_scripts.zip.
    - packages directory.
@@ -980,7 +987,8 @@ Obtain the scripts from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https
 
 ##### Ubuntu Guest VM Launch Scripts
 
-On the Ubuntu host, download the `ubuntu_kvm_multios_scripts.zip `launch script from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
+On the Ubuntu host, download the `ubuntu_kvm_multios_scripts.zip` launch script from the
+[RPL-S_RPL-SR_KVM_MultiOS.zip release package](https://www.intel.com/content/www/us/en/secure/design/confidential/software-kits/kit-details.html?kitId=839117).
 
 > **Note:** If you have performed the Host kernel setup, the ZIP files and all the script files should already be in the system.
 
