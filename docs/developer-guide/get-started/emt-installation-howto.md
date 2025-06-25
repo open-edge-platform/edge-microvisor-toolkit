@@ -190,40 +190,51 @@ On Windows, download and install ISO writer software such as [Rufus](https://ruf
 ### Boot and Install Edge Microvisor Toolkit
 
 **Boot from USB**
+
 1. Insert the USB into the target machine.
-1. Enter BIOS/Boot menu.
-1. Choose USB drive as the boot device.
+2. Enter the BIOS/Boot menu.
+3. Choose the USB drive as the boot device.
 
 **Select Installer**
-1. Choose *Terminal Installer* or *Graphical Installer* when prompted ![Select installer](../assets/01-select-installer.png)
 
-**Follow Installation Prompts**
-1. Accept license.
-1. Select target disc to install EMT on
-   ![Partition](../assets/02-partition-config.png).
-1. Skip disc encryption (optional).
-1. Host name - keep as default
-   ![System config](../assets/03-system-config.png).
-1. Create username and password.
-1. Confirm and begin installation.
+1. Choose *Terminal Installer* or *Graphical Installer* when prompted
 
-**Restart the System**
-1. After completion, click *Restart*
-   ![Complete](../assets/04-install-complete.png).
-1. EMT image will boot from the installed disc.
+   ![Select installer](../assets/01-select-installer.png)
+
+   **Follow Installation Prompts**
+
+2. Choose the installation type:
+
+   ![Installation type](../assets/02-installation-type.png).
+
+3. Select the target disk for installation and choose the partitioning method.
+
+   ![Partition](../assets/03-partition-config.png).
+
+4. Skip disk encryption (optional).
+5. Create a username and a password. Keep the default *Hostname*.
+
+   ![System config](../assets/04-system-config.png).
+
+6. Click *Install* and confirm by clicking *Install Now*.
+
+7. When the installation has completed, click *Done* to close the installer.
+
+   ![Complete](../assets/05-install-complete.png).
+
+   The system will reboot.
+
+   **You are now ready to use Edge Microvisor Toolkit!**
 
 ### Post Installation Check
 
-After reboot, login and check the EMT OS version. Run the following command:
+Check the version of Edge Microvisor Toolkit by running the following command:
 
 ```bash
 cat /etc/os-release
 ```
 
-You should see the EMT image version. **Installation Complete**. You are
-now ready to use the EMT 3.0 image!
-
 ## Next
 
-- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](emt-sb-howto.md).
-- Learn how to customize and manually [build microvisor images](emt-building-howto.md).
+- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](./emt-sb-howto.md).
+- Learn how to customize and manually [build microvisor images](./emt-building-howto.md).
