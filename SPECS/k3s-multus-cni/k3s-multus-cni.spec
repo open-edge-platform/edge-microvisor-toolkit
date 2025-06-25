@@ -1,6 +1,6 @@
 Name:           k3s-multus-cni
 Version:        4.2.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Multus manifests and container images for k3s kubernetes cluster.
 
 License:        Apache-2.0
@@ -28,7 +28,7 @@ This package provides Multus manifests and container image for k3s kubernetes cl
 
 %install
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/10-multus
-mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/10-multus
+mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
 
 # Copy multus manifest
 install -m 644 ./deployments/multus-daemonset.yml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/10-multus/
@@ -36,16 +36,19 @@ install -m 644 ./deployments/multus-daemonset.yml %{buildroot}%{_sharedstatedir}
 # Multus manifest uses 1 image
 # 
 # ghcr.io/k8snetworkplumbingwg/multus-cni:v4.2.1
-install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/10-multus/multus-cni.tar.zst
+install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
 
 %files
 %dir %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus
-%dir %{_sharedstatedir}/rancher/k3s/agent/images/10-multus
+%dir %{_sharedstatedir}/rancher/k3s/agent/images
 %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus/multus-daemonset.yml
-%{_sharedstatedir}/rancher/k3s/agent/images/10-multus/multus-cni.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
 
 %changelog
-* Mon Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-3
+* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-4
+- Move images to common install directory
+
+* Tue Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-3
 - Update Source1 to use a zstd-compressed image
 
 * Mon Jun 23 2025 Hyunsun Moon <hyunsun.moon@intel.com> - 4.2.1-2
