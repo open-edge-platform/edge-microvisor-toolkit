@@ -30,7 +30,7 @@ install -m 0644 ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml %{buildroot}
 %{_sharedstatedir}/rancher/k3s/agent/images/intel-gpu-plugin.tar.zst
 
 %changelog
-* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 3.30.1-2
+* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 0.32.1-3
 - Move images to common install directory
 
 * Tue Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 0.32.1-2

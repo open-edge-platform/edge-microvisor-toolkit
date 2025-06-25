@@ -45,7 +45,7 @@ install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/image
 %{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
 
 %changelog
-* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 3.30.1-2
+* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-4
 - Move images to common install directory
 
 * Tue Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-3

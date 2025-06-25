@@ -62,7 +62,7 @@ install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/imag
 %{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %changelog
-* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 3.30.1-2
+* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4-2
 - Move images to common install directory
 - Use _sharedstatedir macro for /var/lib paths
 
