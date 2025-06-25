@@ -1,7 +1,7 @@
 Name:          k3s
 Summary:       K3s - Lightweight Kubernetes
 Version:       1.32.4
-Release:       1%{?dist}
+Release:       2%{?dist}
 License:       ASL 2.0
 Vendor:        Intel Corporation
 Distribution:  Edge Microvisor Toolkit
@@ -53,36 +53,19 @@ install -m 0755 dist/artifacts/k3s %{buildroot}%{_bindir}
 mkdir %{buildroot}/opt
 install -m 0755 install.sh %{buildroot}/opt/install.sh
 
-mkdir -p %{buildroot}/var/lib/rancher/k3s/agent/images
-install -m 0644 %{SOURCE1} %{buildroot}/var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
+mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
+install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %files
- %{_bindir}/k3s
+%{_bindir}/k3s
 /opt/install.sh
-/var/lib/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %changelog
+* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4-2
+- Move images to common install directory
+- Use _sharedstatedir macro for /var/lib paths
+
 * Tue Jun 17 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4-1
 - Initial Edge Microvisor Toolkit import from the source project (license: same as "License" tag).
-
-* Wed Apr 23 2025 Rafael <32229014+rafaelbreno@users.noreply.github.com> - v1.32.4+k3s1
-- Update to v1.32.4 (#12209)
-
-* Fri Mar 21 2025 Derek Nola <derek.nola@suse.com> - v1.32.3+k3s1
-- [Release-1.32] Fix upgrade test container version (#12000)
-- Fix upgrade test container version
-- Force docker test cleanup in CI
-- Bump skew test deployment times
-- Bump skew test timeout
-
-* Fri Feb 21 2025 Brad Davidson <brad.davidson@rancher.com> - v1.32.2+k3s1
-- Bump containerd for go-cni deadlock fix
-
-* Thu Jan 23 2025 Brad Davidson <brad.davidson@rancher.com> - v1.32.1+k3s1
-- Update tests
-- Also add an ordinal to subtests so its easier to figure out which one is failing
-
-* Tue Jan 7 2025 Hussein Galal <hussein.galal.ahmed.11@gmail.com> - v1.32.0+k3s1
-- Load kernel modules for nft in agent setup (#11527)
-- Initial Azure Linux import from the source project (license: same as "License" tag)
-- License verified
+- License verified.
