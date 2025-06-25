@@ -277,7 +277,7 @@ lspci -nn -D | grep Wi-Fi
 6 AX210/AX211/AX411 160MHz [8086:2725] (rev 1a)
 ```
 
-2. Edit the passthrough section of the `/home/$USER/.intel/.civ/Android-CIV1.ini` configuration file. 
+2. Edit the passthrough section of the `/home/$USER/.intel/.civ/Android-CIV1.ini` configuration file.
 
 ```bash
 [passthrough]
@@ -288,7 +288,7 @@ passthrough_pci=0000:02:00.0
 
 ##### Enabling Logging for Android 12 Guest VM**
 
-1. Ensure that the Android 12 guest VM is not running. Edit the extra section of the `/home/$USER/.intel/.civ/Android-CIV1.ini` configuration file. 
+1. Ensure that the Android 12 guest VM is not running. Edit the extra section of the `/home/$USER/.intel/.civ/Android-CIV1.ini` configuration file.
 
 ```bash
 [extra]
@@ -719,7 +719,7 @@ sudo -E ./start_windows.sh
 3. Create a `start_all_windows.sh` script to launch multiple guests as shown below.
 
    > **Note:** The amount of memory and cores allocated might be different for each platform.
-   
+
    ```bash
    #!/bin/bash
    # Sample script to launch multiple Windows guests
@@ -788,30 +788,30 @@ For Windows guest VMs, USB devices can be setup in two ways:
 
 2. Passthrough of Selected USB Devices
 
-   An external command option can be used to passthrough only a few selected USB devices.
-   
-   Retrieve the `vendorid` and `productid` of USB device. In this example, `046d` is vendor ID, `c06a` is product ID.
-   
+  An external command option can be used to passthrough only a few selected USB devices.
+
+    Retrieve the `vendorid` and `productid` of USB device. In this example, `046d` is vendor ID, `c06a` is product ID.
+
    ```bash
    # On target terminal.
    lsusb
    Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
    Mouse
    ```
-   
+
    Specify an additional parameter to the Guest VM launch command:
-   
+
    ```bash
    # Add extra command when start guest
    sudo -E ./start_windows.sh -e "-device usbhost,vendorid=0x046d,productid=0xc06a"
    ```
-   
+
    > **Note:** A passthrough device option can only be used once because a device can be passthrough to only 1 guest VM at a time.
-   
+
    ##### Enabling PCIe Wi-Fi Adapter Device in Windows Guest VM**
-   
+
    For Windows guest VMs, PCI Wi-Fi device passthrough can be setup by adding `--passthrough-pci-wifi` parameter to guest VM launch command:
-   
+
    ```bash
    # Add --passthrough-pci-wifi for passing through Wifi adapter
    sudo -E ./start_windows.sh --passthrough-pci-wifi
@@ -881,17 +881,17 @@ Obtain the scripts from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https
    # Start guest VM to install Ubuntu
    sudo ./install_ubuntu.sh
    ```
-   
+
    > **Note:** If guest VM enters UEFI shell instead of Ubuntu, type the following command in the EFI shell:
-   
+
    ```bash
    fs0:
    cd efi/boot
    grubx64.efi
    ```
-   
+
    Then press enter and continue boot to Ubuntu as shown below.
-   
+
    ![Ubuntu Boot Screen](../../assets/emt-virt-mf-lin-1.png)
 
 5. Run Ubuntu OS installation to install into guest image and reboot after completion.
@@ -915,7 +915,7 @@ Obtain the scripts from the [RPL-S_RPL-SR_KVM_MultiOS.zip release package](https
    - ubuntu_kvm_multios_scripts.zip.
    - packages directory.
    - sriov_install directory.
-   
+
    ```bash
    # Format:
    # scp -r <host_user>@<host_ip>:<host_source_dir>{file1,
@@ -1010,7 +1010,7 @@ sudo -E ./start_ubuntu.sh
 3. Create a `start_all_ubuntu.sh` script to launch multiple guests:
 
    > **Note:** The amount of memory and cores allocated might be different for each platform.
-   
+
    ```bash
    #!/bin/bash
    # Sample script to launch multiple Ubuntu guests
@@ -1077,24 +1077,24 @@ For Ubuntu guest VMs, USB devices can be setup in two ways:
 2. Passthrough of Selected USB Devices
 
    An external command option can be used to passthrough only a few selected USB devices.
-   
+
    Retrieve the `vendorid` and `productid` of USB device. In this example, `046d` is vendor
    ID, `c06a` is product ID.
-   
+
    ```bash
    # On target terminal.
    lsusb
    Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
    Mouse
    ```
-   
+
    Specify an additional parameter to the Guest VM launch command:
-   
+
    ```bash
    # Add extra command when start guest
    sudo -E ./start_ubuntu.sh -e "-device usb-host,vendorid=0x046d,productid=0xc06a"
    ```
-   
+
    > **Note:** A passthrough device option can only be used once because a device can be passthrough to only 1 guest VM at a time.
 
 ##### Enabling PCIe Wi-Fi Adapter Device in Guest VM
