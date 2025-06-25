@@ -27,8 +27,17 @@ To create a custom developer build of Edge Microvisor Toolkit, follow these step
 
 - [Download the mutable host ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso) from
   Intel® Edge Software Catalog.
-- Install the mutable host via ISO image that includes only essential pre-installed packages,
-  providing a ready-to-use base environment.
+- Install the mutable host via ISO image. Choose one of several installation types that
+  provide ready-to-use base environments:
+  - **Standard Kernel** - that includes only essential pre-installed packages,
+  - **RT Kernel** - that offers enhanced real-time performance with
+    [Preempt RT Linux Kernel 6.12](./emt-architecture-overview.md#preempt-rt-kernel),
+  - **Standard Kernel + Docker + K3s** - that is fitted with additional features:
+    - Docker 25.07 - for deploying applications in lightweight and standalone containers,
+    - K3s - Lightweight Kubernetes 1.32.4, installed as an RPM package, for a simplified
+      deployment on resource-constrained edge devices,
+  - **RT Kernel + Docker + K3s** - that supports real-time workloads and offers small
+    footprint deployment.
 - Install additional RPM packages, using DNF to tailor the OS to your specific needs.
 - Update installed RPMs regularly to stay up-to-date in the OS in terms of package updates,
   kernel updates, security vulnerability fixes and bug fixes.
@@ -79,7 +88,8 @@ outlines the key differences between those.
 | Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
 | Update Mechanism | RPM package updates with TDNF | Image based A/B updates + Rollback       |
 | Linux Kernel     | Intel® Kernel 6.12   | Intel® Kernel 6.12                                |
-| Real time        | No                   | Two images provided one RT kernel and one without |
+| Real time        | Available for opt-in | Two images provided: one with RT kernel and one without |
+| Add-on packages  | Available for opt-in: Docker + K3s | Built into image: Docker + K3s |
 | OS Bootloader    | GRUB                 | systemd-boot                                      |
 | Secure Boot      | Available for opt-in | Enabled                                           |
 | Full Disc Encryption | Available for opt-in | Enabled                                       |

@@ -3,7 +3,7 @@
 Summary:        Intel Local Manageability Service allows applications to access the Intel Active Management Technology (AMT) firmware via the Intel Management Engine Interface (MEI).
 Name:           intel-lms
 Version:        2506.0.0.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
@@ -53,16 +53,26 @@ mkdir -p %{buildroot}%{_datadir}/licenses/%{name}
 cp COPYING %{buildroot}%{_datadir}/licenses/%{name}
 cp -r Docs/Licenses/* %{buildroot}%{_datadir}/licenses/%{name}
 
+mkdir -p %{buildroot}%{_sysconfdir}/lms
+
 # remove unpackaged files
 rm -rf %{buildroot}%{_docdir}/lms
 
-%post -f UNS/linux_scripts/post.rpm
+%systemd_post lms.service
+
+# from UNS/linux_scripts/post.rpm
+# only do following if running in actual system
+if [ -d /run/systemd/system ]; then
+    udevadm control -R && udevadm trigger -c add
+    systemctl restart rsyslog
+fi
 
 %preun -f UNS/linux_scripts/preun.rpm
 
 %files
 %defattr(-,root,root,-)
 %license COPYING
+%dir %{_sysconfdir}/lms
 %{_bindir}/lms
 %{_datadir}/dbus-1/system-services/com.intel.amt.lms.service
 %config %{_sysconfdir}/dbus-1/system.d/com.intel.amt.lms.conf
@@ -75,6 +85,9 @@ rm -rf %{buildroot}%{_docdir}/lms
 
 
 %changelog
+* Mon Jun 23 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 2506.0.0.0-3
+- Switch to perform post rpm install actions in spec file instead of calling post.rpm
+
 * Wed Jun 11 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 2506.0.0.0-2
 - Modified build flags.
 
