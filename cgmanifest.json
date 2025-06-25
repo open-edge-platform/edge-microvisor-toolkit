@@ -8392,7 +8392,7 @@
         "other": {
           "name": "k3s-disable-flannel-cni",
           "version": "0.0.1",
-          "downloadUrl": "k3s-disable-flannel-cni-0.0.1.tar"
+          "downloadUrl": "k3s-disable-cni-manifest-v0.0.1.tar"
         }
       }
     },
