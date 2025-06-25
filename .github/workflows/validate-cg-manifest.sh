@@ -37,6 +37,7 @@ ignore_no_source_tarball=" \
   hyphen-mn \
   initramfs \
   javapackages-tools-meta \
+  k3s-disable-cni \
   k3s-network-policy \
   kata-packages-uvm \
   kde-filesystem \
