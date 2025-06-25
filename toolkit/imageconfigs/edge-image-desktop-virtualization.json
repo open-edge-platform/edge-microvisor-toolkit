@@ -98,9 +98,6 @@
                 },
                 {
                         "Path": "additionalconfigs/add-sudoer.sh"
-                },
-		{
-                        "Path": "additionalconfigs/idv-service-config.sh"
                 }
             ],
             "KernelOptions": {
