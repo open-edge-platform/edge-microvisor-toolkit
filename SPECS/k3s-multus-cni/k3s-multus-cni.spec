@@ -1,6 +1,6 @@
 Name:           k3s-multus-cni
 Version:        4.2.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Multus manifests and container images for k3s kubernetes cluster.
 
 License:        Apache-2.0
@@ -9,8 +9,8 @@ Distribution:   Edge Microvisor Toolkit
 
 URL:            https://github.com/k8snetworkplumbingwg/multus-cni
 Source0:        https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
-# Generate image tar by running `docker save ghcr.io/k8snetworkplumbingwg/multus-cni:<version> | gzip > k3s-multus-cni-<version>.tar.gz`
-Source1:        %{name}-image-v%{version}.tar.gz
+# Generate image tar.zst by running `docker save ghcr.io/k8snetworkplumbingwg/multus-cni:<version> | zstd -T0 -16 -f --long=25 > k3s-multus-cni-<version>.tar.zst`
+Source1:        %{name}-image-v%{version}.tar.zst
 Patch0:         multus-daemonset.patch
 Requires:       k3s
 
@@ -36,15 +36,18 @@ install -m 644 ./deployments/multus-daemonset.yml %{buildroot}%{_sharedstatedir}
 # Multus manifest uses 1 image
 # 
 # ghcr.io/k8snetworkplumbingwg/multus-cni:v4.2.1
-install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/10-multus/multus-cni.tar.gz
+install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/10-multus/multus-cni.tar.zst
 
 %files
 %dir %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus
 %dir %{_sharedstatedir}/rancher/k3s/agent/images/10-multus
 %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus/multus-daemonset.yml
-%{_sharedstatedir}/rancher/k3s/agent/images/10-multus/multus-cni.tar.gz
+%{_sharedstatedir}/rancher/k3s/agent/images/10-multus/multus-cni.tar.zst
 
 %changelog
+* Mon Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-3
+- Update Source1 to use a zstd-compressed image
+
 * Mon Jun 23 2025 Hyunsun Moon <hyunsun.moon@intel.com> - 4.2.1-2
 - Update patch to configure additional cni bin path for k3s
 - Compress multus cni image in the package
