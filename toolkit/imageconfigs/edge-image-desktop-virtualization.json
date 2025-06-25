@@ -2,7 +2,7 @@
     "Disks": [
         {
             "PartitionTableType": "gpt",
-            "MaxSize": 4096,
+            "MaxSize": 9216,
             "Artifacts": [
                 {
                     "Name": "edge-readonly-dv",
@@ -30,14 +30,14 @@
                     "Name": "rootfs",
                     "ID": "rootfs",
                     "Start": 300,
-                    "End": 3536,
+                    "End": 4048,
                     "FsType": "ext4",
                     "Type": "linux-root-amd64"
                 },
                 {
                     "Name": "edge_persistent",
                     "ID": "opt",
-                    "Start": 3536,
+                    "Start": 4048,
                     "End": 0,
                     "FsType": "ext4"
                 }
