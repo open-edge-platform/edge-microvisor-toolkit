@@ -2268,6 +2268,7 @@
                 "inbm",
                 "intel-desktop-virtualization-k3s",
                 "intel-gpu-device-plugin",
+                "intel-idv-services",
                 "intel-igsc",
                 "intel-lms",
                 "intel-npu-firmware",
