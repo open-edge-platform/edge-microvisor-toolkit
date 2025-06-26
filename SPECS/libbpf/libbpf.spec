@@ -1,12 +1,14 @@
 Summary:        Libbpf library
 Name:           libbpf
 Version:        1.2.2
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        LGPLv2 OR BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/%{name}/%{name}
 Source0:        https://github.com/%{name}/%{name}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Patch0:         CVE-2025-29481.patch
+
 BuildRequires:  elfutils-devel
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:  gcc
@@ -52,8 +54,11 @@ find %{buildroot} -type f -name "*.a" -delete -print
 %{_libdir}/pkgconfig/libbpf.pc
 
 %changelog
-* Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 1.2.2-2
+* Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 1.2.2-3
 - Add TSN patches/support
+
+* Mon Apr 14 2025 Jyoti Kanase <v-jykanase@microsoft.com> -  1.2.2-2
+- Patch for CVE-2025-29481
 
 * Fri Oct 27 2023 CBL-Mariner Servicing Account <cblmargh@microsoft.com> - 1.2.2-1
 - Auto-upgrade to 1.2.2 - Azure Linux 3.0 - package upgrades

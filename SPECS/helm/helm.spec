@@ -2,7 +2,7 @@
 
 Name:          helm
 Version:       3.15.2
-Release:       3%{?dist}
+Release:       4%{?dist}
 Summary:       The Kubernetes Package Manager
 Group:         Applications/Networking
 License:       Apache 2.0
@@ -25,15 +25,15 @@ Source0:       https://github.com/helm/helm/archive/refs/tags/v%{version}.tar.gz
 #
 Source1:       %{name}-%{version}-vendor.tar.gz
 Patch0:        CVE-2024-45338.patch
+Patch1:        CVE-2025-32386.patch
+Patch2:        CVE-2025-22872.patch
 BuildRequires: golang
 
 %description
 Helm is a tool that streamlines installing and managing Kubernetes applications. Think of it like apt/yum/homebrew for Kubernetes.
 
 %prep
-%autosetup -N
-tar -xf %{SOURCE1} --no-same-owner
-%autopatch -p1
+%autosetup -p1 -a1
 
 %build
 export VERSION=%{version}
@@ -55,6 +55,10 @@ install -m 755 ./helm %{buildroot}%{_bindir}
 go test -v ./cmd/helm
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.15.2-4
+- merge from Azure Linux 3.0.20250521-3.0
+- Patch CVE-2025-32386 & CVE-2025-22872
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 3.15.2-3
 - Bump Release to rebuild
 

@@ -3,7 +3,7 @@
 Summary: The open-source application container engine
 Name:    moby-engine
 Version: 25.0.3
-Release: 12%{?dist}
+Release: 13%{?dist}
 License: ASL 2.0
 Group:   Tools/Container
 URL: https://mobyproject.org
@@ -26,6 +26,7 @@ Patch8:  CVE-2024-45337.patch
 Patch9:  CVE-2023-45288.patch
 Patch10: CVE-2025-22868.patch
 Patch11: CVE-2025-22869.patch
+Patch12: CVE-2025-30204.patch
 
 %{?systemd_requires}
 
@@ -121,6 +122,10 @@ fi
 %{_unitdir}/*
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 25.0.3-13
+- merge from Azure Linux 3.0.20250521-3.0
+- Patch CVE-2025-30204
+
 * Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 25.0.3-12
 - merge from Azure Linux tag 3.0.20250423-3.0
 - Patch CVE-2025-22868 & CVE-2025-22869
