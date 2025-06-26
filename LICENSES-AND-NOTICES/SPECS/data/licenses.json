@@ -2272,6 +2272,7 @@
                 "intel-lms",
                 "intel-npu-firmware",
                 "intel-xpu-smi",
+                "k3s-disable-cni",
                 "node-agent",
                 "nvidia-data-center-driver",
                 "os-ab-update",
