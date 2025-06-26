@@ -56,5 +56,4 @@ install -m 644 autologin.conf %{buildroot}%{_sysconfdir}/systemd/system/getty@tt
 
 %changelog
 * Wed Jun 25 2025 Dhanya A <dhanya.a@intel.com> - 0.1-1
-- Initial Edge Microvisor Toolkit import from Fedora 43 (license: MIT). License verified.
-- RPM package for installing idv services
+- Original version for Edge Microvisor Toolkit. License verified.
