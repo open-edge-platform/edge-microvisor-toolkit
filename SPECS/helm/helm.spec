@@ -54,7 +54,7 @@ go test -v ./cmd/helm
 
 %changelog
 * Thu Jun 26 2025 Aaron Dorney <aaron.dorney@intel.com> - 3.18.3-1
-- Bump Release to rebuild
+- Bump Release to rebuild and remove CVE patch
 
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 3.15.2-3
 - Bump Release to rebuild
