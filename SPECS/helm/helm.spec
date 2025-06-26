@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 
 Name:          helm
-Version:       3.15.2
-Release:       3%{?dist}
+Version:       3.18.3
+Release:       1%{?dist}
 Summary:       The Kubernetes Package Manager
 Group:         Applications/Networking
 License:       Apache 2.0
@@ -55,6 +55,9 @@ install -m 755 ./helm %{buildroot}%{_bindir}
 go test -v ./cmd/helm
 
 %changelog
+* Fri Mar 21 2025 Aaron Dorney <aaron.dorney@intel.com> - 3.18.3-1
+- Bump Release to rebuild
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 3.15.2-3
 - Bump Release to rebuild
 
