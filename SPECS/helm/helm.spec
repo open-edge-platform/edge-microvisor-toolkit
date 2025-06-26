@@ -24,7 +24,6 @@ Source0:       https://github.com/helm/helm/archive/refs/tags/v%{version}.tar.gz
 #           -cf %%{name}-%%{version}-vendor.tar.gz vendor
 #
 Source1:       %{name}-%{version}-vendor.tar.gz
-Patch0:        CVE-2024-45338.patch
 BuildRequires: golang
 
 %description
@@ -33,7 +32,6 @@ Helm is a tool that streamlines installing and managing Kubernetes applications.
 %prep
 %autosetup -N
 tar -xf %{SOURCE1} --no-same-owner
-%autopatch -p1
 
 %build
 export VERSION=%{version}
@@ -55,7 +53,7 @@ install -m 755 ./helm %{buildroot}%{_bindir}
 go test -v ./cmd/helm
 
 %changelog
-* Fri Mar 21 2025 Aaron Dorney <aaron.dorney@intel.com> - 3.18.3-1
+* Thu Jun 26 2025 Aaron Dorney <aaron.dorney@intel.com> - 3.18.3-1
 - Bump Release to rebuild
 
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 3.15.2-3
