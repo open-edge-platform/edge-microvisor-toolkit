@@ -7480,6 +7480,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "intel-idv-services",
+          "version": "0.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/intel-idv-services-0.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "intel-gpu-device-plugin",
           "version": "0.32.1",
           "downloadUrl": "https://github.com/intel/intel-device-plugins-for-kubernetes/archive/refs/tags/v0.32.1.tar.gz"
