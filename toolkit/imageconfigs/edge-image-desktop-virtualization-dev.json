@@ -2,7 +2,7 @@
     "Disks": [
         {
             "PartitionTableType": "gpt",
-            "MaxSize": 9216,
+            "MaxSize": 13312,
             "Artifacts": [
                 {
                     "Name": "edge-readonly-dv-dev",
