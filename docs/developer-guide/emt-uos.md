@@ -147,7 +147,5 @@ components are added to run as native systemd services in the `initramfs` image:
   [Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
   will require additional adjustments to the `initramfs`:
 >
-> - Include packages: efibootmgr, gawk, lvm2, net-tools, parted
-> - Inject required OS installer bash scripts and systemd service to run it as service
-> - Disable tink-worker, Caddy, Fluent Bit, device discovery agent services
-
+> - Include packages: efibootmgr, gawk, lvm2, net-tools, parted.
+> - Inject required OS installer bash scripts and systemd service to run it as service.
