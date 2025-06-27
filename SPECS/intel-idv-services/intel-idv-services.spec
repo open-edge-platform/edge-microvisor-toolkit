@@ -56,6 +56,6 @@ install -m 644 autologin.conf %{buildroot}%{_sysconfdir}/systemd/system/getty@tt
 
 %changelog
 * Fri Jun 27 2025 Dhanya A <dhanya.a@intel.com> - 0.2-1
-- Remove logging in shell scripts
+- Remove logging to a log file in shell scripts
 * Wed Jun 25 2025 Dhanya A <dhanya.a@intel.com> - 0.1-1
 - Original version for Edge Microvisor Toolkit. License verified.
