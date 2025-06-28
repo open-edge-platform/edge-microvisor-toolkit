@@ -7460,19 +7460,31 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "intel-desktop-virtualization-k3s",
-          "version": "0.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/intel-idv-kubevirt-v0.1.tar.gz"
+          "name": "intel-gmmlib",
+          "version": "22.5.1",
+          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.5.1.tar.gz"
         }
       }
     },
     {
       "component": {
         "type": "other",
+        "comment": "Imported as part of the 'intel-desktop-virtualization-k3s' package, version v1.0.0-rc1",
         "other": {
-          "name": "intel-gmmlib",
-          "version": "22.5.1",
-          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.5.1.tar.gz"
+          "name": "intel-idv-device-plugin",
+          "version": "1.0.0~rc1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc1/intel-idv-device-plugin-1.0.0-rc1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "comment": "Imported as part of the 'intel-desktop-virtualization-k3s' package, version v1.0.0-rc1",
+        "other": {
+          "name": "intel-idv-kubevirt",
+          "version": "1.0.0~rc1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc1/intel-idv-kubevirt-1.0.0-rc1.tar.gz"
         }
       }
     },
