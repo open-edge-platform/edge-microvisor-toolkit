@@ -77,8 +77,7 @@
                 "packagelists/os-ab-update.json",
                 "packagelists/vpro-amt-packages.json",
                 "packagelists/docker.json",
-                "packagelists/k3s.json",
-                "packagelists/helm.json"
+                "packagelists/k3s.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
