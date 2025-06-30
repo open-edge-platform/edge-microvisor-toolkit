@@ -83,6 +83,7 @@
                 "packagelists/calico.json",
                 "packagelists/multus.json",
                 "packagelists/intel-gpu-device-plugin.json",
+                "packagelists/helm.json",
                 "packagelists/fs-tools.json",
                 "packagelists/intel-idv-services.json",
                 "packagelists/intel-desktop-virtualization-k3s.json"
