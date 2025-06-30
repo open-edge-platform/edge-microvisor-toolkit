@@ -1,4 +1,4 @@
-# Deploying Edge Microvisor Toolkit on Virtual Machines
+# Deploying Edge Microvisor Toolkit on Virtual Machines as Guest OS
 
 Below you will find all methods of deployment on Virtual Machines (VMs) supported by Edge Microvisor Toolkit.
 
