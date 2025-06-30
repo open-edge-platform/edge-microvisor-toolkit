@@ -10,4 +10,4 @@ sudo vim /etc/default/grub
 sudo grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
 ```
 
-Resources required for configuring guest OS require access to intel proprietary storage location. Contact Your Intel representative to learn more and obtain required materials.
+Contact Your Intel representative for more details on configuring guest OS for SRIOV specific use cases.
