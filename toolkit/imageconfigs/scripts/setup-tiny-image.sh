@@ -6,7 +6,7 @@
 set -e
 set -x
 
-pprefix="Tink"
+pprefix="Tiny"
 
 # services
 systemctl disable systemd-homed.service
@@ -19,8 +19,8 @@ if [ ! -f /etc/fluent-bit/fluent-bit.conf ]; then
   touch /etc/fluent-bit/fluent-bit.conf
 fi
 # update console msg
-sed -i 's\Toolkit\Toolkit-Tink\' /etc/issue
-sed -i 's\Toolkit\Toolkit-Tink\' /etc/issue.net
+sed -i 's\Toolkit\Toolkit-Tiny\' /etc/issue
+sed -i 's\Toolkit\Toolkit-Tiny\' /etc/issue.net
 echo "$pprefix: $(du -ah /usr/share)"
 find /usr/share -type f \
   ! -path "/usr/share/terminfo/v/vt100" \

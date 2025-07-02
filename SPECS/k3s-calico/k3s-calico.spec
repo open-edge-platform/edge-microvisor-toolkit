@@ -1,6 +1,6 @@
 Name:           k3s-calico
 Version:        3.30.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Calico manifests and container images for k3s kubernetes cluster.
 
 License:        Apache-2.0
@@ -27,7 +27,7 @@ This package provides Calico manifests and container images for k3s kubernetes c
 
 %install
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-calico
-mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/00-calico
+mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
 
 # Copy calico manifest
 install -m 644 ./manifests/calico.yaml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-calico/
@@ -37,21 +37,24 @@ install -m 644 ./manifests/calico.yaml %{buildroot}%{_sharedstatedir}/rancher/k3
 # docker.io/calico/node:v3.30.1
 # docker.io/calico/kube-controllers:v3.30.1
 
-install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/00-calico/calico-cni.tar.zst
-install -m 644 %{SOURCE2} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/00-calico/calico-node.tar.zst
-install -m 644 %{SOURCE3} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/00-calico/calico-kube-controllers.tar.zst
+install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/calico-cni.tar.zst
+install -m 644 %{SOURCE2} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/calico-node.tar.zst
+install -m 644 %{SOURCE3} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/calico-kube-controllers.tar.zst
 
 
 %files
 %dir %{_sharedstatedir}/rancher/k3s/server/manifests/00-calico
-%dir %{_sharedstatedir}/rancher/k3s/agent/images/00-calico
+%dir %{_sharedstatedir}/rancher/k3s/agent/images
 %{_sharedstatedir}/rancher/k3s/server/manifests/00-calico/calico.yaml
-%{_sharedstatedir}/rancher/k3s/agent/images/00-calico/calico-cni.tar.zst
-%{_sharedstatedir}/rancher/k3s/agent/images/00-calico/calico-node.tar.zst
-%{_sharedstatedir}/rancher/k3s/agent/images/00-calico/calico-kube-controllers.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/calico-cni.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/calico-node.tar.zst
+%{_sharedstatedir}/rancher/k3s/agent/images/calico-kube-controllers.tar.zst
 
 %changelog
-* Mon Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 3.30.1-2
+* Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 3.30.1-3
+- Move images to common install directory
+
+* Tue Jun 24 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 3.30.1-2
 - Update Source0 from release to source tarball
 - Add sources for zstd-compressed images replacing the uncompressed release images
 

@@ -5,7 +5,7 @@
             "MaxSize": 1560,
             "Artifacts": [
                 {
-                    "Name": "edge-readonly-tink",
+                    "Name": "edge-readonly-tiny",
                     "Type": "tar.gz"
                 }
             ]
@@ -16,7 +16,7 @@
             "Name": "Standard",
             "BootType": "efi",
             "PackageLists": [
-                "packagelists/tink-packages.json",
+                "packagelists/tiny-packages.json",
                 "packagelists/minimal-os-packages.json"
             ],
             "AdditionalFiles": {
@@ -39,13 +39,13 @@
                     "Path": "scripts/cleanup.sh"
                 },
                 {
-                    "Path": "scripts/setup-tink-image.sh"
+                    "Path": "scripts/setup-tiny-image.sh"
                 }
             ],
             "KernelCommandLine": {
                 "ExtraCommandLine": "root=tmpfs rootflags=mode=0755 rd.skipfsck noresume quiet splash modules-load=nbd"
             },
-            "Hostname": "EMT-tink",
+            "Hostname": "EMT-tiny",
             "DisableRpmDocs": true,
             "RemoveRpmDb": true,
             "Users": [

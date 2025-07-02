@@ -38,12 +38,22 @@ and workloads. It has been validated on the following platforms:
 
 ## Recommended Hardware Configuration
 
-| Component    | Edge Microvisor Toolkit Developer Node| Edge Microvisor Toolkit (Open Edge Platform or Standalone Node) |
-|--------------|-----------------------------|----------------------------------------------|
-| CPU          | Intel® Atom™, Core, or Xeon | Intel® Atom™, Core™, or Xeon                 |
-| RAM          | 2GB minimum                 | 8GB minimum                                  |
-| Storage      | 32GB SSD/NVMe or eMMC       | 64GB SSD or NVMe                             |
-| Networking   | 1GbE Ethernet               | 1GbE Ethernet or higher                      |
+### Edge Microvisor Toolkit Developer Node
+
+| Component                  | Intel® Atom™ | Core™/Core™ Ultra | Xeon®   |
+|----------------------------|--------------|-------------------|---------|
+| RAM                        | 2 GB         | 2 GB              | 2 GB    |
+| Storage (SSD/NVMe or eMMC) | 32 GB        | 32 GB             | 32 GB   |
+| Networking (Ethernet)      | 1 GbE        | 1 GbE             | 1 GbE   |
+
+### Edge Microvisor Toolkit (Open Edge Platform or Standalone Node)
+
+| Component                  | Intel® Atom™    | Core™/Core™ Ultra | Xeon®           |
+|----------------------------|-----------------|-------------------|-----------------|
+| RAM                        | 16 GB           | 64 GB             | 128 GB          |
+| Storage (SSD/NVMe or eMMC) | 64 GB           | 512 GB            | 1 TB            |
+| Networking (Ethernet)      | 1 GbE or higher | 1 GbE or higher   | 1 GbE or higher |
+
 
 ## Software Requirements
 

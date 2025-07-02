@@ -1,0 +1,6 @@
+{
+    "packages": [
+        "k3s-disable-cni"
+    ],
+    "_comment": "Packages to disable flannel the default CNI. This is useful for users who want to use a different CNI plugin with K3s."
+}
