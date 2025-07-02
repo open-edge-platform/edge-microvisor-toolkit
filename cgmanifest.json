@@ -1757,8 +1757,8 @@
         "type": "other",
         "other": {
           "name": "cjson",
-          "version": "1.7.17",
-          "downloadUrl": "https://github.com/DaveGamble/cJSON/archive/v1.7.17/cjson-1.7.17.tar.gz"
+          "version": "1.7.18",
+          "downloadUrl": "https://github.com/DaveGamble/cJSON/archive/v1.7.18/cjson-1.7.18.tar.gz"
         }
       }
     },

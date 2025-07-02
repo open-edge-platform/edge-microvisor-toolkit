@@ -1,7 +1,7 @@
 Summary:        Ultralightweight JSON parser in ANSI C
 Name:           cjson
-Version:        1.7.17
-Release:        3%{?dist}
+Version:        1.7.18
+Release:        1%{?dist}
 # several files in tests/ are Apache-2.0 but are not packaged
 License:        MIT
 Vendor:         Intel Corporation
@@ -55,6 +55,9 @@ rm -f %{buildroot}%{_libdir}/*.{la,a}
 %{_includedir}/cjson/
 
 %changelog
+* Wed July 02 2025 Tan Jia Yong <jia.yong.tan@intel.com> - 1.7.18-1
+- Update to new upstream version.
+
 * Thu Dec 19 2024 Mun Chun Yep <mun.chun.yep@intel.com> - 1.7.17.-3
 - Add vendor and distribution tag.
 

@@ -21,7 +21,14 @@ review, better understand, and prioritize the request.
 
 All contributing Pull Requests should target the `3.0-dev` branch. This branch is used for
 development, testing, and validation. It is merged to the `3.0` release branch by project
-maintainers, at their discretion. The `3.0` branch is used for publishing official releases of the EMT images.
+maintainers, at their discretion. The `3.0` branch is used for publishing official releases
+of the EMT images.
+
+All contributed changes are published with the following release, according to the
+[release policy](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/RELEASE_POLICY.md).
+Both issues and feature requests (also raised as issues) are evaluated and
+prioritized by product maintainers. This means they may or may not be included in the
+next release.
 
 Following the [Azure Linux](https://github.com/microsoft/azurelinux/blob/3.0/CONTRIBUTING.md#packages)
 scheme for packages, Edge Microvisor Toolkit maintains two directories:
@@ -44,30 +51,9 @@ When raising a PR, make sure that:
   ```bash
   cd toolkit
   sudo make input-srpms REBUILD_TOOLS=y SRPM_FILE_SIGNATURE_HANDLING=update
-  
+
 * The baseline branch for the pull request is set to `3.0-dev`.
 
-
-## Release Cadence
-
-Edge Microvisor Toolkit has a steady and predictable release cadence. Both issues and
-feature requests, which are also raised as issues, are evaluated and prioritized to meet one
-of the planned releases.
-
-Edge Microvisor Toolkit releases every 6 weeks. Here are the details:
-
-**Every 6 weeks:**
-
-- RPM updates including new RPMs or patches to existing RPMs.
-- Exception releases to address critical bugs/CVEs.
-
-**Every 12 weeks:**
-
-- ISO image + RPM release.
-
-**Every quarter:**
-
-- RAW/VHD (+RPMs delta) image release.
 
 ## Contribution license
 
