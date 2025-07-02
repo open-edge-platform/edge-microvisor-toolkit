@@ -1,0 +1,11 @@
+# This patch sets the namespace to 'kube-system'.
+--- deployments/gpu_plugin/base/intel-gpu-plugin.yaml
++++ deployments/gpu_plugin/base/intel-gpu-plugin.yaml
+@@ -2,6 +2,7 @@
+ kind: DaemonSet
+ metadata:
+   name: intel-gpu-plugin
++  namespace: kube-system
+   labels:
+     app: intel-gpu-plugin
+ spec:
