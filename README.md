@@ -18,6 +18,7 @@ The currently published versions are:
 * [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node)
 * [Edge Microvisor Toolkit (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
 * [Edge Microvisor Toolkit with real time extensions (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
+* [Edge Microvisor Toolkit Tiny](./docs/developer-guide/emt-tiny.md)
 
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
 platforms such as  Xeon®, Intel® Core Ultra™, Intel Core™ and Intel® Atom®. It
