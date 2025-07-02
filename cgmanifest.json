@@ -1757,8 +1757,8 @@
         "type": "other",
         "other": {
           "name": "cjson",
-          "version": "1.7.17",
-          "downloadUrl": "https://github.com/DaveGamble/cJSON/archive/v1.7.17/cjson-1.7.17.tar.gz"
+          "version": "1.7.18",
+          "downloadUrl": "https://github.com/DaveGamble/cJSON/archive/v1.7.18/cjson-1.7.18.tar.gz"
         }
       }
     },
@@ -5330,8 +5330,8 @@
         "type": "other",
         "other": {
           "name": "helm",
-          "version": "3.15.2",
-          "downloadUrl": "https://github.com/helm/helm/archive/refs/tags/v3.15.2.tar.gz"
+          "version": "3.18.3",
+          "downloadUrl": "https://github.com/helm/helm/archive/refs/tags/v3.18.3.tar.gz"
         }
       }
     },
@@ -7492,9 +7492,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "intel-idv-services",
-          "version": "0.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.1/intel-idv-services-0.1.tar.gz"
+          "name": "intel-gpu-device-plugin",
+          "version": "0.32.1",
+          "downloadUrl": "https://github.com/intel/intel-device-plugins-for-kubernetes/archive/refs/tags/v0.32.1.tar.gz"
         }
       }
     },
@@ -7502,9 +7502,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "intel-gpu-device-plugin",
-          "version": "0.32.1",
-          "downloadUrl": "https://github.com/intel/intel-device-plugins-for-kubernetes/archive/refs/tags/v0.32.1.tar.gz"
+          "name": "intel-idv-services",
+          "version": "0.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v0.2/intel-idv-services-0.2.tar.gz"
         }
       }
     },

@@ -1,0 +1,6 @@
+{
+    "packages": [
+        "helm"
+    ],
+    "_comment": "helm package for helm chart installation."
+}

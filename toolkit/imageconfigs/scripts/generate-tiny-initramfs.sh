@@ -6,7 +6,7 @@
 set -e
 #set -x
 
-pprefix="Tink"
+pprefix="Tiny"
 
 function generate_images() {
     if [[ $# -eq 2 ]]; then
