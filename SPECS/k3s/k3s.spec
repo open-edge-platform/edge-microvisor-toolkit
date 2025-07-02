@@ -1,15 +1,16 @@
+%define        _version 1.32.4
 Name:          k3s
 Summary:       K3s - Lightweight Kubernetes
-Version:       1.32.4
-Release:       2%{?dist}
+Version:       %{_version}+k3s1
+Release:       1%{?dist}
 License:       ASL 2.0
 Vendor:        Intel Corporation
 Distribution:  Edge Microvisor Toolkit
 Group:         System Environment/Base
 URL:           https://k3s.io/
-Source0:       https://github.com/k3s-io/k3s/archive/refs/tags/v%{version}+k3s1.tar.gz#/%{name}-v%{version}.tar.gz
-Source1:       https://github.com/k3s-io/k3s/releases/download/v%{version}+k3s1/k3s-airgap-images-amd64.tar.zst#/%{name}-airgap-images-v%{version}.tar.zst
-Source2:       %{name}-vendor-v%{version}.tar.gz
+Source0:       https://github.com/k3s-io/k3s/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{_version}.tar.gz
+Source1:       https://github.com/k3s-io/k3s/releases/download/v%{version}/k3s-airgap-images-amd64.tar.zst#/%{name}-airgap-images-v%{_version}.tar.zst
+Source2:       %{name}-vendor-v%{_version}.tar.gz
 Source3:       https://github.com/k3s-io/k3s-root/releases/download/v0.14.1/k3s-root-amd64.tar
 Source4:       https://github.com/opencontainers/runc/archive/refs/tags/v1.2.5.tar.gz#/runc-v1.2.5.tar.gz
 Source5:       https://github.com/k3s-io/containerd/archive/refs/tags/v2.0.4-k3s2.tar.gz#/containerd-v2.0.4-k3s2.tar.gz
@@ -29,7 +30,7 @@ BuildRequires: libseccomp-devel
 K3s - Lightweight Kubernetes %{version}
 
 %prep
-%setup -n %{name}-%{version}-k3s1
+%setup -n %{name}-%{_version}-k3s1
 mkdir -p build/src/github.com/opencontainers/runc build/src/github.com/containerd/containerd  build/static/charts build/src/github.com/containernetworking/plugins bin dist
 tar -xf %{SOURCE2} --no-same-owner
 tar -xf %{SOURCE3} --no-same-owner
@@ -40,7 +41,7 @@ mv %{SOURCE7} build/static/charts/
 tar -xf %{SOURCE8} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins
 rm -rf build/src/github.com/containernetworking/plugins/plugins/meta/flannel/*
 tar -xf %{SOURCE9} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins/plugins/meta/flannel
-%autopatch -v -p0
+%autopatch -p0
 
 %build
 ./scripts/build
@@ -62,6 +63,9 @@ install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/imag
 %{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %changelog
+* Wed Jul 02 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4+k3s1-1
+- Update package version format to add distribution identifier 'k3s1'
+
 * Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4-2
 - Move images to common install directory
 - Use _sharedstatedir macro for /var/lib paths
