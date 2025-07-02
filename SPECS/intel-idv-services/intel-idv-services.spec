@@ -55,7 +55,7 @@ install -m 644 autologin.conf %{buildroot}%{_sysconfdir}/systemd/system/getty@tt
 %preun
 
 %changelog
-* Wed Jul 02 2025 Dhanya A <dhanya.a@intel.com> - 1.0.0~rc1
+* Wed Jul 02 2025 Dhanya A <dhanya.a@intel.com> - 1.0.0~rc1-1
 - Bump up version to v1.0.0~rc1
 
 * Fri Jun 27 2025 Dhanya A <dhanya.a@intel.com> - 0.2-1
