@@ -1,12 +1,12 @@
 Name:           intel-idv-services
-Version:        0.2
+Version:        1.0.0~rc1
 Release:        1%{?dist}
 Summary:        A package to install scripts and systemd services for Intelligent Desktop Virtualization(IDV)
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
 URL:            https://github.com/open-edge-platform/edge-desktop-virtualization
-Source0:        https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/pre-release-v%{version}/%{name}-%{version}.tar.gz
+Source0:        https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/%{version_no_tilde}/%{name}-%{version_no_tilde}.tar.gz
 
 BuildArch:       noarch
 BuildRequires:   systemd-rpm-macros
@@ -24,7 +24,7 @@ idv-launcher.service:
 This service launches virtual machines based on the configuration specified in the vm.conf file. The VMs are displayed in full-screen mode on their respective monitors with USB passthrough enabled.
 
 %prep
-%setup -q
+%setup -q -n %{name}-%{version_no_tilde}
 
 %build
 
@@ -55,6 +55,9 @@ install -m 644 autologin.conf %{buildroot}%{_sysconfdir}/systemd/system/getty@tt
 %preun
 
 %changelog
+* Wed Jul 02 2025 Dhanya A <dhanya.a@intel.com> - 1.0.0~rc1-1
+- Bump up version to v1.0.0~rc1
+
 * Fri Jun 27 2025 Dhanya A <dhanya.a@intel.com> - 0.2-1
 - Remove logging to a log file in shell scripts
 
