@@ -21,6 +21,8 @@ Framework - a complete integrated system providing full lifecycle management for
 your edge devices, including remote deployment and management of Kubernetes
 applications.
 
+<!--img-->
+
 ### Edge Microvisor Toolkit Developer Node
 
 To create a custom developer build of Edge Microvisor Toolkit, follow these steps:
