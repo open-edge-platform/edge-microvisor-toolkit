@@ -7479,17 +7479,6 @@
     {
       "component": {
         "type": "other",
-        "comment": "Imported as part of the 'intel-desktop-virtualization-k3s' package, version v1.0.0-rc1",
-        "other": {
-          "name": "intel-idv-device-plugin",
-          "version": "1.0.0~rc1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc1/intel-idv-device-plugin-1.0.0-rc1.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
         "other": {
           "name": "intel-gpu-device-plugin",
           "version": "0.32.1",
