@@ -14,7 +14,7 @@ BuildRequires:  elfutils-libelf-devel
 BuildRequires:  gcc
 BuildRequires:  make
 
-Patch0:         0001-libbpf-add-txtime-field-in-xdp_desc-struct.patch
+Patch1:         0001-libbpf-add-txtime-field-in-xdp_desc-struct.patch
 
 %description
 A mirror of bpf-next linux tree bpf-next/tools/lib/bpf directory plus its
@@ -54,11 +54,12 @@ find %{buildroot} -type f -name "*.a" -delete -print
 %{_libdir}/pkgconfig/libbpf.pc
 
 %changelog
-* Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 1.2.2-3
-- Add TSN patches/support
+* Thu Jul 3 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.2.2-3
+- merge from Azure Linux 3.0.20250521-3.0
+- Address CVE-2025-31498 with a patch
 
-* Mon Apr 14 2025 Jyoti Kanase <v-jykanase@microsoft.com> -  1.2.2-2
-- Patch for CVE-2025-29481
+* Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 1.2.2-2
+- Add TSN patches/support
 
 * Fri Oct 27 2023 CBL-Mariner Servicing Account <cblmargh@microsoft.com> - 1.2.2-1
 - Auto-upgrade to 1.2.2 - Azure Linux 3.0 - package upgrades

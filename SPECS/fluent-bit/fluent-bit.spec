@@ -185,12 +185,12 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
-* Fri Jun 13 2025 Tham Jing Hui <jing.hui.tham@intel.com> - 3.1.9-13
-- Include patch for CVE-2025-29087
-
-* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.1.9-12
+* Thu Jul 3 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.1.9-13
 - merge from Azure Linux 3.0.20250521-3.0
 - Address CVE-2025-31498 with a patch
+
+* Fri Jun 13 2025 Tham Jing Hui <jing.hui.tham@intel.com> - 3.1.9-12
+- Include patch for CVE-2025-29087
 
 * Tue Mar 18 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.1.9-11
 - Bump version for merge AZL tag: 3.0.20250311-3.0
