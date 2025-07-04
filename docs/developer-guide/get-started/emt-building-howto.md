@@ -116,9 +116,9 @@ alternative text editor to the image:
    ./add_custom_packages.sh "nano" ../imageconfigs/edge-image.json utilities.json
    ```
 
-  - `"<pkg1 pkg2 ...>"` - List names of packages to include. Keep them separated by spaces.
-  - `path/to/image.json` - Specify the path to your `imageconfig` JSON file, for example, `../imageconfigs/edge-image.json`.
-  - `[custom-packages.json]` - Optionally, provide a name for the custom package list file. If omitted, the default `custom-packages.json` name will be used.
+   - `"<pkg1 pkg2 ...>"` - List names of packages to include. Keep them separated by spaces.
+   - `path/to/image.json` - Specify the path to your `imageconfig` JSON file, for example, `../imageconfigs/edge-image.json`.
+   - `[custom-packages.json]` - Optionally, provide a name for the custom package list file. If omitted, the default `custom-packages.json` name will be used.
 
 2. After running the script, your `imageconfig` JSON file (e.g., `edge-image.json`) will include the custom package list you specified. You can also create a new file and add it to the `imageconfigs` folder. Before running `add_custom_packages.sh` to include your custom package list, make sure that the `PackageLists` section exists in the `imageconfig` JSON file.
 
