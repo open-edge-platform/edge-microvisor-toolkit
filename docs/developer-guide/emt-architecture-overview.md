@@ -39,7 +39,9 @@ Use [kernel with real-time extensions](#preempt-rt-kernel) for enhanced real-tim
 
 ### EMT Standalone immutable RAW images
 
-INTEL ready-made solution for Edge AI applications. Immutable Standalone Node uses Secure Boot technology to protect against injecting malicious sftware, both at rest and during runtime. This image cannot be modified after deployment, providing the best security for your Edge Node. Download the Edge Microvisor Toolkit Standalone Node installer to your device, run it to create a a bootable USB stick, and use that USB stick to install the EMT Standalone OS.
+INTEL ready-made solution for Edge AI applications. Immutable Standalone Node uses Secure Boot technology to protect against injecting malicious sftware, both at rest and during runtime. This image cannot be modified after deployment, providing the best security for your Edge Node.
+
+Download the Edge Microvisor Toolkit Standalone Node installer to your device, run it to create a bootable USB stick, and use that USB stick to install the EMT Standalone OS.
 
 #### Standard kernel with integrated Docker and K3S
 
