@@ -96,7 +96,11 @@ RT build command: sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_
 
 ## Customizing an Image
 
-To add packages to the default image, you can define your own `packagelist.json` file, pointing to RPMs that should be included in the image. To streamline this process, you can use the `add_custom_packages.sh` script located in `toolkit/scripts`. This script helps generate a `custom-packages.json` file and updates an existing imageconfig JSON file. The `edge-image.json` file points to multiple `packagelist` files, located under `imageconfigs/packagelists`. The same `rpms` may be included in an `imageconfig` file through the `packagelist` files.
+To add packages to the default image, you can define your own `packagelist.json` file, pointing to RPMs that should be included in the image.
+To streamline this process, you can use the `add_custom_packages.sh` script located in `toolkit/scripts`.
+This script helps generate a `custom-packages.json` file and updates an existing imageconfig JSON file.
+The `edge-image.json` file points to multiple `packagelist` files, located under `imageconfigs/packagelists`.
+The same `rpms` may be included in an `imageconfig` file through the `packagelist` files.
 
 The resulting image will include the set of all `rpms` specified within the array of
 `packagelist` files from the `imageconfig`.
