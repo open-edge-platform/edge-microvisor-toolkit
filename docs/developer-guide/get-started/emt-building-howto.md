@@ -109,7 +109,7 @@ alternative text editor to the image:
 1. Use the script to create a custom `utilities.json` file with a package list and update an existing `imageconfig` JSON file, for example, `edge-image.json`.
 
    ```bash
-   # Refer to this usage format 
+   # Refer to this usage format:
    Usage: ./add_custom_packages.sh "<pkg1 pkg2 ...>" path/to/image.json [custom-packages.json]
    
    # Run the script to add nano into the edge-image.json configuration
