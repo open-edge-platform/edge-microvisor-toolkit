@@ -1,5 +1,5 @@
 Name:           intel-desktop-virtualization-k3s
-Version:        1.0.0~rc1
+Version:        1.0.0~rc2
 Release:        1%{?dist}
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -45,6 +45,9 @@ cp intel-idv-device-plugin*/*.yaml %{buildroot}%{_sharedstatedir}/rancher/k3s/se
 %post
 
 %changelog
+* Fri Jul 04 2025 D M, Karthik <karthik.d.m@intel.com> - 1.0.0~rc2-1
+- Device Plugin v1.1 to support Display Virtualization on local display with fix to busybox image
+
 * Wed Jul 02 2025 D M, Karthik <karthik.d.m@intel.com> - 1.0.0~rc1-1
 - Release version of Kubevirt v1.5.0 with Display Virtualization and GTK library support with QEMU 9.1.0
 - Release version of Device Plugin v1 to support Display Virtualization on local display
