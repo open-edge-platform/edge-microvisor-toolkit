@@ -110,7 +110,7 @@ alternative text editor to the image:
 
    ```bash
    # Refer to this usage format:
-   Usage: ./add_custom_packages.sh "<pkg1 pkg2 ...>" path/to/image.json [custom-packages.json]
+   # Usage: ./add_custom_packages.sh "<pkg1 pkg2 ...>" path/to/image.json [custom-packages.json]
    
    # Run the script to add nano into the edge-image.json configuration
    ./add_custom_packages.sh "nano" ../imageconfigs/edge-image.json utilities.json
