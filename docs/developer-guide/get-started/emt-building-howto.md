@@ -112,7 +112,7 @@ alternative text editor to the image:
    # Refer to this usage format:
    # Usage: ./add_custom_packages.sh "<pkg1 pkg2 ...>" path/to/image.json [custom-packages.json]
    
-   # Run the script to add nano into the edge-image.json configuration
+   # Run the script to add nano into the edge-image.json configuration.
    ./add_custom_packages.sh "nano" ../imageconfigs/edge-image.json utilities.json
    ```
   - `"<pkg1 pkg2 ...>"`: List the package names you want to include, separated by spaces.
