@@ -106,7 +106,7 @@ The resulting image will include the set of all `rpms` specified within the arra
 Note that you can only add the packages for which SPEC files exist. To add `nano` as an
 alternative text editor to the image:
 
-1. Use the script to create a custom `utilities.json` file with a package list and update an existing `imageconfig` JSON file, for example, `edge-image.json`.
+1. Use the script to create a custom package list file, for example `utilities.json`, and update an existing `imageconfig` JSON file, for example, `edge-image.json`.
 
    ```bash
    # Refer to this usage format:
