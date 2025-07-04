@@ -48,8 +48,8 @@ tar -xf %{SOURCE9} --no-same-owner --strip-components 1 -C build/src/github.com/
 ./scripts/package-cli
 
 %install
-mkdir -p %{buildroot}%{_bindir}
-install -m 0755 dist/artifacts/k3s %{buildroot}%{_bindir}
+mkdir -p %{buildroot}/usr/local/bin
+install -m 0755 dist/artifacts/k3s %{buildroot}/usr/local/bin
 
 mkdir %{buildroot}/opt
 install -m 0755 install.sh %{buildroot}/opt/install.sh
@@ -58,7 +58,7 @@ mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
 install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %files
-%{_bindir}/k3s
+/usr/local/bin/k3s
 /opt/install.sh
 %{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
