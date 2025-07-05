@@ -1,12 +1,12 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 
 %bcond_with trace
 
 Summary: Terminal emulator for the X Window System
 Name: xterm
 Version: 395
-Release: 2%{?dist}
+Release: 3%{?dist}
 URL: https://invisible-island.net/xterm
 License: MIT AND X11 AND HPND AND CC-BY-4.0
 BuildRequires: make
@@ -107,6 +107,10 @@ install -m644 -p xterm.appdata.xml $RPM_BUILD_ROOT%{_datadir}/appdata
 %{_mandir}/man1/resize.1*
 
 %changelog
+* Thu Jul 03 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 395-3
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT).
+- License verified
+
 * Mon Jan 13 2025 Archana Shettigar <shettigara@microsoft.com> - 395-2
 - Initial Azure Linux import from Fedora 41 (license: MIT).
 - License verified

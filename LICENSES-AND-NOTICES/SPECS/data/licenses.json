@@ -807,7 +807,6 @@
                 "libusb1",
                 "libusbmuxd",
                 "libuser",
-                "libutempter",
                 "libvarlink",
                 "libverto",
                 "libvirt-dbus",
@@ -2223,7 +2222,6 @@
                 "xorg-x11-xkb-utils",
                 "xorg-x11-xtrans-devel",
                 "xrestop",
-                "xterm",
                 "xxhash",
                 "yajl",
                 "yaml-cpp",
@@ -2369,6 +2367,7 @@
                 "libmaxminddb",
                 "libmetalink",
                 "libsafec",
+                "libutempter",
                 "libuv",
                 "libxml++",
                 "linuxptp",
@@ -2535,6 +2534,7 @@
                 "vala",
                 "valkey",
                 "vnstat",
+                "xterm",
                 "zstd"
             ]
         },

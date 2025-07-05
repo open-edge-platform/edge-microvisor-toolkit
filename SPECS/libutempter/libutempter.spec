@@ -1,15 +1,16 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 %define utempter_compat_ver 0.5.2
 
 Summary: A privileged helper for utmp/wtmp updates
 Name: libutempter
 Version: 1.1.6
-Release: 19%{?dist}
+Release: 20%{?dist}
 License: LGPLv2+
 URL: https://github.com/altlinux/libutempter
-# Sourece0: https://github.com/altlinux/libutempter/archive/refs/tags/1.1.6-alt2.tar.gz
-Source0: https://github.com/altlinux/libutempter/archive/refs/tags/%{name}-%{version}.tar.bz2
+#Sourece0: https://github.com/altlinux/libutempter/archive/refs/tags/1.1.6-alt2.tar.gz
+#Source0: https://github.com/altlinux/libutempter/archive/refs/tags/%{name}-%{version}.tar.bz2
+Source0: https://ftp.altlinux.org/pub/people/ldv/libutempter/%{name}-%{version}.tar.bz2
 
 BuildRequires: gcc
 
@@ -63,6 +64,11 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 %{_mandir}/man3/*
 
 %changelog
+* Thu Jul 03 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.1.6-20
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT).
+- Update with working Source0 url.
+- License verified
+
 * Fri Oct 15 2021 Pawel Winogrodzki <pawelwi@microsoft.com> - 1.1.6-19
 - Initial CBL-Mariner import from Fedora 32 (license: MIT).
 
