@@ -1,0 +1,78 @@
+From e94bf4ee4c8706cf23a3a851764e27781c74b61f Mon Sep 17 00:00:00 2001
+From: Andre Przywara <andre.przywara@arm.com>
+Date: Fri, 25 Oct 2024 11:56:20 +0100
+Subject: [PATCH 2/3] clk: sunxi-ng: h616: Reparent CPU clock during frequency
+ changes
+
+The H616 user manual recommends to re-parent the CPU clock during
+frequency changes of the PLL, and recommends PLL_PERI0(1X), which runs
+at 600 MHz. Also it asks to disable and then re-enable the PLL lock bit,
+after the factor changes have been applied.
+
+Add clock notifiers for the PLL and the CPU mux clock, using the existing
+notifier callbacks, and tell them to use mux 4 (the PLL_PERI0(1X) source),
+and bit 29 (the LOCK_ENABLE) bit. The existing code already follows the
+correct algorithms.
+
+Signed-off-by: Andre Przywara <andre.przywara@arm.com>
+Link: https://lore.kernel.org/r/20241025105620.1891596-1-andre.przywara@arm.com
+Tested-by: Evgeny Boger <boger@wirenboard.com>
+Reviewed-by: Chen-Yu Tsai <wens@csie.org>
+Signed-off-by: Stephen Boyd <sboyd@kernel.org>
+---
+ drivers/clk/sunxi-ng/ccu-sun50i-h616.c | 28 ++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/clk/sunxi-ng/ccu-sun50i-h616.c b/drivers/clk/sunxi-ng/ccu-sun50i-h616.c
+index b383ae2b2d44..5c06c4f27bf2 100644
+--- a/drivers/clk/sunxi-ng/ccu-sun50i-h616.c
++++ b/drivers/clk/sunxi-ng/ccu-sun50i-h616.c
+@@ -1107,11 +1107,24 @@ static const u32 usb2_clk_regs[] = {
+ 	SUN50I_H616_USB3_CLK_REG,
+ };
+ 
++static struct ccu_mux_nb sun50i_h616_cpu_nb = {
++	.common		= &cpux_clk.common,
++	.cm		= &cpux_clk.mux,
++	.delay_us	= 1, /* manual doesn't really say */
++	.bypass_index	= 4, /* PLL_PERI0@600MHz, as recommended by manual */
++};
++
++static struct ccu_pll_nb sun50i_h616_pll_cpu_nb = {
++	.common		= &pll_cpux_clk.common,
++	.enable		= BIT(29),	/* LOCK_ENABLE */
++	.lock		= BIT(28),
++};
++
+ static int sun50i_h616_ccu_probe(struct platform_device *pdev)
+ {
+ 	void __iomem *reg;
+ 	u32 val;
+-	int i;
++	int ret, i;
+ 
+ 	reg = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(reg))
+@@ -1166,7 +1179,18 @@ static int sun50i_h616_ccu_probe(struct platform_device *pdev)
+ 	val |= BIT(24);
+ 	writel(val, reg + SUN50I_H616_HDMI_CEC_CLK_REG);
+ 
+-	return devm_sunxi_ccu_probe(&pdev->dev, reg, &sun50i_h616_ccu_desc);
++	ret = devm_sunxi_ccu_probe(&pdev->dev, reg, &sun50i_h616_ccu_desc);
++	if (ret)
++		return ret;
++
++	/* Reparent CPU during CPU PLL rate changes */
++	ccu_mux_notifier_register(pll_cpux_clk.common.hw.clk,
++				  &sun50i_h616_cpu_nb);
++
++	/* Re-lock the CPU PLL after any rate changes */
++	ccu_pll_notifier_register(&sun50i_h616_pll_cpu_nb);
++
++	return 0;
+ }
+ 
+ static const struct of_device_id sun50i_h616_ccu_ids[] = {
+-- 
+2.25.1
+
