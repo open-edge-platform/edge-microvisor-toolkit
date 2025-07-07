@@ -1,6 +1,6 @@
 {
  "Signatures": {
-     "os-update-2.6.tar.gz": "5d017b453aa8015c71ad214e08b25d3d97819dd134f09e6166872d92cf9b5e85",
+     "os-update-2.7.tar.gz": "090f88df1afab18dfc21df765cc2cbc21828f6377cfeaf9f00d7bb7e0b88a9c2",
      "os-update.te": "35e355fd1dd2aa30c89c17c7e38be7e9959bb08f44cfc7ecf50c53e9b3c0d57f"
  }
 }
