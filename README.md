@@ -18,7 +18,7 @@ The currently published versions are:
 * [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node)
 * [Edge Microvisor Toolkit (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
 * [Edge Microvisor Toolkit with real time extensions (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
-* [Edge Microvisor Toolkit Tiny](./docs/developer-guide/emt-tiny.md)
+* [Edge Microvisor Bootkit](./docs/developer-guide/emt-bootkit.md)
 
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
 platforms such as  Xeon®, Intel® Core Ultra™, Intel Core™ and Intel® Atom®. It
@@ -53,7 +53,7 @@ Check out these articles to quickly learn how to work with Edge Microvisor Toolk
 * [Troubleshooting common issues](./docs/developer-guide/emt-troubleshooting.md)
 
 **Demos**
-* [Standalone Edge Microvisor Toolkit (EMT-S) integration with EMT-Micro OS](https://www.youtube.com/watch?v=rmgmWYi6OpE):
+* [Standalone Edge Microvisor Toolkit (EMT-S) integration with Edge Microvisor Bootkit](https://www.youtube.com/watch?v=rmgmWYi6OpE):
   This demo includes: USB Device Preparation, Provisioning Process, System Readiness, and Final Boot with the cluster starting successfully.
 
 ## Getting Help
