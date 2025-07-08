@@ -5,7 +5,7 @@
             "MaxSize": 1560,
             "Artifacts": [
                 {
-                    "Name": "edge-readonly-tiny",
+                    "Name": "edge-microvisor-bootkit",
                     "Type": "tar.gz"
                 }
             ]
@@ -16,7 +16,7 @@
             "Name": "Standard",
             "BootType": "efi",
             "PackageLists": [
-                "packagelists/tiny-packages.json",
+                "packagelists/bootkit-packages.json",
                 "packagelists/minimal-os-packages.json"
             ],
             "AdditionalFiles": {
@@ -39,13 +39,13 @@
                     "Path": "scripts/cleanup.sh"
                 },
                 {
-                    "Path": "scripts/setup-tiny-image.sh"
+                    "Path": "scripts/setup-bootkit-image.sh"
                 }
             ],
             "KernelCommandLine": {
                 "ExtraCommandLine": "root=tmpfs rootflags=mode=0755 rd.skipfsck noresume quiet splash modules-load=nbd"
             },
-            "Hostname": "EMT-tiny",
+            "Hostname": "EdgeMicrovisorBootkit",
             "DisableRpmDocs": true,
             "RemoveRpmDb": true,
             "Users": [

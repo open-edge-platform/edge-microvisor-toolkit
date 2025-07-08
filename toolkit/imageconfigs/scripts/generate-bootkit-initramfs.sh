@@ -6,7 +6,7 @@
 set -e
 #set -x
 
-pprefix="Tiny"
+pprefix="Bootkit"
 
 function generate_images() {
     if [[ $# -eq 2 ]]; then
