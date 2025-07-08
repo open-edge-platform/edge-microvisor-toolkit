@@ -53,7 +53,7 @@ Check out these articles to quickly learn how to work with Edge Microvisor Toolk
 * [Troubleshooting common issues](./docs/developer-guide/emt-troubleshooting.md)
 
 **Demos**
-* [Standalone Edge Microvisor Toolkit (EMT-S) integration with Edge Microvisor Bootkit](https://www.youtube.com/watch?v=rmgmWYi6OpE):
+* [Standalone Edge Microvisor Toolkit (EMT-S) integration with EMT-Micro OS](https://www.youtube.com/watch?v=rmgmWYi6OpE):
   This demo includes: USB Device Preparation, Provisioning Process, System Readiness, and Final Boot with the cluster starting successfully.
 
 ## Getting Help
