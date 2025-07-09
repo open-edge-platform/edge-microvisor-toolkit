@@ -2,7 +2,7 @@
 Name:          k3s
 Summary:       K3s - Lightweight Kubernetes
 Version:       %{_version}+k3s1
-Release:       1%{?dist}
+Release:       2%{?dist}
 License:       ASL 2.0
 Vendor:        Intel Corporation
 Distribution:  Edge Microvisor Toolkit
@@ -48,8 +48,8 @@ tar -xf %{SOURCE9} --no-same-owner --strip-components 1 -C build/src/github.com/
 ./scripts/package-cli
 
 %install
-mkdir -p %{buildroot}%{_bindir}
-install -m 0755 dist/artifacts/k3s %{buildroot}%{_bindir}
+mkdir -p %{buildroot}/usr/local/bin
+install -m 0755 dist/artifacts/k3s %{buildroot}/usr/local/bin
 
 mkdir %{buildroot}/opt
 install -m 0755 install.sh %{buildroot}/opt/install.sh
@@ -58,11 +58,14 @@ mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
 install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %files
-%{_bindir}/k3s
+/usr/local/bin/k3s
 /opt/install.sh
 %{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %changelog
+* Tue Jul 08 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4+k3s1-2
+- Move k3s binary install dir from '/usr/bin' to '/usr/local/bin'
+
 * Wed Jul 02 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4+k3s1-1
 - Update package version format to add distribution identifier 'k3s1'
 
