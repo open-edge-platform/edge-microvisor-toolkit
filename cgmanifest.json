@@ -7290,6 +7290,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "igt-gpu-tools",
+          "version": "2.0",
+          "downloadUrl": "https://gitlab.freedesktop.org/drm/igt-gpu-tools/-/archive/v2.0/igt-gpu-tools-v2.0.tar.bz2"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "iio-sensor-proxy",
           "version": "3.0",
           "downloadUrl": "https://gitlab.freedesktop.org/hadess/iio-sensor-proxy/uploads/de965bcb444552d328255639b241ce73/iio-sensor-proxy-3.0.tar.xz"
@@ -8481,8 +8491,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.33",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
+          "version": "6.12.35",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250703T075830Z.tar.gz"
         }
       }
     },
@@ -8501,8 +8511,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.33",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
+          "version": "6.12.35",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250703T075830Z.tar.gz"
         }
       }
     },
@@ -8531,8 +8541,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.33",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.33-emt-250618T100026Z.tar.gz"
+          "version": "6.12.35",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250703T075830Z.tar.gz"
         }
       }
     },

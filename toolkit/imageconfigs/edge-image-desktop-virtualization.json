@@ -88,6 +88,9 @@
                 "packagelists/intel-idv-services.json",
                 "packagelists/intel-desktop-virtualization-k3s.json"
             ],
+            "Packages": [
+                "igt-gpu-tools"
+            ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
                 "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network",
