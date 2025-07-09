@@ -8,13 +8,12 @@ environment for deploying edge workloads across multiple deployment models.
 
 This section outlines the key usage models intended for Edge Microvisor Toolkit.
 
-![Use cases](./assets/emt-get-started-os-use-cases.svg)
-
 - [Build a new Edge Microvisor Toolkit Image.](./get-started/emt-building-howto.md)
 - [Install Edge Microvisor Toolkit from existing image.](./get-started/emt-installation-howto.md)
 
-Microvisor can be used for standalone edge node deployments, or with Edge Manageability Framework - a complete integrated system providing full lifecycle management for your edge devices, including remote deployment and management of Kubernetes
-applications.
+Microvisor can be used for standalone edge node deployments, or with Edge Manageability Framework
+- a complete integrated system providing full lifecycle management for your edge devices,
+including remote deployment and management of Kubernetes applications.
 
 ### Edge Microvisor Toolkit Developer Node
 

@@ -25,35 +25,51 @@ overview of key software components:
 
 ## Edge Microvisor Toolkit Image Versions
 
-### EMT Developer Node Mutable ISO
+### Developer Node mutable ISO image
 
-Mutable Developer node in an ISO installer format. This image allows you to add packages and customize the system after deployment. During installation you can select one of four versions:
+Mutable Developer node in an ISO format allows you to add packages and
+customize the system after deployment. During installation you can select one of four versions:
 
 - Standard kernel
 - Standard kernel with Docker and K3S included
 - [Kernel with real-time extensions](#preempt-rt-kernel)
 - [kernel with real-time extensions](#preempt-rt-kernel), with Docker and K3S included
 
-This image is a customizable developer version that includes only essential pre-installed packages, providing a basic ready-to-use environment. You can install additional RPM packages, using DNF to tailor the OS to your specific needs.
-Use [kernel with real-time extensions](#preempt-rt-kernel) for enhanced real-time performance compared to the standard kernel, if quick responses to critical events are crucial for your use case.
+This image is a customizable developer version that includes only essential pre-installed
+packages, providing a basic ready-to-use environment. You can install additional RPM packages,
+using DNF to tailor the OS to your specific needs.
+Use [kernel with real-time extensions](#preempt-rt-kernel) for enhanced real-time performance
+compared to the standard kernel, if quick responses to critical events are crucial for
+your use case.
 
-### EMT Standalone immutable RAW images
+### Standalone Node immutable RAW images
 
-INTEL ready-made solution for Edge AI applications. Immutable Standalone Node uses Secure Boot technology to protect against injecting malicious sftware, both at rest and during runtime. This image cannot be modified after deployment, providing the best security for your Edge Node.
+Intel ready-made solution for Edge AI applications. Immutable Standalone Node uses Secure
+Boot technology to protect against injecting malicious software, both at rest and during
+runtime. This image cannot be modified after deployment, providing the best security for
+your Edge Node.
 
-Download the Edge Microvisor Toolkit Standalone Node installer to your device, run it to create a bootable USB stick, and use that USB stick to install the EMT Standalone OS.
+Download the Edge Microvisor Toolkit Standalone Node installer to your device, run it to
+create a bootable USB stick, and use that USB stick to install the EMT Standalone OS.
 
 #### Standard kernel with integrated Docker and K3S
 
-This image has integrated Docker and K3S for deploying and managing applications. The image uses the standard linux kernel.
+This image has integrated Docker and K3S for deploying and managing applications. The image
+uses the standard linux kernel.
 
 #### Kernel with real-time extensions, and integrated Docker and K3S
 
-This image has integrated Docker and K3S for deploying and managing applications. The image uses [kernel with real-time extensions](#preempt-rt-kernel), offering enhanced real-time performance compared to the standard kernel. Use this image if quick responses to critical events are crucial for your use case.
+This image has integrated Docker and K3S for deploying and managing applications. The image
+uses [kernel with real-time extensions](#preempt-rt-kernel), offering enhanced real-time
+performance compared to the standard kernel. Use this image if quick responses to critical
+events are crucial for your use case.
 
 #### Desktop Virtualization - standard Kernel without real-time extensions
 
-INTEL ready-made solution for using Edge Microvisor Toolkit as a host for Windows 10 or Ubuntu guest virtual machines. This image includes Kubevirt and Intel IDV (Intelligent Desktop Virtualization) services for launching the virtual machines with SR-IOV capabilities. This image uses the standard linux kernel.
+Intel ready-made solution for using Edge Microvisor Toolkit as a host for Windows 10 or
+Ubuntu guest virtual machines. This image includes Kubevirt and Intel IDV (Intelligent
+Desktop Virtualization) services for launching the virtual machines with SR-IOV capabilities.
+This image uses the standard linux kernel.
 
 ## Edge Microvisor Toolkit Real Time
 
