@@ -44,7 +44,7 @@ your use case.
 
 ### Standalone Node immutable RAW images
 
-Intel ready-made solution for Edge AI applications. Immutable Standalone Node uses Secure
+Intel® ready-made solution for Edge AI applications. Immutable Standalone Node uses Secure
 Boot technology to protect against injecting malicious software, both at rest and during
 runtime. This image cannot be modified after deployment, providing the best security for
 your Edge Node.
@@ -66,7 +66,7 @@ events are crucial for your use case.
 
 #### Desktop Virtualization - standard Kernel without real-time extensions
 
-Intel ready-made solution for using Edge Microvisor Toolkit as a host for Windows 10 or
+Intel® ready-made solution for using Edge Microvisor Toolkit as a host for Windows 10 or
 Ubuntu guest virtual machines. This image includes Kubevirt and Intel IDV (Intelligent
 Desktop Virtualization) services for launching the virtual machines with SR-IOV capabilities.
 This image uses the standard linux kernel.
