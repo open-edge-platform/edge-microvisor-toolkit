@@ -20,7 +20,7 @@
 Summary:        Container native virtualization
 Name:           kubevirt
 Version:        1.2.0
-Release:        16%{?dist}
+Release:        18%{?dist}
 License:        ASL 2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -38,11 +38,12 @@ Patch4:         CVE-2024-45338.patch
 Patch5:         CVE-2023-45288.patch
 Patch6:         CVE-2023-44487.patch
 Patch7:         CVE-2025-22869.patch
+Patch8:         CVE-2025-22872.patch
 
 %global debug_package %{nil}
 BuildRequires:  swtpm-tools
 BuildRequires:  glibc-devel
-BuildRequires:  glibc-static >= 2.38-9%{?dist}
+BuildRequires:  glibc-static >= 2.38-10%{?dist}
 BuildRequires:  golang >= 1.21
 BuildRequires:  golang-packaging
 BuildRequires:  pkgconfig
@@ -279,6 +280,11 @@ install -p -m 0644 cmd/virt-launcher/qemu.conf %{buildroot}%{_datadir}/kube-virt
 %{_bindir}/virt-tests
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.2.0-18
+- merge from Azure Linux 3.0.20250521-3.0
+- Patch CVE-2025-22872
+- Bump to rebuild with updated glibc
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.2.0-16
 - Bump Release to rebuild
 

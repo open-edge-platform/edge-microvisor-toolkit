@@ -1,7 +1,7 @@
 Summary:        Plugin for discovering and advertising networking resources
 Name:           sriov-network-device-plugin
 Version:        3.7.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        MIT
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -10,6 +10,7 @@ Source0:        https://github.com/k8snetworkplumbingwg/%{name}/archive/refs/tag
 Source1:        %{name}-%{version}-vendor.tar.gz
 Patch0:         CVE-2024-45338.patch
 Patch1:		CVE-2024-45339.patch
+Patch2:         CVE-2025-22872.patch
 BuildRequires:  golang
 Requires:       gawk
 Requires:       hwdata
@@ -39,6 +40,10 @@ install -D -m0755 images/ddptool-1.0.1.12.tar.gz %{buildroot}%{_datadir}/%{name}
 %{_datadir}/%{name}/ddptool-1.0.1.12.tar.gz
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.7.0-5
+- merge from Azure Linux 3.0.20250521-3.0
+- Patch CVE-2025-22872
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 3.7.0-4
 - Bump Release to rebuild
 

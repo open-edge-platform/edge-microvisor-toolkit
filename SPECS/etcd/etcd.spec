@@ -2,7 +2,7 @@
 
 Summary:        A highly-available key value store for shared configuration
 Name:           etcd
-Version:        3.5.18
+Version:        3.5.21
 Release:        2%{?dist}
 License:        ASL 2.0
 Vendor:         Microsoft Corporation
@@ -145,6 +145,10 @@ install -vdm755 %{buildroot}%{_sharedstatedir}/etcd
 /%{_docdir}/%{name}-%{version}-tools/*
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.5.21-2
+- merge from Azure Linux 3.0.20250521-3.0
+- Auto-upgrade to 3.5.21 - for CVE-2025-30204 [High]
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 3.5.18-2
 - Bump Release to rebuild
 

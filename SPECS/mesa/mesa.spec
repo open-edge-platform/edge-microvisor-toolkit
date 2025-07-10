@@ -68,7 +68,7 @@
 Name:           mesa
 Summary:        Mesa graphics libraries
 Version:        24.0.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -150,7 +150,7 @@ BuildRequires:  llvm-devel >= 7.0.0
 %if 0%{?with_opencl} || 0%{?with_nvk}
 BuildRequires:  clang-devel
 BuildRequires:  bindgen
-BuildRequires:  rust
+BuildRequires:  rust < 1.85.0
 BuildRequires:  pkgconfig(libclc)
 BuildRequires:  pkgconfig(SPIRV-Tools)
 BuildRequires:  pkgconfig(LLVMSPIRVLib)
@@ -747,6 +747,10 @@ popd
 %endif
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 24.0.1-4
+- merge from Azure Linux 3.0.20250521-3.0
+- Pin rust version
+
 * Mon Jan 06 2025 Lishan Liu <lishan.liu@intel.com> - 24.0.1-3
 - Include SRIOV Patches
 
