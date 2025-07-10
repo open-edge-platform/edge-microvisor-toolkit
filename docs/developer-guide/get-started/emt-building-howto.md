@@ -96,10 +96,11 @@ RT build command: sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_
 
 ## Customizing an Image
 
-To add packages to the default image, you can define your own `packagelist.json` file,
-pointing to `rpms` that should be included in the image. The `edge-image.json` file points to
-multiple `packagelist` files, located under `imageconfigs/packagelists`. The same `rpms` may
-be included in an `imageconfig` file through the `packagelist` files.
+To add packages to the default image, you can define your own `packagelist.json` file, pointing to RPMs that should be included in the image.
+To streamline this process, you can use the `add_custom_packages.sh` script located in `toolkit/scripts`.
+This script helps generate a `custom-packages.json` file and updates an existing imageconfig JSON file.
+The `edge-image.json` file points to multiple `packagelist` files, located under `imageconfigs/packagelists`.
+The same `rpms` may be included in an `imageconfig` file through the `packagelist` files.
 
 The resulting image will include the set of all `rpms` specified within the array of
 `packagelist` files from the `imageconfig`.
@@ -109,24 +110,24 @@ The resulting image will include the set of all `rpms` specified within the arra
 Note that you can only add the packages for which SPEC files exist. To add `nano` as an
 alternative text editor to the image:
 
-1. Define a new JSON file.
+1. Use the script to create a custom package list file, for example `utilities.json`, and update an existing `imageconfig` JSON file, for example, `edge-image.json`.
 
    ```bash
-   # Create a new packagelist called utilities.json
-   cat <<EOF > ./imageconfigs/packagelists/utilities.json
-   {
-       "packages": [
-           "nano"
-       ]
-   }
-   EOF
+   # Refer to this usage format:
+   # Usage: ./add_custom_packages.sh "<pkg1 pkg2 ...>" path/to/image.json [custom-packages.json]
+   
+   # Run the script to add nano into the edge-image.json configuration.
+   ./add_custom_packages.sh "nano" ../imageconfigs/edge-image.json utilities.json
    ```
 
-2. Include it in an existing `imageconfig` JSON file, for example `edge-image.json`.
-   You can also create a new file and add it to the `imageconfigs` folder.
+   - `"<pkg1 pkg2 ...>"` - List names of packages to include. Keep them separated by spaces.
+   - `path/to/image.json` - Specify the path to your `imageconfig` JSON file, for example, `../imageconfigs/edge-image.json`.
+   - `[custom-packages.json]` - Optionally, provide a name for the custom package list file. If omitted, the default `custom-packages.json` name will be used.
+
+2. After running the script, your `imageconfig` JSON file (e.g., `edge-image.json`) will include the custom package list you specified. You can also create a new file and add it to the `imageconfigs` folder. Before running `add_custom_packages.sh` to include your custom package list, make sure that the `PackageLists` section exists in the `imageconfig` JSON file.
 
    ```bash
-   # Edit the edge-image.json file. Add the custom packagelist and default login account for testing.
+   # Edit the edge-image.json file. Add the default login account for testing.
    ...
    "PackageLists": [
      "packagelists/core-packages-image-systemd-boot.json",
