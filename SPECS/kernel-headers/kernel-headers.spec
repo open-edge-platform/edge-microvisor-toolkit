@@ -14,13 +14,13 @@
 Summary:        Linux API header files
 Name:           kernel-headers
 Version:        6.12.35
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/linux-intel-lts
-Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250703T075830Z.tar.gz
+Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250710T220928Z.tar.gz
 # Historical name shipped by other distros
 Provides:       glibc-kernheaders = %{version}-%{release}
 BuildArch:      noarch
@@ -41,7 +41,7 @@ cross-glibc package.
 %endif
 
 %prep
-%setup -q -n lts-v6.12.35-emt-250703T075830Z
+%setup -q -n lts-v6.12.35-emt-250710T220928Z
 
 %build
 make mrproper
@@ -76,6 +76,9 @@ done
 %endif
 
 %changelog
+* Thu Jul 10 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.35-2
+- Update kernel to 6.12.35
+
 * Fri Jul 04 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.35-1
 - Update kernel to 6.12.35
 
