@@ -24,12 +24,12 @@ mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gp
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
 
 # Install the pre-pulled image tarball and manifest
-install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/intel-gpu-plugin.tar.zst
+#install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/intel-gpu-plugin.tar.zst
 install -m 0644 ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu/
 
 %files
 %{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu/intel-gpu-plugin.yaml
-%{_sharedstatedir}/rancher/k3s/agent/images/intel-gpu-plugin.tar.zst
+#%{_sharedstatedir}/rancher/k3s/agent/images/intel-gpu-plugin.tar.zst
 
 %changelog
 * Wed Jul 02 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 0.32.1-4

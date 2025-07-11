@@ -55,12 +55,12 @@ mkdir %{buildroot}/opt
 install -m 0755 install.sh %{buildroot}/opt/install.sh
 
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
-install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
+#install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %files
 /usr/local/bin/k3s
 /opt/install.sh
-%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
+#%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %changelog
 * Tue Jul 08 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4+k3s1-2

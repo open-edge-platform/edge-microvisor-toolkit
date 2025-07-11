@@ -36,13 +36,13 @@ install -m 644 ./deployments/multus-daemonset.yml %{buildroot}%{_sharedstatedir}
 # Multus manifest uses 1 image
 # 
 # ghcr.io/k8snetworkplumbingwg/multus-cni:v4.2.1
-install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
+#install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
 
 %files
 %dir %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus
-%dir %{_sharedstatedir}/rancher/k3s/agent/images
+#%dir %{_sharedstatedir}/rancher/k3s/agent/images
 %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus/multus-daemonset.yml
-%{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
+#%{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
 
 %changelog
 * Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-4
