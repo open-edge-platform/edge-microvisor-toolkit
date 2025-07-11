@@ -1,6 +1,6 @@
 Name:           intel-gmmlib
-Version:        22.5.1
-Release:        2%{?dist}
+Version:        22.7.1
+Release:        1%{?dist}
 Summary:        Intel Graphics Memory Management Library
 License:        MIT
 Vendor:         Intel Corporation
@@ -58,6 +58,9 @@ mkdir build && cd build
 %{_libdir}/pkgconfig/igdgmm.pc
 
 %changelog
+* Fri Jul 11 2025 Liang Yang <liang1.yang@intel.com> - 22.7.1-1
+- Upgraded to version 22.7.1.
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 22.5.1-2
 - Updated initial changelog entry having fedora version and license info.
 
