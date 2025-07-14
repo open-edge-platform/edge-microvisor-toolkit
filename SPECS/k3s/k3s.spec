@@ -9,15 +9,14 @@ Distribution:  Edge Microvisor Toolkit
 Group:         System Environment/Base
 URL:           https://k3s.io/
 Source0:       https://github.com/k3s-io/k3s/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{_version}.tar.gz
-Source1:       https://github.com/k3s-io/k3s/releases/download/v%{version}/k3s-airgap-images-amd64.tar.zst#/%{name}-airgap-images-v%{_version}.tar.zst
-Source2:       %{name}-vendor-v%{_version}.tar.gz
-Source3:       https://github.com/k3s-io/k3s-root/releases/download/v0.14.1/k3s-root-amd64.tar
-Source4:       https://github.com/opencontainers/runc/archive/refs/tags/v1.2.5.tar.gz#/runc-v1.2.5.tar.gz
-Source5:       https://github.com/k3s-io/containerd/archive/refs/tags/v2.0.4-k3s2.tar.gz#/containerd-v2.0.4-k3s2.tar.gz
-Source6:       https://k3s.io/k3s-charts/assets/traefik-crd/traefik-crd-34.2.1+up34.2.0.tgz
-Source7:       https://k3s.io/k3s-charts/assets/traefik/traefik-34.2.1+up34.2.0.tgz
-Source8:       https://github.com/rancher/plugins/archive/refs/tags/v1.6.0-k3s1.tar.gz#/rancher-plugins-v1.6.0-k3s1.tar.gz
-Source9:       https://github.com/flannel-io/cni-plugin/archive/refs/tags/v1.6.0-flannel1.tar.gz#/flannel-v1.6.0-flannel1.tar.gz
+Source1:       %{name}-vendor-v%{_version}.tar.gz
+Source2:       https://github.com/k3s-io/k3s-root/releases/download/v0.14.1/k3s-root-amd64.tar
+Source3:       https://github.com/opencontainers/runc/archive/refs/tags/v1.2.5.tar.gz#/runc-v1.2.5.tar.gz
+Source4:       https://github.com/k3s-io/containerd/archive/refs/tags/v2.0.4-k3s2.tar.gz#/containerd-v2.0.4-k3s2.tar.gz
+Source5:       https://k3s.io/k3s-charts/assets/traefik-crd/traefik-crd-34.2.1+up34.2.0.tgz
+Source6:       https://k3s.io/k3s-charts/assets/traefik/traefik-34.2.1+up34.2.0.tgz
+Source7:       https://github.com/rancher/plugins/archive/refs/tags/v1.6.0-k3s1.tar.gz#/rancher-plugins-v1.6.0-k3s1.tar.gz
+Source8:       https://github.com/flannel-io/cni-plugin/archive/refs/tags/v1.6.0-flannel1.tar.gz#/flannel-v1.6.0-flannel1.tar.gz
 Patch0:        k3s-version.patch
 Patch1:        k3s-build.patch
 Patch2:        k3s-package-cli.patch
@@ -32,15 +31,15 @@ K3s - Lightweight Kubernetes %{version}
 %prep
 %setup -n %{name}-%{_version}-k3s1
 mkdir -p build/src/github.com/opencontainers/runc build/src/github.com/containerd/containerd  build/static/charts build/src/github.com/containernetworking/plugins bin dist
+tar -xf %{SOURCE1} --no-same-owner
 tar -xf %{SOURCE2} --no-same-owner
-tar -xf %{SOURCE3} --no-same-owner
-tar -xf %{SOURCE4} --no-same-owner --strip-components 1 -C build/src/github.com/opencontainers/runc
-tar -xf %{SOURCE5} --no-same-owner --strip-components 1 -C build/src/github.com/containerd/containerd
+tar -xf %{SOURCE3} --no-same-owner --strip-components 1 -C build/src/github.com/opencontainers/runc
+tar -xf %{SOURCE4} --no-same-owner --strip-components 1 -C build/src/github.com/containerd/containerd
+mv %{SOURCE5} build/static/charts/
 mv %{SOURCE6} build/static/charts/
-mv %{SOURCE7} build/static/charts/
-tar -xf %{SOURCE8} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins
+tar -xf %{SOURCE7} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins
 rm -rf build/src/github.com/containernetworking/plugins/plugins/meta/flannel/*
-tar -xf %{SOURCE9} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins/plugins/meta/flannel
+tar -xf %{SOURCE8} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins/plugins/meta/flannel
 %autopatch -p0
 
 %build
@@ -55,12 +54,10 @@ mkdir %{buildroot}/opt
 install -m 0755 install.sh %{buildroot}/opt/install.sh
 
 mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
-#install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %files
 /usr/local/bin/k3s
 /opt/install.sh
-#%{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %changelog
 * Tue Jul 08 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4+k3s1-2

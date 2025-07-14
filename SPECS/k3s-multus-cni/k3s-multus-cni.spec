@@ -9,8 +9,6 @@ Distribution:   Edge Microvisor Toolkit
 
 URL:            https://github.com/k8snetworkplumbingwg/multus-cni
 Source0:        https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
-# Generate image tar.zst by running `docker save ghcr.io/k8snetworkplumbingwg/multus-cni:<version> | zstd -T0 -16 -f --long=25 > k3s-multus-cni-<version>.tar.zst`
-Source1:        %{name}-image-v%{version}.tar.zst
 Patch0:         multus-daemonset.patch
 Requires:       k3s
 
@@ -33,16 +31,10 @@ mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
 # Copy multus manifest
 install -m 644 ./deployments/multus-daemonset.yml %{buildroot}%{_sharedstatedir}/rancher/k3s/server/manifests/10-multus/
 
-# Multus manifest uses 1 image
-# 
-# ghcr.io/k8snetworkplumbingwg/multus-cni:v4.2.1
-#install -m 644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
-
 %files
 %dir %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus
 #%dir %{_sharedstatedir}/rancher/k3s/agent/images
 %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus/multus-daemonset.yml
-#%{_sharedstatedir}/rancher/k3s/agent/images/multus-cni.tar.zst
 
 %changelog
 * Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-4

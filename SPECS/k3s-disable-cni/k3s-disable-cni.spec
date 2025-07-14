@@ -8,6 +8,7 @@ License:        Apache-2.0
 # Source0 is a YAML manifest that disables the default Flannel CNI in K3s.
 # This allows other CNI plugins (like Calico) to be used instead of the default one.
 Source0:        00-disable-flannel.yaml
+Source1:        00-pool.yaml
 Requires:       k3s
 
 %description
