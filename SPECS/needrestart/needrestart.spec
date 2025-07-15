@@ -1,7 +1,7 @@
 Summary:        Restart daemons after library updates
 Name:           needrestart
 Version:        3.6
-Release:        15%{?dist}
+Release:        16%{?dist}
 License:        GPLv2+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -11,6 +11,10 @@ Source1:        restart.d__auditd.service
 Source2:        yum__plugin.py
 Source3:        dnf__plugin.py
 BuildArch:	noarch
+Patch0:         CVE-2024-11003.patch 
+Patch1:         CVE-2024-48990.patch
+Patch2:         CVE-2024-48991.patch
+Patch3:         CVE-2024-48992.patch
 BuildRequires:	make
 BuildRequires:     perl
 BuildRequires:     perl-generators
@@ -75,6 +79,9 @@ echo "IUCODE_TOOL_EXTRA_OPTIONS=--ignore-broken" >%{buildroot}/%{_sysconfdir}/de
 
 
 %changelog
+* Thu July 10 2025 Tan Jia Yong <jia.yong.tan@intel.com> - 3.6-16
+- Add patches for CVE-2024-11003, CVE-2024-48990, CVE-2024-48991, CVE-2024-48992
+
 * Wed Jan 22 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.6-15
 - Add Vendor and Distribution
 

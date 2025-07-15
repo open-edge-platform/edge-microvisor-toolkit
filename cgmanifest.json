@@ -7470,16 +7470,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "intel-desktop-virtualization-k3s",
-          "version": "1.0.0~rc2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc2/intel-idv-kubevirt-1.0.0-rc2.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "intel-gmmlib",
           "version": "22.5.1",
           "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.5.1.tar.gz"
