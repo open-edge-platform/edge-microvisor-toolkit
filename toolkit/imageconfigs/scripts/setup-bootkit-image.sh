@@ -52,6 +52,8 @@ cd /tmp/initramfs
 echo "$pprefix: inside $(pwd)"
 echo "$pprefix: after copy $(du -h /tmp/initramfs)"
 echo "$pprefix: check cmdline.d $(ls etc/cmdline.d)"
+rm -f etc/cmdline.d/*
+echo "$pprefix: check cmdline.d after cleanup $(ls etc/cmdline.d)"
 echo "$pprefix: check cmdline.d contents $(cat etc/cmdline.d/95root-dev.conf)"
 echo 'root=tmpfs rootflags=size=1G,mode=0755' > etc/cmdline.d/95root-dev.conf
 echo "$pprefix: check cmdline.d contents after edit $(cat etc/cmdline.d/95root-dev.conf)"
