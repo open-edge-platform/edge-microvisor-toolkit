@@ -11,13 +11,14 @@ URL:           https://k3s.io/
 Source0:       https://github.com/k3s-io/k3s/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{_version}.tar.gz
 Source1:       https://github.com/k3s-io/k3s/releases/download/v%{version}/k3s-airgap-images-amd64.tar.zst#/%{name}-airgap-images-v%{_version}.tar.zst
 Source2:       %{name}-vendor-v%{_version}.tar.gz
-Source3:       https://github.com/k3s-io/k3s-root/releases/download/v0.14.1/k3s-root-amd64.tar
+Source3:       https://github.com/k3s-io/k3s-root/archive/refs/tags/v0.14.1.tar.gz#/k3s-root-amd64-v0.14.1.tar.gz
 Source4:       https://github.com/opencontainers/runc/archive/refs/tags/v1.2.5.tar.gz#/runc-v1.2.5.tar.gz
 Source5:       https://github.com/k3s-io/containerd/archive/refs/tags/v2.0.4-k3s2.tar.gz#/containerd-v2.0.4-k3s2.tar.gz
 Source6:       https://k3s.io/k3s-charts/assets/traefik-crd/traefik-crd-34.2.1+up34.2.0.tgz
 Source7:       https://k3s.io/k3s-charts/assets/traefik/traefik-34.2.1+up34.2.0.tgz
 Source8:       https://github.com/rancher/plugins/archive/refs/tags/v1.6.0-k3s1.tar.gz#/rancher-plugins-v1.6.0-k3s1.tar.gz
 Source9:       https://github.com/flannel-io/cni-plugin/archive/refs/tags/v1.6.0-flannel1.tar.gz#/flannel-v1.6.0-flannel1.tar.gz
+Source10:      k3s-root-build-requirements-v0.14.1.tar.gz
 Patch0:        k3s-version.patch
 Patch1:        k3s-build.patch
 Patch2:        k3s-package-cli.patch
@@ -41,6 +42,11 @@ mv %{SOURCE7} build/static/charts/
 tar -xf %{SOURCE8} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins
 rm -rf build/src/github.com/containernetworking/plugins/plugins/meta/flannel/*
 tar -xf %{SOURCE9} --no-same-owner --strip-components 1 -C build/src/github.com/containernetworking/plugins/plugins/meta/flannel
+tar -xf %{SOURCE10} --no-same-owner --strip-components 1 -C k3s-root-0.14.1
+pushd k3s-root-0.14.1
+docker load -i sle15-15.6.tar
+make ci
+popd
 %autopatch -p0
 
 %build
@@ -63,6 +69,9 @@ install -m 0644 %{SOURCE1} %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/imag
 %{_sharedstatedir}/rancher/k3s/agent/images/k3s-airgap-images-amd64.tar.zst
 
 %changelog
+* Mon Jul 14 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4+k3s1-3
+- Build k3s-root from source
+
 * Tue Jul 08 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4+k3s1-2
 - Move k3s binary install dir from '/usr/bin' to '/usr/local/bin'
 
