@@ -12,6 +12,7 @@ Source1:        ab-update.te
 %global modulename  ab-update
 %global selinuxtype targeted
 %global debug_package %{nil}
+BuildRequires:  golang
 BuildRequires:  selinux-policy-devel
 Requires:       (%{name}-selinux if selinux-policy-targeted)
 
