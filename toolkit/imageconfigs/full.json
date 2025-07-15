@@ -1,7 +1,7 @@
 {
     "SystemConfigs": [
 	{
-            "Name": "RT Kernel + Docker + K3s",
+            "Name": "RT Kernel + Docker",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
@@ -14,8 +14,7 @@
                 "packagelists/intel-rdt.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-		"packagelists/docker.json",
-		"packagelists/k3s.json"
+                "packagelists/docker.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
@@ -33,7 +32,7 @@
             ]
         },
 	{
-            "Name": "Standard Kernel + Docker + K3s",
+            "Name": "Standard Kernel + Docker",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
@@ -45,8 +44,7 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-	        "packagelists/docker.json",
-		"packagelists/k3s.json"
+                "packagelists/docker.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
@@ -64,7 +62,7 @@
             ]
         },
         {
-	    "Name": "RT Kernel",
+		"Name": "RT Kernel",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
