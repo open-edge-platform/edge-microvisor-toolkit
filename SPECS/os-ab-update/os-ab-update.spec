@@ -33,10 +33,17 @@ SELinux security policy for os-ab-update.
 
 %build
 make build GO_MOD=vendor
+mkdir selinux
+cp -p %{SOURCE1} selinux/
+
+make -f %{_datadir}/selinux/devel/Makefile %{modulename}.pp
 
 %install
 # Install the script files under /usr/bin
 %make_install
+
+mkdir -p %{buildroot}%{_datadir}/selinux/packages
+install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modulename}.pp
 
 %files
 /usr/bin/%{name}
