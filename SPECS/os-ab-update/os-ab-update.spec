@@ -1,6 +1,6 @@
 Summary:        OS AB Update Tool for OS A and B swapping for image based update
 Name:           os-ab-update
-Version:        2.6
+Version:        3.0
 Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
@@ -32,21 +32,14 @@ SELinux security policy for os-ab-update.
 %setup -q
 
 %build
-mkdir selinux
-cp -p %{SOURCE1} selinux/
-
-make -f %{_datadir}/selinux/devel/Makefile %{modulename}.pp
+make build GO_MOD=vendor
 
 %install
 # Install the script files under /usr/bin
 %make_install
 
-mkdir -p %{buildroot}%{_datadir}/selinux/packages
-install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modulename}.pp
-
 %files
-%{_bindir}/os-update-tool.sh
-%{_bindir}/ab-update-modules/*
+/usr/bin/%{name}
 
 %files selinux
 %{_datadir}/selinux/packages/%{modulename}.pp
