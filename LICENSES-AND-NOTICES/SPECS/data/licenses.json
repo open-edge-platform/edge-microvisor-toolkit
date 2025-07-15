@@ -2677,6 +2677,7 @@
                 "libva",
                 "libvdpau",
                 "lynx",
+                "multus",
                 "objectweb-anttask",
                 "objectweb-asm",
                 "objenesis",
