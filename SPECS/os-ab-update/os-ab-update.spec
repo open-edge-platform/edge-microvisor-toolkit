@@ -151,13 +151,13 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 - Bump version to 1.2
 - Update install using make install
 
-* Mon Oct 23 2024 Suh Haw Teoh <suh.haw.teoh@intel.com> - 1.1-1
+* Wed Oct 23 2024 Suh Haw Teoh <suh.haw.teoh@intel.com> - 1.1-1
 - Bump version to 1.1
 - Update to use tarball for source
 - Update URL
 - Remove ab-update conf file
 
-* Fri Oct 16 2024 Samuel Taripin <samuel.taripin@intel.com> - 1.0-5
+* Wed Oct 16 2024 Samuel Taripin <samuel.taripin@intel.com> - 1.0-5
 - Working Release Version for Latest Edge Microvisor Toolkit .
 
 * Fri Oct 11 2024 Suh Haw Teoh <suh.haw.teoh@intel.com> - 1.0-4
