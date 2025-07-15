@@ -3205,7 +3205,6 @@
         "Source project": {
             "license": "Same as the source project.",
             "specs": [
-                "k3s",
                 "k3s-calico",
                 "k3s-multus-cni",
                 "python-nocaselist",
