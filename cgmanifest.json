@@ -15983,8 +15983,8 @@
         "type": "other",
         "other": {
           "name": "os-update",
-          "version": "2.7",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-microvisor-update-tool/archive/refs/tags/2.7.tar.gz"
+          "version": "2.8",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-microvisor-update-tool/archive/refs/tags/2.8.tar.gz"
         }
       }
     },
