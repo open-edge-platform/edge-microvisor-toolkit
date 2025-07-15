@@ -1,7 +1,7 @@
 {
     "packages": [
         "caddy",
-        "containerd",
+        "containerd2-core",
         "cryptsetup",
         "device-discovery",
         "dracut-tmpfsroot",
