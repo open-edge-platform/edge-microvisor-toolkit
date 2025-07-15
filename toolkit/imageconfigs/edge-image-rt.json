@@ -76,8 +76,7 @@
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
                 "packagelists/vpro-amt-packages.json",
-                "packagelists/docker.json",
-                "packagelists/k3s.json"
+                "packagelists/docker.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
