@@ -7480,16 +7480,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "intel-gpu-device-plugin",
-          "version": "0.32.1",
-          "downloadUrl": "https://github.com/intel/intel-device-plugins-for-kubernetes/archive/refs/tags/v0.32.1.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "intel-idv-services",
           "version": "1.0.0~rc1",
           "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc1/intel-idv-services-1.0.0-rc1.tar.gz"
@@ -8363,36 +8353,6 @@
           "name": "jzlib",
           "version": "1.1.3",
           "downloadUrl": "https://github.com/ymnk/jzlib/archive/1.1.3.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "k3s",
-          "version": "1.32.4+k3s1",
-          "downloadUrl": "https://github.com/k3s-io/k3s/archive/refs/tags/v1.32.4+k3s1.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "k3s-calico",
-          "version": "3.30.1",
-          "downloadUrl": "https://github.com/projectcalico/calico/archive/refs/tags/v3.30.1.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "k3s-multus-cni",
-          "version": "4.2.1",
-          "downloadUrl": "https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v4.2.1.tar.gz"
         }
       }
     },
@@ -14034,16 +13994,6 @@
           "name": "multiperf",
           "version": "3.0",
           "downloadUrl": "https://linux.mellanox.com/public/repo/mlnx_ofed/24.10-0.7.0.0/SRPMS/multiperf-3.0.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "multus",
-          "version": "4.0.2",
-          "downloadUrl": "https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v4.0.2.tar.gz"
         }
       }
     },
