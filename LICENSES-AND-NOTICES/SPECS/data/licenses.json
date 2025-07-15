@@ -2265,7 +2265,6 @@
                 "edge-rpm-macros",
                 "hardware-discovery-agent",
                 "inbm",
-                "intel-desktop-virtualization-k3s",
                 "intel-gpu-device-plugin",
                 "intel-idv-services",
                 "intel-igsc",
