@@ -2,7 +2,7 @@ Name:           intel-gpu-device-plugin
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Version:        0.32.1
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Intel GPU device plugin manifests and container images for k3s Kubernetes cluster.
 License:        Apache-2.0
 URL:            https://github.com/intel/intel-device-plugins-for-kubernetes
@@ -28,6 +28,9 @@ install -m 0644 ./deployments/gpu_plugin/base/intel-gpu-plugin.yaml %{buildroot}
 %{_sharedstatedir}/rancher/k3s/server/manifests/00-intel-gpu/intel-gpu-plugin.yaml
 
 %changelog
+* Tue Jul 15 2025 Aaron Dorney <aaron.dorney@intel.com> - 0.32.1-5
+- Remove images
+
 * Wed Jul 02 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 0.32.1-4
 - Set DaemonSet namespace to 'kube-system'
 

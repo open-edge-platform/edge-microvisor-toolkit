@@ -1,6 +1,6 @@
 Name:           k3s-multus-cni
 Version:        4.2.1
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Multus manifests and container images for k3s kubernetes cluster.
 
 License:        Apache-2.0
@@ -37,6 +37,9 @@ install -m 644 ./deployments/multus-daemonset.yml %{buildroot}%{_sharedstatedir}
 %{_sharedstatedir}/rancher/k3s/server/manifests/10-multus/multus-daemonset.yml
 
 %changelog
+* Tue Jul 15 2025 Aaron Dorney <aaron.dorney@intel.com> - 4.2.1-5
+- Remove images
+
 * Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 4.2.1-4
 - Move images to common install directory
 

@@ -2,7 +2,7 @@
 Name:          k3s
 Summary:       K3s - Lightweight Kubernetes
 Version:       %{_version}+k3s1
-Release:       2%{?dist}
+Release:       3%{?dist}
 License:       ASL 2.0
 Vendor:        Intel Corporation
 Distribution:  Edge Microvisor Toolkit
@@ -60,6 +60,9 @@ mkdir -p %{buildroot}%{_sharedstatedir}/rancher/k3s/agent/images
 /opt/install.sh
 
 %changelog
+* Tue Jul 15 2025 Aaron Dorney <aaron.dorney@intel.com> - 1.32.4+k3s1-3
+- Remove airgap images
+
 * Tue Jul 08 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 1.32.4+k3s1-2
 - Move k3s binary install dir from '/usr/bin' to '/usr/local/bin'
 

@@ -1,6 +1,6 @@
 Name:           k3s-calico
 Version:        3.30.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Calico manifests and container images for k3s kubernetes cluster.
 
 License:        Apache-2.0
@@ -35,6 +35,9 @@ install -m 644 ./manifests/calico.yaml %{buildroot}%{_sharedstatedir}/rancher/k3
 %{_sharedstatedir}/rancher/k3s/server/manifests/00-calico/calico.yaml
 
 %changelog
+* Tue Jul 15 2025 Aaron Dorney <aaron.dorney@intel.com> - 3.30.1-4
+- Remove images
+
 * Wed Jun 25 2025 Eoghan Lawless <eoghan.lawless@intel.com> - 3.30.1-3
 - Move images to common install directory
 
