@@ -20,8 +20,8 @@ also including the existing functionality not downstreamed in the existing distr
 
 Currently published default versions are:
 
-* `Edge Microvisor Toolkit Standalone Node (immutable) <https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node>`__
-* `Edge Microvisor Toolkit Developer Node (mutable) <https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node>`__
+* `Edge Microvisor Toolkit Standalone Node (immutable) <https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node>`__
+* `Edge Microvisor Toolkit Developer Node (mutable) <https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/get-started/emt-installation-howto.md>`__
 * `Edge Microvisor Toolkit (immutable) <https://github.com/open-edge-platform/edge-manageability-framework>`__
 * `Edge Microvisor Toolkit with real time extensions (immutable) <https://github.com/open-edge-platform/edge-manageability-framework>`__
 
