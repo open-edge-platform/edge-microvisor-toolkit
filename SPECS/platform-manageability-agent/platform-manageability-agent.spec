@@ -78,12 +78,6 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %postun
 %{systemd_postun_with_restart %{name}.service}
 
-%files selinux
-%{_datadir}/selinux/packages/%{modulename}.pp
 
-%post selinux
-%selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/%{modulename}.pp
 
-%postun selinux
-%selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
