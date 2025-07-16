@@ -2265,14 +2265,11 @@
                 "edge-rpm-macros",
                 "hardware-discovery-agent",
                 "inbm",
-                "intel-desktop-virtualization-k3s",
-                "intel-gpu-device-plugin",
                 "intel-idv-services",
                 "intel-igsc",
                 "intel-lms",
                 "intel-npu-firmware",
                 "intel-xpu-smi",
-                "k3s-disable-cni",
                 "node-agent",
                 "nvidia-data-center-driver",
                 "os-ab-update",
@@ -3206,9 +3203,6 @@
         "Source project": {
             "license": "Same as the source project.",
             "specs": [
-                "k3s",
-                "k3s-calico",
-                "k3s-multus-cni",
                 "python-nocaselist",
                 "yq"
             ]
