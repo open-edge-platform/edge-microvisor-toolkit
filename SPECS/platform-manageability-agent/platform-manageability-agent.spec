@@ -25,8 +25,6 @@ Requires:       rpc
 pm-agent ensures that all required manageability features are available as soon as the OS is deployed.
 and execute manageability opration on node. 
 
-
-
 %prep
 %setup -q
 
