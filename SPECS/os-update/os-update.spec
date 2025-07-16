@@ -14,6 +14,7 @@ Source1:        os-update.te
 %global debug_package %{nil}
 BuildRequires:  selinux-policy-devel
 Requires:       (%{name}-selinux if selinux-policy-targeted)
+Obsoletes:      os-ab-update
 
 %description
 Purpose of this module is to enable OS  A and B swapping for Day 2 Operation. Details on the
