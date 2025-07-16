@@ -14,7 +14,8 @@
                 "packagelists/intel-rdt.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-                "packagelists/docker.json"
+                "packagelists/docker.json",
+		"packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
@@ -44,7 +45,8 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-                "packagelists/docker.json"
+	        "packagelists/docker.json",
+		"packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
@@ -74,7 +76,8 @@
                 "packagelists/intel-gpu-base-rt.json",
                 "packagelists/intel-rdt.json",
                 "packagelists/drtm.json",
-                "packagelists/virt-guest-packages.json"
+                "packagelists/virt-guest-packages.json",
+                "packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
                 "SELinux": "permissive"
