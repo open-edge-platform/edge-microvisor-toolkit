@@ -44,11 +44,11 @@ mkdir -p %{buildroot}%{_unitdir}
 cp %{SOURCE2} %{buildroot}%{_unitdir}
 
 install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
-install -m 644 config/pm-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/node/confs/pm-agent.yaml
+install -m 644 config/platform-manageability-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-manageability-agent.yaml
 install -m 744 %{SOURCE3} %{buildroot}%{_sysconfdir}/edge-node/node/confs/pm-agent
 
 mkdir -p %{buildroot}%{_sysconfdir}/sudoers.d
-cp %{SOURCE5} %{buildroot}%{_sysconfdir}/sudoers.d/cluster-agent
+cp %{SOURCE5} %{buildroot}%{_sysconfdir}/sudoers.d/platform-manageability-agent
 
 mkdir -p %{buildroot}%{_defaultlicensedir}/%{name}
 cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
@@ -60,9 +60,9 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{_sysusersdir}/%{name}.conf
 
 %config %attr(-, -, bm-agents) %{_sysconfdir}/edge-node/node/confs
-%config %attr(-, pm-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/pm-agent.yaml
+%config %attr(-, pm-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/platform-manageability-agent.yaml
 %config %attr(-, pm-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/pm-agent
-%config %{_sysconfdir}/sudoers.d/pm-agent
+%config %{_sysconfdir}/sudoers.d/platform-manageability-agent
 
 %license %{_defaultlicensedir}/%{name}/copyright
 
@@ -78,6 +78,6 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %postun
 %{systemd_postun_with_restart %{name}.service}
 
-
+%changelog
 
 
