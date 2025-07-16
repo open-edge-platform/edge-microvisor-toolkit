@@ -1,6 +1,0 @@
-{
-    "packages": [
-        "k3s-calico"
-    ],
-    "_comment": "Calico CNI addon for Kubernetes."
-}
