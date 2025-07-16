@@ -1,0 +1,1 @@
+pm-agent  ALL=(root) NOPASSWD:/usr/bin/sh,/usr/bin/rpc,/usr/sbin/dmidecode

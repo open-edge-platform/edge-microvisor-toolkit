@@ -3,7 +3,7 @@ Description=Platform Manageability Agent
 Documentation=https://github.com/open-edge-platform/edge-node-agents/blob/main/platform-manageability-agent/README.md
 
 [Service]
-ExecStart=/opt/edge-node/bin/pm-agent -config /etc/edge-node/node/confs/platform-manageability-agent.yaml
+ExecStart=/etc/edge-node/node/confs/pm-agent /usr/bin/pm-agent -config /etc/edge-node/node/confs/platform-manageability-agent.yaml
 StandardOutput=journal
 StandardError=journal
 RestartSec=60
