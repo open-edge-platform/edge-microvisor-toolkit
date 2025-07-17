@@ -2272,7 +2272,7 @@
                 "intel-xpu-smi",
                 "node-agent",
                 "nvidia-data-center-driver",
-                "os-ab-update",
+                "os-update",
                 "otelcol-contrib",
                 "persistent-mount",
                 "platform-observability-agent",
