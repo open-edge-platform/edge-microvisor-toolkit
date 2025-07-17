@@ -22,8 +22,8 @@ Requires:       rpc
 %global modulename      pm_agent
 
 %description
-pm-agent ensures that all required manageability features are available as soon as the OS is deployed.
-and execute manageability opration on node. 
+platform-manageability-agent detects what manageability features are available after the OS is deployed
+and performs device management operations requested by users.
 
 %prep
 %setup -q
