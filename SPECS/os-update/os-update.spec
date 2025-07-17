@@ -1,32 +1,33 @@
-Summary:        OS AB Update Tool for OS A and B swapping for image based update
-Name:           os-ab-update
-Version:        2.6
+Summary:        OS Update Tool for OS A and B swapping for image based update
+Name:           os-update
+Version:        2.8
 Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
-URL:            https://github.com/open-edge-platform/edge-microvisor-toolkit
+URL:            https://github.com/open-edge-platform/edge-microvisor-update-tool
 Source0:        %{url}/archive/refs/tags/%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Source1:        ab-update.te
-%global modulename  ab-update
+Source1:        os-update.te
+%global modulename  os-update
 %global selinuxtype targeted
 %global debug_package %{nil}
 BuildRequires:  selinux-policy-devel
 Requires:       (%{name}-selinux if selinux-policy-targeted)
+Obsoletes:      os-ab-update
 
 %description
 Purpose of this module is to enable OS  A and B swapping for Day 2 Operation. Details on the
 architecture can be found in the ADR.
 
 %package        selinux
-Summary:        SELinux security policy for os-ab-update
-Requires(post): os-ab-update = %{version}-%{release}
+Summary:        SELinux security policy for os-update
+Requires(post): os-update = %{version}-%{release}
 BuildArch:      noarch
 %{?selinux_requires}
 
 %description    selinux
-SELinux security policy for os-ab-update.
+SELinux security policy for os-update.
 
 %prep
 %setup -q
@@ -46,7 +47,7 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 
 %files
 %{_bindir}/os-update-tool.sh
-%{_bindir}/ab-update-modules/*
+%{_bindir}/os-update-modules/*
 
 %files selinux
 %{_datadir}/selinux/packages/%{modulename}.pp
@@ -58,6 +59,14 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Tue Jul 15 2025 Samuel Taripin <samuel.taripin@intel.com> - 2.8-1
+- Bump version to 2.8
+- Remove bootctl remove logic
+
+* Mon Jul 07 2025 Suh Haw Teoh <suh.haw.teoh@intel.com> - 2.7-1
+- Bump version to 2.7
+- Improved wording
+
 * Thu Apr 10 2025 Suh Haw Teoh <suh.haw.teoh@intel.com> - 2.6-1
 - Bump version to 2.6
 - Add filesystem check before change UUID
@@ -80,9 +89,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 
 * Mon Jan 20 2025 Suh Haw Teoh <suh.haw.teoh@intel.com> - 2.2-1
 - Bump version to 2.2
-- Fix AB update -c flag
+- Fix OS update -c flag
 - improve pattern matching for lsblk related operation
-- Fix AB update not able to run in service.
+- Fix OS update not able to run in service.
 - Add log in for B partition.
 
 * Mon Jan 20 2025 Jia Yong Tan <jia.yong.tan@intel.com> - 2.0-3
@@ -154,7 +163,7 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 - Bump version to 1.1
 - Update to use tarball for source
 - Update URL
-- Remove ab-update conf file
+- Remove os-update conf file
 
 * Fri Oct 16 2024 Samuel Taripin <samuel.taripin@intel.com> - 1.0-5
 - Working Release Version for Latest Edge Microvisor Toolkit .

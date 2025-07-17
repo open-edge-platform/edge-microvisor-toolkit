@@ -1,4 +1,4 @@
-module ab-update 1.0;
+module os-update 1.0;
 
 require {
         type var_lock_t;
