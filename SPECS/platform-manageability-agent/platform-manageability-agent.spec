@@ -77,6 +77,6 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
-* Thur July 17 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.0-1
-- "License verified"
+* Thu July 17 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.0-1
+- Original version for Edge Microvisor Toolkit. License verified.
 
