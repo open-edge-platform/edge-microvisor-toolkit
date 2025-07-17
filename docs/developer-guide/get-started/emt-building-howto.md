@@ -1,6 +1,6 @@
-# Build an Edge Microvisor Toolkit Image
+# Build Your Own Edge Microvisor Toolkit
 
-Edge Microvisor Toolkit is a downstream of Azure Linux. It is composed of multiple modules to
+Edge Microvisor Toolkit is an operating system derived from Azure Linux. It is composed of multiple modules to
 facilitate creating `rpm` based OS images supporting a variety of different image formats.
 
 The toolkit has an `imageconfig` construct in the JSON format that defines the characteristics
@@ -17,6 +17,8 @@ of the resulting image, such as:
 - Kernel and command line options.
 - Final configuration properties that should be applied (e.g. enable full disc encryption,
   immutable image, second stage bootloader provider, purge documentation etc.).
+
+## Build the Toolchain
 
 Before you can build OS images you need to build the toolchain and make sure to
 [**install pre-requisites (Ubuntu)**](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md).
@@ -49,7 +51,7 @@ Before you can build OS images you need to build the toolchain and make sure to
    sudo make toolchain REBUILD_TOOLS=y
    ```
 
-## Building the Default Microvisor Image
+## Build the Edge Microvisor Toolkit Image
 
 Multiple image configurations are located in the `imageconfigs` folder:
 
@@ -91,10 +93,10 @@ sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfig
 To build a RAW image with real-time extensions, use the following command:
 
 ```bash
-RT build command: sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image-rt.json
+sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image-rt.json
 ```
 
-## Customizing an Image
+## Customize Your Edge Microvisor Toolkit Image
 
 To add packages to the default image, you can define your own `packagelist.json` file, pointing to RPMs that should be included in the image.
 To streamline this process, you can use the `add_custom_packages.sh` script located in `toolkit/scripts`.
@@ -115,7 +117,7 @@ alternative text editor to the image:
    ```bash
    # Refer to this usage format:
    # Usage: ./add_custom_packages.sh "<pkg1 pkg2 ...>" path/to/image.json [custom-packages.json]
-   
+
    # Run the script to add nano into the edge-image.json configuration.
    ./add_custom_packages.sh "nano" ../imageconfigs/edge-image.json utilities.json
    ```
@@ -159,16 +161,9 @@ alternative text editor to the image:
 
 ### Example 2: Adding a new RPM package
 
-To add a new package you need to generate a SPEC file for the package which
-contains all required information for the build infrastructure to generate the
-`SRPM` and `RPM` for the package. There are a few steps involved in creating
-a new package for Edge Microvisor Toolkit.
-
-1. Create a folder, define the SPEC file and add it into the `/SPECS` directory.
-2. Create the source archive and generate the sha256sum for the package.
-3. Update the `cgmanifest.json` file.
-4. Build an image with the package included and test locally.
-5. Upload the tar.gz package to the source package repository after is has been tested locally.
+To add a new package you need to generate for the package a SPEC file containing
+all information required for the build infrastructure to generate `SRPM` and `RPM`
+for the package. There are a few steps involved in creating a new package for Edge Microvisor Toolkit.
 
 **Prerequisites**
 
@@ -188,23 +183,29 @@ On Ubuntu, use the following command:
 sudo apt-get install rpm
 ```
 
-Then, manually create the necessary directories:
-
-```bash
-mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
-```
-
 **Preparing the files**
 
-1. Navigate to user home directory.
+1. Manually create the necessary directories:
+
+   ```bash
+   mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+   echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
+   ```
+
+2. Navigate to user home directory and create your SPEC file:
 
    ```bash
    cd
+   touch helloworld.spec
    ```
 
-2. Define the SPEC file, using the example below.
+3. Open the spec file using the method of your choice, for example:
 
+   ```bash
+   nano helloworld.spec
+   ```
+
+   Copy the example below into the file.
    It will create a simple hello world RPM package, which will include a bash script that
    prints *"Hello, world!"*.
 
@@ -245,7 +246,7 @@ echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
    - Initial package
    ```
 
-3. Create the simple script and make it executable.
+4. Create the simple script and make it executable.
 
    ```bash
    mkdir -p ./helloworld-1.0
@@ -256,7 +257,9 @@ echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
    chmod +x ./helloworld-1.0/helloworld.sh
    ```
 
-4. Compute its SHA-256 and generate the JSON signature for it.
+**Create the source archive and generate the sha256sum for the package.**
+
+1. Compute the SHA-256 and generate the JSON signature for it.
 
    ```bash
    sum=$(sha256sum ./helloworld-1.0/helloworld.sh | awk '{print $1}')
@@ -268,7 +271,7 @@ echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
    EOF
    ```
 
-5. Create the tarball archive and generate its JSON signature.
+2. Create the tarball archive and generate its JSON signature.
 
    ```bash
    tar -czf helloworld-1.0.tar.gz ./helloworld-1.0
@@ -281,7 +284,7 @@ echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
    EOF
    ```
 
-4. Copy the RPM package files to the building directories and build it.
+3. Copy the RPM package files to the building directories and build it.
 
    ```bash
    cp helloworld-1.0.tar.gz ./rpmbuild/SOURCES
@@ -313,65 +316,12 @@ echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
        python3 ./scripts/update_cgmanifest.py first ../cgmanifest.json ../SPECS/helloworld.spec
    ```
 
-**Local Build and Testing**
+**Building the package and testing it locally**
 
-If testing is complete and you are ready to contribute this package,
-please raise a PR and work with a code owner to upload the source tarball to package source mirror.
+1. Build your package by running the following command:
 
-```bash
-make build-packages # to rebuild the packages
-```
+   ```bash
+   make build-packages # to rebuild the packages
+   ```
 
-Follow the steps under [Customizing an image](./emt-building-howto.md#customizing-an-image) to create
-an image with your new package.
-
-**Uploading the archive**
-
-Intel will upload the tar.gz archive to the mirror.
-
-### Update an agent
-
-To add or update an existing BMA (Bare metal agent) from the Edge Management
-Framework, follow these steps.
-
-1. If a new package has to be released, follow these steps to ensure the package
-   is available in the artifactory:
-
-    a. Checkout the tag for your agent which has to be released.
-    b. cd into your agent's directory.
-    c. Invoke `make tarball`.
-    d. Upload tarball from `build/artifacts` to the tarball repository.
-
-2. Update the respective .spec file in SPECS/`package` directory. Example: `SPECS/node-agent`.
-
-3. Bump the release number declared in the top section of the .spec file if on the same
-   version. Otherwise, update the release version and set the number to 1.
-
-4. Update `env_wrapper.sh` and the .spec file if there are installation changes or new
-   configurations to be added.
-
-5. Update the changelog to ensure the version and release number are mentioned correctly as
-   well. Example:
-
-    ```bash
-    * Tue Mar 25 2025 Andrea Campanella <andrea.campanella@intel.com> - 1.5.11-2
-    - Move from RSTYPE to RS_TYPE in wrapper for node-agent
-    ```
-
-6. Generate sha256sum of all files that have been updated.
-Example : `sha256sum ./SPECS/node-agent/env_wrapper.sh`
-
-7. Update the signature file name `<agent-name>.signatures.json`. Example: `node-agent.signatures.json`.
-
-8. Update `cgmanifest.json`. You can use a script to do it, if you have an RPM environment.
-   Otherwise, update the version and download the URL manually. Example commands to update
-   using a manifest:
-
-    ```bash
-    python3 -m pip install -r ./toolkit/scripts/requirements.txt
-    python3 ./toolkit/scripts/update_cgmanifest.py first cgmanifest.json ./SPECS/node-agent/node-agent.spec
-    ```
-## Next
-
-- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](emt-sb-howto.md).
-- See the detailed description of how to [create a full build and customize it](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/add-package.md).
+2. Build the image containing the package by following the steps outlined in [Building the Edge Microvisor Toolkit Image](#build-the-edge-microvisor-toolkit-image), and pointing to your modified imageconfig file.

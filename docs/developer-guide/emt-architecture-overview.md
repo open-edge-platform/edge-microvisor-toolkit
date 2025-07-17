@@ -25,6 +25,24 @@ overview of key software components:
 
 ## Edge Microvisor Toolkit Image Versions
 
+The toolkit comes pre-configured to produce different images, the table below
+outlines the key differences between those.
+
+|  Feature         | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit Standalone Node & Orchestrated                                   |
+| -----------------| -------------------- | ------------------------------------------------- |
+| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with toolkit to build image with an opt-in data integrity and security features.</li></ul> | <ul><li>Designed for Open Edge Platforms and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare-metal and as guest OS.</li><li>Fast atomic updates & rollback support with small image footprint and short boot time.|
+| Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
+| Update Mechanism | RPM package updates with TDNF | Image based A/B updates + Rollback       |
+| Linux Kernel     | Intel® Kernel 6.12   | Intel® Kernel 6.12                                |
+| Real time        | Available for opt-in | Image variants with standard and RT Kernel provided |
+| Desktop Virtualization | Available      | Dedicated non-RT image variant provided                                    |
+| Add-on packages  | Available for opt-in: Docker + K3s | Built into image: Docker + K3s      |
+| OS Bootloader    | GRUB                 | systemd-boot                                      |
+| Secure Boot      | Available for opt-in | Enabled                                           |
+| Full Disc Encryption | Available for opt-in | Enabled                                       |
+| dm-verity        | Available for opt-in | Enabled                                           |
+| SELinux          | Permissive           | Permissive                                        |
+
 ### Developer Node mutable ISO image
 
 Mutable Developer node in an ISO format allows you to add packages and
