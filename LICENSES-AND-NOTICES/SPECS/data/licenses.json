@@ -2258,7 +2258,6 @@
         "Intel": {
             "license": "[MIT License](/LICENSES-AND-NOTICES/LICENSE.md)",
             "specs": [
-                "platform-manageability-agent",
                 "cluster-agent",
                 "device-discovery",
                 "edge-release",
