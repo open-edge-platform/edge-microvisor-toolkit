@@ -11,10 +11,6 @@ Source1:        %{name}.conf
 Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        %{name}.sudoers
-BuildRequires:  golang >= 1.24.1
-BuildRequires:  systemd-rpm-macros
-Requires(pre):  %{_bindir}/systemd-sysusers
-Requires:       dmidecode
 Requires:       rpc
 
 %global debug_package   %{nil}
