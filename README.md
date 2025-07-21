@@ -49,7 +49,7 @@ Before submitting a new report, check the existing issues to see if a similar on
 been filed already. If no matching issue is found, feel free to file the issue as described
 in the [contribution guide](./docs/developer-guide/emt-contribution.md).
 
-For security-related concerns, please refer to [SECURITY.md](./SECURITY.md).
+For security-related concerns, please refer to [security considerations](./docs/developer-guide/emt-security-considerations.md).
 
 [Azure Linux Documentation](toolkit/docs/), may also be useful, if you encounter
 problems when using Edge Microvisor Toolkit. Its copy is part of the Edge
