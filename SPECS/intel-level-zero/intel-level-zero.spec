@@ -1,7 +1,7 @@
 Summary:        OneAPI Level Zero Specification Headers and Loader
 Name:           intel-level-zero
-Version:        1.17.44
-Release:        2%{?dist}
+Version:        1.21.9
+Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -12,7 +12,7 @@ BuildRequires:  chrpath
 BuildRequires:  gcc-c++
 BuildRequires:  cmake
 BuildRequires:  make
-BuildRequires:  opencl-headers
+#BuildRequires:  opencl-headers
 # Useful for a quick oneAPI Level-Zero testing
 Recommends:     %{name}-zello_world
 
@@ -78,6 +78,9 @@ chrpath --delete %{buildroot}%{_bindir}/zello_world
 %{_libdir}/pkgconfig/level-zero.pc
 
 %changelog
+* Mon Jul 21 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.21.9-1
+- Update version to 1.21.9.
+
 * Fri Dec 27 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 1.17.44-2
 - Update Source URL.
 
