@@ -29,3 +29,7 @@ cp /boot/linux.efi /boot/efi/EFI/Linux/linux-$KERNEL_VERSION.efi
 rm -rf /boot/linux.efi
 rm -rf /boot/initramfs-*.img
 rm -rf /boot/vmlinuz*
+
+# preload the hwdb.bin
+systemd-hwdb update
+[ -f /etc/udev/hwdb.bin ] && mv /etc/udev/hwdb.bin /usr/lib/udev/hwdb.bin

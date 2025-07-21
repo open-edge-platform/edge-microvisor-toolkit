@@ -5,7 +5,7 @@
 Summary:        Edge Microvisor Toolkit release files
 Name:           edge-release
 Version:        %{dist_version}.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -118,6 +118,9 @@ install -Dm0644 %{SOURCE4} -t %{buildroot}%{_sysctldir}/
 %{_sysctldir}/*.conf
 
 %changelog
+* Mon Jul 21 2025 Andy <andy.peng@intel.com> - 3.0-5
+- update 90-default.preset to disable systemd-networkd-wait-online.service
+
 * Tue Jun 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.0-4
 - bump version for release.
 
