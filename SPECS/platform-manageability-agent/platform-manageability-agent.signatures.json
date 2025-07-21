@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "platform-manageability-agent-v0.1.0.tar.gz": "7956a774fa3bbf8136c0e2f59975d3cd5c2ca58d6f50847930f89e59ff1dafb0",
+    "platform-manageability-agent-0.1.0.tar.gz": "7956a774fa3bbf8136c0e2f59975d3cd5c2ca58d6f50847930f89e59ff1dafb0",
     "platform-manageability-agent.service": "1135832fdd2a12fa08d5bc552e7c6b0cde6f39572ff460688098ced0d86183fc",
     "env_wrapper.sh": "6239de7a4e75db2ddf81454628ac7d111b79224d392161bdc11642e6de9602f7",
     "platform-manageability-agent.conf": "efe3d39585266222720a828f4617a25beaf6e6334ee7d9bfa57fba4e4bd7f6ef",
