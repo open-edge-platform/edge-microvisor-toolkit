@@ -1,5 +1,5 @@
 Name:           intel-idv-services
-Version:        1.0.0~rc1
+Version:        1.0.0~rc4
 Release:        1%{?dist}
 Summary:        A package to install scripts and systemd services for Intelligent Desktop Virtualization(IDV)
 Distribution:   Edge Microvisor Toolkit
@@ -55,6 +55,9 @@ install -m 644 autologin.conf %{buildroot}%{_sysconfdir}/systemd/system/getty@tt
 %preun
 
 %changelog
+* Fri Jul 18 2025 Dhanya A <dhanya.a@intel.com> - 1.0.0~rc4-1
+- Bump up version to v1.0.0~rc4
+
 * Wed Jul 02 2025 Dhanya A <dhanya.a@intel.com> - 1.0.0~rc1-1
 - Bump up version to v1.0.0~rc1
 
