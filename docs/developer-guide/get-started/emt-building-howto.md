@@ -330,8 +330,8 @@ sudo apt-get install rpm
 ### Example 3: Generating user passwords
 
 To specify user passwords for your build, you can use
-[OpenSSL](https://openssl-library.org/source/) and generate a SHA-512 hash along with a salt,
-which is the default and recommended security solution in the toolkit.
+[OpenSSL](https://openssl-library.org/source/) and generate a SHA-512 hash with salt.
+It is the default and recommended security solution in the toolkit.
 
 1. Generate a secure password with `openssl passwd`:
 
