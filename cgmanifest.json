@@ -21552,6 +21552,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "platform-manageability-agent",
+          "version": "0.1.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.1.0.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "platform-telemetry-agent",
           "version": "1.4.0",
           "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.4.0.tar.gz"
