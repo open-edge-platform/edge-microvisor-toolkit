@@ -15,7 +15,7 @@ or build your own system, using the existing infrastructure.
 The currently published versions are:
 
 * [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
-* [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node)
+* [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](./docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image)
 * [Edge Microvisor Toolkit (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
 * [Edge Microvisor Toolkit with real time extensions (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
 * [Edge Microvisor Bootkit](./docs/developer-guide/emt-bootkit.md)
