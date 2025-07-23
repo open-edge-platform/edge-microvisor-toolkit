@@ -11,7 +11,7 @@ Source1:        %{name}.conf
 Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        %{name}.sudoers
-BuildRequires:  golang >= 1.24.1
+BuildRequires:  systemd-rpm-macros
 Requires:       rpc
 
 %global debug_package   %{nil}
@@ -30,7 +30,7 @@ make pmabuild GO_MOD=vendor
 
 
 %install
-make install DESTDIR=%{buildroot} PREFIX=%{_prefix}
+make pmainstall DESTDIR=%{buildroot} PREFIX=%{_prefix}
 
 mkdir -p %{buildroot}%{_sysusersdir}
 cp %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
@@ -39,18 +39,18 @@ mkdir -p %{buildroot}%{_unitdir}
 cp %{SOURCE2} %{buildroot}%{_unitdir}
 
 install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
-install -m 644 config/platform-manageability-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-manageability-agent.yaml
+install -m 644 configs/platform-manageability-agent.yaml %{buildroot}%{_sysconfdir}/edge-node/node/confs/platform-manageability-agent.yaml
 install -m 744 %{SOURCE3} %{buildroot}%{_sysconfdir}/edge-node/node/confs/pm-agent
 
 mkdir -p %{buildroot}%{_sysconfdir}/sudoers.d
-cp %{SOURCE5} %{buildroot}%{_sysconfdir}/sudoers.d/platform-manageability-agent
+cp %{SOURCE4} %{buildroot}%{_sysconfdir}/sudoers.d/platform-manageability-agent
 
 mkdir -p %{buildroot}%{_defaultlicensedir}/%{name}
 cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 
 
 %files
-%{_bindir}/pm-agent
+%{_bindir}/platform-manageability-agent
 %{_unitdir}/%{name}.service
 %{_sysusersdir}/%{name}.conf
 
@@ -74,6 +74,6 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
-* Thu July 17 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.0-1
+* Thu Jul 17 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.0-1
 - Original version for Edge Microvisor Toolkit. License verified.
 
