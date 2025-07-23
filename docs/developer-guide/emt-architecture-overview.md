@@ -36,7 +36,7 @@ outlines the key differences between those.
 | Linux Kernel     | Intel® Kernel 6.12   | Intel® Kernel 6.12                                |
 | Real time        | Available for opt-in | Image variants with standard and RT Kernel provided |
 | Desktop Virtualization | Available      | Dedicated non-RT image variant provided                                    |
-| Add-on packages  | Available for opt-in: Docker + K3s | Downloaded during installation: Docker + K3s      |
+| Add-on packages  | Available for opt-in: Docker + K3s | Downloaded during installation: K3s and extensions    |
 | OS Bootloader    | GRUB                 | systemd-boot                                      |
 | Secure Boot      | Available for opt-in | Enabled                                           |
 | Full Disc Encryption | Available for opt-in | Enabled                                       |
