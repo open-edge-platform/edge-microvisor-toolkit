@@ -1,5 +1,5 @@
 :::
-:orphan:
+orphan: true
 :::
 
 # Edge Microvisor Bootkit
