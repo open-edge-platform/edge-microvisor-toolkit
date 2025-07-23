@@ -24,7 +24,7 @@ Currently published default versions are:
 * `Edge Microvisor Toolkit Developer Node (mutable) <https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/get-started/emt-installation-howto.md>`__
 * `Edge Microvisor Toolkit (immutable) <https://github.com/open-edge-platform/edge-manageability-framework>`__
 * `Edge Microvisor Toolkit with real time extensions (immutable) <https://github.com/open-edge-platform/edge-manageability-framework>`__
-* :doc:`Edge Microvisor Bootkit <./emt-bootkit>`
+* :doc:`Edge Microvisor Bootkit <./emt-bootkit-os>`
 
 If you need more than that, the build infrastructure of Edge Microvisor Toolkit enables you
 to create your own, custom images.
@@ -121,7 +121,7 @@ Next Steps
     emt-get-started
     emt-architecture-overview
     emt-deployment-edge-orchestrator
-    emt-bootkit
+    emt-bootkit-os
     emt-security
     emt-contribution
     emt-troubleshooting
