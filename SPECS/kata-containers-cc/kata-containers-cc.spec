@@ -2,8 +2,8 @@
 %define sourceName kata-containers
 
 Name:         kata-containers-cc
-Version:      3.2.0.azl5
-Release:      1%{?dist}
+Version:      3.15.0.aks0
+Release:      2%{?dist}
 Summary:      Kata Confidential Containers package developed for Confidential Containers on AKS
 License:      ASL 2.0
 URL:          https://github.com/microsoft/kata-containers
@@ -17,7 +17,7 @@ ExclusiveArch: x86_64
 BuildRequires:  azurelinux-release
 BuildRequires:  golang
 BuildRequires:  protobuf-compiler
-BuildRequires:  rust
+BuildRequires:  rust >= 1.85.0
 BuildRequires:  libseccomp-devel
 BuildRequires:  openssl-devel
 BuildRequires:  clang
@@ -150,6 +150,11 @@ fi
 %{tools_pkg}/tools/osbuilder/node-builder/azure-linux/agent-install/usr/lib/systemd/system/kata-agent.service
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.15.0.aks0-2
+- merge from Azure Linux 3.0.20250521-3.0
+- Auto-upgrade to 3.15.0.aks0
+- Pin rust version
+
 * Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.2.0.azl5-1
 - merge from Azure Linux tag 3.0.20250423-3.0
 - Auto-upgrade to 3.2.0.azl5

@@ -3534,6 +3534,15 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 - Initial Edge Microvisor Toolkit import from Fedora (license: MIT).
 - For update from 8.2.0 to v9.1.0 and add SRIOV patches.
 
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 8.2.0-18
+- merge from Azure Linux 3.0.20250521-3.0
+- Added patch for CVE-2024-26327 CVE-2024-26328
+- Bump to rebuild with updated glibc
+- Added patch for CVE-2024-6505 CVE-2024-4467 CVE-2024-4693 CVE-2024-7730 CVE-2024-3447 CVE-2024-3567
+- Add patch for CVE-2023-6683
+- Add patch for CVE-2023-6693
+- Add patch for CVE-2021-20255
+
 * Tue Mar 18 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 8.2.0-17
 - Bump version for merge AZL tag: 3.0.20250311-3.0
 - Bump to rebuild with updated glibc

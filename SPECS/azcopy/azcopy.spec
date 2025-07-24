@@ -1,7 +1,7 @@
 Summary:        The new Azure Storage data transfer utility - AzCopy v10
 Name:           azcopy
 Version:        10.25.1
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        MIT
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -29,6 +29,8 @@ Source0:        https://github.com/Azure/azure-storage-azcopy/archive/refs/tags/
 Source1:        azure-storage-%{name}-%{version}-vendor.tar.gz
 Patch0:         CVE-2025-22868.patch
 Patch1:         CVE-2025-30204.patch
+Patch2:         CVE-2025-22870.patch
+Patch3:         CVE-2024-51744.patch
 
 BuildRequires:  golang >= 1.17.9
 BuildRequires:  git
@@ -65,6 +67,10 @@ go test -mod=vendor
 %{_bindir}/azcopy
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 10.25.1-5
+- merge from Azure Linux 3.0.20250521-3.0
+- Patch CVE-2025-22870, CVE-2024-51744
+
 * Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 10.25.1-4
 - merge from Azure Linux 3.0.20250423.
 - Patch CVE-2025-30204
