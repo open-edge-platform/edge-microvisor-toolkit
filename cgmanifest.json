@@ -28976,8 +28976,8 @@
         "type": "other",
         "other": {
           "name": "spirv-llvm-translator",
-          "version": "14.0.3",
-          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v14.0.3/spirv-llvm-translator-v14.0.3.tar.gz"
+          "version": "15.0.13",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v15.0.13/spirv-llvm-translator-v15.0.13.tar.gz"
         }
       }
     },
