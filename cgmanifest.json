@@ -7611,8 +7611,8 @@
         "type": "other",
         "other": {
           "name": "intel-opencl-clang",
-          "version": "140",
-          "downloadUrl": "https://github.com/intel/opencl-clang/archive/470cf0018e1ef6fc92eda1356f5f31f7da452abc/intel-opencl-clang-.tar.gz"
+          "version": "150",
+          "downloadUrl": "https://github.com/intel/opencl-clang/archive/58242977b4092cf5eb94a10dd144691c12c87001/intel-opencl-clang-58242977.tar.gz"
         }
       }
     },
