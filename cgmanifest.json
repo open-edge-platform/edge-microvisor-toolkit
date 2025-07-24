@@ -1816,6 +1816,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "clang15",
+          "version": "15.0.7",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-15.0.7.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "cldr-emoji-annotation",
           "version": "37.0_13.0_0_1",
           "downloadUrl": "https://github.com/fujiwarat/cldr-emoji-annotation/releases/download/37.0_13.0_0_1/cldr-emoji-annotation-37.0_13.0_0_1.tar.gz"
@@ -12530,6 +12540,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "lld15",
+          "version": "15.0.7",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-15.0.7.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "lldb",
           "version": "18.1.2",
           "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-18.1.2.tar.gz"
@@ -12573,6 +12593,16 @@
           "name": "llvm14",
           "version": "14.0.5",
           "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-14.0.5.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "llvm15",
+          "version": "15.0.7",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-15.0.7.tar.gz"
         }
       }
     },

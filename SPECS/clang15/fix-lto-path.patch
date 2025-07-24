@@ -1,0 +1,25 @@
+diff --git a/clang/include/clang/Config/config.h.cmake b/clang/include/clang/Config/config.h.cmake
+index dfd2f757a185..96aceb656e2b 100644
+--- a/clang/include/clang/Config/config.h.cmake
++++ b/clang/include/clang/Config/config.h.cmake
+@@ -104,4 +104,6 @@
+ /* Whether to enable opaque pointers by default */
+ #cmakedefine01 CLANG_ENABLE_OPAQUE_POINTERS_INTERNAL
+ 
++#define CLANG_INSTALL_PREFIX "${CLANG_INSTALL_PREFIX}"
++
+ #endif
+diff --git a/clang/lib/Driver/ToolChains/CommonArgs.cpp b/clang/lib/Driver/ToolChains/CommonArgs.cpp
+index 443725f7d8a8..23239824a0f1 100644
+--- a/clang/lib/Driver/ToolChains/CommonArgs.cpp
++++ b/clang/lib/Driver/ToolChains/CommonArgs.cpp
+@@ -501,8 +501,7 @@ void tools::addLTOOptions(const ToolChain &ToolChain, const ArgList &Args,
+ #endif
+ 
+     SmallString<1024> Plugin;
+-    llvm::sys::path::native(
+-        Twine(D.Dir) + "/../lib" CLANG_LIBDIR_SUFFIX "/LLVMgold" + Suffix,
++    llvm::sys::path::native(Twine(CLANG_INSTALL_PREFIX "/LLVMgold") + Suffix,
+         Plugin);
+     CmdArgs.push_back(Args.MakeArgString(Plugin));
+   }

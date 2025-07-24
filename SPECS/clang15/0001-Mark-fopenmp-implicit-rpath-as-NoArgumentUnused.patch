@@ -1,0 +1,29 @@
+From 537e325f180d3d82bbef64aac71efcb0256d6916 Mon Sep 17 00:00:00 2001
+From: Nikita Popov <npopov@redhat.com>
+Date: Fri, 2 Sep 2022 16:30:15 +0200
+Subject: [PATCH] Mark fopenmp-implicit-rpath as NoArgumentUnused
+
+We pass this option unconditionally in LDFLAGS, make sure this
+does not warn if openmp is not used, as this may break some
+build systems.
+---
+ clang/include/clang/Driver/Options.td | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/clang/include/clang/Driver/Options.td b/clang/include/clang/Driver/Options.td
+index d921ea5d5da9..d883fd3a8f04 100644
+--- a/clang/include/clang/Driver/Options.td
++++ b/clang/include/clang/Driver/Options.td
+@@ -4118,7 +4118,8 @@ defm openmp_implicit_rpath: BoolFOption<"openmp-implicit-rpath",
+   LangOpts<"OpenMP">,
+   DefaultTrue,
+   PosFlag<SetTrue, [], "Set rpath on OpenMP executables">,
+-  NegFlag<SetFalse>>;
++  NegFlag<SetFalse>,
++  BothFlags<[NoArgumentUnused]>>;
+ def r : Flag<["-"], "r">, Flags<[LinkerInput,NoArgumentUnused]>,
+         Group<Link_Group>;
+ def save_temps_EQ : Joined<["-", "--"], "save-temps=">, Flags<[CC1Option, FlangOption, NoXarchOption]>,
+-- 
+2.37.2
+
