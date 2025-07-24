@@ -1,14 +1,14 @@
-%global sdkver 1.3.275.0
+%global sdkver 1.4.309.0
 
 
 Name:           spirv-headers
 Version:        1.5.5
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Header files from the SPIR-V registry
 
 License:        MIT
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/KhronosGroup/SPIRV-Headers/
 Source0:        %{url}/archive/refs/tags/vulkan-sdk-%{sdkver}.tar.gz#/%{name}-sdk-%{sdkver}.tar.gz
 
@@ -62,6 +62,9 @@ chmod a-x include/spirv/1.2/spirv.py
 %{_datadir}/pkgconfig/SPIRV-Headers.pc
 
 %changelog
+* Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.5.5-3
+- Promote and upgrade to 2025.1 based on Fedora 41.
+
 * Thu Feb 29 2024 Vince Perri <viperri@microsoft.com> - 1.5.5-2
 - Promote and upgrade to SDK 1.3.275 (commit 1c6bb2743599e6eb6f37b2969acc0aef812e32e3) based on Fedora 40.
 - License verified.
