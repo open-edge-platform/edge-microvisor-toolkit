@@ -1,10 +1,10 @@
-%global llvm_compat 14
+%global llvm_compat 15
 %global debug_package %{nil}
 
 Name:           vc-intrinsics
-Version:        0.19.0
-Release:        2%{?dist}
-Summary:        New intrinsics on top of core LLVM IR instructions
+Version:        0.22.1
+Release:        1%{?dist}
+Summary:        New intrinsics on top of core LLVM %{?llvm_compat} IR instructions
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -32,7 +32,11 @@ developing against %{upstream_name} built against LLVM %{?llvm_compat}.
 %autosetup -p1 -n %{name}-%{version}
 
 %build
+%if 0%{?llvm_compat}
+%cmake -DLLVM_DIR=%{_libdir}/llvm%{?llvm_compat}/lib/cmake -DCMAKE_BUILD_TYPE=Release -DLLVM_INCLUDE_TESTS=OFF -DBUILD_SHARED_LIBS:BOOL=OFF
+%else
 %cmake -DLLVM_DIR=%%{_libdir}/cmake/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_INCLUDE_TESTS=OFF -DBUILD_SHARED_LIBS:BOOL=OFF
+%endif
 %cmake_build
 
 %install
@@ -47,6 +51,9 @@ developing against %{upstream_name} built against LLVM %{?llvm_compat}.
 
 %doc
 %changelog
+* Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 0.22.1-1
+- Update to v0.22.1 and upgrade to build against llvm15.
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 0.19.0-2
 - Updated initial changelog entry having fedora version and license info.
 

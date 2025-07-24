@@ -30396,8 +30396,8 @@
         "type": "other",
         "other": {
           "name": "vc-intrinsics",
-          "version": "0.19.0",
-          "downloadUrl": "https://github.com/intel/vc-intrinsics/archive/v0.19.0/vc-intrinsics-v0.19.0.tar.gz"
+          "version": "0.22.1",
+          "downloadUrl": "https://github.com/intel/vc-intrinsics/archive/v0.22.1/vc-intrinsics-v0.22.1.tar.gz"
         }
       }
     },
