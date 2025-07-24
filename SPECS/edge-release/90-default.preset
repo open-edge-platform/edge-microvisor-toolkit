@@ -2,7 +2,7 @@
 disable systemd-timesyncd.service
 
 enable systemd-networkd.service
-disable systemd-networkd-wait-online.service
+enable systemd-networkd-wait-online.service
 
 disable systemd-boot-update.service
 
