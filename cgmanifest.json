@@ -7531,8 +7531,8 @@
         "type": "other",
         "other": {
           "name": "intel-igc",
-          "version": "1.0.17537.20",
-          "downloadUrl": "https://github.com/intel/intel-graphics-compiler/archive/igc-1.0.17537.20/igc-1.0.17537.20.tar.gz"
+          "version": "2.11.7",
+          "downloadUrl": "https://github.com/intel/intel-graphics-compiler/archive/v2.11.7/v2.11.7.tar.gz"
         }
       }
     },
