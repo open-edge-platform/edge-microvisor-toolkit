@@ -723,7 +723,7 @@ BuildRequires: python-tomli
 %endif
 
 %if %{user_static}
-BuildRequires: glibc-static >= 2.38-9
+BuildRequires: glibc-static >= 2.38-10
 BuildRequires: glib2-static
 BuildRequires: zlib-static
 # -latomic added by GLib 2.81.0, 2024-06-28

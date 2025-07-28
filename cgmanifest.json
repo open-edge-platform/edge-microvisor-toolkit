@@ -14061,6 +14061,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "multus",
+          "version": "4.0.2",
+          "downloadUrl": "https://github.com/k8snetworkplumbingwg/multus-cni/archive/refs/tags/v4.0.2.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "munge",
           "version": "0.5.15",
           "downloadUrl": "https://github.com/dun/munge/releases/download/munge-0.5.15/munge-0.5.15.tar.xz"
@@ -27994,8 +28004,8 @@
         "type": "other",
         "other": {
           "name": "rust",
-          "version": "1.75.0",
-          "downloadUrl": "https://static.rust-lang.org/dist/rustc-1.75.0-src.tar.xz"
+          "version": "1.85.0",
+          "downloadUrl": "https://static.rust-lang.org/dist/rustc-1.85.0-src.tar.xz"
         }
       }
     },

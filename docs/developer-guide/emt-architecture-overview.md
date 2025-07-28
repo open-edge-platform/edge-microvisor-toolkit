@@ -36,7 +36,7 @@ outlines the key differences between those.
 | Linux Kernel     | Intel® Kernel 6.12   | Intel® Kernel 6.12                                |
 | Real time        | Available for opt-in | Image variants with standard and RT Kernel provided |
 | Desktop Virtualization | Available      | Dedicated non-RT image variant provided                                    |
-| Add-on packages  | Available for opt-in: Docker + K3s | Built into image: Docker + K3s      |
+| Add-on packages  | Available for opt-in: Docker + K3s | Downloaded during installation: K3s and extensions    |
 | OS Bootloader    | GRUB                 | systemd-boot                                      |
 | Secure Boot      | Available for opt-in | Enabled                                           |
 | Full Disc Encryption | Available for opt-in | Enabled                                       |
@@ -46,16 +46,32 @@ outlines the key differences between those.
 ### Developer Node mutable ISO image
 
 Mutable Developer node in an ISO format allows you to add packages and
-customize the system after deployment. During installation you can select one of four versions:
+customize the system after deployment. During setup you can select one of four versions:
 
 - Standard kernel
-- Standard kernel with Docker and K3S included
+- Standard kernel - Docker and K3S provisioned during installation
 - [Kernel with real-time extensions](#preempt-rt-kernel)
-- [kernel with real-time extensions](#preempt-rt-kernel), with Docker and K3S included
+- [Kernel with real-time extensions](#preempt-rt-kernel) - Docker and K3S provisioned during installation
 
 This image is a customizable developer version that includes only essential pre-installed
-packages, providing a basic ready-to-use environment. You can install additional RPM packages,
-using DNF to tailor the OS to your specific needs.
+packages, providing a basic ready-to-use environment:
+
+| Item              | Details                                         |
+| ------------------| ----------------------------------------------- |
+| Packages          | approximately ~400                              |
+| Core system tools | bash, coreutils, util-linux, tar, gzip          |
+| Networking        | curl, wget, iproute2, iptables, openssh         |
+| Package Management | tdnf, rpm                                      |
+| Development       | gcc, make, python3, perl, cmake, git            |
+| Security          | openssl, gnupg, selinux, cryptsetup, tpm2-tools |
+| Filesystem        | e2fsprogs, mount                                |
+| Included in kernel | iGPU, dGPU (Intel® Arc&trade;), SR-IOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
+
+You can install additional RPM packages, using DNF to tailor the OS to your specific needs.
+The supported package repository offers additional `rpm` for tailoring the image
+to specific needs of container runtime, virtualization, orchestration software,
+monitoring tools, standard cloud-edge (CNCF) software, and more.
+
 Use [kernel with real-time extensions](#preempt-rt-kernel) for enhanced real-time performance
 compared to the standard kernel, if quick responses to critical events are crucial for
 your use case.
