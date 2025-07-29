@@ -325,3 +325,38 @@ sudo apt-get install rpm
    ```
 
 2. Build the image containing the package by following the steps outlined in [Building the Edge Microvisor Toolkit Image](#build-the-edge-microvisor-toolkit-image), and pointing to your modified imageconfig file.
+
+
+### Example 3: Generating user passwords
+
+To specify user passwords for your build, you can use
+[OpenSSL](https://openssl-library.org/source/) and generate a SHA-512 hash with salt.
+It is the default and recommended security solution in the toolkit.
+
+1. Generate a secure password with `openssl passwd`:
+
+   ```bash
+   openssl passwd -6 -salt YourSaltValue UserPassword
+   ```
+
+   The `-6` parameter is required for creation of a secure SHA-512 hash. `-salt` is optional,
+   but recommended, as it provides a more complex and unique password.
+
+2. Edit the main config JSON file, for example
+   [edge-image-dev.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-dev.json),
+   and add the `Users` section if it is not present, providing necessary credentials:
+
+   ```bash
+               "Users": [
+                   {
+                       "Name": "root",
+                       "Password": "Generated Password",
+                       "PasswordHashed": true
+                   },
+                   {
+                       "Name": "guest",
+                       "Password": "Generated Password",
+                       "PasswordHashed": true
+                   }
+               ]
+   ```
