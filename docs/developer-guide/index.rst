@@ -122,7 +122,7 @@ Next Steps
     emt-architecture-overview
     emt-deployment-edge-orchestrator
     emt-bootkit
-    emt-security
+    emt-security-considerations
     emt-contribution
     emt-troubleshooting
     emt-system-requirements

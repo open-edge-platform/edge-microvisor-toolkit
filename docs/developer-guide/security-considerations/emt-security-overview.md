@@ -52,7 +52,7 @@ stack is authenticated and tamper-resistant.
 Edge Microvisor Toolkit ensures that the software image remains immutable both at rest and
 during runtime. Once installed on an edge device, the image cannot be modified — whether on
 disk or while the system is running. Upgrades can only occur via a controlled, official
-upgrade process (detailed in [architecture overview](./emt-architecture-overview.md)),
+upgrade process (detailed in [architecture overview](../emt-architecture-overview.md)),
 resulting in a secure and tamper-resistant operating system.
 Additionally, runtime modifications are actively prevented by built-in protection of the
 microvisor kernel.
@@ -116,7 +116,7 @@ configured, data written to storage is automatically encrypted, and it is seamle
 when read by applications. This transparent process extends to the Linux swap partition,
 ensuring that cached data remains protected.
 
-![Enabling Full Disc Encryption](./assets/emt-luks-setup.drawio.svg)
+![Enabling Full Disc Encryption](../assets/emt-luks-setup.drawio.svg)
 
 ### Key Management and Boot Process
 
