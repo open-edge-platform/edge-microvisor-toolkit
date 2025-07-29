@@ -1,6 +1,16 @@
 # Deploying Edge Microvisor Toolkit on Virtual Machines as Guest OS
 
-Below you will find all methods of deployment on Virtual Machines (VMs) supported by Edge Microvisor Toolkit.
+Below you will find all methods of deployment on Virtual Machines (VMs) supported by Edge
+Microvisor Toolkit.
+
+The methods presented below assume the use of **"dev"** versions of Edge Microvisor Toolkit,
+published as RAW and VHD images. If you want to start virtual machines using
+**"non-dev"** images, built with
+[edge-image-json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image.json)
+or [edge-image-rt.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-rt.json)
+, you need to unseal disk encryption key with TPM, or
+[rebuild them](../emt-building-howto.md#building-the-default-microvisor-image)
+with the `"EMTEncryptionEnabled": false` parameter in the corresponding JSON config file.
 
 ## Hyper-V
 
@@ -80,44 +90,57 @@ sudo apt install libvirt-daemon-system
 sudo usermod -a -G libvirt $(whoami)
 ```
 
-1. Start `virt-manager`.
-2. Create a *New Virtual Machine*.
-3. Select *Local install media* (ISO image) or alternatively *Import existing disk
-   image* and select the RAW disk image.
+Start `virt-manager` and create a *New Virtual Machine*. Choose the preferred installation
+method:
 
-   1. Click *Browse* to open the *Locate ISO media volume* window.
-   2. Click *Browse local* and navigate to the folder with the ISO image. Select the image file
-      and click *Open*.
-   3. You may be prompted with the *"The emulator may not have search permissions for the
-      specified path. Do you want to correct this now?"* Click *Yes*.
+- *Local install media* (ISO image)
 
-4. Deselect *Automatically detect from the installation /source* and choose the *Fedora* OS
-   type manually and click *Forward*.
-5. Configure the number of CPUs and the amount of memory to allocate to the virtual machine.
-6. Check *Enable storage for this virtual machine* and choose
-   *Create a disk image for the virtual machine*. Then, specify the size of the disk image.
-7. Create a name for the virtual machine, configure network as desired, and click *Finish*.
-   The virtual machine will boot and run the installation of Edge Microvisor Toolkit.
-8. Select the *Terminal Installer* when prompted and proceed.
+  1. Click *Browse* to open the *Locate ISO media volume* window.
+  2. Click *Browse local* and navigate to the folder with the ISO image. Select the image
+     file and click *Open*.
+  3. You may be prompted with the *"The emulator may not have search permissions for the
+     specified path. Do you want to correct this now?"* Click *Yes*.
+  4. Deselect *Automatically detect from the installation /source* and choose the *Fedora* OS
+     type manually and click *Forward*.
+  5. Configure the number of CPUs and the amount of memory to allocate to the virtual machine.
+  6. Check *Enable storage for this virtual machine* and choose
+     *Create a disk image for the virtual machine*. Then, specify the size of the disk image.
+  7. Create a name for the virtual machine, configure network as desired, check the
+     *Customize configuration before install* option and click *Finish*.
+  8. In *Overview* tab, go to *Hypervisor Details* and change *Firmware* to
+     `UEFI x86_64: /usr/share/OVMF/OVMF_CODE_4M.fd`.
+  9. Click *Begin Installation*. The virtual machine will boot and run the installation of
+     Edge Microvisor Toolkit.
+  10. Select the desired installer when prompted and proceed.
+  11. Choose an *Installation Type*.
+  12. Select the *Virtual Disk* for installation and click *Next* if you want to use the
+      default partitioning method. Otherwise, select *Custom Partition* to set it up
+      manually.
+  13. Skip disk encryption (optional).
+  14. Use the default *Hostname* and select *Next* to set up the user account.
+  15. Select *Yes* to *Start Installation*.
+  16. Upon successful installation, you need to press ENTER to restart.
 
-   > **NOTE**:
-     KVM does not support the *Graphical Terminal* when installing the toolkit from ISO image.
+- *Import existing disk image* (RAW, QCOW2)
 
-9. Choose an *Installation Type*.
-10. Select the *Virtual Disk* for installation and click *Next* if you want to use the default
-    partitioning method. Otherwise, select *Custom Partition* to set it up manually.
-11. Skip disk encryption (optional).
-12. Use the default *Hostname* and select *Next* to set up the user account.
-13. Select *Yes* to *Start Installation*.
-14. Upon successful installation, you need to press ENTER to restart.
+  1. Click *Browse* to open the *Locate or create storage volume* window.
+  2. Click *Browse local* and navigate to the folder with the disk image. Select the image
+     file and click *Open*.
+  2. Choose the *Fedora* OS type manually and click *Forward*.
+  3. Configure CPU and memory settings.
+  4. Specify the name for the virtual machine and check the
+     *Customize configuration before install* option and click *Finish*.
+  5. In *Overview* tab, go to *Hypervisor Details* and change *Firmware* to
+     `UEFI x86_64: /usr/share/OVMF/OVMF_CODE_4M.fd`.
+  6. Click *Begin Installation* to boot and run Edge Microvisor Toolkit.
 
-    **You are now ready to use Edge Microvisor Toolkit!**
+**You are now ready to use Edge Microvisor Toolkit!**
 
 ### Support for Disk Image Formats
 
 | Image              | Support                                                              |
 | ------------------ | -------------------------------------------------------------------- |
-| RAW (.img, .raw)   | ⚠️ Limited. Direct use is unreliable, conversion is recommended.     |
+| RAW (.img, .raw)   | ✅ Best performance, directly supported                              |
 | QCOW2 (.qcow2)     | ✅ KVM's native format, supports snapshots and compression           |
 | VHD (.vhd, .vpc)   | ⚠️ Limited. Direct use is unreliable, conversion is recommended.     |
 | VDI (.vdi)         | ❌ No                                                                |
@@ -148,18 +171,26 @@ format:
 
 ## QEMU and UEFI
 
-Instead of using `virt-manager` you can use `qemu-img`.
+You can launch Edge Microvisor Toolkit in a virtual machine using `qemu-img` and the
+([OVMF firmware](https://github.com/tianocore/tianocore.github.io/wiki/OVMF)), which provides
+UEFI support. See the examples below to learn how to install Edge Microvisor Toolkit from
+the ISO image, or launch the toolkit from existing RAW/ VHD disk images.
 
-1. Create a virtual disk image, specifying a disk size appropriate for your usage and available storage:
+Use an appropriate acceleration type based on your platform, such as `accel=kvm` for Linux
+or `accel=hvf` for macOS on Intel-based Macs. Specify the path to the virtual machine
+firmware (OVMF). The path may vary depending on your OS and the version of Qemu.
+
+
+### Create Virtual Machine using ISO
+
+1. Create a virtual disk image, specifying a disk size appropriate for your usage and
+   available storage:
 
    ```bash
    qemu-img create -f qcow2 emt_rootfs.img 10G
    ```
 
-2. Start the virtual machine
-
-   Launch and install the Edge Microvisor Toolkit in a Virtual Machine with UEFI virtual
-   machine firmware ([OVMF](https://github.com/tianocore/tianocore.github.io/wiki/OVMF):
+2. Start the virtual machine and install Edge Microvisor Toolkit.
 
    ```bash
    qemu-system-x86_64 \
@@ -175,6 +206,32 @@ Instead of using `virt-manager` you can use `qemu-img`.
       -device ide-cd,drive=cdrom,bootindex=2
    ```
 
-Use the appropriate acceleration based on your platform, such as `accel=kvm` for Linux or
-`accel=hvf` for macOS on Intel based Mac systems. The path to the virtual machine firmware
-may vary depending on your operating system and qemu package.
+### Create Virtual Machine using RAW or VHD
+
+- RAW
+
+  ```bash
+  qemu-system-x86_64 \
+     -nodefaults -M accel=kvm -cpu host \
+     -device virtio-rng-pci \
+     -machine q35 -smp 2 -m 2048M \
+     -vga std \
+     -nic user \
+     -drive if=pflash,format=raw,readonly=on,file=/usr/share/ovmf/OVMF.fd \
+     -drive id=disk1,file=/path/to/EdgeMicrovisorToolkit-3.0.raw,if=none,format=raw,cache=none \
+     -device virtio-blk-pci,drive=disk1,bootindex=1
+  ```
+
+- VHD
+
+  ```bash
+  qemu-system-x86_64 \
+     -nodefaults -M accel=kvm -cpu host \
+     -device virtio-rng-pci \
+     -machine q35 -smp 2 -m 2048M \
+     -vga std \
+     -nic user \
+     -drive if=pflash,format=raw,readonly=on,file=/usr/share/ovmf/OVMF.fd \
+     -drive id=disk1,file=/path/to/EdgeMicrovisorToolkit-3.0.vhd,if=none,format=vpc,cache=none \
+     -device virtio-blk-pci,drive=disk1,bootindex=1
+  ```

@@ -1,18 +1,20 @@
 Summary:        Libbpf library
 Name:           libbpf
 Version:        1.2.2
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        LGPLv2 OR BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/%{name}/%{name}
 Source0:        https://github.com/%{name}/%{name}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Patch0:         CVE-2025-29481.patch
+
 BuildRequires:  elfutils-devel
 BuildRequires:  elfutils-libelf-devel
 BuildRequires:  gcc
 BuildRequires:  make
 
-Patch0:         0001-libbpf-add-txtime-field-in-xdp_desc-struct.patch
+Patch1:         0001-libbpf-add-txtime-field-in-xdp_desc-struct.patch
 
 %description
 A mirror of bpf-next linux tree bpf-next/tools/lib/bpf directory plus its
@@ -52,6 +54,10 @@ find %{buildroot} -type f -name "*.a" -delete -print
 %{_libdir}/pkgconfig/libbpf.pc
 
 %changelog
+* Thu Jul 3 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.2.2-3
+- merge from Azure Linux 3.0.20250521-3.0
+- Address CVE-2025-31498 with a patch
+
 * Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 1.2.2-2
 - Add TSN patches/support
 
