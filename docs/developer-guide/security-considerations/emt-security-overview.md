@@ -19,7 +19,7 @@ implemented through platform fuses or other dedicated technologies. Each compone
 authenticated before the next stage loads. If any link cannot be verified, the boot process
 stops immediately to prevent potential tampering.
 
-![System Partition](assets/emt-security-partitions.drawio.svg)
+![System Partition](../assets/emt-security-partitions.drawio.svg)
 
 > **Note:**
   Measured Boot is a related mechanism that records cryptographic hashes (measurements) of
