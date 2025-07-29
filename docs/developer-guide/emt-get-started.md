@@ -70,5 +70,4 @@ outlines the key differences between those.
 :::{toctree}
 ./get-started/emt-building-howto.md
 ./get-started/emt-installation-howto.md
-./get-started/emt-sb-howto.md
 :::

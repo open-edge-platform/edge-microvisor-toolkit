@@ -9,7 +9,7 @@ describes in detail how to quickly install and try out Edge Microvisor Toolkit o
 
 ## Next
 
-- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](./emt-sb-howto.md).
+- Learn how to [Enable Secure Boot for Edge Microvisor Toolkit](../security-considerations/emt-sb-howto.md).
 - Learn how to customize and manually [build microvisor images](./emt-building-howto.md).
 
 :::{toctree}
