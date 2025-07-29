@@ -231,5 +231,5 @@ Buildkit can produce.
 To install from a USB device, you need to update BIOS to include the
 USB boot option and make sure USB boot has highest precedence in the
 boot order list. You also need to configure BIOS with the Platform Keys (PK) to enable
-[secure boot](./get-started/emt-sb-howto.md) for Edge Microvisor Toolkit.
+[secure boot](./security-considerations/emt-sb-howto.md) for Edge Microvisor Toolkit.
 ::::
