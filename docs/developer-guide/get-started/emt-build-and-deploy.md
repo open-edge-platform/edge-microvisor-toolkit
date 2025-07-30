@@ -44,7 +44,7 @@ skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
    # Install required dependencies.
    sudo ./toolkit/docs/building/prerequisites-ubuntu.sh
 
-   # Also supported is:
+   # Also supported:
    #    make -C toolkit install-prereqs
 
    # Fix go 1.21 link
@@ -215,7 +215,7 @@ Replace `/dev/sdX` with the device name of your USB drive.
    - **User credentials** - the username and password for the primary user account on the edge node.
    - **Cloud-init customization** - optional, user-defined `cloud-init` configurations for advanced setup requirements.
 
-     For the default non-real-time image, a basic Kubernetes installation is done automatically.
+     For the default non-RT image, a basic Kubernetes installation is done automatically.
 
      > **Note:** For deployments requiring desktop virtualization features,
      > refer to the [desktop virtualization image guide](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/desktop-virtualization-image-guide.md) in the
