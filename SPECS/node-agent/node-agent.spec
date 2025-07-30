@@ -1,7 +1,7 @@
 Summary:        Edge node registration and trust management
 Name:           node-agent
 Version:        1.7.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -89,6 +89,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/license-agent
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/platform-update-agent
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/prometheus
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/release-service
+mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/platform-manageability-agent
 
 %files
 %{_bindir}/%{name}
@@ -117,6 +118,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/release-service
 %dir %{_sysconfdir}/intel_edge_node/tokens/platform-update-agent
 %dir %{_sysconfdir}/intel_edge_node/tokens/prometheus
 %dir %{_sysconfdir}/intel_edge_node/tokens/release-service
+%dir %{_sysconfdir}/intel_edge_node/tokens/platform-manageability-agent
 
 %pre
 %sysusers_create_package %{name} %{SOURCE3}
