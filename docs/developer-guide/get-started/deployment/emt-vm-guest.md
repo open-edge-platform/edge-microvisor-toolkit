@@ -9,7 +9,7 @@ published as RAW and VHD images. If you want to start virtual machines using
 [edge-image-json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image.json)
 or [edge-image-rt.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-rt.json)
 , you need to unseal disk encryption key with TPM, or
-[rebuild them](../emt-building-howto.md#building-the-default-microvisor-image)
+[rebuild them](../emt-building-howto.md#build-the-edge-microvisor-toolkit-image)
 with the `"EMTEncryptionEnabled": false` parameter in the corresponding JSON config file.
 
 ## Hyper-V
