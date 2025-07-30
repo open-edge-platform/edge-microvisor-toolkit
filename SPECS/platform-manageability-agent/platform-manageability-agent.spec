@@ -1,17 +1,17 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
-Version:        0.1.0
+Version:        0.1.2
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/open-edge-platform/edge-node-agents
-Source0:        %{url}/archive/refs/tags/%{name}/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Source0:        %{url}/archive/refs/tags/%{name}/v%{version}.tar.gz#/pm-agent-%{version}.tar.gz
 Source1:        %{name}.conf
 Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        %{name}.sudoers
-BuildRequires:  golang >= 1.24.1
+BuildRequires:  golang >= 1.24.4
 BuildRequires:  systemd-rpm-macros
 Requires:       rpc
 
@@ -24,7 +24,7 @@ platform-manageability-agent detects what manageability features are available a
 and performs device management operations requested by users.
 
 %prep
-%setup -q
+%autosetup -n pm-agent-%{version}
 
 %build
 make pmabuild GO_MOD=vendor
@@ -51,7 +51,7 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 
 
 %files
-%{_bindir}/platform-manageability-agent
+%{_bindir}/pm-agent
 %{_unitdir}/%{name}.service
 %{_sysusersdir}/%{name}.conf
 
@@ -75,6 +75,11 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
+* Wed Jul 30 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.2-1
+- Binary name updated in spec file.
+
 * Thu Jul 17 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.0-1
 - Original version for Edge Microvisor Toolkit. License verified.
+
+
 

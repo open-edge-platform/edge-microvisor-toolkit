@@ -1,9 +1,9 @@
 {
   "Signatures": {
-    "platform-manageability-agent-0.1.0.tar.gz": "32722a1dd16fdc666338e1d5bb7e2733106e537aff988842604f3784e8b01677",
-    "platform-manageability-agent.service": "cade4a722db0e01a9adf9faa01614cd025394c1e89adcaa1e6e56c5b53ea9d08",
-    "env_wrapper.sh": "6239de7a4e75db2ddf81454628ac7d111b79224d392161bdc11642e6de9602f7",
+    "pm-agent-0.1.2.tar.gz": "a792f6198ae6097c98b43640e65774eaf4aed36e725d5de00ba142edb6549212",
+    "platform-manageability-agent.service": "fdd68c7ab244785c4dda515bb0daff7abf75dec45ffa8e99f1f0c6e50fa1355d",
+    "env_wrapper.sh": "a1b68c509483801ec33ce810c7d3ab272b930a75add43370713b64ac2306a746",
     "platform-manageability-agent.conf": "efe3d39585266222720a828f4617a25beaf6e6334ee7d9bfa57fba4e4bd7f6ef",
-    "platform-manageability-agent.sudoers": "519571e8c61b36f65ea2fe2a6731c48713c1c9b79e6a38e88c022dcb6a2c7716"
+    "platform-manageability-agent.sudoers": "c6129ef5c01b6e56db8b829e3f0cc1cf5a0333764120ef242d2a4a6df9334015"
   }
 }
