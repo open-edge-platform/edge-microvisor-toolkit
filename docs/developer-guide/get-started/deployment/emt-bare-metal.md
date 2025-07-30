@@ -141,8 +141,8 @@ To deploy Edge Microvisor Toolkit Standalone Node, use the installer from
 It downloads the default non-RT image and creates a bootable USB drive for the installation
 of the toolkit on the edge node.
 
-You can also prepare a bootable USB drive using
-[source code](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/Get-Started-Guide.md#prerequisites) and deploy a selected version of the standalone node.
+Build the OS image and prepare a bootable USB drive, using
+[source code](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/Get-Started-Guide.md#prerequisites) to deploy a selected version of the standalone node.
 
 Edge Microvisor Toolkit Standalone Node can be installed from one of available OS
 image versions:

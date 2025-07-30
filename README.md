@@ -15,9 +15,9 @@ or build your own system, using the existing infrastructure.
 The currently published versions are:
 
 * [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
-* [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](./docs/developer-guide/get-started/emt-installation-howto.md)
-* [Edge Microvisor Toolkit (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
-* [Edge Microvisor Toolkit with real time extensions (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
+* [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](./docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image)
+* [Edge Microvisor Toolkit (immutable) - deployable in Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
+* [Edge Microvisor Toolkit with real time extensions (immutable) - deployable in Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
 * [Edge Microvisor Bootkit](./docs/developer-guide/emt-bootkit.md)
 
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
@@ -49,7 +49,7 @@ Before submitting a new report, check the existing issues to see if a similar on
 been filed already. If no matching issue is found, feel free to file the issue as described
 in the [contribution guide](./docs/developer-guide/emt-contribution.md).
 
-For security-related concerns, please refer to [SECURITY.md](./SECURITY.md).
+For security-related concerns, please refer to [security considerations](./docs/developer-guide/emt-security-considerations.md).
 
 [Azure Linux Documentation](toolkit/docs/), may also be useful, if you encounter
 problems when using Edge Microvisor Toolkit. Its copy is part of the Edge

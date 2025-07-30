@@ -50,7 +50,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        28%{?dist}
+Release:        29%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -1237,6 +1237,10 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 255-29
+- merge from Azure Linux 3.0.20250521-3.0
+- Bumping 'Release' tag to match the 'signed' version of the spec.
+
 * Tue May 20 2025 Basavaraj unniche <basavarajx.unniche@intel.com> - 255-28
 - Add kernel command to disable TCP timestamps.
 

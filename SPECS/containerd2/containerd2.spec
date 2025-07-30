@@ -5,7 +5,7 @@
 Summary: Industry-standard container runtime
 Name: %{upstream_name}2
 Version: 2.0.0
-Release: 7%{?dist}
+Release: 8%{?dist}
 License: ASL 2.0
 Group: Tools/Container
 URL: https://www.containerd.io
@@ -15,10 +15,10 @@ Distribution: Edge Microvisor Toolkit
 Source0: https://github.com/containerd/containerd/archive/v%{version}.tar.gz#/%{upstream_name}-%{version}.tar.gz
 Source1: containerd.service
 Source2: containerd.toml
-# Added patch to support tardev-snapshotter for Kata CC
+
 Patch0:	CVE-2024-45338.patch
-Patch1:  add-tardev-support.patch
-Patch2:	CVE-2025-27144.patch
+Patch1:	CVE-2025-27144.patch
+Patch2:	CVE-2024-40635.patch
 %{?systemd_requires}
 
 BuildRequires: golang
@@ -124,11 +124,16 @@ fi
 %{_bindir}/containerd-stress
 
 %changelog
+* Fri Jul 18 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.0.0-8
+- merge from Azure Linux 3.0.20250521-3.0
+- Fix CVE-2024-40635
+- Remove the tardev-snapshotter patch for Kata CC support.
+
 * Mon Jun 30 2025 Lishan Liu <lishan.liu@intel.com> - 2.0.0-7
 - Separate pacakges into core, ctr and stress
 
 * Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.0.0-6
-- merge from Azure Linux 3.0.20250423.
+- merge from Azure Linux 3.0.20250423.3.0
 - Fix CVE-2025-27144
 - Add "Provides/Obsoletes:" to shift all installs of containerd and moby-containerd to containerd2
 

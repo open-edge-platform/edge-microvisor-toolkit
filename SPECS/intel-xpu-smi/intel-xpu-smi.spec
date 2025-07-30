@@ -1,7 +1,7 @@
 Summary:        Intel XPU System Management Interface
 Name:           intel-xpu-smi
 Version:        1.2.39
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -9,7 +9,7 @@ URL:            https://github.com/intel/xpumanager
 Source0:        https://github.com/intel/xpumanager/archive/refs/tags/V%{version}.tar.gz#/%{name}-%{version}.tar.gz
 
 BuildRequires:  cmake
-BuildRequires:  glibc-static >= 2.38-9%{?dist}
+BuildRequires:  glibc-static >= 2.38-10%{?dist}
 BuildRequires:  libpciaccess-devel
 BuildRequires:  intel-level-zero-devel
 BuildRequires:  intel-metee-devel
@@ -75,6 +75,9 @@ make install DESTDIR=%{buildroot}
 %{_libdir}/xpu-smi/resources/*
 
 %changelog
+* Thu jul 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.2.39-4
+- rebuild for glibc bump
+
 * Fri Dec 27 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 1.2.39-3
 - Update Source URL.
 
