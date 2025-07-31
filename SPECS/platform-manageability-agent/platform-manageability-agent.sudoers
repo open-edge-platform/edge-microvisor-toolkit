@@ -1,0 +1,1 @@
+pm-agent  ALL=(root) NOPASSWD:/usr/bin/rpc,/usr/sbin/dmidecode,/usr/bin/systemctl,/usr/sbin/modprobe
