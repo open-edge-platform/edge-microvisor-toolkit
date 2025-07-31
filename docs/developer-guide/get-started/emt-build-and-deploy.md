@@ -87,6 +87,8 @@ skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
    sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image.json
    ```
 
+   The built image will be located in its separate directory under  `edge-microvisor-toolkit/out/images/`.
+
    For more information about specific building parameters, refer to [this article](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables).
 
 ## 2. Create a bootable USB installer
@@ -266,7 +268,7 @@ Replace `/dev/sdX` with the device name of your USB drive.
 
    2. Copy the image to the mounted directory:
 
-      Copy your custom build image from a local directory to 5th partition:
+      Copy your custom build image from its directory under `edge-microvisor-toolkit/out/images/` to the 5th partition:
 
       ```bash
       sudo cp ~/edge-microvisor-toolkit/out/images/edge-image/edge-readonly-3.0.20250717.0840.raw ./
