@@ -6,8 +6,8 @@ RAW images.
 ## Requirements
 
 - OS image, depending on the version of Edge Microvisor Toolkit:
-  - [ISO image of Developer Node 3.0](#installing-edge-microvisor-toolkit-developer-node)
-  - [RAW image of Edge Microvisor Toolkit Standalone Node 3.0](#installing-edge-microvisor-toolkit-standalone-node)
+  - [ISO image of Developer Node 3.1](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
+  - [RAW image of Edge Microvisor Toolkit Standalone Node 3.1](#installing-edge-microvisor-toolkit-standalone-node)
 - USB flash drive (min. 8GB)
 - Access to the target machine
 - Optional: monitor and keyboard, or BMC/iDRAC/iKVM access
@@ -17,7 +17,7 @@ RAW images.
 ### Flashing ISO
 
 Download the
-[ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.0.iso)
+[ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
 and insert a USB drive.
 
 #### On Linux OS
