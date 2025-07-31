@@ -1,6 +1,6 @@
 Summary:        OS Update Tool for OS A and B swapping for image based update
 Name:           os-update
-Version:        2.8
+Version:        2.9
 Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
@@ -59,6 +59,10 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Jul 31 2025 Suh Haw Teoh <suh.haw.teoh@intel.com> - 2.9-1
+- Bump version to 2.9
+- Remove restore function
+
 * Tue Jul 15 2025 Samuel Taripin <samuel.taripin@intel.com> - 2.8-1
 - Bump version to 2.8
 - Remove bootctl remove logic

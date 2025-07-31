@@ -16003,8 +16003,8 @@
         "type": "other",
         "other": {
           "name": "os-update",
-          "version": "2.8",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-microvisor-update-tool/archive/refs/tags/2.8.tar.gz"
+          "version": "2.9",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-microvisor-update-tool/archive/refs/tags/2.9.tar.gz"
         }
       }
     },
@@ -26622,9 +26622,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "reproc",
-          "version": "14.2.4",
-          "downloadUrl": "https://github.com/DaanDeMeyer/reproc/archive/1c07bdbec3f2ecba7125b9499b9a8a77bf9aa8c7/reproc-14.2.4-1c07bdb.tar.gz"
+          "name": "reporting-agent",
+          "version": "0.0.4",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.0.4.tar.gz"
         }
       }
     },
@@ -26632,9 +26632,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "reporting-agent",
-          "version": "0.0.4",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.0.4.tar.gz"
+          "name": "reproc",
+          "version": "14.2.4",
+          "downloadUrl": "https://github.com/DaanDeMeyer/reproc/archive/1c07bdbec3f2ecba7125b9499b9a8a77bf9aa8c7/reproc-14.2.4-1c07bdb.tar.gz"
         }
       }
     },
