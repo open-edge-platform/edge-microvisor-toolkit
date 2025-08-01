@@ -1,13 +1,22 @@
 # Deploying Edge Microvisor Toolkit on Bare Metal
 
-In this article will learn how to deploy Edge Microvisor Toolkit on bare metal using ISO or
+In this article, you will learn how to deploy Edge Microvisor Toolkit on bare metal using ISO or
 RAW images.
 
 ## Requirements
 
-- OS image, depending on the version of Edge Microvisor Toolkit:
-  - [ISO image of Developer Node 3.1](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-  - [RAW image of Edge Microvisor Toolkit Standalone Node 3.1](#installing-edge-microvisor-toolkit-standalone-node)
+- OS image, depending on the version of Edge Microvisor Toolkit 3.1:
+  - **Developer Node**:
+    - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
+      \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum)
+
+      The image above was created from the
+      [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718)
+      release.\
+      For weekly builds, see
+      [Announcements in GitHub Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
+  - **Standalone Node**:
+    - [RAW](#installing-edge-microvisor-toolkit-standalone-node)
 - USB flash drive (min. 8GB)
 - Access to the target machine
 - Optional: monitor and keyboard, or BMC/iDRAC/iKVM access
