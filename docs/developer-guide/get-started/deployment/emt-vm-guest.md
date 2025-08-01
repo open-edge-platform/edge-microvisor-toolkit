@@ -3,8 +3,22 @@
 Below you will find all methods of deployment on Virtual Machines (VMs) supported by Edge
 Microvisor Toolkit.
 
-The methods presented below assume the use of **"dev"** versions of Edge Microvisor Toolkit,
-published as RAW and VHD images. If you want to start virtual machines using
+The methods presented below assume the use of **"dev"** images of Edge Microvisor Toolkit 3.1,
+published as RAW or ISO:
+
+- RAW:
+
+  - [Non-Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250717.0734.raw.gz)
+    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250717.0734.raw.gz.sha256sum)
+  - [Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/rt/edge-readonly-rt-3.0.20250717.0732.raw.gz)
+    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/rt/edge-readonly-rt-3.0.20250717.0732.raw.gz.sha256sum)
+
+- [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
+  \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum)
+
+All of the images above were created from the [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718) release. For weekly builds, see [Announcements in GitHub discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
+
+If you want to start virtual machines using
 **"non-dev"** images, built with
 [edge-image-json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image.json)
 or [edge-image-rt.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-rt.json)
