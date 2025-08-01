@@ -7601,8 +7601,8 @@
         "type": "other",
         "other": {
           "name": "intel-opencl-clang",
-          "version": "140",
-          "downloadUrl": "https://github.com/intel/opencl-clang/archive/470cf0018e1ef6fc92eda1356f5f31f7da452abc/intel-opencl-clang-.tar.gz"
+          "version": "180",
+          "downloadUrl": "https://github.com/intel/opencl-clang/archive/81cf510c707c19ae5215763b824f80c25916fe5e/intel-opencl-clang-81cf510c.tar.gz"
         }
       }
     },
@@ -28946,8 +28946,8 @@
         "type": "other",
         "other": {
           "name": "spirv-llvm-translator",
-          "version": "14.0.3",
-          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v14.0.3/spirv-llvm-translator-v14.0.3.tar.gz"
+          "version": "18.1.1",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v18.1.1/spirv-llvm-translator-v18.1.1.tar.gz"
         }
       }
     },

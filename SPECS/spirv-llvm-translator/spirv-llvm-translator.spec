@@ -1,8 +1,6 @@
-%global llvm_compat 14
-
 Name:           spirv-llvm-translator
-Version:        14.0.3
-Release:        2%{?dist}
+Version:        18.1.1
+Release:        1%{?dist}
 Summary:        LLVM to SPIRV Translator
 License:        NCSA
 Vendor:         Intel Corporation
@@ -13,7 +11,7 @@ BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  cmake
 BuildRequires:  ninja-build
-BuildRequires:  llvm%{llvm_compat}-devel
+BuildRequires:  llvm-devel
 BuildRequires:  spirv-headers-devel
 BuildRequires:  spirv-tools-devel
 BuildRequires:  zlib-devel
@@ -71,6 +69,9 @@ This package contains the standalone llvm to spirv tool.
 %{_libdir}/pkgconfig/LLVMSPIRVLib.pc
 
 %changelog
+* Tue Aug 01 2025 Jayanth kintali<jayanthx.kintali@intel.com> - 18.1.1-1
+- Upgrade the spirv-llvm-translator component version from 14.0.3s to 18.1.1
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 14.0.3-2
 - Updated initial changelog entry having fedora version and license info.
 
