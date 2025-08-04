@@ -446,7 +446,7 @@ Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
 Summary: QEMU is a FAST! processor emulator
 Name: qemu
 Version: 9.1.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND FSFAP AND GPL-1.0-or-later AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-2.0-or-later WITH GCC-exception-2.0 AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT AND LicenseRef-Fedora-Public-Domain AND CC-BY-3.0
 URL: http://www.qemu.org/
 
@@ -532,6 +532,9 @@ Patch50: 0047-ui-gtk-Covering-render_sync-false-case-when-dealing-.patch
 Patch51: 0048-ui-gtk-egl-Cursor-texture-needs-to-be-re-created-whe.patch
 Patch52: 0049-Adding-default-docs.patch
 Patch53: 0050-gtk-Abort-if-there-is-no-connector-set-for-primary-w.patch
+Patch54: 0051-hw-display-virtio-gpu-Initialize-dmabuf_fd-for-the-b.patch
+Patch55: 0052-gtk-Adding-funcs-for-destroying-textures-in-gtk-egl-.patch
+Patch56: 0053-hw-display-virtio-gpu-Redundant-call-of-dpy_gfx_repl.patch
 
 BuildRequires: gnupg2
 BuildRequires: meson >= %{meson_version}
@@ -3530,6 +3533,10 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 
 
 %changelog
+* Mon Aug 4 2025 Tong Liang Chew <tong.liang.chew@intel.com> - 9.1.0-2
+- Added 3 patches from Intel Distribution Qemu Commit 29ed545
+- Resolved Qemu memory-leak issue.
+
 * Wed Jun 18 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 9.1.0-1
 - Initial Edge Microvisor Toolkit import from Fedora (license: MIT).
 - For update from 8.2.0 to v9.1.0 and add SRIOV patches.
