@@ -1,6 +1,6 @@
 Summary:        Edge node hardware information reporting
 Name:           hardware-discovery-agent
-Version:        1.7.0
+Version:        1.7.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -115,6 +115,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Wed Jun 04 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.7.1-1
+- Add backoff/retry on northbound grpc interfaces
+
 * Tue May 27 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.7.0-1
 - Fix GPU detection when vendor information is empty
 - HW Discovery Agent version 1.7.0
