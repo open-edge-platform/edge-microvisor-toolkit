@@ -1,6 +1,6 @@
 # Build Edge Microvisor Toolkit and Deploy on Edge Nodes
 
-This guide will walk you through the entire process of deploying Edge Microvisor Toolkit.
+This guide will walk you through the entire process of deploying the Edge Microvisor Toolkit.
 You will learn how to build the toolkit, install it on single or multiple edge node
 clusters, and deploy AI solutions.
 
@@ -21,7 +21,7 @@ meet specific edge deployment needs. You can choose between:
 ## 1. Build the microvisor
 
 If you want to create your own custom standalone node, follow the instructions below to build
-the microvisor from scratch. If you wish to use the default, non-real-time image of Edge Microvisor
+the Edge Microvisor from scratch. If you wish to use the default, non-real-time image of Edge Microvisor
 skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
 
 1. Clone the stable branch of edge-microvisor-toolkit repository:
@@ -203,7 +203,7 @@ Replace `/dev/sdX` with the device name of your USB drive.
    sudo ./download_images.sh NON-RT
    ```
 
-   > **Note:** By default, the script will only pull basic kubernetes artifacts to create a
+   > **Note:** By default, the script will only pull basic Kubernetes artifacts to create a
      single node cluster. If you want to use EMT image with desktop virtualization features,
      use the `DV` parameter instead of `NON-RT`.
 
@@ -215,7 +215,7 @@ Replace `/dev/sdX` with the device name of your USB drive.
    - **SSH key** - the public SSH key (typically your `id_rsa.pub`) from your Linux
      development system to enable passwordless SSH access to the edge node.
    - **User credentials** - the username and password for the primary user account on the edge node.
-   - **Cloud-init customization** - optional, user-defined `cloud-init` configurations for advanced setup requirements.
+   - **cloud-init customization** - optional, user-defined `cloud-init` configurations for advanced setup requirements.
 
      For the default non-RT image, a basic Kubernetes installation is done automatically.
 
