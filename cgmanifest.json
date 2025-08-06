@@ -1806,16 +1806,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "clang14",
-          "version": "14.0.5",
-          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-14.0.5.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "clang15",
           "version": "15.0.7",
           "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-15.0.7.tar.gz"
@@ -12530,16 +12520,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "lld14",
-          "version": "14.0.5",
-          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-14.0.5.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "lld15",
           "version": "15.0.7",
           "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-15.0.7.tar.gz"
@@ -12583,16 +12563,6 @@
           "name": "llvm",
           "version": "18.1.2",
           "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-18.1.2.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "llvm14",
-          "version": "14.0.5",
-          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-14.0.5.tar.gz"
         }
       }
     },
