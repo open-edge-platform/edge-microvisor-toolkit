@@ -26,8 +26,11 @@ skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
 
 1. Clone the stable branch of edge-microvisor-toolkit repository:
 
+   Check the [tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
+   the `<stable_tag_name>`.
+
    ```bash
-   git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=3.0.20250718
+   git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=<stable_tag_name>
    ```
 
 2. Navigate to the `edge-microvisor-toolkit` directory:
@@ -135,10 +138,13 @@ Replace `/dev/sdX` with the device name of your USB drive.
 
 1. Clone the edge-microvisor-toolkit-standalone-node repository:
 
+   Check the [tags](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/tags) for
+   the latest release.
+
    ```bash
-   cd
-   git clone https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node
+   git clone https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node --branch=<latest_tag_name>
    ```
+
 
 2. Navigate to the `edge-microvisor-toolkit-standalone-node` directory:
 
