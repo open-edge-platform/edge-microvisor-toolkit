@@ -1,9 +1,9 @@
 %global mfx_ver_major 2
-%global mfx_ver_minor 11
+%global mfx_ver_minor 15
 
 Name:           intel-vpl-gpu-rt
-Version:        24.2.5
-Release:        2%{?dist}
+Version:        25.2.3
+Release:        1%{?dist}
 Summary:        Intel Video Processing Library (Intel VPL) GPU Runtime
 License:        MIT
 Vendor:         Intel Corporation
@@ -61,6 +61,9 @@ developing applications that use %{name}.
 %{_libdir}/pkgconfig/libmfx-gen.pc
 
 %changelog
+* Thu Jul 10 2025 Swee Yee Fonn<swee.yee.fonn@intel.com> - 25.2.3-1
+- Upgraded to version 25.2.3
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 24.2.5-2
 - Updated initial changelog entry having fedora version and license info.
 

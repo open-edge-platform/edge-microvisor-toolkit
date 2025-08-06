@@ -1,10 +1,10 @@
 %global mfx_major 2
-%global mfx_minor 12
+%global mfx_minor 14
 
 Name:           libvpl
 Epoch:          1
-Version:        2.12.0
-Release:        2%{?dist}
+Version:        2.14.0
+Release:        1%{?dist}
 Summary:        Intel Video Processing Library
 License:        MIT
 Vendor:         Intel Corporation
@@ -93,6 +93,9 @@ rm -fr %{buildroot}%{_datadir}/vpl/licensing
 %{_datadir}/vpl/examples
 
 %changelog
+* Thu Jul 10 2025 Swee Yee Fonn<swee.yee.fonn@intel.com> - 2.14.0-1
+- Upgraded version 2.14
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 2.12.0-2
 - Updated initial changelog entry having fedora version and license info.
 
