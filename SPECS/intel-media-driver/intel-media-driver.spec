@@ -1,6 +1,6 @@
 Name:           intel-media-driver
-Version:        24.2.5
-Release:        2%{?dist}
+Version:        25.2.3
+Release:        1%{?dist}
 Summary:        The Intel Media Driver for VAAPI
 License:        MIT and BSD-3-Clause
 Vendor:         Intel Corporation
@@ -96,6 +96,9 @@ fn=%{buildroot}%{_metainfodir}/intel-media-driver.metainfo.xml
 %{_libdir}/pkgconfig/igfxcmrt.pc
 
 %changelog
+* Fri Jul 11 2025 Liang Yang <liang1.yang@intel.com> - 25.2.3-1
+- Upgraded to version 25.2.3.
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 24.2.5-2
 - Updated initial changelog entry having fedora version and license info.
 
