@@ -14,6 +14,9 @@ update_infra_url() {
 		UPDATED_RPS_DISCOVERY_INFRA_URL=$(sed "s/^rpsAddress: '.*'/rpsAddress: '$RPS_ADDRESS'/" /etc/edge-node/node/confs/platform-manageability-agent.yaml)
 		echo -E "${UPDATED_RPS_DISCOVERY_INFRA_URL}" > /etc/edge-node/node/confs/platform-manageability-agent.yaml
 	fi
+	
+	GUID="$(cat /sys/class/dmi/id/product_uuid)"
+	sed -i "s/^GUID: '.*'/GUID: '$GUID'/" /etc/edge-node/node/confs/platform-manageability-agent.yaml
 }
 
 update_infra_url
