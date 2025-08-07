@@ -15,10 +15,19 @@ update_infra_url() {
 		echo -E "${UPDATED_RPS_DISCOVERY_INFRA_URL}" > /etc/edge-node/node/confs/platform-manageability-agent.yaml
 	fi
 	
-	GUID="$(cat /sys/class/dmi/id/product_uuid)"
-	sed -i "s/^GUID: '.*'/GUID: '$GUID'/" /etc/edge-node/node/confs/platform-manageability-agent.yaml
+
+}
+update_uuid() {
+	local EDGE_NODE_UUID
+	local UPDATED_PMA_AGENT_UUID
+	EDGE_NODE_UUID="$(sudo cat /sys/class/dmi/id/product_uuid)"
+	UPDATED_PMA_AGENT_UUID=$(sed "s/^GUID: '.*'/GUID: '${EDGE_NODE_UUID}'/" /etc/edge-node/node/confs/platform-manageability-agent.yaml)
+	echo -E "${UPDATED_PMA_AGENT_UUID}" > /etc/edge-node/node/confs/platform-manageability-agent.yaml
 }
 
+
+
 update_infra_url
+update_uuid
 
 exec "$@"
