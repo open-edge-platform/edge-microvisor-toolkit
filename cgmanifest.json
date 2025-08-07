@@ -5280,8 +5280,8 @@
         "type": "other",
         "other": {
           "name": "hardware-discovery-agent",
-          "version": "1.7.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.7.0.tar.gz"
+          "version": "1.7.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.7.1.tar.gz"
         }
       }
     },
@@ -7501,8 +7501,8 @@
         "type": "other",
         "other": {
           "name": "intel-gmmlib",
-          "version": "22.5.1",
-          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.5.1.tar.gz"
+          "version": "22.7.1",
+          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.7.1.tar.gz"
         }
       }
     },
@@ -7571,8 +7571,8 @@
         "type": "other",
         "other": {
           "name": "intel-media-driver",
-          "version": "24.2.5",
-          "downloadUrl": "https://github.com/intel/media-driver/archive/refs/tags/intel-media-24.2.5.tar.gz"
+          "version": "25.2.3",
+          "downloadUrl": "https://github.com/intel/media-driver/archive/refs/tags/intel-media-25.2.3.tar.gz"
         }
       }
     },
@@ -7621,8 +7621,8 @@
         "type": "other",
         "other": {
           "name": "intel-vpl-gpu-rt",
-          "version": "24.2.5",
-          "downloadUrl": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-24.2.5/intel-onevpl-24.2.5.tar.gz"
+          "version": "25.2.3",
+          "downloadUrl": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-25.2.3/intel-onevpl-25.2.3.tar.gz"
         }
       }
     },
@@ -8471,8 +8471,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.35",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250710T220928Z.tar.gz"
+          "version": "6.12.39",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
         }
       }
     },
@@ -8491,8 +8491,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.35",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250710T220928Z.tar.gz"
+          "version": "6.12.39",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
         }
       }
     },
@@ -8531,8 +8531,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.35",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250710T220928Z.tar.gz"
+          "version": "6.12.39",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
         }
       }
     },
@@ -11801,8 +11801,8 @@
         "type": "other",
         "other": {
           "name": "libva",
-          "version": "2.20.0",
-          "downloadUrl": "https://github.com/intel/libva/archive/2.20.0.tar.gz"
+          "version": "2.22.0",
+          "downloadUrl": "https://github.com/intel/libva/archive/2.22.0.tar.gz"
         }
       }
     },
@@ -11931,8 +11931,8 @@
         "type": "other",
         "other": {
           "name": "libvpl",
-          "version": "2.12.0",
-          "downloadUrl": "https://github.com/intel/libvpl/archive/v2.12.0/libvpl-2.12.0.tar.gz"
+          "version": "2.14.0",
+          "downloadUrl": "https://github.com/intel/libvpl/archive/v2.14.0/libvpl-2.14.0.tar.gz"
         }
       }
     },

@@ -2569,7 +2569,6 @@
                 "perftest",
                 "rshim",
                 "sockperf",
-                "srp-signed",
                 "xpmem-modules-signed"
             ]
         },
