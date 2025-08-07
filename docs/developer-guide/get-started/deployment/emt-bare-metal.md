@@ -76,6 +76,33 @@ the instructions below:
 Next, set up the target machine to [boot from the USB drive](#booting-from-usb) to
 [install Edge Microvisor Toolkit Developer Node](#installing-edge-microvisor-toolkit-developer-node).
 
+### Flashing RAW
+
+You can [Build](../emt-building-howto.md#build-the-edge-microvisor-toolkit-image) a custom
+immutable RAW image from a chosen version of Edge Microvisor Toolkit.
+You can use any [imageconfig JSON file](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0-dev/toolkit/imageconfigs/)
+that matches the **"edge-image\*.json"** file name pattern.
+Make sure to [add user credentials](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0-dev/docs/developer-guide/get-started/emt-building-howto.md#example-3-generating-user-passwords) to the JSON file before building
+the image, so your custom system can operate correctly when booted.
+
+Once you have built the image, flash it on a USB drive.
+
+1. Navigate to the folder with the RAW image. Then, unpack the image by running the commands:
+
+   ```bash
+   gzip -d edge_microvisor_toolkit.raw.gz
+   chmod -Rf 777 edge_microvisor_toolkit.raw
+   ```
+
+2. Flash the RAW image to a USB flash drive using the 'dd' command.
+
+   ```bash
+   sudo dd if=edge_microvisor_toolkit.raw of=/dev/sdc status=progress
+   ```
+
+   > **Note:** Successful flashing of the image should produce partitions such as `/dev/sdb`
+     and `/dev/sdc`.
+
 ### Booting from USB
 
 1. Insert the USB into the target machine.
