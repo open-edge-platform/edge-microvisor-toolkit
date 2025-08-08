@@ -77,11 +77,9 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %changelog
 * Fri Aug 8 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.7-1
 - Updated PMA Version.
+- Updated sudoers file for AMT Password
 - Fix status reporting when vPRO disabled
 
-* Thu Aug 7 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.6-1
-- Updated PMA Version.
-- Updated sudoers file for AMT Password
 
 * Wed Jul 30 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.3-1
 - Binary name updated in spec file.
