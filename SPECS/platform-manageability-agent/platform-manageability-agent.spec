@@ -1,6 +1,6 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
-Version:        0.1.6
+Version:        0.1.7
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -75,6 +75,10 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
+* Fri Aug 8 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.7-1
+- Updated PMA Version.
+- Fix status reporting when vPRO disabled
+
 * Thu Aug 7 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.6-1
 - Updated PMA Version.
 - Updated sudoers file for AMT Password
