@@ -1,7 +1,7 @@
 Summary:        Intel Graphics System Controller Firmware Update Library
 Name:           intel-igsc
-Version:        0.9.4
-Release:        2%{?dist}
+Version:        0.9.5
+Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -50,6 +50,9 @@ The %{name}-devel package contains libraries and header files for %{name}.
 %{_libdir}/cmake/igsc/igsc*.cmake
 
 %changelog
+* Tue Jul 22 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 0.9.5-1
+- Upgrade to 0.9.5
+
 * Tue Dec 31 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 0.9.4-2
 - Update Source URL.
 

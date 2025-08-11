@@ -1,13 +1,13 @@
-%global sdkver 1.3.275.0
+%global sdkver 1.4.309.0
 
 Name:           spirv-tools
-Version:        2023.2
+Version:        2025.1
 Release:        1%{?dist}
 Summary:        API and commands for processing SPIR-V modules
 
 License:        ASL 2.0
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/KhronosGroup/SPIRV-Tools
 Source0:        %url/archive/vulkan-sdk-%{sdkver}.tar.gz#/%{name}-sdk-%{sdkver}.tar.gz
 
@@ -77,6 +77,7 @@ popd
 %{_bindir}/spirv-val
 
 %files libs
+%license LICENSE
 %{_libdir}/libSPIRV-Tools-diff.so
 %{_libdir}/libSPIRV-Tools-link.so
 %{_libdir}/libSPIRV-Tools-lint.so
@@ -92,6 +93,9 @@ popd
 %{_libdir}/pkgconfig/SPIRV-Tools.pc
 
 %changelog
+* Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 2025.1-1
+- Promote and upgrade to 2025.1 based on Fedora 41.
+
 * Thu Feb 29 2024 Vince Perri <viperri@microsoft.com> - 2023.2-1
 - Promote and upgrade to 2023.2 based on Fedora 40.
 - License verified.

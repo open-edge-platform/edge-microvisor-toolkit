@@ -1,0 +1,29 @@
+From c87abee7356b8fde81512ffceadd520776c465d2 Mon Sep 17 00:00:00 2001
+From: serge-sans-paille <sguelton@redhat.com>
+Date: Thu, 25 Feb 2021 14:09:29 +0100
+Subject: [PATCH] [PATCH][clang] Make -funwind-tables the default on all archs
+
+---
+ clang/lib/Driver/ToolChains/Gnu.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/clang/lib/Driver/ToolChains/Gnu.cpp
+b/clang/lib/Driver/ToolChains/Gnu.cpp
+index d0808d061c82..de9c9743cd38 100644
+--- a/clang/lib/Driver/ToolChains/Gnu.cpp
++++ b/clang/lib/Driver/ToolChains/Gnu.cpp
+@@ -2701,6 +2701,11 @@ bool Generic_GCC::IsUnwindTablesDefault(const ArgList &Args) const {
+   case llvm::Triple::ppc64le:
+   case llvm::Triple::x86:
+   case llvm::Triple::x86_64:
++
++  // Enable -funwind-tables on all architectures supported by Fedora:
++  // rhbz#1655546
++  case llvm::Triple::systemz:
++  case llvm::Triple::arm:
+     return true;
+   default:
+     return false;
+-- 
+2.27.0
+
