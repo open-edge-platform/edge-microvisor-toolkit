@@ -21623,8 +21623,8 @@
         "type": "other",
         "other": {
           "name": "platform-observability-agent",
-          "version": "1.8.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.8.0.tar.gz"
+          "version": "1.9.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.9.0.tar.gz"
         }
       }
     },
