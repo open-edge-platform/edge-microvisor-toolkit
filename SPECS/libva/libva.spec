@@ -23,14 +23,14 @@
 
 Name:           libva
 %define _name   libva
-Version:        2.20.0
-Release:        2%{?dist}
+Version:        2.22.0
+Release:        1%{?dist}
 Summary:        Video Acceleration (VA) API
 License:        MIT
 Group:          Development/Libraries/C and C++
 URL:            https://01.org/linuxmedia
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Source0:        https://github.com/intel/libva/archive/%{version}.tar.gz#/libva-%{version}.tar.gz
 Source2:        baselibs.conf
 Patch0:         propagate-dpy.patch
@@ -205,6 +205,10 @@ rm -rf `find %{buildroot}%{_libdir}/pkgconfig/libva*.pc | grep -v "glx"`
 %endif
 
 %changelog
+* Fri Jul 11 2025 Liang Yang <liang1.yang@intel.com> - 2.22.0-1
+- Upgraded to version 2.22.0
+- Updated Vendor and Distribution info.
+
 * Tue Sep 03 2024 Neha Agarwal <nehaagarwal@microsoft.com> - 2.20.0-2
 - Add missing Vendor and Distribution tags.
 

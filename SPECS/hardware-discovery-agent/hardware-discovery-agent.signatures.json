@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "hardware-discovery-agent-1.7.0.tar.gz": "f30903d85e78293f82f5d56ec0ff0783f3d48338bfe7a18beb4268ab768dd11f",
+    "hardware-discovery-agent-1.7.1.tar.gz": "fa6031c2fb1c9af081b664bd4709fc088c51cb828c8a10eaa569dd0b9b7cc91e",
     "hardware-discovery-agent.service": "2c3151d61ca649ced26764de6008833fbcab45a966b6f18f4113d4cf5a4846b7",
     "env_wrapper.sh": "0fa0e748f2d1c0b81c240fa59fac4647571518c53479000adb4ba467031cccf6",
     "hardware-discovery-agent.conf": "ffb9cbd4bf7b95c5dc39d3bc84ab7279b034203533c63856818638636f41c01a",
