@@ -132,6 +132,7 @@ mkdir -p %{buildroot}%{_rundir}/platform-observability-agent/fluent-bit
 %changelog
 * Mon Aug 11 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.9.0-1
 - Add Platform Manageability Agent log collection to agent log service
+- Remove old services from log collection
 
 * Tue May 06 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.8.0-3
 - Update file permissions for agent wrapper scripts
