@@ -1,7 +1,7 @@
 Summary:        OneAPI Level Zero Specification Headers and Loader
 Name:           intel-level-zero
 Version:        1.21.9
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -13,6 +13,7 @@ BuildRequires:  gcc-c++
 BuildRequires:  cmake
 BuildRequires:  make
 #BuildRequires:  opencl-headers
+BuildRequires:  spdlog-devel
 # Useful for a quick oneAPI Level-Zero testing
 Recommends:     %{name}-zello_world
 
@@ -46,7 +47,7 @@ of the oneAPI Level-Zero driver and dumping out the basic device and driver char
 %build
 # spdlog uses fmt, but since this doesn't setup linking, use it in header only mode
 export CXXFLAGS="%{build_cxxflags} -DFMT_HEADER_ONLY=1"
-%cmake
+%cmake -DSYSTEM_SPDLOG=ON
 %cmake_build
 
 %install
@@ -78,6 +79,9 @@ chrpath --delete %{buildroot}%{_bindir}/zello_world
 %{_libdir}/pkgconfig/level-zero.pc
 
 %changelog
+* Wed Aug 08 2025 Polmoorx Shiva Kumar <polmoorx.shiva.kumar@intel.com> - 1.21.9-2
+- Update to use the system installed spdlog
+
 * Mon Jul 21 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.21.9-1
 - Update version to 1.21.9.
 
