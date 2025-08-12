@@ -5,18 +5,15 @@ RAW images.
 
 ## Requirements
 
-- OS image, depending on the version of Edge Microvisor Toolkit 3.1:
-  - **Developer Node**:
-    - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-      \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum)
+- OS image of Edge Microvisor Toolkit Developer Node 3.1:
+  - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
+    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum)
 
-      The image above was created from the
-      [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718)
-      release.\
-      For weekly builds, see
-      [Announcements in GitHub Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
-  - **Standalone Node**:
-    - [RAW](#installing-edge-microvisor-toolkit-standalone-node)
+    The image above was created from the
+    [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718)
+    release.\
+    For weekly builds, see
+    [Announcements in GitHub Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
 - USB flash drive (min. 8GB)
 - Access to the target machine
 - Optional: monitor and keyboard, or BMC/iDRAC/iKVM access
@@ -81,8 +78,14 @@ Next, set up the target machine to [boot from the USB drive](#booting-from-usb) 
 
 ### Flashing RAW
 
-You can [Build](../emt-building-howto.md#build-the-edge-microvisor-toolkit-image) a RAW image
-and flash it on a USB drive.
+You can [Build](../emt-building-howto.md#build-the-edge-microvisor-toolkit-image) a custom
+immutable RAW image from a chosen version of Edge Microvisor Toolkit.
+You can use any [imageconfig JSON file](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0-dev/toolkit/imageconfigs/)
+that matches the **"edge-image\*.json"** file name pattern.
+Make sure to [add user credentials](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0-dev/docs/developer-guide/get-started/emt-building-howto.md#example-3-generating-user-passwords) to the JSON file before building
+the image, so your custom system can operate correctly when booted.
+
+Once you have built the image, flash it on a USB drive.
 
 1. Navigate to the folder with the RAW image. Then, unpack the image by running the commands:
 
@@ -145,17 +148,13 @@ and flash it on a USB drive.
 
 ## Installing Edge Microvisor Toolkit Standalone Node
 
-To deploy Edge Microvisor Toolkit Standalone Node, use the installer from
-[Intel® Edge Software Catalog](https://edgesoftwarecatalog.intel.com/package/edge_microvisor_toolkit_standalone_node).
-It downloads the default non-RT image and creates a bootable USB drive for the installation
-of the toolkit on the edge node.
-
-Build the OS image and prepare a bootable USB drive, using
-[source code](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/Get-Started-Guide.md#prerequisites) to deploy a selected version of the standalone node.
+To deploy a selected version of Edge Microvisor Toolkit Standalone Node, build the OS image
+and prepare a bootable USB drive, using
+[source code](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/get-started-guide.md#prerequisites).
 
 Edge Microvisor Toolkit Standalone Node can be installed from one of available OS
 image versions:
 
 - Edge Microvisor Toolkit Non-RT (default)
-- Edge Microvisor Toolkit RT (real-time)
 - Edge Microvisor Toolkit Desktop Virtualization
+- [Immutable custom build](../emt-building-howto.md) of Edge Microvisor Toolkit Developer Node
