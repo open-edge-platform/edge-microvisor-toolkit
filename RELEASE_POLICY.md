@@ -13,7 +13,7 @@ A major release introduces significant changes to the operating system and its c
 Beyond the active support window of 18-24 months, support will be in the form of a community-driven best effort. After the end of the 18-24 month active support window for a major release, it is recommended that you transition your Edge Microvisor Toolkit deployments to the next major release for continued support.
 
 
-![Release cadence and support.](emt-releases-and-support.png)
+![Release cadence and support.](./docs/developer-guide/assets/emt-releases-and-support.png)
 
 
 
@@ -25,7 +25,12 @@ Minor releases aim to be seamless upgrades or updates that maintain the integrit
 
 ## Weekly Releases
 
-Weekly releases typically include bug fixes, performance optimizations, and vulnerability patches for known CVEs. You can find the latest weekly build in [Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements). 
+Weekly releases typically include bug fixes, performance optimizations, and vulnerability patches for known CVEs. You can find the latest weekly build in [Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements).
+
+
+![Release cadence and support.](./docs/developer-guide/assets/emt-weekly-releases.png)
+
+
 
 ## No Long-Term Support
 
