@@ -1,0 +1,74 @@
+From bc9aa904bf9d24e7f39a2a866ff6b463858b6ccb Mon Sep 17 00:00:00 2001
+From: serge-sans-paille <sguelton@redhat.com>
+Date: Wed, 21 Sep 2022 16:08:45 +0200
+Subject: [PATCH] [clang] Fix interaction between asm labels and inline
+ builtins
+
+One must pick the same name as the one referenced in CodeGenFunction when
+generating .inline version of an inline builtin, otherwise they are not
+correctly replaced.
+
+Differential Revision: https://reviews.llvm.org/D134362
+---
+ clang/lib/CodeGen/CGExpr.cpp                  |  5 ++-
+ .../test/CodeGen/asm-label-inline-builtins.c  | 32 +++++++++++++++++++
+ 2 files changed, 36 insertions(+), 1 deletion(-)
+ create mode 100644 clang/test/CodeGen/asm-label-inline-builtins.c
+
+diff --git a/clang/lib/CodeGen/CGExpr.cpp b/clang/lib/CodeGen/CGExpr.cpp
+index bf3dd812b9e8..a951d53423bf 100644
+--- a/clang/lib/CodeGen/CGExpr.cpp
++++ b/clang/lib/CodeGen/CGExpr.cpp
+@@ -5046,7 +5046,10 @@ static CGCallee EmitDirectCallee(CodeGenFunction &CGF, GlobalDecl GD) {
+   if (auto builtinID = FD->getBuiltinID()) {
+     std::string NoBuiltinFD = ("no-builtin-" + FD->getName()).str();
+     std::string NoBuiltins = "no-builtins";
+-    std::string FDInlineName = (FD->getName() + ".inline").str();
++
++    auto *A = FD->getAttr<AsmLabelAttr>();
++    StringRef Ident = A ? A->getLabel() : FD->getName();
++    std::string FDInlineName = (Ident + ".inline").str();
+ 
+     bool IsPredefinedLibFunction =
+         CGF.getContext().BuiltinInfo.isPredefinedLibFunction(builtinID);
+diff --git a/clang/test/CodeGen/asm-label-inline-builtins.c b/clang/test/CodeGen/asm-label-inline-builtins.c
+new file mode 100644
+index 000000000000..ab9afc29411d
+--- /dev/null
++++ b/clang/test/CodeGen/asm-label-inline-builtins.c
+@@ -0,0 +1,32 @@
++// RUN: %clang_cc1 -triple x86_64 -S -emit-llvm -disable-llvm-passes -o - %s | FileCheck %s
++//
++// Verifies that clang-generated *.inline carry the same name at call and callee
++// site, in spite of asm labels.
++
++typedef struct _IO_FILE FILE;
++extern FILE *stdout;
++extern int vprintf (const char *__restrict __format, __builtin_va_list __arg);
++extern int __vfprintf_chk (FILE *__restrict __stream, int __flag,
++      const char *__restrict __format, __builtin_va_list __ap);
++extern int __vprintf_chk (int __flag, const char *__restrict __format,
++     __builtin_va_list __ap);
++
++extern __typeof (vprintf) vprintf __asm ("__vprintfieee128");
++extern __typeof (__vfprintf_chk) __vfprintf_chk __asm ("__vfprintf_chkieee128");
++extern __typeof (__vprintf_chk) __vprintf_chk __asm ("__vprintf_chkieee128");
++
++extern __inline __attribute__ ((__always_inline__)) __attribute__ ((__gnu_inline__)) __attribute__ ((__artificial__)) int
++vprintf (const char *__restrict __fmt, __builtin_va_list __ap)
++{
++  return __vfprintf_chk (stdout, 2 - 1, __fmt, __ap);
++}
++
++void test(const char *fmt, __builtin_va_list ap) {
++  vprintf(fmt, ap);
++}
++
++// CHECK-LABEL: void @test(
++// CHECK: call i32 @__vprintfieee128.inline(
++//
++// CHECK-LABEL: internal i32 @__vprintfieee128.inline(
++// CHECK: call i32 @__vfprintf_chkieee128(
+-- 
+2.37.2
+

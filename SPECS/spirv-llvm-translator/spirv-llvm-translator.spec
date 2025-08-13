@@ -1,9 +1,9 @@
-%global llvm_compat 14
+%global llvm_compat 15
 
 Name:           spirv-llvm-translator
-Version:        14.0.3
-Release:        2%{?dist}
-Summary:        LLVM to SPIRV Translator
+Version:        15.0.13
+Release:        1%{?dist}
+Summary:        LLVM %{?llvm_compat} to SPIRV Translator
 License:        NCSA
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -19,13 +19,13 @@ BuildRequires:  spirv-tools-devel
 BuildRequires:  zlib-devel
 
 %description
-Khronos LLVM to SPIRV Translator. This is a library
-to be used by Mesa for OpenCL support. It translate
-LLVM IR to Khronos SPIR-V. It also includes a
+Khronos LLVM 15 to SPIRV Translator. This is a library
+that is used by Mesa and compute-runtime for OpenCL support.
+It translates LLVM IR to Khronos SPIR-V. It also includes a
 standalone tool used for building libclc.
 
 %package devel
-Summary: Development files for LLVM to SPIRV Translator
+Summary: Development files for LLVM %{llvm_compat} to SPIRV Translator
 Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description devel
@@ -33,7 +33,7 @@ This package contains libraries and header files for
 developing against %{name}
 
 %package tools
-Summary: Standalone llvm to spirv translator tool
+Summary: Standalone llvm %{llvm_compat} to spirv translator tool
 Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description tools
@@ -47,7 +47,11 @@ This package contains the standalone llvm to spirv tool.
        -DLLVM_BUILD_TOOLS=ON \
        -DCMAKE_BUILD_TYPE=Release \
        -DCMAKE_INSTALL_RPATH:BOOL=";" \
+%if 0%{?llvm_compat}
+       -DLLVM_DIR=%{_libdir}/llvm%{?llvm_compat}/lib/cmake/llvm \
+%else
        -DLLVM_DIR="/usr/lib/cmake/llvm/" \
+%endif
        -DBUILD_SHARED_LIBS=YES \
        -DLLVM_EXTERNAL_PROJECTS="SPIRV-Headers" \
        -DLLVM_EXTERNAL_SPIRV_HEADERS_SOURCE_DIR="/usr/include/spirv/"
@@ -71,6 +75,9 @@ This package contains the standalone llvm to spirv tool.
 %{_libdir}/pkgconfig/LLVMSPIRVLib.pc
 
 %changelog
+* Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 15.0.13-1
+- Upgrade to 15.0.13 and link to llvm15
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 14.0.3-2
 - Updated initial changelog entry having fedora version and license info.
 
