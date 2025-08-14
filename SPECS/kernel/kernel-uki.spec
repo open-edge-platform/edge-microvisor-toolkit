@@ -70,6 +70,9 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Thu Aug 14 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.39-2
+- Update kernel spec
+
 * Thu Jul 24 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.39-1
 - Update kernel to 6.12.39
 

@@ -1,0 +1,26 @@
+From 32acb0dfc8e248ab0dce5fedf988e6c2fab1c454 Mon Sep 17 00:00:00 2001
+From: "Zawawi, Muhammad Zul Husni" <muhammad.zul.husni.zawawi@intel.com>
+Date: Fri, 17 Mar 2023 15:31:56 +0800
+Subject: [PATCH 12/48] drm/i915: force VF using v70 GuC API
+
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+---
+ drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c b/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
+index 4c1bd90715d07..a95447378385c 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
+@@ -2604,7 +2604,7 @@ static int register_context(struct intel_context *ce, bool loop)
+ 	GEM_BUG_ON(intel_context_is_child(ce));
+ 	trace_intel_context_register(ce);
+ 
+-	if (GUC_SUBMIT_VER(guc) >= MAKE_GUC_VER(1, 0, 0))
++	if (GUC_SUBMIT_VER(guc) >= MAKE_GUC_VER(1, 0, 0) || IS_SRIOV_VF(guc_to_gt(guc)->i915))
+ 		ret = register_context_v70(guc, ce, loop);
+ 	else
+ 		ret = register_context_v69(guc, ce, loop);
+-- 
+2.25.1
+

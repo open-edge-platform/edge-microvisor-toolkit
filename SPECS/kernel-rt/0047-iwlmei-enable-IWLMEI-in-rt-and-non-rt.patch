@@ -1,0 +1,38 @@
+From a2e9872605e27394c00f940b78c4f1dee18a2664 Mon Sep 17 00:00:00 2001
+From: "Qiao, Wei" <wei.qiao@intel.com>
+Date: Mon, 10 Mar 2025 17:03:53 +0800
+Subject: [PATCH 47/76] iwlmei: enable IWLMEI in rt and non-rt
+
+Signed-off-by: Qiao, Wei <wei.qiao@intel.com>
+---
+ Intel/config    | 1 +
+ Intel/config-rt | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/Intel/config b/Intel/config
+index de9bc05968446..7ffa3e00d13dd 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -3010,6 +3010,7 @@ CONFIG_IWLWIFI_OPMODE_MODULAR=y
+ CONFIG_IWLWIFI_DEVICE_TRACING=y
+ # end of Debugging Options
+ 
++CONFIG_IWLMEI=m
+ CONFIG_WLAN_VENDOR_INTERSIL=y
+ # CONFIG_HOSTAP is not set
+ # CONFIG_HERMES is not set
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 6f9eb83363db0..2543f0a545b5b 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -3026,6 +3026,7 @@ CONFIG_IWLWIFI_OPMODE_MODULAR=y
+ CONFIG_IWLWIFI_DEVICE_TRACING=y
+ # end of Debugging Options
+ 
++CONFIG_IWLMEI=m
+ CONFIG_WLAN_VENDOR_INTERSIL=y
+ # CONFIG_HOSTAP is not set
+ # CONFIG_HERMES is not set
+-- 
+2.43.0
+

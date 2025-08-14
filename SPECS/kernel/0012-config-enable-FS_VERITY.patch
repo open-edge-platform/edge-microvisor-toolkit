@@ -1,0 +1,41 @@
+From b506a106d1cdadf4d786cb32ca71d213f8de9efa Mon Sep 17 00:00:00 2001
+From: "Zhou, Furong" <furong.zhou@intel.com>
+Date: Wed, 13 Nov 2024 10:59:29 +0800
+Subject: [PATCH 12/76] config: enable FS_VERITY
+
+---
+ Intel/config    | 3 ++-
+ Intel/config-rt | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index ea5b39d6da0d3..16add14dbdbbe 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -7011,7 +7011,8 @@ CONFIG_EXPORTFS=y
+ CONFIG_EXPORTFS_BLOCK_OPS=y
+ CONFIG_FILE_LOCKING=y
+ # CONFIG_FS_ENCRYPTION is not set
+-# CONFIG_FS_VERITY is not set
++CONFIG_FS_VERITY=y
++CONFIG_FS_VERITY_BUILTIN_SIGNATURES=y
+ CONFIG_FSNOTIFY=y
+ CONFIG_DNOTIFY=y
+ CONFIG_INOTIFY_USER=y
+diff --git a/Intel/config-rt b/Intel/config-rt
+index d6cd788c32cbd..67936cc8abb74 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -7032,7 +7032,8 @@ CONFIG_EXPORTFS=y
+ CONFIG_EXPORTFS_BLOCK_OPS=y
+ CONFIG_FILE_LOCKING=y
+ # CONFIG_FS_ENCRYPTION is not set
+-# CONFIG_FS_VERITY is not set
++CONFIG_FS_VERITY=y
++CONFIG_FS_VERITY_BUILTIN_SIGNATURES=y
+ CONFIG_FSNOTIFY=y
+ CONFIG_DNOTIFY=y
+ CONFIG_INOTIFY_USER=y
+-- 
+2.43.0
+

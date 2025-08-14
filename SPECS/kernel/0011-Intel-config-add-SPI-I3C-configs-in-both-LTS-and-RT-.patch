@@ -1,0 +1,51 @@
+From ab12c50f153637df68804c74c2ea1b49adbb1b82 Mon Sep 17 00:00:00 2001
+From: Hao Li <hao3.li@intel.com>
+Date: Fri, 8 Nov 2024 13:20:28 +0800
+Subject: [PATCH 11/76] Intel/config: add SPI I3C configs in both LTS and RT
+ kernels
+
+added following 3 configs for both LTS and RT kernel configs:
+CONFIG_I3C=y
+CONFIG_SPI=y
+CONFIG_SPI_SPIDEV=y
+
+Signed-off-by: Hao Li <hao3.li@intel.com>
+---
+ Intel/config    | 5 +++--
+ Intel/config-rt | 3 ++-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index bbfbc75780a15..ea5b39d6da0d3 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -3441,8 +3441,9 @@ CONFIG_I2C_DESIGNWARE_BAYTRAIL=y
+ # CONFIG_I2C_DEBUG_BUS is not set
+ # end of I2C support
+ 
+-# CONFIG_I3C is not set
+-# CONFIG_SPI is not set
++CONFIG_I3C=y
++CONFIG_SPI=y
++CONFIG_SPI_SPIDEV=y
+ # CONFIG_SPMI is not set
+ # CONFIG_HSI is not set
+ CONFIG_PPS=y
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 3583bd57a17cb..d6cd788c32cbd 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -3458,8 +3458,9 @@ CONFIG_I2C_DESIGNWARE_BAYTRAIL=y
+ # CONFIG_I2C_DEBUG_BUS is not set
+ # end of I2C support
+ 
+-# CONFIG_I3C is not set
++CONFIG_I3C=y
+ CONFIG_SPI=y
++CONFIG_SPI_SPIDEV=y
+ # CONFIG_SPMI is not set
+ # CONFIG_HSI is not set
+ CONFIG_PPS=y
+-- 
+2.43.0
+

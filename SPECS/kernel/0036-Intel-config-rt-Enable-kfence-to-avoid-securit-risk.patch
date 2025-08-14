@@ -1,0 +1,27 @@
+From d40119f370a77900d5be762b848b3e3fd6eec220 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:37:23 +0800
+Subject: [PATCH 36/76] Intel/config-rt: Enable kfence to avoid securit risk
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config-rt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/Intel/config-rt b/Intel/config-rt
+index ad24cc7d09ded..810c2c84a16d5 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -7952,7 +7952,8 @@ CONFIG_CC_HAS_KASAN_GENERIC=y
+ CONFIG_CC_HAS_WORKING_NOSANITIZE_ADDRESS=y
+ # CONFIG_KASAN is not set
+ CONFIG_HAVE_ARCH_KFENCE=y
+-# CONFIG_KFENCE is not set
++CONFIG_KFENCE=y
++CONFIG_KFENCE_SAMPLE_INTERVAL=100
+ CONFIG_HAVE_ARCH_KMSAN=y
+ # end of Memory Debugging
+ 
+-- 
+2.43.0
+

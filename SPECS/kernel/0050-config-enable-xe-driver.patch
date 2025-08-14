@@ -1,0 +1,31 @@
+From ce09bfcd4cee2bfa5f0dca8bff894a63ff08940c Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Fri, 16 May 2025 14:38:37 +0800
+Subject: [PATCH 50/76] config: enable xe driver
+
+BMG driver is using xe driver instead i915. Enable it for BMG
+driver.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ Intel/config | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Intel/config b/Intel/config
+index 9b24c74543362..844efd5e1fd12 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -4835,6 +4835,10 @@ CONFIG_DRM_I915_STOP_TIMEOUT=100
+ CONFIG_DRM_I915_TIMESLICE_DURATION=1
+ # end of drm/i915 Profile Guided Optimisation
+ 
++CONFIG_DRM_XE=m
++CONFIG_DRM_XE_DISPLAY=y
++CONFIG_DRM_XE_FORCE_PROBE=""
++
+ CONFIG_DRM_VGEM=m
+ # CONFIG_DRM_VKMS is not set
+ CONFIG_DRM_VMWGFX=y
+-- 
+2.43.0
+

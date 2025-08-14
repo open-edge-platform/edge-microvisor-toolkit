@@ -1,0 +1,60 @@
+From fda88182d33331d99c393b4280da11ada8d8026f Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Wed, 2 Jul 2025 13:54:00 +0800
+Subject: [PATCH 55/76] Enable the TSN kernel config
+
+CONFIG_NET_SCH_TAPRIO and CONFIG_NET_SCH_ETS are needed by TSN feature.
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config    | 4 ++--
+ Intel/config-rt | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index c4c3c691afb95..b568cb5f32029 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -1658,7 +1658,7 @@ CONFIG_NET_SCH_TBF=m
+ # CONFIG_NET_SCH_CBS is not set
+ CONFIG_NET_SCH_ETF=m
+ CONFIG_NET_SCH_MQPRIO_LIB=m
+-# CONFIG_NET_SCH_TAPRIO is not set
++CONFIG_NET_SCH_TAPRIO=m
+ CONFIG_NET_SCH_GRED=m
+ CONFIG_NET_SCH_NETEM=m
+ CONFIG_NET_SCH_DRR=m
+@@ -1674,7 +1674,7 @@ CONFIG_NET_SCH_FQ=m
+ # CONFIG_NET_SCH_PIE is not set
+ CONFIG_NET_SCH_INGRESS=m
+ CONFIG_NET_SCH_PLUG=m
+-# CONFIG_NET_SCH_ETS is not set
++CONFIG_NET_SCH_ETS=m
+ # CONFIG_NET_SCH_DEFAULT is not set
+ 
+ #
+diff --git a/Intel/config-rt b/Intel/config-rt
+index e44979b57135f..c510da031a0a3 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -1664,7 +1664,7 @@ CONFIG_NET_SCH_TBF=m
+ CONFIG_NET_SCH_CBS=m
+ CONFIG_NET_SCH_ETF=m
+ CONFIG_NET_SCH_MQPRIO_LIB=m
+-# CONFIG_NET_SCH_TAPRIO is not set
++CONFIG_NET_SCH_TAPRIO=m
+ CONFIG_NET_SCH_GRED=m
+ CONFIG_NET_SCH_NETEM=m
+ CONFIG_NET_SCH_DRR=m
+@@ -1680,7 +1680,7 @@ CONFIG_NET_SCH_HHF=m
+ CONFIG_NET_SCH_PIE=m
+ CONFIG_NET_SCH_INGRESS=m
+ CONFIG_NET_SCH_PLUG=m
+-# CONFIG_NET_SCH_ETS is not set
++CONFIG_NET_SCH_ETS=m
+ # CONFIG_NET_SCH_DEFAULT is not set
+ 
+ #
+-- 
+2.43.0
+

@@ -1,0 +1,31 @@
+From ab63f7492eb2fec78ae09fc4595a21f000a0b317 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:39:50 +0800
+Subject: [PATCH 23/76] Enable the confidentiality model by default
+
+The kernel runs in confidentiality mode by default. Features
+that allow the kernel to be modified at runtime or that permit
+userland code to read confidential material held inside the
+kernel are disabled.
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Intel/config b/Intel/config
+index 09e6fda4ad38e..63040960ea642 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -7319,7 +7319,7 @@ CONFIG_SECURITY_LOCKDOWN_LSM=y
+ CONFIG_SECURITY_LOCKDOWN_LSM_EARLY=y
+ CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE=y
+ # CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set
+-# CONFIG_LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY is not set
++CONFIG_LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY=y
+ CONFIG_SECURITY_LANDLOCK=y
+ CONFIG_INTEGRITY=y
+ # CONFIG_INTEGRITY_SIGNATURE is not set
+-- 
+2.43.0
+

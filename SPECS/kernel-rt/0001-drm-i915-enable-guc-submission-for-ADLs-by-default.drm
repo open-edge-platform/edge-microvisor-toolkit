@@ -1,0 +1,32 @@
+From c40e997809c11ec62a3bec6e59c29b3657999547 Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Tue, 17 Dec 2024 10:15:41 +0800
+Subject: [PATCH] drm/i915: enable guc submission for ADLs by default
+
+tlb invalidation needs guc submission. By default enable it.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ drivers/gpu/drm/i915/gt/uc/intel_uc.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_uc.c b/drivers/gpu/drm/i915/gt/uc/intel_uc.c
+index 517d644f407fd..31cb85cd89912 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_uc.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_uc.c
+@@ -46,12 +46,6 @@ static void uc_expand_default_options(struct intel_uc *uc)
+ 		return;
+ 	}
+ 
+-	/* Intermediate platforms are HuC authentication only */
+-	if (IS_ALDERLAKE_S(i915) && !IS_RAPTORLAKE_S(i915)) {
+-		i915->params.enable_guc = ENABLE_GUC_LOAD_HUC;
+-		return;
+-	}
+-
+ 	/* Default: enable HuC authentication and GuC submission */
+ 	i915->params.enable_guc = ENABLE_GUC_LOAD_HUC | ENABLE_GUC_SUBMISSION;
+ }
+-- 
+2.25.1
+

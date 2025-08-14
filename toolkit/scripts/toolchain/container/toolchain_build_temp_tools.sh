@@ -88,8 +88,8 @@ touch $LFS/logs/temptoolchain/status_gcc_pass1_complete
 
 KERNEL_VERSION="6.12.39"
 echo Linux-${KERNEL_VERSION} API Headers
-tar xf lts-v6.12.39-emt-250721T212915Z.tar.gz
-pushd lts-v${KERNEL_VERSION}-emt-250721T212915Z
+tar xf linux-6.12.39.tar.gz
+pushd linux-${KERNEL_VERSION}
 make mrproper
 make headers
 find usr/include -type f ! -name '*.h' -delete

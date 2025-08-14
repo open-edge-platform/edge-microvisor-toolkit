@@ -1,0 +1,48 @@
+From ddab6d83b923c1b852d981dcee6d9b2c3adc4fe3 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:32:20 +0800
+Subject: [PATCH 16/76] Hardening by removeing unnecessary system call
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index 5359b5cf88e16..591abd8b4b172 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -270,7 +270,7 @@ CONFIG_KALLSYMS_BASE_RELATIVE=y
+ CONFIG_ARCH_HAS_MEMBARRIER_SYNC_CORE=y
+ CONFIG_KCMP=y
+ CONFIG_RSEQ=y
+-CONFIG_CACHESTAT_SYSCALL=y
++# CONFIG_CACHESTAT_SYSCALL is not set
+ # CONFIG_DEBUG_RSEQ is not set
+ CONFIG_HAVE_PERF_EVENTS=y
+ CONFIG_GUEST_PERF_EVENTS=y
+@@ -291,10 +291,8 @@ CONFIG_TRACEPOINTS=y
+ # Kexec and crash features
+ #
+ CONFIG_CRASH_CORE=y
+-CONFIG_KEXEC_CORE=y
+-CONFIG_HAVE_IMA_KEXEC=y
+-CONFIG_KEXEC=y
+-CONFIG_KEXEC_FILE=y
++# CONFIG_KEXEC is not set
++# CONFIG_KEXEC_FILE is not set
+ # CONFIG_KEXEC_SIG is not set
+ # CONFIG_KEXEC_JUMP is not set
+ CONFIG_CRASH_DUMP=y
+@@ -8025,7 +8023,7 @@ CONFIG_RCU_EXP_CPU_STALL_TIMEOUT=0
+ 
+ # CONFIG_DEBUG_WQ_FORCE_RR_CPU is not set
+ # CONFIG_CPU_HOTPLUG_STATE_CONTROL is not set
+-CONFIG_LATENCYTOP=y
++# CONFIG_LATENCYTOP is not set
+ # CONFIG_DEBUG_CGROUP_REF is not set
+ CONFIG_USER_STACKTRACE_SUPPORT=y
+ CONFIG_NOP_TRACER=y
+-- 
+2.43.0
+

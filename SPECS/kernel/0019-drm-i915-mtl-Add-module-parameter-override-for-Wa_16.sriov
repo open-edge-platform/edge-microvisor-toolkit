@@ -1,0 +1,92 @@
+From cdf61c92c1214869b6cf1d0aca703c9092bfdb6d Mon Sep 17 00:00:00 2001
+From: "Kooran Paul, Princy" <princy.kooran.paul@intel.com>
+Date: Thu, 1 Aug 2024 10:47:07 +0800
+Subject: [PATCH 19/48] drm/i915/mtl: Add module parameter override for
+ Wa_16019325821/Wa_14019159160
+
+These w/a's can have significant performance implications for any
+workload which uses both RCS and CCS. On the other hand, the hang
+itself is only seen in one or two very specific workloads. So add a
+module parameter to control whether the w/a's are enabled or not and
+default to not.
+
+Signed-off-by: John Harrison <John.C.Harrison@Intel.com>
+---
+ drivers/gpu/drm/i915/gt/uc/intel_guc.c            | 3 ++-
+ drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c        | 3 ++-
+ drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c | 3 ++-
+ drivers/gpu/drm/i915/i915_params.c                | 3 +++
+ drivers/gpu/drm/i915/i915_params.h                | 1 +
+ 5 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_guc.c b/drivers/gpu/drm/i915/gt/uc/intel_guc.c
+index 0c6d45c08c405..1a1c31a43ced5 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_guc.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_guc.c
+@@ -311,7 +311,8 @@ static u32 guc_ctl_wa_flags(struct intel_guc *guc)
+ 
+ 	/* Wa_16019325821 */
+ 	/* Wa_14019159160 */
+-	if (IS_GFX_GT_IP_RANGE(gt, IP_VER(12, 70), IP_VER(12, 74)))
++	if (gt->i915->params.enable_mtl_rcs_ccs_wa &&
++	    IS_GFX_GT_IP_RANGE(gt, IP_VER(12, 70), IP_VER(12, 74)))
+ 		flags |= GUC_WA_RCS_CCS_SWITCHOUT;
+ 
+ 	/*
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c b/drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c
+index 7a58760e3f144..2717bb5f05cdc 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c
+@@ -852,7 +852,8 @@ static void guc_waklv_init(struct intel_guc *guc)
+ 	remain = guc_ads_waklv_size(guc);
+ 
+ 	/* Wa_14019159160 */
+-	if (IS_GFX_GT_IP_RANGE(gt, IP_VER(12, 70), IP_VER(12, 74))) {
++	if (gt->i915->params.enable_mtl_rcs_ccs_wa &&
++	    IS_GFX_GT_IP_RANGE(gt, IP_VER(12, 70), IP_VER(12, 74))) {
+ 		guc_waklv_enable_simple(guc, &offset, &remain,
+ 					GUC_WORKAROUND_KLV_SERIALIZED_RA_MODE);
+ 		guc_waklv_enable_simple(guc, &offset, &remain,
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c b/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
+index 3a37978ae7f4a..2c2ec695ef637 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
+@@ -4611,7 +4611,8 @@ static void guc_default_vfuncs(struct intel_engine_cs *engine)
+ 
+ 	/* Wa_16019325821 */
+ 	/* Wa_14019159160 */
+-	if ((engine->class == COMPUTE_CLASS || engine->class == RENDER_CLASS) &&
++	if (engine->i915->params.enable_mtl_rcs_ccs_wa &&
++	    (engine->class == COMPUTE_CLASS || engine->class == RENDER_CLASS) &&
+ 	    IS_GFX_GT_IP_RANGE(engine->gt, IP_VER(12, 70), IP_VER(12, 74)))
+ 		engine->flags |= I915_ENGINE_USES_WA_HOLD_SWITCHOUT;
+ 
+diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
+index c1b937ed33f65..241b4ffcb7c73 100644
+--- a/drivers/gpu/drm/i915/i915_params.c
++++ b/drivers/gpu/drm/i915/i915_params.c
+@@ -73,6 +73,9 @@ i915_param_named(max_vfs, uint, 0400,
+ 	"Limit number of virtual functions to allocate. "
+ 	"(0 = no VFs [default]; N = allow up to N VFs)");
+ 
++i915_param_named(enable_mtl_rcs_ccs_wa, bool, 0400,
++       "Enable the RCS/CCS switchout hold workaround for MTL (only some workloads are affected by issue and w/a has a performance penalty) (default:false)");
++
+ #if IS_ENABLED(CONFIG_DRM_I915_CAPTURE_ERROR)
+ i915_param_named(error_capture, bool, 0400,
+ 	"Record the GPU state following a hang. "
+diff --git a/drivers/gpu/drm/i915/i915_params.h b/drivers/gpu/drm/i915/i915_params.h
+index e46b557be8a3b..cf3bed60725e6 100644
+--- a/drivers/gpu/drm/i915/i915_params.h
++++ b/drivers/gpu/drm/i915/i915_params.h
+@@ -62,6 +62,7 @@ struct drm_printer;
+ 	param(unsigned int, lmem_bar_size, 0, 0400) \
+ 	param(unsigned int, max_vfs, 0, 0400) \
+ 	/* leave bools at the end to not create holes */ \
++	param(bool, enable_mtl_rcs_ccs_wa, false, 0x400) \
+ 	param(bool, enable_hangcheck, true, 0600) \
+ 	param(bool, error_capture, true, IS_ENABLED(CONFIG_DRM_I915_CAPTURE_ERROR) ? 0600 : 0) \
+ 	param(bool, enable_gvt, false, IS_ENABLED(CONFIG_DRM_I915_GVT) ? 0400 : 0) \
+-- 
+2.25.1
+

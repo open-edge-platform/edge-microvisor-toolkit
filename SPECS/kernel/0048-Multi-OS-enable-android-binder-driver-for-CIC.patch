@@ -1,0 +1,29 @@
+From 445532b5a80b479515cbe7f1c9137a66b43ea037 Mon Sep 17 00:00:00 2001
+From: "Pan, Kris" <kris.pan@intel.com>
+Date: Thu, 28 Nov 2024 00:56:39 +0000
+Subject: [PATCH 48/76] Multi-OS: enable android binder driver for CIC
+
+Signed-off-by: Pan, Kris <kris.pan@intel.com>
+---
+ Intel/config | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Intel/config b/Intel/config
+index 7ffa3e00d13dd..9c762cf3ca51d 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -6918,7 +6918,10 @@ CONFIG_RAS_CEC=y
+ #
+ # Android
+ #
+-# CONFIG_ANDROID_BINDER_IPC is not set
++CONFIG_ANDROID_BINDER_IPC=y
++CONFIG_ANDROID_BINDERFS=y
++CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
++# CONFIG_ANDROID_BINDER_IPC_SELFTEST is not set
+ # end of Android
+ 
+ CONFIG_LIBNVDIMM=y
+-- 
+2.43.0
+

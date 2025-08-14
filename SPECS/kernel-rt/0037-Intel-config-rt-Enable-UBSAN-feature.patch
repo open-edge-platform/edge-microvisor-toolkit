@@ -1,0 +1,32 @@
+From 402cd0b3755f55f723cc1d24db0538aee9178d68 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:37:58 +0800
+Subject: [PATCH 37/76] Intel/config-rt: Enable UBSAN feature
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config-rt | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 810c2c84a16d5..f5f39a42ab515 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -7900,7 +7900,13 @@ CONFIG_HAVE_ARCH_KGDB=y
+ # CONFIG_KDB_CONTINUE_CATASTROPHIC is not set
+ CONFIG_ARCH_HAS_EARLY_DEBUG=y
+ CONFIG_ARCH_HAS_UBSAN_SANITIZE_ALL=y
+-# CONFIG_UBSAN is not set
++CONFIG_UBSAN=y
++CONFIG_UBSAN_BOUNDS=y
++CONFIG_UBSAN_TRAP=y
++# CONFIG_UBSAN_ENUM is not set
++# CONFIG_UBSAN_BOOL is not set
++# CONFIG_UBSAN_SHIFT is not set
++CONFIG_UBSAN_SANITIZE_ALL=y
+ CONFIG_HAVE_ARCH_KCSAN=y
+ CONFIG_HAVE_KCSAN_COMPILER=y
+ # CONFIG_KCSAN is not set
+-- 
+2.43.0
+

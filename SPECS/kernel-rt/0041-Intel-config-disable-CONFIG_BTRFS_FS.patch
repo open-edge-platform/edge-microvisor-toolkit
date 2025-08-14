@@ -1,0 +1,34 @@
+From ef904191e6e2af83c2b62ee07751979072773030 Mon Sep 17 00:00:00 2001
+From: "Pan, Kris" <kris.pan@intel.com>
+Date: Wed, 11 Dec 2024 01:31:22 +0000
+Subject: [PATCH 41/76] Intel/config: disable CONFIG_BTRFS_FS
+
+disable for CVE-2024-26944
+
+Signed-off-by: Pan, Kris <kris.pan@intel.com>
+---
+ Intel/config | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index 19e273dab98c8..4a1f4bb5db842 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -6994,13 +6994,7 @@ CONFIG_XFS_WARN=y
+ # CONFIG_XFS_DEBUG is not set
+ # CONFIG_GFS2_FS is not set
+ # CONFIG_OCFS2_FS is not set
+-CONFIG_BTRFS_FS=m
+-CONFIG_BTRFS_FS_POSIX_ACL=y
+-# CONFIG_BTRFS_FS_CHECK_INTEGRITY is not set
+-# CONFIG_BTRFS_FS_RUN_SANITY_TESTS is not set
+-# CONFIG_BTRFS_DEBUG is not set
+-# CONFIG_BTRFS_ASSERT is not set
+-# CONFIG_BTRFS_FS_REF_VERIFY is not set
++# CONFIG_BTRFS_FS is not set
+ # CONFIG_NILFS2_FS is not set
+ # CONFIG_F2FS_FS is not set
+ # CONFIG_ZONEFS_FS is not set
+-- 
+2.43.0
+

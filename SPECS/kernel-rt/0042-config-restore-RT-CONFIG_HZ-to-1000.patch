@@ -1,0 +1,32 @@
+From 5a8fad59e37b671c8c9fbd202944661cbd5918bb Mon Sep 17 00:00:00 2001
+From: "Zhou, Furong" <furong.zhou@intel.com>
+Date: Tue, 17 Dec 2024 17:58:56 +0800
+Subject: [PATCH 42/76] config: restore RT CONFIG_HZ to 1000
+
+There are performance drop when set CONFIG_HZ to 100.
+---
+ Intel/config-rt | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 48064bfa2d46c..54580046084b1 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -483,11 +483,11 @@ CONFIG_EFI_HANDOVER_PROTOCOL=y
+ # CONFIG_EFI_MIXED is not set
+ # CONFIG_EFI_FAKE_MEMMAP is not set
+ CONFIG_EFI_RUNTIME_MAP=y
+-# CONFIG_HZ_1000 is not set
++CONFIG_HZ_1000=y
+ # CONFIG_HZ_250 is not set
+ # CONFIG_HZ_300 is not set
+-CONFIG_HZ_100=y
+-CONFIG_HZ=100
++# CONFIG_HZ_100 is not set
++CONFIG_HZ=1000
+ CONFIG_SCHED_HRTICK=y
+ CONFIG_ARCH_SUPPORTS_KEXEC=y
+ CONFIG_ARCH_SUPPORTS_KEXEC_FILE=y
+-- 
+2.43.0
+

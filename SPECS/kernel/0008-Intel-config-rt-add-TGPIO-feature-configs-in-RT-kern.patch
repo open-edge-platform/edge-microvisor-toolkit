@@ -1,0 +1,50 @@
+From 3a64bab7c5248b205fae7ed2a30abe9ac084dd9b Mon Sep 17 00:00:00 2001
+From: Hao Li <hao3.li@intel.com>
+Date: Fri, 13 Sep 2024 16:14:10 +0800
+Subject: [PATCH 08/76] Intel/config-rt: add TGPIO feature configs in RT kernel
+ config
+
+added following 4 configs for RT kernel config:
+
+CONFIG_PTP_INTEL_PMC_TGPIO=m
+CONFIG_PTP_INTEL_TGPIO_PLAT=m
+CONFIG_MFD_INTEL_EHL_PSE_GPIO=m
+CONFIG_GPIO_EHL_PSE_PLAT=m
+
+Signed-off-by: Hao Li <hao3.li@intel.com>
+---
+ Intel/config-rt | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Intel/config-rt b/Intel/config-rt
+index dbc936a90b9e1..4cc47f58e948d 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -3478,6 +3478,8 @@ CONFIG_PTP_1588_CLOCK_OPTIONAL=y
+ # CONFIG_DP83640_PHY is not set
+ # CONFIG_PTP_1588_CLOCK_INES is not set
+ CONFIG_PTP_1588_CLOCK_KVM=m
++CONFIG_PTP_INTEL_TGPIO_PLAT=m
++CONFIG_PTP_INTEL_PMC_TGPIO=m
+ # CONFIG_PTP_1588_CLOCK_IDT82P33 is not set
+ # CONFIG_PTP_1588_CLOCK_IDTCM is not set
+ # CONFIG_PTP_1588_CLOCK_MOCK is not set
+@@ -3540,6 +3542,7 @@ CONFIG_GPIO_GENERIC=m
+ #
+ # CONFIG_GPIO_AMDPT is not set
+ # CONFIG_GPIO_DWAPB is not set
++CONFIG_GPIO_EHL_PSE_PLAT=m
+ CONFIG_GPIO_GENERIC_PLATFORM=m
+ CONFIG_GPIO_ICH=m
+ # CONFIG_GPIO_MB86S7X is not set
+@@ -3974,6 +3977,7 @@ CONFIG_MFD_CORE=m
+ # CONFIG_MFD_MC13XXX_I2C is not set
+ # CONFIG_MFD_MP2629 is not set
+ # CONFIG_MFD_INTEL_QUARK_I2C_GPIO is not set
++CONFIG_MFD_INTEL_EHL_PSE_GPIO=m
+ CONFIG_LPC_ICH=m
+ CONFIG_LPC_SCH=m
+ # CONFIG_INTEL_SOC_PMIC_MRFLD is not set
+-- 
+2.43.0
+

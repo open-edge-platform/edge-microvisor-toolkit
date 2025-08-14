@@ -1,0 +1,59 @@
+From e5ed3b0cec6f4863df19ee61d71f8ca96e6cfb06 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Fri, 20 Dec 2024 15:42:14 +0800
+Subject: [PATCH 28/76] Intel/config: disable io-uring feature to avoid
+ security risk
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config    | 4 ++--
+ Intel/config-rt | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index 736b460e6b38e..a25fea2350ebb 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -259,7 +259,7 @@ CONFIG_TIMERFD=y
+ CONFIG_EVENTFD=y
+ CONFIG_SHMEM=y
+ CONFIG_AIO=y
+-CONFIG_IO_URING=y
++# CONFIG_IO_URING is not set
+ CONFIG_ADVISE_SYSCALLS=y
+ CONFIG_MEMBARRIER=y
+ CONFIG_KALLSYMS=y
+@@ -7270,7 +7270,7 @@ CONFIG_NLS_UCS2_UTILS=m
+ CONFIG_DLM=m
+ # CONFIG_DLM_DEBUG is not set
+ # CONFIG_UNICODE is not set
+-CONFIG_IO_WQ=y
++# CONFIG_IO_WQ is not set
+ # end of File systems
+ 
+ #
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 1a8fedee7fafd..c0da2f93dab21 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -266,7 +266,7 @@ CONFIG_TIMERFD=y
+ CONFIG_EVENTFD=y
+ CONFIG_SHMEM=y
+ CONFIG_AIO=y
+-CONFIG_IO_URING=y
++# CONFIG_IO_URING is not set
+ CONFIG_ADVISE_SYSCALLS=y
+ CONFIG_MEMBARRIER=y
+ CONFIG_KALLSYMS=y
+@@ -7291,7 +7291,7 @@ CONFIG_NLS_UCS2_UTILS=m
+ CONFIG_DLM=m
+ # CONFIG_DLM_DEBUG is not set
+ # CONFIG_UNICODE is not set
+-CONFIG_IO_WQ=y
++# CONFIG_IO_WQ is not set
+ # end of File systems
+ 
+ #
+-- 
+2.43.0
+

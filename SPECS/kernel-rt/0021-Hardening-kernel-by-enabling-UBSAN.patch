@@ -1,0 +1,32 @@
+From 3d0d84224e3a445c84dfbfd655956fffaa6cc58e Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:37:58 +0800
+Subject: [PATCH 21/76] Hardening kernel by enabling UBSAN
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/Intel/config b/Intel/config
+index c5dd2b9652b9a..8ec0790277f1d 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -7879,7 +7879,13 @@ CONFIG_HAVE_ARCH_KGDB=y
+ # CONFIG_KDB_CONTINUE_CATASTROPHIC is not set
+ CONFIG_ARCH_HAS_EARLY_DEBUG=y
+ CONFIG_ARCH_HAS_UBSAN_SANITIZE_ALL=y
+-# CONFIG_UBSAN is not set
++CONFIG_UBSAN=y
++CONFIG_UBSAN_BOUNDS=y
++CONFIG_UBSAN_TRAP=y
++# CONFIG_UBSAN_ENUM is not set
++# CONFIG_UBSAN_BOOL is not set
++# CONFIG_UBSAN_SHIFT is not set
++CONFIG_UBSAN_SANITIZE_ALL=y
+ CONFIG_HAVE_ARCH_KCSAN=y
+ CONFIG_HAVE_KCSAN_COMPILER=y
+ # CONFIG_KCSAN is not set
+-- 
+2.43.0
+

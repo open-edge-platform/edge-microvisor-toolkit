@@ -1,0 +1,30 @@
+From e9266990900b0b519a71b34030c4512d694a938f Mon Sep 17 00:00:00 2001
+From: "Chew, Tong Liang" <tong.liang.chew@intel.com>
+Date: Fri, 14 Jan 2022 02:42:31 +0800
+Subject: [PATCH 09/48] drm/i915/gt: Modify the adls mocs table same as tgl
+ mocs table.
+
+ADL-S using the same mocs table as TGL.
+
+Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+---
+ drivers/gpu/drm/i915/gt/intel_mocs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/intel_mocs.c b/drivers/gpu/drm/i915/gt/intel_mocs.c
+index 9602480c64319..b39202aa76ec4 100644
+--- a/drivers/gpu/drm/i915/gt/intel_mocs.c
++++ b/drivers/gpu/drm/i915/gt/intel_mocs.c
+@@ -477,7 +477,7 @@ static unsigned int get_mocs_settings(struct drm_i915_private *i915,
+ 		table->n_entries = GEN9_NUM_MOCS_ENTRIES;
+ 		table->uc_index = 1;
+ 		table->unused_entries_index = 5;
+-	} else if (IS_TIGERLAKE(i915) || IS_ROCKETLAKE(i915)) {
++	} else if (IS_TIGERLAKE(i915) || IS_ALDERLAKE_S(i915) || IS_ROCKETLAKE(i915)) {
+ 		/* For TGL/RKL, Can't be changed now for ABI reasons */
+ 		table->size  = ARRAY_SIZE(tgl_mocs_table);
+ 		table->table = tgl_mocs_table;
+-- 
+2.25.1
+

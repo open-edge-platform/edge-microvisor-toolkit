@@ -1,0 +1,308 @@
+From 400b3ef0dc0530bc0cdd1a2aefcb53718f63dc03 Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Fri, 11 Jul 2025 11:21:09 +0800
+Subject: [PATCH 76/76] Revert "drm/xe/gt: Update handling of xe_force_wake_get
+ return"
+
+This reverts commit d42b44736ea29fa6d0c3cb9c75569314134b7732.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ drivers/gpu/drm/xe/xe_gt.c | 105 +++++++++++++++++--------------------
+ 1 file changed, 47 insertions(+), 58 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_gt.c b/drivers/gpu/drm/xe/xe_gt.c
+index 231ed53cf907c..8a9c8f75124be 100644
+--- a/drivers/gpu/drm/xe/xe_gt.c
++++ b/drivers/gpu/drm/xe/xe_gt.c
+@@ -98,14 +98,14 @@ void xe_gt_sanitize(struct xe_gt *gt)
+ 
+ static void xe_gt_enable_host_l2_vram(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+ 	u32 reg;
++	int err;
+ 
+ 	if (!XE_WA(gt, 16023588340))
+ 		return;
+ 
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FW_GT);
+-	if (!fw_ref)
++	err = xe_force_wake_get(gt_to_fw(gt), XE_FW_GT);
++	if (WARN_ON(err))
+ 		return;
+ 
+ 	if (!xe_gt_is_media_type(gt)) {
+@@ -115,13 +115,13 @@ static void xe_gt_enable_host_l2_vram(struct xe_gt *gt)
+ 	}
+ 
+ 	xe_gt_mcr_multicast_write(gt, XEHPC_L3CLOS_MASK(3), 0xF);
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	xe_force_wake_put(gt_to_fw(gt), XE_FW_GT);
+ }
+ 
+ static void xe_gt_disable_host_l2_vram(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+ 	u32 reg;
++	int err;
+ 
+ 	if (!XE_WA(gt, 16023588340))
+ 		return;
+@@ -129,15 +129,15 @@ static void xe_gt_disable_host_l2_vram(struct xe_gt *gt)
+ 	if (xe_gt_is_media_type(gt))
+ 		return;
+ 
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FW_GT);
+-	if (!fw_ref)
++	err = xe_force_wake_get(gt_to_fw(gt), XE_FW_GT);
++	if (WARN_ON(err))
+ 		return;
+ 
+ 	reg = xe_gt_mcr_unicast_read_any(gt, XE2_GAMREQSTRM_CTRL);
+ 	reg &= ~CG_DIS_CNTLBUS;
+ 	xe_gt_mcr_multicast_write(gt, XE2_GAMREQSTRM_CTRL, reg);
+ 
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	xe_force_wake_put(gt_to_fw(gt), XE_FW_GT);
+ }
+ 
+ /**
+@@ -405,14 +405,11 @@ static void dump_pat_on_error(struct xe_gt *gt)
+ 
+ static int gt_fw_domain_init(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+ 	int err, i;
+ 
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FW_GT);
+-	if (!fw_ref) {
+-		err = -ETIMEDOUT;
++	err = xe_force_wake_get(gt_to_fw(gt), XE_FW_GT);
++	if (err)
+ 		goto err_hw_fence_irq;
+-	}
+ 
+ 	if (!xe_gt_is_media_type(gt)) {
+ 		err = xe_ggtt_init(gt_to_tile(gt)->mem.ggtt);
+@@ -447,12 +444,14 @@ static int gt_fw_domain_init(struct xe_gt *gt)
+ 	 */
+ 	gt->info.gmdid = xe_mmio_read32(gt, GMD_ID);
+ 
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	err = xe_force_wake_put(gt_to_fw(gt), XE_FW_GT);
++	XE_WARN_ON(err);
++
+ 	return 0;
+ 
+ err_force_wake:
+ 	dump_pat_on_error(gt);
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	xe_force_wake_put(gt_to_fw(gt), XE_FW_GT);
+ err_hw_fence_irq:
+ 	for (i = 0; i < XE_ENGINE_CLASS_MAX; ++i)
+ 		xe_hw_fence_irq_finish(&gt->fence_irq[i]);
+@@ -462,14 +461,11 @@ static int gt_fw_domain_init(struct xe_gt *gt)
+ 
+ static int all_fw_domain_init(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+ 	int err, i;
+ 
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
+-	if (!xe_force_wake_ref_has_domain(fw_ref, XE_FORCEWAKE_ALL)) {
+-		err = -ETIMEDOUT;
+-		goto err_force_wake;
+-	}
++	err = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	if (err)
++		goto err_hw_fence_irq;
+ 
+ 	xe_gt_mcr_set_implicit_defaults(gt);
+ 	xe_wa_process_gt(gt);
+@@ -535,12 +531,14 @@ static int all_fw_domain_init(struct xe_gt *gt)
+ 	if (IS_SRIOV_PF(gt_to_xe(gt)))
+ 		xe_gt_sriov_pf_init_hw(gt);
+ 
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	err = xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	XE_WARN_ON(err);
+ 
+ 	return 0;
+ 
+ err_force_wake:
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++err_hw_fence_irq:
+ 	for (i = 0; i < XE_ENGINE_CLASS_MAX; ++i)
+ 		xe_hw_fence_irq_finish(&gt->fence_irq[i]);
+ 
+@@ -553,12 +551,11 @@ static int all_fw_domain_init(struct xe_gt *gt)
+  */
+ int xe_gt_init_hwconfig(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+ 	int err;
+ 
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FW_GT);
+-	if (!fw_ref)
+-		return -ETIMEDOUT;
++	err = xe_force_wake_get(gt_to_fw(gt), XE_FW_GT);
++	if (err)
++		goto out;
+ 
+ 	xe_gt_mcr_init_early(gt);
+ 	xe_pat_init(gt);
+@@ -576,7 +573,8 @@ int xe_gt_init_hwconfig(struct xe_gt *gt)
+ 	xe_gt_enable_host_l2_vram(gt);
+ 
+ out_fw:
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	xe_force_wake_put(gt_to_fw(gt), XE_FW_GT);
++out:
+ 	return err;
+ }
+ 
+@@ -746,7 +744,6 @@ static int do_gt_restart(struct xe_gt *gt)
+ 
+ static int gt_reset(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+ 	int err;
+ 
+ 	if (xe_device_wedged(gt_to_xe(gt)))
+@@ -767,11 +764,9 @@ static int gt_reset(struct xe_gt *gt)
+ 
+ 	xe_gt_sanitize(gt);
+ 
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
+-	if (!xe_force_wake_ref_has_domain(fw_ref, XE_FORCEWAKE_ALL)) {
+-		err = -ETIMEDOUT;
+-		goto err_out;
+-	}
++	err = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	if (err)
++		goto err_msg;
+ 
+ 	xe_uc_gucrc_disable(&gt->uc);
+ 	xe_uc_stop_prepare(&gt->uc);
+@@ -789,7 +784,8 @@ static int gt_reset(struct xe_gt *gt)
+ 	if (err)
+ 		goto err_out;
+ 
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	err = xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	XE_WARN_ON(err);
+ 	xe_pm_runtime_put(gt_to_xe(gt));
+ 
+ 	xe_gt_info(gt, "reset done\n");
+@@ -797,7 +793,8 @@ static int gt_reset(struct xe_gt *gt)
+ 	return 0;
+ 
+ err_out:
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	XE_WARN_ON(xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL));
++err_msg:
+ 	XE_WARN_ON(xe_uc_start(&gt->uc));
+ err_fail:
+ 	xe_gt_err(gt, "reset failed (%pe)\n", ERR_PTR(err));
+@@ -829,25 +826,22 @@ void xe_gt_reset_async(struct xe_gt *gt)
+ 
+ void xe_gt_suspend_prepare(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+-
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	XE_WARN_ON(xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL));
+ 
+ 	xe_uc_suspend_prepare(&gt->uc);
+ 
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	XE_WARN_ON(xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL));
+ }
+ 
+ int xe_gt_suspend(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+ 	int err;
+ 
+ 	xe_gt_dbg(gt, "suspending\n");
+ 	xe_gt_sanitize(gt);
+ 
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
+-	if (!xe_force_wake_ref_has_domain(fw_ref, XE_FORCEWAKE_ALL))
++	err = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	if (err)
+ 		goto err_msg;
+ 
+ 	err = xe_uc_suspend(&gt->uc);
+@@ -858,15 +852,14 @@ int xe_gt_suspend(struct xe_gt *gt)
+ 
+ 	xe_gt_disable_host_l2_vram(gt);
+ 
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	XE_WARN_ON(xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL));
+ 	xe_gt_dbg(gt, "suspended\n");
+ 
+ 	return 0;
+ 
+-err_msg:
+-	err = -ETIMEDOUT;
+ err_force_wake:
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	XE_WARN_ON(xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL));
++err_msg:
+ 	xe_gt_err(gt, "suspend failed (%pe)\n", ERR_PTR(err));
+ 
+ 	return err;
+@@ -874,11 +867,9 @@ int xe_gt_suspend(struct xe_gt *gt)
+ 
+ void xe_gt_shutdown(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+-
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
+ 	do_gt_reset(gt);
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL);
+ }
+ 
+ /**
+@@ -903,12 +894,11 @@ int xe_gt_sanitize_freq(struct xe_gt *gt)
+ 
+ int xe_gt_resume(struct xe_gt *gt)
+ {
+-	unsigned int fw_ref;
+ 	int err;
+ 
+ 	xe_gt_dbg(gt, "resuming\n");
+-	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
+-	if (!xe_force_wake_ref_has_domain(fw_ref, XE_FORCEWAKE_ALL))
++	err = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	if (err)
+ 		goto err_msg;
+ 
+ 	err = do_gt_restart(gt);
+@@ -917,15 +907,14 @@ int xe_gt_resume(struct xe_gt *gt)
+ 
+ 	xe_gt_idle_enable_pg(gt);
+ 
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	XE_WARN_ON(xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL));
+ 	xe_gt_dbg(gt, "resumed\n");
+ 
+ 	return 0;
+ 
+-err_msg:
+-	err = -ETIMEDOUT;
+ err_force_wake:
+-	xe_force_wake_put(gt_to_fw(gt), fw_ref);
++	XE_WARN_ON(xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL));
++err_msg:
+ 	xe_gt_err(gt, "resume failed (%pe)\n", ERR_PTR(err));
+ 
+ 	return err;
+-- 
+2.43.0
+

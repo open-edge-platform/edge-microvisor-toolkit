@@ -1,0 +1,43 @@
+From 7cee3010ba3fbb58a290ec495895c34eb748650a Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Tue, 10 Jun 2025 08:38:11 +0800
+Subject: [PATCH 52/76] emt/config: disable nvidia framebuffer driver
+
+nvidia framebuffer driver is buggy and poorly supported, disable
+it.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ Intel/config    | 2 +-
+ Intel/config-rt | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index 844efd5e1fd12..ec5f1978c0462 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -4898,7 +4898,7 @@ CONFIG_FB_EFI=y
+ # CONFIG_FB_HGA is not set
+ # CONFIG_FB_OPENCORES is not set
+ # CONFIG_FB_S1D13XXX is not set
+-CONFIG_FB_NVIDIA=m
++# CONFIG_FB_NVIDIA is not set
+ # CONFIG_FB_NVIDIA_I2C is not set
+ # CONFIG_FB_NVIDIA_DEBUG is not set
+ CONFIG_FB_NVIDIA_BACKLIGHT=y
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 89ffaaa9a1e10..75b9eae3ca94e 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -4915,7 +4915,7 @@ CONFIG_FB_EFI=y
+ # CONFIG_FB_HGA is not set
+ # CONFIG_FB_OPENCORES is not set
+ # CONFIG_FB_S1D13XXX is not set
+-CONFIG_FB_NVIDIA=m
++# CONFIG_FB_NVIDIA is not set
+ # CONFIG_FB_NVIDIA_I2C is not set
+ # CONFIG_FB_NVIDIA_DEBUG is not set
+ CONFIG_FB_NVIDIA_BACKLIGHT=y
+-- 
+2.43.0
+

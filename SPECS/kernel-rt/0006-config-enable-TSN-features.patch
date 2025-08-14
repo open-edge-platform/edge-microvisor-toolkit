@@ -1,0 +1,32 @@
+From 10839937ba680c7729a6490d39c5a2f11ca8c3e3 Mon Sep 17 00:00:00 2001
+From: "Zhou, Furong" <furong.zhou@intel.com>
+Date: Fri, 13 Sep 2024 14:45:56 +0800
+Subject: [PATCH 06/76] config: enable TSN features
+
+Enable TSN features together with cherry pick TSN patches from 6.6
+LTS kernel
+---
+ Intel/config-rt | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 0ac6e69d4aa22..b52f5c0b5fadf 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -2776,7 +2776,12 @@ CONFIG_NET_VENDOR_SAMSUNG=y
+ # CONFIG_NET_VENDOR_SOLARFLARE is not set
+ # CONFIG_NET_VENDOR_SMSC is not set
+ # CONFIG_NET_VENDOR_SOCIONEXT is not set
+-# CONFIG_NET_VENDOR_STMICRO is not set
++CONFIG_NET_VENDOR_STMICRO=y
++CONFIG_STMMAC_ETH=m
++CONFIG_STMMAC_PLATFORM=m
++CONFIG_DWMAC_GENERIC=m
++CONFIG_DWMAC_INTEL=m
++CONFIG_STMMAC_PCI=m
+ # CONFIG_NET_VENDOR_SUN is not set
+ # CONFIG_NET_VENDOR_SYNOPSYS is not set
+ # CONFIG_NET_VENDOR_TEHUTI is not set
+-- 
+2.43.0
+

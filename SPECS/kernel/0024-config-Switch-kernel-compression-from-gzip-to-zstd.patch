@@ -1,0 +1,109 @@
+From 54d2d39424ba1a919984ec778cf9fb1f89c07eeb Mon Sep 17 00:00:00 2001
+From: "Zhou, Furong" <furong.zhou@intel.com>
+Date: Wed, 4 Dec 2024 11:30:08 +0800
+Subject: [PATCH 24/76] config: Switch kernel compression from gzip to zstd
+
+Switch kernel compression method from gzip to zstd which
+will save about 2M kernel size.
+---
+ Intel/config    | 10 +++++-----
+ Intel/config-rt | 10 +++++-----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index 63040960ea642..a8fd19ea3a618 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -38,13 +38,13 @@ CONFIG_HAVE_KERNEL_XZ=y
+ CONFIG_HAVE_KERNEL_LZO=y
+ CONFIG_HAVE_KERNEL_LZ4=y
+ CONFIG_HAVE_KERNEL_ZSTD=y
+-CONFIG_KERNEL_GZIP=y
++# CONFIG_KERNEL_GZIP is not set
+ # CONFIG_KERNEL_BZIP2 is not set
+ # CONFIG_KERNEL_LZMA is not set
+ # CONFIG_KERNEL_XZ is not set
+ # CONFIG_KERNEL_LZO is not set
+ # CONFIG_KERNEL_LZ4 is not set
+-# CONFIG_KERNEL_ZSTD is not set
++CONFIG_KERNEL_ZSTD=y
+ CONFIG_DEFAULT_INIT=""
+ CONFIG_DEFAULT_HOSTNAME=""
+ CONFIG_SYSVIPC=y
+@@ -1989,7 +1989,7 @@ CONFIG_FW_LOADER_USER_HELPER=y
+ # CONFIG_FW_LOADER_USER_HELPER_FALLBACK is not set
+ CONFIG_FW_LOADER_COMPRESS=y
+ CONFIG_FW_LOADER_COMPRESS_XZ=y
+-# CONFIG_FW_LOADER_COMPRESS_ZSTD is not set
++CONFIG_FW_LOADER_COMPRESS_ZSTD=y
+ CONFIG_FW_CACHE=y
+ # CONFIG_FW_UPLOAD is not set
+ # end of Firmware loader
+@@ -7124,7 +7124,7 @@ CONFIG_SQUASHFS_ZLIB=y
+ CONFIG_SQUASHFS_LZ4=y
+ CONFIG_SQUASHFS_LZO=y
+ CONFIG_SQUASHFS_XZ=y
+-# CONFIG_SQUASHFS_ZSTD is not set
++CONFIG_SQUASHFS_ZSTD=y
+ # CONFIG_SQUASHFS_4K_DEVBLK_SIZE is not set
+ # CONFIG_SQUASHFS_EMBEDDED is not set
+ CONFIG_SQUASHFS_FRAGMENT_CACHE_SIZE=3
+@@ -7535,7 +7535,7 @@ CONFIG_CRYPTO_LZO=m
+ # CONFIG_CRYPTO_842 is not set
+ # CONFIG_CRYPTO_LZ4 is not set
+ # CONFIG_CRYPTO_LZ4HC is not set
+-# CONFIG_CRYPTO_ZSTD is not set
++CONFIG_CRYPTO_ZSTD=y
+ # end of Compression
+ 
+ #
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 67936cc8abb74..1a8fedee7fafd 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -38,13 +38,13 @@ CONFIG_HAVE_KERNEL_XZ=y
+ CONFIG_HAVE_KERNEL_LZO=y
+ CONFIG_HAVE_KERNEL_LZ4=y
+ CONFIG_HAVE_KERNEL_ZSTD=y
+-CONFIG_KERNEL_GZIP=y
++# CONFIG_KERNEL_GZIP is not set
+ # CONFIG_KERNEL_BZIP2 is not set
+ # CONFIG_KERNEL_LZMA is not set
+ # CONFIG_KERNEL_XZ is not set
+ # CONFIG_KERNEL_LZO is not set
+ # CONFIG_KERNEL_LZ4 is not set
+-# CONFIG_KERNEL_ZSTD is not set
++CONFIG_KERNEL_ZSTD=y
+ CONFIG_DEFAULT_INIT=""
+ CONFIG_DEFAULT_HOSTNAME=""
+ CONFIG_SYSVIPC=y
+@@ -1995,7 +1995,7 @@ CONFIG_FW_LOADER_USER_HELPER=y
+ # CONFIG_FW_LOADER_USER_HELPER_FALLBACK is not set
+ CONFIG_FW_LOADER_COMPRESS=y
+ CONFIG_FW_LOADER_COMPRESS_XZ=y
+-# CONFIG_FW_LOADER_COMPRESS_ZSTD is not set
++CONFIG_FW_LOADER_COMPRESS_ZSTD=y
+ CONFIG_FW_CACHE=y
+ # CONFIG_FW_UPLOAD is not set
+ # end of Firmware loader
+@@ -7145,7 +7145,7 @@ CONFIG_SQUASHFS_ZLIB=y
+ CONFIG_SQUASHFS_LZ4=y
+ CONFIG_SQUASHFS_LZO=y
+ CONFIG_SQUASHFS_XZ=y
+-# CONFIG_SQUASHFS_ZSTD is not set
++CONFIG_SQUASHFS_ZSTD=y
+ # CONFIG_SQUASHFS_4K_DEVBLK_SIZE is not set
+ # CONFIG_SQUASHFS_EMBEDDED is not set
+ CONFIG_SQUASHFS_FRAGMENT_CACHE_SIZE=3
+@@ -7556,7 +7556,7 @@ CONFIG_CRYPTO_LZO=m
+ # CONFIG_CRYPTO_842 is not set
+ # CONFIG_CRYPTO_LZ4 is not set
+ # CONFIG_CRYPTO_LZ4HC is not set
+-# CONFIG_CRYPTO_ZSTD is not set
++CONFIG_CRYPTO_ZSTD=y
+ # end of Compression
+ 
+ #
+-- 
+2.43.0
+

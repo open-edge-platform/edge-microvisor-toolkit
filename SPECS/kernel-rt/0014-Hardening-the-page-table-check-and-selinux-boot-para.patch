@@ -1,0 +1,38 @@
+From c83ca2a1f1cba8dc2c85a9148e46e4d01e536132 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:30:48 +0800
+Subject: [PATCH 14/76] Hardening the page table check and selinux boot param
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index b57e7bc94b9f9..9950b8d517cf4 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -7297,8 +7297,8 @@ CONFIG_HARDENED_USERCOPY=y
+ CONFIG_FORTIFY_SOURCE=y
+ # CONFIG_STATIC_USERMODEHELPER is not set
+ CONFIG_SECURITY_SELINUX=y
+-CONFIG_SECURITY_SELINUX_BOOTPARAM=y
+-CONFIG_SECURITY_SELINUX_DEVELOP=y
++# CONFIG_SECURITY_SELINUX_BOOTPARAM is not set
++# CONFIG_SECURITY_SELINUX_DEVELOP is not set
+ CONFIG_SECURITY_SELINUX_AVC_STATS=y
+ CONFIG_SECURITY_SELINUX_SIDTAB_HASH_BITS=9
+ CONFIG_SECURITY_SELINUX_SID2STR_CACHE_SIZE=256
+@@ -7901,7 +7901,8 @@ CONFIG_HAVE_KCSAN_COMPILER=y
+ CONFIG_SLUB_DEBUG=y
+ # CONFIG_SLUB_DEBUG_ON is not set
+ # CONFIG_PAGE_OWNER is not set
+-# CONFIG_PAGE_TABLE_CHECK is not set
++CONFIG_PAGE_TABLE_CHECK=y
++CONFIG_PAGE_TABLE_CHECK_ENFORCED=y
+ CONFIG_PAGE_POISONING=y
+ # CONFIG_DEBUG_PAGE_REF is not set
+ # CONFIG_DEBUG_RODATA_TEST is not set
+-- 
+2.43.0
+

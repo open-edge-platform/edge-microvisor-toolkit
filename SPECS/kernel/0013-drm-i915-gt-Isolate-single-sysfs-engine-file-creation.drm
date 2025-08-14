@@ -1,0 +1,141 @@
+From 829d2d2927139e68807358ed0d278d24028c9e10 Mon Sep 17 00:00:00 2001
+From: Andi Shyti <andi.shyti@linux.intel.com>
+Date: Sat, 17 Aug 2024 23:00:24 +0200
+Subject: [PATCH 13/17] drm/i915/gt: Isolate single sysfs engine file creation
+
+In preparation for upcoming patches, we need the ability to
+create and remove individual sysfs files. To facilitate this,
+extract from the intel_engines_add_sysfs() function the creation
+of individual files.
+
+Signed-off-by: Andi Shyti <andi.shyti@linux.intel.com>
+---
+ drivers/gpu/drm/i915/gt/sysfs_engines.c | 75 ++++++++++++++++---------
+ drivers/gpu/drm/i915/gt/sysfs_engines.h |  2 +
+ 2 files changed, 49 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/sysfs_engines.c b/drivers/gpu/drm/i915/gt/sysfs_engines.c
+index d3d3c67edf34b..ef2eda72ac7f7 100644
+--- a/drivers/gpu/drm/i915/gt/sysfs_engines.c
++++ b/drivers/gpu/drm/i915/gt/sysfs_engines.c
+@@ -9,6 +9,7 @@
+ #include "i915_drv.h"
+ #include "intel_engine.h"
+ #include "intel_engine_heartbeat.h"
++#include "intel_gt_print.h"
+ #include "sysfs_engines.h"
+ 
+ struct kobj_engine {
+@@ -481,7 +482,7 @@ static void add_defaults(struct kobj_engine *parent)
+ 		return;
+ }
+ 
+-void intel_engines_add_sysfs(struct drm_i915_private *i915)
++int intel_engine_add_single_sysfs(struct intel_engine_cs *engine)
+ {
+ 	static const struct attribute * const files[] = {
+ 		&name_attr.attr,
+@@ -497,7 +498,48 @@ void intel_engines_add_sysfs(struct drm_i915_private *i915)
+ #endif
+ 		NULL
+ 	};
++	struct kobject *dir = engine->i915->sysfs_engine;
++	struct kobject *kobj = engine->kobj;
++	int err;
++
++	kobj = kobj_engine(dir, engine);
++	if (!kobj) {
++		err = -EFAULT;
++		goto err_engine;
++	}
++
++	err = sysfs_create_files(kobj, files);
++	if (err)
++		goto err_object;
++
++	if (intel_engine_has_timeslices(engine)) {
++		err = sysfs_create_file(kobj, &timeslice_duration_attr.attr);
++		if (err)
++			goto err_object;
++	}
+ 
++	if (intel_engine_has_preempt_reset(engine)) {
++		err = sysfs_create_file(kobj, &preempt_timeout_attr.attr);
++		if (err)
++			goto err_object;
++	}
++
++	add_defaults(container_of(kobj, struct kobj_engine, base));
++
++	engine->kobj = kobj;
++
++	return 0;
++
++err_object:
++	kobject_put(kobj);
++err_engine:
++	gt_warn(engine->gt, "Failed to add sysfs engine '%s'\n", engine->name);
++
++	return err;
++}
++
++void intel_engines_add_sysfs(struct drm_i915_private *i915)
++{
+ 	struct device *kdev = i915->drm.primary->kdev;
+ 	struct intel_engine_cs *engine;
+ 	struct kobject *dir;
+@@ -514,33 +556,10 @@ void intel_engines_add_sysfs(struct drm_i915_private *i915)
+ 	 * uabi_engines access list with the mutex.
+ 	 */
+ 	for_each_uabi_engine(engine, i915) {
+-		struct kobject *kobj;
+-
+-		kobj = kobj_engine(dir, engine);
+-		if (!kobj)
+-			goto err_engine;
+-
+-		if (sysfs_create_files(kobj, files))
+-			goto err_object;
++		int err;
+ 
+-		if (intel_engine_has_timeslices(engine) &&
+-		    sysfs_create_file(kobj, &timeslice_duration_attr.attr))
+-			goto err_engine;
+-
+-		if (intel_engine_has_preempt_reset(engine) &&
+-		    sysfs_create_file(kobj, &preempt_timeout_attr.attr))
+-			goto err_engine;
+-
+-		add_defaults(container_of(kobj, struct kobj_engine, base));
+-
+-		engine->kobj = kobj;
+-
+-		if (0) {
+-err_object:
+-			kobject_put(kobj);
+-err_engine:
+-			dev_warn(kdev, "Failed to add sysfs engine '%s'\n",
+-				 engine->name);
+-		}
++		err = intel_engine_add_single_sysfs(engine);
++		if (err)
++			break;
+ 	}
+ }
+diff --git a/drivers/gpu/drm/i915/gt/sysfs_engines.h b/drivers/gpu/drm/i915/gt/sysfs_engines.h
+index 9546fffe03a7d..2e3ec2df14a9b 100644
+--- a/drivers/gpu/drm/i915/gt/sysfs_engines.h
++++ b/drivers/gpu/drm/i915/gt/sysfs_engines.h
+@@ -7,7 +7,9 @@
+ #define INTEL_ENGINE_SYSFS_H
+ 
+ struct drm_i915_private;
++struct intel_engine_cs;
+ 
+ void intel_engines_add_sysfs(struct drm_i915_private *i915);
++int intel_engine_add_single_sysfs(struct intel_engine_cs *engine);
+ 
+ #endif /* INTEL_ENGINE_SYSFS_H */
+-- 
+2.34.1
+

@@ -1,0 +1,49 @@
+From d0fdddf72c527a1c3f0887c2e7e0db082793f856 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 13 Jan 2025 13:07:19 +0800
+Subject: [PATCH 43/76] Intel/config: Enable the selinux boot param and
+ development support
+
+SELinux is an important security feature. From TiberOS perspective, there
+is immutable and Read-only filesystem. It prefer to enforce the SELinux
+at the image level to facilitate the development.
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config    | 4 ++--
+ Intel/config-rt | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index 4a1f4bb5db842..142016011f203 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -7291,8 +7291,8 @@ CONFIG_HARDENED_USERCOPY=y
+ CONFIG_FORTIFY_SOURCE=y
+ # CONFIG_STATIC_USERMODEHELPER is not set
+ CONFIG_SECURITY_SELINUX=y
+-# CONFIG_SECURITY_SELINUX_BOOTPARAM is not set
+-# CONFIG_SECURITY_SELINUX_DEVELOP is not set
++CONFIG_SECURITY_SELINUX_BOOTPARAM=y
++CONFIG_SECURITY_SELINUX_DEVELOP=y
+ CONFIG_SECURITY_SELINUX_AVC_STATS=y
+ CONFIG_SECURITY_SELINUX_SIDTAB_HASH_BITS=9
+ CONFIG_SECURITY_SELINUX_SID2STR_CACHE_SIZE=256
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 54580046084b1..bf6e5fc191604 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -7318,8 +7318,8 @@ CONFIG_HARDENED_USERCOPY=y
+ CONFIG_FORTIFY_SOURCE=y
+ # CONFIG_STATIC_USERMODEHELPER is not set
+ CONFIG_SECURITY_SELINUX=y
+-# CONFIG_SECURITY_SELINUX_BOOTPARAM is not set
+-# CONFIG_SECURITY_SELINUX_DEVELOP is not set
++CONFIG_SECURITY_SELINUX_BOOTPARAM=y
++CONFIG_SECURITY_SELINUX_DEVELOP=y
+ CONFIG_SECURITY_SELINUX_AVC_STATS=y
+ CONFIG_SECURITY_SELINUX_SIDTAB_HASH_BITS=9
+ CONFIG_SECURITY_SELINUX_SID2STR_CACHE_SIZE=256
+-- 
+2.43.0
+

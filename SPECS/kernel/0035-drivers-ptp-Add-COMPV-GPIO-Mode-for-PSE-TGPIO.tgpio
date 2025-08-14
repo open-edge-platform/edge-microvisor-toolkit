@@ -1,0 +1,54 @@
+From bd416f117b0400c04e5e8f8022d332a98cdb394f Mon Sep 17 00:00:00 2001
+From: "D, Lakshmi Sowjanya" <lakshmi.sowjanya.d@intel.com>
+Date: Thu, 2 May 2024 12:22:51 +0530
+Subject: [PATCH 35/43] drivers/ptp: Add COMPV GPIO Mode for PSE TGPIO
+
+In the COMPV GPIO Mode, instead of generating interrupts for each
+input event received, each input events will increment the event
+counter register only.
+
+The event counter value will be fed as Input Event Counter to the
+comparator which then be matched against the programmed COMPV value.
+Interrupt will be generated when they matches.
+
+Signed-off-by: Tan, Raymond <raymond.tan@intel.com>
+Signed-off-by: Lakshmi Sowjanya D <lakshmi.sowjanya.d@intel.com>
+Signed-off-by: Hao Li <hao3.li@intel.com>
+---
+ drivers/ptp/ptp_chardev.c      | 5 ++++-
+ include/uapi/linux/ptp_clock.h | 3 ++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ptp/ptp_chardev.c b/drivers/ptp/ptp_chardev.c
+index 196e0db2c0c91..9a747a85e1256 100644
+--- a/drivers/ptp/ptp_chardev.c
++++ b/drivers/ptp/ptp_chardev.c
+@@ -249,7 +249,10 @@ long ptp_ioctl(struct posix_clock_context *pccontext, unsigned int cmd,
+ 			}
+ 		} else if (cmd == PTP_EXTTS_REQUEST) {
+ 			req.extts.flags &= PTP_EXTTS_V1_VALID_FLAGS;
+-			zero_rsv_field(req.extts.rsv);
++			/* zero_rsv_field(req.extts.rsv); */
++			/* TOFIX: Temporarily uses RESERVED field to */
++			/* pass event count value */
++			req.extts.rsv[1] = 0;
+ 		}
+ 		if (req.extts.index >= ops->n_ext_ts) {
+ 			err = -EINVAL;
+diff --git a/include/uapi/linux/ptp_clock.h b/include/uapi/linux/ptp_clock.h
+index 62320cccd1a28..a48f1f5bdf20e 100644
+--- a/include/uapi/linux/ptp_clock.h
++++ b/include/uapi/linux/ptp_clock.h
+@@ -49,7 +49,8 @@
+ 				 PTP_RISING_EDGE |	\
+ 				 PTP_FALLING_EDGE |	\
+ 				 PTP_STRICT_FLAGS |	\
+-				 PTP_EXT_OFFSET)
++				 PTP_EXT_OFFSET |	\
++				 PTP_EVENT_COUNTER_MODE)
+ 
+ /*
+  * flag fields valid for the original PTP_EXTTS_REQUEST ioctl.
+-- 
+2.25.1
+

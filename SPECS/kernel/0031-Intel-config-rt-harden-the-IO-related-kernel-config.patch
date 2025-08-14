@@ -1,0 +1,46 @@
+From d10ae36e5ffecec0c98d062ab42a92134ae3c4ef Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:31:43 +0800
+Subject: [PATCH 31/76] Intel/config-rt: harden the IO related kernel config
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config-rt | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 1b218b0c6349c..fa35c5f7fc128 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -441,7 +441,7 @@ CONFIG_PERF_EVENTS_AMD_UNCORE=y
+ # end of Performance monitoring
+ 
+ # CONFIG_X86_VSYSCALL_EMULATION is not set
+-CONFIG_X86_IOPL_IOPERM=y
++# CONFIG_X86_IOPL_IOPERM is not set
+ CONFIG_MICROCODE=y
+ # CONFIG_MICROCODE_LATE_LOADING is not set
+ CONFIG_X86_MSR=m
+@@ -6370,8 +6370,8 @@ CONFIG_IOMMU_IO_PGTABLE=y
+ # end of Generic IOMMU Pagetable Support
+ 
+ # CONFIG_IOMMU_DEBUGFS is not set
+-# CONFIG_IOMMU_DEFAULT_DMA_STRICT is not set
+-CONFIG_IOMMU_DEFAULT_DMA_LAZY=y
++CONFIG_IOMMU_DEFAULT_DMA_STRICT=y
++# CONFIG_IOMMU_DEFAULT_DMA_LAZY is not set
+ # CONFIG_IOMMU_DEFAULT_PASSTHROUGH is not set
+ CONFIG_IOMMU_DMA=y
+ CONFIG_IOMMU_SVA=y
+@@ -8098,7 +8098,7 @@ CONFIG_FTRACE_SYSCALLS=y
+ # CONFIG_TRACER_SNAPSHOT is not set
+ CONFIG_BRANCH_PROFILE_NONE=y
+ # CONFIG_PROFILE_ANNOTATED_BRANCHES is not set
+-CONFIG_BLK_DEV_IO_TRACE=y
++# CONFIG_BLK_DEV_IO_TRACE is not set
+ CONFIG_PROBE_EVENTS_BTF_ARGS=y
+ CONFIG_KPROBE_EVENTS=y
+ # CONFIG_KPROBE_EVENTS_ON_NOTRACE is not set
+-- 
+2.43.0
+

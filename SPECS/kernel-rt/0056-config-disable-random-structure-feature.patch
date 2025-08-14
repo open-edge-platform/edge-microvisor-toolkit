@@ -1,0 +1,48 @@
+From 7c2beb6b472349f46ab4f6fd591086c2cb6d797d Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Fri, 4 Jul 2025 15:51:41 +0800
+Subject: [PATCH 56/76] config: disable random structure feature
+
+This feature might append random data in kernel module structure.
+Kernel module couldn't be built with different server.
+For EMT, nvidia data center driver kernel module couldn't be
+installed sometimes because it might be built with different
+server. This kernel option is none in ubuntu.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ Intel/config    | 3 +--
+ Intel/config-rt | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index b568cb5f32029..9c5a66565f0c8 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -7442,8 +7442,7 @@ CONFIG_LIST_HARDENED=y
+ CONFIG_BUG_ON_DATA_CORRUPTION=y
+ # end of Hardening of kernel data structures
+ 
+-# CONFIG_RANDSTRUCT_NONE is not set
+-CONFIG_RANDSTRUCT_FULL=y
++CONFIG_RANDSTRUCT_NONE=y
+ # end of Kernel hardening options
+ # end of Security options
+ 
+diff --git a/Intel/config-rt b/Intel/config-rt
+index c510da031a0a3..a4036fbc6d7b9 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -7423,8 +7423,7 @@ CONFIG_LIST_HARDENED=y
+ CONFIG_BUG_ON_DATA_CORRUPTION=y
+ # end of Hardening of kernel data structures
+ 
+-# CONFIG_RANDSTRUCT_NONE is not set
+-CONFIG_RANDSTRUCT_FULL=y
++CONFIG_RANDSTRUCT_NONE=y
+ # end of Kernel hardening options
+ # end of Security options
+ 
+-- 
+2.43.0
+

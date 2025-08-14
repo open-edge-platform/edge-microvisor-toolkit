@@ -1,0 +1,40 @@
+From 320b8a48a092873251472dda1ac7f024ebb4175c Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Fri, 27 Dec 2024 11:08:31 +0800
+Subject: [PATCH 40/76] Intel/config: disable the static usermode helper
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config    | 2 +-
+ Intel/config-rt | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index a25fea2350ebb..19e273dab98c8 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -7295,7 +7295,7 @@ CONFIG_INTEL_TXT=y
+ CONFIG_LSM_MMAP_MIN_ADDR=65536
+ CONFIG_HARDENED_USERCOPY=y
+ CONFIG_FORTIFY_SOURCE=y
+-CONFIG_STATIC_USERMODEHELPER=y
++# CONFIG_STATIC_USERMODEHELPER is not set
+ CONFIG_SECURITY_SELINUX=y
+ # CONFIG_SECURITY_SELINUX_BOOTPARAM is not set
+ # CONFIG_SECURITY_SELINUX_DEVELOP is not set
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 50b25774ed7a4..48064bfa2d46c 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -7316,7 +7316,7 @@ CONFIG_INTEL_TXT=y
+ CONFIG_LSM_MMAP_MIN_ADDR=65536
+ CONFIG_HARDENED_USERCOPY=y
+ CONFIG_FORTIFY_SOURCE=y
+-CONFIG_STATIC_USERMODEHELPER=y
++# CONFIG_STATIC_USERMODEHELPER is not set
+ CONFIG_SECURITY_SELINUX=y
+ # CONFIG_SECURITY_SELINUX_BOOTPARAM is not set
+ # CONFIG_SECURITY_SELINUX_DEVELOP is not set
+-- 
+2.43.0
+

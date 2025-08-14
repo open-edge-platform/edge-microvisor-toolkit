@@ -1,0 +1,27 @@
+From 9999b2efb98fd2bfcc0030e91299d860f7242d95 Mon Sep 17 00:00:00 2001
+From: "Pan, Kris" <kris.pan@intel.com>
+Date: Thu, 28 Nov 2024 01:19:37 +0000
+Subject: [PATCH 27/76] Intel/config: enable CONFIG_UDMABUF to enable EGL
+ dmabuf API
+
+Signed-off-by: Pan, Kris <kris.pan@intel.com>
+---
+ Intel/config | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Intel/config b/Intel/config
+index 1f128a902a06c..736b460e6b38e 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -6085,7 +6085,7 @@ CONFIG_DMA_ENGINE_RAID=y
+ #
+ CONFIG_SYNC_FILE=y
+ # CONFIG_SW_SYNC is not set
+-# CONFIG_UDMABUF is not set
++CONFIG_UDMABUF=y
+ # CONFIG_DMABUF_MOVE_NOTIFY is not set
+ # CONFIG_DMABUF_DEBUG is not set
+ # CONFIG_DMABUF_SELFTESTS is not set
+-- 
+2.43.0
+

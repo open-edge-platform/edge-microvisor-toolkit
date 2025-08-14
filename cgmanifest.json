@@ -8472,7 +8472,7 @@
         "other": {
           "name": "kernel",
           "version": "6.12.39",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.39.tar.gz"
         }
       }
     },
@@ -8492,7 +8492,7 @@
         "other": {
           "name": "kernel-headers",
           "version": "6.12.39",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.39.tar.gz"
         }
       }
     },
@@ -8532,7 +8532,7 @@
         "other": {
           "name": "kernel-rt",
           "version": "6.12.39",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.39.tar.gz"
         }
       }
     },
@@ -21622,9 +21622,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "platform-observability-agent",
-          "version": "1.9.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.9.0.tar.gz"
+          "name": "platform-manageability-agent",
+          "version": "0.1.8",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.1.8.tar.gz"
         }
       }
     },
@@ -21632,9 +21632,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "platform-manageability-agent",
-          "version": "0.1.8",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.1.8.tar.gz"
+          "name": "platform-observability-agent",
+          "version": "1.9.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.9.0.tar.gz"
         }
       }
     },

@@ -1,0 +1,69 @@
+From ace7219f95fc9ef3c9cee0dc63dc9fecb6b4e94d Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Wed, 18 Jun 2025 13:18:43 +0800
+Subject: [PATCH 53/76] config: disable kernel module signature
+
+disable kernel module force checking. Or external kernel module
+couldn't be installed due to signature mismatch.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ Intel/config    | 8 ++------
+ Intel/config-rt | 8 ++------
+ 2 files changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index ec5f1978c0462..c4c3c691afb95 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -905,7 +905,7 @@ CONFIG_MODVERSIONS=y
+ CONFIG_ASM_MODVERSIONS=y
+ # CONFIG_MODULE_SRCVERSION_ALL is not set
+ CONFIG_MODULE_SIG=y
+-CONFIG_MODULE_SIG_FORCE=y
++# CONFIG_MODULE_SIG_FORCE is not set
+ CONFIG_MODULE_SIG_ALL=y
+ # CONFIG_MODULE_SIG_SHA1 is not set
+ # CONFIG_MODULE_SIG_SHA224 is not set
+@@ -7385,11 +7385,7 @@ CONFIG_SECURITY_APPARMOR_PARANOID_LOAD=y
+ # CONFIG_SECURITY_LOADPIN is not set
+ CONFIG_SECURITY_YAMA=y
+ CONFIG_SECURITY_SAFESETID=y
+-CONFIG_SECURITY_LOCKDOWN_LSM=y
+-CONFIG_SECURITY_LOCKDOWN_LSM_EARLY=y
+-CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE=y
+-# CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set
+-# CONFIG_LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY is not set
++# CONFIG_SECURITY_LOCKDOWN_LSM is not set
+ CONFIG_SECURITY_LANDLOCK=y
+ CONFIG_INTEGRITY=y
+ # CONFIG_INTEGRITY_SIGNATURE is not set
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 75b9eae3ca94e..9e84ce47d8369 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -911,7 +911,7 @@ CONFIG_MODVERSIONS=y
+ CONFIG_ASM_MODVERSIONS=y
+ # CONFIG_MODULE_SRCVERSION_ALL is not set
+ CONFIG_MODULE_SIG=y
+-CONFIG_MODULE_SIG_FORCE=y
++# CONFIG_MODULE_SIG_FORCE is not set
+ CONFIG_MODULE_SIG_ALL=y
+ # CONFIG_MODULE_SIG_SHA1 is not set
+ # CONFIG_MODULE_SIG_SHA224 is not set
+@@ -7337,11 +7337,7 @@ CONFIG_SECURITY_APPARMOR_PARANOID_LOAD=y
+ # CONFIG_SECURITY_LOADPIN is not set
+ CONFIG_SECURITY_YAMA=y
+ CONFIG_SECURITY_SAFESETID=y
+-CONFIG_SECURITY_LOCKDOWN_LSM=y
+-CONFIG_SECURITY_LOCKDOWN_LSM_EARLY=y
+-CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE=y
+-# CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set
+-# CONFIG_LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY is not set
++# CONFIG_SECURITY_LOCKDOWN_LSM is not set
+ CONFIG_SECURITY_LANDLOCK=y
+ CONFIG_INTEGRITY=y
+ # CONFIG_INTEGRITY_SIGNATURE is not set
+-- 
+2.43.0
+

@@ -1,0 +1,79 @@
+From 6c4162eb7bb8be8b63308ff088ac9045b2fda6bf Mon Sep 17 00:00:00 2001
+From: Malli C <mallikarjuna.chilakala@intel.com>
+Date: Mon, 25 Jan 2021 17:38:47 -0800
+Subject: [PATCH 01/32] igc: Set the RX packet buffer size for TSN mode
+
+In preparation for supporting frame preemption, when entering TSN mode
+set the receive packet buffer to 16KB for the Express MAC, 16KB for
+the Preemptible MAC and 2KB for the BMC, according to the datasheet
+section 7.1.3.2.
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Signed-off-by: Malli C <mallikarjuna.chilakala@intel.com>
+Signed-off-by: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc_defines.h |  2 ++
+ drivers/net/ethernet/intel/igc/igc_tsn.c     | 12 ++++++++++--
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igc/igc_defines.h b/drivers/net/ethernet/intel/igc/igc_defines.h
+index 8e449904aa7db..460513b8c1b46 100644
+--- a/drivers/net/ethernet/intel/igc/igc_defines.h
++++ b/drivers/net/ethernet/intel/igc/igc_defines.h
+@@ -401,6 +401,8 @@
+ #define IGC_RXPBS_CFG_TS_EN	0x80000000 /* Timestamp in Rx buffer */
+ 
+ #define IGC_TXPBSIZE_TSN	0x04145145 /* 5k bytes buffer for each queue */
++#define IGC_RXPBSIZE_TSN	0x00010090 /* 16KB for EXP + 16KB for BE + 2KB for BMC */
++#define IGC_RXPBSIZE_SIZE_MASK	0x0001FFFF
+ 
+ #define IGC_DTXMXPKTSZ_TSN	0x19 /* 1600 bytes of max TX DMA packet size */
+ #define IGC_DTXMXPKTSZ_DEFAULT	0x98 /* 9728-byte Jumbo frames */
+diff --git a/drivers/net/ethernet/intel/igc/igc_tsn.c b/drivers/net/ethernet/intel/igc/igc_tsn.c
+index 1e44374ca1ffb..891d4dc437780 100644
+--- a/drivers/net/ethernet/intel/igc/igc_tsn.c
++++ b/drivers/net/ethernet/intel/igc/igc_tsn.c
+@@ -132,7 +132,7 @@ static int igc_tsn_disable_offload(struct igc_adapter *adapter)
+ {
+ 	u16 queue_per_tc[4] = { 3, 2, 1, 0 };
+ 	struct igc_hw *hw = &adapter->hw;
+-	u32 tqavctrl;
++	u32 tqavctrl, rxpbs;
+ 	int i;
+ 
+ 	wr32(IGC_GTXOFFSET, 0);
+@@ -141,6 +141,10 @@ static int igc_tsn_disable_offload(struct igc_adapter *adapter)
+ 
+ 	if (igc_is_device_id_i226(hw))
+ 		igc_tsn_restore_retx_default(adapter);
++	rxpbs = rd32(IGC_RXPBS) & ~IGC_RXPBSIZE_SIZE_MASK;
++	rxpbs |= I225_RXPBSIZE_DEFAULT;
++
++	wr32(IGC_RXPBS, rxpbs);
+ 
+ 	tqavctrl = rd32(IGC_TQAVCTRL);
+ 	tqavctrl &= ~(IGC_TQAVCTRL_TRANSMIT_MODE_TSN |
+@@ -194,7 +198,7 @@ static int igc_tsn_enable_offload(struct igc_adapter *adapter)
+ {
+ 	struct igc_hw *hw = &adapter->hw;
+ 	u32 tqavctrl, baset_l, baset_h;
+-	u32 sec, nsec, cycle;
++	u32 sec, nsec, cycle, rxpbs;
+ 	ktime_t base_time, systim;
+ 	int i;
+ 
+@@ -204,6 +208,10 @@ static int igc_tsn_enable_offload(struct igc_adapter *adapter)
+ 
+ 	if (igc_is_device_id_i226(hw))
+ 		igc_tsn_set_retx_qbvfullthreshold(adapter);
++	rxpbs = rd32(IGC_RXPBS) & ~IGC_RXPBSIZE_SIZE_MASK;
++	rxpbs |= IGC_RXPBSIZE_TSN;
++
++	wr32(IGC_RXPBS, rxpbs);
+ 
+ 	if (adapter->strict_priority_enable) {
+ 		int err;
+-- 
+2.25.1
+

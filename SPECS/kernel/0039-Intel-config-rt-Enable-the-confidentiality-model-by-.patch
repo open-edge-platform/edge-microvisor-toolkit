@@ -1,0 +1,32 @@
+From 8651952a36d5743e896bc2f25780f5bd29b504c6 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:39:50 +0800
+Subject: [PATCH 39/76] Intel/config-rt: Enable the confidentiality model by
+ default
+
+The kernel runs in confidentiality mode by default. Features
+that allow the kernel to be modified at runtime or that permit
+userland code to read confidential material held inside the
+kernel are disabled.
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config-rt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Intel/config-rt b/Intel/config-rt
+index bad2f879724c2..50b25774ed7a4 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -7340,7 +7340,7 @@ CONFIG_SECURITY_LOCKDOWN_LSM=y
+ CONFIG_SECURITY_LOCKDOWN_LSM_EARLY=y
+ CONFIG_LOCK_DOWN_KERNEL_FORCE_NONE=y
+ # CONFIG_LOCK_DOWN_KERNEL_FORCE_INTEGRITY is not set
+-# CONFIG_LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY is not set
++CONFIG_LOCK_DOWN_KERNEL_FORCE_CONFIDENTIALITY=y
+ CONFIG_SECURITY_LANDLOCK=y
+ CONFIG_INTEGRITY=y
+ # CONFIG_INTEGRITY_SIGNATURE is not set
+-- 
+2.43.0
+

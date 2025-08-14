@@ -1,0 +1,27 @@
+From 7cf7bb92524a539ea0afb48004cf377a27e6e509 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 9 Dec 2024 10:37:23 +0800
+Subject: [PATCH 20/76] Hardening kernel by enabling kfence
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ Intel/config | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/Intel/config b/Intel/config
+index a893a78741ba2..c5dd2b9652b9a 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -7931,7 +7931,8 @@ CONFIG_CC_HAS_KASAN_GENERIC=y
+ CONFIG_CC_HAS_WORKING_NOSANITIZE_ADDRESS=y
+ # CONFIG_KASAN is not set
+ CONFIG_HAVE_ARCH_KFENCE=y
+-# CONFIG_KFENCE is not set
++CONFIG_KFENCE=y
++CONFIG_KFENCE_SAMPLE_INTERVAL=100
+ CONFIG_HAVE_ARCH_KMSAN=y
+ # end of Memory Debugging
+ 
+-- 
+2.43.0
+

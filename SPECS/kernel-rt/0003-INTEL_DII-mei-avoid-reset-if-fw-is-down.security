@@ -1,0 +1,180 @@
+From 61a121e14e1f2f4c7d3dabf154620fc6eefad271 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Tue, 1 Mar 2022 16:36:25 +0200
+Subject: [PATCH 03/19] INTEL_DII: mei: avoid reset if fw is down
+
+If FW is not ready and FW reset flag is off
+do not start reset flow as FW will not answer anyway.
+Wait till interrupt with FW reset flag on to start reset flow.
+
+Flow:
+FW on the way down unset ME_RDY_HRA and ME_RST_HRA and sends interrupt.
+Driver receives interrupt and stops all communication.
+(Before the patch here the driver starts reset flow).
+FW on the way up set ME_RST_HRA and sends interrupt.
+Driver receives interrupt and starts the link reset flow.
+FW sets ME_RDY_HRA and unsets ME_RST_HRA and sends interrupt.
+Driver continues with link reset flow.
+
+Limit the flow to GSC for now.
+
+Co-developed-by: Tomas Winkler <tomasw@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/gsc-me.c  |  2 +-
+ drivers/misc/mei/hw-me.c   | 16 ++++++++++++++++
+ drivers/misc/mei/hw-me.h   |  2 ++
+ drivers/misc/mei/init.c    |  7 +++++--
+ drivers/misc/mei/main.c    |  1 +
+ drivers/misc/mei/mei_dev.h |  3 ++-
+ 6 files changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/misc/mei/gsc-me.c b/drivers/misc/mei/gsc-me.c
+index 5a8c26c3df13d..2a35e7e6b2038 100644
+--- a/drivers/misc/mei/gsc-me.c
++++ b/drivers/misc/mei/gsc-me.c
+@@ -21,7 +21,7 @@
+ 
+ #include "mei-trace.h"
+ 
+-#define MEI_GSC_RPM_TIMEOUT 500
++#define MEI_GSC_RPM_TIMEOUT 2000
+ 
+ static int mei_gsc_read_hfs(const struct mei_device *dev, int where, u32 *val)
+ {
+diff --git a/drivers/misc/mei/hw-me.c b/drivers/misc/mei/hw-me.c
+index d11a0740b47c9..b9f0f25adf228 100644
+--- a/drivers/misc/mei/hw-me.c
++++ b/drivers/misc/mei/hw-me.c
+@@ -1334,6 +1334,7 @@ EXPORT_SYMBOL_GPL(mei_me_irq_quick_handler);
+ irqreturn_t mei_me_irq_thread_handler(int irq, void *dev_id)
+ {
+ 	struct mei_device *dev = (struct mei_device *) dev_id;
++	struct mei_me_hw *hw = to_me_hw(dev);
+ 	struct list_head cmpl_list;
+ 	s32 slots;
+ 	u32 hcsr;
+@@ -1348,6 +1349,16 @@ irqreturn_t mei_me_irq_thread_handler(int irq, void *dev_id)
+ 
+ 	INIT_LIST_HEAD(&cmpl_list);
+ 
++	/* HW not ready without reset - HW is powering down */
++	if (hw->cfg->hw_down_supported && !mei_hw_is_ready(dev)  && !mei_me_hw_is_resetting(dev)) {
++		dev_notice(dev->dev, "FW not ready and not resetting\n");
++		mei_cl_all_disconnect(dev);
++		/* move device to fw down state to allow reset flow on next interrupt */
++		mei_set_devstate(dev, MEI_DEV_FW_DOWN);
++		pm_runtime_mark_last_busy(dev->dev);
++		goto end;
++	}
++
+ 	/* check if ME wants a reset */
+ 	if (!mei_hw_is_ready(dev) && dev->dev_state != MEI_DEV_RESETTING) {
+ 		if (kind_is_gsc(dev) || kind_is_gscfi(dev)) {
+@@ -1642,6 +1653,9 @@ static bool mei_me_fw_type_sps_ign(const struct pci_dev *pdev)
+ #define MEI_CFG_TRC \
+ 	.hw_trc_supported = 1
+ 
++#define MEI_CFG_DOWN \
++	.hw_down_supported = 1
++
+ /* ICH Legacy devices */
+ static const struct mei_cfg mei_me_ich_cfg = {
+ 	MEI_CFG_ICH_HFS,
+@@ -1744,6 +1758,7 @@ static const struct mei_cfg mei_me_gsc_cfg = {
+ 	MEI_CFG_TYPE_GSC,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
++	MEI_CFG_DOWN,
+ };
+ 
+ /* Graphics System Controller Firmware Interface */
+@@ -1751,6 +1766,7 @@ static const struct mei_cfg mei_me_gscfi_cfg = {
+ 	MEI_CFG_TYPE_GSCFI,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
++	MEI_CFG_DOWN,
+ };
+ 
+ /*
+diff --git a/drivers/misc/mei/hw-me.h b/drivers/misc/mei/hw-me.h
+index 204b92af6c478..7128897885221 100644
+--- a/drivers/misc/mei/hw-me.h
++++ b/drivers/misc/mei/hw-me.h
+@@ -23,6 +23,7 @@
+  * @dma_size: device DMA buffers size
+  * @fw_ver_supported: is fw version retrievable from FW
+  * @hw_trc_supported: does the hw support trc register
++ * @hw_down_supported: can go down
+  */
+ struct mei_cfg {
+ 	const struct mei_fw_status fw_status;
+@@ -31,6 +32,7 @@ struct mei_cfg {
+ 	size_t dma_size[DMA_DSCR_NUM];
+ 	u32 fw_ver_supported:1;
+ 	u32 hw_trc_supported:1;
++	u32 hw_down_supported:1;
+ };
+ 
+ 
+diff --git a/drivers/misc/mei/init.c b/drivers/misc/mei/init.c
+index 8ef2b1df8ac76..22e21a237cf58 100644
+--- a/drivers/misc/mei/init.c
++++ b/drivers/misc/mei/init.c
+@@ -27,6 +27,7 @@ const char *mei_dev_state_str(int state)
+ 	MEI_DEV_STATE(POWERING_DOWN);
+ 	MEI_DEV_STATE(POWER_DOWN);
+ 	MEI_DEV_STATE(POWER_UP);
++	MEI_DEV_STATE(FW_DOWN);
+ 	default:
+ 		return "unknown";
+ 	}
+@@ -121,7 +122,8 @@ int mei_reset(struct mei_device *dev)
+ 	if (state != MEI_DEV_INITIALIZING &&
+ 	    state != MEI_DEV_DISABLED &&
+ 	    state != MEI_DEV_POWER_DOWN &&
+-	    state != MEI_DEV_POWER_UP) {
++	    state != MEI_DEV_POWER_UP &&
++	    state != MEI_DEV_FW_DOWN) {
+ 		char fw_sts_str[MEI_FW_STATUS_STR_SZ];
+ 
+ 		mei_fw_status_str(dev, fw_sts_str, MEI_FW_STATUS_STR_SZ);
+@@ -360,7 +362,8 @@ EXPORT_SYMBOL_GPL(mei_stop);
+  */
+ bool mei_write_is_idle(struct mei_device *dev)
+ {
+-	bool idle = (dev->dev_state == MEI_DEV_ENABLED &&
++	bool idle = ((dev->dev_state == MEI_DEV_ENABLED ||
++		      dev->dev_state == MEI_DEV_FW_DOWN) &&
+ 		list_empty(&dev->ctrl_wr_list) &&
+ 		list_empty(&dev->write_list)   &&
+ 		list_empty(&dev->write_waiting_list));
+diff --git a/drivers/misc/mei/main.c b/drivers/misc/mei/main.c
+index 1f5aaf16e300f..d5e124095e5bf 100644
+--- a/drivers/misc/mei/main.c
++++ b/drivers/misc/mei/main.c
+@@ -1124,6 +1124,7 @@ void mei_set_devstate(struct mei_device *dev, enum mei_dev_state state)
+ 		put_device(clsdev);
+ 	}
+ }
++EXPORT_SYMBOL_GPL(mei_set_devstate);
+ 
+ /**
+  * kind_show - display device kind
+diff --git a/drivers/misc/mei/mei_dev.h b/drivers/misc/mei/mei_dev.h
+index 37d7fb15cad74..91f9dc5d56d9f 100644
+--- a/drivers/misc/mei/mei_dev.h
++++ b/drivers/misc/mei/mei_dev.h
+@@ -64,7 +64,8 @@ enum mei_dev_state {
+ 	MEI_DEV_DISABLED,
+ 	MEI_DEV_POWERING_DOWN,
+ 	MEI_DEV_POWER_DOWN,
+-	MEI_DEV_POWER_UP
++	MEI_DEV_POWER_UP,
++	MEI_DEV_FW_DOWN,
+ };
+ 
+ /**
+-- 
+2.25.1
+

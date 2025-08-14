@@ -1,0 +1,32 @@
+From 5541f464133cd10295cb59f404ddfde84198a6f8 Mon Sep 17 00:00:00 2001
+From: Liang1 Yang <liang1.yang@intel.com>
+Date: Tue, 20 May 2025 20:19:45 +0800
+Subject: [PATCH 51/76] config-rt: enable CONFIG_UDMABUF
+
+Enable CONFIG_UDMABUF in the real-time (RT) kernel config
+for EMT. This option allows userspace to allocate memory
+via mmap and export it as a DMA-BUF, enabling zero-copy
+buffer sharing with other devices such as GPU virtualization
+scenarios using SR-IOV between guest VMs and the host.
+
+Signed-off-by: Liang1 Yang <liang1.yang@intel.com>
+---
+ Intel/config-rt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Intel/config-rt b/Intel/config-rt
+index 2543f0a545b5b..89ffaaa9a1e10 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -6107,7 +6107,7 @@ CONFIG_DMA_ENGINE_RAID=y
+ #
+ CONFIG_SYNC_FILE=y
+ # CONFIG_SW_SYNC is not set
+-# CONFIG_UDMABUF is not set
++CONFIG_UDMABUF=y
+ # CONFIG_DMABUF_MOVE_NOTIFY is not set
+ # CONFIG_DMABUF_DEBUG is not set
+ # CONFIG_DMABUF_SELFTESTS is not set
+-- 
+2.43.0
+

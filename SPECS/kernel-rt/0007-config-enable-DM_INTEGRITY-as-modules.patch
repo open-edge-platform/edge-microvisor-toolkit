@@ -1,0 +1,42 @@
+From 8ddb72c3c445edfe3658e8502c1c638bfab3d190 Mon Sep 17 00:00:00 2001
+From: "Zhou, Furong" <furong.zhou@intel.com>
+Date: Mon, 23 Sep 2024 09:20:51 +0800
+Subject: [PATCH 07/76] config: enable DM_INTEGRITY as modules
+
+Enable DM_INTEGRITGY as modules per request.
+
+Signed-off-by: Zhou, Furong <furong.zhou@intel.com>
+---
+ Intel/config    | 2 +-
+ Intel/config-rt | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Intel/config b/Intel/config
+index a6131d158d992..a849f9ae6567d 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -2483,7 +2483,7 @@ CONFIG_DM_VERITY=y
+ CONFIG_DM_VERITY_FEC=y
+ # CONFIG_DM_SWITCH is not set
+ # CONFIG_DM_LOG_WRITES is not set
+-# CONFIG_DM_INTEGRITY is not set
++CONFIG_DM_INTEGRITY=y
+ # CONFIG_DM_ZONED is not set
+ # CONFIG_DM_AUDIT is not set
+ CONFIG_TARGET_CORE=m
+diff --git a/Intel/config-rt b/Intel/config-rt
+index b52f5c0b5fadf..dbc936a90b9e1 100644
+--- a/Intel/config-rt
++++ b/Intel/config-rt
+@@ -2489,7 +2489,7 @@ CONFIG_DM_VERITY=y
+ CONFIG_DM_VERITY_FEC=y
+ # CONFIG_DM_SWITCH is not set
+ # CONFIG_DM_LOG_WRITES is not set
+-# CONFIG_DM_INTEGRITY is not set
++CONFIG_DM_INTEGRITY=y
+ # CONFIG_DM_ZONED is not set
+ # CONFIG_DM_AUDIT is not set
+ CONFIG_TARGET_CORE=m
+-- 
+2.43.0
+

@@ -1,0 +1,36 @@
+From a3b94bce59ba739b98a948844ab31280ae70f84b Mon Sep 17 00:00:00 2001
+From: "Pan, Kris" <kris.pan@intel.com>
+Date: Mon, 13 Jan 2025 01:24:27 +0000
+Subject: [PATCH 44/76] Intel/config: disable CONFIG_TRIM_UNUSED_KSYMS
+
+Issue: https://lore.kernel.org/kvm/13e90f87-9062-a7e4-99c0-5c6f5c16cad2@gmail.com/
+
+The problem is that trimming unused symbols in the kernel breaks VFIO
+passthrough on x86/amd64 at least. If the option TRIM_UNUSED_KSYMS is
+enabled you will see the following error when trying to start a VM in
+QEmu with any pcie device passed via VFIO:
+
+qemu-system-x86_64: -device vfio-pci,host=04:00.0: Failed to add group
+25 to KVM VFIO device: Invalid argument
+
+Signed-off-by: Pan, Kris <kris.pan@intel.com>
+---
+ Intel/config | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Intel/config b/Intel/config
+index 142016011f203..d28ceef1bdc65 100644
+--- a/Intel/config
++++ b/Intel/config
+@@ -919,7 +919,7 @@ CONFIG_MODULE_COMPRESS_NONE=y
+ # CONFIG_MODULE_COMPRESS_ZSTD is not set
+ # CONFIG_MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS is not set
+ CONFIG_MODPROBE_PATH="/sbin/modprobe"
+-CONFIG_TRIM_UNUSED_KSYMS=y
++# CONFIG_TRIM_UNUSED_KSYMS is not set
+ CONFIG_MODULES_TREE_LOOKUP=y
+ CONFIG_BLOCK=y
+ CONFIG_BLOCK_LEGACY_AUTOLOAD=y
+-- 
+2.43.0
+
