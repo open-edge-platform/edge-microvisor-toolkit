@@ -4,33 +4,32 @@ The releases of Edge Microvisor Toolkit take three forms: major, minor, and week
 
 ## Major Releases
 
-A major release of Edge Microvisor Toolkit typically occurs once a year in June. New feature development takes place on the latest major release and its subsequent minor releases. A major release is supported for 18 to 24 months.
+A major release of Edge Microvisor Toolkit typically occurs once a year in June. New feature development takes place on the latest major release and its subsequent minor releases. Every major release is supported for 18 to 24 months. The minor releases are part of the active maintenance window. There are no separate branches created or maintained for either the major release or minor releases during the active maintenance window.
 
-During the 18-24 month support window for a major release of Edge Microvisor Toolkit, active support follows open-source practices, including the fixing of bugs found by the community. You can [open an issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues) or [submit a design proposal or a pull request](./docs/developer-guide/emt-contribution.md).
+During the 18-24 month active maintenance window for a major release of Edge Microvisor Toolkit, active support follows open-source practices, including the fixing of bugs found by the community. You can [open an issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues) or [submit a design proposal or a pull request](./docs/developer-guide/emt-contribution.md).
 
-A major release introduces significant changes to the operating system and its capabilities. These changes might include base operating system updates and a Linux kernel upgrade, which could affect software compatibility. A major release also typically includes new features, bug fixes, and CVE patches.
+A major release introduces significant changes to the operating system and its capabilities. These changes may include base operating system updates and a Linux kernel upgrade, which may affect software compatibility. A major release also typically includes new features, bug fixes, and CVE patches.
 
-Beyond the active support window of 18-24 months, support will be in the form of a community-driven best effort. After the end of the 18-24 month active support window for a major release, it is recommended that you transition your Edge Microvisor Toolkit deployments to the next major release for continued support.
+Beyond the active maintenance window of 18 to 24 months, support will be in the form of a community-driven best effort. After the end of the 18-24 month active maintenance window for a major release, it is recommended that you transition your Edge Microvisor Toolkit deployments to the next major release for continued support.
 
 
-![Release cadence and support.](./docs/developer-guide/assets/emt-releases-and-support.png)
+![Release cadence and maintenance.](./docs/developer-guide/assets/emt-releases-and-support.png)
 
 
 
 ## Minor Releases
 
-A minor release, which delivers incremental updates on top of the current major version, typically occurs three times a year, in March, September, and December. These minor releases are part of the 18-24 month active support window of a major release.
-During the active support window, no separate branches other than the branch for the standalone node and the branch for the developer node are supported for every major and minor release.
+A minor release, which delivers incremental updates on top of the current major version, typically occurs three times a year, in March, September, and December. These minor releases are part of the 18-24 month active maintenance window of a major release.
+There are no separate branches created or maintained for any minor release during the active maintenance window.
 
-Minor releases aim to be seamless upgrades or updates that maintain the integrity of applications and data without requiring reimaging. Focused on continuous improvement, these non-disruptive minor releases might include package upgrades, new feature enablement, bug fixes, performance optimizations, and security vulnerability patches.
-Minor releases might also include new packages, such as developer tools and user applications, available through the Edge Microvisor Toolkit RPM repository.
+Focused on continuous improvement, these non-breaking minor releases may include package upgrades, new feature enablement, bug fixes, performance optimizations, and security vulnerability patches. Minor releases may also include new packages, such as developer tools and user applications, available through the Edge Microvisor Toolkit RPM repository.
 
 ## Weekly Releases
 
 Weekly releases typically include bug fixes, performance optimizations, and vulnerability patches for known CVEs. You can find the latest weekly build in [Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements).
 
 
-![Release cadence and support.](./docs/developer-guide/assets/emt-weekly-releases.png)
+![Weekly releases.](./docs/developer-guide/assets/emt-weekly-releases.png)
 
 
 
