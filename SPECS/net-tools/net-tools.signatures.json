@@ -1,5 +1,7 @@
 {
  "Signatures": {
-  "net-tools-2.10.tar.xz": "b262435a5241e89bfa51c3cabd5133753952f7a7b7b93f32e08cb9d96f580d69"
+  "net-tools-2.10.tar.xz": "b262435a5241e89bfa51c3cabd5133753952f7a7b7b93f32e08cb9d96f580d69",
+  "ether-wake.c": "a20a6aa6f47ea5b5112b941a57c027b4438e50eed5838813f71baa441c8ddada",
+  "ether-wake.8": "514e1e7d5f04bf6bea3f4935626472a42331c4b28ebb641c1d46c6e5341955c1"
  }
 }

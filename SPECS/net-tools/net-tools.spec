@@ -1,19 +1,22 @@
 Summary:        Networking Tools
 Name:           net-tools
 Version:        2.10
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2+
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
 Group:          System Environment/Base
 URL:            https://sourceforge.net/projects/net-tools/
 Source0:        https://downloads.sourceforge.net/project/%{name}/%{name}-%{version}.tar.xz
+Source1:        ether-wake.c
+Source2:        ether-wake.8
 Conflicts:      toybox
 Obsoletes:      inetutils
 Provides:       hostname = %{version}-%{release}
 
 %description
 The Net-tools package is a collection of programs for controlling the network subsystem of the Linux kernel.
+Now includes the ether-wake utility.
 
 %prep
 %autosetup -p1
@@ -30,12 +33,16 @@ sed -i -e 's|# HAVE_IP_TOOLS=0|HAVE_IP_TOOLS=1|g' \
        -e 's|# HAVE_MII=0|HAVE_MII=1|g' config.make
 sed -i 's|#include <netinet/ip.h>|//#include <netinet/ip.h>|g' iptunnel.c
 make
+# Build ether-wake
+gcc -O2 -Wall -o ether-wake %{SOURCE1}
 
 %install
 make BASEDIR=%{buildroot} install
+install -m0755 ether-wake %{buildroot}/sbin/ether-wake
+install -m0644 %{SOURCE2} %{buildroot}%{_mandir}/man8/ether-wake.8
 
-%post	-p /sbin/ldconfig
-%postun	-p /sbin/ldconfig
+%post   -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 %files
 %defattr(-,root,root)
@@ -45,8 +52,13 @@ make BASEDIR=%{buildroot} install
 %{_mandir}/man1/*
 %{_mandir}/man5/*
 %{_mandir}/man8/*
+/sbin/ether-wake
+%{_mandir}/man8/ether-wake.8*
 
 %changelog
+* Tue Aug 19 2025 kintali Jayanth <jayanthx.kintali@intel.com> - 2.10-4
+- Added build and install support for ether-wake utility
+
 * Wed Sep 20 2023 Jon Slobodzian <joslobo@microsoft.com> - 2.10-3
 - Recompile with stack-protection fixed gcc version (CVE-2023-4039)
 
