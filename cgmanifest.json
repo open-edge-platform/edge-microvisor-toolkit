@@ -11810,6 +11810,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libva-utils",
+          "version": "2.22.0",
+          "downloadUrl": "https://github.com/intel/libva-utils/archive/2.22.0/libva-utils-2.22.0.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libvarlink",
           "version": "23",
           "downloadUrl": "https://github.com/varlink/libvarlink/archive/23/libvarlink-23.tar.gz"
