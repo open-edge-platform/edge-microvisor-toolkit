@@ -4,7 +4,7 @@ The releases of Edge Microvisor Toolkit take three forms: major, minor, and week
 
 ## Major Releases
 
-A major release of Edge Microvisor Toolkit typically occurs once a year in June. New feature development takes place on the latest major release and its subsequent minor releases. Every major release is supported for 18 to 24 months. 
+A major release of Edge Microvisor Toolkit typically occurs once a year in June. New feature development takes place on the latest major release and its subsequent minor releases. Every major release is supported for 18 to 24 months.
 The minor releases are part of the active maintenance window. There are no separate branches created or maintained for either the major release or minor releases during the active maintenance window.
 
 During the 18-24 month active maintenance window for a major release of Edge Microvisor Toolkit, active support follows open-source practices, including the fixing of bugs found by the community. You can [open an issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues) or [submit a design proposal or a pull request](./docs/developer-guide/emt-contribution.md).
