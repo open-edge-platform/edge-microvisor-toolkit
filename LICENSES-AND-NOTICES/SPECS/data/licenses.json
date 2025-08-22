@@ -810,6 +810,7 @@
                 "libusb1",
                 "libusbmuxd",
                 "libuser",
+                "libva-utils",
                 "libvarlink",
                 "libverto",
                 "libvirt-dbus",
