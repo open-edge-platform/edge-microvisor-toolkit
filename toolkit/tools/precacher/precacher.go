@@ -82,27 +82,30 @@ func main() {
 	if err != nil {
 		logger.PanicOnError(err)
 	}
-	packagesAvailableFromRepos, err := repoutils.GetAllRepoData(*repoUrls, *repoFiles, *workerTar, *buildDir, *repoUrlsFile)
-	if err != nil {
-		logger.PanicOnError(err)
-	}
-
-	logger.Log.Infof("Found %d available packages", len(packagesAvailableFromRepos))
-	if logger.Log.IsLevelEnabled(logrus.DebugLevel) {
-		for _, pkg := range packagesAvailableFromRepos {
-			logger.Log.Debugf("Found package: %s", pkg)
+	for _, url := range *repoUrls {
+		singleRepo := []string{url}
+		packagesAvailableFromRepos, err := repoutils.GetAllRepoData(singleRepo, *repoFiles, *workerTar, *buildDir, *repoUrlsFile)
+		if err != nil {
+			logger.PanicOnError(err)
 		}
-	}
 
-	downloadedPackages, err := downloadMissingPackages(rpmSnapshot, packagesAvailableFromRepos, *outDir, *concurrentNetOps)
-	if err != nil {
-		logger.PanicOnError(err)
-	}
+		logger.Log.Infof("Found %d available packages", len(packagesAvailableFromRepos))
+		if logger.Log.IsLevelEnabled(logrus.DebugLevel) {
+			for _, pkg := range packagesAvailableFromRepos {
+				logger.Log.Debugf("Found package: %s", pkg)
+			}
+		}
 
-	logger.Log.Infof("Downloaded %d packages into the cache", len(downloadedPackages))
-	err = writeSummaryFile(*outputSummaryFile, downloadedPackages)
-	if err != nil {
-		logger.PanicOnError(err)
+		downloadedPackages, err := downloadMissingPackages(rpmSnapshot, packagesAvailableFromRepos, *outDir, *concurrentNetOps)
+		if err != nil {
+			logger.PanicOnError(err)
+		}
+
+		logger.Log.Infof("Downloaded %d packages into the cache", len(downloadedPackages))
+		err = writeSummaryFile(*outputSummaryFile, downloadedPackages)
+		if err != nil {
+			logger.PanicOnError(err)
+		}
 	}
 }
 
