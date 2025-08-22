@@ -65,7 +65,6 @@ endif
 
 ifneq ($(DAILY_BUILD_REPO),)
    PACKAGE_ROOT := $(shell grep -m 1 "baseurl" $(DAILY_BUILD_REPO) | sed 's|baseurl=||g')
-
    PACKAGE_DEBUGINFO := $(subst base,debuginfo,$(PACKAGE_ROOT))
    PACKAGE_SRPM := $(subst base,srpm,$(PACKAGE_ROOT))
    $(warning )
@@ -74,14 +73,14 @@ ifneq ($(DAILY_BUILD_REPO),)
    $(warning $(PACKAGE_ROOT))
    $(warning ######################### WARNING #########################)
    $(warning )
-   override PACKAGE_URL_LIST  := $(PACKAGE_URL_LIST)\
-   				 $(PACKAGE_ROOT) \
+   override PACKAGE_URL_LIST  := $(PACKAGE_URL_LIST) \
+                                 $(PACKAGE_ROOT) \
                                  $(PACKAGE_DEBUGINFO)
-   override SRPM_URL_LIST     := $(SRPM_URL_LIST) \
-				 $(PACKAGE_SRPMS)
    override PACKAGE_REPO_LIST := $(PACKAGE_REPO_LIST) \
 	                         $(PACKAGE_ROOT) \
 				 $(PACKAGE_DEBUGINFO)
+   override SRPM_URL_LIST     := $(SRPM_URL_LIST) \
+	                         $(PACKAGE_SRPM)
 endif
 
 # This does not use $(depend_DAILY_BUILD_ID) because that mechanism will not detect the conversion of "lkg" to a
