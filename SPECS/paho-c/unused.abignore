@@ -1,0 +1,2 @@
+[suppress_function]
+symbol_name_regexp=(Tree.*|MQTTPacket_free_packet|Socket_abortWrite)
