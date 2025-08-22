@@ -935,6 +935,7 @@
                 "memcached",
                 "memkind",
                 "mesa",
+                "mesa-demos",
                 "mesa-libGLU",
                 "metis",
                 "microcode_ctl",
