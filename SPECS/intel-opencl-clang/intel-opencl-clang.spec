@@ -4,7 +4,7 @@
 
 Name:           intel-opencl-clang
 Version:        150
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Library to compile OpenCL C kernels to SPIR-V modules
 License:        Apache-2.0 WITH LLVM-exception OR NCSA
 Vendor:         Intel Corporation
@@ -19,8 +19,8 @@ BuildRequires:  gcc-c++
 BuildRequires:  make
 BuildRequires:  llvm%{?llvm_compat}-devel
 BuildRequires:  clang%{?llvm_compat}-devel
-BuildRequires:  spirv-llvm-translator-devel
-BuildRequires:  spirv-llvm-translator
+BuildRequires:  spirv-llvm%{?llvm_compat}-translator-devel
+BuildRequires:  spirv-llvm%{?llvm_compat}-translator
 BuildRequires:  zlib-devel
 
 %description
