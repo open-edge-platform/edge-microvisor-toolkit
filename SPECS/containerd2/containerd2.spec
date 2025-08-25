@@ -5,20 +5,20 @@
 Summary: Industry-standard container runtime
 Name: %{upstream_name}2
 Version: 2.0.0
-Release: 6%{?dist}
+Release: 8%{?dist}
 License: ASL 2.0
 Group: Tools/Container
 URL: https://www.containerd.io
-Vendor: Microsoft Corporation
-Distribution: Azure Linux
+Vendor: Intel Corporation
+Distribution: Edge Microvisor Toolkit
 
 Source0: https://github.com/containerd/containerd/archive/v%{version}.tar.gz#/%{upstream_name}-%{version}.tar.gz
 Source1: containerd.service
 Source2: containerd.toml
-# Added patch to support tardev-snapshotter for Kata CC
+
 Patch0:	CVE-2024-45338.patch
-Patch1:  add-tardev-support.patch
-Patch2:	CVE-2025-27144.patch
+Patch1:	CVE-2025-27144.patch
+Patch2:	CVE-2024-40635.patch
 %{?systemd_requires}
 
 BuildRequires: golang
@@ -26,11 +26,12 @@ BuildRequires: go-md2man
 BuildRequires: make
 BuildRequires: systemd-rpm-macros
 
-Requires: runc >= 1.2.2
-
 # This package replaces the old name of containerd
 Provides: containerd = %{version}-%{release}
 Obsoletes: containerd < %{version}-%{release}
+Requires: %{name}-core  = %{version}-%{release}
+Requires: %{name}-ctr = %{version}-%{release}
+Requires: %{name}-stress = %{version}-%{release}
 
 # This package replaces the old name of moby-containerd
 Provides: moby-containerd = %{version}-%{release}
@@ -45,6 +46,27 @@ low-level storage and network attachments, etc.
 
 containerd is designed to be embedded into a larger system, rather than being
 used directly by developers or end-users.
+
+%package core
+Summary:        containerd core functionality and service
+Requires:       runc >= 1.2.2
+
+%description core
+This package contains containerd core functionality and containerd service
+
+%package ctr
+Summary:        ctr command line interface
+Requires:       %{name}-core = %{version}-%{release}
+
+%description ctr
+This package contains ctr binary to provide ctr commandline interface  to containerd
+
+%package stress
+Summary:        stress-testing tool for containerd
+Requires:       %{name}-core = %{version}-%{release}
+
+%description stress
+This package contains module for debugging and stress-testing tool for containerd
 
 %prep
 %autosetup -p1 -n %{upstream_name}-%{version}
@@ -65,7 +87,7 @@ install -D -p -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/containerd.service
 install -D -p -m 0644 %{SOURCE2} %{buildroot}%{_sysconfdir}/containerd/config.toml
 install -vdm 755 %{buildroot}/opt/containerd/{bin,lib}
 
-%post
+%post core
 %systemd_post containerd.service
 
 if [ $1 -eq 1 ]; then # Package install
@@ -73,25 +95,45 @@ if [ $1 -eq 1 ]; then # Package install
 	systemctl start containerd.service > /dev/null 2>&1 || :
 fi
 
-%preun
+%preun core
 %systemd_preun containerd.service
 
-%postun
+%postun core
 %systemd_postun_with_restart containerd.service
 
 %files
 %license LICENSE NOTICE
-%{_bindir}/*
-%{_mandir}/*
+
+%files core
+%{_bindir}/containerd
+%{_bindir}/containerd-shim-runc-v2
+%{_mandir}/man5/containerd-config.toml.5.gz
+%{_mandir}/man8/containerd-config.8.gz
+%{_mandir}/man8/containerd.8.gz
 %config(noreplace) %{_unitdir}/containerd.service
 %config(noreplace) %{_sysconfdir}/containerd/config.toml
 %dir /opt/containerd
 %dir /opt/containerd/bin
 %dir /opt/containerd/lib
 
+%files ctr
+%{_bindir}/ctr
+%{_mandir}/man8/ctr.8.gz
+
+%files stress
+%{_bindir}/containerd-stress
+
 %changelog
+* Fri Jul 18 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.0.0-8
+- merge from Azure Linux 3.0.20250521-3.0
+- Fix CVE-2024-40635
+- Remove the tardev-snapshotter patch for Kata CC support.
+
+* Mon Jun 30 2025 Lishan Liu <lishan.liu@intel.com> - 2.0.0-7
+- Separate pacakges into core, ctr and stress
+
 * Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.0.0-6
-- merge from Azure Linux 3.0.20250423.
+- merge from Azure Linux 3.0.20250423.3.0
 - Fix CVE-2025-27144
 - Add "Provides/Obsoletes:" to shift all installs of containerd and moby-containerd to containerd2
 

@@ -1,6 +1,6 @@
 Summary:        Edge node registration and trust management
 Name:           node-agent
-Version:        1.7.2
+Version:        1.7.3
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -12,7 +12,7 @@ Source2:        env_wrapper.sh
 Source3:        %{name}.conf
 Source4:        node_agent.te
 Source5:        node_agent.fc
-BuildRequires:  golang >= 1.24.1
+BuildRequires:  golang >= 1.24.4
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       (%{name}-selinux if selinux-policy-targeted)
@@ -89,6 +89,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/license-agent
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/platform-update-agent
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/prometheus
 mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/release-service
+mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/platform-manageability-agent
 
 %files
 %{_bindir}/%{name}
@@ -117,6 +118,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/intel_edge_node/tokens/release-service
 %dir %{_sysconfdir}/intel_edge_node/tokens/platform-update-agent
 %dir %{_sysconfdir}/intel_edge_node/tokens/prometheus
 %dir %{_sysconfdir}/intel_edge_node/tokens/release-service
+%dir %{_sysconfdir}/intel_edge_node/tokens/platform-manageability-agent
 
 %pre
 %sysusers_create_package %{name} %{SOURCE3}
@@ -157,6 +159,9 @@ sed -i '/client-proxy/{N;d;}' %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Jul 31 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 1.7.3-1
+- Upgrade for platform-manageability-agent handling
+
 * Fri May 16 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.7.2-1
 - Caddy configuration not needed anymore
 

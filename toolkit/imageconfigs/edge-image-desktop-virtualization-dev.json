@@ -77,15 +77,9 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
-                "packagelists/k3s.json",
-                "packagelists/k3s-cni-config.json",
-                "packagelists/calico.json",
-                "packagelists/multus.json",
-                "packagelists/intel-gpu-device-plugin.json",
                 "packagelists/fs-tools.json",
                 "packagelists/helm.json",
-                "packagelists/intel-idv-services.json",
-                "packagelists/intel-desktop-virtualization-k3s.json"
+                "packagelists/intel-idv-services.json"
             ],
             "Packages": [
                 "igt-gpu-tools"

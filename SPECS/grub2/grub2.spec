@@ -7,7 +7,7 @@
 Summary:        GRand Unified Bootloader
 Name:           grub2
 Version:        2.06
-Release:        23%{?dist}
+Release:        24%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -86,6 +86,7 @@ Patch0199:      0199-fs-f2fs-Do-not-copy-file-names-that-are-too-long.patch
 Patch0200:      0200-fs-btrfs-Fix-several-fuzz-issues-with-invalid-dir-it.patch
 Patch0201:      0201-fs-btrfs-Fix-more-ASAN-and-SEGV-issues-found-with-fu.patch
 Patch0202:      0202-fs-btrfs-Fix-more-fuzz-issues-related-to-chunks.patch
+Patch0203:      0203-replace-fgrep-with-grep.patch
 # Required to reach SBAT 3
 Patch:          sbat-3-0001-font-Reject-glyphs-exceeds-font-max_glyph_width-or-f.patch
 Patch:          sbat-3-0004-font-Remove-grub_font_dup_glyph.patch
@@ -434,6 +435,10 @@ cp $GRUB_PXE_MODULE_SOURCE $EFI_BOOT_DIR/$GRUB_PXE_MODULE_NAME
 %config(noreplace) %{_sysconfdir}/grub.d/41_custom
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.06-24
+- merge from Azure Linux 3.0.20250521-3.0
+- Add patch to replace fgrep with grep -F
+
 * Mon Apr 07 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 2.06-23
 - Add patch to remove the 2GB limitation in memory map.
 

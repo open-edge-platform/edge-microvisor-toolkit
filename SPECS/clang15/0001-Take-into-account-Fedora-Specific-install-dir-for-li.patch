@@ -1,0 +1,45 @@
+From a85305a801c39720d7ec1c9441a88fef1ac19435 Mon Sep 17 00:00:00 2001
+From: serge-sans-paille <sguelton@redhat.com>
+Date: Fri, 9 Sep 2022 10:17:01 +0200
+Subject: [PATCH] Take into account Fedora Specific install dir for libunwind
+
+---
+ clang/lib/Driver/ToolChains/CommonArgs.cpp | 8 +++++++-
+ clang/test/Driver/linux-ld.c               | 2 +-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/clang/lib/Driver/ToolChains/CommonArgs.cpp b/clang/lib/Driver/ToolChains/CommonArgs.cpp
+index 443725f..c1401a6 100644
+--- a/clang/lib/Driver/ToolChains/CommonArgs.cpp
++++ b/clang/lib/Driver/ToolChains/CommonArgs.cpp
+@@ -1529,7 +1529,13 @@ static void AddUnwindLibrary(const ToolChain &TC, const Driver &D,
+       CmdArgs.push_back("-lgcc_s");
+     break;
+   }
+-  case ToolChain::UNW_CompilerRT:
++  case ToolChain::UNW_CompilerRT: {
++    SmallString<256> DefaultLibPath =
++        llvm::sys::path::parent_path(TC.getDriver().Dir);
++    llvm::sys::path::append(DefaultLibPath, Twine("lib") + CLANG_LIBDIR_SUFFIX);
++    CmdArgs.push_back(
++        strdup(("-L" + DefaultLibPath + "/llvm-unwind").str().c_str()));
++  }
+     if (TC.getTriple().isOSAIX()) {
+       // AIX only has libunwind as a shared library. So do not pass
+       // anything in if -static is specified.
+diff --git a/clang/test/Driver/linux-ld.c b/clang/test/Driver/linux-ld.c
+index e76b35d..dfb8eca 100644
+--- a/clang/test/Driver/linux-ld.c
++++ b/clang/test/Driver/linux-ld.c
+@@ -299,7 +299,7 @@
+ // RUN:     --sysroot=%S/Inputs/basic_linux_tree \
+ // RUN:   | FileCheck --check-prefix=CHECK-CLANG-ANDROID-STATIC %s
+ // CHECK-CLANG-ANDROID-STATIC: "{{.*}}ld{{(.exe)?}}" "--sysroot=[[SYSROOT:[^"]+]]"
+-// CHECK-CLANG-ANDROID-STATIC: "--start-group" "{{[^"]*}}{{/|\\\\}}libclang_rt.builtins-aarch64-android.a" "-l:libunwind.a" "-lc" "--end-group"
++// CHECK-CLANG-ANDROID-STATIC: "--start-group" "{{[^"]*}}{{/|\\\\}}libclang_rt.builtins-aarch64-android.a" "-L{{[^"]*}}{{/|\\\\}}llvm-unwind" "-l:libunwind.a" "-lc" "--end-group"
+ //
+ // RUN: %clang -### %s 2>&1      \
+ // RUN:     --target=x86_64-unknown-linux -rtlib=platform --unwindlib=platform \
+-- 
+1.8.3.1
+

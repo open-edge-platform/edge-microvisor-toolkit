@@ -4,7 +4,7 @@
 Summary: Industry-standard container runtime
 Name: containerd
 Version: 1.7.13
-Release: 8%{?dist}
+Release: 9%{?dist}
 License: ASL 2.0
 Group: Tools/Container
 URL: https://www.containerd.io
@@ -22,6 +22,7 @@ Patch4:  CVE-2024-24786.patch
 Patch5:  CVE-2024-28180.patch
 Patch6:  CVE-2023-45288.patch
 Patch7:  CVE-2025-27144.patch
+Patch8:  CVE-2024-40635.patch
 
 %{?systemd_requires}
 
@@ -91,8 +92,12 @@ fi
 %dir /opt/containerd/lib
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.7.13-9
+- merge from Azure Linux 3.0.20250521-3.0
+- Fix CVE-2024-40635
+
 * Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.7.13-8
-- merge from Azure Linux 3.0.20250423.
+- merge from Azure Linux 3.0.20250423-3.0
 - Fix CVE-2025-27144
 
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.7.13-7

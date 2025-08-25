@@ -56,11 +56,11 @@ ifneq ($(DAILY_BUILD_ID),)
     # Include both so that the tools that expect a valid repo work, while the tools that expect a basic URL also work.
     # The ordering is important, we want to always take the daily build versions of packages first since they are NOT
     # the same files as the official packages and will fail checksum validation.
-    override PACKAGE_URL_LIST := https://mariner3dailydevrepo.blob.core.windows.net/$(daily_build_repo_name)/built_rpms_all \
-                                    https://mariner3dailydevrepo.blob.core.windows.net/$(daily_build_repo_name) \
-                                    $(PACKAGE_URL_LIST)
-    override SRPM_URL_LIST    := https://mariner3dailydevrepo.blob.core.windows.net/$(daily_build_repo_name)/SRPMS \
-                                    $(SRPM_URL_LIST)
+    #override PACKAGE_URL_LIST := https://mariner3dailydevrepo.blob.core.windows.net/$(daily_build_repo_name)/built_rpms_all \
+    #                                https://mariner3dailydevrepo.blob.core.windows.net/$(daily_build_repo_name) \
+    #                                $(PACKAGE_URL_LIST)
+    #override SRPM_URL_LIST    := https://mariner3dailydevrepo.blob.core.windows.net/$(daily_build_repo_name)/SRPMS \
+    #                                $(SRPM_URL_LIST)
 endif
 
 ifneq ($(DAILY_BUILD_REPO),)
@@ -71,12 +71,16 @@ ifneq ($(DAILY_BUILD_REPO),)
    $(warning $(PACKAGE_ROOT))
    $(warning ######################### WARNING #########################)
    $(warning )
-   override PACKAGE_URL_LIST  := $(PACKAGE_ROOT)/RPMS/x86_64 \
+   override PACKAGE_URL_LIST  := $(PACKAGE_URL_LIST) \
+                                 $(PACKAGE_ROOT)/RPMS/x86_64 \
                                  $(PACKAGE_ROOT)/RPMS/noarch \
-				 $(PACKAGE_ROOT)/RPMS/debuginfo \
-				 $(PACKAGE_URL_LIST)
-   override SRPM_URL_LIST     := $(PACKAGE_ROOT)/SRPMS \
-				 $(SRPM_URL_LIST)
+                                 $(PACKAGE_ROOT)/RPMS/debuginfo
+
+   override SRPM_URL_LIST     := $(SRPM_URL_LIST) \
+                                 $(PACKAGE_ROOT)/SRPMS
+
+   override PACKAGE_REPO_LIST := $(PACKAGE_REPO_LIST) \
+                                 $(PACKAGE_ROOT)
 endif
 
 # This does not use $(depend_DAILY_BUILD_ID) because that mechanism will not detect the conversion of "lkg" to a

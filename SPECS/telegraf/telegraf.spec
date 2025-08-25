@@ -1,7 +1,7 @@
 Summary:        agent for collecting, processing, aggregating, and writing metrics.
 Name:           telegraf
 Version:        1.31.0
-Release:        21%{?dist}
+Release:        22%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -12,14 +12,19 @@ Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-%{version}.
 Source1:        %{name}-%{version}-vendor.tar.gz
 Source2:        telegraf.te
 Source3:        telegraf.fc
-Patch0:         CVE-2024-37298.patch
-Patch1:         CVE-2024-45337.patch
-Patch2:         CVE-2024-45338.patch
-Patch3:         CVE-2025-22868.patch
-Patch4:         CVE-2025-22869.patch
-Patch5:         CVE-2025-22870.patch
-Patch6:         CVE-2024-51744.patch
-Patch7:         CVE-2025-30204.patch
+Patch0:         CVE-2024-35255.patch
+Patch1:         CVE-2024-37298.patch
+Patch2:         CVE-2024-45337.patch
+Patch3:         CVE-2024-45338.patch
+Patch4:         CVE-2025-22868.patch
+Patch5:         CVE-2025-22869.patch
+Patch6:         CVE-2025-22870.patch
+Patch7:         CVE-2024-51744.patch
+Patch8:         CVE-2025-30204.patch
+Patch9:         CVE-2025-27144.patch
+Patch10:        CVE-2025-30215.patch
+Patch11:        CVE-2025-22872.patch
+
 BuildRequires:  golang
 BuildRequires:  systemd-devel
 Requires:       logrotate
@@ -58,10 +63,7 @@ BuildArch:      noarch
 SELinux policy for %{name}.
 
 %prep
-%autosetup -N
-# setup vendor before patching
-tar -xf %{SOURCE1} --no-same-owner
-%autopatch -p1
+%autosetup -a1 -p1
 
 %build
 CGO_ENABLED=0 go build -trimpath -tags \
@@ -127,6 +129,12 @@ fi
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.31.0-22
+- merge from Azure Linux 3.0.20250521-3.0
+- Fix CVE-2025-22872 with an upstream patch
+- Patch CVE-2025-30215
+- Fix CVE-2024-35255 and CVE-2025-27144 with an upstream patch
+
 * Thu Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.31.0-21
 - merge from Azure Linux tag 3.0.20250423-3.0
 - Patch CVE-2025-30204

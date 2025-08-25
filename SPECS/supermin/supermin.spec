@@ -21,7 +21,7 @@
 Summary:        Tool for creating supermin appliances
 Name:           supermin
 Version:        5.3.4
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        GPLv2+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -54,7 +54,7 @@ BuildRequires:  systemd-udev
 %if %{with dietlibc}
 BuildRequires:  dietlibc-devel
 %else
-BuildRequires:  glibc-static >= 2.38-9%{?dist}
+BuildRequires:  glibc-static >= 2.38-10%{?dist}
 %endif
 
 %if 0%{?with_check}
@@ -129,6 +129,10 @@ make check || {
 %{_rpmconfigdir}/supermin-find-requires
 
 %changelog
+* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 5.3.4-6
+- merge from Azure Linux 3.0.20250521-3.0
+- Bump to rebuild with updated glibc
+
 * Tue Mar 18 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 5.3.4-5
 - Bump version for merge AZL tag: 3.0.20250311-3.0
 - Bump to rebuild with updated glibc

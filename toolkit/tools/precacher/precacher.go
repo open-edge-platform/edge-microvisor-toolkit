@@ -82,27 +82,30 @@ func main() {
 	if err != nil {
 		logger.PanicOnError(err)
 	}
-	packagesAvailableFromRepos, err := repoutils.GetAllRepoData(*repoUrls, *repoFiles, *workerTar, *buildDir, *repoUrlsFile)
-	if err != nil {
-		logger.PanicOnError(err)
-	}
-
-	logger.Log.Infof("Found %d available packages", len(packagesAvailableFromRepos))
-	if logger.Log.IsLevelEnabled(logrus.DebugLevel) {
-		for _, pkg := range packagesAvailableFromRepos {
-			logger.Log.Debugf("Found package: %s", pkg)
+	for _, url := range *repoUrls {
+		singleRepo := []string{url}
+		packagesAvailableFromRepos, err := repoutils.GetAllRepoData(singleRepo, *repoFiles, *workerTar, *buildDir, *repoUrlsFile)
+		if err != nil {
+			logger.PanicOnError(err)
 		}
-	}
 
-	downloadedPackages, err := downloadMissingPackages(rpmSnapshot, packagesAvailableFromRepos, *outDir, *concurrentNetOps)
-	if err != nil {
-		logger.PanicOnError(err)
-	}
+		logger.Log.Infof("Found %d available packages", len(packagesAvailableFromRepos))
+		if logger.Log.IsLevelEnabled(logrus.DebugLevel) {
+			for _, pkg := range packagesAvailableFromRepos {
+				logger.Log.Debugf("Found package: %s", pkg)
+			}
+		}
 
-	logger.Log.Infof("Downloaded %d packages into the cache", len(downloadedPackages))
-	err = writeSummaryFile(*outputSummaryFile, downloadedPackages)
-	if err != nil {
-		logger.PanicOnError(err)
+		downloadedPackages, err := downloadMissingPackages(rpmSnapshot, packagesAvailableFromRepos, *outDir, *concurrentNetOps)
+		if err != nil {
+			logger.PanicOnError(err)
+		}
+
+		logger.Log.Infof("Downloaded %d packages into the cache", len(downloadedPackages))
+		err = writeSummaryFile(*outputSummaryFile, downloadedPackages)
+		if err != nil {
+			logger.PanicOnError(err)
+		}
 	}
 }
 
@@ -166,34 +169,27 @@ func monitorProgress(total int, results chan downloadResult) (downloadedPackages
 	unavailable := 0
 	lastProgressUpdate := progressIncrement * -1
 
-	for done := false; !done; {
-		// Wait for a result from a worker, or the done channel to be closed (which means all workers are done)
-		result, ok := <-results
-		if !ok {
-			// All workers are done, finish this iteration of the loop and then return
-			done = true
-		} else {
-			switch result.resultType {
-			case downloadResultTypeSkipped:
-				logger.Log.Debugf("Skipping pre-caching '%s'. File already exists", result.pkgName)
-				skipped++
-			case downloadResultTypeSuccess:
-				logger.Log.Debugf("Pre-caching '%s' succeeded", result.pkgName)
-				downloadedPackages = append(downloadedPackages, result.pkgName)
-				downloaded++
-			case downloadResultTypeFailure:
-				logger.Log.Warnf("Failed to download: %s", result.pkgName)
-				failed++
-			case downloadResultTypeUnavailable:
-				logger.Log.Warnf("Could not find '%s' in any repos", result.pkgName)
-				unavailable++
-			}
+	for result := range results {
+		switch result.resultType {
+		case downloadResultTypeSkipped:
+			logger.Log.Debugf("Skipping pre-caching '%s'. File already exists", result.pkgName)
+			skipped++
+		case downloadResultTypeSuccess:
+			logger.Log.Debugf("Pre-caching '%s' succeeded", result.pkgName)
+			downloadedPackages = append(downloadedPackages, result.pkgName)
+			downloaded++
+		case downloadResultTypeFailure:
+			logger.Log.Warnf("Failed to download: %s", result.pkgName)
+			failed++
+		case downloadResultTypeUnavailable:
+			logger.Log.Warnf("Could not find '%s' in any repos", result.pkgName)
+			unavailable++
 		}
 
 		// Calculate the progress percentage and update the progress counter if needed (update every 'progressIncrement' percent)
 		completed := downloaded + skipped + failed + unavailable
 		progressPercent := (float64(completed) / float64(total)) * 100
-		if progressPercent > lastProgressUpdate+progressIncrement || done {
+		if progressPercent > lastProgressUpdate+progressIncrement {
 			logger.Log.Infof("Pre-caching: %3d%% ( downloaded: %4d, skipped: %4d, unavailable: %4d, failed: %4d )", int(progressPercent), downloaded, skipped, unavailable, failed)
 			lastProgressUpdate = progressPercent
 		}

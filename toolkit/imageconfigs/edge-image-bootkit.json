@@ -43,7 +43,7 @@
                 }
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "root=tmpfs rootflags=mode=0755 rd.skipfsck noresume quiet splash modules-load=nbd"
+                "ExtraCommandLine": "root=tmpfs rootflags=mode=0755 rd.skipfsck noresume quiet splash modules-load=nbd,cdc_ncm"
             },
             "Hostname": "EdgeMicrovisorBootkit",
             "DisableRpmDocs": true,

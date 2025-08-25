@@ -20,10 +20,11 @@ also including the existing functionality not downstreamed in the existing distr
 
 Currently published default versions are:
 
-* `Edge Microvisor Toolkit Standalone Node (immutable) <https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node>`__
-* `Edge Microvisor Toolkit Developer Node (mutable) <https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node>`__
-* `Edge Microvisor Toolkit (immutable) <https://github.com/open-edge-platform/edge-manageability-framework>`__
-* `Edge Microvisor Toolkit with real time extensions (immutable) <https://github.com/open-edge-platform/edge-manageability-framework>`__
+* `Edge Microvisor Toolkit Standalone Node (immutable) <https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node>`__
+* :doc:`Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable) <./emt-architecture-overview>`
+* :doc:`Edge Microvisor Toolkit (immutable) - deployable in Edge Manageability Framework <./emt-deployment-edge-orchestrator>`
+* :doc:`Edge Microvisor Toolkit with real time extensions (immutable) - deployable in Edge Manageability Framework <./emt-deployment-edge-orchestrator>`
+* :doc:`Edge Microvisor Bootkit <./emt-bootkit>`
 
 If you need more than that, the build infrastructure of Edge Microvisor Toolkit enables you
 to create your own, custom images.
@@ -120,7 +121,8 @@ Next Steps
     emt-get-started
     emt-architecture-overview
     emt-deployment-edge-orchestrator
-    emt-security
+    emt-bootkit
+    emt-security-considerations
     emt-contribution
     emt-troubleshooting
     emt-system-requirements

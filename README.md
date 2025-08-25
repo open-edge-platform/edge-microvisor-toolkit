@@ -14,10 +14,10 @@ or build your own system, using the existing infrastructure.
 
 The currently published versions are:
 
-* [Edge Microvisor Toolkit Standalone Node (immutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge-microvisor-toolkit-standalone-node)
-* [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=edge--microvisor-toolkit-development-node)
-* [Edge Microvisor Toolkit (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
-* [Edge Microvisor Toolkit with real time extensions (immutable) - Available in Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
+* [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
+* [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](./docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image)
+* [Edge Microvisor Toolkit (immutable) - deployable in Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
+* [Edge Microvisor Toolkit with real time extensions (immutable) - deployable in Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
 * [Edge Microvisor Bootkit](./docs/developer-guide/emt-bootkit.md)
 
 The Edge Microvisor Toolkit has undergone extensive validation across all Intel
@@ -32,25 +32,7 @@ Toolkit are available as Open-Source.
 
 ## Get Started
 
-Check out these articles to quickly learn how to work with Edge Microvisor Toolkit.
-
-**Edge Microvisor Toolkit Developer Node**
-
-* [Downloading and installing the developer toolkit ISO image](./docs/developer-guide/emt-get-started.md#edge-microvisor-toolkit-developer)
-* [Building a custom Edge Microvisor Toolkit image](./docs/developer-guide/get-started/emt-building-howto.md)
-
-**Edge Microvisor Toolkit Standalone Node**
-
-* [Get the tools required to build USB creator and install Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
-
-**Common**
-
-* [Hardware and software system requirements](./docs/developer-guide/emt-system-requirements.md)
-* [Installing EMT on bare metal edge node](./docs/developer-guide/get-started/emt-installation-howto.md#bare-metal-with-iso)
-* [Installing EMT on a Virtual Machine](./docs/developer-guide/get-started/emt-installation-howto.md#virtual-machine-with-hyper-v)
-* [Integrating the Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
-* [Using the security features of the Edge Microvisor](./docs/developer-guide/emt-security.md)
-* [Troubleshooting common issues](./docs/developer-guide/emt-troubleshooting.md)
+All articles required to quickly learn how to work with Edge Microvisor Toolkit can be found [here](./docs/developer-guide/emt-get-started.md).
 
 **Demos**
 * [Standalone Edge Microvisor Toolkit (EMT-S) integration with Edge Microvisor Bootkit](https://www.youtube.com/watch?v=rmgmWYi6OpE):
@@ -67,7 +49,7 @@ Before submitting a new report, check the existing issues to see if a similar on
 been filed already. If no matching issue is found, feel free to file the issue as described
 in the [contribution guide](./docs/developer-guide/emt-contribution.md).
 
-For security-related concerns, please refer to [SECURITY.md](./SECURITY.md).
+For security-related concerns, please refer to [security considerations](./docs/developer-guide/emt-security-considerations.md).
 
 [Azure Linux Documentation](toolkit/docs/), may also be useful, if you encounter
 problems when using Edge Microvisor Toolkit. Its copy is part of the Edge

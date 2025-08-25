@@ -1,10 +1,10 @@
-%global llvm_compat 14
-%global commit 470cf0018e1ef6fc92eda1356f5f31f7da452abc
+%global llvm_compat 15
+%global commit 58242977b4092cf5eb94a10dd144691c12c87001
 %global shortcommit %(c=%{commit}; echo ${c:0:8})
 
 Name:           intel-opencl-clang
-Version:        140
-Release:        2%{?dist}
+Version:        150
+Release:        1%{?dist}
 Summary:        Library to compile OpenCL C kernels to SPIR-V modules
 License:        Apache-2.0 WITH LLVM-exception OR NCSA
 Vendor:         Intel Corporation
@@ -37,10 +37,12 @@ developing against %{name}
 
 %prep
 %autosetup -n opencl-clang-%{commit} -p1
+sed -i 's/$<TARGET_FILE:clang>/$<TARGET_FILE:clang%{?llvm_compat}>/' cl_headers/CMakeLists.txt
 
 %build
 %cmake \
-    -DLLVM_DIR=%{_libdir}/cmake/llvm/ -DCMAKE_BUILD_TYPE=Release
+    -DPREFERRED_LLVM_VERSION='%(rpm -q --qf '%%{version}' llvm%{?llvm_compat}-devel | cut -d. -f1 | sed "s/$/.0.0/")' \
+    -DLLVM_DIR=%{_libdir}/llvm%{?llvm_compat}/lib/cmake/llvm/ -DCMAKE_BUILD_TYPE=Release
 %cmake_build
 
 %install
@@ -58,6 +60,9 @@ developing against %{name}
 %{_includedir}/cclang/module.modulemap
 
 %changelog
+* Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 150-1
+- Upgrade to 150 and link to llvm15
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 140-2
 - Updated initial changelog entry having fedora version and license info.
 

@@ -76,8 +76,7 @@
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
                 "packagelists/vpro-amt-packages.json",
-                "packagelists/docker.json",
-                "packagelists/k3s.json"
+                "packagelists/docker.json"
             ],
             "AdditionalFiles": {
                 "additionalconfigs/layout.env": "/etc/layout.env",
@@ -105,7 +104,7 @@
                 }
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "quiet splash sysctl.vm.overcommit_memory=1 sysctl.kernel.panic=10 sysctl.kernel.panic_on_oops=1 sysctl.fs.inotify.max_user_instances=8192 rd.shell=0 rd.timeout=200 rd.emergency=reboot i915.force_probe=*",
+                "ExtraCommandLine": "quiet splash sysctl.vm.overcommit_memory=1 sysctl.kernel.panic=10 sysctl.kernel.panic_on_oops=1 sysctl.fs.inotify.max_user_instances=8192 rd.shell=0 rd.parallel=1 rd.timeout=200 rd.emergency=reboot i915.force_probe=*",
                 "SELinux": "permissive"
             },
             "Hostname": "EdgeMicrovisorToolkit",

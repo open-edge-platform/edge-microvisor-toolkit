@@ -1,6 +1,6 @@
 Name:           intel-idv-services
-Version:        1.0.0~rc1
-Release:        1%{?dist}
+Version:        1.0.0~rc4
+Release:        2%{?dist}
 Summary:        A package to install scripts and systemd services for Intelligent Desktop Virtualization(IDV)
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -41,20 +41,22 @@ install -m 644 idv-init.service %{buildroot}%{_userunitdir}/idv-init.service
 # Install the idv-launcher service. This service launches virtual machines based on the configuration specified in the launcher/vm.conf file.
 install -m 644 idv-launcher.service %{buildroot}%{_userunitdir}/idv-launcher.service
 
-# Install the autologin.conf file. This enables autologin for a specified user.
-mkdir -p %{buildroot}%{_sysconfdir}/systemd/system/getty@tty1.service.d
-install -m 644 autologin.conf %{buildroot}%{_sysconfdir}/systemd/system/getty@tty1.service.d/autologin.conf
-
 %files
 %{_bindir}/idv/*
 %{_userunitdir}/idv-*.service
-%config(noreplace) %{_sysconfdir}/systemd/system/getty@tty1.service.d/autologin.conf
 
 %post
 
 %preun
 
 %changelog
+* Wed Aug 06 2025 Smitesh Sutaria <smitesh.sutaria@intel.com> - 1.0.0~rc4-2
+- Removing autologin.conf from the spec
+- autologin for a specific user can be enabled via cloud-init
+
+* Fri Jul 18 2025 Dhanya A <dhanya.a@intel.com> - 1.0.0~rc4-1
+- Bump up version to v1.0.0~rc4
+
 * Wed Jul 02 2025 Dhanya A <dhanya.a@intel.com> - 1.0.0~rc1-1
 - Bump up version to v1.0.0~rc1
 

@@ -1,19 +1,20 @@
 Summary:        Intel XPU System Management Interface
 Name:           intel-xpu-smi
 Version:        1.2.39
-Release:        3%{?dist}
+Release:        5%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/intel/xpumanager
 Source0:        https://github.com/intel/xpumanager/archive/refs/tags/V%{version}.tar.gz#/%{name}-%{version}.tar.gz
-
+Patch0:         system-installed-spdlog.patch
 BuildRequires:  cmake
-BuildRequires:  glibc-static >= 2.38-9%{?dist}
+BuildRequires:  glibc-static >= 2.38-10%{?dist}
 BuildRequires:  libpciaccess-devel
 BuildRequires:  intel-level-zero-devel
 BuildRequires:  intel-metee-devel
 BuildRequires:  intel-igsc-devel
+BuildRequires:  spdlog-devel
 
 Requires:       intel-level-zero
 Requires:       intel-metee
@@ -37,7 +38,7 @@ Requires:   %{name} = %{version}-%{release}
 The %{name}-devel package contains libraries and header files for %{name}.
 
 %prep
-%autosetup -n xpumanager-%{version}
+%autosetup -p1 -n xpumanager-%{version}
 
 %build
 mkdir build
@@ -46,6 +47,7 @@ cmake .. \
     -DCMAKE_INSTALL_PREFIX=%{_prefix} \
     -DCMAKE_INSTALL_LIBDIR=%{_libdir} \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DSYSTEM_SPDLOG=ON \
     -DDAEMONLESS=ON \
     -DCPACK_GENERATOR=RPM
 make %{?_smp_mflags}
@@ -75,6 +77,12 @@ make install DESTDIR=%{buildroot}
 %{_libdir}/xpu-smi/resources/*
 
 %changelog
+* Wed Aug 11 2025 Polmoorx Shiva Kumar <polmoorx.shiva.kumar@intel.com> - 1.2.39-5
+- Patch for system installed spdlog
+
+* Thu jul 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.2.39-4
+- rebuild for glibc bump
+
 * Fri Dec 27 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 1.2.39-3
 - Update Source URL.
 

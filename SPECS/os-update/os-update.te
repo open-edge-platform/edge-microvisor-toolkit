@@ -1,0 +1,17 @@
+module os-update 1.0;
+
+require {
+        type var_lock_t;
+        type bootloader_t;
+        type lvm_t;
+        class file { read write };
+        class capability linux_immutable;
+}
+
+#============= bootloader_t ==============
+allow bootloader_t self:capability linux_immutable;
+allow bootloader_t var_lock_t:file { read write };
+
+#============= lvm_t ==============
+#for cryptsetup and dmsetup
+allow lvm_t var_lock_t:file { read write };

@@ -1,13 +1,13 @@
 Summary:        Linux Kernel
 Name:           kernel
-Version:        6.12.35
+Version:        6.12.39
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/linux-intel-lts
-Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.35-emt-250703T075830Z.tar.gz
+Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -20,32 +20,38 @@ Patch2:         CVE-2025-21807.patch
 Patch3:         CVE-2025-21817.patch
 Patch4:         CVE-2025-21884.patch
 Patch5:         CVE-2025-21884-1.patch
-Patch6:         CVE-2025-22101.patch
-Patch7:         CVE-2025-22103.patch
-Patch8:         CVE-2025-22104.patch
-Patch9:         CVE-2025-22105.patch
-Patch10:        CVE-2025-22105-1.patch
-Patch11:        CVE-2025-22106.patch
-Patch12:        CVE-2025-22108.patch
-Patch13:        CVE-2025-22111.patch
-Patch14:        CVE-2025-22113.patch
-Patch15:        CVE-2025-22113-1.patch
-Patch16:        CVE-2025-22116.patch
-Patch17:        CVE-2025-22117.patch
-Patch18:        CVE-2025-22121.patch
-Patch19:        CVE-2025-22121-1.patch
-Patch20:        CVE-2025-22124.patch
-Patch21:        CVE-2025-23131.patch
-Patch22:        CVE-2025-37746.patch
-Patch23:        CVE-2025-37746-1.patch
-Patch24:        CVE-2025-37906.patch
-Patch25:        CVE-2025-37984.patch
-Patch26:        CVE-2025-38029.patch
-Patch27:        CVE-2025-38041.patch
-Patch28:        CVE-2025-38041-1.patch
-Patch29:        CVE-2025-38041-2.patch
-Patch30:        CVE-2025-38064.patch
-Patch31:        CVE-2025-38064-1.patch
+Patch6:         CVE-2025-22103.patch
+Patch7:         CVE-2025-22104.patch
+Patch8:         CVE-2025-22105.patch
+Patch9:         CVE-2025-22105-1.patch
+Patch10:        CVE-2025-22106.patch
+Patch11:        CVE-2025-22108.patch
+Patch12:        CVE-2025-22111.patch
+Patch13:        CVE-2025-22113.patch
+Patch14:        CVE-2025-22113-1.patch
+Patch15:        CVE-2025-22116.patch
+Patch16:        CVE-2025-22117.patch
+Patch17:        CVE-2025-22121.patch
+Patch18:        CVE-2025-22121-1.patch
+Patch19:        CVE-2025-22124.patch
+Patch20:        CVE-2025-23131.patch
+Patch21:        CVE-2025-37746.patch
+Patch22:        CVE-2025-37746-1.patch
+Patch23:        CVE-2025-37906.patch
+Patch24:        CVE-2025-38029.patch
+Patch25:        CVE-2025-38041.patch
+Patch26:        CVE-2025-38041-1.patch
+Patch27:        CVE-2025-38041-2.patch
+Patch28:        CVE-2025-38064.patch
+Patch29:        CVE-2025-38064-1.patch
+Patch30:        CVE-2025-38105.patch
+Patch31:        CVE-2025-38137.patch
+Patch32:        CVE-2025-38207.patch
+Patch33:        CVE-2025-38234.patch
+Patch34:        CVE-2025-38248.patch
+Patch35:        CVE-2025-38306.patch
+Patch36:        CVE-2025-38311.patch
+Patch37:        CVE-2025-38351.patch
 
 
 %global security_hardening none
@@ -194,7 +200,7 @@ This package contains the bpftool, which allows inspection and simple
 manipulation of eBPF programs and maps.
 
 %prep
-%autosetup -p1 -n lts-v6.12.35-emt-250703T075830Z
+%autosetup -p1 -n lts-v6.12.39-emt-250721T212915Z
 # %patch 0 -p1
 make mrproper
 
@@ -440,6 +446,12 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Thu Jul 24 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.39-1
+- Update kernel to 6.12.39
+
+* Thu Jul 10 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.35-2
+- Update kernel to 6.12.35
+
 * Fri Jul 04 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.35-1
 - Update kernel to 6.12.35
 
