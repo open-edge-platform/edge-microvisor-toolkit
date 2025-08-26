@@ -1,0 +1,66 @@
+From f244341abad45417e24c8af98fc27cab32db0c7a Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Thu, 12 Sep 2024 11:09:36 +0800
+Subject: [PATCH 053/147] UBUNTU: SAUCE: KVM: TDX: Require TDP MMU and mmio
+ caching for TDX
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+As TDP MMU is becoming main stream than the legacy MMU, the legacy MMU
+support for TDX isn't implemented.  TDX requires KVM mmio caching.  Disable
+TDX support when TDP MMU or mmio caching aren't supported.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 76233fb7cf2868f24ce95e45316cf3d6f5f499d3)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/mmu.c  |  1 +
+ arch/x86/kvm/vmx/main.c | 13 +++++++++++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 41d98384785d..cab4831cc7a9 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -104,6 +104,7 @@ module_param_named(flush_on_reuse, force_flush_and_sync_on_reuse, bool, 0644);
+  * If the hardware supports that we don't need to do shadow paging.
+  */
+ bool tdp_enabled = false;
++EXPORT_SYMBOL_GPL(tdp_enabled);
+ 
+ static bool __ro_after_init tdp_mmu_allowed;
+ 
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 2a652faea18d..bd4583b459d3 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -3,6 +3,7 @@
+ 
+ #include "x86_ops.h"
+ #include "vmx.h"
++#include "mmu.h"
+ #include "nested.h"
+ #include "pmu.h"
+ #include "posted_intr.h"
+@@ -40,6 +41,18 @@ static __init int vt_hardware_setup(void)
+ 	if (ret)
+ 		return ret;
+ 
++	/* TDX requires KVM TDP MMU. */
++	if (enable_tdx && !tdp_enabled) {
++		enable_tdx = false;
++		pr_warn_ratelimited("TDX requires TDP MMU.  Please enable TDP MMU for TDX.\n");
++	}
++
++	/* TDX requires MMIO caching. */
++	if (enable_tdx && !enable_mmio_caching) {
++		enable_tdx = false;
++		pr_warn_ratelimited("TDX requires mmio caching.  Please enable mmio caching for TDX.\n");
++	}
++
+ 	enable_tdx = enable_tdx && !tdx_hardware_setup(&vt_x86_ops);
+ 	if (enable_tdx)
+ 		vt_x86_ops.vm_size = max_t(unsigned int, vt_x86_ops.vm_size,
+-- 
+2.34.1
+

@@ -1,0 +1,208 @@
+From 89d1c95a8e27b7593224fb253e6802d99998bf66 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 26 Jan 2022 15:20:09 -0800
+Subject: [PATCH 044/147] UBUNTU: SAUCE: KVM: x86/mmu: Add a private pointer to
+ struct kvm_mmu_page
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+For private GPA, CPU refers a private page table whose contents are
+encrypted.  The dedicated APIs to operate on it (e.g. updating/reading its
+PTE entry) are used and their cost is expensive.
+
+When KVM resolves KVM page fault, it walks the page tables.  To reuse the
+existing KVM MMU code and mitigate the heavy cost to directly walk private
+page table, allocate one more page to copy the dummy page table for KVM MMU
+code to directly walk.  Resolve KVM page fault with the existing code, and
+do additional operations necessary for the private page table.  To
+distinguish such cases, the existing KVM page table is called a shared page
+table (i.e. not associated with private page table), and the page table
+with private page table is called a private page table.  The relationship
+is depicted below.
+
+Add a private pointer to struct kvm_mmu_page for private page table and
+add helper functions to allocate/initialize/free a private page table
+page.
+
+              KVM page fault                     |
+                     |                           |
+                     V                           |
+        -------------+----------                 |
+        |                      |                 |
+        V                      V                 |
+     shared GPA           private GPA            |
+        |                      |                 |
+        V                      V                 |
+    shared PT root      dummy PT root            |    private PT root
+        |                      |                 |           |
+        V                      V                 |           V
+     shared PT            dummy PT ----propagate---->   private PT
+        |                      |                 |           |
+        |                      \-----------------+------\    |
+        |                                        |      |    |
+        V                                        |      V    V
+  shared guest page                              |    private guest page
+                                                 |
+                           non-encrypted memory  |    encrypted memory
+                                                 |
+PT: page table
+- Shared PT is visible to KVM and it is used by CPU.
+- Private PT is used by CPU but it is invisible to KVM.
+- Dummy PT is visible to KVM but not used by CPU.  It is used to
+  propagate PT change to the actual private PT which is used by CPU.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Binbin Wu <binbin.wu@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 745ce02bc6811ea0ab68c9d0b04e6bb47b45ec82)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm_host.h |  5 +++
+ arch/x86/kvm/mmu/mmu.c          |  7 ++++
+ arch/x86/kvm/mmu/mmu_internal.h | 63 ++++++++++++++++++++++++++++++---
+ arch/x86/kvm/mmu/tdp_mmu.c      |  1 +
+ 4 files changed, 72 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 07a9ec6b87e6..2908e6075894 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -826,6 +826,11 @@ struct kvm_vcpu_arch {
+ 	struct kvm_mmu_memory_cache mmu_shadow_page_cache;
+ 	struct kvm_mmu_memory_cache mmu_shadowed_info_cache;
+ 	struct kvm_mmu_memory_cache mmu_page_header_cache;
++	/*
++	 * This cache is to allocate private page table. E.g.  Secure-EPT used
++	 * by the TDX module.
++	 */
++	struct kvm_mmu_memory_cache mmu_private_spt_cache;
+ 
+ 	/*
+ 	 * QEMU userspace and the guest each have their own FPU state.
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 55a8309ab476..29a22d837c0a 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -662,6 +662,12 @@ static int mmu_topup_memory_caches(struct kvm_vcpu *vcpu, bool maybe_indirect)
+ 				       1 + PT64_ROOT_MAX_LEVEL + PTE_PREFETCH_NUM);
+ 	if (r)
+ 		return r;
++	if (kvm_gfn_shared_mask(vcpu->kvm)) {
++		r = kvm_mmu_topup_memory_cache(&vcpu->arch.mmu_private_spt_cache,
++					       PT64_ROOT_MAX_LEVEL);
++		if (r)
++			return r;
++	}
+ 	r = kvm_mmu_topup_memory_cache(&vcpu->arch.mmu_shadow_page_cache,
+ 				       PT64_ROOT_MAX_LEVEL);
+ 	if (r)
+@@ -681,6 +687,7 @@ static void mmu_free_memory_caches(struct kvm_vcpu *vcpu)
+ 	kvm_mmu_free_memory_cache(&vcpu->arch.mmu_pte_list_desc_cache);
+ 	kvm_mmu_free_memory_cache(&vcpu->arch.mmu_shadow_page_cache);
+ 	kvm_mmu_free_memory_cache(&vcpu->arch.mmu_shadowed_info_cache);
++	kvm_mmu_free_memory_cache(&vcpu->arch.mmu_private_spt_cache);
+ 	kvm_mmu_free_memory_cache(&vcpu->arch.mmu_page_header_cache);
+ }
+ 
+diff --git a/arch/x86/kvm/mmu/mmu_internal.h b/arch/x86/kvm/mmu/mmu_internal.h
+index 5f6508686766..7baaf2ea1048 100644
+--- a/arch/x86/kvm/mmu/mmu_internal.h
++++ b/arch/x86/kvm/mmu/mmu_internal.h
+@@ -101,7 +101,21 @@ struct kvm_mmu_page {
+ 		int root_count;
+ 		refcount_t tdp_mmu_root_count;
+ 	};
+-	unsigned int unsync_children;
++	union {
++		struct {
++			unsigned int unsync_children;
++			/*
++			 * Number of writes since the last time traversal
++			 * visited this page.
++			 */
++			atomic_t write_flooding_count;
++		};
++		/*
++		 * Associated private shadow page table, e.g. Secure-EPT page
++		 * passed to the TDX module.
++		 */
++		void *private_spt;
++	};
+ 	union {
+ 		struct kvm_rmap_head parent_ptes; /* rmap pointers to parent sptes */
+ 		tdp_ptep_t ptep;
+@@ -124,9 +138,6 @@ struct kvm_mmu_page {
+ 	int clear_spte_count;
+ #endif
+ 
+-	/* Number of writes since the last time traversal visited this page.  */
+-	atomic_t write_flooding_count;
+-
+ #ifdef CONFIG_X86_64
+ 	/* Used for freeing the page asynchronously if it is a TDP MMU page. */
+ 	struct rcu_head rcu_head;
+@@ -150,6 +161,50 @@ static inline bool is_private_sp(const struct kvm_mmu_page *sp)
+ 	return kvm_mmu_page_role_is_private(sp->role);
+ }
+ 
++static inline void *kvm_mmu_private_spt(struct kvm_mmu_page *sp)
++{
++	return sp->private_spt;
++}
++
++static inline void kvm_mmu_init_private_spt(struct kvm_mmu_page *sp, void *private_spt)
++{
++	sp->private_spt = private_spt;
++}
++
++static inline void kvm_mmu_alloc_private_spt(struct kvm_vcpu *vcpu, struct kvm_mmu_page *sp)
++{
++	bool is_root = vcpu->arch.root_mmu.root_role.level == sp->role.level;
++
++	KVM_BUG_ON(!kvm_mmu_page_role_is_private(sp->role), vcpu->kvm);
++	if (is_root)
++		/*
++		 * Because TDX module assigns root Secure-EPT page and set it to
++		 * Secure-EPTP when TD vcpu is created, secure page table for
++		 * root isn't needed.
++		 */
++		sp->private_spt = NULL;
++	else {
++		/*
++		 * Because the TDX module doesn't trust VMM and initializes
++		 * the pages itself, KVM doesn't initialize them.  Allocate
++		 * pages with garbage and give them to the TDX module.
++		 */
++		sp->private_spt = kvm_mmu_memory_cache_alloc(&vcpu->arch.mmu_private_spt_cache);
++		/*
++		 * Because mmu_private_spt_cache is topped up before starting
++		 * kvm page fault resolving, the allocation above shouldn't
++		 * fail.
++		 */
++		WARN_ON_ONCE(!sp->private_spt);
++	}
++}
++
++static inline void kvm_mmu_free_private_spt(struct kvm_mmu_page *sp)
++{
++	if (sp->private_spt)
++		free_page((unsigned long)sp->private_spt);
++}
++
+ static inline bool kvm_mmu_page_ad_need_write_protect(struct kvm_mmu_page *sp)
+ {
+ 	/*
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index 5fb6c5f0acbd..770084f5f902 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -53,6 +53,7 @@ void kvm_mmu_uninit_tdp_mmu(struct kvm *kvm)
+ 
+ static void tdp_mmu_free_sp(struct kvm_mmu_page *sp)
+ {
++	kvm_mmu_free_private_spt(sp);
+ 	free_page((unsigned long)sp->spt);
+ 	kmem_cache_free(mmu_page_header_cache, sp);
+ }
+-- 
+2.34.1
+

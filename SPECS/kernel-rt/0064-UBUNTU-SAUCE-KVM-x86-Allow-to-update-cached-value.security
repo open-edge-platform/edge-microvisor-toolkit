@@ -1,0 +1,95 @@
+From edd2da65773fe925c91b95123320714004b7a6c1 Mon Sep 17 00:00:00 2001
+From: Chao Gao <chao.gao@intel.com>
+Date: Fri, 13 Sep 2024 14:09:48 +0800
+Subject: [PATCH 064/147] UBUNTU: SAUCE: KVM: x86: Allow to update cached
+ values in kvm_user_return_msrs w/o wrmsr
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Several MSRs are constant and only used in userspace(ring 3).  But VMs may
+have different values.  KVM uses kvm_set_user_return_msr() to switch to
+guest's values and leverages user return notifier to restore them when the
+kernel is to return to userspace.  To eliminate unnecessary wrmsr, KVM also
+caches the value it wrote to an MSR last time.
+
+TDX module unconditionally resets some of these MSRs to architectural INIT
+state on TD exit.  It makes the cached values in kvm_user_return_msrs are
+inconsistent with values in hardware.  This inconsistency needs to be
+fixed.  Otherwise, it may mislead kvm_on_user_return() to skip restoring
+some MSRs to the host's values.  kvm_set_user_return_msr() can help correct
+this case, but it is not optimal as it always does a wrmsr.  So, introduce
+a variation of kvm_set_user_return_msr() to update cached values and skip
+that wrmsr.
+
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit fbe4bce081323de89fe848cd5d4894620a80724f)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm_host.h |  1 +
+ arch/x86/kvm/x86.c              | 25 ++++++++++++++++++++-----
+ 2 files changed, 21 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 969ea9a1f974..1f9ea8a9322f 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -2323,6 +2323,7 @@ int kvm_pv_send_ipi(struct kvm *kvm, unsigned long ipi_bitmap_low,
+ int kvm_add_user_return_msr(u32 msr);
+ int kvm_find_user_return_msr(u32 msr);
+ int kvm_set_user_return_msr(unsigned index, u64 val, u64 mask);
++void kvm_user_return_update_cache(unsigned int index, u64 val);
+ 
+ static inline bool kvm_is_supported_user_return_msr(u32 msr)
+ {
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 2065773c20af..1ef65c1f1887 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -637,6 +637,15 @@ static void kvm_user_return_msr_cpu_online(void)
+ 	}
+ }
+ 
++static void kvm_user_return_register_notifier(struct kvm_user_return_msrs *msrs)
++{
++	if (!msrs->registered) {
++		msrs->urn.on_user_return = kvm_on_user_return;
++		user_return_notifier_register(&msrs->urn);
++		msrs->registered = true;
++	}
++}
++
+ int kvm_set_user_return_msr(unsigned slot, u64 value, u64 mask)
+ {
+ 	struct kvm_user_return_msrs *msrs = this_cpu_ptr(user_return_msrs);
+@@ -650,15 +659,21 @@ int kvm_set_user_return_msr(unsigned slot, u64 value, u64 mask)
+ 		return 1;
+ 
+ 	msrs->values[slot].curr = value;
+-	if (!msrs->registered) {
+-		msrs->urn.on_user_return = kvm_on_user_return;
+-		user_return_notifier_register(&msrs->urn);
+-		msrs->registered = true;
+-	}
++	kvm_user_return_register_notifier(msrs);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(kvm_set_user_return_msr);
+ 
++/* Update the cache, "curr", and register the notifier */
++void kvm_user_return_update_cache(unsigned int slot, u64 value)
++{
++	struct kvm_user_return_msrs *msrs = this_cpu_ptr(user_return_msrs);
++
++	msrs->values[slot].curr = value;
++	kvm_user_return_register_notifier(msrs);
++}
++EXPORT_SYMBOL_GPL(kvm_user_return_update_cache);
++
+ static void drop_user_return_notifiers(void)
+ {
+ 	struct kvm_user_return_msrs *msrs = this_cpu_ptr(user_return_msrs);
+-- 
+2.34.1
+

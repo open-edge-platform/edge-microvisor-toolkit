@@ -1,0 +1,259 @@
+From 0a0e133098b66dd4b172d025ba62df64c3e6194c Mon Sep 17 00:00:00 2001
+From: Kai Huang <kai.huang@intel.com>
+Date: Mon, 23 Sep 2024 20:39:12 +0800
+Subject: [PATCH 127/147] UBUNTU: SAUCE: 0157 x86/virt/tdx: Get information
+ about TDX module and TDX-capable memory
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Start to transit out the "multi-steps" to initialize the TDX module.
+
+TDX provides increased levels of memory confidentiality and integrity.
+This requires special hardware support for features like memory
+encryption and storage of memory integrity checksums.  Not all memory
+satisfies these requirements.
+
+As a result, TDX introduced the concept of a "Convertible Memory Region"
+(CMR).  During boot, the firmware builds a list of all of the memory
+ranges which can provide the TDX security guarantees.
+
+CMRs tell the kernel which memory is TDX compatible.  The kernel takes
+CMRs (plus a little more metadata) and constructs "TD Memory Regions"
+(TDMRs).  TDMRs let the kernel grant TDX protections to some or all of
+the CMR areas.
+
+The TDX module also reports necessary information to let the kernel
+build TDMRs and run TDX guests in structure 'tdsysinfo_struct'.  The
+list of CMRs, along with the TDX module information, is available to
+the kernel by querying the TDX module.
+
+As a preparation to construct TDMRs, get the TDX module information and
+the list of CMRs.  Print out CMRs to help user to decode which memory
+regions are TDX convertible.
+
+The 'tdsysinfo_struct' is fairly large (1024 bytes) and contains a lot
+of info about the TDX module.  Fully define the entire structure, but
+only use the fields necessary to build the TDMRs and pr_info() some
+basics about the module.  The rest of the fields will get used by KVM.
+
+Signed-off-by: Kai Huang <kai.huang@intel.com>
+Reviewed-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 1cc38da353d302a688d4dce0a80cb8d343b73acd)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/virt/vmx/tdx/tdx.c | 87 +++++++++++++++++++++++++++++++++++++
+ arch/x86/virt/vmx/tdx/tdx.h | 63 +++++++++++++++++++++++++++
+ 2 files changed, 150 insertions(+)
+
+diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+index 052a2a19134d..4d37f9e7ce61 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.c
++++ b/arch/x86/virt/vmx/tdx/tdx.c
+@@ -27,6 +27,8 @@
+ #include <linux/log2.h>
+ #include <linux/acpi.h>
+ #include <linux/suspend.h>
++#include <linux/slab.h>
++#include <linux/math.h>
+ #include <asm/page.h>
+ #include <asm/special_insns.h>
+ #include <asm/msr-index.h>
+@@ -182,6 +184,60 @@ int tdx_cpu_enable(void)
+ }
+ EXPORT_SYMBOL_GPL(tdx_cpu_enable);
+ 
++static void print_cmrs(struct cmr_info *cmr_array, int nr_cmrs)
++{
++	int i;
++
++	for (i = 0; i < nr_cmrs; i++) {
++		struct cmr_info *cmr = &cmr_array[i];
++
++		/*
++		 * The array of CMRs reported via TDH.SYS.INFO can
++		 * contain tail empty CMRs.  Don't print them.
++		 */
++		if (!cmr->size)
++			break;
++
++		pr_info("CMR: [0x%llx, 0x%llx)\n", cmr->base,
++				cmr->base + cmr->size);
++	}
++}
++
++static int get_tdx_sysinfo(struct tdsysinfo_struct *tdsysinfo,
++			struct cmr_info *cmr_array)
++{
++	struct tdx_module_args args = {};
++	int ret;
++
++	/*
++	 * TDH.SYS.INFO writes the TDSYSINFO_STRUCT and the CMR array
++	 * to the buffers provided by the kernel (via RCX and R8
++	 * respectively).  The buffer size of the TDSYSINFO_STRUCT
++	 * (via RDX) and the maximum entries of the CMR array (via R9)
++	 * passed to this SEAMCALL must be at least the size of
++	 * TDSYSINFO_STRUCT and MAX_CMRS respectively.
++	 *
++	 * Upon a successful return, R9 contains the actual entries
++	 * written to the CMR array.
++	 */
++	args.rcx = __pa(tdsysinfo);
++	args.rdx = TDSYSINFO_STRUCT_SIZE;
++	args.r8 = __pa(cmr_array);
++	args.r9 = MAX_CMRS;
++	ret = seamcall_prerr_ret(TDH_SYS_INFO, &args);
++	if (ret)
++		return ret;
++
++	pr_info("TDX module: attributes 0x%x, vendor_id 0x%x, major_version %u, minor_version %u, build_date %u, build_num %u",
++		tdsysinfo->attributes,    tdsysinfo->vendor_id,
++		tdsysinfo->major_version, tdsysinfo->minor_version,
++		tdsysinfo->build_date,    tdsysinfo->build_num);
++
++	print_cmrs(cmr_array, args.r9);
++
++	return 0;
++}
++
+ /*
+  * Add a memory region as a TDX memory block.  The caller must make sure
+  * all memory regions are added in address ascending order and don't
+@@ -1118,9 +1174,32 @@ static int init_tdmrs(struct tdmr_info_list *tdmr_list)
+ 
+ static int init_tdx_module(void)
+ {
++	struct tdsysinfo_struct *tdsysinfo;
++	struct cmr_info *cmr_array;
++	int tdsysinfo_size;
++	int cmr_array_size;
+ 	struct tdx_tdmr_sysinfo tdmr_sysinfo;
+ 	int ret;
+ 
++	tdsysinfo_size = round_up(TDSYSINFO_STRUCT_SIZE,
++		TDSYSINFO_STRUCT_ALIGNMENT);
++	tdsysinfo = kzalloc(tdsysinfo_size, GFP_KERNEL);
++	if (!tdsysinfo)
++		return -ENOMEM;
++
++	cmr_array_size = sizeof(struct cmr_info) * MAX_CMRS;
++	cmr_array_size = round_up(cmr_array_size, CMR_INFO_ARRAY_ALIGNMENT);
++	cmr_array = kzalloc(cmr_array_size, GFP_KERNEL);
++	if (!cmr_array) {
++		kfree(tdsysinfo);
++		return -ENOMEM;
++	}
++
++	/* Get the TDSYSINFO_STRUCT and CMRs from the TDX module. */
++	ret = get_tdx_sysinfo(tdsysinfo, cmr_array);
++	if (ret)
++		goto out;
++
+ 	/*
+ 	 * To keep things simple, assume that all TDX-protected memory
+ 	 * will come from the page allocator.  Make sure all pages in the
+@@ -1199,6 +1278,14 @@ static int init_tdx_module(void)
+ err_free_tdxmem:
+ 	free_tdx_memlist(&tdx_memlist);
+ 	goto out_put_tdxmem;
++out:
++	/*
++	 * For now both @sysinfo and @cmr_array are only used during
++	 * module initialization, so always free them.
++	 */
++	kfree(tdsysinfo);
++	kfree(cmr_array);
++	return ret;
+ }
+ 
+ static int __tdx_enable(void)
+diff --git a/arch/x86/virt/vmx/tdx/tdx.h b/arch/x86/virt/vmx/tdx/tdx.h
+index 4c32c8bf156a..93bb7609751a 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.h
++++ b/arch/x86/virt/vmx/tdx/tdx.h
+@@ -3,6 +3,9 @@
+ #define _X86_VIRT_TDX_H
+ 
+ #include <linux/bits.h>
++#include <linux/types.h>
++#include <linux/stddef.h>
++#include <linux/compiler_attributes.h>
+ 
+ /*
+  * This file contains both macros and data structures defined by the TDX
+@@ -16,6 +19,7 @@
+  */
+ #define TDH_PHYMEM_PAGE_RDMD	24
+ #define TDH_SYS_KEY_CONFIG	31
++#define TDH_SYS_INFO   	        32
+ #define TDH_SYS_INIT		33
+ #define TDH_SYS_RD		34
+ #define TDH_SYS_LP_INIT		35
+@@ -116,4 +120,63 @@ struct tdmr_info_list {
+ 	int max_tdmrs;	/* How many 'tdmr_info's are allocated */
+ };
+ 
++struct cmr_info {
++       u64     base;
++       u64     size;
++} __packed;
++
++#define MAX_CMRS       32
++#define CMR_INFO_ARRAY_ALIGNMENT       512
++
++struct cpuid_config {
++       u32     leaf;
++       u32     sub_leaf;
++       u32     eax;
++       u32     ebx;
++       u32     ecx;
++       u32     edx;
++} __packed;
++
++#define TDSYSINFO_STRUCT_SIZE          1024
++#define TDSYSINFO_STRUCT_ALIGNMENT     1024
++
++/*
++ * The size of this structure itself is flexible.  The actual structure
++ * passed to TDH.SYS.INFO must be padded to TDSYSINFO_STRUCT_SIZE bytes
++ * and TDSYSINFO_STRUCT_ALIGNMENT bytes aligned.
++ */
++struct tdsysinfo_struct {
++       /* TDX-SEAM Module Info */
++       u32     attributes;
++       u32     vendor_id;
++       u32     build_date;
++       u16     build_num;
++       u16     minor_version;
++       u16     major_version;
++       u8      reserved0[14];
++       /* Memory Info */
++       u16     max_tdmrs;
++       u16     max_reserved_per_tdmr;
++       u16     pamt_entry_size;
++       u8      reserved1[10];
++       /* Control Struct Info */
++       u16     tdcs_base_size;
++       u8      reserved2[2];
++       u16     tdvps_base_size;
++       u8      tdvps_xfam_dependent_size;
++       u8      reserved3[9];
++       /* TD Capabilities */
++       u64     attributes_fixed0;
++       u64     attributes_fixed1;
++       u64     xfam_fixed0;
++       u64     xfam_fixed1;
++       u8      reserved4[32];
++       u32     num_cpuid_config;
++       /*
++	* The actual number of CPUID_CONFIG depends on above
++	* 'num_cpuid_config'.
++	*/
++       DECLARE_FLEX_ARRAY(struct cpuid_config, cpuid_configs);
++} __packed;
++
+ #endif
+-- 
+2.34.1
+

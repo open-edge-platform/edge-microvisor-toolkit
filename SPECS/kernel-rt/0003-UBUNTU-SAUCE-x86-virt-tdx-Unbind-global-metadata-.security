@@ -1,0 +1,86 @@
+From bde0cb11ed6db12303bfaf9a9d3b5b505e0a810f Mon Sep 17 00:00:00 2001
+From: Kai Huang <kai.huang@intel.com>
+Date: Thu, 4 Jan 2024 23:45:35 +1300
+Subject: [PATCH 003/147] UBUNTU: SAUCE: x86/virt/tdx: Unbind global metadata
+ read with 'struct tdx_tdmr_sysinfo'
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+For now the kernel only reads TDMR related global metadata fields for
+module initialization, and the metadata read code only works with the
+'struct tdx_tdmr_sysinfo'.
+
+KVM will need to read a bunch of non-TDMR related metadata to create and
+run TDX guests.  It's essential to provide a generic metadata read
+infrastructure which is not bound to any specific structure.
+
+To start providing such infrastructure, unbound the metadata read with
+the 'struct tdx_tdmr_sysinfo'.
+
+Signed-off-by: Kai Huang <kai.huang@intel.com>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 7de2b7c7336d0188d6045f55f5c37b5079d8deb4)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/virt/vmx/tdx/tdx.c | 25 ++++++++++++++-----------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+index fe1acce68613..0a6d2f983841 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.c
++++ b/arch/x86/virt/vmx/tdx/tdx.c
+@@ -273,9 +273,9 @@ static int read_sys_metadata_field(u64 field_id, u64 *data)
+ 
+ static int read_sys_metadata_field16(u64 field_id,
+ 				     int offset,
+-				     struct tdx_tdmr_sysinfo *ts)
++				     void *stbuf)
+ {
+-	u16 *ts_member = ((void *)ts) + offset;
++	u16 *st_member = stbuf + offset;
+ 	u64 tmp;
+ 	int ret;
+ 
+@@ -287,7 +287,7 @@ static int read_sys_metadata_field16(u64 field_id,
+ 	if (ret)
+ 		return ret;
+ 
+-	*ts_member = tmp;
++	*st_member = tmp;
+ 
+ 	return 0;
+ }
+@@ -297,19 +297,22 @@ struct field_mapping {
+ 	int offset;
+ };
+ 
+-#define TD_SYSINFO_MAP(_field_id, _member) \
+-	{ .field_id = MD_FIELD_ID_##_field_id,	   \
+-	  .offset   = offsetof(struct tdx_tdmr_sysinfo, _member) }
++#define TD_SYSINFO_MAP(_field_id, _struct, _member)	\
++	{ .field_id = MD_FIELD_ID_##_field_id,		\
++	  .offset   = offsetof(_struct, _member) }
++
++#define TD_SYSINFO_MAP_TDMR_INFO(_field_id, _member)	\
++	TD_SYSINFO_MAP(_field_id, struct tdx_tdmr_sysinfo, _member)
+ 
+ static int get_tdx_tdmr_sysinfo(struct tdx_tdmr_sysinfo *tdmr_sysinfo)
+ {
+ 	/* Map TD_SYSINFO fields into 'struct tdx_tdmr_sysinfo': */
+ 	const struct field_mapping fields[] = {
+-		TD_SYSINFO_MAP(MAX_TDMRS,	      max_tdmrs),
+-		TD_SYSINFO_MAP(MAX_RESERVED_PER_TDMR, max_reserved_per_tdmr),
+-		TD_SYSINFO_MAP(PAMT_4K_ENTRY_SIZE,    pamt_entry_size[TDX_PS_4K]),
+-		TD_SYSINFO_MAP(PAMT_2M_ENTRY_SIZE,    pamt_entry_size[TDX_PS_2M]),
+-		TD_SYSINFO_MAP(PAMT_1G_ENTRY_SIZE,    pamt_entry_size[TDX_PS_1G]),
++		TD_SYSINFO_MAP_TDMR_INFO(MAX_TDMRS,		max_tdmrs),
++		TD_SYSINFO_MAP_TDMR_INFO(MAX_RESERVED_PER_TDMR, max_reserved_per_tdmr),
++		TD_SYSINFO_MAP_TDMR_INFO(PAMT_4K_ENTRY_SIZE,    pamt_entry_size[TDX_PS_4K]),
++		TD_SYSINFO_MAP_TDMR_INFO(PAMT_2M_ENTRY_SIZE,    pamt_entry_size[TDX_PS_2M]),
++		TD_SYSINFO_MAP_TDMR_INFO(PAMT_1G_ENTRY_SIZE,    pamt_entry_size[TDX_PS_1G]),
+ 	};
+ 	int ret;
+ 	int i;
+-- 
+2.34.1
+

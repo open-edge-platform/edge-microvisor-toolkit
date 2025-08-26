@@ -1,0 +1,63 @@
+From 7f1b9f23d2b5482767a5d5693c84ac7749bb04d2 Mon Sep 17 00:00:00 2001
+From: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Date: Mon, 30 Nov 2020 18:12:14 -0800
+Subject: [PATCH 09/32] igc: Add support for exposing frame preemption stats
+ registers
+
+Expose the Frame Preemption counters, so the number of
+express/preemptible packets can be monitored by userspace.
+
+These registers are cleared when read, so the value shown is the
+number of events that happened since the last read.
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Signed-off-by: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc_ethtool.c |  8 ++++++++
+ drivers/net/ethernet/intel/igc/igc_regs.h    | 10 ++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/drivers/net/ethernet/intel/igc/igc_ethtool.c b/drivers/net/ethernet/intel/igc/igc_ethtool.c
+index 761bafd585b37..60120b7d674ad 100644
+--- a/drivers/net/ethernet/intel/igc/igc_ethtool.c
++++ b/drivers/net/ethernet/intel/igc/igc_ethtool.c
+@@ -345,6 +345,14 @@ static void igc_ethtool_get_regs(struct net_device *netdev,
+ 
+ 	regs_buff[213] = adapter->stats.tlpic;
+ 	regs_buff[214] = adapter->stats.rlpic;
++	regs_buff[215] = rd32(IGC_PRMPTDTCNT);
++	regs_buff[216] = rd32(IGC_PRMEVNTTCNT);
++	regs_buff[217] = rd32(IGC_PRMPTDRCNT);
++	regs_buff[218] = rd32(IGC_PRMEVNTRCNT);
++	regs_buff[219] = rd32(IGC_PRMPBLTCNT);
++	regs_buff[220] = rd32(IGC_PRMPBLRCNT);
++	regs_buff[221] = rd32(IGC_PRMEXPTCNT);
++	regs_buff[222] = rd32(IGC_PRMEXPRCNT);
+ }
+ 
+ static void igc_ethtool_get_wol(struct net_device *netdev,
+diff --git a/drivers/net/ethernet/intel/igc/igc_regs.h b/drivers/net/ethernet/intel/igc/igc_regs.h
+index 12ddc5793651d..6d207e220458e 100644
+--- a/drivers/net/ethernet/intel/igc/igc_regs.h
++++ b/drivers/net/ethernet/intel/igc/igc_regs.h
+@@ -222,6 +222,16 @@
+ 
+ #define IGC_FTQF(_n)	(0x059E0 + (4 * (_n)))  /* 5-tuple Queue Fltr */
+ 
++/* Time sync registers - preemption statistics */
++#define IGC_PRMPTDTCNT	0x04280  /* Good TX Preempted Packets */
++#define IGC_PRMEVNTTCNT	0x04298  /* TX Preemption event counter */
++#define IGC_PRMPTDRCNT	0x04284  /* Good RX Preempted Packets */
++#define IGC_PRMEVNTRCNT	0x0429C  /* RX Preemption event counter */
++#define IGC_PRMPBLTCNT	0x04288  /* Good TX Preemptible Packets */
++#define IGC_PRMPBLRCNT	0x0428C  /* Good RX Preemptible Packets */
++#define IGC_PRMEXPTCNT	0x04290  /* Good TX Express Packets */
++#define IGC_PRMEXPRCNT	0x042A0  /* Preemption Exception Counter */
++
+ /* Transmit Scheduling Registers */
+ #define IGC_TQAVCTRL		0x3570
+ #define IGC_TXQCTL(_n)		(0x3344 + 0x4 * (_n))
+-- 
+2.25.1
+

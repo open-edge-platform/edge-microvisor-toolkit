@@ -1,0 +1,59 @@
+From 9ee573e6f5b1d145a9c3104287f024ac83e9314b Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Mon, 4 Aug 2025 03:38:26 +0000
+Subject: [PATCH 147/147] Revert "UBUNTU: SAUCE: KVM: TDX: Allow 2MB large page
+ for TD GUEST"
+
+This reverts commit 278864361577f05d7d482f816e9de0c1d3278ec9.
+
+the original commit may lead to the SEAMCALL failure, therefore, we
+revert it to resolve this issue.
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/kvm/mmu/tdp_mmu.c | 9 +++++++--
+ arch/x86/kvm/vmx/tdx.c     | 7 ++-----
+ 2 files changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index 152a093f13a1..b906db460cdd 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -1632,9 +1632,14 @@ int kvm_tdp_mmu_map(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault)
+ 
+ 		sp->nx_huge_page_disallowed = fault->huge_page_disallowed;
+ 
+-		if (is_shadow_present_pte(iter.old_spte))
++		if (is_shadow_present_pte(iter.old_spte)) {
++			/*
++			 * TODO: large page support.
++			 * Doesn't support large page for TDX now
++			 */
++			KVM_BUG_ON(is_private_sptep(iter.sptep), vcpu->kvm);
+ 			r = tdp_mmu_split_huge_page(kvm, &iter, sp, true);
+-		else
++		} else
+ 			r = tdp_mmu_link_sp(kvm, &iter, sp, true);
+ 
+ 		/*
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 88669b793534..f8d94d6b6e2f 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -3133,11 +3133,8 @@ int tdx_gmem_max_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
+ 	if (!is_private)
+ 		return 0;
+ 
+-	/*
+-	 * TDH.MEM.PAGE.AUG supports up to 2MB page.
+-	 * TODO: Enable 1gb large page support.
+-	 */
+-	*max_level = min(*max_level, PG_LEVEL_2M);
++	/* TODO: Enable 2mb and 1gb large page support. */
++	*max_level = min(*max_level, PG_LEVEL_4K);
+ 	return 0;
+ }
+ 
+-- 
+2.34.1
+

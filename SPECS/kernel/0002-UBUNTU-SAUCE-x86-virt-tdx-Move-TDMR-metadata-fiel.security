@@ -1,0 +1,57 @@
+From 2b19adf5f5e08b251e46316345995068a39b8934 Mon Sep 17 00:00:00 2001
+From: Kai Huang <kai.huang@intel.com>
+Date: Thu, 4 Jan 2024 23:45:34 +1300
+Subject: [PATCH 002/147] UBUNTU: SAUCE: x86/virt/tdx: Move TDMR metadata
+ fields map table to local variable
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+The kernel reads all TDMR related global metadata fields based on a
+table which maps the metadata fields to the corresponding members of
+'struct tdx_tdmr_sysinfo'.  Currently this table is a static variable.
+
+But this table is only used by the function which reads these metadata
+fields and becomes useless after reading is done.  Change the table
+to function local variable.
+
+Signed-off-by: Kai Huang <kai.huang@intel.com>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 86fce178d5db5f3e9010f99c5dfc7340ecc5db9d)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/virt/vmx/tdx/tdx.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+index e27b75cbcd8b..fe1acce68613 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.c
++++ b/arch/x86/virt/vmx/tdx/tdx.c
+@@ -301,17 +301,16 @@ struct field_mapping {
+ 	{ .field_id = MD_FIELD_ID_##_field_id,	   \
+ 	  .offset   = offsetof(struct tdx_tdmr_sysinfo, _member) }
+ 
+-/* Map TD_SYSINFO fields into 'struct tdx_tdmr_sysinfo': */
+-static const struct field_mapping fields[] = {
+-	TD_SYSINFO_MAP(MAX_TDMRS,	      max_tdmrs),
+-	TD_SYSINFO_MAP(MAX_RESERVED_PER_TDMR, max_reserved_per_tdmr),
+-	TD_SYSINFO_MAP(PAMT_4K_ENTRY_SIZE,    pamt_entry_size[TDX_PS_4K]),
+-	TD_SYSINFO_MAP(PAMT_2M_ENTRY_SIZE,    pamt_entry_size[TDX_PS_2M]),
+-	TD_SYSINFO_MAP(PAMT_1G_ENTRY_SIZE,    pamt_entry_size[TDX_PS_1G]),
+-};
+-
+ static int get_tdx_tdmr_sysinfo(struct tdx_tdmr_sysinfo *tdmr_sysinfo)
+ {
++	/* Map TD_SYSINFO fields into 'struct tdx_tdmr_sysinfo': */
++	const struct field_mapping fields[] = {
++		TD_SYSINFO_MAP(MAX_TDMRS,	      max_tdmrs),
++		TD_SYSINFO_MAP(MAX_RESERVED_PER_TDMR, max_reserved_per_tdmr),
++		TD_SYSINFO_MAP(PAMT_4K_ENTRY_SIZE,    pamt_entry_size[TDX_PS_4K]),
++		TD_SYSINFO_MAP(PAMT_2M_ENTRY_SIZE,    pamt_entry_size[TDX_PS_2M]),
++		TD_SYSINFO_MAP(PAMT_1G_ENTRY_SIZE,    pamt_entry_size[TDX_PS_1G]),
++	};
+ 	int ret;
+ 	int i;
+ 
+-- 
+2.34.1
+

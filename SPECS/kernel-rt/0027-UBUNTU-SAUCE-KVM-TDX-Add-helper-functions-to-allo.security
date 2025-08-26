@@ -1,0 +1,66 @@
+From 1ebad538761398939a6151bfdb701232dcc500fc Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 9 Feb 2022 11:23:49 -0800
+Subject: [PATCH 027/147] UBUNTU: SAUCE: KVM: TDX: Add helper functions to
+ allocate/free TDX private host key id
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Add helper functions to allocate/free TDX private host key id (HKID).
+
+The memory controller encrypts TDX memory with the assigned TDX HKIDs.  The
+global TDX HKID is to encrypt the TDX module, its memory, and some dynamic
+data (TDR).  The private TDX HKID is assigned to guest TD to encrypt guest
+memory and the related data.  When VMM releases an encrypted page for
+reuse, the page needs a cache flush with the used HKID.  VMM needs the
+global TDX HKID and the private TDX HKIDs to flush encrypted pages.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 4c76ce3d9c0e54397b1decb8c80e93ec36f01e4c)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 1601d04cec55..d13c902bbff4 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -11,6 +11,34 @@
+ #undef pr_fmt
+ #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ 
++/*
++ * Key id globally used by TDX module: TDX module maps TDR with this TDX global
++ * key id.  TDR includes key id assigned to the TD.  Then TDX module maps other
++ * TD-related pages with the assigned key id.  TDR requires this TDX global key
++ * id for cache flush unlike other TD-related pages.
++ */
++/* TDX KeyID pool */
++static DEFINE_IDA(tdx_guest_keyid_pool);
++
++static int __used tdx_guest_keyid_alloc(void)
++{
++	if (WARN_ON_ONCE(!tdx_guest_keyid_start || !tdx_nr_guest_keyids))
++		return -EINVAL;
++
++	return ida_alloc_range(&tdx_guest_keyid_pool, tdx_guest_keyid_start,
++			       tdx_guest_keyid_start + tdx_nr_guest_keyids - 1,
++			       GFP_KERNEL);
++}
++
++static void __used tdx_guest_keyid_free(int keyid)
++{
++	if (WARN_ON_ONCE(keyid < tdx_guest_keyid_start ||
++			 keyid > tdx_guest_keyid_start + tdx_nr_guest_keyids - 1))
++		return;
++
++	ida_free(&tdx_guest_keyid_pool, keyid);
++}
++
+ static int __init tdx_module_setup(void)
+ {
+ 	int ret;
+-- 
+2.34.1
+

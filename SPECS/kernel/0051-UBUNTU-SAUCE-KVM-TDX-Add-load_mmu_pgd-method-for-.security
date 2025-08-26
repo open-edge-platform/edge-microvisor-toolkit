@@ -1,0 +1,114 @@
+From ed5374af8bb0dcc06daca170a1536804d53a1272 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <sean.j.christopherson@intel.com>
+Date: Wed, 24 Jun 2020 21:14:14 -0700
+Subject: [PATCH 051/147] UBUNTU: SAUCE: KVM: TDX: Add load_mmu_pgd method for
+ TDX
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+For virtual IO, the guest TD shares guest pages with VMM without
+encryption.  Shared EPT is used to map guest pages in unprotected way.
+
+Add the VMCS field encoding for the shared EPTP, which will be used by
+TDX to have separate EPT walks for private GPAs (existing EPTP) versus
+shared GPAs (new shared EPTP).
+
+Set shared EPT pointer value for the TDX guest to initialize TDX MMU.
+
+Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit 7fd8b48ca03abecf0f69e53f45eb86ba1df86d34)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/vmx.h |  1 +
+ arch/x86/kvm/vmx/main.c    | 13 ++++++++++++-
+ arch/x86/kvm/vmx/tdx.c     |  6 ++++++
+ arch/x86/kvm/vmx/x86_ops.h |  4 ++++
+ 4 files changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/asm/vmx.h b/arch/x86/include/asm/vmx.h
+index f7fd4369b821..9298fb9d4bb3 100644
+--- a/arch/x86/include/asm/vmx.h
++++ b/arch/x86/include/asm/vmx.h
+@@ -256,6 +256,7 @@ enum vmcs_field {
+ 	TSC_MULTIPLIER_HIGH             = 0x00002033,
+ 	TERTIARY_VM_EXEC_CONTROL	= 0x00002034,
+ 	TERTIARY_VM_EXEC_CONTROL_HIGH	= 0x00002035,
++	SHARED_EPT_POINTER		= 0x0000203C,
+ 	PID_POINTER_TABLE		= 0x00002042,
+ 	PID_POINTER_TABLE_HIGH		= 0x00002043,
+ 	GUEST_PHYSICAL_ADDRESS          = 0x00002400,
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 3e636df381cd..2a652faea18d 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -127,6 +127,17 @@ static void vt_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)
+ 	vmx_vcpu_reset(vcpu, init_event);
+ }
+ 
++static void vt_load_mmu_pgd(struct kvm_vcpu *vcpu, hpa_t root_hpa,
++			int pgd_level)
++{
++	if (is_td_vcpu(vcpu)) {
++		tdx_load_mmu_pgd(vcpu, root_hpa, pgd_level);
++		return;
++	}
++
++	vmx_load_mmu_pgd(vcpu, root_hpa, pgd_level);
++}
++
+ static int vt_mem_enc_ioctl(struct kvm *kvm, void __user *argp)
+ {
+ 	if (!is_td(kvm))
+@@ -263,7 +274,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.write_tsc_offset = vmx_write_tsc_offset,
+ 	.write_tsc_multiplier = vmx_write_tsc_multiplier,
+ 
+-	.load_mmu_pgd = vmx_load_mmu_pgd,
++	.load_mmu_pgd = vt_load_mmu_pgd,
+ 
+ 	.check_intercept = vmx_check_intercept,
+ 	.handle_exit_irqoff = vmx_handle_exit_irqoff,
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index bf2b234460f5..6571dd1d57db 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -453,6 +453,12 @@ void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)
+ 	 */
+ }
+ 
++void tdx_load_mmu_pgd(struct kvm_vcpu *vcpu, hpa_t root_hpa, int pgd_level)
++{
++	WARN_ON_ONCE(root_hpa & ~PAGE_MASK);
++	td_vmcs_write64(to_tdx(vcpu), SHARED_EPT_POINTER, root_hpa);
++}
++
+ static int tdx_get_capabilities(struct kvm_tdx_cmd *cmd)
+ {
+ 	struct kvm_tdx_capabilities __user *user_caps;
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index 716198b6a132..3f46f53aacb8 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -150,6 +150,8 @@ void tdx_vcpu_free(struct kvm_vcpu *vcpu);
+ void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event);
+ 
+ int tdx_vcpu_ioctl(struct kvm_vcpu *vcpu, void __user *argp);
++
++void tdx_load_mmu_pgd(struct kvm_vcpu *vcpu, hpa_t root_hpa, int root_level);
+ #else
+ static inline int tdx_hardware_setup(struct kvm_x86_ops *x86_ops) { return -EOPNOTSUPP; }
+ static inline void tdx_hardware_unsetup(void) {}
+@@ -170,6 +172,8 @@ static inline void tdx_vcpu_free(struct kvm_vcpu *vcpu) {}
+ static inline void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event) {}
+ 
+ static inline int tdx_vcpu_ioctl(struct kvm_vcpu *vcpu, void __user *argp) { return -EOPNOTSUPP; }
++
++static inline void tdx_load_mmu_pgd(struct kvm_vcpu *vcpu, hpa_t root_hpa, int root_level) {}
+ #endif
+ 
+ #endif /* __KVM_X86_VMX_X86_OPS_H */
+-- 
+2.34.1
+

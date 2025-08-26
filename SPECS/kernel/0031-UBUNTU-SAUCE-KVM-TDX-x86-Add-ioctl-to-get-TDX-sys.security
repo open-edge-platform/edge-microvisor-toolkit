@@ -1,0 +1,147 @@
+From e918fd3021fa26600e21fc46489c4e6f3f928274 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <sean.j.christopherson@intel.com>
+Date: Mon, 25 Apr 2022 14:56:08 -0700
+Subject: [PATCH 031/147] UBUNTU: SAUCE: KVM: TDX: x86: Add ioctl to get TDX
+ systemwide parameters
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Implement an ioctl to get system-wide parameters for TDX.  Although the
+function is systemwide, vm scoped mem_enc ioctl works for userspace VMM
+like qemu and device scoped version is not define, re-use vm scoped
+mem_enc.
+
+Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 977c4fb6ffae065868097d5da380d174d8423108)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/uapi/asm/kvm.h | 17 ++++++++++
+ arch/x86/kvm/vmx/tdx.c          | 56 +++++++++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/tdx.h          |  3 ++
+ 3 files changed, 76 insertions(+)
+
+diff --git a/arch/x86/include/uapi/asm/kvm.h b/arch/x86/include/uapi/asm/kvm.h
+index 0ab082324526..3acfb16b7909 100644
+--- a/arch/x86/include/uapi/asm/kvm.h
++++ b/arch/x86/include/uapi/asm/kvm.h
+@@ -963,4 +963,21 @@ struct kvm_tdx_cpuid_config {
+ 	__u32 edx;
+ };
+ 
++/* supported_gpaw */
++#define TDX_CAP_GPAW_48	(1 << 0)
++#define TDX_CAP_GPAW_52	(1 << 1)
++
++struct kvm_tdx_capabilities {
++	__u64 attrs_fixed0;
++	__u64 attrs_fixed1;
++	__u64 xfam_fixed0;
++	__u64 xfam_fixed1;
++	__u32 supported_gpaw;
++	__u32 padding;
++	__u64 reserved[251];
++
++	__u32 nr_cpuid_configs;
++	struct kvm_tdx_cpuid_config cpuid_configs[];
++};
++
+ #endif /* _ASM_X86_KVM_H */
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 6bbfacf8c68d..d350065ae0ca 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -6,6 +6,7 @@
+ #include "capabilities.h"
+ #include "x86_ops.h"
+ #include "x86.h"
++#include "mmu.h"
+ #include "tdx_arch.h"
+ #include "tdx.h"
+ 
+@@ -55,6 +56,58 @@ struct tdx_info {
+ /* Info about the TDX module. */
+ static struct tdx_info *tdx_info;
+ 
++static int tdx_get_capabilities(struct kvm_tdx_cmd *cmd)
++{
++	struct kvm_tdx_capabilities __user *user_caps;
++	struct kvm_tdx_capabilities *caps = NULL;
++	int ret = 0;
++
++	if (cmd->flags)
++		return -EINVAL;
++
++	caps = kmalloc(sizeof(*caps), GFP_KERNEL);
++	if (!caps)
++		return -ENOMEM;
++
++	user_caps = (void __user *)cmd->data;
++	if (copy_from_user(caps, user_caps, sizeof(*caps))) {
++		ret = -EFAULT;
++		goto out;
++	}
++
++	if (caps->nr_cpuid_configs < tdx_info->num_cpuid_config) {
++		ret = -E2BIG;
++		goto out;
++	}
++
++	*caps = (struct kvm_tdx_capabilities) {
++		.attrs_fixed0 = tdx_info->attributes_fixed0,
++		.attrs_fixed1 = tdx_info->attributes_fixed1,
++		.xfam_fixed0 = tdx_info->xfam_fixed0,
++		.xfam_fixed1 = tdx_info->xfam_fixed1,
++		.supported_gpaw = TDX_CAP_GPAW_48 |
++		((kvm_get_shadow_phys_bits() >= 52 &&
++		  cpu_has_vmx_ept_5levels()) ? TDX_CAP_GPAW_52 : 0),
++		.nr_cpuid_configs = tdx_info->num_cpuid_config,
++		.padding = 0,
++	};
++
++	if (copy_to_user(user_caps, caps, sizeof(*caps))) {
++		ret = -EFAULT;
++		goto out;
++	}
++	if (copy_to_user(user_caps->cpuid_configs, &tdx_info->cpuid_configs,
++			 tdx_info->num_cpuid_config *
++			 sizeof(tdx_info->cpuid_configs[0]))) {
++		ret = -EFAULT;
++	}
++
++out:
++	/* kfree() accepts NULL. */
++	kfree(caps);
++	return ret;
++}
++
+ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp)
+ {
+ 	struct kvm_tdx_cmd tdx_cmd;
+@@ -68,6 +121,9 @@ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp)
+ 	mutex_lock(&kvm->lock);
+ 
+ 	switch (tdx_cmd.id) {
++	case KVM_TDX_CAPABILITIES:
++		r = tdx_get_capabilities(&tdx_cmd);
++		break;
+ 	default:
+ 		r = -EINVAL;
+ 		goto out;
+diff --git a/arch/x86/kvm/vmx/tdx.h b/arch/x86/kvm/vmx/tdx.h
+index 473013265bd8..22c0b57f69ca 100644
+--- a/arch/x86/kvm/vmx/tdx.h
++++ b/arch/x86/kvm/vmx/tdx.h
+@@ -3,6 +3,9 @@
+ #define __KVM_X86_TDX_H
+ 
+ #ifdef CONFIG_INTEL_TDX_HOST
++
++#include "tdx_ops.h"
++
+ struct kvm_tdx {
+ 	struct kvm kvm;
+ 	/* TDX specific members follow. */
+-- 
+2.34.1
+

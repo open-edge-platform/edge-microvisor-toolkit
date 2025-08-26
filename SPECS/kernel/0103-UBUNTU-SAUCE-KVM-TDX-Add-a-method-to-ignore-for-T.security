@@ -1,0 +1,56 @@
+From ba9d9305945d6ace75d8cb534fd060f77f82bfe5 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Mon, 9 Jan 2023 17:21:54 -0800
+Subject: [PATCH 103/147] UBUNTU: SAUCE: KVM: TDX: Add a method to ignore for
+ TDX to ignore hypercall patch
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Because guest TD memory is protected, VMM patching guest binary for
+hypercall instruction isn't possible.  Add a method to ignore hypercall
+patching with a warning.  Note: guest TD kernel needs to be modified to use
+TDG.VP.VMCALL for hypercall.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit cb0df9601f9e53f4790a89d666ffc20abd9d4b0d)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/main.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 27d750ba5c0f..f587be80b3c2 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -735,6 +735,19 @@ static u32 vt_get_interrupt_shadow(struct kvm_vcpu *vcpu)
+ 	return vmx_get_interrupt_shadow(vcpu);
+ }
+ 
++static void vt_patch_hypercall(struct kvm_vcpu *vcpu,
++				  unsigned char *hypercall)
++{
++	/*
++	 * Because guest memory is protected, guest can't be patched. TD kernel
++	 * is modified to use TDG.VP.VMCAL for hypercall.
++	 */
++	if (KVM_BUG_ON(is_td_vcpu(vcpu), vcpu->kvm))
++		return;
++
++	vmx_patch_hypercall(vcpu, hypercall);
++}
++
+ static void vt_inject_irq(struct kvm_vcpu *vcpu, bool reinjected)
+ {
+ 	if (is_td_vcpu(vcpu))
+@@ -1026,7 +1039,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.update_emulated_instruction = vmx_update_emulated_instruction,
+ 	.set_interrupt_shadow = vt_set_interrupt_shadow,
+ 	.get_interrupt_shadow = vt_get_interrupt_shadow,
+-	.patch_hypercall = vmx_patch_hypercall,
++	.patch_hypercall = vt_patch_hypercall,
+ 	.inject_irq = vt_inject_irq,
+ 	.inject_nmi = vt_inject_nmi,
+ 	.inject_exception = vt_inject_exception,
+-- 
+2.34.1
+

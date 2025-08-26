@@ -1,0 +1,53 @@
+From 9d0862b0d906d7d750ea64a0f9bbbcb5b7afb896 Mon Sep 17 00:00:00 2001
+From: Chao Gao <chao.gao@intel.com>
+Date: Thu, 29 Aug 2024 11:15:39 +0800
+Subject: [PATCH 016/147] UBUNTU: SAUCE: KVM: x86/mmu: Assume guest MMIOs are
+ shared
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TODO: Drop this patch once the common patch is merged.
+
+When memory slot isn't found for kvm page fault, handle it as MMIO.
+
+The guest of TDX_VM, SNP_VM, or SW_PROTECTED_VM don't necessarily convert
+the virtual MMIO range to shared before accessing it.  When the guest tries
+to access the virtual device's MMIO without any private/shared conversion,
+An NPT fault or EPT violation is raised first to find private-shared
+mismatch.  Don't raise KVM_EXIT_MEMORY_FAULT, fall back to KVM_PFN_NOLSLOT.
+
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 42f597cf870c27a8cf375b84221d91621589741a)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/mmu.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 2262f4a901fc..138041cabaa2 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -4403,8 +4403,18 @@ static int kvm_faultin_pfn_private(struct kvm_vcpu *vcpu,
+ static int __kvm_faultin_pfn(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault)
+ {
+ 	bool async;
++	bool force_mmio;
+ 
+-	if (fault->is_private)
++	/*
++	 * !fault->slot means MMIO for SNP and TDX.  Don't require explicit GPA
++	 * conversion for MMIO because MMIO is assigned at the boot time.  Fall
++	 * to !is_private case to get pfn = KVM_PFN_NOSLOT.
++	 */
++	force_mmio = !fault->slot &&
++		vcpu->kvm->arch.vm_type != KVM_X86_DEFAULT_VM &&
++		vcpu->kvm->arch.vm_type != KVM_X86_SW_PROTECTED_VM;
++
++	if (!force_mmio && fault->is_private)
+ 		return kvm_faultin_pfn_private(vcpu, fault);
+ 
+ 	async = false;
+-- 
+2.34.1
+

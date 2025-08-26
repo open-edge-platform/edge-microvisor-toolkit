@@ -1,0 +1,204 @@
+From 6740f024dac1afc7bdfb7b346b4fb9e32379fb9e Mon Sep 17 00:00:00 2001
+From: Xiaoyao Li <xiaoyao.li@intel.com>
+Date: Tue, 31 Aug 2021 15:34:48 +0800
+Subject: [PATCH 119/147] UBUNTU: SAUCE: KVM: x86/tdp_mmu, TDX: Split a large
+ page when 4KB page within it converted to shared
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+When mapping the shared page for TDX, it needs to zap private alias.
+
+In the case that private page is mapped as large page (2MB), it can be
+removed directly only when the whole 2MB is converted to shared.
+Otherwise, it has to split 2MB page into 512 4KB page, and only remove
+the pages that converted to shared.
+
+When a present large leaf spte switches to present non-leaf spte, TDX needs
+to split the corresponding SEPT page to reflect it.
+
+Signed-off-by: Xiaoyao Li <xiaoyao.li@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit d41240b8cdc66dadc382ef4867e3ac8a657641b2)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm-x86-ops.h |  1 +
+ arch/x86/include/asm/kvm_host.h    |  2 ++
+ arch/x86/kvm/mmu/tdp_mmu.c         | 21 ++++++++++++++++-----
+ arch/x86/kvm/vmx/tdx.c             | 27 +++++++++++++++++++++++++--
+ arch/x86/kvm/vmx/tdx_arch.h        |  1 +
+ arch/x86/kvm/vmx/tdx_errno.h       |  1 +
+ arch/x86/kvm/vmx/tdx_ops.h         | 13 +++++++++++++
+ 7 files changed, 59 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm-x86-ops.h b/arch/x86/include/asm/kvm-x86-ops.h
+index 1e942e6c077b..e24946fddfe1 100644
+--- a/arch/x86/include/asm/kvm-x86-ops.h
++++ b/arch/x86/include/asm/kvm-x86-ops.h
+@@ -103,6 +103,7 @@ KVM_X86_OP_OPTIONAL_RET0(get_mt_mask)
+ KVM_X86_OP(load_mmu_pgd)
+ KVM_X86_OP_OPTIONAL(link_private_spt)
+ KVM_X86_OP_OPTIONAL(free_private_spt)
++KVM_X86_OP_OPTIONAL(split_private_spt)
+ KVM_X86_OP_OPTIONAL(set_private_spte)
+ KVM_X86_OP_OPTIONAL(remove_private_spte)
+ KVM_X86_OP_OPTIONAL(zap_private_spte)
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 1e7fa1ad24e7..de4a2b73a90d 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -1805,6 +1805,8 @@ struct kvm_x86_ops {
+ 				void *private_spt);
+ 	int (*free_private_spt)(struct kvm *kvm, gfn_t gfn, enum pg_level level,
+ 				void *private_spt);
++	int (*split_private_spt)(struct kvm *kvm, gfn_t gfn, enum pg_level level,
++				  void *private_spt);
+ 	int (*set_private_spte)(struct kvm *kvm, gfn_t gfn, enum pg_level level,
+ 				 kvm_pfn_t pfn);
+ 	int (*remove_private_spte)(struct kvm *kvm, gfn_t gfn, enum pg_level level,
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index e60764aa5048..cd72914cfe2b 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -620,23 +620,34 @@ static int __must_check __set_private_spte_present(struct kvm *kvm, tdp_ptep_t s
+ {
+ 	bool was_present = is_shadow_present_pte(old_spte);
+ 	bool is_present = is_shadow_present_pte(new_spte);
++	bool was_leaf = was_present && is_last_spte(old_spte, level);
+ 	bool is_leaf = is_present && is_last_spte(new_spte, level);
+ 	kvm_pfn_t new_pfn = spte_to_pfn(new_spte);
++	void *private_spt;
+ 	int ret = 0;
+ 
+ 	lockdep_assert_held(&kvm->mmu_lock);
+-	/* TDP MMU doesn't change present -> present */
+-	KVM_BUG_ON(was_present, kvm);
+ 
+ 	/*
+ 	 * Use different call to either set up middle level
+ 	 * private page table, or leaf.
+ 	 */
+-	if (is_leaf)
++	if (level > PG_LEVEL_4K && was_leaf && !is_leaf) {
++		/*
++		 * splitting large page into 4KB.
++		 * tdp_mmu_split_huge_page() => tdp_mmu_link_sp()
++		 */
++		private_spt = get_private_spt(gfn, new_spte, level);
++		KVM_BUG_ON(!private_spt, kvm);
++		ret = static_call(kvm_x86_zap_private_spte)(kvm, gfn, level);
++		kvm_flush_remote_tlbs(kvm);
++		if (!ret)
++			ret = static_call(kvm_x86_split_private_spt)(kvm, gfn,
++								     level, private_spt);
++	} else if (is_leaf)
+ 		ret = static_call(kvm_x86_set_private_spte)(kvm, gfn, level, new_pfn);
+ 	else {
+-		void *private_spt = get_private_spt(gfn, new_spte, level);
+-
++		private_spt = get_private_spt(gfn, new_spte, level);
+ 		KVM_BUG_ON(!private_spt, kvm);
+ 		ret = static_call(kvm_x86_link_private_spt)(kvm, gfn, level, private_spt);
+ 	}
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 10b1bfe7536c..dfc2d9724193 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1654,6 +1654,30 @@ static int tdx_sept_link_private_spt(struct kvm *kvm, gfn_t gfn,
+ 	return 0;
+ }
+ 
++static int tdx_sept_split_private_spt(struct kvm *kvm, gfn_t gfn,
++				      enum pg_level level, void *private_spt)
++{
++	int tdx_level = pg_level_to_tdx_sept_level(level);
++	struct kvm_tdx *kvm_tdx = to_kvm_tdx(kvm);
++	gpa_t gpa = gfn_to_gpa(gfn) & KVM_HPAGE_MASK(level);
++	hpa_t hpa = __pa(private_spt);
++	struct tdx_module_args out;
++	u64 err;
++
++	/* See comment in tdx_sept_set_private_spte() to pin pages. */
++	do {
++		err = tdh_mem_page_demote(kvm_tdx->tdr_pa, gpa, tdx_level, hpa, &out);
++	} while (err == TDX_INTERRUPTED_RESTARTABLE);
++	if (unlikely(err == TDX_ERROR_SEPT_BUSY))
++		return -EAGAIN;
++	if (KVM_BUG_ON(err, kvm)) {
++		pr_tdx_error(TDH_MEM_PAGE_DEMOTE, err, &out);
++		return -EIO;
++	}
++
++	return 0;
++}
++
+ static int tdx_sept_zap_private_spte(struct kvm *kvm, gfn_t gfn,
+ 				      enum pg_level level)
+ {
+@@ -1667,8 +1691,6 @@ static int tdx_sept_zap_private_spte(struct kvm *kvm, gfn_t gfn,
+ 	if (unlikely(!is_hkid_assigned(kvm_tdx)))
+ 		return 0;
+ 
+-	/* For now large page isn't supported yet. */
+-	WARN_ON_ONCE(level != PG_LEVEL_4K);
+ 	err = tdh_mem_range_block(kvm_tdx->tdr_pa, gpa, tdx_level, &out);
+ 	if (unlikely(err == TDX_ERROR_SEPT_BUSY))
+ 		return -EAGAIN;
+@@ -3315,6 +3337,7 @@ int __init tdx_hardware_setup(struct kvm_x86_ops *x86_ops)
+ 
+ 	x86_ops->link_private_spt = tdx_sept_link_private_spt;
+ 	x86_ops->free_private_spt = tdx_sept_free_private_spt;
++	x86_ops->split_private_spt = tdx_sept_split_private_spt;
+ 	x86_ops->set_private_spte = tdx_sept_set_private_spte;
+ 	x86_ops->remove_private_spte = tdx_sept_remove_private_spte;
+ 	x86_ops->zap_private_spte = tdx_sept_zap_private_spte;
+diff --git a/arch/x86/kvm/vmx/tdx_arch.h b/arch/x86/kvm/vmx/tdx_arch.h
+index 19f2deafde5b..bb324f744bbf 100644
+--- a/arch/x86/kvm/vmx/tdx_arch.h
++++ b/arch/x86/kvm/vmx/tdx_arch.h
+@@ -21,6 +21,7 @@
+ #define TDH_MNG_CREATE			9
+ #define TDH_VP_CREATE			10
+ #define TDH_MNG_RD			11
++#define TDH_MEM_PAGE_DEMOTE		15
+ #define TDH_MR_EXTEND			16
+ #define TDH_MR_FINALIZE			17
+ #define TDH_VP_FLUSH			18
+diff --git a/arch/x86/kvm/vmx/tdx_errno.h b/arch/x86/kvm/vmx/tdx_errno.h
+index 5366bf476d2c..416708e6cbb7 100644
+--- a/arch/x86/kvm/vmx/tdx_errno.h
++++ b/arch/x86/kvm/vmx/tdx_errno.h
+@@ -11,6 +11,7 @@
+  */
+ #define TDX_NON_RECOVERABLE_VCPU		0x4000000100000000ULL
+ #define TDX_INTERRUPTED_RESUMABLE		0x8000000300000000ULL
++#define TDX_INTERRUPTED_RESTARTABLE		0x8000000400000000ULL
+ #define TDX_OPERAND_INVALID			0xC000010000000000ULL
+ #define TDX_OPERAND_BUSY			0x8000020000000000ULL
+ #define TDX_PREVIOUS_TLB_EPOCH_BUSY		0x8000020100000000ULL
+diff --git a/arch/x86/kvm/vmx/tdx_ops.h b/arch/x86/kvm/vmx/tdx_ops.h
+index ef4748943ac7..d8f0d9aa7439 100644
+--- a/arch/x86/kvm/vmx/tdx_ops.h
++++ b/arch/x86/kvm/vmx/tdx_ops.h
+@@ -241,6 +241,19 @@ static inline u64 tdh_mng_rd(hpa_t tdr, u64 field, struct tdx_module_args *out)
+ 	return tdx_seamcall(TDH_MNG_RD, &in, out);
+ }
+ 
++static inline u64 tdh_mem_page_demote(hpa_t tdr, gpa_t gpa, int level, hpa_t page,
++				      struct tdx_module_args *out)
++{
++	struct tdx_module_args in = {
++		.rcx = gpa | level,
++		.rdx = tdr,
++		.r8 = page,
++	};
++
++	tdx_clflush_page(page, PG_LEVEL_4K);
++	return tdx_seamcall_sept(TDH_MEM_PAGE_DEMOTE, &in, out);
++}
++
+ static inline u64 tdh_mr_extend(hpa_t tdr, gpa_t gpa,
+ 				struct tdx_module_args *out)
+ {
+-- 
+2.34.1
+

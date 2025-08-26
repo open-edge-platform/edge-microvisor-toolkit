@@ -1,0 +1,287 @@
+From 8b8a5310f7f597c56b6fba7d52def11744d21604 Mon Sep 17 00:00:00 2001
+From: Kai Huang <kai.huang@intel.com>
+Date: Tue, 11 Jun 2024 00:19:19 +1200
+Subject: [PATCH 133/147] UBUNTU: SAUCE: x86/virt/tdx: Exclude memory region
+ hole within CMR as TDMR's reserved area
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+A TDX module initialization failure was reported on a Emerald Rapids
+platform:
+
+  virt/tdx: initialization failed: TDMR [0x0, 0x80000000): reserved areas exhausted.
+  virt/tdx: module initialization failed (-28)
+
+As a step of initializing the TDX module, the kernel tells the TDX
+module all the TDX-usable memory regions via a set of TDX architecture
+defined "TD Memory Region" (TDMR).  Each TDMR must be in 1GB aligned and
+in 1GB granularity, and all non-TDX-usable memory holes in a given TDMR
+must be marked as a "reserved area".  Each TDMR only supports a maximum
+number of reserved areas reported by the TDX module.
+
+As shown above, the root cause of this failure is when the kernel tries
+to construct a TDMR to cover address range [0x0, 0x80000000), there
+are too many memory holes within that range and the number of memory
+holes exceeds of the maximum number of reserved areas.
+
+The E820 table of that platform (see [1] below) reflects this: the
+number of memory holes among e820 "usable" entries exceeds 16, which is
+the maximum mumber of reserved areas TDX module supports in practice.
+
+=== Fix ===
+
+There are two options to fix this: 1) put less memory holes as "reserved
+area" when constructing a TDMR; 2) reduce the TDMR's size to cover less
+memory regions, thus less memory holes.
+
+Option 1) is possible, and in fact is easier thus preferrable:
+
+TDX actually has a concept of "Convertible Memory Regions" (CMRs).  TDX
+reports a list of CMRs that meet TDX's security requierments on memory.
+TDX requires all the "TDX-usable memory regions" that the kernel passes
+to the module via TDMRs, a.k.a, all the "non-reserved regions in TDMRs",
+must be convertible memory.
+
+In other words, if a memory hole is indeed CMR, then it's not mandatory
+for the kernel to add it to the reserved areas.  The number of consumed
+reserved areas can be reduced if the kernel doesn't add those memory
+holes as reserved area.  Note this doesn't have security impact because
+the kernel is out of TDX's TCB anyway.
+
+This is feasible because in practice the CMRs just reflect the nature of
+whether the RAM can indeed be used by TDX, thus each CMR tends to be a
+large range w/o being split to small areas, e.g., in the way the e820
+table does to contain a lot "ACPI *" entries.  [2] below shows the CMRs
+reported on the problematic platform (using the off-tree TDX code).
+
+So for this particular module initialization failure, the memory holes
+that are within [0x0, 0x80000000) are mostly indeed CMR.  By not adding
+them to the reserved areas, the number of consumed reserved areas for
+the TDMR [0x0, 0x80000000) can be dramatically reduced.
+
+On the other hand, although option 2) is also theoretically feasible, it
+requires much more complicated logic to handle around splitting TDMR
+into smaller ones.  E.g., today one memory region must be fully in one
+TDMR, while splitting TDMR will result in each TDMR only covers part of
+some memory region.  And this also increases the total number of TDMRs,
+which also cannot exceed a maximum value that TDX module supports.
+
+So, fix this issue by:
+
+1) reading out the CMRs from the TDX module global metadata, and
+2) passing the CMRs to the function construct_tdmrs(), and changing to
+   not add a memory hole to the reserved areas when it is indeed CMR.
+
+Also dump the CMRs in dmesg.  They are helpful when something goes wrong
+around "constructing and passing the TDMRs to the TDX module".
+
+=== Reference ===
+
+[1] BIOS-E820 table of the problematic platform:
+
+  BIOS-e820: [mem 0x0000000000000000-0x000000000009efff] usable
+  BIOS-e820: [mem 0x000000000009f000-0x00000000000fffff] reserved
+  BIOS-e820: [mem 0x0000000000100000-0x000000005d168fff] usable
+  BIOS-e820: [mem 0x000000005d169000-0x000000005d22afff] ACPI data
+  BIOS-e820: [mem 0x000000005d22b000-0x000000005d3cefff] usable
+  BIOS-e820: [mem 0x000000005d3cf000-0x000000005d469fff] reserved
+  BIOS-e820: [mem 0x000000005d46a000-0x000000005e5b2fff] usable
+  BIOS-e820: [mem 0x000000005e5b3000-0x000000005e5c2fff] reserved
+  BIOS-e820: [mem 0x000000005e5c3000-0x000000005e5d2fff] usable
+  BIOS-e820: [mem 0x000000005e5d3000-0x000000005e5e4fff] reserved
+  BIOS-e820: [mem 0x000000005e5e5000-0x000000005eb57fff] usable
+  BIOS-e820: [mem 0x000000005eb58000-0x0000000061357fff] ACPI NVS
+  BIOS-e820: [mem 0x0000000061358000-0x000000006172afff] usable
+  BIOS-e820: [mem 0x000000006172b000-0x0000000061794fff] ACPI data
+  BIOS-e820: [mem 0x0000000061795000-0x00000000617fefff] usable
+  BIOS-e820: [mem 0x00000000617ff000-0x0000000061912fff] ACPI data
+  BIOS-e820: [mem 0x0000000061913000-0x0000000061998fff] usable
+  BIOS-e820: [mem 0x0000000061999000-0x00000000619dffff] ACPI data
+  BIOS-e820: [mem 0x00000000619e0000-0x00000000619e1fff] usable
+  BIOS-e820: [mem 0x00000000619e2000-0x00000000619e9fff] reserved
+  BIOS-e820: [mem 0x00000000619ea000-0x0000000061a26fff] usable
+  BIOS-e820: [mem 0x0000000061a27000-0x0000000061baefff] ACPI data
+  BIOS-e820: [mem 0x0000000061baf000-0x00000000623c2fff] usable
+  BIOS-e820: [mem 0x00000000623c3000-0x0000000062471fff] reserved
+  BIOS-e820: [mem 0x0000000062472000-0x0000000062823fff] usable
+  BIOS-e820: [mem 0x0000000062824000-0x0000000063a24fff] reserved
+  BIOS-e820: [mem 0x0000000063a25000-0x0000000063d57fff] usable
+  BIOS-e820: [mem 0x0000000063d58000-0x0000000064157fff] reserved
+  BIOS-e820: [mem 0x0000000064158000-0x0000000064158fff] usable
+  BIOS-e820: [mem 0x0000000064159000-0x0000000064194fff] reserved
+  BIOS-e820: [mem 0x0000000064195000-0x000000006e9cefff] usable
+  BIOS-e820: [mem 0x000000006e9cf000-0x000000006eccefff] reserved
+  BIOS-e820: [mem 0x000000006eccf000-0x000000006f6fefff] ACPI NVS
+  BIOS-e820: [mem 0x000000006f6ff000-0x000000006f7fefff] ACPI data
+  BIOS-e820: [mem 0x000000006f7ff000-0x000000006f7fffff] usable
+  BIOS-e820: [mem 0x000000006f800000-0x000000008fffffff] reserved
+  ......
+
+[2] Convertible Memory Regions of the problematic platform:
+
+  virt/tdx: CMR: [0x100000, 0x6f800000)
+  virt/tdx: CMR: [0x100000000, 0x107a000000)
+  virt/tdx: CMR: [0x1080000000, 0x207c000000)
+  virt/tdx: CMR: [0x2080000000, 0x307c000000)
+  virt/tdx: CMR: [0x3080000000, 0x407c000000)
+
+Signed-off-by: Kai Huang <kai.huang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit acb262c44f4d1d6bc23a5ed9314ff3c2f0b5ae41)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/virt/vmx/tdx/tdx.c | 66 ++++++++++++++++++++++++++++---------
+ 1 file changed, 51 insertions(+), 15 deletions(-)
+
+diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+index 6c314aef7704..b774f7119f70 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.c
++++ b/arch/x86/virt/vmx/tdx/tdx.c
+@@ -827,6 +827,24 @@ static int tdmr_add_rsvd_area(struct tdmr_info *tdmr, int *p_idx, u64 addr,
+ 	return 0;
+ }
+ 
++/* Return whether a given region [start, end) is a sub-region of any CMR */
++static bool is_cmr_subregion(struct cmr_info *cmr_array, u64 start,
++			    u64 end)
++{
++	int i;
++
++	for (i = 0; i < MAX_CMRS; i++) {
++		struct cmr_info *cmr = &cmr_array[i];
++		u64 cmr_base = cmr->base;
++		u64 cmr_size = cmr->size;
++
++		if (start >= cmr_base && end <= (cmr_base + cmr_size))
++			return true;
++	}
++
++	return false;
++}
++
+ /*
+  * Go through @tmb_list to find holes between memory areas.  If any of
+  * those holes fall within @tdmr, set up a TDMR reserved area to cover
+@@ -835,7 +853,8 @@ static int tdmr_add_rsvd_area(struct tdmr_info *tdmr, int *p_idx, u64 addr,
+ static int tdmr_populate_rsvd_holes(struct list_head *tmb_list,
+ 				    struct tdmr_info *tdmr,
+ 				    int *rsvd_idx,
+-				    u16 max_reserved_per_tdmr)
++				    u16 max_reserved_per_tdmr,
++				    struct cmr_info *cmr_array)
+ {
+ 	struct tdx_memblock *tmb;
+ 	u64 prev_end;
+@@ -864,10 +883,16 @@ static int tdmr_populate_rsvd_holes(struct list_head *tmb_list,
+ 		 * Skip over memory areas that
+ 		 * have already been dealt with.
+ 		 */
+-		if (start <= prev_end) {
+-			prev_end = end;
+-			continue;
+-		}
++		if (start <= prev_end)
++			goto next_tmb;
++
++		/*
++		 * Found the hole [prev_end, start) before this region.
++		 * Skip the hole if it is within any CMR to reduce the
++		 * consumption of reserved areas.
++		 */
++		if (is_cmr_subregion(cmr_array, prev_end, start))
++			goto next_tmb;
+ 
+ 		/* Add the hole before this region */
+ 		ret = tdmr_add_rsvd_area(tdmr, rsvd_idx, prev_end,
+@@ -876,11 +901,16 @@ static int tdmr_populate_rsvd_holes(struct list_head *tmb_list,
+ 		if (ret)
+ 			return ret;
+ 
++next_tmb:
+ 		prev_end = end;
+ 	}
+ 
+-	/* Add the hole after the last region if it exists. */
+-	if (prev_end < tdmr_end(tdmr)) {
++	/*
++	 * Add the hole after the last region if it exists, but skip
++	 * if it is within any CMR.
++	 */
++	if (prev_end < tdmr_end(tdmr) &&
++			!is_cmr_subregion(cmr_array, prev_end, tdmr_end(tdmr))) {
+ 		ret = tdmr_add_rsvd_area(tdmr, rsvd_idx, prev_end,
+ 				tdmr_end(tdmr) - prev_end,
+ 				max_reserved_per_tdmr);
+@@ -956,12 +986,13 @@ static int rsvd_area_cmp_func(const void *a, const void *b)
+ static int tdmr_populate_rsvd_areas(struct tdmr_info *tdmr,
+ 				    struct list_head *tmb_list,
+ 				    struct tdmr_info_list *tdmr_list,
+-				    u16 max_reserved_per_tdmr)
++				    u16 max_reserved_per_tdmr,
++				    struct cmr_info *cmr_array)
+ {
+ 	int ret, rsvd_idx = 0;
+ 
+ 	ret = tdmr_populate_rsvd_holes(tmb_list, tdmr, &rsvd_idx,
+-			max_reserved_per_tdmr);
++			max_reserved_per_tdmr, cmr_array);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -979,11 +1010,13 @@ static int tdmr_populate_rsvd_areas(struct tdmr_info *tdmr,
+ 
+ /*
+  * Populate reserved areas for all TDMRs in @tdmr_list, including memory
+- * holes (via @tmb_list) and PAMTs.
++ * holes (via @tmb_list) and PAMTs.  Exclude the memory holes within any
++ * CMR to reduce number of consumed reserved areas.
+  */
+ static int tdmrs_populate_rsvd_areas_all(struct tdmr_info_list *tdmr_list,
+ 					 struct list_head *tmb_list,
+-					 u16 max_reserved_per_tdmr)
++					 u16 max_reserved_per_tdmr,
++					 struct cmr_info *cmr_array)
+ {
+ 	int i;
+ 
+@@ -991,7 +1024,8 @@ static int tdmrs_populate_rsvd_areas_all(struct tdmr_info_list *tdmr_list,
+ 		int ret;
+ 
+ 		ret = tdmr_populate_rsvd_areas(tdmr_entry(tdmr_list, i),
+-				tmb_list, tdmr_list, max_reserved_per_tdmr);
++				tmb_list, tdmr_list, max_reserved_per_tdmr,
++				cmr_array);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -1006,7 +1040,8 @@ static int tdmrs_populate_rsvd_areas_all(struct tdmr_info_list *tdmr_list,
+  */
+ static int construct_tdmrs(struct list_head *tmb_list,
+ 			   struct tdmr_info_list *tdmr_list,
+-			   struct tdx_tdmr_sysinfo *tdmr_sysinfo)
++			   struct tdx_tdmr_sysinfo *tdmr_sysinfo,
++			   struct cmr_info *cmr_info)
+ {
+ 	int ret;
+ 
+@@ -1020,7 +1055,8 @@ static int construct_tdmrs(struct list_head *tmb_list,
+ 		return ret;
+ 
+ 	ret = tdmrs_populate_rsvd_areas_all(tdmr_list, tmb_list,
+-			tdmr_sysinfo->max_reserved_per_tdmr);
++			tdmr_sysinfo->max_reserved_per_tdmr,
++			cmr_info);
+ 	if (ret)
+ 		tdmrs_free_pamt_all(tdmr_list);
+ 
+@@ -1243,7 +1279,7 @@ static int init_tdx_module(void)
+ 		goto err_free_tdxmem;
+ 
+ 	/* Cover all TDX-usable memory regions in TDMRs */
+-	ret = construct_tdmrs(&tdx_memlist, &tdx_tdmr_list, &tdmr_sysinfo);
++	ret = construct_tdmrs(&tdx_memlist, &tdx_tdmr_list, &tdmr_sysinfo, cmr_array);
+ 	if (ret)
+ 		goto err_free_tdmrs;
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,184 @@
+From d3dbe44c7f4fc26a0dff0c249642408b9f5b2ebe Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Fri, 30 Aug 2024 16:03:30 +0800
+Subject: [PATCH 030/147] UBUNTU: SAUCE: VM: TDX: Add place holder for TDX VM
+ specific mem_enc_op ioctl
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+KVM_MEMORY_ENCRYPT_OP was introduced for VM-scoped operations specific for
+guest state-protected VM.  It defined subcommands for technology-specific
+operations under KVM_MEMORY_ENCRYPT_OP.  Despite its name, the subcommands
+are not limited to memory encryption, but various technology-specific
+operations are defined.  It's natural to repurpose KVM_MEMORY_ENCRYPT_OP
+for TDX specific operations and define subcommands.
+
+TDX requires VM-scoped TDX-specific operations for device model, for
+example, qemu.  Getting system-wide parameters, TDX-specific VM
+initialization.
+
+Add a place holder function for TDX specific VM-scoped ioctl as mem_enc_op.
+TDX specific sub-commands will be added to retrieve/pass TDX specific
+parameters.  Make mem_enc_ioctl non-optional as it's always filled.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit c97ff94291b15f7b6db2015a8d6c8b32b05c163c)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm-x86-ops.h |  2 +-
+ arch/x86/include/uapi/asm/kvm.h    | 26 ++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/main.c            | 10 ++++++++++
+ arch/x86/kvm/vmx/tdx.c             | 26 ++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/x86_ops.h         |  2 ++
+ arch/x86/kvm/x86.c                 |  4 ----
+ 6 files changed, 65 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm-x86-ops.h b/arch/x86/include/asm/kvm-x86-ops.h
+index cfb22f8c451a..fe3d618e51a7 100644
+--- a/arch/x86/include/asm/kvm-x86-ops.h
++++ b/arch/x86/include/asm/kvm-x86-ops.h
+@@ -120,7 +120,7 @@ KVM_X86_OP(leave_smm)
+ KVM_X86_OP(enable_smi_window)
+ #endif
+ KVM_X86_OP_OPTIONAL(dev_get_attr)
+-KVM_X86_OP_OPTIONAL(mem_enc_ioctl)
++KVM_X86_OP(mem_enc_ioctl)
+ KVM_X86_OP_OPTIONAL(mem_enc_register_region)
+ KVM_X86_OP_OPTIONAL(mem_enc_unregister_region)
+ KVM_X86_OP_OPTIONAL(vm_copy_enc_context_from)
+diff --git a/arch/x86/include/uapi/asm/kvm.h b/arch/x86/include/uapi/asm/kvm.h
+index a1953f596bf7..0ab082324526 100644
+--- a/arch/x86/include/uapi/asm/kvm.h
++++ b/arch/x86/include/uapi/asm/kvm.h
+@@ -926,6 +926,32 @@ struct kvm_hyperv_eventfd {
+ #define KVM_X86_SNP_VM		4
+ #define KVM_X86_TDX_VM          5
+ 
++/* Trust Domain eXtension sub-ioctl() commands. */
++enum kvm_tdx_cmd_id {
++	KVM_TDX_CAPABILITIES = 0,
++
++	KVM_TDX_CMD_NR_MAX,
++};
++
++struct kvm_tdx_cmd {
++	/* enum kvm_tdx_cmd_id */
++	__u32 id;
++	/* flags for sub-commend. If sub-command doesn't use this, set zero. */
++	__u32 flags;
++	/*
++	 * data for each sub-command. An immediate or a pointer to the actual
++	 * data in process virtual address.  If sub-command doesn't use it,
++	 * set zero.
++	 */
++	__u64 data;
++	/*
++	 * Auxiliary error code.  The sub-command may return TDX SEAMCALL
++	 * status code in addition to -Exxx.
++	 * Defined for consistency with struct kvm_sev_cmd.
++	 */
++	__u64 error;
++};
++
+ #define KVM_TDX_CPUID_NO_SUBLEAF	((__u32)-1)
+ 
+ struct kvm_tdx_cpuid_config {
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index f1c33392a2a5..08d47906f56a 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -51,6 +51,14 @@ static int vt_vm_init(struct kvm *kvm)
+ 	return vmx_vm_init(kvm);
+ }
+ 
++static int vt_mem_enc_ioctl(struct kvm *kvm, void __user *argp)
++{
++	if (!is_td(kvm))
++		return -ENOTTY;
++
++	return tdx_vm_ioctl(kvm, argp);
++}
++
+ #define VMX_REQUIRED_APICV_INHIBITS				\
+ 	(BIT(APICV_INHIBIT_REASON_DISABLED) |			\
+ 	 BIT(APICV_INHIBIT_REASON_ABSENT) |			\
+@@ -203,6 +211,8 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.vcpu_deliver_sipi_vector = kvm_vcpu_deliver_sipi_vector,
+ 
+ 	.get_untagged_addr = vmx_get_untagged_addr,
++
++	.mem_enc_ioctl = vt_mem_enc_ioctl,
+ };
+ 
+ struct kvm_x86_init_ops vt_init_ops __initdata = {
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 0c881f79972e..6bbfacf8c68d 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -55,6 +55,32 @@ struct tdx_info {
+ /* Info about the TDX module. */
+ static struct tdx_info *tdx_info;
+ 
++int tdx_vm_ioctl(struct kvm *kvm, void __user *argp)
++{
++	struct kvm_tdx_cmd tdx_cmd;
++	int r;
++
++	if (copy_from_user(&tdx_cmd, argp, sizeof(struct kvm_tdx_cmd)))
++		return -EFAULT;
++	if (tdx_cmd.error)
++		return -EINVAL;
++
++	mutex_lock(&kvm->lock);
++
++	switch (tdx_cmd.id) {
++	default:
++		r = -EINVAL;
++		goto out;
++	}
++
++	if (copy_to_user(argp, &tdx_cmd, sizeof(struct kvm_tdx_cmd)))
++		r = -EFAULT;
++
++out:
++	mutex_unlock(&kvm->lock);
++	return r;
++}
++
+ #define TDX_MD_MAP(_fid, _ptr)			\
+ 	{ .fid = MD_FIELD_ID_##_fid,		\
+ 	  .ptr = (_ptr), }
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index 8f67f15b866b..15a155276b41 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -136,9 +136,11 @@ void vmx_setup_mce(struct kvm_vcpu *vcpu);
+ #ifdef CONFIG_INTEL_TDX_HOST
+ int __init tdx_hardware_setup(struct kvm_x86_ops *x86_ops);
+ void tdx_hardware_unsetup(void);
++int tdx_vm_ioctl(struct kvm *kvm, void __user *argp);
+ #else
+ static inline int tdx_hardware_setup(struct kvm_x86_ops *x86_ops) { return -EOPNOTSUPP; }
+ static inline void tdx_hardware_unsetup(void) {}
++static inline int tdx_vm_ioctl(struct kvm *kvm, void __user *argp) { return -EOPNOTSUPP; }
+ #endif
+ 
+ #endif /* __KVM_X86_VMX_X86_OPS_H */
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 07fa0e68a26a..a9fdcfef4407 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -7331,10 +7331,6 @@ int kvm_arch_vm_ioctl(struct file *filp, unsigned int ioctl, unsigned long arg)
+ 		goto out;
+ 	}
+ 	case KVM_MEMORY_ENCRYPT_OP: {
+-		r = -ENOTTY;
+-		if (!kvm_x86_ops.mem_enc_ioctl)
+-			goto out;
+-
+ 		r = kvm_x86_call(mem_enc_ioctl)(kvm, argp);
+ 		break;
+ 	}
+-- 
+2.34.1
+

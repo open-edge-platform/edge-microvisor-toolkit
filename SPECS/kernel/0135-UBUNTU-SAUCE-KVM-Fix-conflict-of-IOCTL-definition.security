@@ -1,0 +1,75 @@
+From d18bb5eb36e7f419f08596770768d5764f87457c Mon Sep 17 00:00:00 2001
+From: Feng Tang <feng.tang@intel.com>
+Date: Tue, 8 Oct 2024 19:47:35 +0800
+Subject: [PATCH 135/147] UBUNTU: SAUCE: KVM: Fix conflict of IOCTL definition
+ of KVM_MEMORY_MAPPING
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Newer kernel implment now instance which conflit with QEMU definitions.
+
+Signed-off-by: Feng Tang <feng.tang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit fbf1a25cc248337764c05274c830c7c854fdd0e3)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ include/uapi/linux/kvm.h |  3 ++-
+ virt/kvm/kvm_main.c      | 22 +++++++++++-----------
+ 2 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
+index 2a7334d258be..d350d3deba1c 100644
+--- a/include/uapi/linux/kvm.h
++++ b/include/uapi/linux/kvm.h
+@@ -1654,7 +1654,8 @@ struct kvm_create_guest_memfd {
+ 	__u64 reserved[6];
+ };
+ 
+-#define KVM_PRE_FAULT_MEMORY	_IOWR(KVMIO, 0xd5, struct kvm_pre_fault_memory)
++/* Change from 0xd5 to 0xd6 to be compatible with older QEMU version */
++#define KVM_PRE_FAULT_MEMORY	_IOWR(KVMIO, 0xd6, struct kvm_pre_fault_memory)
+ 
+ struct kvm_pre_fault_memory {
+ 	__u64 gpa;
+diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
+index 281493db035b..c55e2864611b 100644
+--- a/virt/kvm/kvm_main.c
++++ b/virt/kvm/kvm_main.c
+@@ -4720,6 +4720,17 @@ static long kvm_vcpu_ioctl(struct file *filp,
+ 		break;
+ 	}
+ #endif
++	case KVM_MEMORY_MAPPING: {
++		struct kvm_memory_mapping mapping;
++
++		r = -EFAULT;
++		if (copy_from_user(&mapping, argp, sizeof(mapping)))
++			break;
++		r = kvm_vcpu_memory_mapping(vcpu, &mapping);
++		if (copy_to_user(argp, &mapping, sizeof(mapping)))
++			r = -EFAULT;
++		break;
++	}
+ 	default:
+ 		r = kvm_arch_vcpu_ioctl(filp, ioctl, arg);
+ 	}
+@@ -4764,17 +4775,6 @@ static long kvm_vcpu_compat_ioctl(struct file *filp,
+ 			r = kvm_vcpu_ioctl_set_sigmask(vcpu, NULL);
+ 		break;
+ 	}
+-	case KVM_MEMORY_MAPPING: {
+-		struct kvm_memory_mapping mapping;
+-
+-		r = -EFAULT;
+-		if (copy_from_user(&mapping, argp, sizeof(mapping)))
+-			break;
+-		r = kvm_vcpu_memory_mapping(vcpu, &mapping);
+-		if (copy_to_user(argp, &mapping, sizeof(mapping)))
+-			r = -EFAULT;
+-		break;
+-	}
+ 	default:
+ 		r = kvm_vcpu_ioctl(filp, ioctl, arg);
+ 	}
+-- 
+2.34.1
+

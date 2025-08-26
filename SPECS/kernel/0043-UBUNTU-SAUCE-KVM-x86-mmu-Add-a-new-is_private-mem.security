@@ -1,0 +1,88 @@
+From ff495136c0b04fa6678b9e64c637efd40bfb2665 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Thu, 21 Jul 2022 14:28:51 -0700
+Subject: [PATCH 043/147] UBUNTU: SAUCE: KVM: x86/mmu: Add a new is_private
+ member for union kvm_mmu_page_role
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Because TDX support introduces private mapping, add a new member in union
+kvm_mmu_page_role with access functions to check the member.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 51636f8f58ca192ad3d72b14a1d3dce7f55060bc)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm_host.h | 13 ++++++++++++-
+ arch/x86/kvm/mmu/mmu_internal.h |  5 +++++
+ arch/x86/kvm/mmu/spte.h         |  7 +++++++
+ 3 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 2b0e91934bf5..07a9ec6b87e6 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -350,7 +350,8 @@ union kvm_mmu_page_role {
+ 		unsigned ad_disabled:1;
+ 		unsigned guest_mode:1;
+ 		unsigned passthrough:1;
+-		unsigned :5;
++		unsigned is_private:1;
++		unsigned :4;
+ 
+ 		/*
+ 		 * This is left at the top of the word so that
+@@ -362,6 +363,16 @@ union kvm_mmu_page_role {
+ 	};
+ };
+ 
++static inline bool kvm_mmu_page_role_is_private(union kvm_mmu_page_role role)
++{
++	return !!role.is_private;
++}
++
++static inline void kvm_mmu_page_role_set_private(union kvm_mmu_page_role *role)
++{
++	role->is_private = 1;
++}
++
+ /*
+  * kvm_mmu_extended_role complements kvm_mmu_page_role, tracking properties
+  * relevant to the current MMU configuration.   When loading CR0, CR4, or EFER,
+diff --git a/arch/x86/kvm/mmu/mmu_internal.h b/arch/x86/kvm/mmu/mmu_internal.h
+index c98827840e07..5f6508686766 100644
+--- a/arch/x86/kvm/mmu/mmu_internal.h
++++ b/arch/x86/kvm/mmu/mmu_internal.h
+@@ -145,6 +145,11 @@ static inline int kvm_mmu_page_as_id(struct kvm_mmu_page *sp)
+ 	return kvm_mmu_role_as_id(sp->role);
+ }
+ 
++static inline bool is_private_sp(const struct kvm_mmu_page *sp)
++{
++	return kvm_mmu_page_role_is_private(sp->role);
++}
++
+ static inline bool kvm_mmu_page_ad_need_write_protect(struct kvm_mmu_page *sp)
+ {
+ 	/*
+diff --git a/arch/x86/kvm/mmu/spte.h b/arch/x86/kvm/mmu/spte.h
+index 2cb816ea2430..9061913f7b53 100644
+--- a/arch/x86/kvm/mmu/spte.h
++++ b/arch/x86/kvm/mmu/spte.h
+@@ -267,6 +267,13 @@ static inline struct kvm_mmu_page *root_to_sp(hpa_t root)
+ 	return spte_to_child_sp(root);
+ }
+ 
++static inline bool is_private_sptep(u64 *sptep)
++{
++	if (WARN_ON_ONCE(!sptep))
++		return false;
++	return is_private_sp(sptep_to_sp(sptep));
++}
++
+ static inline bool is_mmio_spte(struct kvm *kvm, u64 spte)
+ {
+ 	return (spte & shadow_mmio_mask) == kvm->arch.shadow_mmio_value &&
+-- 
+2.34.1
+

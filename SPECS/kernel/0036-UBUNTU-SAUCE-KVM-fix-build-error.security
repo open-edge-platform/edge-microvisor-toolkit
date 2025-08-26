@@ -1,0 +1,30 @@
+From e9a302812ae5d1286734e1d850a38f6e21c547d9 Mon Sep 17 00:00:00 2001
+From: Feng Tang <feng.tang@intel.com>
+Date: Fri, 30 Aug 2024 21:09:08 +0800
+Subject: [PATCH 036/147] UBUNTU: SAUCE: KVM: fix build error
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Signed-off-by: Feng Tang <feng.tang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit d85287ce24b011d18f8e0b0afa9b9fe4f741fa03)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 7eb353cbac50..042ff9bd5282 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -396,7 +396,7 @@ static int tdx_get_capabilities(struct kvm_tdx_cmd *cmd)
+ 		.xfam_fixed0 = tdx_info->xfam_fixed0,
+ 		.xfam_fixed1 = tdx_info->xfam_fixed1,
+ 		.supported_gpaw = TDX_CAP_GPAW_48 |
+-		((kvm_get_shadow_phys_bits() >= 52 &&
++		((kvm_host.maxphyaddr >= 52 &&
+ 		  cpu_has_vmx_ept_5levels()) ? TDX_CAP_GPAW_52 : 0),
+ 		.nr_cpuid_configs = tdx_info->num_cpuid_config,
+ 		.padding = 0,
+-- 
+2.34.1
+

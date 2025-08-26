@@ -1,0 +1,64 @@
+From f7e7175372d3e8bdcd18bad98ee43f5730466f30 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Tue, 27 Jun 2023 07:38:26 -0700
+Subject: [PATCH 124/147] UBUNTU: SAUCE: KVM: TDX: Emulate Xen MTRR disablement
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+The TDX module doesn't allow VMM to disable CPUID.MTRR
+(CPUID[EAX=1].EDX[12]) bit.  It forcibly sets the bit to 1(MTRR available)
+unconditionally and VMM can't change it.  The v6.5 guest kernel doesn't
+disable MTRR explicitly.  It uses CPUID.MTRR and results in a kernel panic
+when setting CR4.CD=1 to disable cache during programming MTRRs.
+
+The guest kernel has Xen MTRR disablement.
+  Commit f9626104a5b6 ("x86/mm/mtrr: Generalize runtime disabling of MTRRs")
+When MTRR is available and MTRRdefType.enable = 0 as BIOS hand-off state,
+the kernel pretends as MTRR isn't available.  That is a deviation from SDM
+because MTRRdefType.enable = 0 means all memory access is UC according to
+the SDM.
+
+Mimic the Xen guest MTRR disablement for the TD guest kernel to boot.
+
+Other workaround is to pass "clearcpuid=mtrr" to the guest kernel command
+line.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 7ec1823835d67499e59489d9fa41f2ccaccccd76)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index d6f846f6ef05..b7d3ae543703 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -2164,6 +2164,24 @@ int tdx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
+ 		 */
+ 		msr->data = 0;
+ 		return 0;
++	case MSR_MTRRdefType:
++		/*
++		 * FIXME: Xen convention to disable guest MTRR:
++		 * The guest kernel pretends as if MTRR isn't available when
++		 * CPUID.MTRR = 1 (MTRR available) and MTRRdefType.enable = 0
++		 * (MTRRs disabled) as BIOS hand-off state. Which is deviation
++		 * from SDM.  MTRRdefType.enable = 0 means all memory access is
++		 * UC according to the SDM.
++		 *
++		 * The TD guest kernel has to disable MTRR otherwise it tries
++		 * program MTRRs to disable caching. CR4.CD=1 results in the
++		 * unexpected #VE and the guest kernel panic.  As workaround,
++		 * utilize the Xen convention in the guest kernel.
++		 * E(MTRR enable)=0, FE(fixed range MTRR enable)=0,
++		 * default memory type=WB
++		 */
++		msr->data = MTRR_TYPE_WRBACK;
++		return 0;
+ 	default:
+ 		if (tdx_has_emulated_msr(msr->index, false))
+ 			return kvm_get_msr_common(vcpu, msr);
+-- 
+2.34.1
+

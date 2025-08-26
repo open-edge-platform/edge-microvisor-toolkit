@@ -1,0 +1,38 @@
+From 2b46a5821b7e58479ef1e8640b1121abd74a22dd Mon Sep 17 00:00:00 2001
+From: "Padmasanan, Prathisna" <prathisna.padmasanan@intel.com>
+Date: Tue, 4 Aug 2020 20:20:19 +0530
+Subject: [PATCH 20/43] GPIO: Fix for PSE GPIO generating only one event as
+ interrupt source
+
+Reference count of the PSE GPIO driver was decremented before suspend
+and so device was not able to wakeup on IRQ .
+
+Signed-off-by: Padmasanan, Prathisna <prathisna.padmasanan@intel.com>
+---
+ drivers/gpio/gpio-ehl-pse-plat.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/gpio/gpio-ehl-pse-plat.c b/drivers/gpio/gpio-ehl-pse-plat.c
+index f597d8cd05902..47e686e034190 100644
+--- a/drivers/gpio/gpio-ehl-pse-plat.c
++++ b/drivers/gpio/gpio-ehl-pse-plat.c
+@@ -256,8 +256,6 @@ static int ehl_pse_irq_set_type(struct irq_data *d, unsigned int type)
+ 
+ 	raw_spin_unlock_irqrestore(&priv->lock, flags);
+ 
+-	pm_runtime_put(priv->dev->parent);
+-
+ 	return 0;
+ }
+ 
+@@ -271,6 +269,7 @@ static int ehl_pse_irq_set_wake(struct irq_data *d, unsigned int on)
+ 	unsigned long flags;
+ 	u32 value;
+ 
++	pm_runtime_put(priv->dev->parent);
+ 	raw_spin_lock_irqsave(&priv->lock, flags);
+ 
+ 	/* Clear the existing wake status */
+-- 
+2.25.1
+

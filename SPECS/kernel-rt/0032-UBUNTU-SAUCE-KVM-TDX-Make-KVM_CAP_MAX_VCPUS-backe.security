@@ -1,0 +1,205 @@
+From e5d03a726e1a32dd0edc2293255c37f177780765 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Fri, 30 Aug 2024 16:23:23 +0800
+Subject: [PATCH 032/147] UBUNTU: SAUCE: KVM: TDX: Make KVM_CAP_MAX_VCPUS
+ backend specific
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX has its own limitation on the maximum number of vcpus that the guest
+can accommodate.  Allow x86 kvm backend to implement its own KVM_ENABLE_CAP
+handler and implement TDX backend for KVM_CAP_MAX_VCPUS.  user space VMM,
+e.g. qemu, can specify its value instead of KVM_MAX_VCPUS.
+
+When creating TD (TDH.MNG.INIT), the maximum number of vcpu needs to be
+specified as struct td_params_struct.  and the value is a part of
+measurement.  The user space has to specify the value somehow.  There are
+two options for it.
+option 1. API (Set KVM_CAP_MAX_VCPU) to specify the value (this patch)
+option 2. Add max_vcpu as a parameter to initialize the guest.
+          (TDG.MNG.INIT)
+
+The flow will be create VM (KVM_CREATE_VM), create VCPUs (KVM_CREATE_VCPU),
+initialize TDX part of VM and, initialize TDX part of vcpu.
+Because the creation of vcpu is independent from TDX VM initialization,
+Choose the option 1.
+The work flow will be, KVM_CREATE_VM, set KVM_CAP_MAX_VCPU and,
+KVM_CREATE_VCPU.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 84ef1d34755018d3f9116aa3b00002234ae61a84)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm-x86-ops.h |  2 ++
+ arch/x86/include/asm/kvm_host.h    |  2 ++
+ arch/x86/kvm/vmx/main.c            | 22 ++++++++++++++++++++++
+ arch/x86/kvm/vmx/tdx.c             | 29 +++++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/x86_ops.h         |  5 +++++
+ arch/x86/kvm/x86.c                 |  4 ++++
+ 6 files changed, 64 insertions(+)
+
+diff --git a/arch/x86/include/asm/kvm-x86-ops.h b/arch/x86/include/asm/kvm-x86-ops.h
+index fe3d618e51a7..62e8ef07612e 100644
+--- a/arch/x86/include/asm/kvm-x86-ops.h
++++ b/arch/x86/include/asm/kvm-x86-ops.h
+@@ -19,6 +19,8 @@ KVM_X86_OP(disable_virtualization_cpu)
+ KVM_X86_OP(hardware_unsetup)
+ KVM_X86_OP(has_emulated_msr)
+ KVM_X86_OP(vcpu_after_set_cpuid)
++KVM_X86_OP_OPTIONAL(max_vcpus);
++KVM_X86_OP_OPTIONAL(vm_enable_cap)
+ KVM_X86_OP(vm_init)
+ KVM_X86_OP_OPTIONAL(vm_destroy)
+ KVM_X86_OP_OPTIONAL_RET0(vcpu_precreate)
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index e4dd840e0bec..e8788819ab73 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -1641,6 +1641,8 @@ struct kvm_x86_ops {
+ 	void (*vcpu_after_set_cpuid)(struct kvm_vcpu *vcpu);
+ 
+ 	unsigned int vm_size;
++	int (*max_vcpus)(struct kvm *kvm);
++	int (*vm_enable_cap)(struct kvm *kvm, struct kvm_enable_cap *cap);
+ 	int (*vm_init)(struct kvm *kvm);
+ 	void (*vm_destroy)(struct kvm *kvm);
+ 
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 08d47906f56a..ced92a259cb7 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -7,6 +7,7 @@
+ #include "pmu.h"
+ #include "posted_intr.h"
+ #include "tdx.h"
++#include "tdx_arch.h"
+ 
+ static bool enable_tdx __ro_after_init;
+ module_param_named(tdx, enable_tdx, bool, 0444);
+@@ -20,6 +21,17 @@ static bool vt_is_vm_type_supported(unsigned long type)
+ }
+ #endif
+ 
++static int vt_max_vcpus(struct kvm *kvm)
++{
++	if (!kvm)
++		return KVM_MAX_VCPUS;
++
++	if (is_td(kvm))
++		return min(kvm->max_vcpus, TDX_MAX_VCPUS);
++
++	return kvm->max_vcpus;
++}
++
+ static __init int vt_hardware_setup(void)
+ {
+ 	int ret;
+@@ -43,6 +55,14 @@ static void vt_hardware_unsetup(void)
+ 	vmx_hardware_unsetup();
+ }
+ 
++static int vt_vm_enable_cap(struct kvm *kvm, struct kvm_enable_cap *cap)
++{
++	if (is_td(kvm))
++		return tdx_vm_enable_cap(kvm, cap);
++
++	return -EINVAL;
++}
++
+ static int vt_vm_init(struct kvm *kvm)
+ {
+ 	if (is_td(kvm))
+@@ -83,6 +103,8 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.has_emulated_msr = vmx_has_emulated_msr,
+ 
+ 	.vm_size = sizeof(struct kvm_vmx),
++	.max_vcpus = vt_max_vcpus,
++	.vm_enable_cap = vt_vm_enable_cap,
+ 	.vm_init = vt_vm_init,
+ 	.vm_destroy = vmx_vm_destroy,
+ 
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index d350065ae0ca..4c2302560724 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -56,6 +56,35 @@ struct tdx_info {
+ /* Info about the TDX module. */
+ static struct tdx_info *tdx_info;
+ 
++int tdx_vm_enable_cap(struct kvm *kvm, struct kvm_enable_cap *cap)
++{
++	int r;
++
++	switch (cap->cap) {
++	case KVM_CAP_MAX_VCPUS: {
++		if (cap->flags || cap->args[0] == 0)
++			return -EINVAL;
++		if (cap->args[0] > KVM_MAX_VCPUS ||
++		    cap->args[0] > TDX_MAX_VCPUS)
++			return -E2BIG;
++
++		mutex_lock(&kvm->lock);
++		if (kvm->created_vcpus)
++			r = -EBUSY;
++		else {
++			kvm->max_vcpus = cap->args[0];
++			r = 0;
++		}
++		mutex_unlock(&kvm->lock);
++		break;
++	}
++	default:
++		r = -EINVAL;
++		break;
++	}
++	return r;
++}
++
+ static int tdx_get_capabilities(struct kvm_tdx_cmd *cmd)
+ {
+ 	struct kvm_tdx_capabilities __user *user_caps;
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index 15a155276b41..25ba9e3eb9f4 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -137,10 +137,15 @@ void vmx_setup_mce(struct kvm_vcpu *vcpu);
+ int __init tdx_hardware_setup(struct kvm_x86_ops *x86_ops);
+ void tdx_hardware_unsetup(void);
+ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp);
++int tdx_vm_enable_cap(struct kvm *kvm, struct kvm_enable_cap *cap);
+ #else
+ static inline int tdx_hardware_setup(struct kvm_x86_ops *x86_ops) { return -EOPNOTSUPP; }
+ static inline void tdx_hardware_unsetup(void) {}
+ static inline int tdx_vm_ioctl(struct kvm *kvm, void __user *argp) { return -EOPNOTSUPP; }
++static inline int tdx_vm_enable_cap(struct kvm *kvm, struct kvm_enable_cap *cap)
++{
++	return -EINVAL;
++}
+ #endif
+ 
+ #endif /* __KVM_X86_VMX_X86_OPS_H */
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index a9fdcfef4407..231490d0bb8d 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -4741,6 +4741,8 @@ int kvm_vm_ioctl_check_extension(struct kvm *kvm, long ext)
+ 		break;
+ 	case KVM_CAP_MAX_VCPUS:
+ 		r = KVM_MAX_VCPUS;
++		if (kvm_x86_ops.max_vcpus)
++			r = static_call(kvm_x86_max_vcpus)(kvm);
+ 		break;
+ 	case KVM_CAP_MAX_VCPU_ID:
+ 		r = KVM_MAX_VCPU_IDS;
+@@ -6790,6 +6792,8 @@ int kvm_vm_ioctl_enable_cap(struct kvm *kvm,
+ 	}
+ 	default:
+ 		r = -EINVAL;
++		if (kvm_x86_ops.vm_enable_cap)
++			r = static_call(kvm_x86_vm_enable_cap)(kvm, cap);
+ 		break;
+ 	}
+ 	return r;
+-- 
+2.34.1
+

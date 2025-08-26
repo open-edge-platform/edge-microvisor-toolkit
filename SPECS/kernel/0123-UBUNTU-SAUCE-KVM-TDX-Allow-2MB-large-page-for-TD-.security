@@ -1,0 +1,63 @@
+From d79577553a75ba03261e535673eb995b9de09813 Mon Sep 17 00:00:00 2001
+From: Xiaoyao Li <xiaoyao.li@intel.com>
+Date: Tue, 31 Aug 2021 15:34:52 +0800
+Subject: [PATCH 123/147] UBUNTU: SAUCE: KVM: TDX: Allow 2MB large page for TD
+ GUEST
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Now that everything is there to support 2MB page for TD guest.  Because TDX
+module TDH.MEM.PAGE.AUG supports 4KB page and 2MB page, set struct
+kvm_arch.tdp_max_page_level to 2MB page level.
+
+Signed-off-by: Xiaoyao Li <xiaoyao.li@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 7189448fe053f9b75d2d416733e17155ad2eb010)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/tdp_mmu.c | 9 ++-------
+ arch/x86/kvm/vmx/tdx.c     | 7 +++++--
+ 2 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index fe905851d5e5..e3a1c41677a6 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -1632,14 +1632,9 @@ int kvm_tdp_mmu_map(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault)
+ 
+ 		sp->nx_huge_page_disallowed = fault->huge_page_disallowed;
+ 
+-		if (is_shadow_present_pte(iter.old_spte)) {
+-			/*
+-			 * TODO: large page support.
+-			 * Doesn't support large page for TDX now
+-			 */
+-			KVM_BUG_ON(is_private_sptep(iter.sptep), vcpu->kvm);
++		if (is_shadow_present_pte(iter.old_spte))
+ 			r = tdp_mmu_split_huge_page(kvm, &iter, sp, true);
+-		} else
++		else
+ 			r = tdp_mmu_link_sp(kvm, &iter, sp, true);
+ 
+ 		/*
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index c1e63d79c732..d6f846f6ef05 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -3113,8 +3113,11 @@ int tdx_gmem_max_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
+ 	if (!is_private)
+ 		return 0;
+ 
+-	/* TODO: Enable 2mb and 1gb large page support. */
+-	*max_level = min(*max_level, PG_LEVEL_4K);
++	/*
++	 * TDH.MEM.PAGE.AUG supports up to 2MB page.
++	 * TODO: Enable 1gb large page support.
++	 */
++	*max_level = min(*max_level, PG_LEVEL_2M);
+ 	return 0;
+ }
+ 
+-- 
+2.34.1
+

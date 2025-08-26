@@ -1,0 +1,41 @@
+From bd5e8abcc11d88b12854f165688d8b1483315116 Mon Sep 17 00:00:00 2001
+From: Kai Huang <kai.huang@intel.com>
+Date: Thu, 4 Jan 2024 23:45:33 +1300
+Subject: [PATCH 001/147] UBUNTU: SAUCE: x86/virt/tdx: Rename _offset to
+ _member for TD_SYSINFO_MAP() macro
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TD_SYSINFO_MAP() macro actually takes the member of the 'struct
+tdx_tdmr_sysinfo' as the second argument and uses the offsetof() to
+calculate the offset for that member.
+
+Rename the macro argument _offset to _member to reflect this.
+
+Signed-off-by: Kai Huang <kai.huang@intel.com>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit e694b921af17509cca07a03db1e44a69f1c98cbc)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/virt/vmx/tdx/tdx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+index eb91bc5448de..e27b75cbcd8b 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.c
++++ b/arch/x86/virt/vmx/tdx/tdx.c
+@@ -297,9 +297,9 @@ struct field_mapping {
+ 	int offset;
+ };
+ 
+-#define TD_SYSINFO_MAP(_field_id, _offset) \
++#define TD_SYSINFO_MAP(_field_id, _member) \
+ 	{ .field_id = MD_FIELD_ID_##_field_id,	   \
+-	  .offset   = offsetof(struct tdx_tdmr_sysinfo, _offset) }
++	  .offset   = offsetof(struct tdx_tdmr_sysinfo, _member) }
+ 
+ /* Map TD_SYSINFO fields into 'struct tdx_tdmr_sysinfo': */
+ static const struct field_mapping fields[] = {
+-- 
+2.34.1
+

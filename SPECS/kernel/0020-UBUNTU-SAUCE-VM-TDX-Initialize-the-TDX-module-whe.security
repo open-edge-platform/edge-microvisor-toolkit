@@ -1,0 +1,209 @@
+From c54ae7dbd7a93b87315c23bcb992e40e8d3bcec4 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Thu, 29 Aug 2024 20:43:26 +0800
+Subject: [PATCH 020/147] UBUNTU: SAUCE: VM: TDX: Initialize the TDX module
+ when loading the KVM intel kernel module
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX requires several initialization steps for KVM to create guest TDs.
+Detect CPU feature, enable VMX (TDX is based on VMX) on all online CPUs,
+detect the TDX module availability, initialize it and disable VMX.
+
+To enable/disable VMX on all online CPUs, utilize
+vmx_hardware_enable/disable().  The method also initializes each CPU for
+TDX.  TDX requires calling a TDX initialization function per logical
+processor (LP) before the LP uses TDX.  When the CPU is becoming online,
+call the TDX LP initialization API.  If it fails to initialize TDX, refuse
+CPU online for simplicity instead of TDX avoiding the failed LP.
+
+There are several options on when to initialize the TDX module.  A.) kernel
+module loading time, B.) the first guest TD creation time.  A.) was chosen.
+With B.), a user may hit an error of the TDX initialization when trying to
+create the first guest TD.  The machine that fails to initialize the TDX
+module can't boot any guest TD further.  Such failure is undesirable and a
+surprise because the user expects that the machine can accommodate guest
+TD, but not.  So A.) is better than B.).
+
+Introduce a module parameter, kvm_intel.tdx, to explicitly enable TDX KVM
+support.  It's off by default to keep the same behavior for those who don't
+use TDX.  Implement hardware_setup method to detect TDX feature of CPU and
+initialize TDX module.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit d3b2042bf4e86f2ca402abe1c273dc0882148817)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/kvm/Makefile      |  1 +
+ arch/x86/kvm/vmx/main.c    | 19 ++++++++-
+ arch/x86/kvm/vmx/tdx.c     | 84 ++++++++++++++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/x86_ops.h |  6 +++
+ 4 files changed, 109 insertions(+), 1 deletion(-)
+ create mode 100644 arch/x86/kvm/vmx/tdx.c
+
+diff --git a/arch/x86/kvm/Makefile b/arch/x86/kvm/Makefile
+index f9dddb8cb466..fec803aff7ad 100644
+--- a/arch/x86/kvm/Makefile
++++ b/arch/x86/kvm/Makefile
+@@ -20,6 +20,7 @@ kvm-intel-y		+= vmx/vmx.o vmx/vmenter.o vmx/pmu_intel.o vmx/vmcs12.o \
+ 
+ kvm-intel-$(CONFIG_X86_SGX_KVM)	+= vmx/sgx.o
+ kvm-intel-$(CONFIG_KVM_HYPERV)	+= vmx/hyperv.o vmx/hyperv_evmcs.o
++kvm-intel-$(CONFIG_INTEL_TDX_HOST)	+= vmx/tdx.o
+ 
+ kvm-amd-y		+= svm/svm.o svm/vmenter.o svm/pmu.o svm/nested.o svm/avic.o
+ 
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 50036c1d6e50..1bd1551563cc 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -7,6 +7,22 @@
+ #include "pmu.h"
+ #include "posted_intr.h"
+ 
++static bool enable_tdx __ro_after_init;
++module_param_named(tdx, enable_tdx, bool, 0444);
++
++static __init int vt_hardware_setup(void)
++{
++	int ret;
++
++	ret = vmx_hardware_setup();
++	if (ret)
++		return ret;
++
++	enable_tdx = enable_tdx && !tdx_hardware_setup(&vt_x86_ops);
++
++	return 0;
++}
++
+ #define VMX_REQUIRED_APICV_INHIBITS				\
+ 	(BIT(APICV_INHIBIT_REASON_DISABLED) |			\
+ 	 BIT(APICV_INHIBIT_REASON_ABSENT) |			\
+@@ -23,6 +39,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 
+ 	.hardware_unsetup = vmx_hardware_unsetup,
+ 
++	/* TDX cpu enablement is done by tdx_hardware_setup(). */
+ 	.enable_virtualization_cpu = vmx_enable_virtualization_cpu,
+ 	.disable_virtualization_cpu = vmx_disable_virtualization_cpu,
+ 	.emergency_disable_virtualization_cpu = vmx_emergency_disable_virtualization_cpu,
+@@ -161,7 +178,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ };
+ 
+ struct kvm_x86_init_ops vt_init_ops __initdata = {
+-	.hardware_setup = vmx_hardware_setup,
++	.hardware_setup = vt_hardware_setup,
+ 	.handle_intel_pt_intr = NULL,
+ 
+ 	.runtime_ops = &vt_x86_ops,
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+new file mode 100644
+index 000000000000..4366c1b673a9
+--- /dev/null
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -0,0 +1,84 @@
++// SPDX-License-Identifier: GPL-2.0
++#include <linux/cpu.h>
++
++#include <asm/tdx.h>
++
++#include "capabilities.h"
++#include "x86_ops.h"
++#include "x86.h"
++
++#undef pr_fmt
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
++static int __init tdx_module_setup(void)
++{
++	int ret;
++
++	ret = tdx_enable();
++	if (ret) {
++		pr_info("Failed to initialize TDX module.\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++struct tdx_enabled {
++	cpumask_var_t enabled;
++	atomic_t err;
++};
++
++static void __init tdx_on(void *_enable)
++{
++	struct tdx_enabled *enable = _enable;
++	int r;
++
++	r = vmx_enable_virtualization_cpu();
++	if (!r) {
++		cpumask_set_cpu(smp_processor_id(), enable->enabled);
++		r = tdx_cpu_enable();
++	}
++	if (r)
++		atomic_set(&enable->err, r);
++}
++
++static void __init vmx_off(void *_enabled)
++{
++	cpumask_var_t *enabled = (cpumask_var_t *)_enabled;
++
++	if (cpumask_test_cpu(smp_processor_id(), *enabled))
++		vmx_disable_virtualization_cpu();
++}
++
++int __init tdx_hardware_setup(struct kvm_x86_ops *x86_ops)
++{
++	struct tdx_enabled enable = {
++		.err = ATOMIC_INIT(0),
++	};
++	int r = 0;
++
++	if (!enable_ept) {
++		pr_warn("Cannot enable TDX with EPT disabled\n");
++		return -EINVAL;
++	}
++
++	if (!zalloc_cpumask_var(&enable.enabled, GFP_KERNEL)) {
++		r = -ENOMEM;
++		goto out;
++	}
++
++	/* tdx_enable() in tdx_module_setup() requires cpus lock. */
++	cpus_read_lock();
++	on_each_cpu(tdx_on, &enable, true); /* TDX requires vmxon. */
++	r = atomic_read(&enable.err);
++	if (!r)
++		r = tdx_module_setup();
++	else
++		r = -EIO;
++	on_each_cpu(vmx_off, &enable.enabled, true);
++	cpus_read_unlock();
++	free_cpumask_var(enable.enabled);
++
++out:
++	return r;
++}
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index b2ef0009de01..844a1ad0179d 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -133,4 +133,10 @@ void vmx_cancel_hv_timer(struct kvm_vcpu *vcpu);
+ #endif
+ void vmx_setup_mce(struct kvm_vcpu *vcpu);
+ 
++#ifdef CONFIG_INTEL_TDX_HOST
++int __init tdx_hardware_setup(struct kvm_x86_ops *x86_ops);
++#else
++static inline int tdx_hardware_setup(struct kvm_x86_ops *x86_ops) { return -EOPNOTSUPP; }
++#endif
++
+ #endif /* __KVM_X86_VMX_X86_OPS_H */
+-- 
+2.34.1
+

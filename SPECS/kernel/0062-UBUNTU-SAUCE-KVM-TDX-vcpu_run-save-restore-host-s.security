@@ -1,0 +1,197 @@
+From b795607740b9dd4d01808ec97ede4dd881646419 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Fri, 13 Sep 2024 13:08:19 +0800
+Subject: [PATCH 062/147] UBUNTU: SAUCE: KVM: TDX: vcpu_run: save/restore host
+ state(host kernel gs)
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+On entering/exiting TDX vcpu, Preserved or clobbered CPU state is different
+from VMX case.  Add TDX hooks to save/restore host/guest CPU state.
+Save/restore kernel GS base MSR.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit f32995d98f6eb1f46fa87cbe16fc37b6d9952cf2)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/main.c    | 30 ++++++++++++++++++++++++--
+ arch/x86/kvm/vmx/tdx.c     | 44 ++++++++++++++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/tdx.h     |  4 ++++
+ arch/x86/kvm/vmx/x86_ops.h |  4 ++++
+ 4 files changed, 80 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index b18af1042863..230a5fb38767 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -162,6 +162,32 @@ static void vt_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)
+ 	vmx_vcpu_reset(vcpu, init_event);
+ }
+ 
++static void vt_prepare_switch_to_guest(struct kvm_vcpu *vcpu)
++{
++	/*
++	 * All host state is saved/restored across SEAMCALL/SEAMRET, and the
++	 * guest state of a TD is obviously off limits.  Deferring MSRs and DRs
++	 * is pointless because the TDX module needs to load *something* so as
++	 * not to expose guest state.
++	 */
++	if (is_td_vcpu(vcpu)) {
++		tdx_prepare_switch_to_guest(vcpu);
++		return;
++	}
++
++	vmx_prepare_switch_to_guest(vcpu);
++}
++
++static void vt_vcpu_put(struct kvm_vcpu *vcpu)
++{
++	if (is_td_vcpu(vcpu)) {
++		tdx_vcpu_put(vcpu);
++		return;
++	}
++
++	vmx_vcpu_put(vcpu);
++}
++
+ static int vt_vcpu_pre_run(struct kvm_vcpu *vcpu)
+ {
+ 	if (is_td_vcpu(vcpu))
+@@ -331,9 +357,9 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.vcpu_free = vt_vcpu_free,
+ 	.vcpu_reset = vt_vcpu_reset,
+ 
+-	.prepare_switch_to_guest = vmx_prepare_switch_to_guest,
++	.prepare_switch_to_guest = vt_prepare_switch_to_guest,
+ 	.vcpu_load = vmx_vcpu_load,
+-	.vcpu_put = vmx_vcpu_put,
++	.vcpu_put = vt_vcpu_put,
+ 
+ 	.update_exception_bitmap = vmx_update_exception_bitmap,
+ 	.get_feature_msr = vmx_get_feature_msr,
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 60eda5e60d8f..e4ed4b666e0f 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1,5 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0
+ #include <linux/cpu.h>
++#include <linux/mmu_context.h>
+ 
+ #include <asm/tdx.h>
+ 
+@@ -11,6 +12,8 @@
+ #include "vmx.h"
+ #include "x86.h"
+ 
++#include "posted_intr.h"
++
+ #include <trace/events/kvm.h>
+ #include "trace.h"
+ 
+@@ -424,6 +427,7 @@ u8 tdx_get_mt_mask(struct kvm_vcpu *vcpu, gfn_t gfn, bool is_mmio)
+ int tdx_vcpu_create(struct kvm_vcpu *vcpu)
+ {
+ 	struct kvm_tdx *kvm_tdx = to_kvm_tdx(vcpu->kvm);
++	struct vcpu_tdx *tdx = to_tdx(vcpu);
+ 
+ 	WARN_ON_ONCE(vcpu->arch.cpuid_entries);
+ 	WARN_ON_ONCE(vcpu->arch.cpuid_nent);
+@@ -447,9 +451,47 @@ int tdx_vcpu_create(struct kvm_vcpu *vcpu)
+ 	if ((kvm_tdx->xfam & XFEATURE_MASK_XTILE) == XFEATURE_MASK_XTILE)
+ 		vcpu->arch.xfd_no_write_intercept = true;
+ 
++	tdx->host_state_need_save = true;
++	tdx->host_state_need_restore = false;
++
+ 	return 0;
+ }
+ 
++void tdx_prepare_switch_to_guest(struct kvm_vcpu *vcpu)
++{
++	struct vcpu_tdx *tdx = to_tdx(vcpu);
++
++	if (!tdx->host_state_need_save)
++		return;
++
++	if (likely(is_64bit_mm(current->mm)))
++		tdx->msr_host_kernel_gs_base = current->thread.gsbase;
++	else
++		tdx->msr_host_kernel_gs_base = read_msr(MSR_KERNEL_GS_BASE);
++
++	tdx->host_state_need_save = false;
++}
++
++static void tdx_prepare_switch_to_host(struct kvm_vcpu *vcpu)
++{
++	struct vcpu_tdx *tdx = to_tdx(vcpu);
++
++	tdx->host_state_need_save = true;
++	if (!tdx->host_state_need_restore)
++		return;
++
++	++vcpu->stat.host_state_reload;
++
++	wrmsrl(MSR_KERNEL_GS_BASE, tdx->msr_host_kernel_gs_base);
++	tdx->host_state_need_restore = false;
++}
++
++void tdx_vcpu_put(struct kvm_vcpu *vcpu)
++{
++	vmx_vcpu_pi_put(vcpu);
++	tdx_prepare_switch_to_host(vcpu);
++}
++
+ void tdx_vcpu_free(struct kvm_vcpu *vcpu)
+ {
+ 	struct vcpu_tdx *tdx = to_tdx(vcpu);
+@@ -570,6 +612,8 @@ fastpath_t tdx_vcpu_run(struct kvm_vcpu *vcpu,  bool force_immediate_exit)
+ 
+ 	tdx_vcpu_enter_exit(tdx);
+ 
++	tdx->host_state_need_restore = true;
++
+ 	vcpu->arch.regs_avail &= ~VMX_REGS_LAZY_LOAD_SET;
+ 	trace_kvm_exit(vcpu, KVM_ISA_VMX);
+ 
+diff --git a/arch/x86/kvm/vmx/tdx.h b/arch/x86/kvm/vmx/tdx.h
+index 81d301fbe638..e96c416e73bf 100644
+--- a/arch/x86/kvm/vmx/tdx.h
++++ b/arch/x86/kvm/vmx/tdx.h
+@@ -69,6 +69,10 @@ struct vcpu_tdx {
+ 
+ 	bool initialized;
+ 
++	bool host_state_need_save;
++	bool host_state_need_restore;
++	u64 msr_host_kernel_gs_base;
++
+ 	/*
+ 	 * Dummy to make pmu_intel not corrupt memory.
+ 	 * TODO: Support PMU for TDX.  Future work.
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index 9431c15a13b3..96111a2aeba3 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -149,6 +149,8 @@ int tdx_vcpu_create(struct kvm_vcpu *vcpu);
+ void tdx_vcpu_free(struct kvm_vcpu *vcpu);
+ void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event);
+ fastpath_t tdx_vcpu_run(struct kvm_vcpu *vcpu, bool force_immediate_exit);
++void tdx_prepare_switch_to_guest(struct kvm_vcpu *vcpu);
++void tdx_vcpu_put(struct kvm_vcpu *vcpu);
+ u8 tdx_get_mt_mask(struct kvm_vcpu *vcpu, gfn_t gfn, bool is_mmio);
+ 
+ int tdx_vcpu_ioctl(struct kvm_vcpu *vcpu, void __user *argp);
+@@ -183,6 +185,8 @@ static inline int tdx_vcpu_create(struct kvm_vcpu *vcpu) { return -EOPNOTSUPP; }
+ static inline void tdx_vcpu_free(struct kvm_vcpu *vcpu) {}
+ static inline void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event) {}
+ static inline fastpath_t tdx_vcpu_run(struct kvm_vcpu *vcpu,  bool force_immediate_exit) { return EXIT_FASTPATH_NONE; }
++static inline void tdx_prepare_switch_to_guest(struct kvm_vcpu *vcpu) {}
++static inline void tdx_vcpu_put(struct kvm_vcpu *vcpu) {}
+ static inline u8 tdx_get_mt_mask(struct kvm_vcpu *vcpu, gfn_t gfn, bool is_mmio) { return 0; }
+ 
+ static inline int tdx_vcpu_ioctl(struct kvm_vcpu *vcpu, void __user *argp) { return -EOPNOTSUPP; }
+-- 
+2.34.1
+

@@ -1,0 +1,35 @@
+From bd458a91bb349ea126312c37dba7900821efe7f8 Mon Sep 17 00:00:00 2001
+From: Feng Tang <feng.tang@intel.com>
+Date: Tue, 8 Oct 2024 19:58:32 +0800
+Subject: [PATCH 136/147] UBUNTU: SAUCE: KVM: TDX: Fix is_private for page
+ fault handler
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Otherwise the TDX page fault handler will fail to detect PF for private
+address.
+
+Signed-off-by: Feng Tang <feng.tang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 75bca5c927552c26c969cfb5cc49970b43a89017)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/mmu_internal.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/mmu_internal.h b/arch/x86/kvm/mmu/mmu_internal.h
+index cc996468f001..9596678aee06 100644
+--- a/arch/x86/kvm/mmu/mmu_internal.h
++++ b/arch/x86/kvm/mmu/mmu_internal.h
+@@ -393,8 +393,7 @@ static inline int kvm_mmu_do_page_fault(struct kvm_vcpu *vcpu, gpa_t cr2_or_gpa,
+ 		.max_level = KVM_MAX_HUGEPAGE_LEVEL,
+ 		.req_level = PG_LEVEL_4K,
+ 		.goal_level = PG_LEVEL_4K,
+-		.is_private = err & PFERR_PRIVATE_ACCESS,
+-
++		.is_private = err & PFERR_GUEST_ENC_MASK,
+ 		.pfn = KVM_PFN_ERR_FAULT,
+ 		.hva = KVM_HVA_ERR_BAD,
+ 	};
+-- 
+2.34.1
+

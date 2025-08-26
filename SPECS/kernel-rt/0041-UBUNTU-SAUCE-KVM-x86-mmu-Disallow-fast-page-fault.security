@@ -1,0 +1,46 @@
+From 543b3f15530eee905cbc34b97d3c501443dfbd2b Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Sat, 31 Aug 2024 14:39:59 +0800
+Subject: [PATCH 041/147] UBUNTU: SAUCE: KVM: x86/mmu: Disallow fast page fault
+ on private GPA
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX requires TDX SEAMCALL to operate Secure EPT instead of direct memory
+access and TDX SEAMCALL is heavy operation.  Fast page fault on private GPA
+doesn't make sense.  Disallow fast page fault on private GPA.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+Reviewed-by: Binbin Wu <binbin.wu@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 6b2b129fd12e259c8cc441d8ea817ac011965f3e)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/mmu.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index d3220b824297..55a8309ab476 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -3347,6 +3347,17 @@ static int kvm_handle_noslot_fault(struct kvm_vcpu *vcpu,
+ 
+ static bool page_fault_can_be_fast(struct kvm *kvm, struct kvm_page_fault *fault)
+ {
++
++	/*
++	 * TDX private mapping doesn't support fast page fault because the EPT
++	 * entry is read/written with TDX SEAMCALLs instead of direct memory
++	 * access.
++	 * For other VM type, kvm_is_private_gpa() is always false because
++	 * gfn_shared_mask is zero.
++	 */
++	if (kvm_is_private_gpa(kvm, fault->addr))
++		return false;
++
+ 	/*
+ 	 * Page faults with reserved bits set, i.e. faults on MMIO SPTEs, only
+ 	 * reach the common page fault handler if the SPTE has an invalid MMIO
+-- 
+2.34.1
+

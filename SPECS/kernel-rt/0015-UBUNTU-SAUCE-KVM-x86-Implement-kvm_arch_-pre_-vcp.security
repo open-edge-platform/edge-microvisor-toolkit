@@ -1,0 +1,65 @@
+From 6c1fa78bbae691e4ab15d55af9d3aa4c087f7e93 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 28 Aug 2024 16:17:02 +0800
+Subject: [PATCH 015/147] UBUNTU: SAUCE: KVM: x86: Implement kvm_arch_{,
+ pre_}vcpu_memory_mapping()
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Wire KVM_MEMORY_MAPPING ioctl to kvm_mmu_map_tdp_page() to populate
+guest memory.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 992055d438a6c9438e33ab6a79a388ec67daf609)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/x86.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index f378d479fea3..d253c0d20c30 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -4677,6 +4677,7 @@ int kvm_vm_ioctl_check_extension(struct kvm *kvm, long ext)
+ 	case KVM_CAP_IRQFD_RESAMPLE:
+ 	case KVM_CAP_MEMORY_FAULT_INFO:
+ 	case KVM_CAP_X86_GUEST_MODE:
++	case KVM_CAP_MEMORY_MAPPING:
+ 		r = 1;
+ 		break;
+ 	case KVM_CAP_PRE_FAULT_MEMORY:
+@@ -5849,6 +5850,31 @@ static int kvm_vcpu_ioctl_enable_cap(struct kvm_vcpu *vcpu,
+ 	}
+ }
+ 
++void kvm_arch_vcpu_pre_memory_mapping(struct kvm_vcpu *vcpu)
++{
++	kvm_mmu_reload(vcpu);
++}
++
++int kvm_arch_vcpu_memory_mapping(struct kvm_vcpu *vcpu,
++				 struct kvm_memory_mapping *mapping)
++{
++	u8 max_level = KVM_MAX_HUGEPAGE_LEVEL;
++	u64 error_code = PFERR_WRITE_MASK;
++	u8 goal_level = PG_LEVEL_4K;
++	int r;
++
++	r = kvm_mmu_map_tdp_page(vcpu, gfn_to_gpa(mapping->base_gfn), error_code,
++				 max_level, &goal_level);
++	if (r)
++		return r;
++
++	if (mapping->source)
++		mapping->source += KVM_HPAGE_SIZE(goal_level);
++	mapping->base_gfn += KVM_PAGES_PER_HPAGE(goal_level);
++	mapping->nr_pages -= KVM_PAGES_PER_HPAGE(goal_level);
++	return r;
++}
++
+ long kvm_arch_vcpu_ioctl(struct file *filp,
+ 			 unsigned int ioctl, unsigned long arg)
+ {
+-- 
+2.34.1
+

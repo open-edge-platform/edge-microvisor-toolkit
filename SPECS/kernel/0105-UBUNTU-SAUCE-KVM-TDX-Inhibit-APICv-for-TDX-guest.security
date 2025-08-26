@@ -1,0 +1,90 @@
+From 4dbecd1309b51016eca562bc4656f4f72358251e Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Mon, 16 Sep 2024 13:45:08 +0800
+Subject: [PATCH 105/147] UBUNTU: SAUCE: KVM: TDX: Inhibit APICv for TDX guest
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX doesn't support APICV, inhibit APICv for TDX guest.  Follow how SEV
+does it.  Define a new inhibit reason for TDX, set it on TD
+initialization, and add the flag to kvm_x86_ops.required_apicv_inhibits.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 36f4273ab6cab76ba41bbd5ac9d35233d6278db7)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm_host.h | 13 ++++++++++++-
+ arch/x86/kvm/vmx/main.c         |  3 ++-
+ arch/x86/kvm/vmx/tdx.c          |  4 ++++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 5b6b13d26ae0..c45af78f0f71 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -1300,6 +1300,15 @@ enum kvm_apicv_inhibit {
+ 	 */
+ 	APICV_INHIBIT_REASON_LOGICAL_ID_ALIASED,
+ 
++	/*********************************************************/
++	/* INHIBITs that are relevant only to the Intel's APICv. */
++	/*********************************************************/
++
++	/*
++	 * APICv is disabled because TDX doesn't support it.
++	 */
++	APICV_INHIBIT_REASON_TDX,
++
+ 	NR_APICV_INHIBIT_REASONS,
+ };
+ 
+@@ -1318,7 +1327,9 @@ enum kvm_apicv_inhibit {
+ 	__APICV_INHIBIT_REASON(IRQWIN),			\
+ 	__APICV_INHIBIT_REASON(PIT_REINJ),		\
+ 	__APICV_INHIBIT_REASON(SEV),			\
+-	__APICV_INHIBIT_REASON(LOGICAL_ID_ALIASED)
++	__APICV_INHIBIT_REASON(LOGICAL_ID_ALIASED),	\
++	__APICV_INHIBIT_REASON(TDX)
++
+ 
+ struct kvm_arch {
+ 	unsigned long n_used_mmu_pages;
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 7241752bcf67..960354527893 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -1007,7 +1007,8 @@ static void vt_post_memory_mapping(struct kvm_vcpu *vcpu,
+ 	 BIT(APICV_INHIBIT_REASON_BLOCKIRQ) |			\
+ 	 BIT(APICV_INHIBIT_REASON_PHYSICAL_ID_ALIASED) |	\
+ 	 BIT(APICV_INHIBIT_REASON_APIC_ID_MODIFIED) |		\
+-	 BIT(APICV_INHIBIT_REASON_APIC_BASE_MODIFIED))
++	 BIT(APICV_INHIBIT_REASON_APIC_BASE_MODIFIED) |		\
++	 BIT(APICV_INHIBIT_REASON_TDX))
+ 
+ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.name = KBUILD_MODNAME,
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 5cc78adf06b7..71ee1da757ad 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -2492,6 +2492,8 @@ static int __tdx_td_init(struct kvm *kvm, struct td_params *td_params,
+ 		goto teardown;
+ 	}
+ 
++	kvm_set_apicv_inhibit(kvm, APICV_INHIBIT_REASON_TDX);
++
+ 	return 0;
+ 
+ 	/*
+@@ -2825,6 +2827,8 @@ static int tdx_td_vcpu_init(struct kvm_vcpu *vcpu, u64 vcpu_rcx)
+ 		return -EIO;
+ 	}
+ 
++	WARN_ON_ONCE(kvm_apicv_activated(vcpu->kvm));
++	vcpu->arch.apic->apicv_active = false;
+ 	vcpu->arch.mp_state = KVM_MP_STATE_RUNNABLE;
+ 	tdx->td_vcpu_created = true;
+ 	return 0;
+-- 
+2.34.1
+

@@ -1,0 +1,63 @@
+From 43fe337f613c9dad630a989f642291376ba5b68c Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Fri, 1 Dec 2023 16:35:02 -0800
+Subject: [PATCH 046/147] UBUNTU: SAUCE: KVM: x86/tdp_mmu: Apply mmu notifier
+ callback to only shared GPA
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+The private GPAs that typically guest memfd backs aren't subject to MMU
+notifier because it isn't mapped into virtual address of user process.
+kvm_tdp_mmu_handle_gfn() handles the callback of the MMU notifier,
+clear_flush_young(), clear_young(), test_young()() and change_pte().  Make
+kvm_tdp_mmu_handle_gfn() aware of private mapping and skip private mapping.
+
+Even with AS_UNMOVABLE set, those mmu notifier are called.  For example,
+ksmd triggers change_pte().
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Binbin Wu <binbin.wu@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit ba416fd3c47927e69a841c502d302c4de11eed83)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/tdp_mmu.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index 2b37e9f81bd8..6b86d4a72279 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -1229,9 +1229,29 @@ static __always_inline bool kvm_tdp_mmu_handle_gfn(struct kvm *kvm,
+ 	 * into this helper allow blocking; it'd be dead, wasteful code.
+ 	 */
+ 	for_each_tdp_mmu_root(kvm, root, range->slot->as_id) {
++		gfn_t start, end;
++
++		/*
++		 * This function is called on behalf of mmu_notifier of
++		 * clear_flush_young(), clear_young(), test_young()(), and
++		 * change_pte().  They apply to only shared GPAs.
++		 */
++		WARN_ON_ONCE(range->only_private);
++		WARN_ON_ONCE(!range->only_shared);
++		if (is_private_sp(root))
++			continue;
++
++		/*
++		 * For TDX shared mapping, set GFN shared bit to the range,
++		 * so the handler() doesn't need to set it, to avoid duplicated
++		 * code in multiple handler()s.
++		 */
++		start = kvm_gfn_to_shared(kvm, range->start);
++		end = kvm_gfn_to_shared(kvm, range->end);
++
+ 		rcu_read_lock();
+ 
+-		tdp_root_for_each_leaf_pte(iter, root, range->start, range->end)
++		tdp_root_for_each_leaf_pte(iter, root, start, end)
+ 			ret |= handler(kvm, &iter, range);
+ 
+ 		rcu_read_unlock();
+-- 
+2.34.1
+

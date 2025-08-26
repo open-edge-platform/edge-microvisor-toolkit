@@ -1,0 +1,30 @@
+From 7b2569fb72317bcf2fa9c7a79018fee320a76c05 Mon Sep 17 00:00:00 2001
+From: Feng Tang <feng.tang@intel.com>
+Date: Tue, 8 Oct 2024 19:59:32 +0800
+Subject: [PATCH 137/147] UBUNTU: SAUCE: KVM: Fix the host_level setting for
+ private PF
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Signed-off-by: Feng Tang <feng.tang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit a19527960b2622889c3dec110fc35d154865a148)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/mmu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 09d9c4e069d1..162ed9298278 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -4427,6 +4427,7 @@ static int kvm_faultin_pfn_private(struct kvm_vcpu *vcpu,
+ 		return r;
+ 	}
+ 
++	fault->host_level = kvm_max_level_for_order(max_order);
+ 	fault->map_writable = !(fault->slot->flags & KVM_MEM_READONLY);
+ 	fault->max_level = kvm_max_private_mapping_level(vcpu->kvm, fault->pfn,
+ 							 fault->gfn, fault->max_level, max_order,
+-- 
+2.34.1
+

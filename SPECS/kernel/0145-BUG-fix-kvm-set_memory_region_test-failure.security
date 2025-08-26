@@ -1,0 +1,41 @@
+From c58c3ba109612d61c466c7eae0e08a18dafb840a Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Thu, 31 Jul 2025 07:00:22 +0000
+Subject: [PATCH 145/147] BUG: fix kvm:set_memory_region_test failure
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/kvm/mmu/mmu.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 7ecbc9ecd3de..6f96d4d75c4e 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -7258,11 +7258,19 @@ static inline bool kvm_memslot_flush_zap_all(struct kvm *kvm)
+ void kvm_arch_flush_shadow_memslot(struct kvm *kvm,
+ 				   struct kvm_memory_slot *slot)
+ {
+-	/* TODO: I am not sure below logic is correct, need double check*/
+-	if (kvm_memslot_flush_zap_all(kvm) && !kvm_gfn_shared_mask(kvm))
++	if (kvm_memslot_flush_zap_all(kvm)) {
+ 		kvm_mmu_zap_all_fast(kvm);
+-	else if (kvm_gfn_shared_mask(kvm))
+-		kvm_mmu_zap_memslot(kvm, slot);
++	} else {
++		if (kvm_gfn_shared_mask(kvm))
++				/*
++				 * Secure-EPT requires to release PTs from the leaf.  The
++				 * optimization to zap root PT first with child PT doesn't
++				 * work.
++				 */
++			kvm_mmu_zap_memslot(kvm, slot);
++		else
++			kvm_mmu_zap_all_fast(kvm);
++	}
+ }
+ 
+ void kvm_mmu_invalidate_mmio_sptes(struct kvm *kvm, u64 gen)
+-- 
+2.34.1
+

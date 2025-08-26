@@ -1,0 +1,67 @@
+From 4c888bc2428d1871f48a8a0a5b6d01fdfe6888e7 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Tue, 14 Dec 2021 09:35:49 -0800
+Subject: [PATCH 081/147] UBUNTU: SAUCE: KVM: TDX: handle EXCEPTION_NMI and
+ EXTERNAL_INTERRUPT
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Because guest TD state is protected, exceptions in guest TDs can't be
+intercepted.  TDX VMM doesn't need to handle exceptions.
+tdx_handle_exit_irqoff() handles NMI and machine check.  Ignore NMI and
+machine check and continue guest TD execution.
+
+For external interrupt, increment stats same to the VMX case.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit 6d54d08d6bdf019a0be50dbf4368dafa62dcff16)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 7ebf76f745d9..81d070f69ad8 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -922,6 +922,25 @@ void tdx_handle_exit_irqoff(struct kvm_vcpu *vcpu)
+ 		vmx_handle_exception_irqoff(vcpu, tdexit_intr_info(vcpu));
+ }
+ 
++static int tdx_handle_exception(struct kvm_vcpu *vcpu)
++{
++	u32 intr_info = tdexit_intr_info(vcpu);
++
++	if (is_nmi(intr_info) || is_machine_check(intr_info))
++		return 1;
++
++	kvm_pr_unimpl("unexpected exception 0x%x(exit_reason 0x%llx qual 0x%lx)\n",
++		intr_info,
++		to_tdx(vcpu)->exit_reason.full, tdexit_exit_qual(vcpu));
++	return -EFAULT;
++}
++
++static int tdx_handle_external_interrupt(struct kvm_vcpu *vcpu)
++{
++	++vcpu->stat.irq_exits;
++	return 1;
++}
++
+ static int tdx_handle_triple_fault(struct kvm_vcpu *vcpu)
+ {
+ 	vcpu->run->exit_reason = KVM_EXIT_SHUTDOWN;
+@@ -1394,6 +1413,10 @@ int tdx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t fastpath)
+ 	WARN_ON_ONCE(fastpath != EXIT_FASTPATH_NONE);
+ 
+ 	switch (exit_reason.basic) {
++	case EXIT_REASON_EXCEPTION_NMI:
++		return tdx_handle_exception(vcpu);
++	case EXIT_REASON_EXTERNAL_INTERRUPT:
++		return tdx_handle_external_interrupt(vcpu);
+ 	case EXIT_REASON_EPT_VIOLATION:
+ 		return tdx_handle_ept_violation(vcpu);
+ 	case EXIT_REASON_EPT_MISCONFIG:
+-- 
+2.34.1
+

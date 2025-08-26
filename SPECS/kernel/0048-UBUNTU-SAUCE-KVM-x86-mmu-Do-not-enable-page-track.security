@@ -1,0 +1,40 @@
+From 50b24cb82f03639b794abcbe2087b7d9014ef581 Mon Sep 17 00:00:00 2001
+From: Yan Zhao <yan.y.zhao@intel.com>
+Date: Wed, 11 Sep 2024 23:10:12 +0800
+Subject: [PATCH 048/147] UBUNTU: SAUCE: KVM: x86/mmu: Do not enable page track
+ for TD guest
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX does not support write protection and hence page track.
+Though !tdp_enabled and kvm_shadow_root_allocated(kvm) are always false
+for TD guest, should also return false when external write tracking is
+enabled.
+
+Cc: Yuan Yao <yuan.yao@linux.intel.com>
+Signed-off-by: Yan Zhao <yan.y.zhao@intel.com>
+Reviewed-by: Binbin Wu <binbin.wu@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 9cd636ddc7def8afad8358eea6778dcd2aa24c5c)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/page_track.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/x86/kvm/mmu/page_track.c b/arch/x86/kvm/mmu/page_track.c
+index 561c331fd6ec..22dd77d1e5ed 100644
+--- a/arch/x86/kvm/mmu/page_track.c
++++ b/arch/x86/kvm/mmu/page_track.c
+@@ -23,6 +23,10 @@
+ static bool kvm_external_write_tracking_enabled(struct kvm *kvm)
+ {
+ #ifdef CONFIG_KVM_EXTERNAL_WRITE_TRACKING
++
++	if (kvm->arch.vm_type == KVM_X86_TDX_VM)
++		return false;
++
+ 	/*
+ 	 * Read external_write_tracking_enabled before related pointers.  Pairs
+ 	 * with the smp_store_release in kvm_page_track_write_tracking_enable().
+-- 
+2.34.1
+

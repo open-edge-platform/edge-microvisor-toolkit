@@ -1,0 +1,106 @@
+From c0c04eb6f892e53c1b2eaeb89b741ec1a5de8d8c Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Tue, 14 Dec 2021 09:35:30 -0800
+Subject: [PATCH 080/147] UBUNTU: SAUCE: KVM: TDX: handle ept
+ violation/misconfig exit
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+On EPT violation, call a common function, __vmx_handle_ept_violation() to
+trigger x86 MMU code.  On EPT misconfiguration, exit to ring 3 with
+KVM_EXIT_UNKNOWN.  because EPT misconfiguration can't happen as MMIO is
+trigged by TDG.VP.VMCALL. No point to set a misconfiguration value for the
+fast path.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 86ff641dd5cc3c37bb1fde6a9c632d5b10962669)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/common.h |  3 +++
+ arch/x86/kvm/vmx/tdx.c    | 49 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 52 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/common.h b/arch/x86/kvm/vmx/common.h
+index 632af7a76d0a..027aa4175d2c 100644
+--- a/arch/x86/kvm/vmx/common.h
++++ b/arch/x86/kvm/vmx/common.h
+@@ -87,6 +87,9 @@ static inline int __vmx_handle_ept_violation(struct kvm_vcpu *vcpu, gpa_t gpa,
+ 	error_code |= (exit_qualification & EPT_VIOLATION_GVA_TRANSLATED) != 0 ?
+ 	       PFERR_GUEST_FINAL_MASK : PFERR_GUEST_PAGE_MASK;
+ 
++	if (kvm_is_private_gpa(vcpu->kvm, gpa))
++		error_code |= PFERR_GUEST_ENC_MASK;
++
+ 	return kvm_mmu_page_fault(vcpu, gpa, error_code, NULL, 0);
+ }
+ 
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 2ec84caff3f3..7ebf76f745d9 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1289,6 +1289,51 @@ void tdx_deliver_interrupt(struct kvm_lapic *apic, int delivery_mode,
+ 	__vmx_deliver_posted_interrupt(vcpu, &tdx->pi_desc, vector);
+ }
+ 
++static int tdx_handle_ept_violation(struct kvm_vcpu *vcpu)
++{
++	unsigned long exit_qual;
++
++	if (kvm_is_private_gpa(vcpu->kvm, tdexit_gpa(vcpu))) {
++		/*
++		 * Always treat SEPT violations as write faults.  Ignore the
++		 * EXIT_QUALIFICATION reported by TDX-SEAM for SEPT violations.
++		 * TD private pages are always RWX in the SEPT tables,
++		 * i.e. they're always mapped writable.  Just as importantly,
++		 * treating SEPT violations as write faults is necessary to
++		 * avoid COW allocations, which will cause TDAUGPAGE failures
++		 * due to aliasing a single HPA to multiple GPAs.
++		 */
++#define TDX_SEPT_VIOLATION_EXIT_QUAL	EPT_VIOLATION_ACC_WRITE
++		exit_qual = TDX_SEPT_VIOLATION_EXIT_QUAL;
++	} else {
++		exit_qual = tdexit_exit_qual(vcpu);
++		if (exit_qual & EPT_VIOLATION_ACC_INSTR) {
++			pr_warn("kvm: TDX instr fetch to shared GPA = 0x%lx @ RIP = 0x%lx\n",
++				tdexit_gpa(vcpu), kvm_rip_read(vcpu));
++			vcpu->run->exit_reason = KVM_EXIT_EXCEPTION;
++			vcpu->run->ex.exception = PF_VECTOR;
++			vcpu->run->ex.error_code = exit_qual;
++			return 0;
++		}
++	}
++
++	trace_kvm_page_fault(vcpu, tdexit_gpa(vcpu), exit_qual);
++	return __vmx_handle_ept_violation(vcpu, tdexit_gpa(vcpu), exit_qual);
++}
++
++static int tdx_handle_ept_misconfig(struct kvm_vcpu *vcpu)
++{
++	WARN_ON_ONCE(1);
++
++	vcpu->run->exit_reason = KVM_EXIT_INTERNAL_ERROR;
++	vcpu->run->internal.suberror = KVM_INTERNAL_ERROR_UNEXPECTED_EXIT_REASON;
++	vcpu->run->internal.ndata = 2;
++	vcpu->run->internal.data[0] = EXIT_REASON_EPT_MISCONFIG;
++	vcpu->run->internal.data[1] = vcpu->arch.last_vmentry_cpu;
++
++	return 0;
++}
++
+ int tdx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t fastpath)
+ {
+ 	union tdx_exit_reason exit_reason = to_tdx(vcpu)->exit_reason;
+@@ -1349,6 +1394,10 @@ int tdx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t fastpath)
+ 	WARN_ON_ONCE(fastpath != EXIT_FASTPATH_NONE);
+ 
+ 	switch (exit_reason.basic) {
++	case EXIT_REASON_EPT_VIOLATION:
++		return tdx_handle_ept_violation(vcpu);
++	case EXIT_REASON_EPT_MISCONFIG:
++		return tdx_handle_ept_misconfig(vcpu);
+ 	case EXIT_REASON_OTHER_SMI:
+ 		/*
+ 		 * If reach here, it's not a Machine Check System Management
+-- 
+2.34.1
+

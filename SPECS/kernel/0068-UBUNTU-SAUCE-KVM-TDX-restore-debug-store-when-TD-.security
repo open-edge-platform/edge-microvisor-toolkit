@@ -1,0 +1,43 @@
+From 9afce414b7836ca650cab971afdaa28c05a1f44f Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Tue, 21 Dec 2021 18:38:23 -0800
+Subject: [PATCH 068/147] UBUNTU: SAUCE: KVM: TDX: restore debug store when TD
+ exit
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Because debug store is clobbered, restore it on TD exit.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit b3a894fa1506b51c63d5d28ebf6895dae8190514)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/events/intel/ds.c | 1 +
+ arch/x86/kvm/vmx/tdx.c     | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/arch/x86/events/intel/ds.c b/arch/x86/events/intel/ds.c
+index 54007174c15b..139f838728fc 100644
+--- a/arch/x86/events/intel/ds.c
++++ b/arch/x86/events/intel/ds.c
+@@ -2548,3 +2548,4 @@ void perf_restore_debug_store(void)
+ 
+ 	wrmsrl(MSR_IA32_DS_AREA, (unsigned long)ds);
+ }
++EXPORT_SYMBOL_GPL(perf_restore_debug_store);
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 0c41a3ff9139..9a108a417199 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -668,6 +668,7 @@ fastpath_t tdx_vcpu_run(struct kvm_vcpu *vcpu,  bool force_immediate_exit)
+ 	tdx_vcpu_enter_exit(tdx);
+ 
+ 	tdx_user_return_update_cache(vcpu);
++	perf_restore_debug_store();
+ 	tdx_restore_host_xsave_state(vcpu);
+ 	tdx->host_state_need_restore = true;
+ 
+-- 
+2.34.1
+

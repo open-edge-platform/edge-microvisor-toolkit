@@ -1,0 +1,184 @@
+From 2fae32163019d6dfacc68133caaa372f88e83a0e Mon Sep 17 00:00:00 2001
+From: Xiaoyao Li <xiaoyao.li@intel.com>
+Date: Mon, 23 Sep 2024 15:31:59 +0800
+Subject: [PATCH 118/147] UBUNTU: SAUCE: KVM: x86/tdp_mmu: Split the large page
+ when zap leaf
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+When TDX enabled, a large page cannot be zapped if it contains mixed
+pages. In this case, it has to split the large page.
+
+Signed-off-by: Xiaoyao Li <xiaoyao.li@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 784dfb43aa8a9cc51e29d047281d964cf1d3e462)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/mmu.c          |  6 +--
+ arch/x86/kvm/mmu/mmu_internal.h |  9 ++++
+ arch/x86/kvm/mmu/tdp_mmu.c      | 74 +++++++++++++++++++++++++++++++--
+ 3 files changed, 82 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 47aec2ca5e6e..63396932e3ec 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -7776,8 +7776,8 @@ bool kvm_arch_pre_set_memory_attributes(struct kvm *kvm,
+ 	return kvm_unmap_gfn_range(kvm, range);
+ }
+ 
+-static bool hugepage_test_mixed(struct kvm_memory_slot *slot, gfn_t gfn,
+-				int level)
++bool kvm_hugepage_test_mixed(struct kvm_memory_slot *slot, gfn_t gfn,
++			     int level)
+ {
+ 	return lpage_info_slot(gfn, slot, level)->disallow_lpage & KVM_LPAGE_MIXED_FLAG;
+ }
+@@ -7804,7 +7804,7 @@ static bool hugepage_has_attrs(struct kvm *kvm, struct kvm_memory_slot *slot,
+ 		return kvm_range_has_memory_attributes(kvm, start, end, ~0, attrs);
+ 
+ 	for (gfn = start; gfn < end; gfn += KVM_PAGES_PER_HPAGE(level - 1)) {
+-		if (hugepage_test_mixed(slot, gfn, level - 1) ||
++		if (kvm_hugepage_test_mixed(slot, gfn, level - 1) ||
+ 		    attrs != kvm_get_memory_attributes(kvm, gfn))
+ 			return false;
+ 	}
+diff --git a/arch/x86/kvm/mmu/mmu_internal.h b/arch/x86/kvm/mmu/mmu_internal.h
+index b2db39ed1d0f..37c6208c9ade 100644
+--- a/arch/x86/kvm/mmu/mmu_internal.h
++++ b/arch/x86/kvm/mmu/mmu_internal.h
+@@ -435,4 +435,13 @@ void disallowed_hugepage_adjust(struct kvm_page_fault *fault, u64 spte, int cur_
+ void track_possible_nx_huge_page(struct kvm *kvm, struct kvm_mmu_page *sp);
+ void untrack_possible_nx_huge_page(struct kvm *kvm, struct kvm_mmu_page *sp);
+ 
++#ifdef CONFIG_KVM_GENERIC_MEMORY_ATTRIBUTES
++bool kvm_hugepage_test_mixed(struct kvm_memory_slot *slot, gfn_t gfn, int level);
++#else
++static inline bool kvm_hugepage_test_mixed(struct kvm_memory_slot *slot, gfn_t gfn, int level)
++{
++	return false;
++}
++#endif
++
+ #endif /* __KVM_X86_MMU_INTERNAL_H */
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index 38b97e9ce466..e60764aa5048 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -1024,6 +1024,17 @@ bool kvm_tdp_mmu_zap_sp(struct kvm *kvm, struct kvm_mmu_page *sp)
+ 	return true;
+ }
+ 
++
++
++/*
++static struct kvm_mmu_page *tdp_mmu_alloc_sp_for_split(struct kvm *kvm,
++						       struct tdp_iter *iter,
++						       bool shared);
++*/
++static struct kvm_mmu_page *tdp_mmu_alloc_sp_for_split(void);
++static int tdp_mmu_split_huge_page(struct kvm *kvm, struct tdp_iter *iter,
++				   struct kvm_mmu_page *sp, bool shared);
++
+ /*
+  * If can_yield is true, will release the MMU lock and reschedule if the
+  * scheduler needs the CPU or there is contention on the MMU lock. If this
+@@ -1035,14 +1046,16 @@ static bool tdp_mmu_zap_leafs(struct kvm *kvm, struct kvm_mmu_page *root,
+ 			      gfn_t start, gfn_t end, bool can_yield, bool flush,
+ 			      bool zap_private)
+ {
++	bool is_private = is_private_sp(root);
++	struct kvm_mmu_page *split_sp = NULL;
+ 	struct tdp_iter iter;
+ 
+ 	end = min(end, tdp_mmu_max_gfn_exclusive());
+ 
+ 	lockdep_assert_held_write(&kvm->mmu_lock);
+ 
+-	WARN_ON_ONCE(zap_private && !is_private_sp(root));
+-	if (!zap_private && is_private_sp(root))
++	WARN_ON_ONCE(zap_private && !is_private);
++	if (!zap_private && is_private)
+ 		return false;
+ 
+ 	/*
+@@ -1066,6 +1079,57 @@ static bool tdp_mmu_zap_leafs(struct kvm *kvm, struct kvm_mmu_page *root,
+ 		    !is_last_spte(iter.old_spte, iter.level))
+ 			continue;
+ 
++		if (is_private && kvm_gfn_shared_mask(kvm) &&
++		    is_large_pte(iter.old_spte)) {
++			gfn_t gfn = iter.gfn & ~kvm_gfn_shared_mask(kvm);
++			gfn_t mask = KVM_PAGES_PER_HPAGE(iter.level) - 1;
++			struct kvm_memory_slot *slot;
++			struct kvm_mmu_page *sp;
++
++			slot = gfn_to_memslot(kvm, gfn);
++			if (kvm_hugepage_test_mixed(slot, gfn, iter.level) ||
++			    (gfn & mask) < start ||
++			    end < (gfn & mask) + KVM_PAGES_PER_HPAGE(iter.level)) {
++				WARN_ON_ONCE(!can_yield);
++				if (split_sp) {
++					sp = split_sp;
++					split_sp = NULL;
++					sp->role = tdp_iter_child_role(&iter);
++				} else {
++					WARN_ON(iter.yielded);
++					if (flush && can_yield) {
++						kvm_flush_remote_tlbs(kvm);
++						flush = false;
++					}
++
++					/* TODO: try atomic alloc without unlock first */
++					rcu_read_unlock();
++					write_unlock(&kvm->mmu_lock);
++					iter.yielded = true;
++					//sp = tdp_mmu_alloc_sp_for_split(kvm, &iter, false);
++					sp = tdp_mmu_alloc_sp_for_split();
++					kvm_alloc_private_spt_for_split(sp, GFP_KERNEL);
++					write_lock(&kvm->mmu_lock);
++					rcu_read_lock();
++
++					if (iter.yielded) {
++						split_sp = sp;
++						continue;
++					}
++				}
++				KVM_BUG_ON(!sp, kvm);
++
++				tdp_mmu_init_sp(sp, iter.sptep, iter.gfn);
++				if (tdp_mmu_split_huge_page(kvm, &iter, sp, false)) {
++					/* force retry on this gfn. */
++					iter.yielded = true;
++					split_sp = sp;
++				} else
++					flush = true;
++				continue;
++			}
++		}
++
+ 		tdp_mmu_iter_set_spte(kvm, &iter, SHADOW_NONPRESENT_VALUE);
+ 
+ 		/*
+@@ -1078,6 +1142,9 @@ static bool tdp_mmu_zap_leafs(struct kvm *kvm, struct kvm_mmu_page *root,
+ 
+ 	rcu_read_unlock();
+ 
++	if (split_sp)
++		tdp_mmu_free_sp(split_sp);
++
+ 	/*
+ 	 * Because this flow zaps _only_ leaf SPTEs, the caller doesn't need
+ 	 * to provide RCU protection as no 'struct kvm_mmu_page' will be freed.
+@@ -1707,8 +1774,7 @@ static int tdp_mmu_split_huge_pages_root(struct kvm *kvm,
+ 			role = tdp_iter_child_role(&iter);
+ 			KVM_BUG_ON(kvm_mmu_page_role_is_private(role) !=
+ 				   is_private_sptep(iter.sptep), kvm);
+-			/* TODO: Large page isn't supported for private SPTE yet. */
+-			//KVM_BUG_ON(kvm_mmu_page_role_is_private(role), kvm);
++
+ 			sp = tdp_mmu_alloc_sp_for_split();
+ 
+ 			if (kvm_mmu_page_role_is_private(role)) {
+-- 
+2.34.1
+

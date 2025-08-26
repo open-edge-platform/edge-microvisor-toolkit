@@ -1,0 +1,78 @@
+From 58d1db2c84b675f6ceccb03ed13b2004bbe8c6d4 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Thu, 23 Dec 2021 13:56:57 -0800
+Subject: [PATCH 091/147] UBUNTU: SAUCE: KVM: TDX: Handle TDX PV rdmsr/wrmsr
+ hypercall
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Wire up TDX PV rdmsr/wrmsr hypercall to the KVM backend function.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit f73bb7d498c7b4f409e206645a9ab40b7165587b)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 03b5ce013c5c..e6a06cf65d76 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1333,6 +1333,41 @@ static int tdx_emulate_mmio(struct kvm_vcpu *vcpu)
+ 	return 1;
+ }
+ 
++static int tdx_emulate_rdmsr(struct kvm_vcpu *vcpu)
++{
++	u32 index = tdvmcall_a0_read(vcpu);
++	u64 data;
++
++	if (!kvm_msr_allowed(vcpu, index, KVM_MSR_FILTER_READ) ||
++	    kvm_get_msr(vcpu, index, &data)) {
++		trace_kvm_msr_read_ex(index);
++		tdvmcall_set_return_code(vcpu, TDVMCALL_INVALID_OPERAND);
++		return 1;
++	}
++	trace_kvm_msr_read(index, data);
++
++	tdvmcall_set_return_code(vcpu, TDVMCALL_SUCCESS);
++	tdvmcall_set_return_val(vcpu, data);
++	return 1;
++}
++
++static int tdx_emulate_wrmsr(struct kvm_vcpu *vcpu)
++{
++	u32 index = tdvmcall_a0_read(vcpu);
++	u64 data = tdvmcall_a1_read(vcpu);
++
++	if (!kvm_msr_allowed(vcpu, index, KVM_MSR_FILTER_WRITE) ||
++	    kvm_set_msr(vcpu, index, data)) {
++		trace_kvm_msr_write_ex(index, data);
++		tdvmcall_set_return_code(vcpu, TDVMCALL_INVALID_OPERAND);
++		return 1;
++	}
++
++	trace_kvm_msr_write(index, data);
++	tdvmcall_set_return_code(vcpu, TDVMCALL_SUCCESS);
++	return 1;
++}
++
+ static int handle_tdvmcall(struct kvm_vcpu *vcpu)
+ {
+ 	if (tdvmcall_exit_type(vcpu))
+@@ -1347,6 +1382,10 @@ static int handle_tdvmcall(struct kvm_vcpu *vcpu)
+ 		return tdx_emulate_io(vcpu);
+ 	case EXIT_REASON_EPT_VIOLATION:
+ 		return tdx_emulate_mmio(vcpu);
++	case EXIT_REASON_MSR_READ:
++		return tdx_emulate_rdmsr(vcpu);
++	case EXIT_REASON_MSR_WRITE:
++		return tdx_emulate_wrmsr(vcpu);
+ 	default:
+ 		break;
+ 	}
+-- 
+2.34.1
+

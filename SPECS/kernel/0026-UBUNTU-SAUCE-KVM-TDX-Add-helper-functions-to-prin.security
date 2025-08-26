@@ -1,0 +1,81 @@
+From 807bb396f92d7329025b4a8fc104d7e9f8d7d9aa Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Fri, 30 Aug 2024 14:42:39 +0800
+Subject: [PATCH 026/147] UBUNTU: SAUCE: KVM: TDX: Add helper functions to
+ print TDX SEAMCALL error
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Add helper functions to print out errors from the TDX module in a uniform
+manner.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Binbin Wu <binbin.wu@linux.intel.com>
+Reviewed-by: Yuan Yao <yuan.yao@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 01b4a1b7431b9fdb16ee976c60a6f35787e58c92)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/Makefile        |  2 +-
+ arch/x86/kvm/vmx/tdx_error.c | 21 +++++++++++++++++++++
+ arch/x86/kvm/vmx/tdx_ops.h   |  4 ++++
+ 3 files changed, 26 insertions(+), 1 deletion(-)
+ create mode 100644 arch/x86/kvm/vmx/tdx_error.c
+
+diff --git a/arch/x86/kvm/Makefile b/arch/x86/kvm/Makefile
+index fec803aff7ad..5c6a6f77e657 100644
+--- a/arch/x86/kvm/Makefile
++++ b/arch/x86/kvm/Makefile
+@@ -20,7 +20,7 @@ kvm-intel-y		+= vmx/vmx.o vmx/vmenter.o vmx/pmu_intel.o vmx/vmcs12.o \
+ 
+ kvm-intel-$(CONFIG_X86_SGX_KVM)	+= vmx/sgx.o
+ kvm-intel-$(CONFIG_KVM_HYPERV)	+= vmx/hyperv.o vmx/hyperv_evmcs.o
+-kvm-intel-$(CONFIG_INTEL_TDX_HOST)	+= vmx/tdx.o
++kvm-intel-$(CONFIG_INTEL_TDX_HOST)	+= vmx/tdx.o vmx/tdx_error.o
+ 
+ kvm-amd-y		+= svm/svm.o svm/vmenter.o svm/pmu.o svm/nested.o svm/avic.o
+ 
+diff --git a/arch/x86/kvm/vmx/tdx_error.c b/arch/x86/kvm/vmx/tdx_error.c
+new file mode 100644
+index 000000000000..42fcabe1f6c7
+--- /dev/null
++++ b/arch/x86/kvm/vmx/tdx_error.c
+@@ -0,0 +1,21 @@
++// SPDX-License-Identifier: GPL-2.0
++/* functions to record TDX SEAMCALL error */
++
++#include <linux/kernel.h>
++#include <linux/bug.h>
++
++#include "tdx_ops.h"
++
++void pr_tdx_error(u64 op, u64 error_code, const struct tdx_module_args *out)
++{
++	if (!out) {
++		pr_err_ratelimited("SEAMCALL (0x%016llx) failed: 0x%016llx\n",
++				   op, error_code);
++		return;
++	}
++
++#define MSG	\
++	"SEAMCALL (0x%016llx) failed: 0x%016llx RCX 0x%016llx RDX 0x%016llx R8 0x%016llx R9 0x%016llx R10 0x%016llx R11 0x%016llx\n"
++	pr_err_ratelimited(MSG, op, error_code, out->rcx, out->rdx, out->r8,
++			   out->r9, out->r10, out->r11);
++}
+diff --git a/arch/x86/kvm/vmx/tdx_ops.h b/arch/x86/kvm/vmx/tdx_ops.h
+index c5bb165b260e..d80212b1daf3 100644
+--- a/arch/x86/kvm/vmx/tdx_ops.h
++++ b/arch/x86/kvm/vmx/tdx_ops.h
+@@ -40,6 +40,10 @@ static inline u64 tdx_seamcall(u64 op, struct tdx_module_args *in,
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_INTEL_TDX_HOST
++void pr_tdx_error(u64 op, u64 error_code, const struct tdx_module_args *out);
++#endif
++
+ static inline u64 tdh_mng_addcx(hpa_t tdr, hpa_t addr)
+ {
+ 	struct tdx_module_args in = {
+-- 
+2.34.1
+

@@ -1,0 +1,65 @@
+From c5a7ce726a6f21e102c2833859e9eebed3952e71 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Thu, 31 Jul 2025 10:09:09 +0000
+Subject: [PATCH 146/147] BUG: warning at
+ kvm_tdp_mmu_fast_pf_get_last_sptep+0x121/0x140
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/kvm/mmu/mmu.c     | 2 +-
+ arch/x86/kvm/mmu/tdp_mmu.c | 5 +++--
+ arch/x86/kvm/mmu/tdp_mmu.h | 2 +-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 6f96d4d75c4e..1aa988fc52ea 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -3509,7 +3509,7 @@ static int fast_page_fault(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault)
+ 		u64 new_spte;
+ 
+ 		if (tdp_mmu_enabled)
+-			sptep = kvm_tdp_mmu_fast_pf_get_last_sptep(vcpu, fault->gfn, &spte);
++			sptep = kvm_tdp_mmu_fast_pf_get_last_sptep(vcpu, fault, &spte);
+ 		else
+ 			sptep = fast_pf_get_last_sptep(vcpu, fault->addr, &spte);
+ 
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index 393725363b30..152a093f13a1 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -2302,15 +2302,16 @@ int kvm_tdp_mmu_get_walk(struct kvm_vcpu *vcpu, u64 addr, u64 *sptes,
+  *
+  * WARNING: This function is only intended to be called during fast_page_fault.
+  */
+-u64 *kvm_tdp_mmu_fast_pf_get_last_sptep(struct kvm_vcpu *vcpu, gfn_t gfn,
++u64 *kvm_tdp_mmu_fast_pf_get_last_sptep(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault,
+ 					u64 *spte)
+ {
+ 	struct tdp_iter iter;
+ 	struct kvm_mmu *mmu = vcpu->arch.mmu;
+ 	tdp_ptep_t sptep = NULL;
++	gfn_t gfn = fault->gfn;
+ 
+ 	/* fast page fault for private GPA isn't supported. */
+-	WARN_ON_ONCE(kvm_is_private_gpa(vcpu->kvm, gfn << PAGE_SHIFT));
++	WARN_ON_ONCE(kvm_is_private_gpa(vcpu->kvm, fault->addr));
+ 
+ 	tdp_mmu_for_each_pte(iter, mmu, false, gfn, gfn + 1) {
+ 		*spte = iter.old_spte;
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.h b/arch/x86/kvm/mmu/tdp_mmu.h
+index fbcf804fb4a3..a6f1eeaf380c 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.h
++++ b/arch/x86/kvm/mmu/tdp_mmu.h
+@@ -65,7 +65,7 @@ static inline void kvm_tdp_mmu_walk_lockless_end(void)
+ 
+ int kvm_tdp_mmu_get_walk(struct kvm_vcpu *vcpu, u64 addr, u64 *sptes,
+ 			 int *root_level);
+-u64 *kvm_tdp_mmu_fast_pf_get_last_sptep(struct kvm_vcpu *vcpu, gfn_t gfn,
++u64 *kvm_tdp_mmu_fast_pf_get_last_sptep(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault,
+ 					u64 *spte);
+ 
+ #ifdef CONFIG_X86_64
+-- 
+2.34.1
+

@@ -1,0 +1,182 @@
+From 0ab15e6cafa2ff6b1ae5f739ece2487885e64c62 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Thu, 6 Oct 2022 13:06:33 +0300
+Subject: [PATCH 09/19] INTEL_DII: mei: add force wake workaround infra
+
+Upon force wake assert the firmware goes into reset.
+Add force wake get/put functions and a reference counter.
+Add a flag that indicates whether the force wake is needed.
+
+V7: Add mei_forcewake_get and mei_forcewake_put service functions
+
+Co-developed-by: Tomas Winkler <tomasw@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/gsc-me.c  |  6 ++++++
+ drivers/misc/mei/hw-me.c   | 43 +++++++++++++++++++++++++++++++++++++-
+ drivers/misc/mei/hw-me.h   |  5 +++++
+ drivers/misc/mei/mei_dev.h | 35 +++++++++++++++++++++++++++++++
+ 4 files changed, 88 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/misc/mei/gsc-me.c b/drivers/misc/mei/gsc-me.c
+index c9ff2104711c3..1941cd75952c0 100644
+--- a/drivers/misc/mei/gsc-me.c
++++ b/drivers/misc/mei/gsc-me.c
+@@ -365,6 +365,12 @@ static int mei_gsc_probe(struct auxiliary_device *aux_dev,
+ 	hw->irq = adev->irq;
+ 	hw->read_fws = mei_gsc_read_hfs;
+ 
++	/* forcewake */
++	dev->forcewake_needed = adev->forcewake_needed;
++	hw->gsc = adev->gsc;
++	hw->forcewake_get = adev->forcewake_get;
++	hw->forcewake_put = adev->forcewake_put;
++
+ 	dev_set_drvdata(device, dev);
+ 
+ 	if (adev->ext_op_mem.start) {
+diff --git a/drivers/misc/mei/hw-me.c b/drivers/misc/mei/hw-me.c
+index ca4ea09a80989..8ae3814a788f2 100644
+--- a/drivers/misc/mei/hw-me.c
++++ b/drivers/misc/mei/hw-me.c
+@@ -1427,6 +1427,44 @@ static int mei_me_hw_reset(struct mei_device *dev, bool intr_enable)
+ 	return 0;
+ }
+ 
++/**
++ * mei_gt_forcewake_get - grab gt forcewake for the client
++ *
++ * @dev: the device structure
++ *
++ * Return: forcewake_count before increase
++ */
++static int mei_gt_forcewake_get(struct mei_device *dev)
++{
++	struct mei_me_hw *hw = to_me_hw(dev);
++
++	if (!hw->forcewake_get)
++		return 0;
++	dev_dbg(dev->dev, "Forcewake get %d\n", dev->forcewake_count);
++	hw->forcewake_get(hw->gsc);
++	return dev->forcewake_count++;
++}
++
++/**
++ * mei_gt_forcewake_put - release gt forcewake for the client
++ *
++ * @dev: the device structure
++ *
++ * Return: forcewake_count before decrease
++ */
++static int mei_gt_forcewake_put(struct mei_device *dev)
++{
++	struct mei_me_hw *hw = to_me_hw(dev);
++
++	if (!hw->forcewake_put)
++		return 0;
++	dev_dbg(dev->dev, "Forcewake put %d\n", dev->forcewake_count);
++	if (dev->forcewake_count <= 0)
++		return 0;
++	hw->forcewake_put(hw->gsc);
++	return dev->forcewake_count--;
++}
++
+ /**
+  * mei_me_irq_quick_handler - The ISR of the MEI device
+  *
+@@ -1666,7 +1704,10 @@ static const struct mei_hw_ops mei_me_hw_ops = {
+ 
+ 	.rdbuf_full_slots = mei_me_count_full_read_slots,
+ 	.read_hdr = mei_me_mecbrw_read,
+-	.read = mei_me_read_slots
++	.read = mei_me_read_slots,
++
++	.forcewake_get = mei_gt_forcewake_get,
++	.forcewake_put = mei_gt_forcewake_put,
+ };
+ 
+ /**
+diff --git a/drivers/misc/mei/hw-me.h b/drivers/misc/mei/hw-me.h
+index 7128897885221..4fe60df1932d8 100644
+--- a/drivers/misc/mei/hw-me.h
++++ b/drivers/misc/mei/hw-me.h
+@@ -69,6 +69,11 @@ struct mei_me_hw {
+ 	struct task_struct *polling_thread;
+ 	wait_queue_head_t wait_active;
+ 	bool is_active;
++	/* forcewake wa */
++	void *gsc;
++	void (*forcewake_get)(void *gsc);
++	void (*forcewake_put)(void *gsc);
++
+ };
+ 
+ #define to_me_hw(dev) (struct mei_me_hw *)((dev)->hw)
+diff --git a/drivers/misc/mei/mei_dev.h b/drivers/misc/mei/mei_dev.h
+index aa092ef795f6a..c03328e4b0fad 100644
+--- a/drivers/misc/mei/mei_dev.h
++++ b/drivers/misc/mei/mei_dev.h
+@@ -391,6 +391,9 @@ struct mei_hw_ops {
+ 	u32 (*read_hdr)(const struct mei_device *dev);
+ 	int (*read)(struct mei_device *dev,
+ 		     unsigned char *buf, unsigned long len);
++
++	int (*forcewake_get)(struct mei_device *dev);
++	int (*forcewake_put)(struct mei_device *dev);
+ };
+ 
+ /* MEI bus API*/
+@@ -554,6 +557,9 @@ struct mei_dev_timeouts {
+  * @saved_fw_status_flag : flag indicating that firmware status was saved
+  * @gsc_reset_to_pxp     : state of reset to the PXP mode
+  *
++ * @forcewake_needed     : forcewake should be asserted before operations
++ * @forcewake_count      : forcewake status counter
++ *
+  * @ops:        : hw specific operations
+  * @hw          : hw specific data
+  */
+@@ -656,6 +662,9 @@ struct mei_device {
+ 	bool saved_fw_status_flag;
+ 	enum mei_dev_reset_to_pxp gsc_reset_to_pxp;
+ 
++	bool forcewake_needed;
++	int forcewake_count;
++
+ 	const struct mei_hw_ops *ops;
+ 	char hw[] __aligned(sizeof(void *));
+ };
+@@ -925,4 +934,30 @@ static inline bool kind_is_gscfi(struct mei_device *dev)
+ 	/* check kind for NULL because it may be not set, like at the fist call to hw_start */
+ 	return dev->kind && (strcmp(dev->kind, "gscfi") == 0);
+ }
++
++/**
++ * mei_forcewake_get - run forcewake_get if forcewake is needed
++ *
++ * @dev: the device structure
++ *
++ */
++static inline void mei_forcewake_get(struct mei_device *dev)
++{
++	if (!dev->forcewake_needed)
++		return;
++	dev->ops->forcewake_get(dev);
++}
++
++/**
++ * mei_forcewake_put - run forcewake_put if forcewake is needed
++ *
++ * @dev: the device structure
++ *
++ */
++static inline void mei_forcewake_put(struct mei_device *dev)
++{
++	if (!dev->forcewake_needed)
++		return;
++	dev->ops->forcewake_put(dev);
++}
+ #endif
+-- 
+2.25.1
+

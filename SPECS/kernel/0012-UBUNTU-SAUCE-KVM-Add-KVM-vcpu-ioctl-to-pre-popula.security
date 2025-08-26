@@ -1,0 +1,148 @@
+From dbb6880dd07a7e879f1fa710bbd8d111900fe25d Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 28 Aug 2024 15:47:38 +0800
+Subject: [PATCH 012/147] UBUNTU: SAUCE: KVM: Add KVM vcpu ioctl to
+ pre-populate guest memory
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Add new ioctl KVM_MEMORY_MAPPING in the kvm common code. It iterates on the
+memory range and call arch specific function.  Add stub function as weak
+symbol.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 65b9fa7c6a6fd07bfef3347d10a6927e610e9cfd)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ include/linux/kvm_host.h |  4 +++
+ include/uapi/linux/kvm.h | 10 ++++++
+ virt/kvm/kvm_main.c      | 67 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 81 insertions(+)
+
+diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
+index fead709e0028..f4ccdded3c8a 100644
+--- a/include/linux/kvm_host.h
++++ b/include/linux/kvm_host.h
+@@ -2519,4 +2519,8 @@ long kvm_arch_vcpu_pre_fault_memory(struct kvm_vcpu *vcpu,
+ 				    struct kvm_pre_fault_memory *range);
+ #endif
+ 
++void kvm_arch_vcpu_pre_memory_mapping(struct kvm_vcpu *vcpu);
++int kvm_arch_vcpu_memory_mapping(struct kvm_vcpu *vcpu,
++				 struct kvm_memory_mapping *mapping);
++
+ #endif
+diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
+index 637efc055145..a4cc561e4834 100644
+--- a/include/uapi/linux/kvm.h
++++ b/include/uapi/linux/kvm.h
+@@ -933,6 +933,7 @@ struct kvm_enable_cap {
+ #define KVM_CAP_PRE_FAULT_MEMORY 236
+ #define KVM_CAP_X86_APIC_BUS_CYCLES_NS 237
+ #define KVM_CAP_X86_GUEST_MODE 238
++#define KVM_CAP_MEMORY_MAPPING 239
+ 
+ struct kvm_irq_routing_irqchip {
+ 	__u32 irqchip;
+@@ -1573,4 +1574,13 @@ struct kvm_pre_fault_memory {
+ 	__u64 padding[5];
+ };
+ 
++#define KVM_MEMORY_MAPPING	_IOWR(KVMIO, 0xd5, struct kvm_memory_mapping)
++
++struct kvm_memory_mapping {
++	__u64 base_gfn;
++	__u64 nr_pages;
++	__u64 flags;
++	__u64 source;
++};
++
+ #endif /* __LINUX_KVM_H */
+diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
+index ad80e1d2d21f..5d6cc9effc63 100644
+--- a/virt/kvm/kvm_main.c
++++ b/virt/kvm/kvm_main.c
+@@ -4445,6 +4445,62 @@ static int kvm_vcpu_pre_fault_memory(struct kvm_vcpu *vcpu,
+ }
+ #endif
+ 
++__weak void kvm_arch_vcpu_pre_memory_mapping(struct kvm_vcpu *vcpu)
++{
++}
++
++__weak int kvm_arch_vcpu_memory_mapping(struct kvm_vcpu *vcpu,
++					struct kvm_memory_mapping *mapping)
++{
++	return -EOPNOTSUPP;
++}
++
++static int kvm_vcpu_memory_mapping(struct kvm_vcpu *vcpu,
++				   struct kvm_memory_mapping *mapping)
++{
++	bool added = false;
++	int idx, r = 0;
++
++	/* flags isn't used yet. */
++	if (mapping->flags)
++		return -EINVAL;
++
++	/* Sanity check */
++	if (!IS_ALIGNED(mapping->source, PAGE_SIZE) ||
++	    !mapping->nr_pages ||
++	    mapping->nr_pages & GENMASK_ULL(63, 63 - PAGE_SHIFT) ||
++	    mapping->base_gfn + mapping->nr_pages <= mapping->base_gfn)
++		return -EINVAL;
++
++	vcpu_load(vcpu);
++	idx = srcu_read_lock(&vcpu->kvm->srcu);
++	kvm_arch_vcpu_pre_memory_mapping(vcpu);
++
++	while (mapping->nr_pages) {
++		if (signal_pending(current)) {
++			r = -ERESTARTSYS;
++			break;
++		}
++
++		if (need_resched())
++			cond_resched();
++
++		r = kvm_arch_vcpu_memory_mapping(vcpu, mapping);
++		if (r)
++			break;
++
++		added = true;
++	}
++
++	srcu_read_unlock(&vcpu->kvm->srcu, idx);
++	vcpu_put(vcpu);
++
++	if (added && mapping->nr_pages > 0)
++		r = -EAGAIN;
++
++	return r;
++}
++
+ static long kvm_vcpu_ioctl(struct file *filp,
+ 			   unsigned int ioctl, unsigned long arg)
+ {
+@@ -4706,6 +4762,17 @@ static long kvm_vcpu_compat_ioctl(struct file *filp,
+ 			r = kvm_vcpu_ioctl_set_sigmask(vcpu, NULL);
+ 		break;
+ 	}
++	case KVM_MEMORY_MAPPING: {
++		struct kvm_memory_mapping mapping;
++
++		r = -EFAULT;
++		if (copy_from_user(&mapping, argp, sizeof(mapping)))
++			break;
++		r = kvm_vcpu_memory_mapping(vcpu, &mapping);
++		if (copy_to_user(argp, &mapping, sizeof(mapping)))
++			r = -EFAULT;
++		break;
++	}
+ 	default:
+ 		r = kvm_vcpu_ioctl(filp, ioctl, arg);
+ 	}
+-- 
+2.34.1
+

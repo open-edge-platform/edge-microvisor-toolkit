@@ -1,0 +1,73 @@
+From c7b14a83f55acdb413be144f2cc27d28d84d4ea7 Mon Sep 17 00:00:00 2001
+From: Kai Huang <kai.huang@intel.com>
+Date: Thu, 4 Jan 2024 23:45:39 +1300
+Subject: [PATCH 006/147] UBUNTU: SAUCE: x86/virt/tdx: Export TDX KeyID
+ information
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Each TDX guest must be protected by its own unique TDX KeyID.  KVM will
+need to tell the TDX module the unique KeyID for a TDX guest when KVM
+creates it.
+
+Export the TDX KeyID range that can be used by TDX guests for KVM to
+use.  KVM can then manage these KeyIDs and assign one for each TDX guest
+when it is created.
+
+Each TDX guest has a root control structure called "Trust Domain Root"
+(TDR).  Unlike the rest of the TDX guest, the TDR is protected by the
+TDX global KeyID.  When tearing down the TDR, KVM will need to pass the
+TDX global KeyID explicitly to the TDX module to flush cache associated
+to the TDR.
+
+Also export the TDX global KeyID for KVM to tear down the TDR.
+
+Signed-off-by: Kai Huang <kai.huang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 19b93a2aa62a0e5724321a497e5cab951fb08a1c)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/tdx.h  |  5 +++++
+ arch/x86/virt/vmx/tdx/tdx.c | 11 ++++++++---
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/include/asm/tdx.h b/arch/x86/include/asm/tdx.h
+index eba915c4c0e6..c7348f77b9cc 100644
+--- a/arch/x86/include/asm/tdx.h
++++ b/arch/x86/include/asm/tdx.h
+@@ -88,6 +88,11 @@ static inline long tdx_kvm_hypercall(unsigned int nr, unsigned long p1,
+ #endif /* CONFIG_INTEL_TDX_GUEST && CONFIG_KVM_GUEST */
+ 
+ #ifdef CONFIG_INTEL_TDX_HOST
++
++extern u32 tdx_global_keyid;
++extern u32 tdx_guest_keyid_start;
++extern u32 tdx_nr_guest_keyids;
++
+ u64 __seamcall(u64 fn, struct tdx_module_args *args);
+ u64 __seamcall_ret(u64 fn, struct tdx_module_args *args);
+ u64 __seamcall_saved_ret(u64 fn, struct tdx_module_args *args);
+diff --git a/arch/x86/virt/vmx/tdx/tdx.c b/arch/x86/virt/vmx/tdx/tdx.c
+index 811b8bd3f6be..052a2a19134d 100644
+--- a/arch/x86/virt/vmx/tdx/tdx.c
++++ b/arch/x86/virt/vmx/tdx/tdx.c
+@@ -38,9 +38,14 @@
+ #include <asm/mce.h>
+ #include "tdx.h"
+ 
+-static u32 tdx_global_keyid __ro_after_init;
+-static u32 tdx_guest_keyid_start __ro_after_init;
+-static u32 tdx_nr_guest_keyids __ro_after_init;
++u32 tdx_global_keyid __ro_after_init;
++EXPORT_SYMBOL_GPL(tdx_global_keyid);
++
++u32 tdx_guest_keyid_start __ro_after_init;
++EXPORT_SYMBOL_GPL(tdx_guest_keyid_start);
++
++u32 tdx_nr_guest_keyids __ro_after_init;
++EXPORT_SYMBOL_GPL(tdx_nr_guest_keyids);
+ 
+ static DEFINE_PER_CPU(bool, tdx_lp_initialized);
+ 
+-- 
+2.34.1
+

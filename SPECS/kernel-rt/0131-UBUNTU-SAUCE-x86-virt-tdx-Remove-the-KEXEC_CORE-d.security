@@ -1,0 +1,32 @@
+From af157a474dcbb01fc7d91049bded4f6ded9e6138 Mon Sep 17 00:00:00 2001
+From: Kai Huang <kai.huang@intel.com>
+Date: Thu, 18 Apr 2024 23:48:04 +1200
+Subject: [PATCH 131/147] UBUNTU: SAUCE: x86/virt/tdx: Remove the !KEXEC_CORE
+ dependency
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Now TDX host can work with kexec().  Remove the !KEXEC_CORE dependency.
+
+Signed-off-by: Kai Huang <kai.huang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit dced6f73ceb47bef3ae858b59b881a34e72c3a8c)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index cdd35d95c153..07f9ed8c2947 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -1986,7 +1986,6 @@ config INTEL_TDX_HOST
+ 	depends on X86_X2APIC
+ 	select ARCH_KEEP_MEMBLOCK
+ 	depends on CONTIG_ALLOC
+-	depends on !KEXEC_CORE
+ 	depends on X86_MCE
+ 	help
+ 	  Intel Trust Domain Extensions (TDX) protects guest VMs from malicious
+-- 
+2.34.1
+

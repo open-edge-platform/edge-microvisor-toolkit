@@ -1,0 +1,76 @@
+From 03941bf7d95dccfe11bdb890f2e1445ace7c9210 Mon Sep 17 00:00:00 2001
+From: Feng Tang <feng.tang@intel.com>
+Date: Wed, 9 Oct 2024 20:17:47 +0800
+Subject: [PATCH 140/147] UBUNTU: SAUCE: KVM: SVM: Fix compiling issue about
+ sev_private_max_mapping_level()
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+The function API has been changed with 5 parameters, adjust the
+implementation to it, without functional change.
+
+Signed-off-by: Feng Tang <feng.tang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 1bd2b0afd2e6f4bf35999ff69b586891c911b48b)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/svm/sev.c | 11 +++++++----
+ arch/x86/kvm/svm/svm.h |  7 +++++--
+ 2 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/arch/x86/kvm/svm/sev.c b/arch/x86/kvm/svm/sev.c
+index c4ae73541fc5..1860a9543c57 100644
+--- a/arch/x86/kvm/svm/sev.c
++++ b/arch/x86/kvm/svm/sev.c
+@@ -4949,17 +4949,20 @@ void sev_gmem_invalidate(kvm_pfn_t start, kvm_pfn_t end)
+ 	}
+ }
+ 
+-int sev_private_max_mapping_level(struct kvm *kvm, kvm_pfn_t pfn)
++int sev_private_max_mapping_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
++				  bool is_private, u8 *max_level)
+ {
+ 	int level, rc;
+ 	bool assigned;
+ 
+ 	if (!sev_snp_guest(kvm))
+-		return 0;
++		*max_level = 0;
+ 
+ 	rc = snp_lookup_rmpentry(pfn, &assigned, &level);
+ 	if (rc || !assigned)
+-		return PG_LEVEL_4K;
++		*max_level = PG_LEVEL_4K;
++	else
++		*max_level = level;
+ 
+-	return level;
++	return 0;
+ }
+diff --git a/arch/x86/kvm/svm/svm.h b/arch/x86/kvm/svm/svm.h
+index d114efac7af7..85584c7e9122 100644
+--- a/arch/x86/kvm/svm/svm.h
++++ b/arch/x86/kvm/svm/svm.h
+@@ -762,7 +762,8 @@ void sev_handle_rmp_fault(struct kvm_vcpu *vcpu, gpa_t gpa, u64 error_code);
+ void sev_snp_init_protected_guest_state(struct kvm_vcpu *vcpu);
+ int sev_gmem_prepare(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn, int max_order);
+ void sev_gmem_invalidate(kvm_pfn_t start, kvm_pfn_t end);
+-int sev_private_max_mapping_level(struct kvm *kvm, kvm_pfn_t pfn);
++int sev_private_max_mapping_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
++				  bool is_private, u8 *max_level);
+ #else
+ static inline struct page *snp_safe_alloc_page_node(int node, gfp_t gfp)
+ {
+@@ -789,7 +790,9 @@ static inline int sev_gmem_prepare(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn, in
+ 	return 0;
+ }
+ static inline void sev_gmem_invalidate(kvm_pfn_t start, kvm_pfn_t end) {}
+-static inline int sev_private_max_mapping_level(struct kvm *kvm, kvm_pfn_t pfn)
++
++static inline int sev_private_max_mapping_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
++				  bool is_private, u8 *max_level)
+ {
+ 	return 0;
+ }
+-- 
+2.34.1
+

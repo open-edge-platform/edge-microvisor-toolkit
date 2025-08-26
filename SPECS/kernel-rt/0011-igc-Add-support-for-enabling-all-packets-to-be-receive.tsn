@@ -1,0 +1,31 @@
+From 6ed7fcef5f68427c29cf89dd29bc43f77e9c0222 Mon Sep 17 00:00:00 2001
+From: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Date: Wed, 7 Apr 2021 00:39:25 +0800
+Subject: [PATCH 11/32] igc: Add support for enabling all packets to be
+ received
+
+Allows all packets (the packets in which errors were detected
+inclusive) to be received.
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Signed-off-by: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc_main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
+index a81e9240cf6c8..487a356ca0370 100644
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -7278,6 +7278,7 @@ static int igc_probe(struct pci_dev *pdev,
+ 
+ 	/* copy netdev features into list of user selectable features */
+ 	netdev->hw_features |= NETIF_F_NTUPLE;
++	netdev->hw_features |= NETIF_F_RXALL;
+ 	netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_TX;
+ 	netdev->hw_features |= NETIF_F_HW_VLAN_CTAG_RX;
+ 	netdev->hw_features |= netdev->features;
+-- 
+2.25.1
+

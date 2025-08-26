@@ -1,0 +1,109 @@
+From d26bb2313f163678f7754672a42c436fa301ea51 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 11 Jan 2023 17:59:58 -0800
+Subject: [PATCH 056/147] UBUNTU: SAUCE: KVM: TDX: MTRR: implement
+ get_mt_mask() for TDX
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Because TDX virtualize cpuid[0x1].EDX[MTRR: bit 12] to fixed 1, guest TD
+thinks MTRR is supported.  Although TDX supports only WB for private GPA,
+it's desirable to support MTRR for shared GPA.  As guest access to MTRR
+MSRs causes #VE and KVM/x86 tracks the values of MTRR MSRs, the remaining
+part is to implement get_mt_mask method for TDX for shared GPA.
+
+Suggested-by: Kai Huang <kai.huang@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit f2d89eba1d161f82c58bf0a41c199f8128e0015c)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/main.c    | 10 +++++++++-
+ arch/x86/kvm/vmx/tdx.c     | 23 +++++++++++++++++++++++
+ arch/x86/kvm/vmx/x86_ops.h |  2 ++
+ 3 files changed, 34 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 4236382b359f..c3c523d77e71 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -223,6 +223,14 @@ static void vt_load_mmu_pgd(struct kvm_vcpu *vcpu, hpa_t root_hpa,
+ 	vmx_load_mmu_pgd(vcpu, root_hpa, pgd_level);
+ }
+ 
++static u8 vt_get_mt_mask(struct kvm_vcpu *vcpu, gfn_t gfn, bool is_mmio)
++{
++	if (is_td_vcpu(vcpu))
++		return tdx_get_mt_mask(vcpu, gfn, is_mmio);
++
++	return vmx_get_mt_mask(vcpu, gfn, is_mmio);
++}
++
+ static int vt_mem_enc_ioctl(struct kvm *kvm, void __user *argp)
+ {
+ 	if (!is_td(kvm))
+@@ -355,7 +363,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 
+ 	.set_tss_addr = vmx_set_tss_addr,
+ 	.set_identity_map_addr = vmx_set_identity_map_addr,
+-	.get_mt_mask = vmx_get_mt_mask,
++	.get_mt_mask = vt_get_mt_mask,
+ 
+ 	.get_exit_info = vmx_get_exit_info,
+ 
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 8d226a9d0392..b6387846b7a9 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -394,6 +394,29 @@ int tdx_vm_init(struct kvm *kvm)
+ 	return 0;
+ }
+ 
++u8 tdx_get_mt_mask(struct kvm_vcpu *vcpu, gfn_t gfn, bool is_mmio)
++{
++	if (is_mmio)
++		return MTRR_TYPE_UNCACHABLE << VMX_EPT_MT_EPTE_SHIFT;
++
++	if (!kvm_arch_has_noncoherent_dma(vcpu->kvm))
++		return (MTRR_TYPE_WRBACK << VMX_EPT_MT_EPTE_SHIFT) | VMX_EPT_IPAT_BIT;
++
++	/*
++	 * TDX enforces CR0.CD = 0 and KVM MTRR emulation enforces writeback.
++	 * TODO: implement MTRR MSR emulation so that
++	 * MTRRCap: SMRR=0: SMRR interface unsupported
++	 *          WC=0: write combining unsupported
++	 *          FIX=0: Fixed range registers unsupported
++	 *          VCNT=0: number of variable range regitsers = 0
++	 * MTRRDefType: E=1, FE=0, type=writeback only. Don't allow other value.
++	 *              E=1: enable MTRR
++	 *              FE=0: disable fixed range MTRRs
++	 *              type: default memory type=writeback
++	 */
++	return MTRR_TYPE_WRBACK << VMX_EPT_MT_EPTE_SHIFT;
++}
++
+ int tdx_vcpu_create(struct kvm_vcpu *vcpu)
+ {
+ 	struct kvm_tdx *kvm_tdx = to_kvm_tdx(vcpu->kvm);
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index 902f3cb397fc..aceec37aefec 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -148,6 +148,7 @@ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp);
+ int tdx_vcpu_create(struct kvm_vcpu *vcpu);
+ void tdx_vcpu_free(struct kvm_vcpu *vcpu);
+ void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event);
++u8 tdx_get_mt_mask(struct kvm_vcpu *vcpu, gfn_t gfn, bool is_mmio);
+ 
+ int tdx_vcpu_ioctl(struct kvm_vcpu *vcpu, void __user *argp);
+ 
+@@ -175,6 +176,7 @@ static inline int tdx_vm_ioctl(struct kvm *kvm, void __user *argp) { return -EOP
+ static inline int tdx_vcpu_create(struct kvm_vcpu *vcpu) { return -EOPNOTSUPP; }
+ static inline void tdx_vcpu_free(struct kvm_vcpu *vcpu) {}
+ static inline void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event) {}
++static inline u8 tdx_get_mt_mask(struct kvm_vcpu *vcpu, gfn_t gfn, bool is_mmio) { return 0; }
+ 
+ static inline int tdx_vcpu_ioctl(struct kvm_vcpu *vcpu, void __user *argp) { return -EOPNOTSUPP; }
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,239 @@
+From 5b39d5aa7069c7765b2268b5ad54f406eec73aa8 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <sean.j.christopherson@intel.com>
+Date: Mon, 23 Sep 2024 09:06:27 +0800
+Subject: [PATCH 110/147] UBUNTU: SAUCE: KVM: Add transparent hugepage support
+ for dedicated guest memory
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Extended guest_memfd to allow backing guest memory with transparent
+hugepages.  Require userspace to opt-in via a flag even though there's no
+known/anticipated use case for forcing small pages as THP is optional,
+i.e. to avoid ending up in a situation where userspace is unaware that
+KVM can't provide hugepages.
+
+For simplicity, require the guest_memfd size to be a multiple of the
+hugepage size, e.g. so that KVM doesn't need to do bounds checking when
+deciding whether or not to allocate a huge folio.
+
+When reporting the max order when KVM gets a pfn from guest_memfd, force
+order-0 pages if the hugepage is not fully contained by the memslot
+binding, e.g. if userspace requested hugepages but punches a hole in the
+memslot bindings in order to emulate x86's VGA hole.
+
+[feng fwd porting to 6.11-rc4]
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Link: https://lore.kernel.org/r/20231027182217.3615211-18-seanjc@google.com
+(cherry picked from github.com/intel/kernel-downstream commit 7fd94cc998a477aeb10a13e283bb40359359ef58)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ Documentation/virt/kvm/api.rst |   7 +++
+ include/uapi/linux/kvm.h       |   2 +
+ virt/kvm/guest_memfd.c         | 102 +++++++++++++++++++++++++++++++--
+ 3 files changed, 106 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/virt/kvm/api.rst b/Documentation/virt/kvm/api.rst
+index e71fe0898e8e..9dbf487d2aae 100644
+--- a/Documentation/virt/kvm/api.rst
++++ b/Documentation/virt/kvm/api.rst
+@@ -6371,6 +6371,8 @@ and cannot be resized  (guest_memfd files do however support PUNCH_HOLE).
+ 	__u64 reserved[6];
+   };
+ 
++  #define KVM_GUEST_MEMFD_ALLOW_HUGEPAGE         (1ULL << 0)
++
+ Conceptually, the inode backing a guest_memfd file represents physical memory,
+ i.e. is coupled to the virtual machine as a thing, not to a "struct kvm".  The
+ file itself, which is bound to a "struct kvm", is that instance's view of the
+@@ -6387,6 +6389,11 @@ most one mapping per page, i.e. binding multiple memory regions to a single
+ guest_memfd range is not allowed (any number of memory regions can be bound to
+ a single guest_memfd file, but the bound ranges must not overlap).
+ 
++If KVM_GUEST_MEMFD_ALLOW_HUGEPAGE is set in flags, KVM will attempt to allocate
++and map hugepages for the guest_memfd file.  This is currently best effort.  If
++KVM_GUEST_MEMFD_ALLOW_HUGEPAGE is set, the size must be aligned to the maximum
++transparent hugepage size supported by the kernel
++
+ See KVM_SET_USER_MEMORY_REGION2 for additional details.
+ 
+ 4.143 KVM_PRE_FAULT_MEMORY
+diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
+index 1d80d8d5ed5e..2a7334d258be 100644
+--- a/include/uapi/linux/kvm.h
++++ b/include/uapi/linux/kvm.h
+@@ -1663,6 +1663,8 @@ struct kvm_pre_fault_memory {
+ 	__u64 padding[5];
+ };
+ 
++#define KVM_GUEST_MEMFD_ALLOW_HUGEPAGE		(1ULL << 0)
++
+ #define KVM_MEMORY_MAPPING	_IOWR(KVMIO, 0xd5, struct kvm_memory_mapping)
+ 
+ struct kvm_memory_mapping {
+diff --git a/virt/kvm/guest_memfd.c b/virt/kvm/guest_memfd.c
+index 9041b1a73a1e..0178735b9efc 100644
+--- a/virt/kvm/guest_memfd.c
++++ b/virt/kvm/guest_memfd.c
+@@ -87,6 +87,37 @@ static int kvm_gmem_prepare_folio(struct kvm *kvm, struct kvm_memory_slot *slot,
+ 	return r;
+ }
+ 
++static struct folio *kvm_gmem_get_huge_folio(struct inode *inode, pgoff_t index)
++{
++#ifdef CONFIG_TRANSPARENT_HUGEPAGE
++	unsigned long huge_index = round_down(index, HPAGE_PMD_NR);
++	unsigned long flags = (unsigned long)inode->i_private;
++	struct address_space *mapping  = inode->i_mapping;
++	gfp_t gfp = mapping_gfp_mask(mapping);
++	struct folio *folio;
++
++	if (!(flags & KVM_GUEST_MEMFD_ALLOW_HUGEPAGE))
++		return NULL;
++
++	if (filemap_range_has_page(mapping, huge_index << PAGE_SHIFT,
++				   (huge_index + HPAGE_PMD_NR - 1) << PAGE_SHIFT))
++		return NULL;
++
++	folio = filemap_alloc_folio(gfp, HPAGE_PMD_ORDER);
++	if (!folio)
++		return NULL;
++
++	if (filemap_add_folio(mapping, folio, huge_index, gfp)) {
++		folio_put(folio);
++		return NULL;
++	}
++
++	return folio;
++#else
++	return NULL;
++#endif
++}
++
+ /*
+  * Returns a locked folio on success.  The caller is responsible for
+  * setting the up-to-date flag before the memory is mapped into the guest.
+@@ -98,8 +129,40 @@ static int kvm_gmem_prepare_folio(struct kvm *kvm, struct kvm_memory_slot *slot,
+  */
+ static struct folio *kvm_gmem_get_folio(struct inode *inode, pgoff_t index)
+ {
+-	/* TODO: Support huge pages. */
+-	return filemap_grab_folio(inode->i_mapping, index);
++	struct folio *folio;
++
++	folio = kvm_gmem_get_huge_folio(inode, index);
++	if (!folio) {
++		folio = filemap_grab_folio(inode->i_mapping, index);
++		if (IS_ERR_OR_NULL(folio))
++			return NULL;
++	}
++
++	/*
++	 * Use the up-to-date flag to track whether or not the memory has been
++	 * zeroed before being handed off to the guest.  There is no backing
++	 * storage for the memory, so the folio will remain up-to-date until
++	 * it's removed.
++	 *
++	 * TODO: Skip clearing pages when trusted firmware will do it when
++	 * assigning memory to the guest.
++	 */
++	if (!folio_test_uptodate(folio)) {
++		unsigned long nr_pages = folio_nr_pages(folio);
++		unsigned long i;
++
++		for (i = 0; i < nr_pages; i++)
++			clear_highpage(folio_page(folio, i));
++
++		folio_mark_uptodate(folio);
++	}
++
++	/*
++	 * Ignore accessed, referenced, and dirty flags.  The memory is
++	 * unevictable and there is no storage to write back to.
++	 */
++	return folio;
++
+ }
+ 
+ static void kvm_gmem_invalidate_begin(struct kvm_gmem *gmem, pgoff_t start,
+@@ -431,6 +494,7 @@ static int __kvm_gmem_create(struct kvm *kvm, loff_t size, u64 flags)
+ 	inode->i_mode |= S_IFREG;
+ 	inode->i_size = size;
+ 	mapping_set_gfp_mask(inode->i_mapping, GFP_HIGHUSER);
++	mapping_set_large_folios(inode->i_mapping);
+ 	mapping_set_inaccessible(inode->i_mapping);
+ 	/* Unmovable mappings are supposed to be marked unevictable as well. */
+ 	WARN_ON_ONCE(!mapping_unevictable(inode->i_mapping));
+@@ -456,12 +520,21 @@ int kvm_gmem_create(struct kvm *kvm, struct kvm_create_guest_memfd *args)
+ 	u64 flags = args->flags;
+ 	u64 valid_flags = 0;
+ 
++	if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
++		valid_flags |= KVM_GUEST_MEMFD_ALLOW_HUGEPAGE;
++
+ 	if (flags & ~valid_flags)
+ 		return -EINVAL;
+ 
+ 	if (size <= 0 || !PAGE_ALIGNED(size))
+ 		return -EINVAL;
+ 
++#ifdef CONFIG_TRANSPARENT_HUGEPAGE
++	if ((flags & KVM_GUEST_MEMFD_ALLOW_HUGEPAGE) &&
++	    !IS_ALIGNED(size, HPAGE_PMD_SIZE))
++		return -EINVAL;
++#endif
++
+ 	return __kvm_gmem_create(kvm, size, flags);
+ }
+ 
+@@ -559,8 +632,9 @@ __kvm_gmem_get_pfn(struct file *file, struct kvm_memory_slot *slot,
+ 		   gfn_t gfn, kvm_pfn_t *pfn, bool *is_prepared,
+ 		   int *max_order)
+ {
+-	pgoff_t index = gfn - slot->base_gfn + slot->gmem.pgoff;
+-	struct kvm_gmem *gmem = file->private_data;
++	pgoff_t index, huge_index;
++//	struct kvm_gmem *gmem = file->private_data;
++	struct kvm_gmem *gmem;
+ 	struct folio *folio;
+ 
+ 	if (file != slot->gmem.file) {
+@@ -569,6 +643,8 @@ __kvm_gmem_get_pfn(struct file *file, struct kvm_memory_slot *slot,
+ 	}
+ 
+ 	gmem = file->private_data;
++
++	index = gfn - slot->base_gfn + slot->gmem.pgoff;
+ 	if (xa_load(&gmem->bindings, index) != slot) {
+ 		WARN_ON_ONCE(xa_load(&gmem->bindings, index));
+ 		return ERR_PTR(-EIO);
+@@ -585,9 +661,25 @@ __kvm_gmem_get_pfn(struct file *file, struct kvm_memory_slot *slot,
+ 	}
+ 
+ 	*pfn = folio_file_pfn(folio, index);
+-	if (max_order)
++	if (!max_order)
++		goto success;
++
++	*max_order = folio_order(folio);
++	if (!*max_order)
++		goto success;
++
++	/*
++	 * The folio can be mapped with a hugepage if and only if the folio is
++	 * fully contained by the range the memslot is bound to.  Note, the
++	 * caller is responsible for handling gfn alignment, this only deals
++	 * with the file binding.
++	 */
++	huge_index = ALIGN(index, 1ull << *max_order);
++	if (huge_index < ALIGN(slot->gmem.pgoff, 1ull << *max_order) ||
++	    huge_index + (1ull << *max_order) > slot->gmem.pgoff + slot->npages)
+ 		*max_order = 0;
+ 
++success:
+ 	*is_prepared = folio_test_uptodate(folio);
+ 	return folio;
+ }
+-- 
+2.34.1
+

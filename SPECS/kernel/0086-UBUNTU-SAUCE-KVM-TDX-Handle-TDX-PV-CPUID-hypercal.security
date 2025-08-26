@@ -1,0 +1,59 @@
+From 672f191c022b9e0acb0497424d94338a1eedf8bc Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Thu, 23 Dec 2021 13:50:48 -0800
+Subject: [PATCH 086/147] UBUNTU: SAUCE: KVM: TDX: Handle TDX PV CPUID
+ hypercall
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Wire up TDX PV CPUID hypercall to the KVM backend function.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 97e7eabb48128861b4ce562cd44776af32d82838)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 66606e7fb2ca..3a187ff3f284 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1114,12 +1114,34 @@ static int tdx_vp_vmcall_to_user(struct kvm_vcpu *vcpu)
+ 	return 0;
+ }
+ 
++static int tdx_emulate_cpuid(struct kvm_vcpu *vcpu)
++{
++	u32 eax, ebx, ecx, edx;
++
++	/* EAX and ECX for cpuid is stored in R12 and R13. */
++	eax = tdvmcall_a0_read(vcpu);
++	ecx = tdvmcall_a1_read(vcpu);
++
++	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
++
++	tdvmcall_a0_write(vcpu, eax);
++	tdvmcall_a1_write(vcpu, ebx);
++	tdvmcall_a2_write(vcpu, ecx);
++	tdvmcall_a3_write(vcpu, edx);
++
++	tdvmcall_set_return_code(vcpu, TDVMCALL_SUCCESS);
++
++	return 1;
++}
++
+ static int handle_tdvmcall(struct kvm_vcpu *vcpu)
+ {
+ 	if (tdvmcall_exit_type(vcpu))
+ 		return tdx_emulate_vmcall(vcpu);
+ 
+ 	switch (tdvmcall_leaf(vcpu)) {
++	case EXIT_REASON_CPUID:
++		return tdx_emulate_cpuid(vcpu);
+ 	default:
+ 		break;
+ 	}
+-- 
+2.34.1
+

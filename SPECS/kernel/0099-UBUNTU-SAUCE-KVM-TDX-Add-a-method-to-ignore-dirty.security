@@ -1,0 +1,50 @@
+From eff8e13a216493f147117ffcf86f8f89432310e2 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Sun, 15 Sep 2024 21:51:17 +0800
+Subject: [PATCH 099/147] UBUNTU: SAUCE: KVM: TDX: Add a method to ignore dirty
+ logging
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Currently TDX KVM doesn't support tracking dirty pages (yet).  Implement a
+method to ignore it.  Because the flag for kvm memory slot to enable dirty
+logging isn't accepted for TDX, warn on the method is called for TDX.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit e3c2240d63db77cf5e1b1134b187e00e8eeb0c9b)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/main.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 3a9522ce78b2..0392ef7b7f24 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -828,6 +828,14 @@ static u8 vt_get_mt_mask(struct kvm_vcpu *vcpu, gfn_t gfn, bool is_mmio)
+ 	return vmx_get_mt_mask(vcpu, gfn, is_mmio);
+ }
+ 
++static void vt_update_cpu_dirty_logging(struct kvm_vcpu *vcpu)
++{
++	if (KVM_BUG_ON(is_td_vcpu(vcpu), vcpu->kvm))
++		return;
++
++	vmx_update_cpu_dirty_logging(vcpu);
++}
++
+ static int vt_mem_enc_ioctl(struct kvm *kvm, void __user *argp)
+ {
+ 	if (!is_td(kvm))
+@@ -1001,7 +1009,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.handle_exit_irqoff = vt_handle_exit_irqoff,
+ 
+ 	.cpu_dirty_log_size = PML_ENTITY_NUM,
+-	.update_cpu_dirty_logging = vmx_update_cpu_dirty_logging,
++	.update_cpu_dirty_logging = vt_update_cpu_dirty_logging,
+ 
+ 	.nested_ops = &vmx_nested_ops,
+ 
+-- 
+2.34.1
+

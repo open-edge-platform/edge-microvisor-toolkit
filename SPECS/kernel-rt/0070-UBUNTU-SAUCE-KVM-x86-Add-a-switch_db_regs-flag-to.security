@@ -1,0 +1,98 @@
+From 8f95a3397eebccbf0b53e96b83ead083df72babd Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Fri, 13 Sep 2024 15:16:32 +0800
+Subject: [PATCH 070/147] UBUNTU: SAUCE: KVM: x86: Add a switch_db_regs flag to
+ handle TDX's auto-switched behavior
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Add a flag, KVM_DEBUGREG_AUTO_SWITCHED_GUEST, to skip saving/restoring DRs
+irrespective of any other flags.  TDX-SEAM unconditionally saves and
+restores guest DRs and reset to architectural INIT state on TD exit.
+So, KVM needs to save host DRs before TD enter without restoring guest DRs
+and restore host DRs after TD exit.
+
+Opportunistically convert the KVM_DEBUGREG_* definitions to use BIT().
+
+Reported-by: Xiaoyao Li <xiaoyao.li@intel.com>
+Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+Co-developed-by: Chao Gao <chao.gao@intel.com>
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 7fd570c73c6ce99ea5c1e47467e4816babf4695f)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm_host.h | 10 ++++++++--
+ arch/x86/kvm/vmx/tdx.c          |  1 +
+ arch/x86/kvm/x86.c              | 11 ++++++++---
+ 3 files changed, 17 insertions(+), 5 deletions(-)
+
+Index: b/arch/x86/include/asm/kvm_host.h
+===================================================================
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -616,8 +616,14 @@ struct kvm_pmu {
+ struct kvm_pmu_ops;
+ 
+ enum {
+-	KVM_DEBUGREG_BP_ENABLED = 1,
+-	KVM_DEBUGREG_WONT_EXIT = 2,
++	KVM_DEBUGREG_BP_ENABLED		= BIT(0),
++	KVM_DEBUGREG_WONT_EXIT		= BIT(1),
++	/*
++	 * Guest debug registers (DR0-3 and DR6) are saved/restored by hardware
++	 * on exit from or enter to guest. KVM needn't switch them. Because DR7
++	 * is cleared on exit from guest, DR7 need to be saved/restored.
++	 */
++	KVM_DEBUGREG_AUTO_SWITCH	= BIT(2),
+ };
+ 
+ struct kvm_mtrr {
+Index: b/arch/x86/kvm/vmx/tdx.c
+===================================================================
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -589,6 +589,7 @@ int tdx_vcpu_create(struct kvm_vcpu *vcp
+ 
+ 	vcpu->arch.efer = EFER_SCE | EFER_LME | EFER_LMA | EFER_NX;
+ 
++	vcpu->arch.switch_db_regs = KVM_DEBUGREG_AUTO_SWITCH;
+ 	vcpu->arch.cr0_guest_owned_bits = -1ul;
+ 	vcpu->arch.cr4_guest_owned_bits = -1ul;
+ 
+Index: b/arch/x86/kvm/x86.c
+===================================================================
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -11025,7 +11025,7 @@ static int vcpu_enter_guest(struct kvm_v
+ 	if (vcpu->arch.guest_fpu.xfd_err)
+ 		wrmsrl(MSR_IA32_XFD_ERR, vcpu->arch.guest_fpu.xfd_err);
+ 
+-	if (unlikely(vcpu->arch.switch_db_regs)) {
++	if (unlikely(vcpu->arch.switch_db_regs & ~KVM_DEBUGREG_AUTO_SWITCH)) {
+ 		set_debugreg(DR7_FIXED_1, 7);
+ 		set_debugreg(vcpu->arch.eff_db[0], 0);
+ 		set_debugreg(vcpu->arch.eff_db[1], 1);
+@@ -11077,6 +11077,7 @@ static int vcpu_enter_guest(struct kvm_v
+ 	 */
+ 	if (unlikely(vcpu->arch.switch_db_regs & KVM_DEBUGREG_WONT_EXIT)) {
+ 		WARN_ON(vcpu->guest_debug & KVM_GUESTDBG_USE_HW_BP);
++		WARN_ON(vcpu->arch.switch_db_regs & KVM_DEBUGREG_AUTO_SWITCH);
+ 		kvm_x86_call(sync_dirty_debug_regs)(vcpu);
+ 		kvm_update_dr0123(vcpu);
+ 		kvm_update_dr7(vcpu);
+@@ -11089,8 +11090,12 @@ static int vcpu_enter_guest(struct kvm_v
+ 	 * care about the messed up debug address registers. But if
+ 	 * we have some of them active, restore the old state.
+ 	 */
+-	if (hw_breakpoint_active())
+-		hw_breakpoint_restore();
++	if (hw_breakpoint_active()) {
++		if (!(vcpu->arch.switch_db_regs & KVM_DEBUGREG_AUTO_SWITCH))
++			hw_breakpoint_restore();
++		else
++			set_debugreg(__this_cpu_read(cpu_dr7), 7);
++	}
+ 
+ 	vcpu->arch.last_vmentry_cpu = vcpu->cpu;
+ 	vcpu->arch.last_guest_tsc = kvm_read_l1_tsc(vcpu, rdtsc());

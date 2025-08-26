@@ -1,0 +1,72 @@
+From 7527a2e3ae97b3c8af3803aa4c4fb1964d0320eb Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 19 Jul 2023 15:56:59 -0700
+Subject: [PATCH 093/147] UBUNTU: SAUCE: KVM: TDX: Handle MSR IA32_FEAT_CTL MSR
+ and IA32_MCG_EXT_CTL
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+MCE and MCA is advertised via cpuid based on the TDX module spec.  Guest
+kernel can access IA32_FEAT_CTL for checking if LMCE is enabled by platform
+and IA32_MCG_EXT_CTL to enable LMCE.  Make TDX KVM handle them.  Otherwise
+guest MSR access to them with TDG.VP.VMCALL<MSR> on VE results in GP in
+guest.
+
+Because LMCE is disabled with qemu by default, "-cpu lmce=on" to qemu
+command line is needed to reproduce it.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 78de50c8f378fb616506118e3984eb8410464360)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index d6bc8e041972..927257357dd0 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1956,6 +1956,7 @@ bool tdx_has_emulated_msr(u32 index, bool write)
+ 		default:
+ 			return true;
+ 		}
++	case MSR_IA32_FEAT_CTL:
+ 	case MSR_IA32_APICBASE:
+ 	case MSR_EFER:
+ 		return !write;
+@@ -1970,6 +1971,20 @@ bool tdx_has_emulated_msr(u32 index, bool write)
+ int tdx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
+ {
+ 	switch (msr->index) {
++	case MSR_IA32_FEAT_CTL:
++		/*
++		 * MCE and MCA are advertised via cpuid. guest kernel could
++		 * check if LMCE is enabled or not.
++		 */
++		msr->data = FEAT_CTL_LOCKED;
++		if (vcpu->arch.mcg_cap & MCG_LMCE_P)
++			msr->data |= FEAT_CTL_LMCE_ENABLED;
++		return 0;
++	case MSR_IA32_MCG_EXT_CTL:
++		if (!msr->host_initiated && !(vcpu->arch.mcg_cap & MCG_LMCE_P))
++			return 1;
++		msr->data = vcpu->arch.mcg_ext_ctl;
++		return 0;
+ 	case MSR_MTRRcap:
+ 		/*
+ 		 * Override kvm_mtrr_get_msr() which hardcodes the value.
+@@ -1988,6 +2003,11 @@ int tdx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
+ int tdx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
+ {
+ 	switch (msr->index) {
++	case MSR_IA32_MCG_EXT_CTL:
++		if (!msr->host_initiated && !(vcpu->arch.mcg_cap & MCG_LMCE_P))
++			return 1;
++		vcpu->arch.mcg_ext_ctl = msr->data;
++		return 0;
+ 	case MSR_MTRRdefType:
+ 		/*
+ 		 * Allow writeback only for all memory.
+-- 
+2.34.1
+

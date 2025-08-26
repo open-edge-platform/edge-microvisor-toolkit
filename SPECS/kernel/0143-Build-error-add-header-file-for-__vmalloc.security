@@ -1,0 +1,25 @@
+From 85b043b1771073c441ff6bbfef198a5f872b124a Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Sat, 12 Apr 2025 10:13:57 +0800
+Subject: [PATCH 143/147] Build error: add header file for __vmalloc
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/include/asm/kvm_host.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 5e0688227b27..8a45416079b2 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -16,6 +16,7 @@
+ #include <linux/irq_work.h>
+ #include <linux/irq.h>
+ #include <linux/workqueue.h>
++#include <linux/vmalloc.h>
+ 
+ #include <linux/kvm.h>
+ #include <linux/kvm_para.h>
+-- 
+2.34.1
+

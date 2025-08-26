@@ -1,0 +1,70 @@
+From b387152fd022c8ef6fb6e2cdc924f384ae71f84a Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Mon, 23 Sep 2024 13:36:30 +0800
+Subject: [PATCH 117/147] UBUNTU: SAUCE: KVM: x86/tdp_mmu: Allocate private
+ page table for large page split
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Make tdp_mmu_alloc_sp_split() aware of private page table.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 6dcae92e2ee506351ab73cbfed004b26cd416a1f)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/mmu_internal.h |  9 +++++++++
+ arch/x86/kvm/mmu/tdp_mmu.c      | 11 +++++++++--
+ 2 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/mmu_internal.h b/arch/x86/kvm/mmu/mmu_internal.h
+index 63c2e08f22ae..b2db39ed1d0f 100644
+--- a/arch/x86/kvm/mmu/mmu_internal.h
++++ b/arch/x86/kvm/mmu/mmu_internal.h
+@@ -201,6 +201,15 @@ static inline void kvm_mmu_alloc_private_spt(struct kvm_vcpu *vcpu, struct kvm_m
+ 	}
+ }
+ 
++static inline int kvm_alloc_private_spt_for_split(struct kvm_mmu_page *sp, gfp_t gfp)
++{
++	gfp &= ~__GFP_ZERO;
++	sp->private_spt = (void *)__get_free_page(gfp);
++	if (!sp->private_spt)
++		return -ENOMEM;
++	return 0;
++}
++
+ static inline void kvm_mmu_free_private_spt(struct kvm_mmu_page *sp)
+ {
+ 	if (sp->private_spt)
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index 75a8c63b1cea..38b97e9ce466 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -1708,15 +1708,22 @@ static int tdp_mmu_split_huge_pages_root(struct kvm *kvm,
+ 			KVM_BUG_ON(kvm_mmu_page_role_is_private(role) !=
+ 				   is_private_sptep(iter.sptep), kvm);
+ 			/* TODO: Large page isn't supported for private SPTE yet. */
+-			KVM_BUG_ON(kvm_mmu_page_role_is_private(role), kvm);
++			//KVM_BUG_ON(kvm_mmu_page_role_is_private(role), kvm);
+ 			sp = tdp_mmu_alloc_sp_for_split();
+ 
++			if (kvm_mmu_page_role_is_private(role)) {
++				if (kvm_alloc_private_spt_for_split(sp, GFP_KERNEL)) {
++					free_page((unsigned long)sp->spt);
++					sp->spt = NULL;
++				}
++			}
++
+ 			if (shared)
+ 				read_lock(&kvm->mmu_lock);
+ 			else
+ 				write_lock(&kvm->mmu_lock);
+ 
+-			if (!sp) {
++			if (!sp || !sp->spt) {
+ 				trace_kvm_mmu_split_huge_page(iter.gfn,
+ 							      iter.old_spte,
+ 							      iter.level, -ENOMEM);
+-- 
+2.34.1
+

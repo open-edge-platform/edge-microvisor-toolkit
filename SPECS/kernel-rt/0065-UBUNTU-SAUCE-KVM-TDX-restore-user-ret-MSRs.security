@@ -1,0 +1,90 @@
+From 7dd0f8872706a09012d3a123853e9e0b3c6a6772 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Tue, 21 Dec 2021 18:20:37 -0800
+Subject: [PATCH 065/147] UBUNTU: SAUCE: KVM: TDX: restore user ret MSRs
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Several user ret MSRs are clobbered on TD exit.  Restore those values on
+TD exit and before returning to ring 3.  Because TSX_CTRL requires special
+treat, this patch doesn't address it.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit 35f9b815366830538dcc92fc116c207a99303199)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 43 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 51b29279a90d..4732203c809f 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -538,6 +538,28 @@ void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)
+ 	 */
+ }
+ 
++struct tdx_uret_msr {
++	u32 msr;
++	unsigned int slot;
++	u64 defval;
++};
++
++static struct tdx_uret_msr tdx_uret_msrs[] = {
++	{.msr = MSR_SYSCALL_MASK, .defval = 0x20200 },
++	{.msr = MSR_STAR,},
++	{.msr = MSR_LSTAR,},
++	{.msr = MSR_TSC_AUX,},
++};
++
++static void tdx_user_return_update_cache(void)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(tdx_uret_msrs); i++)
++		kvm_user_return_update_cache(tdx_uret_msrs[i].slot,
++					     tdx_uret_msrs[i].defval);
++}
++
+ static void tdx_restore_host_xsave_state(struct kvm_vcpu *vcpu)
+ {
+ 	struct kvm_tdx *kvm_tdx = to_kvm_tdx(vcpu->kvm);
+@@ -630,6 +652,7 @@ fastpath_t tdx_vcpu_run(struct kvm_vcpu *vcpu,  bool force_immediate_exit)
+ 
+ 	tdx_vcpu_enter_exit(tdx);
+ 
++	tdx_user_return_update_cache();
+ 	tdx_restore_host_xsave_state(vcpu);
+ 	tdx->host_state_need_restore = true;
+ 
+@@ -1978,6 +2001,26 @@ int __init tdx_hardware_setup(struct kvm_x86_ops *x86_ops)
+ 		return -EINVAL;
+ 	}
+ 
++	for (i = 0; i < ARRAY_SIZE(tdx_uret_msrs); i++) {
++		/*
++		 * Here it checks if MSRs (tdx_uret_msrs) can be saved/restored
++		 * before returning to user space.
++		 *
++		 * this_cpu_ptr(user_return_msrs)->registered isn't checked
++		 * because the registration is done at vcpu runtime by
++		 * kvm_set_user_return_msr().
++		 * Here is setting up cpu feature before running vcpu,
++		 * registered is already false.
++		 */
++		tdx_uret_msrs[i].slot = kvm_find_user_return_msr(tdx_uret_msrs[i].msr);
++		if (tdx_uret_msrs[i].slot == -1) {
++			/* If any MSR isn't supported, it is a KVM bug */
++			pr_err("MSR %x isn't included by kvm_find_user_return_msr\n",
++				tdx_uret_msrs[i].msr);
++			return -EIO;
++		}
++	}
++
+ 	max_pkgs = topology_max_packages();
+ 	tdx_mng_key_config_lock = kcalloc(max_pkgs, sizeof(*tdx_mng_key_config_lock),
+ 				   GFP_KERNEL);
+-- 
+2.34.1
+

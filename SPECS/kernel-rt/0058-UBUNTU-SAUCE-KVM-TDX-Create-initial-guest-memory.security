@@ -1,0 +1,240 @@
+From 48692d28821972831b7202a570713fdc984771ec Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Thu, 12 Sep 2024 20:30:27 +0800
+Subject: [PATCH 058/147] UBUNTU: SAUCE: KVM: TDX: Create initial guest memory
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Because the guest memory is protected in TDX, the creation of the initial
+guest memory requires a dedicated TDX module API, tdh_mem_page_add, instead
+of directly copying the memory contents into the guest memory in the case
+of the default VM type.  KVM MMU page fault handler callback,
+set_private_spte, handles it.
+
+Implement the hooks for KVM_MEMORY_MAPPING, pre_memory_mapping() and
+post_memory_mapping() to handle it.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 8aedbd02de39abebd75a2dbe6ed3937e8e27e9ea)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/main.c    | 23 ++++++++++
+ arch/x86/kvm/vmx/tdx.c     | 93 ++++++++++++++++++++++++++++++++++++--
+ arch/x86/kvm/vmx/tdx.h     |  4 ++
+ arch/x86/kvm/vmx/x86_ops.h | 12 +++++
+ 4 files changed, 129 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index c3c523d77e71..3671461ede79 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -256,6 +256,27 @@ static int vt_gmem_max_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
+ 	return 0;
+ }
+ 
++static int vt_pre_memory_mapping(struct kvm_vcpu *vcpu,
++				 struct kvm_memory_mapping *mapping,
++				 u64 *error_code, u8 *max_level)
++{
++	if (is_td_vcpu(vcpu))
++		return tdx_pre_memory_mapping(vcpu, mapping, error_code, max_level);
++
++	if (mapping->source)
++		return -EINVAL;
++	return 0;
++}
++
++static void vt_post_memory_mapping(struct kvm_vcpu *vcpu,
++				   struct kvm_memory_mapping *mapping)
++{
++	if (!is_td_vcpu(vcpu))
++		return;
++
++	tdx_post_memory_mapping(vcpu, mapping);
++}
++
+ #define VMX_REQUIRED_APICV_INHIBITS				\
+ 	(BIT(APICV_INHIBIT_REASON_DISABLED) |			\
+ 	 BIT(APICV_INHIBIT_REASON_ABSENT) |			\
+@@ -418,6 +439,8 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.vcpu_mem_enc_ioctl = vt_vcpu_mem_enc_ioctl,
+ 
+ 	.private_max_mapping_level = vt_gmem_max_level,
++	.pre_memory_mapping = vt_pre_memory_mapping,
++	.post_memory_mapping = vt_post_memory_mapping,
+ };
+ 
+ struct kvm_x86_init_ops vt_init_ops __initdata = {
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index b6387846b7a9..1d29819ae499 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -391,6 +391,7 @@ int tdx_vm_init(struct kvm *kvm)
+ 	 */
+ 	kvm->max_vcpus = min(kvm->max_vcpus, TDX_MAX_VCPUS);
+ 
++	mutex_init(&to_kvm_tdx(kvm)->source_lock);
+ 	return 0;
+ }
+ 
+@@ -542,6 +543,51 @@ static int tdx_mem_page_aug(struct kvm *kvm, gfn_t gfn,
+ 	return 0;
+ }
+ 
++static int tdx_mem_page_add(struct kvm *kvm, gfn_t gfn,
++			    enum pg_level level, kvm_pfn_t pfn)
++{
++	struct kvm_tdx *kvm_tdx = to_kvm_tdx(kvm);
++	hpa_t hpa = pfn_to_hpa(pfn);
++	gpa_t gpa = gfn_to_gpa(gfn);
++	struct tdx_module_args out;
++	hpa_t source_pa;
++	u64 err;
++
++	lockdep_assert_held(&kvm_tdx->source_lock);
++
++	/*
++	 * KVM_MEMORY_MAPPING for TD supports only 4K page because
++	 * tdh_mem_page_add() supports only 4K page.
++	 */
++	if (KVM_BUG_ON(level != PG_LEVEL_4K, kvm))
++		return -EINVAL;
++
++	if (KVM_BUG_ON(!kvm_tdx->source_page, kvm)) {
++		tdx_unpin(kvm, pfn);
++		return -EINVAL;
++	}
++
++	source_pa = pfn_to_hpa(page_to_pfn(kvm_tdx->source_page));
++	do {
++		err = tdh_mem_page_add(kvm_tdx->tdr_pa, gpa, hpa, source_pa,
++				       &out);
++		/*
++		 * This path is executed during populating initial guest memory
++		 * image. i.e. before running any vcpu.  Race is rare.
++		 */
++	} while (unlikely(err == TDX_ERROR_SEPT_BUSY));
++	/*
++	 * Don't warn: This is for KVM_MEMORY_MAPPING. So tdh_mem_page_add() can
++	 * fail with parameters user provided.
++	 */
++	if (err) {
++		tdx_unpin(kvm, pfn);
++		return -EIO;
++	}
++
++	return 0;
++}
++
+ static int tdx_sept_set_private_spte(struct kvm *kvm, gfn_t gfn,
+ 				     enum pg_level level, kvm_pfn_t pfn)
+ {
+@@ -564,9 +610,7 @@ static int tdx_sept_set_private_spte(struct kvm *kvm, gfn_t gfn,
+ 	if (likely(is_td_finalized(kvm_tdx)))
+ 		return tdx_mem_page_aug(kvm, gfn, level, pfn);
+ 
+-	/* TODO: tdh_mem_page_add() comes here for the initial memory. */
+-
+-	return 0;
++	return tdx_mem_page_add(kvm, gfn, level, pfn);
+ }
+ 
+ static int tdx_sept_drop_private_spte(struct kvm *kvm, gfn_t gfn,
+@@ -1470,6 +1514,49 @@ int tdx_gmem_max_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
+ 	return 0;
+ }
+ 
++#define TDX_SEPT_PFERR	(PFERR_WRITE_MASK | PFERR_GUEST_ENC_MASK)
++
++int tdx_pre_memory_mapping(struct kvm_vcpu *vcpu,
++			   struct kvm_memory_mapping *mapping,
++			   u64 *error_code, u8 *max_level)
++{
++	struct kvm_tdx *kvm_tdx = to_kvm_tdx(vcpu->kvm);
++	struct page *page;
++	int r = 0;
++
++	/* memory contents is needed for encryption. */
++	if (!mapping->source)
++		return -EINVAL;
++
++	/* Once TD is finalized, the initial guest memory is fixed. */
++	if (is_td_finalized(to_kvm_tdx(vcpu->kvm)))
++		return -EINVAL;
++
++	/* TDX supports only 4K to pre-populate. */
++	*max_level = PG_LEVEL_4K;
++	*error_code = TDX_SEPT_PFERR;
++
++	r = get_user_pages_fast(mapping->source, 1, 0, &page);
++	if (r < 0)
++		return r;
++	if (r != 1)
++		return -ENOMEM;
++
++	mutex_lock(&kvm_tdx->source_lock);
++	kvm_tdx->source_page = page;
++	return 0;
++}
++
++void tdx_post_memory_mapping(struct kvm_vcpu *vcpu,
++			     struct kvm_memory_mapping *mapping)
++{
++	struct kvm_tdx *kvm_tdx = to_kvm_tdx(vcpu->kvm);
++
++	put_page(kvm_tdx->source_page);
++	kvm_tdx->source_page = NULL;
++	mutex_unlock(&kvm_tdx->source_lock);
++}
++
+ #define TDX_MD_MAP(_fid, _ptr)			\
+ 	{ .fid = MD_FIELD_ID_##_fid,		\
+ 	  .ptr = (_ptr), }
+diff --git a/arch/x86/kvm/vmx/tdx.h b/arch/x86/kvm/vmx/tdx.h
+index 75596b9dcf3f..d822e790e3e5 100644
+--- a/arch/x86/kvm/vmx/tdx.h
++++ b/arch/x86/kvm/vmx/tdx.h
+@@ -21,6 +21,10 @@ struct kvm_tdx {
+ 	atomic_t tdh_mem_track;
+ 
+ 	u64 tsc_offset;
++
++	/* For KVM_MEMORY_MAPPING */
++	struct mutex source_lock;
++	struct page *source_page;
+ };
+ 
+ struct vcpu_tdx {
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index aceec37aefec..35034e7dfb6c 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -158,6 +158,11 @@ int tdx_sept_flush_remote_tlbs(struct kvm *kvm);
+ void tdx_load_mmu_pgd(struct kvm_vcpu *vcpu, hpa_t root_hpa, int root_level);
+ int tdx_gmem_max_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
+ 		       bool is_private, u8 *max_level);
++int tdx_pre_memory_mapping(struct kvm_vcpu *vcpu,
++			   struct kvm_memory_mapping *mapping,
++			   u64 *error_code, u8 *max_level);
++void tdx_post_memory_mapping(struct kvm_vcpu *vcpu,
++			     struct kvm_memory_mapping *mapping);
+ #else
+ static inline int tdx_hardware_setup(struct kvm_x86_ops *x86_ops) { return -EOPNOTSUPP; }
+ static inline void tdx_hardware_unsetup(void) {}
+@@ -189,6 +194,13 @@ static inline int tdx_gmem_max_level(struct kvm *kvm, kvm_pfn_t pfn, gfn_t gfn,
+ {
+ 	return -EOPNOTSUPP;
+ }
++static inline int tdx_pre_memory_mapping(struct kvm_vcpu *vcpu,
++			   struct kvm_memory_mapping *mapping,
++			   u64 *error_code, u8 *max_level)
++{
++	return -EOPNOTSUPP;
++}
++static inline void tdx_post_memory_mapping(struct kvm_vcpu *vcpu, struct kvm_memory_mapping *mapping) {}
+ #endif
+ 
+ #endif /* __KVM_X86_VMX_X86_OPS_H */
+-- 
+2.34.1
+

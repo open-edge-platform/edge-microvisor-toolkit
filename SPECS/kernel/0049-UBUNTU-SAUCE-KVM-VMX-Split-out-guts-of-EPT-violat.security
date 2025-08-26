@@ -1,0 +1,127 @@
+From 5920c89c929f4fe55bdcf5e9fe6b05d5a9d7fb3f Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <sean.j.christopherson@intel.com>
+Date: Wed, 11 Sep 2024 23:15:21 +0800
+Subject: [PATCH 049/147] UBUNTU: SAUCE: KVM: VMX: Split out guts of EPT
+ violation to common/exposed function
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+The difference of TDX EPT violation is how to retrieve information, GPA,
+and exit qualification.  To share the code to handle EPT violation, split
+out the guts of EPT violation handler so that VMX/TDX exit handler can call
+it after retrieving GPA and exit qualification.
+
+Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+Reviewed-by: Kai Huang <kai.huang@intel.com>
+Reviewed-by: Binbin Wu <binbin.wu@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 677132b602ab201d8a415b688977650de5cb2d0d)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/kvm/vmx/common.h | 33 +++++++++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/vmx.c    | 25 +++----------------------
+ 2 files changed, 36 insertions(+), 22 deletions(-)
+ create mode 100644 arch/x86/kvm/vmx/common.h
+
+diff --git a/arch/x86/kvm/vmx/common.h b/arch/x86/kvm/vmx/common.h
+new file mode 100644
+index 000000000000..235908f3e044
+--- /dev/null
++++ b/arch/x86/kvm/vmx/common.h
+@@ -0,0 +1,33 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++#ifndef __KVM_X86_VMX_COMMON_H
++#define __KVM_X86_VMX_COMMON_H
++
++#include <linux/kvm_host.h>
++
++#include "mmu.h"
++
++static inline int __vmx_handle_ept_violation(struct kvm_vcpu *vcpu, gpa_t gpa,
++					     unsigned long exit_qualification)
++{
++	u64 error_code;
++
++	/* Is it a read fault? */
++	error_code = (exit_qualification & EPT_VIOLATION_ACC_READ)
++		     ? PFERR_USER_MASK : 0;
++	/* Is it a write fault? */
++	error_code |= (exit_qualification & EPT_VIOLATION_ACC_WRITE)
++		      ? PFERR_WRITE_MASK : 0;
++	/* Is it a fetch fault? */
++	error_code |= (exit_qualification & EPT_VIOLATION_ACC_INSTR)
++		      ? PFERR_FETCH_MASK : 0;
++	/* ept page table entry is present? */
++	error_code |= (exit_qualification & EPT_VIOLATION_RWX_MASK)
++		      ? PFERR_PRESENT_MASK : 0;
++
++	error_code |= (exit_qualification & EPT_VIOLATION_GVA_TRANSLATED) != 0 ?
++	       PFERR_GUEST_FINAL_MASK : PFERR_GUEST_PAGE_MASK;
++
++	return kvm_mmu_page_fault(vcpu, gpa, error_code, NULL, 0);
++}
++
++#endif /* __KVM_X86_VMX_COMMON_H */
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index bc354a8b898a..9f0a5b258b30 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -53,6 +53,7 @@
+ #include <trace/events/ipi.h>
+ 
+ #include "capabilities.h"
++#include "common.h"
+ #include "cpuid.h"
+ #include "hyperv.h"
+ #include "kvm_onhyperv.h"
+@@ -5769,11 +5770,8 @@ static int handle_task_switch(struct kvm_vcpu *vcpu)
+ 
+ static int handle_ept_violation(struct kvm_vcpu *vcpu)
+ {
+-	unsigned long exit_qualification;
++	unsigned long exit_qualification = vmx_get_exit_qual(vcpu);
+ 	gpa_t gpa;
+-	u64 error_code;
+-
+-	exit_qualification = vmx_get_exit_qual(vcpu);
+ 
+ 	/*
+ 	 * EPT violation happened while executing iret from NMI,
+@@ -5789,23 +5787,6 @@ static int handle_ept_violation(struct kvm_vcpu *vcpu)
+ 	gpa = vmcs_read64(GUEST_PHYSICAL_ADDRESS);
+ 	trace_kvm_page_fault(vcpu, gpa, exit_qualification);
+ 
+-	/* Is it a read fault? */
+-	error_code = (exit_qualification & EPT_VIOLATION_ACC_READ)
+-		     ? PFERR_USER_MASK : 0;
+-	/* Is it a write fault? */
+-	error_code |= (exit_qualification & EPT_VIOLATION_ACC_WRITE)
+-		      ? PFERR_WRITE_MASK : 0;
+-	/* Is it a fetch fault? */
+-	error_code |= (exit_qualification & EPT_VIOLATION_ACC_INSTR)
+-		      ? PFERR_FETCH_MASK : 0;
+-	/* ept page table entry is present? */
+-	error_code |= (exit_qualification & EPT_VIOLATION_RWX_MASK)
+-		      ? PFERR_PRESENT_MASK : 0;
+-
+-	if (error_code & EPT_VIOLATION_GVA_IS_VALID)
+-		error_code |= (exit_qualification & EPT_VIOLATION_GVA_TRANSLATED) ?
+-			      PFERR_GUEST_FINAL_MASK : PFERR_GUEST_PAGE_MASK;
+-
+ 	/*
+ 	 * Check that the GPA doesn't exceed physical memory limits, as that is
+ 	 * a guest page fault.  We have to emulate the instruction here, because
+@@ -5817,7 +5798,7 @@ static int handle_ept_violation(struct kvm_vcpu *vcpu)
+ 	if (unlikely(allow_smaller_maxphyaddr && !kvm_vcpu_is_legal_gpa(vcpu, gpa)))
+ 		return kvm_emulate_instruction(vcpu, 0);
+ 
+-	return kvm_mmu_page_fault(vcpu, gpa, error_code, NULL, 0);
++	return __vmx_handle_ept_violation(vcpu, gpa, exit_qualification);
+ }
+ 
+ static int handle_ept_misconfig(struct kvm_vcpu *vcpu)
+-- 
+2.34.1
+

@@ -1,0 +1,118 @@
+From 75fbc232bf22b1f31cd3e31838811414c6bb2e1d Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Fri, 23 Feb 2024 16:33:48 -0800
+Subject: [PATCH 059/147] UBUNTU: SAUCE: KVM: TDX: Extend memory measurement
+ with initial guest memory
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX allows to extned memory measurement with the initial memory.  Define
+new subcommand, KVM_TDX_EXTEND_MEMORY, of VM-scoped KVM_MEMORY_ENCRYPT_OP.
+it extends memory measurement of the TDX guest.  The memory region must
+be populated with KVM_MEMORY_MAPPING command.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit bcd17356ddb04cb584e4db5787cd3c5ecf201e42)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/uapi/asm/kvm.h |  1 +
+ arch/x86/kvm/vmx/tdx.c          | 64 +++++++++++++++++++++++++++++++++
+ 2 files changed, 65 insertions(+)
+
+diff --git a/arch/x86/include/uapi/asm/kvm.h b/arch/x86/include/uapi/asm/kvm.h
+index b635340feebd..4c99bd570676 100644
+--- a/arch/x86/include/uapi/asm/kvm.h
++++ b/arch/x86/include/uapi/asm/kvm.h
+@@ -931,6 +931,7 @@ enum kvm_tdx_cmd_id {
+ 	KVM_TDX_CAPABILITIES = 0,
+ 	KVM_TDX_INIT_VM,
+ 	KVM_TDX_INIT_VCPU,
++	KVM_TDX_EXTEND_MEMORY,
+ 
+ 	KVM_TDX_CMD_NR_MAX,
+ };
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 1d29819ae499..75864db406f2 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1340,6 +1340,67 @@ void tdx_flush_tlb_current(struct kvm_vcpu *vcpu)
+ 	tdx_track(vcpu->kvm);
+ }
+ 
++static int tdx_extend_memory(struct kvm *kvm, struct kvm_tdx_cmd *cmd)
++{
++	struct kvm_tdx *kvm_tdx = to_kvm_tdx(kvm);
++	struct kvm_memory_mapping mapping;
++	struct tdx_module_args out;
++	bool extended = false;
++	int idx, ret = 0;
++	gpa_t gpa;
++	u64 err;
++	int i;
++
++	/* Once TD is finalized, the initial guest memory is fixed. */
++	if (is_td_finalized(kvm_tdx))
++		return -EINVAL;
++
++	if (cmd->flags)
++		return -EINVAL;
++
++	if (copy_from_user(&mapping, (void __user *)cmd->data, sizeof(mapping)))
++		return -EFAULT;
++
++	/* Sanity check */
++	if (mapping.source || !mapping.nr_pages ||
++	    mapping.nr_pages & GENMASK_ULL(63, 63 - PAGE_SHIFT) ||
++	    mapping.base_gfn + (mapping.nr_pages << PAGE_SHIFT) <= mapping.base_gfn ||
++	    !kvm_is_private_gpa(kvm, mapping.base_gfn) ||
++	    !kvm_is_private_gpa(kvm, mapping.base_gfn + (mapping.nr_pages << PAGE_SHIFT)))
++		return -EINVAL;
++
++	idx = srcu_read_lock(&kvm->srcu);
++	while (mapping.nr_pages) {
++		if (signal_pending(current)) {
++			ret = -ERESTARTSYS;
++			break;
++		}
++
++		if (need_resched())
++			cond_resched();
++
++		gpa = gfn_to_gpa(mapping.base_gfn);
++		for (i = 0; i < PAGE_SIZE; i += TDX_EXTENDMR_CHUNKSIZE) {
++			err = tdh_mr_extend(kvm_tdx->tdr_pa, gpa + i, &out);
++			if (err) {
++				ret = -EIO;
++				break;
++			}
++		}
++		mapping.base_gfn++;
++		mapping.nr_pages--;
++		extended = true;
++	}
++	srcu_read_unlock(&kvm->srcu, idx);
++
++	if (extended && mapping.nr_pages > 0)
++		ret = -EAGAIN;
++	if (copy_to_user((void __user *)cmd->data, &mapping, sizeof(mapping)))
++		ret = -EFAULT;
++
++	return ret;
++}
++
+ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp)
+ {
+ 	struct kvm_tdx_cmd tdx_cmd;
+@@ -1359,6 +1420,9 @@ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp)
+ 	case KVM_TDX_INIT_VM:
+ 		r = tdx_td_init(kvm, &tdx_cmd);
+ 		break;
++	case KVM_TDX_EXTEND_MEMORY:
++		r = tdx_extend_memory(kvm, &tdx_cmd);
++		break;
+ 	default:
+ 		r = -EINVAL;
+ 		goto out;
+-- 
+2.34.1
+

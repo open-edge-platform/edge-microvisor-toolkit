@@ -1,0 +1,64 @@
+From a58d3990d78645d426d6174ac544b1cb493fbcf9 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Mon, 9 Jan 2023 23:09:08 -0800
+Subject: [PATCH 100/147] UBUNTU: SAUCE: KVM: TDX: Add methods to ignore VMX
+ preemption timer
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX doesn't support VMX preemption timer.  Implement access methods for VMM
+to ignore VMX preemption timer.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 0345657a6966d1643abd02fe2d1ff83bcec7ebae)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/main.c | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 0392ef7b7f24..d6ac972daad8 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -836,6 +836,27 @@ static void vt_update_cpu_dirty_logging(struct kvm_vcpu *vcpu)
+ 	vmx_update_cpu_dirty_logging(vcpu);
+ }
+ 
++#ifdef CONFIG_X86_64
++static int vt_set_hv_timer(struct kvm_vcpu *vcpu, u64 guest_deadline_tsc,
++			      bool *expired)
++{
++	/* VMX-preemption timer isn't available for TDX. */
++	if (is_td_vcpu(vcpu))
++		return -EINVAL;
++
++	return vmx_set_hv_timer(vcpu, guest_deadline_tsc, expired);
++}
++
++static void vt_cancel_hv_timer(struct kvm_vcpu *vcpu)
++{
++	/* VMX-preemption timer can't be set.  See vt_set_hv_timer(). */
++	if (KVM_BUG_ON(is_td_vcpu(vcpu), vcpu->kvm))
++		return;
++
++	vmx_cancel_hv_timer(vcpu);
++}
++#endif
++
+ static int vt_mem_enc_ioctl(struct kvm *kvm, void __user *argp)
+ {
+ 	if (!is_td(kvm))
+@@ -1017,8 +1038,8 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.pi_start_assignment = vmx_pi_start_assignment,
+ 
+ #ifdef CONFIG_X86_64
+-	.set_hv_timer = vmx_set_hv_timer,
+-	.cancel_hv_timer = vmx_cancel_hv_timer,
++	.set_hv_timer = vt_set_hv_timer,
++	.cancel_hv_timer = vt_cancel_hv_timer,
+ #endif
+ 
+ 	.setup_mce = vmx_setup_mce,
+-- 
+2.34.1
+

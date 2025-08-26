@@ -1,0 +1,75 @@
+From 84e0983d9c2b836d00a090665e46d54083d3111d Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Sun, 15 Sep 2024 21:33:04 +0800
+Subject: [PATCH 098/147] UBUNTU: SAUCE: KVM: TDX: Add methods to ignore guest
+ instruction emulation
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Because TDX protects TDX guest state from VMM, instructions in guest memory
+cannot be emulated.  Implement methods to ignore guest instruction
+emulator.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 0389e564216455f45391874b70e5506f96465746)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/main.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 6686d5feb9a1..3a9522ce78b2 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -324,6 +324,30 @@ static void vt_enable_smi_window(struct kvm_vcpu *vcpu)
+ }
+ #endif
+ 
++static int vt_check_emulate_instruction(struct kvm_vcpu *vcpu, int emul_type,
++					void *insn, int insn_len)
++{
++	if (is_td_vcpu(vcpu))
++		return X86EMUL_RETRY_INSTR;
++
++	return vmx_check_emulate_instruction(vcpu, emul_type, insn, insn_len);
++}
++
++static int vt_check_intercept(struct kvm_vcpu *vcpu,
++				 struct x86_instruction_info *info,
++				 enum x86_intercept_stage stage,
++				 struct x86_exception *exception)
++{
++	/*
++	 * This call back is triggered by the x86 instruction emulator. TDX
++	 * doesn't allow guest memory inspection.
++	 */
++	if (KVM_BUG_ON(is_td_vcpu(vcpu), vcpu->kvm))
++		return X86EMUL_UNHANDLEABLE;
++
++	return vmx_check_intercept(vcpu, info, stage, exception);
++}
++
+ static bool vt_apic_init_signal_blocked(struct kvm_vcpu *vcpu)
+ {
+ 	if (is_td_vcpu(vcpu))
+@@ -973,7 +997,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 
+ 	.load_mmu_pgd = vt_load_mmu_pgd,
+ 
+-	.check_intercept = vmx_check_intercept,
++	.check_intercept = vt_check_intercept,
+ 	.handle_exit_irqoff = vt_handle_exit_irqoff,
+ 
+ 	.cpu_dirty_log_size = PML_ENTITY_NUM,
+@@ -998,7 +1022,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.enable_smi_window = vt_enable_smi_window,
+ #endif
+ 
+-	.check_emulate_instruction = vmx_check_emulate_instruction,
++	.check_emulate_instruction = vt_check_emulate_instruction,
+ 	.apic_init_signal_blocked = vt_apic_init_signal_blocked,
+ 	.migrate_timers = vmx_migrate_timers,
+ 
+-- 
+2.34.1
+

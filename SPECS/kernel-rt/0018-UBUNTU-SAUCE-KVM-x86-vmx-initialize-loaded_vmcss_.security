@@ -1,0 +1,53 @@
+From 0e36a0bfea0ab5794a231e18078452a1d03dd011 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 15 Mar 2023 13:46:31 -0700
+Subject: [PATCH 018/147] UBUNTU: SAUCE: KVM: x86/vmx: initialize
+ loaded_vmcss_on_cpu in vmx_init()
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+vmx_hardware_disable() accesses loaded_vmcss_on_cpu via
+hardware_disable_all().  To allow hardware_enable/disable_all() before
+kvm_init(), initialize it in before kvm_x86_vendor_init() in vmx_init()
+so that tdx module initialization, hardware_setup method, can reference
+the variable.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Yuan Yao <yuan.yao@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit a86a712da449ddb9febb049c8f53b82e3705fef3)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/vmx.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 029fbf3791f1..f4eddbd6a4f2 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -8626,6 +8626,10 @@ static int __init vmx_init(void)
+ 	 */
+ 	hv_init_evmcs();
+ 
++	/* vmx_hardware_disable() accesses loaded_vmcss_on_cpu. */
++	for_each_possible_cpu(cpu)
++		INIT_LIST_HEAD(&per_cpu(loaded_vmcss_on_cpu, cpu));
++
+ 	r = kvm_x86_vendor_init(&vt_init_ops);
+ 	if (r)
+ 		return r;
+@@ -8641,11 +8645,8 @@ static int __init vmx_init(void)
+ 	if (r)
+ 		goto err_l1d_flush;
+ 
+-	for_each_possible_cpu(cpu) {
+-		INIT_LIST_HEAD(&per_cpu(loaded_vmcss_on_cpu, cpu));
+-
++	for_each_possible_cpu(cpu)
+ 		pi_init_cpu(cpu);
+-	}
+ 
+ 	vmx_check_vmcs12_offsets();
+ 
+-- 
+2.34.1
+

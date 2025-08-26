@@ -1,0 +1,124 @@
+From 81f29490d69f1cba728538f4099a290068c6e6b6 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Thu, 27 Oct 2022 02:13:40 -0700
+Subject: [PATCH 011/147] UBUNTU: SAUCE: KVM: Add new members to struct
+ kvm_gfn_range to operate on
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Add new members to strut kvm_gfn_range to indicate which mapping
+(private-vs-shared) to operate on.  only_private and only_shared.  Update
+mmu notifier, set memory attributes ioctl or KVM gmem callback to
+initialize them.
+
+It was premature for set_memory_attributes ioctl to call
+kvm_unmap_gfn_range().  Instead, let kvm_arch_ste_memory_attributes()
+handle it and add a new x86 vendor callback to react to memory attribute
+change.  [1]
+
+- If it's from the mmu notifier, zap shared pages only
+- If it's from the KVM gmem, zap private pages only
+- If setting memory attributes, vendor callback checks new attributes
+  and make decisions.
+  SNP would do nothing and handle it later with gmem callback
+  TDX callback would do as follows.
+  When it converts pages to shared, zap private pages only.
+  When it converts pages to private, zap shared pages only.
+
+TDX needs to know which mapping to operate on.  Shared-EPT vs. Secure-EPT.
+The following sequence to convert the GPA to private doesn't work for TDX
+because the page can already be private.
+
+1) Update memory attributes to private in memory attributes xarray
+2) Zap the GPA range irrespective of private-or-shared.
+   Even if the page is already private, zap the entry.
+3) EPT violation on the GPA
+4) Populate the GPA as private
+   The page is zeroed, and the guest has to accept the page again.
+
+In step 2, TDX wants to zap only shared pages and skip private ones.
+
+[1] https://lore.kernel.org/all/ZJX0hk+KpQP0KUyB@google.com/
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit cc542def24110c86f8cede1dc4e78887776ab1df)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ include/linux/kvm_host.h |  2 ++
+ virt/kvm/guest_memfd.c   |  3 +++
+ virt/kvm/kvm_main.c      | 17 +++++++++++++++++
+ 3 files changed, 22 insertions(+)
+
+diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
+index 15206450929d..fead709e0028 100644
+--- a/include/linux/kvm_host.h
++++ b/include/linux/kvm_host.h
+@@ -265,6 +265,8 @@ struct kvm_gfn_range {
+ 	gfn_t start;
+ 	gfn_t end;
+ 	union kvm_mmu_notifier_arg arg;
++	bool only_private;
++	bool only_shared;
+ 	bool may_block;
+ };
+ bool kvm_unmap_gfn_range(struct kvm *kvm, struct kvm_gfn_range *range);
+diff --git a/virt/kvm/guest_memfd.c b/virt/kvm/guest_memfd.c
+index 8f079a61a56d..9041b1a73a1e 100644
+--- a/virt/kvm/guest_memfd.c
++++ b/virt/kvm/guest_memfd.c
+@@ -118,6 +118,9 @@ static void kvm_gmem_invalidate_begin(struct kvm_gmem *gmem, pgoff_t start,
+ 			.end = slot->base_gfn + min(pgoff + slot->npages, end) - pgoff,
+ 			.slot = slot,
+ 			.may_block = true,
++			/* guest memfd is relevant to only private mappings. */
++			.only_private = true,
++			.only_shared = false,
+ 		};
+ 
+ 		if (!found_memslot) {
+diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
+index 9983b6f05a0f..ad80e1d2d21f 100644
+--- a/virt/kvm/kvm_main.c
++++ b/virt/kvm/kvm_main.c
+@@ -632,6 +632,12 @@ static __always_inline kvm_mn_ret_t __kvm_handle_hva_range(struct kvm *kvm,
+ 			 */
+ 			gfn_range.arg = range->arg;
+ 			gfn_range.may_block = range->may_block;
++			/*
++			 * HVA-based notifications aren't relevant to private
++			 * mappings as they don't have a userspace mapping.
++			 */
++			gfn_range.only_private = false;
++			gfn_range.only_shared = true;
+ 
+ 			/*
+ 			 * {gfn(page) | page intersects with [hva_start, hva_end)} =
+@@ -2454,6 +2460,16 @@ static __always_inline void kvm_handle_gfn_range(struct kvm *kvm,
+ 	gfn_range.arg = range->arg;
+ 	gfn_range.may_block = range->may_block;
+ 
++	/*
++	 * If/when KVM supports more attributes beyond private .vs shared, this
++	 * _could_ set only_{private,shared} appropriately if the entire target
++	 * range already has the desired private vs. shared state (it's unclear
++	 * if that is a net win).  For now, KVM reaches this point if and only
++	 * if the private flag is being toggled, i.e. all mappings are in play.
++	 */
++	gfn_range.only_private = false;
++	gfn_range.only_shared = false;
++
+ 	for (i = 0; i < kvm_arch_nr_memslot_as_ids(kvm); i++) {
+ 		slots = __kvm_memslots(kvm, i);
+ 
+@@ -2510,6 +2526,7 @@ static int kvm_vm_set_mem_attributes(struct kvm *kvm, gfn_t start, gfn_t end,
+ 	struct kvm_mmu_notifier_range pre_set_range = {
+ 		.start = start,
+ 		.end = end,
++		.arg.attributes = attributes,
+ 		.handler = kvm_pre_set_memory_attributes,
+ 		.on_lock = kvm_mmu_invalidate_begin,
+ 		.flush_on_ret = true,
+-- 
+2.34.1
+

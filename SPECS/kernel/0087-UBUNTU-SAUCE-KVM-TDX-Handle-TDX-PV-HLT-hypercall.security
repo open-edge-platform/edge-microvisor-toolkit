@@ -1,0 +1,100 @@
+From ef64bfff464386cc2e9be9361eafeb57e3eb6e93 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 4 May 2022 16:51:24 -0700
+Subject: [PATCH 087/147] UBUNTU: SAUCE: KVM: TDX: Handle TDX PV HLT hypercall
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Wire up TDX PV HLT hypercall to the KVM backend function.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 5f1088f13d8d556587782586b968d5a9ab16066e)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 26 +++++++++++++++++++++++++-
+ arch/x86/kvm/vmx/tdx.h |  4 ++++
+ 2 files changed, 29 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 3a187ff3f284..02190540745d 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -692,7 +692,18 @@ void tdx_vcpu_load(struct kvm_vcpu *vcpu, int cpu)
+ 
+ bool tdx_protected_apic_has_interrupt(struct kvm_vcpu *vcpu)
+ {
+-	return pi_has_pending_interrupt(vcpu);
++	bool ret = pi_has_pending_interrupt(vcpu);
++	union tdx_vcpu_state_details details;
++	struct vcpu_tdx *tdx = to_tdx(vcpu);
++
++	if (ret || vcpu->arch.mp_state != KVM_MP_STATE_HALTED)
++		return true;
++
++	if (tdx->interrupt_disabled_hlt)
++		return false;
++
++	details.full = td_state_non_arch_read64(tdx, TD_VCPU_STATE_DETAILS_NON_ARCH);
++	return !!details.vmxip;
+ }
+ 
+ void tdx_prepare_switch_to_guest(struct kvm_vcpu *vcpu)
+@@ -1134,6 +1145,17 @@ static int tdx_emulate_cpuid(struct kvm_vcpu *vcpu)
+ 	return 1;
+ }
+ 
++static int tdx_emulate_hlt(struct kvm_vcpu *vcpu)
++{
++	struct vcpu_tdx *tdx = to_tdx(vcpu);
++
++	/* See tdx_protected_apic_has_interrupt() to avoid heavy seamcall */
++	tdx->interrupt_disabled_hlt = tdvmcall_a0_read(vcpu);
++
++	tdvmcall_set_return_code(vcpu, TDVMCALL_SUCCESS);
++	return kvm_emulate_halt_noskip(vcpu);
++}
++
+ static int handle_tdvmcall(struct kvm_vcpu *vcpu)
+ {
+ 	if (tdvmcall_exit_type(vcpu))
+@@ -1142,6 +1164,8 @@ static int handle_tdvmcall(struct kvm_vcpu *vcpu)
+ 	switch (tdvmcall_leaf(vcpu)) {
+ 	case EXIT_REASON_CPUID:
+ 		return tdx_emulate_cpuid(vcpu);
++	case EXIT_REASON_HLT:
++		return tdx_emulate_hlt(vcpu);
+ 	default:
+ 		break;
+ 	}
+diff --git a/arch/x86/kvm/vmx/tdx.h b/arch/x86/kvm/vmx/tdx.h
+index 4399d474764f..11c74c34555f 100644
+--- a/arch/x86/kvm/vmx/tdx.h
++++ b/arch/x86/kvm/vmx/tdx.h
+@@ -104,6 +104,8 @@ struct vcpu_tdx {
+ 	bool host_state_need_restore;
+ 	u64 msr_host_kernel_gs_base;
+ 
++	bool interrupt_disabled_hlt;
++
+ 	/*
+ 	 * Dummy to make pmu_intel not corrupt memory.
+ 	 * TODO: Support PMU for TDX.  Future work.
+@@ -166,6 +168,7 @@ static __always_inline void tdvps_vmcs_check(u32 field, u8 bits)
+ }
+ 
+ static __always_inline void tdvps_management_check(u64 field, u8 bits) {}
++static __always_inline void tdvps_state_non_arch_check(u64 field, u8 bits) {}
+ 
+ #define TDX_BUILD_TDVPS_ACCESSORS(bits, uclass, lclass)				\
+ static __always_inline u##bits td_##lclass##_read##bits(struct vcpu_tdx *tdx,	\
+@@ -226,6 +229,7 @@ TDX_BUILD_TDVPS_ACCESSORS(32, VMCS, vmcs);
+ TDX_BUILD_TDVPS_ACCESSORS(64, VMCS, vmcs);
+ 
+ TDX_BUILD_TDVPS_ACCESSORS(8, MANAGEMENT, management);
++TDX_BUILD_TDVPS_ACCESSORS(64, STATE_NON_ARCH, state_non_arch);
+ 
+ static __always_inline u64 td_tdcs_exec_read64(struct kvm_tdx *kvm_tdx, u32 field)
+ {
+-- 
+2.34.1
+

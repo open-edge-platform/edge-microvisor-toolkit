@@ -1,0 +1,35 @@
+From fa93c0461b8b48466c359ef03852623c4858dfc7 Mon Sep 17 00:00:00 2001
+From: Hang Yuan <hang.yuan@intel.com>
+Date: Wed, 8 May 2024 11:05:16 +0800
+Subject: [PATCH 126/147] UBUNTU: SAUCE: KVM: x86/tdp_mmu: Fix to return
+ original flush on unsupported cases
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Picked the fix catched in KVM TDX patch's community review:
+https://lore.kernel.org/kvm/Zh8yHEiOKyvZO+QR@chao-email/
+
+Fixes: 9a91cfd1d241 (KVM: x86/tdp_mmu: Don't zap private pages for unsupported cases)
+Signed-off-by: Hang Yuan <hang.yuan@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 0486db2a2f454bb9e775d83790cea7910c615dc7)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/tdp_mmu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index e3a1c41677a6..e0717a6b815f 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -1067,7 +1067,7 @@ static bool tdp_mmu_zap_leafs(struct kvm *kvm, struct kvm_mmu_page *root,
+ 
+ 	WARN_ON_ONCE(zap_private && !is_private);
+ 	if (!zap_private && is_private)
+-		return false;
++		return flush;
+ 
+ 	/*
+ 	 * start and end doesn't have GFN shared bit.  This function zaps
+-- 
+2.34.1
+

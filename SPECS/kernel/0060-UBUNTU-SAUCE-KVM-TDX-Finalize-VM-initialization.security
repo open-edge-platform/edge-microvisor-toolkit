@@ -1,0 +1,78 @@
+From 7e137092c9c6cb0551e5317aea080e4d2be72a58 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Mon, 13 Dec 2021 23:51:47 -0800
+Subject: [PATCH 060/147] UBUNTU: SAUCE: KVM: TDX: Finalize VM initialization
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+To protect the initial contents of the guest TD, the TDX module measures
+the guest TD during the build process as SHA-384 measurement.  The
+measurement of the guest TD contents needs to be completed to make the
+guest TD ready to run.
+
+Add a new subcommand, KVM_TDX_FINALIZE_VM, for VM-scoped
+KVM_MEMORY_ENCRYPT_OP to finalize the measurement and mark the TDX VM ready
+to run.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 41f385d49b2e80100d89ffbde8eb59dad9edfa51)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/uapi/asm/kvm.h |  1 +
+ arch/x86/kvm/vmx/tdx.c          | 21 +++++++++++++++++++++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/arch/x86/include/uapi/asm/kvm.h b/arch/x86/include/uapi/asm/kvm.h
+index 4c99bd570676..03105713bc8a 100644
+--- a/arch/x86/include/uapi/asm/kvm.h
++++ b/arch/x86/include/uapi/asm/kvm.h
+@@ -932,6 +932,7 @@ enum kvm_tdx_cmd_id {
+ 	KVM_TDX_INIT_VM,
+ 	KVM_TDX_INIT_VCPU,
+ 	KVM_TDX_EXTEND_MEMORY,
++	KVM_TDX_FINALIZE_VM,
+ 
+ 	KVM_TDX_CMD_NR_MAX,
+ };
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 75864db406f2..6fbf982797f9 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1401,6 +1401,24 @@ static int tdx_extend_memory(struct kvm *kvm, struct kvm_tdx_cmd *cmd)
+ 	return ret;
+ }
+ 
++static int tdx_td_finalizemr(struct kvm *kvm)
++{
++	struct kvm_tdx *kvm_tdx = to_kvm_tdx(kvm);
++	u64 err;
++
++	if (!is_hkid_assigned(kvm_tdx) || is_td_finalized(kvm_tdx))
++		return -EINVAL;
++
++	err = tdh_mr_finalize(kvm_tdx->tdr_pa);
++	if (WARN_ON_ONCE(err)) {
++		pr_tdx_error(TDH_MR_FINALIZE, err, NULL);
++		return -EIO;
++	}
++
++	kvm_tdx->finalized = true;
++	return 0;
++}
++
+ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp)
+ {
+ 	struct kvm_tdx_cmd tdx_cmd;
+@@ -1423,6 +1441,9 @@ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp)
+ 	case KVM_TDX_EXTEND_MEMORY:
+ 		r = tdx_extend_memory(kvm, &tdx_cmd);
+ 		break;
++	case KVM_TDX_FINALIZE_VM:
++		r = tdx_td_finalizemr(kvm);
++		break;
+ 	default:
+ 		r = -EINVAL;
+ 		goto out;
+-- 
+2.34.1
+

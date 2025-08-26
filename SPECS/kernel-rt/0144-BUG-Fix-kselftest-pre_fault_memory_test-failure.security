@@ -1,0 +1,26 @@
+From cebd7ed1a6f50fbeefd00c62dea45e95f69a8b4c Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Wed, 23 Jul 2025 01:49:30 +0000
+Subject: [PATCH 144/147] BUG: Fix kselftest:pre_fault_memory_test failure
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/kvm/mmu/mmu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 162ed9298278..7ecbc9ecd3de 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -4848,7 +4848,7 @@ long kvm_arch_vcpu_pre_fault_memory(struct kvm_vcpu *vcpu,
+ 
+ 	if (kvm_arch_has_private_mem(vcpu->kvm) &&
+ 	    kvm_mem_is_private(vcpu->kvm, gpa_to_gfn(range->gpa)))
+-		error_code |= PFERR_PRIVATE_ACCESS;
++		error_code |= PFERR_GUEST_ENC_MASK;
+ 
+ 	/*
+ 	 * Shadow paging uses GVA for kvm page fault, so restrict to
+-- 
+2.34.1
+

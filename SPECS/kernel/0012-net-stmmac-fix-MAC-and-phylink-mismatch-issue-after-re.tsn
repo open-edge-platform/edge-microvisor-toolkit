@@ -1,0 +1,79 @@
+From 8302824aef8b53708037c6a47c66b6bab4a01e9c Mon Sep 17 00:00:00 2001
+From: Gan Yi Fang <yi.fang.gan@intel.com>
+Date: Wed, 16 Aug 2023 15:20:11 +0800
+Subject: [PATCH 12/42] net: stmmac: fix MAC and phylink mismatch issue after
+ resume with WoL active
+
+The issue happened when flag use_phy_wol is enabled, it can be reproduced
+with steps below:
+1. Set the speed to 1000 or 2500 Mbps on the host
+2. Enable the WoL on the host
+3. Suspend the host
+4. Wake up the host
+
+When the WoL is disabled, both the PHY and MAC will suspend and wake up
+with everything configured well. When WoL is enabled, the PHY needs to be
+stay awake to receive the signal from remote client but MAC will be
+suspended.
+
+When the MAC suspends with the flag use_phy_wol enabled, the
+stmmac_suspend() will call the phylink_stop() to stop the phylink instance.
+When the MAC resumes, firstly phylink_resume() will call phylink_start() to
+start the phylink instance which will trigger the phylink machine to invoke
+the .mac_link_up callback.
+
+The stmmac_mac_link_up() will configure the MAC_configuration
+register (offset 0x0) according to the current link state. After this,
+stmmac_hw_setup() will only be called to setup the MAC. Eventually, the
+dwmac4_core_init() will be called and set the MAC_configuration register to
+default value (GMAC_CORE_INIT). The GMAC_CORE_INIT set the GMAC_CONTROL_PS
+(bit 15) to 1 which indicates 10/ 100Mbps causing mismatch between the
+phylink and MAC when the speed is set to 1000 or 2500 Mbps
+
+This patch moves the phylink_resume() after stmmac_hw_setup()
+to ensure the MAC is initialized before configuring the phylink.
+
+Signed-off-by: Gan Yi Fang <yi.fang.gan@intel.com>
+---
+ .../net/ethernet/stmicro/stmmac/stmmac_main.c  | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index d480ec249b5f6..aa0cfff39d427 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -8021,16 +8021,6 @@ int stmmac_resume(struct device *dev)
+ 			return ret;
+ 	}
+ 
+-	rtnl_lock();
+-	if (device_may_wakeup(priv->device) && priv->plat->pmt) {
+-		phylink_resume(priv->phylink);
+-	} else {
+-		phylink_resume(priv->phylink);
+-		if (device_may_wakeup(priv->device))
+-			phylink_speed_up(priv->phylink);
+-	}
+-	rtnl_unlock();
+-
+ 	rtnl_lock();
+ 	mutex_lock(&priv->lock);
+ 
+@@ -8045,6 +8035,14 @@ int stmmac_resume(struct device *dev)
+ 
+ 	stmmac_restore_hw_vlan_rx_fltr(priv, ndev, priv->hw);
+ 
++	if (device_may_wakeup(priv->device) && priv->plat->pmt) {
++		phylink_resume(priv->phylink);
++	} else {
++		phylink_resume(priv->phylink);
++		if (device_may_wakeup(priv->device))
++			phylink_speed_up(priv->phylink);
++	}
++
+ 	stmmac_enable_all_queues(priv);
+ 	stmmac_enable_all_dma_irq(priv);
+ 
+-- 
+2.25.1
+

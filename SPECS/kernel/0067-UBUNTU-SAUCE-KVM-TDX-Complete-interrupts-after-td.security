@@ -1,0 +1,74 @@
+From 09d55b68005c854fcf1e8325ad4485aaf10e93be Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 11 Jan 2023 11:28:29 -0800
+Subject: [PATCH 067/147] UBUNTU: SAUCE: KVM: TDX: Complete interrupts after
+ tdexit
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+This corresponds to VMX __vmx_complete_interrupts().  Because TDX
+virtualize vAPIC, KVM only needs to care NMI injection.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+Reviewed-by: Binbin Wu <binbin.wu@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit f0eb5ef7f829b73ccca4268b9f0f3cb2057fb72b)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 10 ++++++++++
+ arch/x86/kvm/vmx/tdx.h |  4 ++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 13ce9f9ae42c..0c41a3ff9139 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -538,6 +538,14 @@ void tdx_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)
+ 	 */
+ }
+ 
++static void tdx_complete_interrupts(struct kvm_vcpu *vcpu)
++{
++	/* Avoid costly SEAMCALL if no nmi was injected */
++	if (vcpu->arch.nmi_injected)
++		vcpu->arch.nmi_injected = td_management_read8(to_tdx(vcpu),
++							      TD_VCPU_PEND_NMI);
++}
++
+ struct tdx_uret_msr {
+ 	u32 msr;
+ 	unsigned int slot;
+@@ -666,6 +674,8 @@ fastpath_t tdx_vcpu_run(struct kvm_vcpu *vcpu,  bool force_immediate_exit)
+ 	vcpu->arch.regs_avail &= ~VMX_REGS_LAZY_LOAD_SET;
+ 	trace_kvm_exit(vcpu, KVM_ISA_VMX);
+ 
++	tdx_complete_interrupts(vcpu);
++
+ 	return EXIT_FASTPATH_NONE;
+ }
+ 
+diff --git a/arch/x86/kvm/vmx/tdx.h b/arch/x86/kvm/vmx/tdx.h
+index 44eab734e702..0d8a98feb58e 100644
+--- a/arch/x86/kvm/vmx/tdx.h
++++ b/arch/x86/kvm/vmx/tdx.h
+@@ -142,6 +142,8 @@ static __always_inline void tdvps_vmcs_check(u32 field, u8 bits)
+ 			 "Invalid TD VMCS access for 16-bit field");
+ }
+ 
++static __always_inline void tdvps_management_check(u64 field, u8 bits) {}
++
+ #define TDX_BUILD_TDVPS_ACCESSORS(bits, uclass, lclass)				\
+ static __always_inline u##bits td_##lclass##_read##bits(struct vcpu_tdx *tdx,	\
+ 							u32 field)		\
+@@ -200,6 +202,8 @@ TDX_BUILD_TDVPS_ACCESSORS(16, VMCS, vmcs);
+ TDX_BUILD_TDVPS_ACCESSORS(32, VMCS, vmcs);
+ TDX_BUILD_TDVPS_ACCESSORS(64, VMCS, vmcs);
+ 
++TDX_BUILD_TDVPS_ACCESSORS(8, MANAGEMENT, management);
++
+ static __always_inline u64 td_tdcs_exec_read64(struct kvm_tdx *kvm_tdx, u32 field)
+ {
+ 	struct tdx_module_args out;
+-- 
+2.34.1
+

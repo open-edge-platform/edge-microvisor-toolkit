@@ -1,0 +1,108 @@
+From c5acd7e11cbcdb114edfba7d5109c8d2c1fb8672 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <sean.j.christopherson@intel.com>
+Date: Wed, 28 Aug 2024 16:12:05 +0800
+Subject: [PATCH 014/147] UBUNTU: SAUCE: VM: x86/mmu: Introduce
+ kvm_mmu_map_tdp_page() for use by TDX
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Introduce a helper to directly (pun intended) fault-in a TDP page
+without having to go through the full page fault path.  This allows
+TDX to get the resulting pfn and also allows the RET_PF_* enums to
+stay in mmu.c where they belong.
+
+Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit d046a202e5f69b6d8717e737a5295d3f85f94ca6)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu.h     |  3 +++
+ arch/x86/kvm/mmu/mmu.c | 58 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 61 insertions(+)
+
+diff --git a/arch/x86/kvm/mmu.h b/arch/x86/kvm/mmu.h
+index 9dc5dd43ae7f..7b8c356b8ab5 100644
+--- a/arch/x86/kvm/mmu.h
++++ b/arch/x86/kvm/mmu.h
+@@ -160,6 +160,9 @@ static inline void kvm_mmu_refresh_passthrough_bits(struct kvm_vcpu *vcpu,
+ 	__kvm_mmu_refresh_passthrough_bits(vcpu, mmu);
+ }
+ 
++int kvm_mmu_map_tdp_page(struct kvm_vcpu *vcpu, gpa_t gpa, u64 error_code,
++			 u8 max_level, u8 *goal_level);
++
+ /*
+  * Check if a given access (described through the I/D, W/R and U/S bits of a
+  * page fault error code pfec) causes a permission fault with the given PTE
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 9242c0649adf..2262f4a901fc 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -4815,6 +4815,64 @@ long kvm_arch_vcpu_pre_fault_memory(struct kvm_vcpu *vcpu,
+ 	return min(range->size, end - range->gpa);
+ }
+ 
++int kvm_mmu_map_tdp_page(struct kvm_vcpu *vcpu, gpa_t gpa, u64 error_code,
++			 u8 max_level, u8 *goal_level)
++{
++	int r;
++	struct kvm_page_fault fault = (struct kvm_page_fault) {
++		.addr = gpa,
++		.error_code = error_code,
++		.exec = error_code & PFERR_FETCH_MASK,
++		.write = error_code & PFERR_WRITE_MASK,
++		.present = error_code & PFERR_PRESENT_MASK,
++		.rsvd = error_code & PFERR_RSVD_MASK,
++		.user = error_code & PFERR_USER_MASK,
++		.prefetch = false,
++		.is_tdp = true,
++		.is_private = error_code & PFERR_GUEST_ENC_MASK,
++		.nx_huge_page_workaround_enabled = is_nx_huge_page_enabled(vcpu->kvm),
++	};
++
++	WARN_ON_ONCE(!vcpu->arch.mmu->root_role.direct);
++	fault.slot = kvm_vcpu_gfn_to_memslot(vcpu, fault.gfn);
++
++	r = mmu_topup_memory_caches(vcpu, false);
++	if (r)
++		return r;
++
++	fault.max_level = max_level;
++	fault.req_level = PG_LEVEL_4K;
++	fault.goal_level = PG_LEVEL_4K;
++
++#ifdef CONFIG_X86_64
++	if (tdp_mmu_enabled)
++		r = kvm_tdp_mmu_page_fault(vcpu, &fault);
++	else
++#endif
++		r = direct_page_fault(vcpu, &fault);
++
++	if (is_error_noslot_pfn(fault.pfn) || vcpu->kvm->vm_bugged)
++		return -EFAULT;
++
++	switch (r) {
++	case RET_PF_RETRY:
++		return -EAGAIN;
++
++	case RET_PF_FIXED:
++	case RET_PF_SPURIOUS:
++		if (goal_level)
++			*goal_level = fault.goal_level;
++		return 0;
++
++	case RET_PF_CONTINUE:
++	case RET_PF_EMULATE:
++	case RET_PF_INVALID:
++	default:
++		return -EIO;
++	}
++}
++EXPORT_SYMBOL_GPL(kvm_mmu_map_tdp_page);
++
+ static void nonpaging_init_context(struct kvm_mmu *context)
+ {
+ 	context->page_fault = nonpaging_page_fault;
+-- 
+2.34.1
+

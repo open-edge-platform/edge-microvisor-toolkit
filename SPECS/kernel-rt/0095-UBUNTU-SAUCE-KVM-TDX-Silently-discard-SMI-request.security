@@ -1,0 +1,175 @@
+From 7fc3c7aed18eb589c5c753693f028eaa395278f9 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Wed, 8 Dec 2021 12:04:34 -0800
+Subject: [PATCH 095/147] UBUNTU: SAUCE: KVM: TDX: Silently discard SMI request
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX doesn't support system-management mode (SMM) and system-management
+interrupt (SMI) in guest TDs.  Because guest state (vcpu state, memory
+state) is protected, it must go through the TDX module APIs to change guest
+state, injecting SMI and changing vcpu mode into SMM.  The TDX module
+doesn't provide a way for VMM to inject SMI into guest TD and a way for VMM
+to switch guest vcpu mode into SMM.
+
+We have two options in KVM when handling SMM or SMI in the guest TD or the
+device model (e.g. QEMU): 1) silently ignore the request or 2) return a
+meaningful error.
+
+For simplicity, we implemented the option 1).
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit f2c4df57469242bd76a5265ab375a4dbc6fb74cd)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/smm.h         |  7 +++++-
+ arch/x86/kvm/vmx/main.c    | 45 ++++++++++++++++++++++++++++++++++----
+ arch/x86/kvm/vmx/tdx.c     | 29 ++++++++++++++++++++++++
+ arch/x86/kvm/vmx/x86_ops.h | 12 ++++++++++
+ 4 files changed, 88 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/kvm/smm.h b/arch/x86/kvm/smm.h
+index a1cf2ac5bd78..bc77902f5c18 100644
+--- a/arch/x86/kvm/smm.h
++++ b/arch/x86/kvm/smm.h
+@@ -142,7 +142,12 @@ union kvm_smram {
+ 
+ static inline int kvm_inject_smi(struct kvm_vcpu *vcpu)
+ {
+-	kvm_make_request(KVM_REQ_SMI, vcpu);
++	/*
++	 * If SMM isn't supported (e.g. TDX), silently discard SMI request.
++	 * Assume that SMM supported = MSR_IA32_SMBASE supported.
++	 */
++	if (static_call(kvm_x86_has_emulated_msr)(vcpu->kvm, MSR_IA32_SMBASE))
++		kvm_make_request(KVM_REQ_SMI, vcpu);
+ 	return 0;
+ }
+ 
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 8023c0d83019..8d02c7e16ea4 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -287,6 +287,43 @@ static void vt_msr_filter_changed(struct kvm_vcpu *vcpu)
+ 	vmx_msr_filter_changed(vcpu);
+ }
+ 
++#ifdef CONFIG_KVM_SMM
++static int vt_smi_allowed(struct kvm_vcpu *vcpu, bool for_injection)
++{
++	if (is_td_vcpu(vcpu))
++		return tdx_smi_allowed(vcpu, for_injection);
++
++	return vmx_smi_allowed(vcpu, for_injection);
++}
++
++static int vt_enter_smm(struct kvm_vcpu *vcpu, union kvm_smram *smram)
++{
++	if (unlikely(is_td_vcpu(vcpu)))
++		return tdx_enter_smm(vcpu, smram);
++
++	return vmx_enter_smm(vcpu, smram);
++}
++
++static int vt_leave_smm(struct kvm_vcpu *vcpu, const union kvm_smram *smram)
++{
++	if (unlikely(is_td_vcpu(vcpu)))
++		return tdx_leave_smm(vcpu, smram);
++
++	return vmx_leave_smm(vcpu, smram);
++}
++
++static void vt_enable_smi_window(struct kvm_vcpu *vcpu)
++{
++	if (is_td_vcpu(vcpu)) {
++		tdx_enable_smi_window(vcpu);
++		return;
++	}
++
++	/* RSM will cause a vmexit anyway.  */
++	vmx_enable_smi_window(vcpu);
++}
++#endif
++
+ static void vt_apicv_pre_state_restore(struct kvm_vcpu *vcpu)
+ {
+ 	struct pi_desc *pi = vcpu_to_pi_desc(vcpu);
+@@ -685,10 +722,10 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.setup_mce = vmx_setup_mce,
+ 
+ #ifdef CONFIG_KVM_SMM
+-	.smi_allowed = vmx_smi_allowed,
+-	.enter_smm = vmx_enter_smm,
+-	.leave_smm = vmx_leave_smm,
+-	.enable_smi_window = vmx_enable_smi_window,
++	.smi_allowed = vt_smi_allowed,
++	.enter_smm = vt_enter_smm,
++	.leave_smm = vt_leave_smm,
++	.enable_smi_window = vt_enable_smi_window,
+ #endif
+ 
+ 	.check_emulate_instruction = vmx_check_emulate_instruction,
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index de77af0dea5c..4fe8746c3d8d 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -2048,6 +2048,35 @@ int tdx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
+ 	}
+ }
+ 
++#ifdef CONFIG_KVM_SMM
++int tdx_smi_allowed(struct kvm_vcpu *vcpu, bool for_injection)
++{
++	/* SMI isn't supported for TDX. */
++	WARN_ON_ONCE(1);
++	return false;
++}
++
++int tdx_enter_smm(struct kvm_vcpu *vcpu, union kvm_smram *smram)
++{
++	/* smi_allowed() is always false for TDX as above. */
++	WARN_ON_ONCE(1);
++	return 0;
++}
++
++int tdx_leave_smm(struct kvm_vcpu *vcpu, const union kvm_smram *smram)
++{
++	WARN_ON_ONCE(1);
++	return 0;
++}
++
++void tdx_enable_smi_window(struct kvm_vcpu *vcpu)
++{
++	/* SMI isn't supported for TDX.  Silently discard SMI request. */
++	WARN_ON_ONCE(1);
++	vcpu->arch.smi_pending = false;
++}
++#endif
++
+ static int tdx_get_capabilities(struct kvm_tdx_cmd *cmd)
+ {
+ 	struct kvm_tdx_capabilities __user *user_caps;
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index 5eb09fdff8ab..38b72b877598 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -238,4 +238,16 @@ static inline int tdx_pre_memory_mapping(struct kvm_vcpu *vcpu,
+ static inline void tdx_post_memory_mapping(struct kvm_vcpu *vcpu, struct kvm_memory_mapping *mapping) {}
+ #endif
+ 
++#if defined(CONFIG_INTEL_TDX_HOST) && defined(CONFIG_KVM_SMM)
++int tdx_smi_allowed(struct kvm_vcpu *vcpu, bool for_injection);
++int tdx_enter_smm(struct kvm_vcpu *vcpu, union kvm_smram *smram);
++int tdx_leave_smm(struct kvm_vcpu *vcpu, const union kvm_smram *smram);
++void tdx_enable_smi_window(struct kvm_vcpu *vcpu);
++#else
++static inline int tdx_smi_allowed(struct kvm_vcpu *vcpu, bool for_injection) { return false; }
++static inline int tdx_enter_smm(struct kvm_vcpu *vcpu, union kvm_smram *smram) { return 0; }
++static inline int tdx_leave_smm(struct kvm_vcpu *vcpu, const union kvm_smram *smram) { return 0; }
++static inline void tdx_enable_smi_window(struct kvm_vcpu *vcpu) {}
++#endif
++
+ #endif /* __KVM_X86_VMX_X86_OPS_H */
+-- 
+2.34.1
+

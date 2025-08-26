@@ -1,0 +1,40 @@
+From 6ad426d4ba7c16e21b83fc461d2b64c49a0d64e3 Mon Sep 17 00:00:00 2001
+From: Feng Tang <feng.tang@intel.com>
+Date: Wed, 9 Oct 2024 09:42:53 +0800
+Subject: [PATCH 138/147] UBUNTU: SAUCE: tdx: init has_private_mem during tdx
+ init
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Otherwise there will be QEMU error when starting TDVM:
+
+"
+qemu-system-x86_64: kvm_set_user_memory_region: KVM_SET_USER_MEMORY_REGION2 failed,
+slot=0, start=0x0, size=0x80000000, flags=0x4, guest_memfd=11,
+guest_memfd_offset=0x0: Invalid argument
+kvm_set_phys_mem: error registering slot: Invalid argument
+"
+
+Signed-off-by: Feng Tang <feng.tang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit e9336259ceea5d6a2a722a917c07dc836fe3de78)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/tdx.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index b7d3ae543703..15da010847a8 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -596,6 +596,8 @@ int tdx_vm_init(struct kvm *kvm)
+ //	kvm_mmu_set_mmio_spte_value(kvm, 0);
+ 	kvm->arch.shadow_mmio_value = 0;
+ 
++	kvm->arch.has_private_mem = true;
++
+ 	/*
+ 	 * This function initializes only KVM software construct.  It doesn't
+ 	 * initialize TDX stuff, e.g. TDCS, TDR, TDCX, HKID etc.
+-- 
+2.34.1
+

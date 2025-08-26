@@ -1,0 +1,35 @@
+From a60de5ea3b9af15474a12797c36be5293887754a Mon Sep 17 00:00:00 2001
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Date: Fri, 25 Oct 2024 11:05:53 +0200
+Subject: [PATCH 22/25] sched: Fixup the IS_ENABLED check for PREEMPT_LAZY
+
+The IS_ENABLED is missing the CONFIG_ and therefore always evaluates to
+false.
+
+Reported-by: Shrikanth Hegde <sshegde@linux.ibm.com>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ kernel/sched/core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 9269397541e0f..9582c5d51e73e 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -1125,11 +1125,11 @@ static __always_inline bool dynamic_preempt_promote(void)
+ #else
+ static __always_inline bool dynamic_preempt_lazy(void)
+ {
+-	return IS_ENABLED(PREEMPT_LAZY) | IS_ENABLED(PREEMPT_LAZIEST);
++	return IS_ENABLED(CONFIG_PREEMPT_LAZY) | IS_ENABLED(CONFIG_PREEMPT_LAZIEST);
+ }
+ static __always_inline bool dynamic_preempt_promote(void)
+ {
+-	return IS_ENABLED(PREEMPT_LAZY);
++	return IS_ENABLED(CONFIG_PREEMPT_LAZY);
+ }
+ #endif
+ 
+-- 
+2.25.1
+

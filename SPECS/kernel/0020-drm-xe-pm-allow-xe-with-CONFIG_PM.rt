@@ -1,0 +1,45 @@
+From 61a644279484a43e502de9cd4a6b9d3187854b2a Mon Sep 17 00:00:00 2001
+From: Zhang Wei E <wei.e.zhang@intel.com>
+Date: Tue, 27 May 2025 06:28:49 +0000
+Subject: [PATCH 20/20] drm/xe/pm: allow xe with CONFIG_PM
+
+Intel xe driver try to check runtime pm active status and use status
+without CONFIG_PM, it will return unexpected value, which prevent xe
+driver working without CONFIG_PM.
+
+Signed-off-by: Zhang Wei E <wei.e.zhang@intel.com>
+---
+ drivers/gpu/drm/xe/xe_pm.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_pm.c b/drivers/gpu/drm/xe/xe_pm.c
+index 46c73ff10c74..b73ffe02d2da 100644
+--- a/drivers/gpu/drm/xe/xe_pm.c
++++ b/drivers/gpu/drm/xe/xe_pm.c
+@@ -585,7 +585,11 @@ int xe_pm_runtime_get_ioctl(struct xe_device *xe)
+  */
+ bool xe_pm_runtime_get_if_active(struct xe_device *xe)
+ {
++#ifdef CONFIG_PM
+ 	return pm_runtime_get_if_active(xe->drm.dev) > 0;
++#else
++	return true;
++#endif
+ }
+ 
+ /**
+@@ -603,7 +607,11 @@ bool xe_pm_runtime_get_if_in_use(struct xe_device *xe)
+ 		return true;
+ 	}
+ 
++#ifdef CONFIG_PM
+ 	return pm_runtime_get_if_in_use(xe->drm.dev) > 0;
++#else
++	return true;
++#endif
+ }
+ 
+ /*
+-- 
+2.34.1
+

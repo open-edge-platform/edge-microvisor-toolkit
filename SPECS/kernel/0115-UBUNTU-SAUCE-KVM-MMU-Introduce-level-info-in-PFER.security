@@ -1,0 +1,86 @@
+From 8f2a7b1186e455915b54cc4b19fa275da7f2d58f Mon Sep 17 00:00:00 2001
+From: Xiaoyao Li <xiaoyao.li@intel.com>
+Date: Mon, 23 Sep 2024 11:02:19 +0800
+Subject: [PATCH 115/147] UBUNTU: SAUCE: KVM: MMU: Introduce level info in
+ PFERR code
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+For TDX, EPT violation can happen when TDG.MEM.PAGE.ACCEPT.
+And TDG.MEM.PAGE.ACCEPT contains the desired accept page level of TD guest.
+
+1. KVM can map it with 4KB page while TD guest wants to accept 2MB page.
+
+  TD guest will get TDX_PAGE_SIZE_MISMATCH and it should try to accept
+  4KB size.
+
+2. KVM can map it with 2MB page while TD guest wants to accept 4KB page.
+
+  KVM needs to honor it because
+  a) there is no way to tell guest KVM maps it as 2MB size. And
+  b) guest accepts it in 4KB size since guest knows some other 4KB page
+     in the same 2MB range will be used as shared page.
+
+For case 2, it need to pass desired page level to KVM MMU page fault
+handler. Use bit 29:31 of kvm PF error code for this purpose.
+
+Signed-off-by: Xiaoyao Li <xiaoyao.li@intel.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit d28a9285d42693d6e67a1ac79a476b9495d273b9)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/include/asm/kvm_host.h | 6 ++++++
+ arch/x86/kvm/mmu/mmu.c          | 5 +++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 6e3dd7a43890..1e7fa1ad24e7 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -258,6 +258,9 @@ enum x86_intercept_stage;
+ 	KVM_GUESTDBG_INJECT_DB | \
+ 	KVM_GUESTDBG_BLOCKIRQ)
+ 
++#define PFERR_LEVEL_START_BIT 28
++#define PFERR_LEVEL_END_BIT 30
++
+ #define PFERR_PRESENT_MASK	BIT(0)
+ #define PFERR_WRITE_MASK	BIT(1)
+ #define PFERR_USER_MASK		BIT(2)
+@@ -265,6 +268,7 @@ enum x86_intercept_stage;
+ #define PFERR_FETCH_MASK	BIT(4)
+ #define PFERR_PK_MASK		BIT(5)
+ #define PFERR_SGX_MASK		BIT(15)
++#define PFERR_LEVEL_MASK	GENMASK_ULL(PFERR_LEVEL_END_BIT, PFERR_LEVEL_START_BIT)
+ #define PFERR_GUEST_RMP_MASK	BIT_ULL(31)
+ #define PFERR_GUEST_FINAL_MASK	BIT_ULL(32)
+ #define PFERR_GUEST_PAGE_MASK	BIT_ULL(33)
+@@ -284,6 +288,8 @@ enum x86_intercept_stage;
+ #define PFERR_PRIVATE_ACCESS   BIT_ULL(49)
+ #define PFERR_SYNTHETIC_MASK   (PFERR_IMPLICIT_ACCESS | PFERR_PRIVATE_ACCESS)
+ 
++#define PFERR_LEVEL(err_code)	(((err_code) & PFERR_LEVEL_MASK) >> PFERR_LEVEL_START_BIT)
++
+ /* apic attention bits */
+ #define KVM_APIC_CHECK_VAPIC	0
+ /*
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index eecca0888e81..47aec2ca5e6e 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -4773,6 +4773,11 @@ bool kvm_mmu_may_ignore_guest_pat(void)
+ 
+ int kvm_tdp_page_fault(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault)
+ {
++	u8 err_level = PFERR_LEVEL(fault->error_code);
++
++	if (err_level)
++		fault->max_level = min(fault->max_level, err_level);
++
+ #ifdef CONFIG_X86_64
+ 	if (tdp_mmu_enabled)
+ 		return kvm_tdp_mmu_page_fault(vcpu, fault);
+-- 
+2.34.1
+

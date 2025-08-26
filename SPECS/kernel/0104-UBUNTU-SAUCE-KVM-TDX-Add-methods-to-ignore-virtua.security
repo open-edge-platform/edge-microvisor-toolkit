@@ -1,0 +1,147 @@
+From 1fad155513ccb8b2bac840ee551c8b1f98546c0b Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Sun, 15 Sep 2024 23:17:17 +0800
+Subject: [PATCH 104/147] UBUNTU: SAUCE: KVM: TDX: Add methods to ignore
+ virtual apic related operation
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+TDX protects TDX guest APIC state from VMM.  Implement access methods of
+TDX guest vAPIC state to ignore them or return zero.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit d87fa494307590744d6744bd765bba31483b6448)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+Signed-off-by: Baoli.Zhang <baoli.zhang@intel.com>
+---
+ arch/x86/kvm/vmx/main.c    | 50 ++++++++++++++++++++++++++++++++++----
+ arch/x86/kvm/vmx/tdx.c     |  6 +++++
+ arch/x86/kvm/vmx/x86_ops.h |  3 +++
+ 3 files changed, 54 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index f587be80b3c2..7241752bcf67 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -356,6 +356,14 @@ static bool vt_apic_init_signal_blocked(struct kvm_vcpu *vcpu)
+ 	return vmx_apic_init_signal_blocked(vcpu);
+ }
+ 
++static void vt_set_virtual_apic_mode(struct kvm_vcpu *vcpu)
++{
++	if (is_td_vcpu(vcpu))
++		return tdx_set_virtual_apic_mode(vcpu);
++
++	return vmx_set_virtual_apic_mode(vcpu);
++}
++
+ static void vt_apicv_pre_state_restore(struct kvm_vcpu *vcpu)
+ {
+ 	struct pi_desc *pi = vcpu_to_pi_desc(vcpu);
+@@ -364,6 +372,22 @@ static void vt_apicv_pre_state_restore(struct kvm_vcpu *vcpu)
+ 	memset(pi->pir, 0, sizeof(pi->pir));
+ }
+ 
++static void vt_hwapic_irr_update(struct kvm_vcpu *vcpu, int max_irr)
++{
++	if (is_td_vcpu(vcpu))
++		return;
++
++	return vmx_hwapic_irr_update(vcpu, max_irr);
++}
++
++static void vt_hwapic_isr_update(struct kvm_vcpu *vcpu, int max_isr)
++{
++	if (is_td_vcpu(kvm_get_running_vcpu()))
++		return;
++
++	return vmx_hwapic_isr_update(vcpu, max_isr);
++}
++
+ static int vt_sync_pir_to_irr(struct kvm_vcpu *vcpu)
+ {
+ 	if (is_td_vcpu(vcpu))
+@@ -809,6 +833,22 @@ static void vt_update_cr8_intercept(struct kvm_vcpu *vcpu, int tpr, int irr)
+ 	vmx_update_cr8_intercept(vcpu, tpr, irr);
+ }
+ 
++static void vt_set_apic_access_page_addr(struct kvm_vcpu *vcpu)
++{
++	if (is_td_vcpu(vcpu))
++		return;
++
++	vmx_set_apic_access_page_addr(vcpu);
++}
++
++static void vt_refresh_apicv_exec_ctrl(struct kvm_vcpu *vcpu)
++{
++	if (WARN_ON_ONCE(is_td_vcpu(vcpu)))
++		return;
++
++	vmx_refresh_apicv_exec_ctrl(vcpu);
++}
++
+ static void vt_load_eoi_exitmap(struct kvm_vcpu *vcpu, u64 *eoi_exit_bitmap)
+ {
+ 	if (is_td_vcpu(vcpu))
+@@ -1053,14 +1093,14 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.update_cr8_intercept = vt_update_cr8_intercept,
+ 
+ 	.x2apic_icr_is_split = false,
+-	.set_virtual_apic_mode = vmx_set_virtual_apic_mode,
+-	.set_apic_access_page_addr = vmx_set_apic_access_page_addr,
+-	.refresh_apicv_exec_ctrl = vmx_refresh_apicv_exec_ctrl,
++	.set_virtual_apic_mode = vt_set_virtual_apic_mode,
++	.set_apic_access_page_addr = vt_set_apic_access_page_addr,
++	.refresh_apicv_exec_ctrl = vt_refresh_apicv_exec_ctrl,
+ 	.load_eoi_exitmap = vt_load_eoi_exitmap,
+ 	.apicv_pre_state_restore = vt_apicv_pre_state_restore,
+ 	.required_apicv_inhibits = VMX_REQUIRED_APICV_INHIBITS,
+-	.hwapic_irr_update = vmx_hwapic_irr_update,
+-	.hwapic_isr_update = vmx_hwapic_isr_update,
++	.hwapic_irr_update = vt_hwapic_irr_update,
++	.hwapic_isr_update = vt_hwapic_isr_update,
+ 	.sync_pir_to_irr = vt_sync_pir_to_irr,
+ 	.deliver_interrupt = vt_deliver_interrupt,
+ 	.dy_apicv_has_pending_interrupt = pi_has_pending_interrupt,
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 16aeb07f8f11..5cc78adf06b7 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -2084,6 +2084,12 @@ void tdx_enable_smi_window(struct kvm_vcpu *vcpu)
+ }
+ #endif
+ 
++void tdx_set_virtual_apic_mode(struct kvm_vcpu *vcpu)
++{
++	/* Only x2APIC mode is supported for TD. */
++	WARN_ON_ONCE(kvm_get_apic_mode(vcpu) != LAPIC_MODE_X2APIC);
++}
++
+ int tdx_get_cpl(struct kvm_vcpu *vcpu)
+ {
+ 	return 0;
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index 38fa1476e515..95e1aaac9c6a 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -163,6 +163,7 @@ void tdx_get_exit_info(struct kvm_vcpu *vcpu, u32 *reason,
+ bool tdx_has_emulated_msr(u32 index, bool write);
+ int tdx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr);
+ int tdx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr);
++void tdx_set_virtual_apic_mode(struct kvm_vcpu *vcpu);
+ 
+ int tdx_get_cpl(struct kvm_vcpu *vcpu);
+ void tdx_cache_reg(struct kvm_vcpu *vcpu, enum kvm_reg reg);
+@@ -224,6 +225,8 @@ static inline bool tdx_has_emulated_msr(u32 index, bool write) { return false; }
+ static inline int tdx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr) { return 1; }
+ static inline int tdx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr) { return 1; }
+ 
++static inline void tdx_set_virtual_apic_mode(struct kvm_vcpu *vcpu) {}
++
+ static inline int tdx_get_cpl(struct kvm_vcpu *vcpu) { return 0; }
+ static inline void tdx_cache_reg(struct kvm_vcpu *vcpu, enum kvm_reg reg) {}
+ static inline unsigned long tdx_get_rflags(struct kvm_vcpu *vcpu) { return 0; }
+-- 
+2.34.1
+

@@ -1,0 +1,250 @@
+From 4d7aaaaaaf0fa1b4ab8112f78def5b61cac120b2 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Sun, 15 Sep 2024 21:21:24 +0800
+Subject: [PATCH 090/147] UBUNTU: SAUCE: KVM: TDX: Implement callbacks for MSR
+ operations for TDX
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+Implements set_msr/get_msr/has_emulated_msr methods for TDX to handle
+hypercall from guest TD for paravirtualized rdmsr and wrmsr.  The TDX
+module virtualizes MSRs.  For some MSRs, it injects #VE to the guest TD
+upon RDMSR or WRMSR.  The exact list of such MSRs are defined in the spec.
+
+Upon #VE, the guest TD may execute hypercalls,
+TDG.VP.VMCALL<INSTRUCTION.RDMSR> and TDG.VP.VMCALL<INSTRUCTION.WRMSR>,
+which are defined in GHCI (Guest-Host Communication Interface) so that the
+host VMM (e.g. KVM) can virtualize the MSRs.
+
+There are three classes of MSRs virtualization.
+- non-configurable: TDX module directly virtualizes it. VMM can't
+  configure. the value set by KVM_SET_MSR_INDEX_LIST is ignored.
+- configurable: TDX module directly virtualizes it. VMM can configure at
+  the VM creation time.  The value set by KVM_SET_MSR_INDEX_LIST is used.
+- #VE case
+  Guest TD would issue TDG.VP.VMCALL<INSTRUCTION.{WRMSR,RDMSR> and
+  VMM handles the MSR hypercall. The value set by KVM_SET_MSR_INDEX_LIST
+  is used.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit 02ed501240f3c46e7bc032bc917e95e1345b5e4d)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/vmx/main.c    | 44 +++++++++++++++++++++---
+ arch/x86/kvm/vmx/tdx.c     | 70 ++++++++++++++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/x86_ops.h |  7 ++++
+ arch/x86/kvm/x86.c         |  1 -
+ arch/x86/kvm/x86.h         |  2 ++
+ 5 files changed, 119 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index 7fe6bc8309dc..8023c0d83019 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -251,6 +251,42 @@ static void vt_handle_exit_irqoff(struct kvm_vcpu *vcpu)
+ 	vmx_handle_exit_irqoff(vcpu);
+ }
+ 
++static int vt_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
++{
++	if (unlikely(is_td_vcpu(vcpu)))
++		return tdx_set_msr(vcpu, msr_info);
++
++	return vmx_set_msr(vcpu, msr_info);
++}
++
++/*
++ * The kvm parameter can be NULL (module initialization, or invocation before
++ * VM creation). Be sure to check the kvm parameter before using it.
++ */
++static bool vt_has_emulated_msr(struct kvm *kvm, u32 index)
++{
++	if (kvm && is_td(kvm))
++		return tdx_has_emulated_msr(index, true);
++
++	return vmx_has_emulated_msr(kvm, index);
++}
++
++static int vt_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
++{
++	if (unlikely(is_td_vcpu(vcpu)))
++		return tdx_get_msr(vcpu, msr_info);
++
++	return vmx_get_msr(vcpu, msr_info);
++}
++
++static void vt_msr_filter_changed(struct kvm_vcpu *vcpu)
++{
++	if (is_td_vcpu(vcpu))
++		return;
++
++	vmx_msr_filter_changed(vcpu);
++}
++
+ static void vt_apicv_pre_state_restore(struct kvm_vcpu *vcpu)
+ {
+ 	struct pi_desc *pi = vcpu_to_pi_desc(vcpu);
+@@ -529,7 +565,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.disable_virtualization_cpu = vt_disable_virtualization_cpu,
+ 	.emergency_disable_virtualization_cpu = vmx_emergency_disable_virtualization_cpu,
+ 
+-	.has_emulated_msr = vmx_has_emulated_msr,
++	.has_emulated_msr = vt_has_emulated_msr,
+ 
+ 	.vm_size = sizeof(struct kvm_vmx),
+ 	.max_vcpus = vt_max_vcpus,
+@@ -550,8 +586,8 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 
+ 	.update_exception_bitmap = vmx_update_exception_bitmap,
+ 	.get_feature_msr = vmx_get_feature_msr,
+-	.get_msr = vmx_get_msr,
+-	.set_msr = vmx_set_msr,
++	.get_msr = vt_get_msr,
++	.set_msr = vt_set_msr,
+ 	.get_segment_base = vmx_get_segment_base,
+ 	.get_segment = vmx_get_segment,
+ 	.set_segment = vmx_set_segment,
+@@ -659,7 +695,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.apic_init_signal_blocked = vmx_apic_init_signal_blocked,
+ 	.migrate_timers = vmx_migrate_timers,
+ 
+-	.msr_filter_changed = vmx_msr_filter_changed,
++	.msr_filter_changed = vt_msr_filter_changed,
+ 	.complete_emulated_msr = kvm_complete_insn_gp,
+ 
+ 	.vcpu_deliver_sipi_vector = kvm_vcpu_deliver_sipi_vector,
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 957bb8da3770..03b5ce013c5c 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1881,6 +1881,76 @@ void tdx_get_exit_info(struct kvm_vcpu *vcpu, u32 *reason,
+ 	*error_code = 0;
+ }
+ 
++static bool tdx_is_emulated_kvm_msr(u32 index, bool write)
++{
++	switch (index) {
++	case MSR_KVM_POLL_CONTROL:
++		return true;
++	default:
++		return false;
++	}
++}
++
++bool tdx_has_emulated_msr(u32 index, bool write)
++{
++	switch (index) {
++	case MSR_IA32_UCODE_REV:
++	case MSR_IA32_ARCH_CAPABILITIES:
++	case MSR_IA32_POWER_CTL:
++	case MSR_IA32_CR_PAT:
++	case MSR_IA32_TSC_DEADLINE:
++	case MSR_IA32_MISC_ENABLE:
++	case MSR_PLATFORM_INFO:
++	case MSR_MISC_FEATURES_ENABLES:
++	case MSR_IA32_MCG_CAP:
++	case MSR_IA32_MCG_STATUS:
++	case MSR_IA32_MCG_CTL:
++	case MSR_IA32_MCG_EXT_CTL:
++	case MSR_IA32_MC0_CTL ... MSR_IA32_MCx_CTL(KVM_MAX_MCE_BANKS) - 1:
++	case MSR_IA32_MC0_CTL2 ... MSR_IA32_MCx_CTL2(KVM_MAX_MCE_BANKS) - 1:
++		/* MSR_IA32_MCx_{CTL, STATUS, ADDR, MISC, CTL2} */
++		return true;
++	case APIC_BASE_MSR ... APIC_BASE_MSR + 0xff:
++		/*
++		 * x2APIC registers that are virtualized by the CPU can't be
++		 * emulated, KVM doesn't have access to the virtual APIC page.
++		 */
++		switch (index) {
++		case X2APIC_MSR(APIC_TASKPRI):
++		case X2APIC_MSR(APIC_PROCPRI):
++		case X2APIC_MSR(APIC_EOI):
++		case X2APIC_MSR(APIC_ISR) ... X2APIC_MSR(APIC_ISR + APIC_ISR_NR):
++		case X2APIC_MSR(APIC_TMR) ... X2APIC_MSR(APIC_TMR + APIC_ISR_NR):
++		case X2APIC_MSR(APIC_IRR) ... X2APIC_MSR(APIC_IRR + APIC_ISR_NR):
++			return false;
++		default:
++			return true;
++		}
++	case MSR_IA32_APICBASE:
++	case MSR_EFER:
++		return !write;
++	case 0x4b564d00 ... 0x4b564dff:
++		/* KVM custom MSRs */
++		return tdx_is_emulated_kvm_msr(index, write);
++	default:
++		return false;
++	}
++}
++
++int tdx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
++{
++	if (tdx_has_emulated_msr(msr->index, false))
++		return kvm_get_msr_common(vcpu, msr);
++	return 1;
++}
++
++int tdx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr)
++{
++	if (tdx_has_emulated_msr(msr->index, true))
++		return kvm_set_msr_common(vcpu, msr);
++	return 1;
++}
++
+ static int tdx_get_capabilities(struct kvm_tdx_cmd *cmd)
+ {
+ 	struct kvm_tdx_capabilities __user *user_caps;
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index 64113445b5bf..5eb09fdff8ab 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -160,6 +160,10 @@ void tdx_deliver_interrupt(struct kvm_lapic *apic, int delivery_mode,
+ void tdx_inject_nmi(struct kvm_vcpu *vcpu);
+ void tdx_get_exit_info(struct kvm_vcpu *vcpu, u32 *reason,
+ 		u64 *info1, u64 *info2, u32 *intr_info, u32 *error_code);
++bool tdx_has_emulated_msr(u32 index, bool write);
++int tdx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr);
++int tdx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr);
++
+ int tdx_vcpu_ioctl(struct kvm_vcpu *vcpu, void __user *argp);
+ 
+ void tdx_flush_tlb(struct kvm_vcpu *vcpu);
+@@ -210,6 +214,9 @@ static inline void tdx_deliver_interrupt(struct kvm_lapic *apic, int delivery_mo
+ static inline void tdx_inject_nmi(struct kvm_vcpu *vcpu) {}
+ static inline void tdx_get_exit_info(struct kvm_vcpu *vcpu, u32 *reason, u64 *info1,
+ 				     u64 *info2, u32 *intr_info, u32 *error_code) {}
++static inline bool tdx_has_emulated_msr(u32 index, bool write) { return false; }
++static inline int tdx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr) { return 1; }
++static inline int tdx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr) { return 1; }
+ 
+ static inline int tdx_vcpu_ioctl(struct kvm_vcpu *vcpu, void __user *argp) { return -EOPNOTSUPP; }
+ 
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 388c9d27e1ea..b87498d53020 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -90,7 +90,6 @@
+ #include "trace.h"
+ 
+ #define MAX_IO_MSRS 256
+-#define KVM_MAX_MCE_BANKS 32
+ 
+ /*
+  * Note, kvm_caps fields should *never* have default values, all fields must be
+diff --git a/arch/x86/kvm/x86.h b/arch/x86/kvm/x86.h
+index a84c48ef5278..7c8f45a1b5d5 100644
+--- a/arch/x86/kvm/x86.h
++++ b/arch/x86/kvm/x86.h
+@@ -9,6 +9,8 @@
+ #include "kvm_cache_regs.h"
+ #include "kvm_emulate.h"
+ 
++#define KVM_MAX_MCE_BANKS 32
++
+ struct kvm_caps {
+ 	/* control of guest tsc rate supported? */
+ 	bool has_tsc_control;
+-- 
+2.34.1
+

@@ -1,0 +1,53 @@
+From 4598b1ab00007ffb13b1935d915a16f61f8eefe6 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Tue, 14 Dec 2021 16:35:13 -0800
+Subject: [PATCH 079/147] UBUNTU: SAUCE: KVM: TDX: handle EXIT_REASON_OTHER_SMI
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+If the control reaches EXIT_REASON_OTHER_SMI, #SMI is delivered and
+handled right after returning from the TDX module to KVM nothing needs to
+be done in KVM.  Continue TDX vcpu execution.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+(cherry picked from github.com/intel/kernel-downstream commit 2a48afee5801c4c8560cac5f3de0ec5c1846bd70)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/uapi/asm/vmx.h | 1 +
+ arch/x86/kvm/vmx/tdx.c          | 7 +++++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/arch/x86/include/uapi/asm/vmx.h b/arch/x86/include/uapi/asm/vmx.h
+index a5faf6d88f1b..b3a30ef3efdd 100644
+--- a/arch/x86/include/uapi/asm/vmx.h
++++ b/arch/x86/include/uapi/asm/vmx.h
+@@ -34,6 +34,7 @@
+ #define EXIT_REASON_TRIPLE_FAULT        2
+ #define EXIT_REASON_INIT_SIGNAL			3
+ #define EXIT_REASON_SIPI_SIGNAL         4
++#define EXIT_REASON_OTHER_SMI           6
+ 
+ #define EXIT_REASON_INTERRUPT_WINDOW    7
+ #define EXIT_REASON_NMI_WINDOW          8
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 9b24e834e94b..2ec84caff3f3 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -1349,6 +1349,13 @@ int tdx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t fastpath)
+ 	WARN_ON_ONCE(fastpath != EXIT_FASTPATH_NONE);
+ 
+ 	switch (exit_reason.basic) {
++	case EXIT_REASON_OTHER_SMI:
++		/*
++		 * If reach here, it's not a Machine Check System Management
++		 * Interrupt(MSMI).  #SMI is delivered and handled right after
++		 * SEAMRET, nothing needs to be done in KVM.
++		 */
++		return 1;
+ 	default:
+ 		break;
+ 	}
+-- 
+2.34.1
+

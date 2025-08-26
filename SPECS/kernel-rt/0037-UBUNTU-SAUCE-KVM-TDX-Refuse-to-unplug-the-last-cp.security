@@ -1,0 +1,217 @@
+From f28ffa42ae6dd8955b58535a4c5b17eb36311c18 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Fri, 30 Aug 2024 21:15:02 +0800
+Subject: [PATCH 037/147] UBUNTU: SAUCE: KVM: TDX: Refuse to unplug the last
+ cpu on the package
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+In order to reclaim TDX HKID, (i.e. when deleting guest TD), needs to call
+TDH.PHYMEM.PAGE.WBINVD on all packages.  If we have active TDX HKID, refuse
+to offline the last online cpu to guarantee at least one CPU online per
+package. Add arch callback for cpu offline.
+Because TDX doesn't support suspend, this also refuses suspend if TDs are
+running.  If no TD is running, suspend is allowed.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+Reviewed-by: Binbin Wu <binbin.wu@linux.intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit d109c8cc5ef84bf651cef4fc04e13e1e03ff19f8)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/asm/kvm-x86-ops.h |  1 +
+ arch/x86/include/asm/kvm_host.h    |  1 +
+ arch/x86/kvm/vmx/main.c            |  1 +
+ arch/x86/kvm/vmx/tdx.c             | 41 ++++++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/x86_ops.h         |  4 +++
+ arch/x86/kvm/x86.c                 |  5 ++++
+ include/linux/kvm_host.h           |  1 +
+ virt/kvm/kvm_main.c                | 12 +++++++--
+ 8 files changed, 64 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm-x86-ops.h b/arch/x86/include/asm/kvm-x86-ops.h
+index 92de8a269ce5..5993c21f9fb8 100644
+--- a/arch/x86/include/asm/kvm-x86-ops.h
++++ b/arch/x86/include/asm/kvm-x86-ops.h
+@@ -17,6 +17,7 @@ KVM_X86_OP(check_processor_compatibility)
+ KVM_X86_OP(enable_virtualization_cpu)
+ KVM_X86_OP(disable_virtualization_cpu)
+ KVM_X86_OP(hardware_unsetup)
++KVM_X86_OP_OPTIONAL_RET0(offline_cpu)
+ KVM_X86_OP(has_emulated_msr)
+ KVM_X86_OP(vcpu_after_set_cpuid)
+ KVM_X86_OP_OPTIONAL(max_vcpus);
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 833d4aa632ed..5953247b505f 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -1637,6 +1637,7 @@ struct kvm_x86_ops {
+ 	cpu_emergency_virt_cb *emergency_disable_virtualization_cpu;
+ 
+ 	void (*hardware_unsetup)(void);
++	int (*offline_cpu)(void);
+ 	bool (*has_emulated_msr)(struct kvm *kvm, u32 index);
+ 	void (*vcpu_after_set_cpuid)(struct kvm_vcpu *vcpu);
+ 
+diff --git a/arch/x86/kvm/vmx/main.c b/arch/x86/kvm/vmx/main.c
+index ceaf9826afb5..b04e77a856fe 100644
+--- a/arch/x86/kvm/vmx/main.c
++++ b/arch/x86/kvm/vmx/main.c
+@@ -114,6 +114,7 @@ struct kvm_x86_ops vt_x86_ops __initdata = {
+ 	.check_processor_compatibility = vmx_check_processor_compat,
+ 
+ 	.hardware_unsetup = vt_hardware_unsetup,
++	.offline_cpu = tdx_offline_cpu,
+ 
+ 	/* TDX cpu enablement is done by tdx_hardware_setup(). */
+ 	.enable_virtualization_cpu = vmx_enable_virtualization_cpu,
+diff --git a/arch/x86/kvm/vmx/tdx.c b/arch/x86/kvm/vmx/tdx.c
+index 042ff9bd5282..64d6b1a47ae3 100644
+--- a/arch/x86/kvm/vmx/tdx.c
++++ b/arch/x86/kvm/vmx/tdx.c
+@@ -97,6 +97,7 @@ int tdx_vm_enable_cap(struct kvm *kvm, struct kvm_enable_cap *cap)
+  */
+ static DEFINE_MUTEX(tdx_lock);
+ static struct mutex *tdx_mng_key_config_lock;
++static atomic_t nr_configured_hkid;
+ 
+ static __always_inline hpa_t set_hkid_to_hpa(hpa_t pa, u16 hkid)
+ {
+@@ -112,6 +113,7 @@ static inline void tdx_hkid_free(struct kvm_tdx *kvm_tdx)
+ {
+ 	tdx_guest_keyid_free(kvm_tdx->hkid);
+ 	kvm_tdx->hkid = -1;
++	atomic_dec(&nr_configured_hkid);
+ }
+ 
+ static inline bool is_hkid_assigned(struct kvm_tdx *kvm_tdx)
+@@ -586,6 +588,7 @@ static int __tdx_td_init(struct kvm *kvm, struct td_params *td_params,
+ 	if (ret < 0)
+ 		return ret;
+ 	kvm_tdx->hkid = ret;
++	atomic_inc(&nr_configured_hkid);
+ 
+ 	va = __get_free_page(GFP_KERNEL_ACCOUNT);
+ 	if (!va)
+@@ -1074,3 +1077,41 @@ void tdx_hardware_unsetup(void)
+ 	kfree(tdx_info);
+ 	kfree(tdx_mng_key_config_lock);
+ }
++
++int tdx_offline_cpu(void)
++{
++	int curr_cpu = smp_processor_id();
++	cpumask_var_t packages;
++	int ret = 0;
++	int i;
++
++	/* No TD is running.  Allow any cpu to be offline. */
++	if (!atomic_read(&nr_configured_hkid))
++		return 0;
++
++	/*
++	 * In order to reclaim TDX HKID, (i.e. when deleting guest TD), need to
++	 * call TDH.PHYMEM.PAGE.WBINVD on all packages to program all memory
++	 * controller with pconfig.  If we have active TDX HKID, refuse to
++	 * offline the last online cpu.
++	 */
++	if (!zalloc_cpumask_var(&packages, GFP_KERNEL))
++		return -ENOMEM;
++	for_each_online_cpu(i) {
++		if (i != curr_cpu)
++			cpumask_set_cpu(topology_physical_package_id(i), packages);
++	}
++	/* Check if this cpu is the last online cpu of this package. */
++	if (!cpumask_test_cpu(topology_physical_package_id(curr_cpu), packages))
++		ret = -EBUSY;
++	free_cpumask_var(packages);
++	if (ret)
++		/*
++		 * Because it's hard for human operator to understand the
++		 * reason, warn it.
++		 */
++#define MSG_ALLPKG_ONLINE \
++	"TDX requires all packages to have an online CPU. Delete all TDs in order to offline all CPUs of a package.\n"
++		pr_warn_ratelimited(MSG_ALLPKG_ONLINE);
++	return ret;
++}
+diff --git a/arch/x86/kvm/vmx/x86_ops.h b/arch/x86/kvm/vmx/x86_ops.h
+index a9f3430400c0..cf5b259adc6d 100644
+--- a/arch/x86/kvm/vmx/x86_ops.h
++++ b/arch/x86/kvm/vmx/x86_ops.h
+@@ -136,6 +136,8 @@ void vmx_setup_mce(struct kvm_vcpu *vcpu);
+ #ifdef CONFIG_INTEL_TDX_HOST
+ int __init tdx_hardware_setup(struct kvm_x86_ops *x86_ops);
+ void tdx_hardware_unsetup(void);
++int tdx_offline_cpu(void);
++
+ int tdx_vm_enable_cap(struct kvm *kvm, struct kvm_enable_cap *cap);
+ int tdx_vm_init(struct kvm *kvm);
+ void tdx_mmu_release_hkid(struct kvm *kvm);
+@@ -144,6 +146,8 @@ int tdx_vm_ioctl(struct kvm *kvm, void __user *argp);
+ #else
+ static inline int tdx_hardware_setup(struct kvm_x86_ops *x86_ops) { return -EOPNOTSUPP; }
+ static inline void tdx_hardware_unsetup(void) {}
++static inline int tdx_offline_cpu(void) { return 0; }
++
+ static inline int tdx_vm_enable_cap(struct kvm *kvm, struct kvm_enable_cap *cap)
+ {
+ 	return -EINVAL;
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 7ca45cf07409..b5f8ff27157e 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -12699,6 +12699,11 @@ void kvm_arch_disable_virtualization_cpu(void)
+ 	drop_user_return_notifiers();
+ }
+ 
++int kvm_arch_offline_cpu(unsigned int cpu)
++{
++	return static_call(kvm_x86_offline_cpu)();
++}
++
+ bool kvm_vcpu_is_reset_bsp(struct kvm_vcpu *vcpu)
+ {
+ 	return vcpu->kvm->arch.bsp_vcpu_id == vcpu->vcpu_id;
+diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
+index f4ccdded3c8a..e9dcb9bce626 100644
+--- a/include/linux/kvm_host.h
++++ b/include/linux/kvm_host.h
+@@ -1555,6 +1555,7 @@ void kvm_arch_disable_virtualization(void);
+ int kvm_arch_enable_virtualization_cpu(void);
+ void kvm_arch_disable_virtualization_cpu(void);
+ #endif
++int kvm_arch_offline_cpu(unsigned int cpu);
+ int kvm_arch_vcpu_runnable(struct kvm_vcpu *vcpu);
+ bool kvm_arch_vcpu_in_kernel(struct kvm_vcpu *vcpu);
+ int kvm_arch_vcpu_should_kick(struct kvm_vcpu *vcpu);
+diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
+index 5d6cc9effc63..b66e4d40186b 100644
+--- a/virt/kvm/kvm_main.c
++++ b/virt/kvm/kvm_main.c
+@@ -5705,12 +5705,20 @@ static void kvm_disable_virtualization_cpu(void *ign)
+ 	__this_cpu_write(virtualization_enabled, false);
+ }
+ 
+-static int kvm_offline_cpu(unsigned int cpu)
++__weak int kvm_arch_offline_cpu(unsigned int cpu)
+ {
+-	kvm_disable_virtualization_cpu(NULL);
+ 	return 0;
+ }
+ 
++static int kvm_offline_cpu(unsigned int cpu)
++{
++	int r = 0;
++	r = kvm_arch_offline_cpu(cpu);
++	if (!r)
++		kvm_disable_virtualization_cpu(NULL);
++	return r;
++}
++
+ static void kvm_shutdown(void)
+ {
+ 	/*
+-- 
+2.34.1
+

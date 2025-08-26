@@ -1,0 +1,146 @@
+From a33bc0da17bac5e50bc82fc9eaea1233d6d655a8 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Mon, 23 Sep 2024 15:58:44 +0800
+Subject: [PATCH 122/147] UBUNTU: SAUCE: KVM: x86/mmu: Make kvm fault handler
+ aware of large page of private memslot
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+struct kvm_page_fault.req_level is the page level which takes care of the
+faulted-in page size.  For now its calculation is only for the conventional
+kvm memslot by host_pfn_mapping_level() that traverses page table.
+
+However, host_pfn_mapping_level() cannot be used for private kvm memslot
+because private pages of private kvm memlost aren't mapped into user
+virtual address space.  Instead, page order is given when getting pfn.
+Remember it in struct kvm_page_fault and use it.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 420a605056a12ba4eacb940a0effb7110aaf02f5)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/mmu.c          | 26 +++++++++++++-------------
+ arch/x86/kvm/mmu/mmu_internal.h | 12 +++++++++++-
+ arch/x86/kvm/mmu/tdp_mmu.c      |  2 +-
+ 3 files changed, 25 insertions(+), 15 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index 63396932e3ec..09d9c4e069d1 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -3155,10 +3155,10 @@ static int host_pfn_mapping_level(struct kvm *kvm, gfn_t gfn,
+ 
+ static int __kvm_mmu_max_mapping_level(struct kvm *kvm,
+ 				       const struct kvm_memory_slot *slot,
+-				       gfn_t gfn, int max_level, bool is_private)
++				       gfn_t gfn, int max_level, int host_level,
++				       bool is_private)
+ {
+ 	struct kvm_lpage_info *linfo;
+-	int host_level;
+ 
+ 	max_level = min(max_level, max_huge_page_level);
+ 	for ( ; max_level > PG_LEVEL_4K; max_level--) {
+@@ -3167,24 +3167,23 @@ static int __kvm_mmu_max_mapping_level(struct kvm *kvm,
+ 			break;
+ 	}
+ 
+-	if (is_private)
+-		return max_level;
+-
+ 	if (max_level == PG_LEVEL_4K)
+ 		return PG_LEVEL_4K;
+ 
+-	host_level = host_pfn_mapping_level(kvm, gfn, slot);
++	if (!is_private) {
++		WARN_ON_ONCE(host_level != PG_LEVEL_NONE);
++		host_level = host_pfn_mapping_level(kvm, gfn, slot);
++	}
++	WARN_ON_ONCE(host_level == PG_LEVEL_NONE);
+ 	return min(host_level, max_level);
+ }
+ 
+ int kvm_mmu_max_mapping_level(struct kvm *kvm,
+ 			      const struct kvm_memory_slot *slot, gfn_t gfn,
+-			      int max_level)
++			      int max_level, bool faultin_private)
+ {
+-	bool is_private = kvm_slot_can_be_private(slot) &&
+-			  kvm_mem_is_private(kvm, gfn);
+-
+-	return __kvm_mmu_max_mapping_level(kvm, slot, gfn, max_level, is_private);
++	return __kvm_mmu_max_mapping_level(kvm, slot, gfn, max_level,
++					   PG_LEVEL_NONE, faultin_private);
+ }
+ 
+ void kvm_mmu_hugepage_adjust(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault)
+@@ -3209,7 +3208,8 @@ void kvm_mmu_hugepage_adjust(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault
+ 	 */
+ 	fault->req_level = __kvm_mmu_max_mapping_level(vcpu->kvm, slot,
+ 						       fault->gfn, fault->max_level,
+-						       fault->is_private);
++						       fault->host_level,
++						       kvm_is_faultin_private(fault));
+ 	if (fault->req_level == PG_LEVEL_4K || fault->huge_page_disallowed)
+ 		return;
+ 
+@@ -7080,7 +7080,7 @@ static bool kvm_mmu_zap_collapsible_spte(struct kvm *kvm,
+ 		 */
+ 		if (sp->role.direct &&
+ 		    sp->role.level < kvm_mmu_max_mapping_level(kvm, slot, sp->gfn,
+-							       PG_LEVEL_NUM)) {
++							       PG_LEVEL_NUM, false)) {
+ 			kvm_zap_one_rmap_spte(kvm, rmap_head, sptep);
+ 
+ 			if (kvm_available_flush_remote_tlbs_range())
+diff --git a/arch/x86/kvm/mmu/mmu_internal.h b/arch/x86/kvm/mmu/mmu_internal.h
+index 37c6208c9ade..cc996468f001 100644
+--- a/arch/x86/kvm/mmu/mmu_internal.h
++++ b/arch/x86/kvm/mmu/mmu_internal.h
+@@ -327,6 +327,9 @@ struct kvm_page_fault {
+ 	 * is changing its own translation in the guest page tables.
+ 	 */
+ 	bool write_fault_to_shadow_pgtable;
++
++	/* valid only for private memslot && private gfn */
++	enum pg_level host_level;
+ };
+ 
+ int kvm_tdp_page_fault(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault);
+@@ -428,7 +431,7 @@ static inline int kvm_mmu_do_page_fault(struct kvm_vcpu *vcpu, gpa_t cr2_or_gpa,
+ 
+ int kvm_mmu_max_mapping_level(struct kvm *kvm,
+ 			      const struct kvm_memory_slot *slot, gfn_t gfn,
+-			      int max_level);
++			      int max_level, bool faultin_private);
+ void kvm_mmu_hugepage_adjust(struct kvm_vcpu *vcpu, struct kvm_page_fault *fault);
+ void disallowed_hugepage_adjust(struct kvm_page_fault *fault, u64 spte, int cur_level);
+ 
+@@ -444,4 +447,11 @@ static inline bool kvm_hugepage_test_mixed(struct kvm_memory_slot *slot, gfn_t g
+ }
+ #endif
+ 
++static inline bool kvm_is_faultin_private(const struct kvm_page_fault *fault)
++{
++	if (IS_ENABLED(CONFIG_KVM_GENERIC_PRIVATE_MEM))
++		return fault->is_private && kvm_slot_can_be_private(fault->slot);
++	return false;
++}
++
+ #endif /* __KVM_X86_MMU_INTERNAL_H */
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index 57c480c73128..fe905851d5e5 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -2191,7 +2191,7 @@ static void zap_collapsible_spte_range(struct kvm *kvm,
+ 			continue;
+ 
+ 		max_mapping_level = kvm_mmu_max_mapping_level(kvm, slot,
+-							      iter.gfn, PG_LEVEL_NUM);
++							      iter.gfn, PG_LEVEL_NUM, false);
+ 		if (max_mapping_level < iter.level)
+ 			continue;
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,45 @@
+From 50c6978fcac650a77e41a375b46dcd8db1692b48 Mon Sep 17 00:00:00 2001
+From: Isaku Yamahata <isaku.yamahata@intel.com>
+Date: Thu, 29 Aug 2024 16:22:45 +0800
+Subject: [PATCH 017/147] UBUNTU: SAUCE: KVM: x86: Add is_vm_type_supported
+ callback
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+For SEV_SNP and TDX, allow the backend can override the supported vm type.
+Add KVM_X86_SNP_VM and KVM_X86_TDX_VM to reserve the bit.
+
+Signed-off-by: Isaku Yamahata <isaku.yamahata@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit 8313025dde68ab8d1668f11858c106d610c707fc)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/include/uapi/asm/kvm.h | 1 +
+ arch/x86/kvm/x86.c              | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/arch/x86/include/uapi/asm/kvm.h b/arch/x86/include/uapi/asm/kvm.h
+index a8debbf2f702..8828a60226e1 100644
+--- a/arch/x86/include/uapi/asm/kvm.h
++++ b/arch/x86/include/uapi/asm/kvm.h
+@@ -924,5 +924,6 @@ struct kvm_hyperv_eventfd {
+ #define KVM_X86_SEV_VM		2
+ #define KVM_X86_SEV_ES_VM	3
+ #define KVM_X86_SNP_VM		4
++#define KVM_X86_TDX_VM          5
+ 
+ #endif /* _ASM_X86_KVM_H */
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index d253c0d20c30..07fa0e68a26a 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -4803,6 +4803,7 @@ int kvm_vm_ioctl_check_extension(struct kvm *kvm, long ext)
+ 		break;
+ 	case KVM_CAP_VM_TYPES:
+ 		r = kvm_caps.supported_vm_types;
++		printk("XXX: kvm_caps.supported_vm_types = %x\n\n", r);
+ 		break;
+ 	case KVM_CAP_READONLY_MEM:
+ 		r = kvm ? kvm_arch_has_readonly_mem(kvm) : 1;
+-- 
+2.34.1
+

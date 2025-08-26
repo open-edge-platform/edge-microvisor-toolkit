@@ -1,0 +1,36 @@
+From 5ffc9869a3b5c3eb2a4ab62b939138c290e98667 Mon Sep 17 00:00:00 2001
+From: "Song, Yoong Siang" <yoong.siang.song@intel.com>
+Date: Fri, 9 Apr 2021 14:43:36 +0800
+Subject: [PATCH 14/42] net: stmmac: Add per-packet time-based scheduling for
+ XDP ZC
+
+Add per-packet time-based scheduling for XDP zero copy via
+struct xdp_desc's launch time field.
+
+Signed-off-by: Song, Yoong Siang <yoong.siang.song@intel.com>
+---
+ drivers/net/ethernet/stmicro/stmmac/stmmac_main.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 5932552950ad6..84e97ae49df6b 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -2566,6 +2566,14 @@ static bool stmmac_xdp_xmit_zc(struct stmmac_priv *priv, u32 queue, u32 budget)
+ 				       true, priv->mode, true, true,
+ 				       xdp_desc.len);
+ 
++		if (tx_q->tbs & STMMAC_TBS_EN && xdp_desc.txtime > 0) {
++                        struct dma_edesc *edesc = &tx_q->dma_entx[entry];
++                        struct timespec64 ts =
++                                ns_to_timespec64(xdp_desc.txtime);
++
++                        stmmac_set_desc_tbs(priv, edesc, ts.tv_sec, ts.tv_nsec);
++                }
++
+ 		stmmac_enable_dma_transmission(priv, priv->ioaddr, queue);
+ 
+ 		xsk_tx_metadata_to_compl(meta,
+-- 
+2.25.1
+

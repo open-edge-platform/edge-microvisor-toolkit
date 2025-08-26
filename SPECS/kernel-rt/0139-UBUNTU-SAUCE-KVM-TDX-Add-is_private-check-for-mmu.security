@@ -1,0 +1,55 @@
+From b788366d242953432a372c18ba2f89fc0b4f93ee Mon Sep 17 00:00:00 2001
+From: Feng Tang <feng.tang@intel.com>
+Date: Wed, 9 Oct 2024 09:55:56 +0800
+Subject: [PATCH 139/147] UBUNTU: SAUCE: KVM: TDX: Add is_private check for
+ mmu_alloc_root
+
+BugLink: https://bugs.launchpad.net/bugs/2085104
+
+New KVM kernel interface doesn't consider the is_private case, which
+will make the normal root and private root use the same address, which
+will break the whole flow.
+
+Add the is_private check as a fix.
+
+Signed-off-by: Feng Tang <feng.tang@intel.com>
+(cherry picked from github.com/intel/kernel-downstream commit b69257d083dd914e2c09ad3f0b1b63253da6d7a0)
+Signed-off-by: Thibault Ferrante <thibault.ferrante@canonical.com>
+---
+ arch/x86/kvm/mmu/tdp_mmu.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index e0717a6b815f..393725363b30 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -193,8 +193,6 @@ static struct kvm_mmu_page *tdp_mmu_alloc_sp(struct kvm_vcpu *vcpu,
+ 	sp = kvm_mmu_memory_cache_alloc(&vcpu->arch.mmu_page_header_cache);
+ 	sp->spt = kvm_mmu_memory_cache_alloc(&vcpu->arch.mmu_shadow_page_cache);
+ 	sp->role = role;
+-	/* TODO: large page support for private GPA. */
+-	WARN_ON_ONCE(kvm_mmu_page_role_is_private(role));
+ 
+ 	if (kvm_mmu_page_role_is_private(role))
+ 		kvm_mmu_alloc_private_spt(vcpu, sp);
+@@ -238,7 +236,8 @@ int kvm_tdp_mmu_alloc_root(struct kvm_vcpu *vcpu, bool private)
+ 	read_lock(&kvm->mmu_lock);
+ 
+ 	for_each_valid_tdp_mmu_root_yield_safe(kvm, root, as_id) {
+-		if (root->role.word == role.word)
++		if (root->role.word == role.word &&
++		    kvm_mmu_page_role_is_private(root->role) == private)
+ 			goto out_read_unlock;
+ 	}
+ 
+@@ -256,6 +255,7 @@ int kvm_tdp_mmu_alloc_root(struct kvm_vcpu *vcpu, bool private)
+ 	 */
+ 	list_for_each_entry(root, &kvm->arch.tdp_mmu_roots, link) {
+ 		if (root->role.word == role.word &&
++		    kvm_mmu_page_role_is_private(root->role) == private &&
+ 		    !WARN_ON_ONCE(!kvm_tdp_mmu_get_root(root)))
+ 			goto out_spin_unlock;
+ 	}
+-- 
+2.34.1
+
