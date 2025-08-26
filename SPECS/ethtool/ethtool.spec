@@ -1,13 +1,13 @@
-Summary:	    Standard Linux utility for controlling network drivers and hardware
-Name:		    ethtool
-Version:        6.4
-Release:        3%{?dist}
-License:	    GPLv2
-URL:		    https://www.kernel.org/pub/software/network/ethtool/
-Group:		    Productivity/Networking/Diagnostic
+Summary:        Standard Linux utility for controlling network drivers and hardware
+Name:           ethtool
+Version:        6.7
+Release:        1%{?dist}
+License:        GPLv2
+URL:            https://www.kernel.org/pub/software/network/ethtool/
+Group:          Productivity/Networking/Diagnostic
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
-Source0:	    https://www.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.xz
+Source0:        https://www.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.xz
 
 # Time Sensitive Networking (TSN) Patches
 Patch0:         0001-include-uapi-Update-the-local-headers-with-Frame-Pre.patch
@@ -45,6 +45,9 @@ make %{?_smp_mflags} check
 %{_datadir}/bash-completion/completions/ethtool
 
 %changelog
+* Thu Jul 10 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 6.7-1
+- Update version to 6.7
+
 * Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 6.4-3
 - Add TSN patches/support
 
