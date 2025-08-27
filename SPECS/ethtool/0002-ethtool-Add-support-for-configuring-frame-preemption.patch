@@ -1,8 +1,7 @@
-From 8b8282cacc9638522524a05448a5f44d24f00c22 Mon Sep 17 00:00:00 2001
-From: Aaron Chan <aaron.chun.yew.chan@intel.com>
-Date: Thu, 29 May 2025 11:55:58 +0800
-Subject: [PATCH 2/5] ethtool: Add support for configuring frame
- preemptionethtool: Add support for configuring frame preemption
+From 4cba1c055780a0da79f6e526b61fde04dc6261e3 Mon Sep 17 00:00:00 2001
+From: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Date: Fri, 15 May 2020 14:50:29 -0700
+Subject: [PATCH 2/4] ethtool: Add support for configuring frame preemption
 
 The configuration knobs that can be set are:
   - enabling/disabling frame preemption per-device;
@@ -16,30 +15,30 @@ Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
 ---
  Makefile.am            |   1 +
  ethtool.8.in           |  15 +++++
- ethtool.c              |  12 ++++
+ ethtool.c              |  13 ++++
  netlink/desc-ethtool.c |   9 +++
  netlink/extapi.h       |   4 ++
  netlink/preempt.c      | 137 +++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 178 insertions(+)
+ 6 files changed, 179 insertions(+)
  create mode 100644 netlink/preempt.c
 
 diff --git a/Makefile.am b/Makefile.am
-index 3879138..a92181c 100644
+index b9e06ad..8bfcfcd 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -42,6 +42,7 @@ ethtool_SOURCES += \
- 		  netlink/desc-ethtool.c netlink/desc-genlctrl.c \
- 		  netlink/module-eeprom.c netlink/module.c netlink/rss.c \
+@@ -48,6 +48,7 @@ ethtool_SOURCES += \
  		  netlink/desc-rtnl.c netlink/cable_test.c netlink/tunnels.c \
-+		  netlink/preempt.c \
  		  netlink/plca.c \
  		  netlink/pse-pd.c \
++		  netlink/preempt.c \
  		  uapi/linux/ethtool_netlink.h \
+ 		  uapi/linux/netlink.h uapi/linux/genetlink.h \
+ 		  uapi/linux/rtnetlink.h uapi/linux/if_link.h \
 diff --git a/ethtool.8.in b/ethtool.8.in
-index adf8900..0fad822 100644
+index 7a3080f..bc8ca0b 100644
 --- a/ethtool.8.in
 +++ b/ethtool.8.in
-@@ -1560,6 +1560,21 @@ shown. Default is to show notifications for all devices.
+@@ -1564,6 +1564,21 @@ shown. Default is to show notifications for all devices.
  Show tunnel-related device capabilities and state.
  List UDP ports kernel has programmed the device to parse as VxLAN,
  or GENEVE tunnels.
@@ -62,10 +61,18 @@ index adf8900..0fad822 100644
  .TP
  .B \-\-show\-module
 diff --git a/ethtool.c b/ethtool.c
-index b7d173b..2324215 100644
+index 3ac15a7..83658b8 100644
 --- a/ethtool.c
 +++ b/ethtool.c
-@@ -6043,6 +6043,18 @@ static const struct option args[] = {
+@@ -5193,6 +5193,7 @@ static int do_gtunable(struct cmd_context *ctx)
+ 		if (!valid)
+ 			exit_bad_args();
+ 	}
++
+ 	return 0;
+ }
+ 
+@@ -6045,6 +6046,18 @@ static const struct option args[] = {
  		.help	= "Set FEC settings",
  		.xhelp	= "		[ encoding auto|off|rs|baser|llrs [...] ]\n"
  	},
@@ -85,7 +92,7 @@ index b7d173b..2324215 100644
  		.opts	= "-Q|--per-queue",
  		.func	= do_perqueue,
 diff --git a/netlink/desc-ethtool.c b/netlink/desc-ethtool.c
-index 661de26..8e92839 100644
+index 661de26..52465a1 100644
 --- a/netlink/desc-ethtool.c
 +++ b/netlink/desc-ethtool.c
 @@ -496,6 +496,13 @@ static const struct pretty_nla_desc __mm_desc[] = {
@@ -102,17 +109,17 @@ index 661de26..8e92839 100644
  const struct pretty_nlmsg_desc ethnl_umsg_desc[] = {
  	NLMSG_DESC_INVALID(ETHTOOL_MSG_USER_NONE),
  	NLMSG_DESC(ETHTOOL_MSG_STRSET_GET, strset),
-@@ -531,6 +538,8 @@ const struct pretty_nlmsg_desc ethnl_umsg_desc[] = {
- 	NLMSG_DESC(ETHTOOL_MSG_MODULE_EEPROM_GET, module_eeprom),
- 	NLMSG_DESC(ETHTOOL_MSG_STATS_GET, stats),
+@@ -533,6 +540,8 @@ const struct pretty_nlmsg_desc ethnl_umsg_desc[] = {
  	NLMSG_DESC(ETHTOOL_MSG_PHC_VCLOCKS_GET, phc_vclocks),
-+	NLMSG_DESC(ETHTOOL_MSG_PREEMPT_GET, preempt),
-+	NLMSG_DESC(ETHTOOL_MSG_PREEMPT_SET, preempt),
  	NLMSG_DESC(ETHTOOL_MSG_MODULE_GET, module),
  	NLMSG_DESC(ETHTOOL_MSG_MODULE_SET, module),
++	NLMSG_DESC(ETHTOOL_MSG_PREEMPT_GET, preempt),
++	NLMSG_DESC(ETHTOOL_MSG_PREEMPT_SET, preempt),
  	NLMSG_DESC(ETHTOOL_MSG_PSE_GET, pse),
+ 	NLMSG_DESC(ETHTOOL_MSG_PSE_SET, pse),
+ 	NLMSG_DESC(ETHTOOL_MSG_RSS_GET, rss),
 diff --git a/netlink/extapi.h b/netlink/extapi.h
-index e2d6b71..c7b3ebe 100644
+index e2d6b71..cbfee61 100644
 --- a/netlink/extapi.h
 +++ b/netlink/extapi.h
 @@ -47,6 +47,8 @@ int nl_gmodule(struct cmd_context *ctx);
@@ -124,18 +131,18 @@ index e2d6b71..c7b3ebe 100644
  int nl_grss(struct cmd_context *ctx);
  int nl_plca_get_cfg(struct cmd_context *ctx);
  int nl_plca_set_cfg(struct cmd_context *ctx);
-@@ -120,6 +122,8 @@ nl_get_eeprom_page(struct cmd_context *ctx __maybe_unused,
- #define nl_gstats_chk		NULL
- #define nl_gstats		NULL
+@@ -122,6 +124,8 @@ nl_get_eeprom_page(struct cmd_context *ctx __maybe_unused,
  #define nl_getmodule		NULL
-+#define nl_get_preempt		NULL
-+#define nl_set_preempt		NULL
  #define nl_gmodule		NULL
  #define nl_smodule		NULL
++#define nl_get_preempt		NULL
++#define nl_set_preempt		NULL
  #define nl_grss			NULL
+ #define nl_plca_get_cfg		NULL
+ #define nl_plca_set_cfg		NULL
 diff --git a/netlink/preempt.c b/netlink/preempt.c
 new file mode 100644
-index 0000000..75d4cfc
+index 0000000..b19fc33
 --- /dev/null
 +++ b/netlink/preempt.c
 @@ -0,0 +1,137 @@
@@ -276,7 +283,6 @@ index 0000000..75d4cfc
 +	else
 +		return nlctx->exit_code ?: 81;
 +}
-\ No newline at end of file
 -- 
 2.34.1
 
