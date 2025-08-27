@@ -2084,6 +2084,7 @@
                 "spice-vdagent",
                 "spirv-headers",
                 "spirv-llvm-translator",
+                "spirv-llvm15-translator",
                 "spirv-tools",
                 "splix",
                 "squashfs-tools",

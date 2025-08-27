@@ -28976,6 +28976,16 @@
         "type": "other",
         "other": {
           "name": "spirv-llvm-translator",
+          "version": "18.1.2",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v18.1.2/spirv-llvm-translator-v18.1.2.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "spirv-llvm15-translator",
           "version": "15.0.13",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v15.0.13/spirv-llvm-translator-v15.0.13.tar.gz"
         }
