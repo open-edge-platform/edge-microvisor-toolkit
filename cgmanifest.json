@@ -29116,8 +29116,8 @@
         "type": "other",
         "other": {
           "name": "stress-ng",
-          "version": "0.18.02",
-          "downloadUrl": "https://github.com/ColinIanKing/stress-ng/archive/V0.18.02/stress-ng-0.18.02.tar.gz"
+          "version": "0.19.03",
+          "downloadUrl": "https://github.com/ColinIanKing/stress-ng/archive/V0.19.03/stress-ng-0.19.03.tar.gz"
         }
       }
     },
