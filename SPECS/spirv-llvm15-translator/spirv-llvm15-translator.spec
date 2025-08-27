@@ -1,32 +1,31 @@
-Name:           spirv-llvm-translator
-Version:        18.1.2
-Release:        1%{?dist}
-Summary:        LLVM to SPIRV Translator
+%global llvm_compat 15
 
+Name:           spirv-llvm15-translator
+Version:        15.0.13
+Release:        2%{?dist}
+Summary:        LLVM %{?llvm_compat} to SPIRV Translator
 License:        NCSA
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/KhronosGroup/SPIRV-LLVM-Translator
-Source0:        %{url}/archive/v%{version}/%{name}-v%{version}.tar.gz
-
-
+Source0:        %{url}/archive/v%{version}/spirv-llvm-translator-v%{version}.tar.gz
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  cmake
 BuildRequires:  ninja-build
-BuildRequires:  llvm-devel
+BuildRequires:  llvm%{llvm_compat}-devel
 BuildRequires:  spirv-headers-devel
 BuildRequires:  spirv-tools-devel
 BuildRequires:  zlib-devel
 
 %description
-Khronos LLVM to SPIRV Translator. This is a library
-to be used by Mesa for OpenCL support. It translate
-LLVM IR to Khronos SPIR-V. It also includes a
+Khronos LLVM 15 to SPIRV Translator. This is a library
+that is used by Mesa and compute-runtime for OpenCL support.
+It translates LLVM IR to Khronos SPIR-V. It also includes a
 standalone tool used for building libclc.
 
 %package devel
-Summary: Development files for LLVM to SPIRV Translator
+Summary: Development files for LLVM %{llvm_compat} to SPIRV Translator
 Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description devel
@@ -34,7 +33,7 @@ This package contains libraries and header files for
 developing against %{name}
 
 %package tools
-Summary: Standalone llvm to spirv translator tool
+Summary: Standalone llvm %{llvm_compat} to spirv translator tool
 Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description tools
@@ -48,7 +47,11 @@ This package contains the standalone llvm to spirv tool.
        -DLLVM_BUILD_TOOLS=ON \
        -DCMAKE_BUILD_TYPE=Release \
        -DCMAKE_INSTALL_RPATH:BOOL=";" \
+%if 0%{?llvm_compat}
+       -DLLVM_DIR=%{_libdir}/llvm%{?llvm_compat}/lib/cmake/llvm \
+%else
        -DLLVM_DIR="/usr/lib/cmake/llvm/" \
+%endif
        -DBUILD_SHARED_LIBS=YES \
        -DLLVM_EXTERNAL_PROJECTS="SPIRV-Headers" \
        -DLLVM_EXTERNAL_SPIRV_HEADERS_SOURCE_DIR="/usr/include/spirv/"
@@ -72,8 +75,8 @@ This package contains the standalone llvm to spirv tool.
 %{_libdir}/pkgconfig/LLVMSPIRVLib.pc
 
 %changelog
-* Mon Aug 25 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 18.1.2-1
-- Promote and upgrade to 18.1.2 matching EMT llvm version based on Fedora 40. License verified.
+* Mon Aug 25 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 15.0.13-2
+- Move as spirv-llvm15-translator package
 
 * Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 15.0.13-1
 - Upgrade to 15.0.13 and link to llvm15
