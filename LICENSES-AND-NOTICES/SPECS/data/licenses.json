@@ -2307,6 +2307,7 @@
         "Microsoft": {
             "license": "[Microsoft MIT License](https://github.com/microsoft/azurelinux/blob/3.0/LICENSES-AND-NOTICES/LICENSE.md)",
             "specs": [
+                "alsa-lib",
                 "application-gateway-kubernetes-ingress",
                 "asc",
                 "azcopy",
@@ -2722,7 +2723,6 @@
             "license": "[Photon License](LICENSE-PHOTON.md) and [Photon Notice](NOTICE.APACHE2). <br>  Also see [LICENSE-EXCEPTIONS.PHOTON](LICENSE-EXCEPTIONS.PHOTON).",
             "specs": [
                 "acl",
-                "alsa-lib",
                 "alsa-utils",
                 "ansible",
                 "apr",
