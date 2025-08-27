@@ -5,8 +5,8 @@ Name:           alsa-lib
 Version:        1.2.9
 Release:        2%{?dist}
 License:        LGPLv2+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Distribution:   Edge Microvisor Toolkit
+Vendor:         Intel Corporation
 Group:          Applications/Internet
 URL:            https://alsa-project.org
 Source0:        https://www.alsa-project.org/files/pub/lib/%{name}-%{version}.tar.bz2
@@ -70,6 +70,7 @@ tar xvjf %{SOURCE1} -C %{buildroot}/%{_datadir}/alsa --strip-components=1 --wild
 %changelog
 * Tue Aug 26 2025 Basavaraj unniche<basavarajx.unniche@intel.com> - 1.2.9-2
 - Generate alsa-topology, which is needed for alsa-sof-firmware
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
 
 * Fri Oct 27 2023 CBL-Mariner Servicing Account <cblmargh@microsoft.com> - 1.2.9-1
 - Auto-upgrade to 1.2.9 - Azure Linux 3.0 - package upgrades

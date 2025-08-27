@@ -173,17 +173,6 @@
     {
       "component": {
         "type": "other",
-        "comment": "Imported as part of the 'alsa-lib' package, version 1.2.9",
-        "other": {
-          "name": "alsa-topology-conf",
-          "version": "1.2.5",
-          "downloadUrl": "https://www.alsa-project.org/files/pub/lib/alsa-topology-conf-1.2.5.tar.bz2"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
         "other": {
           "name": "alsa-plugins",
           "version": "1.2.7.1",
