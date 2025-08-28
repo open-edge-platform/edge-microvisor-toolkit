@@ -1916,6 +1916,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "clinfo",
+          "version": "3.0.23.01.25",
+          "downloadUrl": "https://github.com/Oblomov/clinfo/archive/3.0.23.01.25/clinfo-3.0.23.01.25.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "cmake",
           "version": "3.30.3",
           "downloadUrl": "https://github.com/Kitware/CMake/releases/download/v3.30.3/cmake-3.30.3.tar.gz"
@@ -28966,6 +28976,16 @@
         "type": "other",
         "other": {
           "name": "spirv-llvm-translator",
+          "version": "18.1.2",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v18.1.2/spirv-llvm-translator-v18.1.2.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "spirv-llvm15-translator",
           "version": "15.0.13",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v15.0.13/spirv-llvm-translator-v15.0.13.tar.gz"
         }

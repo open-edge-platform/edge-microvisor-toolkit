@@ -14,10 +14,16 @@
             "Name": "Trusted Compute VM",
             "BootType": "efi",
 	    "packages": [
+            "bc",
             "cronie-anacron",
-            "logrotate",
             "dracut-vrf",
+            "gawk",
+            "igt-gpu-tools",
             "initramfs",
+            "kernel-drivers-gpu",
+            "linux-firmware-i915",
+            "logrotate",
+            "pciutils",
             "shadow-utils"
             ],
             "PackageLists": [

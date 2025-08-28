@@ -2,7 +2,7 @@
 
 Name:           intel-igc
 Version:        2.11.7
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Intel Graphics Compiler for OpenCL
 License:        MIT
 Vendor:         Intel Corporation
@@ -31,8 +31,8 @@ BuildRequires:  zlib-devel
 BuildRequires:  intel-opencl-clang-devel
 BuildRequires: libffi-devel
 BuildRequires: libunwind-devel
-BuildRequires:  spirv-llvm-translator-devel
-BuildRequires:  spirv-llvm-translator-tools
+BuildRequires:  spirv-llvm%{?llvm_compat}-translator-devel
+BuildRequires:  spirv-llvm%{?llvm_compat}-translator-tools
 BuildRequires:  vc-intrinsics-devel
 BuildRequires:  spirv-headers-devel
 BuildRequires:  spirv-tools-devel
