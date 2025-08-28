@@ -1,11 +1,14 @@
-Name:		stress-ng
-Version:	0.18.02
-Release:	2%{?dist}	
-Summary:	Stress test a computer system in various ways
-
-License:	GPL-2.0-or-later
-URL:		https://github.com/ColinIanKing/stress-ng
-Source0:	https://github.com/ColinIanKing/stress-ng/archive/V%{version}/%{name}-%{version}.tar.gz
+Summary:	    Stress test a computer system in various ways
+Name:		    stress-ng
+Version:	    0.19.03
+Release:	    1%{?dist}	
+License:	    GPL-2.0-or-later
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
+URL:		    https://github.com/ColinIanKing/stress-ng
+Source0:	    https://github.com/ColinIanKing/stress-ng/archive/V%{version}/%{name}-%{version}.tar.gz
+# darn is not supported in Power ISA < 3.0, while Fedora aims for Power ISA 2.07
+Patch0:         0_18_01-poewrpc-remove-darn.patch
 
 BuildRequires:	make
 BuildRequires:	gcc
@@ -14,13 +17,16 @@ BuildRequires:	kernel-headers
 BuildRequires:	keyutils-libs-devel
 BuildRequires:	libaio-devel
 BuildRequires:	libattr-devel
+%if %{undefined rhel}
 BuildRequires:	libbsd-devel
+%endif
 BuildRequires:	libcap-devel
 BuildRequires:	libgcrypt-devel
 BuildRequires:	lksctp-tools-devel
 BuildRequires:	libatomic
 BuildRequires:	zlib-devel
 BuildRequires:	Judy-devel
+BuildRequires:	libxcrypt-devel
 
 %description
 Stress test a computer system in various ways. It was designed to exercise
@@ -50,6 +56,10 @@ install -pm 644 bash-completion/%{name} \
 %{_datadir}/bash-completion/completions/%{name}
 
 %changelog
+* Wed Aug 27 2025 Jing Hui Tham <jing.hui.tham@intel.com> - 0.19.03-1
+- Initial Edge Microvisor Toolkit import from Fedora 43 (license: MIT).
+- License verified.
+
 * Sat Aug 10 2024 Chris Co <chrco@microsoft.com> - 0.18.02-2
 - Drop powerpc patch since Azure Linux does not support powerpc
 - Initial Azure Linux import from Fedora 41 (license: MIT)
