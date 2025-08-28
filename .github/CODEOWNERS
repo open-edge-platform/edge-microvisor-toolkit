@@ -1,5 +1,5 @@
 * @open-edge-platform/edge-microvisor-toolkit-maintain
 
 # documentation content
-/docs @open-edge-platform/open-edge-platform-docs-write
-README.md @open-edge-platform/open-edge-platform-docs-write
+/docs/    @open-edge-platform/open-edge-platform-docs-write @open-edge-platform/edge-microvisor-toolkit-maintain
+README.md @open-edge-platform/open-edge-platform-docs-write @open-edge-platform/edge-microvisor-toolkit-maintain

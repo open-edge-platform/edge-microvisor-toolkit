@@ -1,3 +1,7 @@
+:::
+orphan: true
+:::
+
 # Edge Microvisor Bootkit
 
 Edge Microvisor Bootkit is a custom, minimal build of Edge Microvisor Toolkit.
