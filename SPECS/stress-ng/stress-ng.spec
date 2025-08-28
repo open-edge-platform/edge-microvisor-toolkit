@@ -3,8 +3,8 @@ Name:		    stress-ng
 Version:	    0.19.03
 Release:	    1%{?dist}	
 License:	    GPL-2.0-or-later
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:		    https://github.com/ColinIanKing/stress-ng
 Source0:	    https://github.com/ColinIanKing/stress-ng/archive/V%{version}/%{name}-%{version}.tar.gz
 # darn is not supported in Power ISA < 3.0, while Fedora aims for Power ISA 2.07
