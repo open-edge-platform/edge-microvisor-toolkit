@@ -57,7 +57,7 @@ install -pm 644 bash-completion/%{name} \
 
 %changelog
 * Wed Aug 27 2025 Jing Hui Tham <jing.hui.tham@intel.com> - 0.19.03-1
-- Initial Azure Linux import from Fedora 43 (license: MIT).
+- Initial Edge Microvisor Toolkit import from Fedora 43 (license: MIT).
 - License verified.
 
 * Sat Aug 10 2024 Chris Co <chrco@microsoft.com> - 0.18.02-2
