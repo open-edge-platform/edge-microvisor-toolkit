@@ -24,7 +24,7 @@ const (
 	rootBaseDirEnv        = "CHROOT_DIR"
 	chrootLock            = "chroot-pool.lock"
 	chrootUse             = "chroot-used"
-	systemdDetectVirtTool = "systemd-detect-virt"
+	systemdDetectVirtTool = "checkIfContainerDockerEnvFile" //"systemd-detect-virt"
 )
 
 var isRegularBuildCached *bool

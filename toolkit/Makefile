@@ -143,13 +143,13 @@ SOURCE_URL         ?= https://files-rs.edgeorchestration.intel.com/files-edge-or
 # assignments do not take affect without using 'override'. This means that all of the following PACKAGE_URL_LIST values will
 # be ignored if the user sets any value.
 ##help:var:PACKAGE_URL_LIST:<urls_list>=Space-separated list of URLs to download toolchain RPM packages from, used to populate the toolchain packages if `REBUILD_TOOLCHAIN=n'. The URLs will replace the default set of URLs. Print default list with 'make -s printvar-PACKAGE_URL_LIST'.
-PACKAGE_URL_LIST   ?= http://rpm-emt.intel.com/pulp/content/emt-3.0-prod-base
-PACKAGE_URL_LIST   += http://rpm-emt.intel.com/pulp/content/emt-3.0-prod-debuginfo
+PACKAGE_URL_LIST   ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/3.0/base
+PACKAGE_URL_LIST   += https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/3.0/debuginfo
 
 PACKAGE_REPO_LIST  ?= $(PACKAGE_URL_LIST)
 
 REPO_LIST          ?=
-SRPM_URL_LIST      ?= http://rpm-emt.intel.com/pulp/content/emt-3.0-prod-srpms
+SRPM_URL_LIST      ?= https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/3.0/srpm
 
 ##help:var:VALIDATE_TOOLCHAIN_GPG={y,n}=Enable or disable GPG validation of the toolchain RPMs. If enabled toolchain RPMs will be validated against the GPG keys in the TOOLCHAIN_GPG_VALIDATION_KEYS variable. On by default when using upstream toolchain RPMs.
 # Based on REBUILD_TOOLCHAIN and DAILY_BUILD_ID. If REBUILD_TOOLCHAIN is set to 'y' or DAILY_BUILD_ID is set to any non-empty value, then GPG validation is disabled by default.
