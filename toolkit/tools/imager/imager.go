@@ -47,6 +47,7 @@ var (
 	profFlags        = exe.SetupProfileFlags(app)
 	genEMTList       = app.Flag("emt-distrib-specs", "Add Edge Microvisor Toolkit modified status to package in manifest.").Bool()
 	specDir          = app.Flag("spec-dir", "Directory to search for SPEC files.").ExistingDir()
+	imageIDContent   string
 )
 
 const (
@@ -156,6 +157,22 @@ func buildSystemConfig(systemConfig configuration.SystemConfig, disks []configur
 		extraMountPoints       []*safechroot.MountPoint
 		extraDirectories       []string
 	)
+
+	// Retrieve image ID from file if performing live install
+	if *liveInstallFlag {
+		pwd, err := filepath.Abs(".")
+		if err != nil {
+			err = fmt.Errorf("failed to get current filepath:\n%w", err)
+			return err
+		}
+		imageIDBytes, err := os.ReadFile(filepath.Join(pwd, "../etc/image-id"))
+		if err != nil {
+			err = fmt.Errorf("failed to read image-id file:\n%w", err)
+			return err
+		}
+		imageIDContent = string(imageIDBytes)
+		installutils.ReportActionf("image-id file with length %v: %s", len(imageIDContent), imageIDContent)
+	}
 
 	// Get list of packages to install into image
 	packagesToInstall, err := installutils.PackageNamesFromSingleSystemConfig(systemConfig)
@@ -618,7 +635,7 @@ func buildImage(mountPointMap, mountPointToFsTypeMap, mountPointToMountArgsMap, 
 		return
 	}
 
-	err = installutils.AddImageIDFile(installChroot.RootDir(), *buildNumber)
+	err = installutils.AddImageIDFile(installChroot.RootDir(), *buildNumber, imageIDContent)
 	if err != nil {
 		err = fmt.Errorf("failed to add image ID file:\n%w", err)
 		return
