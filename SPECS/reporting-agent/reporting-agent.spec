@@ -1,7 +1,7 @@
 Summary:        An agent gathering statistics from Open Edge Platform installations
 Name:           reporting-agent
 Version:        0.0.4
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -10,7 +10,7 @@ Source0:        %{url}/archive/refs/tags/%{name}/v%{version}.tar.gz#/%{name}-%{v
 Source1:        %{name}.conf
 Source2:        edge-node-metrics.cron
 
-BuildRequires:  golang >= 1.24.1
+BuildRequires:  golang >= 1.24.4
 BuildRequires:  systemd-rpm-macros
 
 Requires(pre):  %{_bindir}/systemd-sysusers
@@ -75,5 +75,8 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %sysusers_create_package %{name} %{SOURCE1}
 
 %changelog
+* Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 0.0.4-2
+- Update go version to use above 1.24.4
+
 * Wed Jun 11 2025 Jakub Sikorski <jakub.sikorski@intel.com> - 0.0.4-1
 - Original version for Edge Microvisor Toolkit. License verified
