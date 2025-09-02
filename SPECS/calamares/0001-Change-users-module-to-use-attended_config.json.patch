@@ -1,0 +1,26 @@
+From eaa962545716175e3915305e398394d32ef4eac6 Mon Sep 17 00:00:00 2001
+From: kintalix jayanth <jayanthx.kintali@intel.com>
+Date: Tue, 2 Sep 2025 13:01:02 +0530
+Subject: [PATCH] Change users module to use attended_config.json
+
+Signed-off-by: kintalix jayanth <jayanthx.kintali@intel.com>
+---
+ src/modules/users/Config.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/modules/users/Config.cpp b/src/modules/users/Config.cpp
+index d11fe40..c3ec978 100644
+--- a/src/modules/users/Config.cpp
++++ b/src/modules/users/Config.cpp
+@@ -978,7 +978,7 @@ Config::createJobs() const
+     // j = new SetupGroupsJob( this );
+     // jobs.append( Calamares::job_ptr( j ) );
+ 
+-    const std::string confPath = "/etc/calamares/unattended_config.json";
++    const std::string confPath = "/etc/calamares/attended_config.json";
+     j = new MarinerconfJob( m_hostname, loginName(), userPassword(), confPath );
+     jobs.append( Calamares::job_ptr( j ) );
+ 
+-- 
+2.34.1
+
