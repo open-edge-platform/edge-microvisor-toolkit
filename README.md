@@ -34,11 +34,7 @@ Toolkit are available as Open-Source.
 
 All articles required to quickly learn how to work with Edge Microvisor Toolkit can be found [here](./docs/developer-guide/emt-get-started.md).
 
-**Demos**
-* [Standalone Edge Microvisor Toolkit (EMT-S) integration with Edge Microvisor Bootkit](https://www.youtube.com/watch?v=rmgmWYi6OpE):
-  This demo includes the USB Device Preparation, Provisioning Process, System Readiness, and Final Boot with the cluster starting successfully.
-* [Edge Microvisor Toolkit Standalone Node 3.0](https://www.youtube.com/watch?v=j_4EX_wggSI):
-  This demo provides a brief walkthrough of Edge Microvisor Toolkit Standalone Node for the 3.0 release, covering various use cases.
+You can find **video demos** on the [Open Edge Platform Playlist](https://www.youtube.com/playlist?list=PLg-UKERBljNxIMUUPWHpA8ZJ_YUU5tPP9).
 
 ## Getting Help
 
@@ -55,11 +51,10 @@ For security-related concerns, please refer to [security considerations](./docs/
 problems when using Edge Microvisor Toolkit. Its copy is part of the Edge
 Microvisor Toolkit repository, for easier access.
 
-## Contributing
+## Community and Contributions
 
 As an open-source project, Edge Microvisor Toolkit always looks for community-driven
-improvements. If you are interested in making the product even better, see how you can
-help in the [contribution guide](./docs/developer-guide/emt-contribution.md).
+improvements. If you are interested in making the product even better, check our [contribution guide](./docs/developer-guide/emt-contribution.md) and start a [GitHub Discussion](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions).
 
 ## License Information
 
