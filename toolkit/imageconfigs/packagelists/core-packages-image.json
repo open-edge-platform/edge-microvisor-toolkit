@@ -7,7 +7,6 @@
         "cronie-anacron",
         "logrotate",
         "core-packages-base-image",
-        "dracut-hostonly",
         "dracut-vrf",
         "dracut-systemd-cryptsetup",
         "initramfs",

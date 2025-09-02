@@ -36,6 +36,10 @@ All articles required to quickly learn how to work with Edge Microvisor Toolkit 
 
 You can find **video demos** on the [Open Edge Platform Playlist](https://www.youtube.com/playlist?list=PLg-UKERBljNxIMUUPWHpA8ZJ_YUU5tPP9).
 
+**Demos**
+* [Standalone Edge Microvisor Toolkit (EMT-S) integration with EMT-Micro OS](https://www.youtube.com/watch?v=rmgmWYi6OpE):
+  This demo includes: USB Device Preparation, Provisioning Process, System Readiness, and Final Boot with the cluster starting successfully.
+
 ## Getting Help
 
 If you encounter bugs, have feature requests, or need assistance,

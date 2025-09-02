@@ -1,13 +1,17 @@
+%define version_alsa_tplg 1.2.5
+
 Summary:        ALSA library
 Name:           alsa-lib
 Version:        1.2.9
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        LGPLv2+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Distribution:   Edge Microvisor Toolkit
+Vendor:         Intel Corporation
 Group:          Applications/Internet
 URL:            https://alsa-project.org
 Source0:        https://www.alsa-project.org/files/pub/lib/%{name}-%{version}.tar.bz2
+Source1:        https://www.alsa-project.org/files/pub/lib/alsa-topology-conf-%{version_alsa_tplg}.tar.bz2
+
 BuildRequires:  python3-devel
 BuildRequires:  python3-libs
 Requires:       python3
@@ -21,7 +25,16 @@ Summary:        Header and development files
 Requires:       %{name} = %{version}
 
 %description    devel
-It contains the libraries and header files to create applications
+It contains the libraries and header files to create applications.
+
+%package  -n alsa-topology
+Summary:   ALSA Topology configuration
+BuildArch: noarch
+Requires:  %{name} >= %{version}
+
+%description -n alsa-topology
+The Advanced Linux Sound Architecture (ALSA) topology configuration
+contains alsa-lib configuration of SoC topology (widgets, mixers, pipelines).
 
 %prep
 %setup -q
@@ -32,6 +45,12 @@ make %{?_smp_mflags}
 
 %install
 make DESTDIR=%{buildroot} install
+
+# Create topology directory
+mkdir -p %{buildroot}/%{_datadir}/alsa/topology
+
+# Unpack topologies
+tar xvjf %{SOURCE1} -C %{buildroot}/%{_datadir}/alsa --strip-components=1 --wildcards "*/topology"
 
 %files
 %defattr(-,root,root)
@@ -45,7 +64,14 @@ make DESTDIR=%{buildroot} install
 %defattr(-,root,root)
 %{_includedir}/*
 
+%files -n alsa-topology
+%{_datadir}/alsa/topology/*
+
 %changelog
+* Tue Aug 26 2025 Basavaraj unniche<basavarajx.unniche@intel.com> - 1.2.9-2
+- Generate alsa-topology, which is needed for alsa-sof-firmware
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
+
 * Fri Oct 27 2023 CBL-Mariner Servicing Account <cblmargh@microsoft.com> - 1.2.9-1
 - Auto-upgrade to 1.2.9 - Azure Linux 3.0 - package upgrades
 

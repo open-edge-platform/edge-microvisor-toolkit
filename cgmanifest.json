@@ -194,6 +194,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "alsa-sof-firmware",
+          "version": "2025.05",
+          "downloadUrl": "https://github.com/thesofproject/sof-bin/releases/download/v2025.05/sof-bin-2025.05.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "amtk",
           "version": "5.6.1",
           "downloadUrl": "https://download.gnome.org/sources/amtk/5.6/amtk-5.6.1.tar.xz"
@@ -1916,6 +1926,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "clinfo",
+          "version": "3.0.23.01.25",
+          "downloadUrl": "https://github.com/Oblomov/clinfo/archive/3.0.23.01.25/clinfo-3.0.23.01.25.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "cmake",
           "version": "3.30.3",
           "downloadUrl": "https://github.com/Kitware/CMake/releases/download/v3.30.3/cmake-3.30.3.tar.gz"
@@ -2257,8 +2277,8 @@
         "type": "other",
         "other": {
           "name": "cpuid",
-          "version": "20200427",
-          "downloadUrl": "http://www.etallen.com/cpuid/cpuid-20200427.src.tar.gz"
+          "version": "20250513",
+          "downloadUrl": "http://www.etallen.com/cpuid/cpuid-20250513.src.tar.gz"
         }
       }
     },
@@ -28966,6 +28986,16 @@
         "type": "other",
         "other": {
           "name": "spirv-llvm-translator",
+          "version": "18.1.2",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v18.1.2/spirv-llvm-translator-v18.1.2.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "spirv-llvm15-translator",
           "version": "15.0.13",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v15.0.13/spirv-llvm-translator-v15.0.13.tar.gz"
         }
@@ -29116,8 +29146,8 @@
         "type": "other",
         "other": {
           "name": "stress-ng",
-          "version": "0.18.02",
-          "downloadUrl": "https://github.com/ColinIanKing/stress-ng/archive/V0.18.02/stress-ng-0.18.02.tar.gz"
+          "version": "0.19.03",
+          "downloadUrl": "https://github.com/ColinIanKing/stress-ng/archive/V0.19.03/stress-ng-0.19.03.tar.gz"
         }
       }
     },
