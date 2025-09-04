@@ -1,7 +1,7 @@
 Summary:        Installs/uninstalls orchestration software on an edge node using command obtained from Cluster Orchestrator.
 Name:           cluster-agent
 Version:        1.7.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit 
@@ -14,7 +14,7 @@ Source4:        rke2-path.conf
 Source5:        cluster-agent.sudoers
 Source6:        cluster_agent.te
 Source7:        cluster_agent.fc
-BuildRequires:  golang >= 1.24.1
+BuildRequires:  golang >= 1.24.4
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       curl
@@ -128,6 +128,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 1.7.3-2
+- Update go version to use above 1.24.4
+
 * Wed Jun 04 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.7.3-1
 - Add backoff/retry on northbound grpc interfaces
 

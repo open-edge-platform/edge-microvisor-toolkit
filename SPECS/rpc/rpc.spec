@@ -1,13 +1,13 @@
 Summary:        Remote Provisioning Client for Intel AMT
 Name:           rpc
 Version:        2.45.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/device-management-toolkit/rpc-go
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-go-%{version}.tar.gz
-BuildRequires:  golang >= 1.21
+BuildRequires:  golang >= 1.24.4
 
 %global modulename      rpc
 
@@ -46,6 +46,9 @@ cp LICENSE %{buildroot}%{_defaultlicensedir}/%{name}
 %license %{_defaultlicensedir}/%{name}/LICENSE
 
 %changelog
+* Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 2.45.1-2
+- Update go version to use above 1.24.4
+
 * Tue Apr 8 2025 kintali Jayanth <jayanthx.kintali@intel.com> - 2.45.1-1
 - Upgrade the RPC component version from 2.43.0 to 2.45.1
 

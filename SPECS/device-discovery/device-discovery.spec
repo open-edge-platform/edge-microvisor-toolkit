@@ -4,7 +4,7 @@ Summary:        Device Discovery Agent for Edge Node
 Name:           device-discovery
 Epoch:          1
 Version:        0.0.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
@@ -15,7 +15,7 @@ Source2:        %{name}-%{version}-vendor.tar.gz
 
 %{?systemd_requires}
 
-BuildRequires:  golang >= 1.24.1
+BuildRequires:  golang >= 1.24.4
 BuildRequires:  systemd-rpm-macros
 Requires: curl
 Requires: dmidecode
@@ -49,6 +49,9 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/device-discovery.service
 %{_unitdir}/device-discovery.service
 
 %changelog
+* Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 1:0.0.3-2
+- Update go version to use above 1.24.4
+
 * Wed Jun 18 2025 Andy <andy.peng@intel.com> - 1:0.0.3-1
 - Update go version to 1.24.1
 
