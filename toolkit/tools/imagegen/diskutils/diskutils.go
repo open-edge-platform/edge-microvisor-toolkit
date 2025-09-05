@@ -902,20 +902,91 @@ func SystemBlockDevices() (systemDevices []SystemBlockDevice, err error) {
 		return
 	}
 
-	systemDevices = make([]SystemBlockDevice, len(blockDevices.Devices))
-
-	for i, disk := range blockDevices.Devices {
-		systemDevices[i].DevicePath = fmt.Sprintf("/dev/%s", disk.Name)
-
-		systemDevices[i].RawDiskSize, err = strconv.ParseUint(disk.Size.String(), 10, 64)
+	// Process each device to build the filtered list
+	systemDevices = make([]SystemBlockDevice, 0, len(blockDevices.Devices))
+	for _, device := range blockDevices.Devices {
+		devicePath := fmt.Sprintf("/dev/%s", device.Name)
+		rawSize, err := strconv.ParseUint(device.Size.String(), 10, 64)
 		if err != nil {
-			return
+			return nil, fmt.Errorf("failed to parse size for %s: %v", devicePath, err)
 		}
 
-		systemDevices[i].Model = strings.TrimSpace(disk.Model)
+		isBoot := isBootDevice(devicePath)
+
+		logger.Log.Debugf("Device: %s, Size: %d, Model: %s, IsBoot: %v",
+			devicePath, rawSize, strings.TrimSpace(device.Model), isBoot)
+
+		if !isBoot {
+			systemDevices = append(systemDevices, SystemBlockDevice{
+				DevicePath:  devicePath,
+				RawDiskSize: rawSize,
+				Model:       strings.TrimSpace(device.Model),
+			})
+		} else {
+			logger.Log.Debugf("Excluded boot device: %s", devicePath)
+		}
 	}
 
-	return
+	logger.Log.Debugf("Final device list: %v", systemDevices)
+	return systemDevices, nil
+}
+
+// isBootDevice determines if a device is the boot device by detecting the system boot path and checking for removable devices.
+// It uses /proc/cmdline and /proc/mounts for detection.
+func isBootDevice(devicePath string) bool {
+	// Detect the system boot path once
+	var bootPath string
+	cmdline, err := os.ReadFile("/proc/cmdline")
+	if err == nil {
+		for _, field := range strings.Fields(string(cmdline)) {
+			if strings.HasPrefix(field, "root=") {
+				bootPath = strings.TrimPrefix(field, "root=")
+				break
+			}
+			if strings.HasPrefix(field, "inst.repo=") {
+				bootPath = strings.TrimPrefix(field, "inst.repo=")
+				break
+			}
+		}
+	}
+
+	// Fallback: Check /proc/mounts for a boot device if cmdline fails
+	if bootPath == "" {
+		mounts, err := os.ReadFile("/proc/mounts")
+		if err == nil {
+			for _, line := range strings.Split(string(mounts), "\n") {
+				fields := strings.Fields(line)
+				if len(fields) >= 2 && (strings.HasPrefix(fields[0], "/dev/sr") || strings.HasPrefix(fields[0], "/dev/loop")) &&
+					strings.Contains(fields[1], "iso") {
+					bootPath = fields[0]
+					break
+				}
+			}
+		}
+	}
+
+	if bootPath != "" {
+		logger.Log.Debugf("Detected boot device: %s", bootPath)
+	}
+
+	// Exclude the boot device itself
+	if bootPath != "" && devicePath == bootPath {
+		return true
+	}
+
+	// Check if the device is removable (e.g., USB or similar boot media)
+	deviceName := devicePath[5:] // Extract 'sda', 'sdb', 'nvme0n1', etc. from '/dev/'
+	removableFile := fmt.Sprintf("/sys/block/%s/removable", deviceName)
+	if exists, err := file.PathExists(removableFile); err == nil && exists {
+		if content, err := os.ReadFile(removableFile); err == nil {
+			if strings.TrimSpace(string(content)) == "1" {
+				logger.Log.Debugf("Excluded %s as removable boot device", devicePath)
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func GetDiskPartitions(diskDevPath string) ([]PartitionInfo, error) {
