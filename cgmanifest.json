@@ -9200,6 +9200,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libclc",
+          "version": "18.1.2",
+          "downloadUrl": "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.2/libclc-18.1.2.src.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libcdio",
           "version": "2.1.8",
           "downloadUrl": "http://ftp.gnu.org/gnu/libcdio/libcdio-2.1.8.tar.gz"
@@ -9481,8 +9491,8 @@
         "type": "other",
         "other": {
           "name": "libdrm",
-          "version": "2.4.120",
-          "downloadUrl": "https://dri.freedesktop.org/libdrm/libdrm-2.4.120.tar.xz"
+          "version": "2.4.122",
+          "downloadUrl": "https://dri.freedesktop.org/libdrm/libdrm-2.4.122.tar.xz"
         }
       }
     },

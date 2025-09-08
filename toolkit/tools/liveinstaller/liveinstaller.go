@@ -180,6 +180,7 @@ func runBootEntryCreationCommand(installDetails installationDetails) (err error)
 	}
 	bootPartIdx, bootPart := cfg.GetBootPartition()
 	bootDisk := cfg.GetDiskContainingPartition(bootPart)
+	logger.Log.Infof("Selected boot partition index %d on disk %s", bootPartIdx+1, bootDisk.TargetDisk.Value)
 
 	commandArgs := []string{
 		"-c",                            // Create a new bootnum and place it in the beginning of the boot order
@@ -309,14 +310,14 @@ func findMouseHandlers() (handlers string, err error) {
 	return
 }
 
-func calamaresInstall(templateConfigFile string, args imagerArguments) (err error) {
+func calamaresInstall(templateConfigFile string, args imagerArguments) (result configuration.Config, err error) {
 	const (
 		squashErrors = false
 		calamaresDir = "/etc/calamares"
 	)
 
 	args.emitProgress = true
-	args.configFile = filepath.Join(calamaresDir, "unattended_config.json")
+	args.configFile = filepath.Join(calamaresDir, "attended_config.json")
 
 	launchScript := filepath.Join(calamaresDir, "mariner-install.sh")
 	skuDir := filepath.Join(calamaresDir, "edgemicrovisortoolkit-skus")
@@ -352,9 +353,24 @@ func calamaresInstall(templateConfigFile string, args imagerArguments) (err erro
 		return
 	}
 
-	return shell.ExecuteLive(squashErrors, "calamares", "-platform", "linuxfb")
-}
+	logger.Log.Infof("Executing Calamares installer")
+	err = shell.ExecuteLive(squashErrors, "calamares", "-platform", "linuxfb")
+	if err != nil {
+		return
+	}
 
+	// Load the configuration file produced by Calamares
+	tempConfig, err := configuration.Load(args.configFile)
+	if err != nil {
+		return
+	}
+
+	for i := range tempConfig.SystemConfigs {
+		tempConfig.SystemConfigs[i].BootType = bootType
+	}
+
+	return tempConfig, nil
+}
 func generateCalamaresLaunchScript(launchScriptPath string, args imagerArguments) (err error) {
 	const executionPerm = 0755
 
@@ -418,6 +434,7 @@ func terminalUIAttendedInstall(templateConfigFile string, args imagerArguments) 
 	}
 
 	args.configFile = filepath.Join(args.buildDir, configFileName)
+	var calamaresdiskCfg configuration.Config
 	attendedInstaller, err := attendedinstaller.New(templateConfig,
 		// Terminal-UI based installation
 		func(cfg configuration.Config, progress chan int, status chan string) (err error) {
@@ -426,7 +443,12 @@ func terminalUIAttendedInstall(templateConfigFile string, args imagerArguments) 
 
 		// Calamares based installation
 		func() (err error) {
-			return calamaresInstall(templateConfigFile, args)
+			cfg, err := calamaresInstall(templateConfigFile, args)
+			if err == nil && len(cfg.SystemConfigs) > 0 {
+				calamaresdiskCfg = cfg
+				return
+			}
+			return
 		})
 
 	if err != nil {
@@ -434,7 +456,11 @@ func terminalUIAttendedInstall(templateConfigFile string, args imagerArguments) 
 	}
 
 	finalConfig, installationQuit, err := attendedInstaller.Run()
-	installDetails.finalConfig = finalConfig
+	if len(calamaresdiskCfg.SystemConfigs) > 0 || len(calamaresdiskCfg.Disks) > 0 {
+		installDetails.finalConfig = calamaresdiskCfg
+	} else {
+		installDetails.finalConfig = finalConfig
+	}
 	installDetails.installationQuit = installationQuit
 	return
 }
