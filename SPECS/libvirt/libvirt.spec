@@ -185,7 +185,7 @@
 Summary:        Library providing a simple virtualization API
 Name:           libvirt
 Version:        10.0.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        GPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND OFL-1.1
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -197,6 +197,9 @@ URL:            https://libvirt.org/
 Source:         https://download.libvirt.org/%{?mainturl}libvirt-%{version}.tar.xz
 Patch0:         libvirt-conf.patch
 Patch1:         0001-PATCH-After-iptables.service.patch
+Patch2:         CVE-2024-1441.patch
+Patch3:         CVE-2024-2494.patch
+Patch4:         CVE-2024-4418.patch
 
 Requires: libvirt-daemon = %{version}-%{release}
 Requires: libvirt-daemon-config-network = %{version}-%{release}
@@ -2187,6 +2190,15 @@ exit 0
 %endif
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 10.0.0-5
+- merge from Azure Linux 3.0.20250822-3.0.
+- Fixes CVE-2024-4418 with an upstream patch.
+- Fix for CVE-2024-1441 and CVE-2024-2494.
+
+* Mon Jan 6 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 10.0.0-4
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
+- Add After iptables.service
+
 * Thu May 30 2024 Sharath Srikanth Chellappa <sharathsr@microsoft.com> - 10.0.0-3
 - Add patch to libvirt.conf to work with kubevirt.
 

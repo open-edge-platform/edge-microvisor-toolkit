@@ -1,13 +1,13 @@
 Summary:        Libbpf library
 Name:           libbpf
-Version:        1.2.2
-Release:        3%{?dist}
+Version:        1.5.0
+Release:        2%{?dist}
 License:        LGPLv2 OR BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/%{name}/%{name}
 Source0:        https://github.com/%{name}/%{name}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
-Patch0:         CVE-2025-29481.patch
+Patch0:         0001-libbpf-Fix-buffer-overflow-in-bpf_object__init_prog.patch
 
 BuildRequires:  elfutils-devel
 BuildRequires:  elfutils-libelf-devel
@@ -54,6 +54,11 @@ find %{buildroot} -type f -name "*.a" -delete -print
 %{_libdir}/pkgconfig/libbpf.pc
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.5.0-2
+- merge from Azure Linux 3.0.20250822-3.0.
+- Patch CVE-2025-29481 
+- Update to version 1.5.0
+
 * Thu Jul 3 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.2.2-3
 - merge from Azure Linux 3.0.20250521-3.0
 - Address CVE-2025-31498 with a patch

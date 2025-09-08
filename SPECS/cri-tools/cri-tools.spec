@@ -7,7 +7,7 @@
 Summary:        CRI tools
 Name:           cri-tools
 Version:        1.32.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        Apache-2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -15,6 +15,7 @@ Group:          Development/Tools
 URL:            https://github.com/kubernetes-sigs/cri-tools
 Source0:        https://github.com/kubernetes-sigs/cri-tools/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Patch0:         CVE-2024-45338.patch
+Patch1:         CVE-2025-22872.patch
 BuildRequires:  glib-devel
 BuildRequires:  glibc-devel
 BuildRequires:  golang
@@ -45,6 +46,10 @@ install -p -m 755 -t %{buildroot}%{_bindir} "${BUILD_FOLDER}/critest"
 %{_bindir}/critest
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.32.0-3
+- merge from Azure Linux 3.0.20250822-3.0.
+- Patch CVE-2025-22872
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.32.0-2
 - Bump Release to rebuild
 

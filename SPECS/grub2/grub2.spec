@@ -7,7 +7,7 @@
 Summary:        GRand Unified Bootloader
 Name:           grub2
 Version:        2.06
-Release:        24%{?dist}
+Release:        25%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -109,6 +109,7 @@ Patch:          sbat-4-0006-fs-ntfs-Make-code-more-readable.patch
 # time optimizes the code incorrectly, leading to network traffic getting
 # dropped in scenarios like PXE booting.
 Patch:          disable-checksum-code-optimization.patch
+Patch:          CVE-2025-0624.patch
 BuildRequires:  autoconf
 BuildRequires:  device-mapper-devel
 BuildRequires:  python3
@@ -435,6 +436,10 @@ cp $GRUB_PXE_MODULE_SOURCE $EFI_BOOT_DIR/$GRUB_PXE_MODULE_NAME
 %config(noreplace) %{_sysconfdir}/grub.d/41_custom
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.06-25
+- merge from Azure Linux 3.0.20250822-3.0.
+- Patch CVE-2025-0624
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.06-24
 - merge from Azure Linux 3.0.20250521-3.0
 - Add patch to replace fgrep with grep -F

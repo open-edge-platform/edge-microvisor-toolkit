@@ -3,8 +3,8 @@ Name:           core-packages
 Version:        %{emt}.0
 Release:        6%{?dist}
 License:        ASL 2.0
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
 URL:            https://aka.ms/mariner
 
@@ -89,8 +89,9 @@ Requires:       zlib
 %files container
 
 %changelog
-* Mon July 16 2024 Jon Slobodzian <joslobo@microsoft.com> - 3.0-6
-- Restore azurelinux-repos to their production versions for all images.
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.0-6
+- merge from Azure Linux 3.0.20250822-3.0.
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
 
 * Mon July 08 2024 Riken Maharjan <rmaharjan@microsoft.com> - 3.0-5
 - Add azurelinux-repos-ms-oss-preview to the base container

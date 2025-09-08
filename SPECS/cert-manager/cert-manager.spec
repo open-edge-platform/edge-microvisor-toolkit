@@ -1,7 +1,7 @@
 Summary:        Automatically provision and manage TLS certificates in Kubernetes
 Name:           cert-manager
 Version:        1.12.15
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        ASL 2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -18,6 +18,9 @@ Patch1:         CVE-2025-27144.patch
 Patch2:         CVE-2025-22868.patch
 Patch3:         CVE-2025-22869.patch
 Patch4:         CVE-2025-30204.patch
+Patch5:         CVE-2025-32386.patch
+Patch6:         CVE-2025-22872.patch
+
 BuildRequires:  golang
 Requires:       %{name}-acmesolver
 Requires:       %{name}-cainjector
@@ -108,6 +111,11 @@ install -D -m0755 bin/webhook %{buildroot}%{_bindir}/
 %{_bindir}/webhook
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.12.15-5
+- merge from Azure Linux 3.0.20250822-3.0.
+- Patch CVE-2025-32386 (also fixes CVE-2025-32387)
+- Patch CVE-2025-22872
+
 * Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.12.15-4
 - merge from Azure Linux 3.0.20250423.
 - Patch CVE-2025-30204

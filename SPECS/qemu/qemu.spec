@@ -446,7 +446,7 @@ Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
 Summary: QEMU is a FAST! processor emulator
 Name: qemu
 Version: 9.1.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND FSFAP AND GPL-1.0-or-later AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-2.0-or-later WITH GCC-exception-2.0 AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT AND LicenseRef-Fedora-Public-Domain AND CC-BY-3.0
 URL: http://www.qemu.org/
 
@@ -722,11 +722,11 @@ BuildRequires: rutabaga-gfx-ffi-devel
 %endif
 %if 0%{?emt}
 # Builds on centos-stream 9 require python-tomli
-BuildRequires: python-tomli
+BuildRequires: python3-tomli
 %endif
 
 %if %{user_static}
-BuildRequires: glibc-static >= 2.38-10
+BuildRequires: glibc-static >= 2.38-11%{?dist}
 BuildRequires: glib2-static
 BuildRequires: zlib-static
 # -latomic added by GLib 2.81.0, 2024-06-28
@@ -3533,6 +3533,11 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 
 
 %changelog
+* Mon Sep 8 2025 Chee Yang Lee <chee.yang.lee@intel.com> - 9.1.0-3
+- merge from Azure Linux 3.0.20250822-3.0.
+- Bump to rebuild with updated glibc
+- python-tomli -> python3-tomli
+
 * Mon Aug 4 2025 Tong Liang Chew <tong.liang.chew@intel.com> - 9.1.0-2
 - Added 3 patches from Intel Distribution Qemu Commit 29ed545
 - Resolved Qemu memory-leak issue.

@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 
 Name:           kata-containers
-Version:        3.15.0.aks0
-Release:        2%{?dist}
+Version:        3.18.0.kata0
+Release:        3%{?dist}
 Summary:        Kata Containers package developed for Pod Sandboxing on AKS
 License:        ASL 2.0
 URL:            https://github.com/microsoft/kata-containers
@@ -26,6 +26,7 @@ BuildRequires:  cmake
 Requires:       kernel-uvm
 # Must match the version specified by the `assets.virtiofsd.version` field in the source's versions.yaml.
 Requires:       virtiofsd = 1.8.0
+Requires:       containerd2
 
 %description
 The Kata Containers package ships the Kata components for Pod Sandboxing on AKS.
@@ -67,6 +68,7 @@ popd
 %{kata_bin}/kata-runtime
 
 %{defaults_kata}/configuration.toml
+%{defaults_kata}/configuration-clh-debug.toml
 
 %{kata_shim_bin}/containerd-shim-kata-v2
 
@@ -92,6 +94,7 @@ popd
 
 %dir %{tools_pkg}/tools/osbuilder/image-builder
 %{tools_pkg}/tools/osbuilder/image-builder/image_builder.sh
+%{tools_pkg}/tools/osbuilder/image-builder/nsdax.gpl.c
 
 %dir %{tools_pkg}/tools/osbuilder/node-builder
 %dir %{tools_pkg}/tools/osbuilder/node-builder/azure-linux
@@ -112,6 +115,12 @@ popd
 %{tools_pkg}/tools/osbuilder/node-builder/azure-linux/agent-install/usr/lib/systemd/system/kata-agent.service
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.18.0.kata0-3
+- merge from Azure Linux 3.0.20250822-3.0.
+- Add dependency on containerd2
+- Auto-upgrade to 3.18.0.kata0
+- Bump release to rebuild with rust
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.15.0.aks0-2
 - merge from Azure Linux 3.0.20250521-3.0
 - Auto-upgrade to 3.15.0.aks0

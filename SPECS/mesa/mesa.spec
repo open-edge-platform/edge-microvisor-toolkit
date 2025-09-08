@@ -68,7 +68,7 @@
 Name:           mesa
 Summary:        Mesa graphics libraries
 Version:        24.0.1
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -747,6 +747,10 @@ popd
 %endif
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 24.0.1-5
+- merge from Azure Linux 3.0.20250822-3.0.
+- Bump release to rebuild with rust
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 24.0.1-4
 - merge from Azure Linux 3.0.20250521-3.0
 - Pin rust version

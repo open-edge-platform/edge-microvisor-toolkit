@@ -1,7 +1,7 @@
 Summary:        Bootstrap version of systemd. Workaround for systemd circular dependency.
 Name:           systemd-bootstrap
 Version:        250.3
-Release:        18%{?dist}
+Release:        19%{?dist}
 License:        LGPLv2+ AND GPLv2+ AND MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -50,6 +50,7 @@ Patch9:         add-bcachefs-magic.patch
 #    5. Repeat from 2. as needed until it builds
 #    6. Build both systemd and systemd-bootstrap, validate the contents of systemd-rpm-macros and system-bootstrap-rpm-macros are identical
 Patch10:         use-255-macros.patch
+Patch11:         CVE-2023-7008.patch
 BuildRequires:  docbook-dtd-xml
 BuildRequires:  docbook-style-xsl
 BuildRequires:  gettext
@@ -287,6 +288,10 @@ fi
 %{_datadir}/pkgconfig/udev.pc
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 250.3-19
+- merge from Azure Linux 3.0.20250822-3.0.
+- Patch CVE-2023-7008
+
 * Wed Feb 26 2025 Anuj Mittal <anuj.mittal@intel.com> - 250.3-18
 - Backport patches to fix build with kernel headers 6.12.12
 
