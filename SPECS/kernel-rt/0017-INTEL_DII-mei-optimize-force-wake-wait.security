@@ -1,0 +1,79 @@
+From e919728844db6f7a6998bd8b71bdb85115f7a4e2 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Thu, 6 Jul 2023 10:56:57 +0300
+Subject: [PATCH 17/19] INTEL_DII: mei: optimize force wake wait
+
+Force wake workaround causes 1 sec wait on every handle open
+when GT is awake and not require GSC reset.
+But after first time driver ensures that no GSC reset is
+expected we can skip that wait till we release the force-wake.
+Add flag that new open handles can use to skip wait.
+
+Co-developed-by: Tomas Winkler <tomasw@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/client.c  | 6 ++++++
+ drivers/misc/mei/hw-me.c   | 2 ++
+ drivers/misc/mei/mei_dev.h | 2 ++
+ 3 files changed, 10 insertions(+)
+
+diff --git a/drivers/misc/mei/client.c b/drivers/misc/mei/client.c
+index 3e9e33406c0c7..b372b1ccca930 100644
+--- a/drivers/misc/mei/client.c
++++ b/drivers/misc/mei/client.c
+@@ -650,6 +650,11 @@ static inline int mei_cl_forcewake_get_and_wait(struct mei_cl *cl)
+ 	 */
+ 	dev->ops->forcewake_get(dev);
+ 
++	if (dev->forcewake_wait_done) {
++		cl_dbg(dev, cl, "forcewake is performed already, no need to wait\n");
++		return 0;
++	}
++
+ 	/* wait for firmware reset or timeout */
+ 	cl_dbg(dev, cl, "wait for firmware reset or timeout\n");
+ 	mutex_unlock(&dev->device_lock);
+@@ -678,6 +683,7 @@ static inline int mei_cl_forcewake_get_and_wait(struct mei_cl *cl)
+ 		}
+ 		cl_dbg(dev, cl, "back from reset\n");
+ 	}
++	dev->forcewake_wait_done = true;
+ 	return 0;
+ }
+ 
+diff --git a/drivers/misc/mei/hw-me.c b/drivers/misc/mei/hw-me.c
+index cf04f88995300..7011b834c0b93 100644
+--- a/drivers/misc/mei/hw-me.c
++++ b/drivers/misc/mei/hw-me.c
+@@ -1462,6 +1462,8 @@ static int mei_gt_forcewake_put(struct mei_device *dev)
+ 	dev_dbg(dev->dev, "Forcewake put %d\n", dev->forcewake_count);
+ 	if (dev->forcewake_count <= 0)
+ 		return 0;
++	if (dev->forcewake_count <= 1)
++		dev->forcewake_wait_done = false;
+ 	hw->forcewake_put(hw->gsc);
+ 	return dev->forcewake_count--;
+ }
+diff --git a/drivers/misc/mei/mei_dev.h b/drivers/misc/mei/mei_dev.h
+index 4114db6f64050..d467162073acf 100644
+--- a/drivers/misc/mei/mei_dev.h
++++ b/drivers/misc/mei/mei_dev.h
+@@ -564,6 +564,7 @@ struct mei_dev_timeouts {
+  *
+  * @forcewake_needed     : forcewake should be asserted before operations
+  * @forcewake_count      : forcewake status counter
++ * @forcewake_wait_done  : wait for reset after forcewake performed
+  * @gt_forcewake_init_on : the GT forcewake is on in init flow
+  *
+  * @ops:        : hw specific operations
+@@ -670,6 +671,7 @@ struct mei_device {
+ 
+ 	bool forcewake_needed;
+ 	int forcewake_count;
++	bool forcewake_wait_done;
+ 	bool gt_forcewake_init_on;
+ 
+ 	const struct mei_hw_ops *ops;
+-- 
+2.25.1
+

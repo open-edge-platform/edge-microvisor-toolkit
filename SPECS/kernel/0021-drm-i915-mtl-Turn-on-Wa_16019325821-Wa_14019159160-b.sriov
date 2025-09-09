@@ -1,0 +1,31 @@
+From 405d6802b8a902898954220cb05d01173ee06f34 Mon Sep 17 00:00:00 2001
+From: "Chew, Tong Liang" <tong.liang.chew@intel.com>
+Date: Mon, 20 Nov 2023 09:43:29 +0800
+Subject: [PATCH 21/48] drm/i915/mtl: Turn on Wa_16019325821/Wa_14019159160 by
+ default
+
+Turn on RCS and CCS workaround by default for MTL to
+fix GPU hang and CATERR issue.
+
+Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+---
+ drivers/gpu/drm/i915/i915_params.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_params.h b/drivers/gpu/drm/i915/i915_params.h
+index fc151c1be1c83..349219ceb33e0 100644
+--- a/drivers/gpu/drm/i915/i915_params.h
++++ b/drivers/gpu/drm/i915/i915_params.h
+@@ -63,7 +63,7 @@ struct drm_printer;
+ 	param(unsigned int, max_vfs, 0, 0400) \
+ 	param(int, force_disable_ccs, 0, 0400) \
+ 	/* leave bools at the end to not create holes */ \
+-	param(bool, enable_mtl_rcs_ccs_wa, false, 0x400) \
++	param(bool, enable_mtl_rcs_ccs_wa, true, 0x400) \
+ 	param(bool, enable_hangcheck, true, 0600) \
+ 	param(bool, error_capture, true, IS_ENABLED(CONFIG_DRM_I915_CAPTURE_ERROR) ? 0600 : 0) \
+ 	param(bool, enable_gvt, false, IS_ENABLED(CONFIG_DRM_I915_GVT) ? 0400 : 0) \
+-- 
+2.25.1
+

@@ -1,0 +1,51 @@
+From cafd1c1e0891a8010724110e83ac5f660a4092d4 Mon Sep 17 00:00:00 2001
+From: florent pirou <florent.pirou@intel.com>
+Date: Mon, 26 Jun 2023 08:53:47 -0700
+Subject: [PATCH 09/20] stmmac_pci: add CONFIG_STMMAC_TSN_TRACE conditional
+ trace_printk usage
+
+Signed-off-by: florent pirou <florent.pirou@intel.com>
+---
+ drivers/net/ethernet/intel/Kconfig.debug          | 13 +++++++++++++
+ drivers/net/ethernet/stmicro/stmmac/stmmac_main.c |  2 ++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/drivers/net/ethernet/intel/Kconfig.debug b/drivers/net/ethernet/intel/Kconfig.debug
+index 9375cbef50b3..721450bd8efe 100644
+--- a/drivers/net/ethernet/intel/Kconfig.debug
++++ b/drivers/net/ethernet/intel/Kconfig.debug
+@@ -13,3 +13,16 @@ config IGC_TSN_TRACE
+ 
+ 	  If in doubt, say "N".
+ 
++config STMMAC_TSN_TRACE
++	bool "Enable TSN trace printk events"
++	depends on STMMAC_PCI
++	select TRACING
++	default n
++	help
++	  Choose this option to turn on low level request tracing events.
++	  This provides the ability to precisely monitor TSN scheduling
++	  mechanism and also analyze the L2-packet timeline.
++
++	  Recommended for driver developers only.
++
++	  If in doubt, say "N".
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 4d08f6143d5c..0d7e2a05a29b 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -2762,8 +2762,10 @@ static int stmmac_tx_clean(struct stmmac_priv *priv, int budget, u32 queue,
+ 				ktime_t tx_hwtstamp = { 0 };
+ 
+ 				stmmac_get_tx_hwtstamp(priv, p, &tx_hwtstamp);
++#if defined(CONFIG_STMMAC_TSN_TRACE)
+ 				trace_printk("XDP TX HW TS %llu\n",
+ 					     tx_hwtstamp);
++#endif
+ 			}
+ 		}
+ 
+-- 
+2.34.1
+

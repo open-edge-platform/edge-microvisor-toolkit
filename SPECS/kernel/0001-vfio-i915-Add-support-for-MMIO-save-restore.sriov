@@ -1,0 +1,123 @@
+From 797c973de894ce90bf10da0e7ee415b1cd37ea3d Mon Sep 17 00:00:00 2001
+From: Kalyan Alle <kalyan.alle@intel.com>
+Date: Tue, 20 Aug 2024 10:01:47 +0000
+Subject: [PATCH 1/2] vfio/i915: Add support for MMIO save/restore
+
+create the "MMIO resource" to save the MMIO block for a VF, and then
+restore the whole MMIO range through VFIO.
+
+vfio/i915: Add detach_ioas support for physical VFIO devices
+Fixes the i915-vfio-probe failed error
+i915-vfio-pci: probe of 0000:4d:00.1 failed with error -22
+
+Signed-off-by: Kalyan Alle <kalyan.alle@intel.com>
+---
+ drivers/vfio/pci/i915/data.c          | 13 +++++++++++++
+ drivers/vfio/pci/i915/i915_vfio_pci.h |  2 +-
+ drivers/vfio/pci/i915/main.c          |  4 ++++
+ 3 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/vfio/pci/i915/data.c b/drivers/vfio/pci/i915/data.c
+index 07d10a322341..13212c1eaf17 100644
+--- a/drivers/vfio/pci/i915/data.c
++++ b/drivers/vfio/pci/i915/data.c
+@@ -26,6 +26,7 @@ enum i915_vfio_pci_migration_data_type {
+ 	I915_VFIO_DATA_DESC = 0,
+ 	I915_VFIO_DATA_GGTT,
+ 	I915_VFIO_DATA_GUC,
++	I915_VFIO_DATA_MMIO,
+ 	I915_VFIO_DATA_DONE,
+ };
+ 
+@@ -35,6 +36,7 @@ static const char *i915_vfio_data_type_str(enum i915_vfio_pci_migration_data_typ
+ 	case I915_VFIO_DATA_DESC: return "DESC";
+ 	case I915_VFIO_DATA_GGTT: return "GGTT";
+ 	case I915_VFIO_DATA_GUC: return "GUC";
++	case I915_VFIO_DATA_MMIO: return "MMIO";
+ 	case I915_VFIO_DATA_DONE: return "DONE";
+ 	default: return "";
+ 	}
+@@ -58,6 +60,9 @@ __i915_vfio_produce(struct i915_vfio_pci_migration_file *migf, unsigned int tile
+ 	case I915_VFIO_DATA_GUC:
+ 		ops = &i915_vdev->pf_ops->fw;
+ 		break;
++	case I915_VFIO_DATA_MMIO:
++		ops = &i915_vdev->pf_ops->mmio;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -122,6 +127,9 @@ static int __i915_vfio_consume(struct i915_vfio_pci_migration_file *migf, unsign
+ 	case I915_VFIO_DATA_GUC:
+ 		ops = &i915_vdev->pf_ops->fw;
+ 		break;
++	case I915_VFIO_DATA_MMIO:
++		ops = &i915_vdev->pf_ops->mmio;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -169,6 +177,7 @@ i915_vfio_consume_##x(struct i915_vfio_pci_migration_file *migf, \
+ 
+ __resource(ggtt, I915_VFIO_DATA_GGTT);
+ __resource(fw, I915_VFIO_DATA_GUC);
++__resource(mmio, I915_VFIO_DATA_MMIO);
+ 
+ static int i915_vfio_produce_desc(struct i915_vfio_pci_migration_file *migf)
+ {
+@@ -250,6 +259,8 @@ i915_vfio_pci_produce_data(struct i915_vfio_pci_migration_file *migf,
+ 		return i915_vfio_produce_ggtt(migf, tile);
+ 	case I915_VFIO_DATA_GUC:
+ 		return i915_vfio_produce_fw(migf, tile);
++	case I915_VFIO_DATA_MMIO:
++		return i915_vfio_produce_mmio(migf, tile);
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -268,6 +279,8 @@ i915_vfio_consume_data(struct i915_vfio_pci_migration_file *migf, const char __u
+ 		return i915_vfio_consume_ggtt(migf, hdr->tile, ubuf, len);
+ 	case I915_VFIO_DATA_GUC:
+ 		return i915_vfio_consume_fw(migf, hdr->tile, ubuf, len);
++	case I915_VFIO_DATA_MMIO:
++		return i915_vfio_consume_mmio(migf, hdr->tile, ubuf, len);
+ 	default:
+ 		return -EINVAL;
+ 	}
+diff --git a/drivers/vfio/pci/i915/i915_vfio_pci.h b/drivers/vfio/pci/i915/i915_vfio_pci.h
+index 9cdb0ff2bcac..483fc3945afd 100644
+--- a/drivers/vfio/pci/i915/i915_vfio_pci.h
++++ b/drivers/vfio/pci/i915/i915_vfio_pci.h
+@@ -97,7 +97,7 @@ struct i915_vfio_pci_migration_pf_ops {
+ 	int (*pause)(struct pci_dev *pf, unsigned int vfid);
+ 	int (*resume)(struct pci_dev *pf, unsigned int vfid);
+ 	int (*wait_flr_done)(struct pci_dev *pf, unsigned int vfid);
+-	struct i915_vfio_pci_resource_ops ggtt, fw;
++	struct i915_vfio_pci_resource_ops ggtt, fw, mmio;
+ 	struct i915_vfio_pci_mappable_resource_ops lmem;
+ };
+ 
+diff --git a/drivers/vfio/pci/i915/main.c b/drivers/vfio/pci/i915/main.c
+index 7905f6eb6197..5ca058952c1a 100644
+--- a/drivers/vfio/pci/i915/main.c
++++ b/drivers/vfio/pci/i915/main.c
+@@ -310,6 +310,9 @@ static const struct i915_vfio_pci_migration_pf_ops pf_ops = {
+ 	.fw.size = i915_sriov_fw_state_size,
+ 	.fw.save = i915_sriov_fw_state_save,
+ 	.fw.load = i915_sriov_fw_state_load,
++	.mmio.size = i915_sriov_mmio_size,
++	.mmio.save = i915_sriov_mmio_save,
++	.mmio.load = i915_sriov_mmio_load,
+ };
+ 
+ static int i915_vfio_pci_init_dev(struct vfio_device *core_vdev)
+@@ -345,6 +348,7 @@ static const struct vfio_device_ops i915_vfio_pci_ops = {
+ 	.bind_iommufd	= vfio_iommufd_physical_bind,
+ 	.unbind_iommufd = vfio_iommufd_physical_unbind,
+ 	.attach_ioas	= vfio_iommufd_physical_attach_ioas,
++	.detach_ioas = vfio_iommufd_physical_detach_ioas,
+ };
+ 
+ static int i915_vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+-- 
+2.34.1
+

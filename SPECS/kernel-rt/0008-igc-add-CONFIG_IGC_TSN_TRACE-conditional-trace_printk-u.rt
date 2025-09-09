@@ -1,0 +1,81 @@
+From 44b21ebdbb6237b4f78101770d77f6ae5d239cf0 Mon Sep 17 00:00:00 2001
+From: florent pirou <florent.pirou@intel.com>
+Date: Fri, 26 Aug 2022 03:05:01 -0700
+Subject: [PATCH 08/20] igc: add CONFIG_IGC_TSN_TRACE conditional trace_printk
+ usage
+
+trace_printk is meant as a debugging tool, and should not be
+compiled into production code without specific debug Kconfig
+options enabled, or source code changes, as indicated by the
+warning that shows up on boot if any trace_printk is called
+**   NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE   **
+**                                                      **
+** trace_printk() being used. Allocating extra memory.  **
+**                                                      **
+** This means that this is a DEBUG kernel and it is     **
+** unsafe for production use.                           **
+
+we making intel CONFIG_IGC_TSN_TRACE kernel config option
+as we want the developer convenience of being able
+to set CONFIG_TRACING on a production kernel config
+
+Signed-off-by: florent pirou <florent.pirou@intel.com>
+---
+ drivers/net/ethernet/intel/Kconfig        |  6 ++++++
+ drivers/net/ethernet/intel/Kconfig.debug  | 15 +++++++++++++++
+ drivers/net/ethernet/intel/igc/igc_main.c |  2 +-
+ 3 files changed, 22 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/ethernet/intel/Kconfig.debug
+
+diff --git a/drivers/net/ethernet/intel/Kconfig b/drivers/net/ethernet/intel/Kconfig
+index 0375c7448a57..04ec7f3579fd 100644
+--- a/drivers/net/ethernet/intel/Kconfig
++++ b/drivers/net/ethernet/intel/Kconfig
+@@ -386,4 +386,10 @@ config IGC_LEDS
+ 
+ source "drivers/net/ethernet/intel/idpf/Kconfig"
+ 
++menu "intel/Ethernet Debugging"
++depends on NET_VENDOR_INTEL
++depends on EXPERT
++source "drivers/net/ethernet/intel/Kconfig.debug"
++endmenu
++
+ endif # NET_VENDOR_INTEL
+diff --git a/drivers/net/ethernet/intel/Kconfig.debug b/drivers/net/ethernet/intel/Kconfig.debug
+new file mode 100644
+index 000000000000..9375cbef50b3
+--- /dev/null
++++ b/drivers/net/ethernet/intel/Kconfig.debug
+@@ -0,0 +1,15 @@
++# SPDX-License-Identifier: GPL-2.0-only
++config IGC_TSN_TRACE
++	bool "Enable TSN trace printk events"
++	depends on IGC
++	select TRACING
++	default n
++	help
++	  Choose this option to turn on low level request tracing events.
++	  This provides the ability to precisely monitor TSN scheduling
++	  mechanism and also analyze the L2-packet timeline.
++
++	  Recommended for driver developers only.
++
++	  If in doubt, say "N".
++
+diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
+index eebf559287fa..cdae9ce3bada 100644
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -3281,7 +3281,7 @@ static bool igc_clean_tx_irq(struct igc_q_vector *q_vector, int napi_budget)
+ 
+ 		switch (tx_buffer->type) {
+ 		case IGC_TX_BUFFER_TYPE_XSK:
+-#if defined(CONFIG_TRACING)
++#if defined(CONFIG_IGC_TSN_TRACE)
+ 		/* Only use for RTCP KPI Measurement on Q2 */
+ 		if (tx_ring->queue_index == 2 && adapter->tstamp_config.tx_type == HWTSTAMP_TX_ON)
+ 			trace_printk("TX HW TS %lld\n", timestamp);
+-- 
+2.34.1
+

@@ -1,0 +1,34 @@
+From 6dda0338ca3523577fb02941e63342607c300ead Mon Sep 17 00:00:00 2001
+From: Hao Li <hao3.li@intel.com>
+Date: Wed, 20 Nov 2024 11:23:20 +0800
+Subject: [PATCH 43/43] net/mlx5: reuse convert_art_ns_to_tsc() to convert ART
+ to TSC
+
+reuse the architecture specific function to convert the ART base
+clock to the corresponding TSC value.
+
+Signed-off-by: Hao Li <hao3.li@intel.com>
+---
+ drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c b/drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c
+index b306ae79bf97a..0a40a3169fa9b 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/lib/clock.c
+@@ -199,11 +199,7 @@ static int mlx5_mtctr_syncdevicetime(ktime_t *device_time,
+ 		return -EINVAL;
+ 
+ 	host = MLX5_GET64(mtctr_reg, out, first_clock_timestamp);
+-	*sys_counterval = (struct system_counterval_t) {
+-			.cycles = host,
+-			.cs_id = CSID_X86_ART,
+-			.use_nsecs = true,
+-	};
++	*sys_counterval = convert_art_ns_to_tsc(host);
+ 
+ 	device = MLX5_GET64(mtctr_reg, out, second_clock_timestamp);
+ 	if (real_time_mode)
+-- 
+2.25.1
+

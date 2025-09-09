@@ -1,0 +1,112 @@
+From 99e3944e212cd157dea0222de88a95542c0e43ab Mon Sep 17 00:00:00 2001
+From: florent pirou <florent.pirou@intel.com>
+Date: Thu, 23 Jan 2025 09:20:41 -0700
+Subject: [PATCH 02/20] Revert "scripts: remove bin2c"
+
+This reverts commit ec61452aaad6bb0d4f3f4d4b78d27bed90eb2494.
+
+Signed-off-by: Florent Pirou <florent.pirou@intel.com>
+---
+ Documentation/dontdiff |  1 +
+ init/Kconfig           |  4 ++++
+ scripts/.gitignore     |  1 +
+ scripts/Makefile       |  1 +
+ scripts/bin2c.c        | 36 ++++++++++++++++++++++++++++++++++++
+ 5 files changed, 43 insertions(+)
+ create mode 100644 scripts/bin2c.c
+
+diff --git a/Documentation/dontdiff b/Documentation/dontdiff
+index de2cb8de6112..77e2a9611a78 100644
+--- a/Documentation/dontdiff
++++ b/Documentation/dontdiff
+@@ -91,6 +91,7 @@ asm_offsets.h
+ autoconf.h*
+ av_permissions.h
+ bbootsect
++bin2c
+ binkernel.spec
+ bootsect
+ bounds.h
+diff --git a/init/Kconfig b/init/Kconfig
+index d3755b2264bd..18815c816a43 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -723,6 +723,10 @@ config CPU_ISOLATION
+ 
+ source "kernel/rcu/Kconfig"
+ 
++config BUILD_BIN2C
++	bool
++	default n
++
+ config IKCONFIG
+ 	tristate "Kernel .config support"
+ 	help
+diff --git a/scripts/.gitignore b/scripts/.gitignore
+index 3dbb8bb2457b..da9a64df6834 100644
+--- a/scripts/.gitignore
++++ b/scripts/.gitignore
+@@ -1,5 +1,6 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ /asn1_compiler
++/bin2c
+ /generate_rust_target
+ /insert-sys-cert
+ /kallsyms
+diff --git a/scripts/Makefile b/scripts/Makefile
+index 6bcda4b9d054..6443a45d9dd8 100644
+--- a/scripts/Makefile
++++ b/scripts/Makefile
+@@ -3,6 +3,7 @@
+ # scripts contains sources for various helper programs used throughout
+ # the kernel for the build process.
+ 
++hostprogs-always-$(CONFIG_BUILD_BIN2C)			+= bin2c
+ hostprogs-always-$(CONFIG_KALLSYMS)			+= kallsyms
+ hostprogs-always-$(BUILD_C_RECORDMCOUNT)		+= recordmcount
+ hostprogs-always-$(CONFIG_BUILDTIME_TABLE_SORT)		+= sorttable
+diff --git a/scripts/bin2c.c b/scripts/bin2c.c
+new file mode 100644
+index 000000000000..c3d7eef3ad06
+--- /dev/null
++++ b/scripts/bin2c.c
+@@ -0,0 +1,36 @@
++/*
++ * Unloved program to convert a binary on stdin to a C include on stdout
++ *
++ * Jan 1999 Matt Mackall <mpm@selenic.com>
++ *
++ * This software may be used and distributed according to the terms
++ * of the GNU General Public License, incorporated herein by reference.
++ */
++
++#include <stdio.h>
++
++int main(int argc, char *argv[])
++{
++	int ch, total = 0;
++
++	if (argc > 1)
++		printf("const char %s[] %s=\n",
++			argv[1], argc > 2 ? argv[2] : "");
++
++	do {
++		printf("\t\"");
++		while ((ch = getchar()) != EOF) {
++			total++;
++			printf("\\x%02x", ch);
++			if (total % 16 == 0)
++				break;
++		}
++		printf("\"\n");
++	} while (ch != EOF);
++
++	if (argc > 1)
++		printf("\t;\n\n#include <linux/types.h>\n\nconst size_t %s_size = %d;\n",
++		       argv[1], total);
++
++	return 0;
++}
+-- 
+2.34.1
+

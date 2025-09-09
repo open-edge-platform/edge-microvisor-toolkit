@@ -1,0 +1,82 @@
+From e2af0dea71b525e7bfc772b1cfa8b87910fb45ab Mon Sep 17 00:00:00 2001
+From: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Date: Mon, 28 Jun 2021 23:49:29 +0200
+Subject: [PATCH 39/48] drm/i915/pf: Handle VF pause complete notification
+
+GuC will notify PF when "VF pause" request is completed.
+Add initial handler to avoid reporting unnecessary errors.
+
+v2: updated for guc 67.0.0
+
+Signed-off-by: Michal Wajdeczko <michal.wajdeczko@intel.com>
+---
+ drivers/gpu/drm/i915/gt/iov/intel_iov_state.c | 11 ++++++++++-
+ drivers/gpu/drm/i915/gt/iov/intel_iov_types.h |  2 ++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c b/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
+index e07395d987546..45a8cccdc9986 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
+@@ -67,6 +67,7 @@ void intel_iov_state_release(struct intel_iov *iov)
+ static void pf_reset_vf_state(struct intel_iov *iov, u32 vfid)
+ {
+ 	iov->pf.state.data[vfid].state = 0;
++	iov->pf.state.data[vfid].paused = false;
+ }
+ 
+ /**
+@@ -373,6 +374,7 @@ static void pf_handle_vf_flr(struct intel_iov *iov, u32 vfid)
+ 		return;
+ 	}
+ 
++	iov->pf.state.data[vfid].paused = false;
+ 	dev_info(dev, "VF%u FLR\n", vfid);
+ 
+ 	for_each_gt(gt, iov_to_i915(iov), gtid)
+@@ -391,6 +393,7 @@ static void pf_handle_vf_pause_done(struct intel_iov *iov, u32 vfid)
+ {
+ 	struct device *dev = iov_to_dev(iov);
+ 
++	iov->pf.state.data[vfid].paused = true;
+ 	dev_info(dev, "VF%u %s\n", vfid, "paused");
+ }
+ 
+@@ -524,7 +527,13 @@ int intel_iov_state_pause_vf(struct intel_iov *iov, u32 vfid)
+  */
+ int intel_iov_state_resume_vf(struct intel_iov *iov, u32 vfid)
+ {
+-	return pf_control_vf(iov, vfid, GUC_PF_TRIGGER_VF_RESUME);
++	int err = pf_control_vf(iov, vfid, GUC_PF_TRIGGER_VF_RESUME);
++
++	if (err < 0)
++		return err;
++
++	iov->pf.state.data[vfid].paused = false;
++	return 0;
+ }
+ 
+ /**
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_types.h b/drivers/gpu/drm/i915/gt/iov/intel_iov_types.h
+index e62dd11cd3580..dbb46f1be0175 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_types.h
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_types.h
+@@ -123,6 +123,7 @@ struct intel_iov_provisioning {
+ /**
+  * struct intel_iov_data - Data related to one VF.
+  * @state: VF state bits
++ * @paused: FIXME missing doc
+  * @adverse_events: FIXME missing doc
+  */
+ struct intel_iov_data {
+@@ -133,6 +134,7 @@ struct intel_iov_data {
+ #define IOV_VF_NEEDS_FLR_FINISH		3
+ #define IOV_VF_NEEDS_FLR_DONE_SYNC	4
+ #define IOV_VF_FLR_FAILED		(BITS_PER_LONG - 1)
++	bool paused;
+ 	unsigned int adverse_events[IOV_THRESHOLD_MAX];
+ };
+ 
+-- 
+2.25.1
+

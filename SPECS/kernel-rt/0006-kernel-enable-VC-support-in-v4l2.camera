@@ -1,0 +1,26 @@
+From 47ac76f2bd1bc71af0dd892a03f751c7ac2b653e Mon Sep 17 00:00:00 2001
+From: zouxiaoh <xiaohong.zou@intel.com>
+Date: Mon, 26 May 2025 14:17:16 +0800
+Subject: [PATCH 06/17] kernel: enable VC support in v4l2
+
+Signed-off-by: zouxiaoh <xiaohong.zou@intel.com>
+---
+ drivers/media/v4l2-core/v4l2-subdev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/v4l2-core/v4l2-subdev.c b/drivers/media/v4l2-core/v4l2-subdev.c
+index 1193852bad599..2e2c36b3f5cb4 100644
+--- a/drivers/media/v4l2-core/v4l2-subdev.c
++++ b/drivers/media/v4l2-core/v4l2-subdev.c
+@@ -32,7 +32,7 @@
+  * 'v4l2_subdev_enable_streams_api' to 1 below.
+  */
+ 
+-static bool v4l2_subdev_enable_streams_api;
++static bool v4l2_subdev_enable_streams_api = true;
+ #endif
+ 
+ /*
+-- 
+2.34.1
+
