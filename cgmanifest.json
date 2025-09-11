@@ -184,9 +184,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "alsa-utils",
-          "version": "1.2.9",
-          "downloadUrl": "https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.9.tar.bz2"
+          "name": "alsa-sof-firmware",
+          "version": "2025.05",
+          "downloadUrl": "https://github.com/thesofproject/sof-bin/releases/download/v2025.05/sof-bin-2025.05.tar.gz"
         }
       }
     },
@@ -194,9 +194,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "alsa-sof-firmware",
-          "version": "2025.05",
-          "downloadUrl": "https://github.com/thesofproject/sof-bin/releases/download/v2025.05/sof-bin-2025.05.tar.gz"
+          "name": "alsa-utils",
+          "version": "1.2.9",
+          "downloadUrl": "https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.9.tar.bz2"
         }
       }
     },
@@ -1836,6 +1836,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "clinfo",
+          "version": "3.0.23.01.25",
+          "downloadUrl": "https://github.com/Oblomov/clinfo/archive/3.0.23.01.25/clinfo-3.0.23.01.25.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "cloud-hypervisor-cvm",
           "version": "41.0.79",
           "downloadUrl": "https://github.com/microsoft/cloud-hypervisor/archive/refs/tags/msft/v41.0.79.tar.gz"
@@ -1919,16 +1929,6 @@
           "name": "clutter-gtk",
           "version": "1.8.4",
           "downloadUrl": "https://download.gnome.org/sources/clutter-gtk/1.8/clutter-gtk-1.8.4.tar.xz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "clinfo",
-          "version": "3.0.23.01.25",
-          "downloadUrl": "https://github.com/Oblomov/clinfo/archive/3.0.23.01.25/clinfo-3.0.23.01.25.tar.gz"
         }
       }
     },
@@ -8491,8 +8491,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.39",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
+          "version": "6.12.44",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz"
         }
       }
     },
@@ -8511,8 +8511,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.39",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
+          "version": "6.12.44",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz"
         }
       }
     },
@@ -8551,8 +8551,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.39",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz"
+          "version": "6.12.44",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz"
         }
       }
     },
@@ -9200,16 +9200,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "libclc",
-          "version": "18.1.2",
-          "downloadUrl": "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.2/libclc-18.1.2.src.tar.xz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "libcdio",
           "version": "2.1.8",
           "downloadUrl": "http://ftp.gnu.org/gnu/libcdio/libcdio-2.1.8.tar.gz"
@@ -9253,6 +9243,16 @@
           "name": "libchewing",
           "version": "0.5.1",
           "downloadUrl": "https://github.com/chewing/libchewing/archive/v0.5.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "libclc",
+          "version": "18.1.2",
+          "downloadUrl": "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.2/libclc-18.1.2.src.tar.xz"
         }
       }
     },
@@ -13530,9 +13530,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "mesa-demos",
-          "version": "9.0.0",
-          "downloadUrl": "https://archive.mesa3d.org/demos/mesa-demos-9.0.0.tar.xz"
+          "name": "mesa",
+          "version": "24.0.1",
+          "downloadUrl": "https://archive.mesa3d.org/mesa-24.0.1.tar.xz"
         }
       }
     },
@@ -13540,9 +13540,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "mesa",
-          "version": "24.0.1",
-          "downloadUrl": "https://archive.mesa3d.org/mesa-24.0.1.tar.xz"
+          "name": "mesa-demos",
+          "version": "9.0.0",
+          "downloadUrl": "https://archive.mesa3d.org/demos/mesa-demos-9.0.0.tar.xz"
         }
       }
     },
@@ -16185,6 +16185,16 @@
           "name": "pacrunner",
           "version": "0.16",
           "downloadUrl": "http://www.kernel.org/pub/linux/network/connman/pacrunner-0.16.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "paho-c",
+          "version": "1.3.14",
+          "downloadUrl": "https://github.com/eclipse/paho.mqtt.c/archive/v1.3.14/paho.mqtt.c-1.3.14.tar.gz"
         }
       }
     },
@@ -21672,9 +21682,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "platform-observability-agent",
-          "version": "1.9.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.9.0.tar.gz"
+          "name": "platform-manageability-agent",
+          "version": "0.1.8",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.1.8.tar.gz"
         }
       }
     },
@@ -21682,9 +21692,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "platform-manageability-agent",
-          "version": "0.1.8",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.1.8.tar.gz"
+          "name": "platform-observability-agent",
+          "version": "1.9.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.9.0.tar.gz"
         }
       }
     },
@@ -31991,16 +32001,6 @@
           "name": "zstd",
           "version": "1.5.5",
           "downloadUrl": "https://github.com/facebook/zstd/releases/download/v1.5.5/zstd-1.5.5.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "paho-c",
-          "version": "1.3.14",
-          "downloadUrl": "https://github.com/eclipse/paho.mqtt.c/archive/v1.3.14/paho.mqtt.c-1.3.14.tar.gz"
         }
       }
     },

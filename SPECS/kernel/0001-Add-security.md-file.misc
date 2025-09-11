@@ -1,0 +1,27 @@
+From 3a01e64f0d80c5154743e5c304774066ceb10972 Mon Sep 17 00:00:00 2001
+From: Lili Li <lili.li@intel.com>
+Date: Tue, 24 Oct 2023 10:33:36 +0800
+Subject: [PATCH] Add security.md file
+
+Add security.md file to open source repository.
+
+Signed-off-by: Lili Li <lili.li@intel.com>
+---
+ security.md | 5 +++++
+ 1 file changed, 5 insertions(+)
+ create mode 100644 security.md
+
+diff --git a/security.md b/security.md
+new file mode 100644
+index 0000000000000..b6eefdf389795
+--- /dev/null
++++ b/security.md
+@@ -0,0 +1,5 @@
++Security Policy
++Intel is committed to rapidly addressing security vulnerabilities affecting our customers and providing clear guidance on the solution, impact, severity and mitigation.
++
++Reporting a Vulnerability
++Please report any security vulnerabilities in this project [utilizing the guidelines here](https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html).
+-- 
+2.25.1
+

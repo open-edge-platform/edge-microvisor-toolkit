@@ -1,0 +1,109 @@
+From 1f5508a341deb998dc0c90c638848843a303e1b6 Mon Sep 17 00:00:00 2001
+From: Andi Shyti <andi.shyti@linux.intel.com>
+Date: Tue, 20 Aug 2024 22:30:47 +0200
+Subject: [PATCH 05/17] drm/i915/gem: Mark and verify UABI engine validity
+
+Mark engines as invalid when they are not added to the UABI list
+to prevent accidental assignment of batch buffers.
+
+Currently, this change is mostly precautionary with minimal
+impact. However, in the future, when CCS engines will be
+dynamically added and removed by the user, this mechanism will
+be used for determining engine validity.
+
+Signed-off-by: Andi Shyti <andi.shyti@linux.intel.com>
+---
+ .../gpu/drm/i915/gem/i915_gem_execbuffer.c    | 28 +++++++++++++++++--
+ drivers/gpu/drm/i915/gt/intel_engine_user.c   |  9 ++++--
+ 2 files changed, 33 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
+index a3b83cfe17267..fb2549ee76760 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
+@@ -2680,6 +2680,22 @@ eb_select_legacy_ring(struct i915_execbuffer *eb)
+ 	return user_ring_map[user_ring_id];
+ }
+ 
++static bool engine_valid(struct intel_context *ce)
++{
++	if (!intel_engine_is_virtual(ce->engine))
++		return !RB_EMPTY_NODE(&ce->engine->uabi_node);
++
++	/*
++	 * TODO: check virtual sibilings; we need to walk through all the
++	 * virtual engines and ask whether the physical engine where it is based
++	 * is still valid. For each of them we need to check with
++	 * RB_EMPTY_NODE(...)
++	 *
++	 * This can be a placed in a new ce_ops.
++	 */
++	return true;
++}
++
+ static int
+ eb_select_engine(struct i915_execbuffer *eb)
+ {
+@@ -2710,8 +2726,6 @@ eb_select_engine(struct i915_execbuffer *eb)
+ 	eb->num_batches = ce->parallel.number_children + 1;
+ 	gt = ce->engine->gt;
+ 
+-	for_each_child(ce, child)
+-		intel_context_get(child);
+ 	eb->wakeref = intel_gt_pm_get(ce->engine->gt);
+ 	/*
+ 	 * Keep GT0 active on MTL so that i915_vma_parked() doesn't
+@@ -2720,6 +2734,16 @@ eb_select_engine(struct i915_execbuffer *eb)
+ 	if (gt->info.id)
+ 		eb->wakeref_gt0 = intel_gt_pm_get(to_gt(gt->i915));
+ 
++	/* We need to hold the wakeref to stabilize i915->uabi_engines */
++	if (!engine_valid(ce)) {
++		intel_context_put(ce);
++		err = -ENODEV;
++		goto err;
++	}
++
++	for_each_child(ce, child)
++		intel_context_get(child);
++
+ 	if (!test_bit(CONTEXT_ALLOC_BIT, &ce->flags)) {
+ 		err = intel_context_alloc_state(ce);
+ 		if (err)
+diff --git a/drivers/gpu/drm/i915/gt/intel_engine_user.c b/drivers/gpu/drm/i915/gt/intel_engine_user.c
+index 11cc06c0c785b..cd7662b1ad59b 100644
+--- a/drivers/gpu/drm/i915/gt/intel_engine_user.c
++++ b/drivers/gpu/drm/i915/gt/intel_engine_user.c
+@@ -220,7 +220,7 @@ void intel_engines_driver_register(struct drm_i915_private *i915)
+ 			container_of(it, typeof(*engine), uabi_list);
+ 
+ 		if (intel_gt_has_unrecoverable_error(engine->gt))
+-			continue; /* ignore incomplete engines */
++			goto clear_node_continue; /* ignore incomplete engines */
+ 
+ 		GEM_BUG_ON(engine->class >= ARRAY_SIZE(uabi_classes));
+ 		engine->uabi_class = uabi_classes[engine->class];
+@@ -242,7 +242,7 @@ void intel_engines_driver_register(struct drm_i915_private *i915)
+ 			      engine->uabi_instance);
+ 
+ 		if (uabi_class > I915_LAST_UABI_ENGINE_CLASS)
+-			continue;
++			goto clear_node_continue;
+ 
+ 		GEM_BUG_ON(uabi_class >=
+ 			   ARRAY_SIZE(i915->engine_uabi_class_count));
+@@ -260,6 +260,11 @@ void intel_engines_driver_register(struct drm_i915_private *i915)
+ 
+ 		prev = &engine->uabi_node;
+ 		p = &prev->rb_right;
++
++		continue;
++
++clear_node_continue:
++		RB_CLEAR_NODE(&engine->uabi_node);
+ 	}
+ 
+ 	if (IS_ENABLED(CONFIG_DRM_I915_SELFTESTS) &&
+-- 
+2.34.1
+

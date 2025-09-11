@@ -1,0 +1,38 @@
+From df91c82f11861d900c4dd9599e88a418745c4a68 Mon Sep 17 00:00:00 2001
+From: Michael Sit Wei Hong <michael.wei.hong.sit@intel.com>
+Date: Fri, 4 Jun 2021 11:03:50 +0800
+Subject: [PATCH 08/42] stmmac: intel: skip xpcs reset for 2.5Gbps on Intel
+ AlderLake
+
+Unlike any other platforms, Intel AlderLake has most of the SerDes
+PLL clock configuration done in the BIOS. Hence, we need to avoid
+performing a xPCS soft reset on driver load.
+
+Signed-off-by: Michael Sit Wei Hong <michael.wei.hong.sit@intel.com>
+---
+ drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+index 3f8378a174a5e..d34e075313128 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+@@ -812,6 +812,7 @@ static int adls_sgmii_phy0_data(struct pci_dev *pdev,
+ {
+ 	plat->bus_id = 1;
+ 	plat->phy_interface = PHY_INTERFACE_MODE_SGMII;
++	plat->skip_reset = 1;
+ 
+ 	/* SerDes power up and power down are done in BIOS for ADL */
+ 
+@@ -827,6 +828,7 @@ static int adls_sgmii_phy1_data(struct pci_dev *pdev,
+ {
+ 	plat->bus_id = 2;
+ 	plat->phy_interface = PHY_INTERFACE_MODE_SGMII;
++	plat->skip_reset = 1;
+ 
+ 	/* SerDes power up and power down are done in BIOS for ADL */
+ 
+-- 
+2.25.1
+

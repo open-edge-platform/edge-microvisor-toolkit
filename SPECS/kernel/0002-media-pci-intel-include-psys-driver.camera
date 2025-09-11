@@ -1,0 +1,24 @@
+From e443c64fb942c1ad1c2383bd8c1136b6d1677ada Mon Sep 17 00:00:00 2001
+From: Julian Chen <julian.chen@intel.com>
+Date: Thu, 16 Jan 2025 17:16:58 +0800
+Subject: [PATCH 2/5] media: pci: intel: include psys driver
+
+Include psys folder for psys driver enable
+
+Signed-off-by: Julian Chen <julian.chen@intel.com>
+---
+ drivers/media/pci/intel/ipu6/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/pci/intel/ipu6/Makefile b/drivers/media/pci/intel/ipu6/Makefile
+index a821b0a1567f4..8a4f4cd7610d2 100644
+--- a/drivers/media/pci/intel/ipu6/Makefile
++++ b/drivers/media/pci/intel/ipu6/Makefile
+@@ -21,3 +21,4 @@ intel-ipu6-isys-y		:= ipu6-isys.o \
+ 				ipu6-isys-dwc-phy.o
+ 
+ obj-$(CONFIG_VIDEO_INTEL_IPU6)	+= intel-ipu6-isys.o
++obj-$(CONFIG_VIDEO_INTEL_IPU6)  += psys/
+-- 
+2.25.1
+

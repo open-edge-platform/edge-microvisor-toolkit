@@ -1,0 +1,163 @@
+From c37e26c219429c56c9187d67db1df6b56cf62409 Mon Sep 17 00:00:00 2001
+From: Hao Li <hao3.li@intel.com>
+Date: Wed, 25 Sep 2024 12:39:22 +0800
+Subject: [PATCH 09/43] Revert "timekeeping: Provide infrastructure for
+ converting to/from a base clock"
+
+This reverts commit 6b2e29977518ec13ef3022f234ff8f3014c243da.
+
+Signed-off-by: Hao Li <hao3.li@intel.com>
+---
+ include/linux/clocksource.h | 27 ------------------------
+ include/linux/timekeeping.h |  2 --
+ kernel/time/timekeeping.c   | 42 +------------------------------------
+ 3 files changed, 1 insertion(+), 70 deletions(-)
+
+diff --git a/include/linux/clocksource.h b/include/linux/clocksource.h
+index d35b677b08fe1..0ad8b550bb4b4 100644
+--- a/include/linux/clocksource.h
++++ b/include/linux/clocksource.h
+@@ -21,7 +21,6 @@
+ #include <asm/div64.h>
+ #include <asm/io.h>
+ 
+-struct clocksource_base;
+ struct clocksource;
+ struct module;
+ 
+@@ -51,7 +50,6 @@ struct module;
+  *			multiplication
+  * @name:		Pointer to clocksource name
+  * @list:		List head for registration (internal)
+- * @freq_khz:		Clocksource frequency in khz.
+  * @rating:		Rating value for selection (higher is better)
+  *			To avoid rating inflation the following
+  *			list should give you a guide as to how
+@@ -72,8 +70,6 @@ struct module;
+  *			validate the clocksource from which the snapshot was
+  *			taken.
+  * @flags:		Flags describing special properties
+- * @base:		Hardware abstraction for clock on which a clocksource
+- *			is based
+  * @enable:		Optional function to enable the clocksource
+  * @disable:		Optional function to disable the clocksource
+  * @suspend:		Optional suspend function for the clocksource
+@@ -111,12 +107,10 @@ struct clocksource {
+ 	u64			max_cycles;
+ 	const char		*name;
+ 	struct list_head	list;
+-	u32			freq_khz;
+ 	int			rating;
+ 	enum clocksource_ids	id;
+ 	enum vdso_clock_mode	vdso_clock_mode;
+ 	unsigned long		flags;
+-	struct clocksource_base *base;
+ 
+ 	int			(*enable)(struct clocksource *cs);
+ 	void			(*disable)(struct clocksource *cs);
+@@ -312,25 +306,4 @@ static inline unsigned int clocksource_get_max_watchdog_retry(void)
+ 
+ void clocksource_verify_percpu(struct clocksource *cs);
+ 
+-/**
+- * struct clocksource_base - hardware abstraction for clock on which a clocksource
+- *			is based
+- * @id:			Defaults to CSID_GENERIC. The id value is used for conversion
+- *			functions which require that the current clocksource is based
+- *			on a clocksource_base with a particular ID in certain snapshot
+- *			functions to allow callers to validate the clocksource from
+- *			which the snapshot was taken.
+- * @freq_khz:		Nominal frequency of the base clock in kHz
+- * @offset:		Offset between the base clock and the clocksource
+- * @numerator:		Numerator of the clock ratio between base clock and the clocksource
+- * @denominator:	Denominator of the clock ratio between base clock and the clocksource
+- */
+-struct clocksource_base {
+-	enum clocksource_ids	id;
+-	u32			freq_khz;
+-	u64			offset;
+-	u32			numerator;
+-	u32			denominator;
+-};
+-
+ #endif /* _LINUX_CLOCKSOURCE_H */
+diff --git a/include/linux/timekeeping.h b/include/linux/timekeeping.h
+index b2ee182d891ef..0ea7823b7f31f 100644
+--- a/include/linux/timekeeping.h
++++ b/include/linux/timekeeping.h
+@@ -310,12 +310,10 @@ struct system_device_crosststamp {
+  *		timekeeping code to verify comparability of two cycle values.
+  *		The default ID, CSID_GENERIC, does not identify a specific
+  *		clocksource.
+- * @use_nsecs:	@cycles is in nanoseconds.
+  */
+ struct system_counterval_t {
+ 	u64			cycles;
+ 	enum clocksource_ids	cs_id;
+-	bool			use_nsecs;
+ };
+ 
+ /*
+diff --git a/kernel/time/timekeeping.c b/kernel/time/timekeeping.c
+index 78c7c15c5f0ea..8dc4d3152da76 100644
+--- a/kernel/time/timekeeping.c
++++ b/kernel/time/timekeeping.c
+@@ -1195,46 +1195,6 @@ static bool timestamp_in_interval(u64 start, u64 end, u64 ts)
+ 	return false;
+ }
+ 
+-static bool convert_clock(u64 *val, u32 numerator, u32 denominator)
+-{
+-	u64 rem, res;
+-
+-	if (!numerator || !denominator)
+-		return false;
+-
+-	res = div64_u64_rem(*val, denominator, &rem) * numerator;
+-	*val = res + div_u64(rem * numerator, denominator);
+-	return true;
+-}
+-
+-static bool convert_base_to_cs(struct system_counterval_t *scv)
+-{
+-	struct clocksource *cs = tk_core.timekeeper.tkr_mono.clock;
+-	struct clocksource_base *base;
+-	u32 num, den;
+-
+-	/* The timestamp was taken from the time keeper clock source */
+-	if (cs->id == scv->cs_id)
+-		return true;
+-
+-	/*
+-	 * Check whether cs_id matches the base clock. Prevent the compiler from
+-	 * re-evaluating @base as the clocksource might change concurrently.
+-	 */
+-	base = READ_ONCE(cs->base);
+-	if (!base || base->id != scv->cs_id)
+-		return false;
+-
+-	num = scv->use_nsecs ? cs->freq_khz : base->numerator;
+-	den = scv->use_nsecs ? USEC_PER_SEC : base->denominator;
+-
+-	if (!convert_clock(&scv->cycles, num, den))
+-		return false;
+-
+-	scv->cycles += base->offset;
+-	return true;
+-}
+-
+ /**
+  * get_device_system_crosststamp - Synchronously capture system/device timestamp
+  * @get_time_fn:	Callback to get simultaneous device time and
+@@ -1281,7 +1241,7 @@ int get_device_system_crosststamp(int (*get_time_fn)
+ 		 * installed timekeeper clocksource
+ 		 */
+ 		if (system_counterval.cs_id == CSID_GENERIC ||
+-		    !convert_base_to_cs(&system_counterval))
++		    tk->tkr_mono.clock->id != system_counterval.cs_id)
+ 			return -ENODEV;
+ 		cycles = system_counterval.cycles;
+ 
+-- 
+2.25.1
+

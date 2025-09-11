@@ -1,0 +1,55 @@
+From 043014deb06a4f5d1325383313bed05d19e1cfeb Mon Sep 17 00:00:00 2001
+From: Gan Yi Fang <yi.fang.gan@intel.com>
+Date: Mon, 21 Nov 2022 01:28:57 -0500
+Subject: [PATCH 05/42] net: phy: dp83867: perform restart AN after modifying
+ AN setting
+
+When changing link speed, the MAC side is not ready when the PHY
+side is up. This is causing the configuration is not updated at
+the MAC side. By restarting the auto negotiation, MAC side is able
+to update the in-band message.
+
+Fixes: 50ca4e7f91ff ("net: phy: dp83867: retrigger SGMII AN when link change")
+Signed-off-by: Gan Yi Fang <yi.fang.gan@intel.com>
+---
+ drivers/net/phy/Kconfig   | 1 +
+ drivers/net/phy/dp83867.c | 4 ++++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/drivers/net/phy/Kconfig b/drivers/net/phy/Kconfig
+index 01b235b3bb7e8..5464a08b8dc1b 100644
+--- a/drivers/net/phy/Kconfig
++++ b/drivers/net/phy/Kconfig
+@@ -407,6 +407,7 @@ config DP83848_PHY
+ 
+ config DP83867_PHY
+ 	tristate "Texas Instruments DP83867 Gigabit PHY"
++	depends on PHYLINK
+ 	help
+ 	  Currently supports the DP83867 PHY.
+ 
+diff --git a/drivers/net/phy/dp83867.c b/drivers/net/phy/dp83867.c
+index 4120385c5a79d..c5e44d72392dc 100644
+--- a/drivers/net/phy/dp83867.c
++++ b/drivers/net/phy/dp83867.c
+@@ -15,6 +15,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/bitfield.h>
+ #include <linux/nvmem-consumer.h>
++#include <linux/phylink.h>
+ 
+ #include <dt-bindings/net/ti-dp83867.h>
+ 
+@@ -1007,6 +1008,9 @@ static void dp83867_link_change_notify(struct phy_device *phydev)
+ 		phy_set_bits(phydev, DP83867_CFG2,
+ 			     DP83867_SGMII_AUTONEG_EN);
+ 	}
++
++	if (phydev->state == PHY_NOLINK)
++		phylink_mii_c22_pcs_an_restart(&phydev->mdio);
+ }
+ 
+ static int dp83867_loopback(struct phy_device *phydev, bool enable)
+-- 
+2.25.1
+
