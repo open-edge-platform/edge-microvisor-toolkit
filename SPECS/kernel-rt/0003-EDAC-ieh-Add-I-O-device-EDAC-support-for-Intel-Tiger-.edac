@@ -1,0 +1,55 @@
+From 2b2238e830c8f5f659616d5dddb164ee3c1dabcc Mon Sep 17 00:00:00 2001
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Date: Fri, 20 Mar 2020 20:19:48 +0800
+Subject: [PATCH 3/9] EDAC/ieh: Add I/O device EDAC support for Intel Tiger
+ Lake-H SoC
+
+Tiger Lake-H SoC shares the same Integrated Error Handler(IEH) architecture
+with Tiger Lake-U, so can use the same ieh_edac driver.
+
+Add Tiger Lake-H IEH device ID for I/O device EDAC support.
+
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+---
+ drivers/edac/ieh_edac.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/edac/ieh_edac.c b/drivers/edac/ieh_edac.c
+index e4bff40baff5a..5a67b8486fec8 100644
+--- a/drivers/edac/ieh_edac.c
++++ b/drivers/edac/ieh_edac.c
+@@ -36,7 +36,7 @@
+ 
+ #include "edac_mc.h"
+ 
+-#define IEH_REVISION	"v1.7"
++#define IEH_REVISION	"v1.8"
+ 
+ #define EDAC_MOD_STR	"ieh_edac"
+ #define IEH_NMI_NAME	"ieh"
+@@ -179,6 +179,14 @@ static struct ieh_config tgl_u_cfg = {
+ 	.action	= RESTART,
+ };
+ 
++/* Tiger Lake-H SoC */
++#define IEH_DID_TGL_H		0x43af
++
++static struct ieh_config tgl_h_cfg = {
++	.did	= IEH_DID_TGL_H,
++	.action	= RESTART,
++};
++
+ static const char * const severities[] = {
+ 	[IEH_CORR_ERR]		= "correctable",
+ 	[IEH_NONFATAL_ERR]	= "non-fatal uncorrectable",
+@@ -529,6 +537,7 @@ static struct notifier_block ieh_mce_dec = {
+ 
+ static const struct x86_cpu_id ieh_cpuids[] = {
+ 	X86_MATCH_VFM(INTEL_TIGERLAKE_L,	&tgl_u_cfg),
++	X86_MATCH_VFM(INTEL_TIGERLAKE,	&tgl_h_cfg),
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(x86cpu, ieh_cpuids);
+-- 
+2.25.1
+

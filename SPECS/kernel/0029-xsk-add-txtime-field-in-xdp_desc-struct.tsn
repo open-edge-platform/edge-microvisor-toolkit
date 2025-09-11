@@ -1,0 +1,29 @@
+From 90e81216a3f9a2714b3f004e7da40f42904ad52b Mon Sep 17 00:00:00 2001
+From: "Song, Yoong Siang" <yoong.siang.song@intel.com>
+Date: Wed, 24 Feb 2021 01:38:14 +0800
+Subject: [PATCH 29/42] xsk: add txtime field in xdp_desc struct
+
+Add a xdp_desc entry to specify packet LaunchTime for drivers
+that support the feature.
+
+Signed-off-by: Song, Yoong Siang <yoong.siang.song@intel.com>
+Signed-off-by: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+---
+ include/uapi/linux/if_xdp.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/uapi/linux/if_xdp.h b/include/uapi/linux/if_xdp.h
+index 42ec5ddaab8dc..b007f3e75850e 100644
+--- a/include/uapi/linux/if_xdp.h
++++ b/include/uapi/linux/if_xdp.h
+@@ -156,6 +156,7 @@ struct xdp_desc {
+ 	__u64 addr;
+ 	__u32 len;
+ 	__u32 options;
++	__u64 txtime;
+ };
+ 
+ /* UMEM descriptor is __u64 */
+-- 
+2.25.1
+

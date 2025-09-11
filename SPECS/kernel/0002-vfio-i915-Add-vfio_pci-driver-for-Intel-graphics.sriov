@@ -1,0 +1,1401 @@
+From 633a5a651d71510cf646e53f97dcf3788fc85317 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>
+Date: Thu, 9 Jun 2022 02:11:51 +0200
+Subject: [PATCH 2/3] vfio/i915: Add vfio_pci driver for Intel graphics
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+In addition to generic VFIO PCI functionality, the driver implements
+VFIO migration uAPI, allowing userspace to enable migration for Intel
+Graphics SR-IOV Virtual Functions.
+The driver binds to VF device, and uses API exposed by i915 driver bound
+to PF device to obtain the necessary device state.
+
+Signed-off-by: Michał Winiarski <michal.winiarski@intel.com>
+Acked-by: Michal Wajdeczko <michal.wajdeczko@intel.com>
+---
+ drivers/gpu/drm/i915/i915_sriov.c      |   4 +-
+ drivers/vfio/pci/Kconfig               |   2 +
+ drivers/vfio/pci/Makefile              |   2 +
+ drivers/vfio/pci/i915/Kconfig          |  25 ++
+ drivers/vfio/pci/i915/Makefile         |   4 +
+ drivers/vfio/pci/i915/data.c           | 409 +++++++++++++++++++++++++
+ drivers/vfio/pci/i915/i915_vfio_pci.h  | 114 +++++++
+ drivers/vfio/pci/i915/main.c           | 397 ++++++++++++++++++++++++
+ drivers/vfio/pci/i915/test/data_test.c | 308 +++++++++++++++++++
+ include/drm/i915_sriov.h               |   4 +-
+ 10 files changed, 1265 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/vfio/pci/i915/Kconfig
+ create mode 100644 drivers/vfio/pci/i915/Makefile
+ create mode 100644 drivers/vfio/pci/i915/data.c
+ create mode 100644 drivers/vfio/pci/i915/i915_vfio_pci.h
+ create mode 100644 drivers/vfio/pci/i915/main.c
+ create mode 100644 drivers/vfio/pci/i915/test/data_test.c
+
+diff --git a/drivers/gpu/drm/i915/i915_sriov.c b/drivers/gpu/drm/i915/i915_sriov.c
+index f38d036eab830..b4f62c4005417 100644
+--- a/drivers/gpu/drm/i915/i915_sriov.c
++++ b/drivers/gpu/drm/i915/i915_sriov.c
+@@ -1190,7 +1190,7 @@ sriov_to_gt(struct pci_dev *pdev, unsigned int tile)
+  *
+  * Return: Size in bytes.
+  */
+-ssize_t
++size_t
+ i915_sriov_ggtt_size(struct pci_dev *pdev, unsigned int vfid, unsigned int tile)
+ {
+ 	struct intel_gt *gt;
+@@ -1279,7 +1279,7 @@ EXPORT_SYMBOL_NS_GPL(i915_sriov_ggtt_load, I915_SRIOV_NS);
+  *
+  * Return: size in bytes on success or a negative error code on failure.
+  */
+-ssize_t
++size_t
+ i915_sriov_fw_state_size(struct pci_dev *pdev, unsigned int vfid, unsigned int tile)
+ {
+ 	struct intel_gt *gt;
+diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+index bf50ffa10bdea..42a8306d82c2a 100644
+--- a/drivers/vfio/pci/Kconfig
++++ b/drivers/vfio/pci/Kconfig
+@@ -67,6 +67,8 @@ source "drivers/vfio/pci/pds/Kconfig"
+ 
+ source "drivers/vfio/pci/virtio/Kconfig"
+ 
++source "drivers/vfio/pci/i915/Kconfig"
++
+ source "drivers/vfio/pci/nvgrace-gpu/Kconfig"
+ 
+ source "drivers/vfio/pci/qat/Kconfig"
+diff --git a/drivers/vfio/pci/Makefile b/drivers/vfio/pci/Makefile
+index cf00c0a7e55c8..387f3d5ec9d2a 100644
+--- a/drivers/vfio/pci/Makefile
++++ b/drivers/vfio/pci/Makefile
+@@ -16,6 +16,8 @@ obj-$(CONFIG_PDS_VFIO_PCI) += pds/
+ 
+ obj-$(CONFIG_VIRTIO_VFIO_PCI) += virtio/
+ 
++obj-$(CONFIG_I915_VFIO_PCI) += i915/
++
+ obj-$(CONFIG_NVGRACE_GPU_VFIO_PCI) += nvgrace-gpu/
+ 
+ obj-$(CONFIG_QAT_VFIO_PCI) += qat/
+diff --git a/drivers/vfio/pci/i915/Kconfig b/drivers/vfio/pci/i915/Kconfig
+new file mode 100644
+index 0000000000000..e2983fbaef197
+--- /dev/null
++++ b/drivers/vfio/pci/i915/Kconfig
+@@ -0,0 +1,25 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++config I915_VFIO_PCI
++	tristate "VFIO vendor-specific PCI driver for Intel Graphics"
++	depends on DRM_I915
++	help
++	  This option enables vendor-specific VFIO driver for Intel Graphics.
++	  In addition to generic VFIO PCI functionality, it implements VFIO
++	  migration uAPI (v1) allowing userspace to enable migration for
++	  Intel Graphics SR-IOV Virtual Functions.
++
++config I915_VFIO_PCI_TEST
++	tristate "KUnit tests for Intel Graphics VFIO" if !KUNIT_ALL_TESTS
++	depends on I915_VFIO_PCI && KUNIT
++	default KUNIT_ALL_TESTS
++	help
++	  This option enables unit tests for i915-vfio-pci.
++	  It is not useful for distributions or general kernels,
++	  but only for kernel developers working on the driver.
++
++	  For more information on KUnit and unit tests in general,
++	  please refer to the KUnit documentation in
++	  Documentation/dev-tools/kunit/.
++
++	  If in doubt, say "N".
+diff --git a/drivers/vfio/pci/i915/Makefile b/drivers/vfio/pci/i915/Makefile
+new file mode 100644
+index 0000000000000..7454a17ef5b38
+--- /dev/null
++++ b/drivers/vfio/pci/i915/Makefile
+@@ -0,0 +1,4 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++obj-$(CONFIG_I915_VFIO_PCI) += i915-vfio-pci.o
++i915-vfio-pci-y := main.o data.o
+diff --git a/drivers/vfio/pci/i915/data.c b/drivers/vfio/pci/i915/data.c
+new file mode 100644
+index 0000000000000..07d10a322341f
+--- /dev/null
++++ b/drivers/vfio/pci/i915/data.c
+@@ -0,0 +1,409 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright © 2023 Intel Corporation
++ */
++
++#include <linux/list.h>
++
++#include "i915_vfio_pci.h"
++
++#define BITSTREAM_MAGIC 0x4f49465635313949ULL
++#define BITSTREAM_VERSION 0x1
++
++struct i915_vfio_data_device_desc {
++	/** @magic: constant, driver specific value */
++	u64 magic;
++	/** @version: device data version */
++	u64 version;
++	u16 vendor;
++	u16 device;
++	u32 rsvd;
++	/** @flags: optional flags */
++	u64 flags;
++} __packed;
++
++enum i915_vfio_pci_migration_data_type {
++	I915_VFIO_DATA_DESC = 0,
++	I915_VFIO_DATA_GGTT,
++	I915_VFIO_DATA_GUC,
++	I915_VFIO_DATA_DONE,
++};
++
++static const char *i915_vfio_data_type_str(enum i915_vfio_pci_migration_data_type type)
++{
++	switch (type) {
++	case I915_VFIO_DATA_DESC: return "DESC";
++	case I915_VFIO_DATA_GGTT: return "GGTT";
++	case I915_VFIO_DATA_GUC: return "GUC";
++	case I915_VFIO_DATA_DONE: return "DONE";
++	default: return "";
++	}
++}
++
++static int
++__i915_vfio_produce(struct i915_vfio_pci_migration_file *migf, unsigned int tile, u32 type)
++{
++	struct i915_vfio_pci_core_device *i915_vdev = migf->i915_vdev;
++	struct device *dev = i915_vdev_to_dev(i915_vdev);
++	const struct i915_vfio_pci_resource_ops *ops;
++	struct i915_vfio_pci_migration_data *data;
++	size_t size;
++	void *buf;
++	int ret;
++
++	switch (type) {
++	case I915_VFIO_DATA_GGTT:
++		ops = &i915_vdev->pf_ops->ggtt;
++		break;
++	case I915_VFIO_DATA_GUC:
++		ops = &i915_vdev->pf_ops->fw;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	size = ops->size(i915_vdev->pf, i915_vdev->vfid, tile);
++	if (!size) {
++		dev_dbg(dev, "Skipping %s for tile%u, ret=%ld\n",
++			i915_vfio_data_type_str(type), tile, size);
++
++		return 0;
++	}
++	buf = kvmalloc(size, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data) {
++		ret = -ENOMEM;
++		goto out_free_buf;
++	}
++
++	ret = ops->save(i915_vdev->pf, i915_vdev->vfid, tile, buf, size);
++	if (ret < 0)
++		goto out_free_data;
++
++	data->hdr.type = type;
++	data->hdr.tile = tile;
++	data->hdr.offset = 0;
++	data->hdr.size = size;
++	data->hdr.flags = 0;
++
++	data->pos = 0;
++	data->buf = buf;
++
++	dev_dbg(dev, "Producing %s for tile%u, size=%ld\n",
++		i915_vfio_data_type_str(type), tile, size);
++
++	list_add(&data->link, &migf->save_data);
++
++	return 0;
++
++out_free_data:
++	kfree(data);
++out_free_buf:
++	kvfree(buf);
++
++	return ret;
++}
++
++static int __i915_vfio_consume(struct i915_vfio_pci_migration_file *migf, unsigned int tile,
++			       u32 type, const char __user *ubuf, size_t len)
++{
++	struct i915_vfio_pci_core_device *i915_vdev = migf->i915_vdev;
++	struct i915_vfio_pci_migration_data *data = &migf->resume_data;
++	const struct i915_vfio_pci_resource_ops *ops;
++	int ret;
++
++	switch (type) {
++	case I915_VFIO_DATA_GGTT:
++		ops = &i915_vdev->pf_ops->ggtt;
++		break;
++	case I915_VFIO_DATA_GUC:
++		ops = &i915_vdev->pf_ops->fw;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	if (data->pos + len > data->hdr.size)
++		return -EINVAL;
++
++	if (!data->buf) {
++		data->buf = kvmalloc(data->hdr.size, GFP_KERNEL);
++		if (!data->buf)
++			return -ENOMEM;
++	}
++
++	if (migf->copy_from(data->buf + data->pos, ubuf, len)) {
++		ret = -EFAULT;
++		goto out_free;
++	}
++
++	if (data->pos + len == data->hdr.size) {
++		ret = ops->load(i915_vdev->pf, i915_vdev->vfid, tile, data->buf, data->hdr.size);
++		if (ret)
++			goto out_free;
++	}
++
++	return 0;
++
++out_free:
++	kvfree(data->buf);
++
++	return ret;
++}
++
++#define __resource(x, type) \
++static int \
++i915_vfio_produce_##x(struct i915_vfio_pci_migration_file *migf, unsigned int tile) \
++{ \
++	return __i915_vfio_produce(migf, tile, type); \
++} \
++static int \
++i915_vfio_consume_##x(struct i915_vfio_pci_migration_file *migf, \
++		      unsigned int tile, const char __user *ubuf, size_t len) \
++{ \
++	return __i915_vfio_consume(migf, tile, type, ubuf, len); \
++}
++
++__resource(ggtt, I915_VFIO_DATA_GGTT);
++__resource(fw, I915_VFIO_DATA_GUC);
++
++static int i915_vfio_produce_desc(struct i915_vfio_pci_migration_file *migf)
++{
++	struct i915_vfio_pci_migration_data *data;
++	struct i915_vfio_data_device_desc desc;
++	void *buf;
++
++	desc.magic = BITSTREAM_MAGIC;
++	desc.version = BITSTREAM_VERSION;
++	desc.vendor = i915_vdev_to_pdev(migf->i915_vdev)->vendor;
++	desc.device = i915_vdev_to_pdev(migf->i915_vdev)->device;
++	desc.flags = 0x0;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	buf = kvmalloc(sizeof(desc), GFP_KERNEL);
++	if (!buf) {
++		kfree(data);
++		return -ENOMEM;
++	}
++
++	data->hdr.type = I915_VFIO_DATA_DESC;
++	data->hdr.tile = 0;
++	data->hdr.offset = 0;
++	data->hdr.size = sizeof(desc);
++	data->hdr.flags = 0;
++	data->pos = 0;
++	data->buf = buf;
++
++	memcpy(data->buf, &desc, sizeof(desc));
++
++	list_add(&data->link, &migf->save_data);
++
++	return 0;
++}
++
++static int i915_vfio_consume_desc(struct i915_vfio_pci_migration_file *migf,
++				  const char __user *ubuf, size_t len)
++{
++	struct i915_vfio_pci_migration_header *hdr = &migf->resume_data.hdr;
++	struct i915_vfio_data_device_desc desc;
++
++	if (hdr->size != sizeof(desc))
++		return -EINVAL;
++
++	if (sizeof(desc) != len)
++		return -EINVAL;
++
++	if (migf->copy_from(&desc, ubuf, len))
++		return -EFAULT;
++
++	if (desc.magic != BITSTREAM_MAGIC)
++		return -EINVAL;
++
++	if (desc.version != BITSTREAM_VERSION)
++		return -EINVAL;
++
++	if (desc.vendor != i915_vdev_to_pdev(migf->i915_vdev)->vendor)
++		return -EINVAL;
++
++	if (desc.device != i915_vdev_to_pdev(migf->i915_vdev)->device)
++		return -EINVAL;
++
++	return 0;
++}
++
++static int
++i915_vfio_pci_produce_data(struct i915_vfio_pci_migration_file *migf,
++			   enum i915_vfio_pci_migration_data_type type, unsigned int tile)
++{
++	switch (type) {
++	case I915_VFIO_DATA_DESC:
++		if (tile)
++			return 0;
++		return i915_vfio_produce_desc(migf);
++	case I915_VFIO_DATA_GGTT:
++		return i915_vfio_produce_ggtt(migf, tile);
++	case I915_VFIO_DATA_GUC:
++		return i915_vfio_produce_fw(migf, tile);
++	default:
++		return -EINVAL;
++	}
++}
++
++static ssize_t
++i915_vfio_consume_data(struct i915_vfio_pci_migration_file *migf, const char __user *ubuf,
++		       size_t len)
++{
++	struct i915_vfio_pci_migration_header *hdr = &migf->resume_data.hdr;
++
++	switch (hdr->type) {
++	case I915_VFIO_DATA_DESC:
++		return i915_vfio_consume_desc(migf, ubuf, len);
++	case I915_VFIO_DATA_GGTT:
++		return i915_vfio_consume_ggtt(migf, hdr->tile, ubuf, len);
++	case I915_VFIO_DATA_GUC:
++		return i915_vfio_consume_fw(migf, hdr->tile, ubuf, len);
++	default:
++		return -EINVAL;
++	}
++}
++
++static void i915_vfio_save_data_free(struct i915_vfio_pci_migration_data *data)
++{
++	list_del_init(&data->link);
++	kvfree(data->buf);
++	kfree(data);
++}
++
++void i915_vfio_save_data_release(struct i915_vfio_pci_migration_file *migf)
++{
++	struct i915_vfio_pci_migration_data *data, *next;
++
++	if (!migf)
++		return;
++
++	list_for_each_entry_safe(data, next, &migf->save_data, link)
++		i915_vfio_save_data_free(data);
++}
++
++static void i915_vfio_resume_data_free(struct i915_vfio_pci_migration_data *data)
++{
++	data->hdr_processed = false;
++	data->pos = 0;
++
++	kvfree(data->buf);
++	data->buf = NULL;
++}
++
++int i915_vfio_pci_produce_save_data(struct i915_vfio_pci_migration_file *migf)
++{
++	enum i915_vfio_pci_migration_data_type type;
++	unsigned int tile;
++	int ret;
++
++	for (tile = 0; tile < I915_VFIO_MAX_TILE; tile++) {
++		for (type = I915_VFIO_DATA_DESC; type < I915_VFIO_DATA_DONE; type++) {
++			ret = i915_vfio_pci_produce_data(migf, type, tile);
++			if (ret)
++				goto out;
++		}
++	}
++
++	return 0;
++
++out:
++	i915_vfio_save_data_release(migf);
++	return ret;
++}
++
++ssize_t i915_vfio_data_read(struct i915_vfio_pci_migration_file *migf, char __user *ubuf,
++			    size_t len)
++{
++	struct i915_vfio_pci_migration_data *data;
++	size_t len_remain, len_hdr;
++	int ret;
++
++	data = list_first_entry_or_null(&migf->save_data, typeof(*data), link);
++	if (!data)
++		return 0;
++
++	if (!data->hdr_processed) {
++		if (len < sizeof(data->hdr))
++			return -EINVAL;
++
++		ret = migf->copy_to(ubuf, &data->hdr, sizeof(data->hdr));
++		if (ret)
++			return -EFAULT;
++
++		len_hdr = sizeof(data->hdr);
++		ubuf += sizeof(data->hdr);
++		data->hdr_processed = true;
++	} else {
++		len_hdr = 0;
++	}
++
++	len_remain = len_hdr + data->hdr.size - data->pos;
++	len = min(len, len_remain);
++
++	if (migf->copy_to(ubuf, data->buf + data->pos, len - len_hdr))
++		return -EFAULT;
++
++	if (len < len_remain)
++		data->pos += len - len_hdr;
++	else
++		i915_vfio_save_data_free(data);
++
++	return len;
++}
++
++ssize_t i915_vfio_data_write(struct i915_vfio_pci_migration_file *migf, const char __user *ubuf,
++			     size_t len)
++{
++	struct i915_vfio_pci_migration_data *data = &migf->resume_data;
++	size_t len_remain, len_hdr;
++	int ret;
++
++	if (!data->hdr_processed) {
++		if (len < sizeof(data->hdr))
++			return -EINVAL;
++
++		if (migf->copy_from(&data->hdr, ubuf, sizeof(data->hdr)))
++			return -EFAULT;
++
++		len_hdr = sizeof(data->hdr);
++		ubuf += sizeof(data->hdr);
++		data->hdr_processed = true;
++
++		dev_dbg(i915_vdev_to_dev(migf->i915_vdev),
++			"Consuming %s for tile%lld, size=%lld\n",
++			i915_vfio_data_type_str(data->hdr.type), data->hdr.tile, data->hdr.size);
++	} else {
++		len_hdr = 0;
++	}
++
++	len_remain = len_hdr + data->hdr.size - data->pos;
++	len = min(len, len_remain);
++
++	ret = i915_vfio_consume_data(migf, ubuf, len - len_hdr);
++	if (ret) {
++		i915_vfio_resume_data_free(data);
++
++		return ret;
++	}
++
++	if (len < len_remain)
++		data->pos += len - len_hdr;
++	else
++		i915_vfio_resume_data_free(data);
++
++	return len;
++}
++
++#if IS_ENABLED(CONFIG_I915_VFIO_PCI_TEST)
++#include "test/data_test.c"
++#endif
+diff --git a/drivers/vfio/pci/i915/i915_vfio_pci.h b/drivers/vfio/pci/i915/i915_vfio_pci.h
+new file mode 100644
+index 0000000000000..9cdb0ff2bcac1
+--- /dev/null
++++ b/drivers/vfio/pci/i915/i915_vfio_pci.h
+@@ -0,0 +1,114 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * Copyright © 2023 Intel Corporation
++ */
++
++#include <linux/vfio_pci_core.h>
++#include <linux/sizes.h>
++
++#include <drm/i915_sriov.h>
++
++#define I915_VFIO_MAX_DATA_SIZE SZ_32M
++#define I915_VFIO_MAX_TILE 2
++
++/**
++ * struct i915_vfio_pci_migration_header - Migration header
++ *
++ * Header describing each individual iteration of device data.
++ */
++struct i915_vfio_pci_migration_header {
++	/** @type: type of device state */
++	u64 type;
++	/** @tile: tile from which the device state comes from */
++	u64 tile;
++	/** @offset: foo */
++	u64 offset;
++	/** @size: size of device data that follows */
++	u64 size;
++	/** @flags: optional flags */
++	u64 flags;
++} __packed;
++
++struct i915_vfio_pci_migration_data {
++	struct i915_vfio_pci_migration_header hdr;
++	bool hdr_processed;
++	struct list_head link;
++	void *buf;
++	loff_t pos;
++};
++
++/**
++ * struct i915_vfio_pci_migration_file
++ */
++struct i915_vfio_pci_migration_file {
++	struct file *filp;
++	/* Protects save_data / resume_data */
++	struct mutex lock;
++	struct list_head save_data;
++	struct i915_vfio_pci_migration_data resume_data;
++	struct i915_vfio_pci_core_device *i915_vdev;
++	unsigned long (*copy_from)(void *to, const void __user *from, unsigned long n);
++	unsigned long (*copy_to)(void __user *to, const void *from, unsigned long n);
++};
++
++struct i915_vfio_pci_mappable_resource {
++	void *vaddr;
++	ssize_t size;
++};
++
++/**
++ * struct i915_vfio_pci_core_device - i915-specific vfio_pci_core_device
++ *
++ * Top level structure of i915_vfio_pci.
++ */
++struct i915_vfio_pci_core_device {
++	/** @core_device: vendor-agnostic VFIO device */
++	struct vfio_pci_core_device core_device;
++
++	enum vfio_device_mig_state mig_state;
++
++	/** @vfid: VF number used by PF, i915 uses 1-based indexing for vfid */
++	unsigned int vfid;
++
++	/** @pf: pointer to driver_private of physical function */
++	struct pci_dev *pf;
++	const struct i915_vfio_pci_migration_pf_ops *pf_ops;
++
++	struct i915_vfio_pci_mappable_resource lmem[I915_VFIO_MAX_TILE];
++
++	struct i915_vfio_pci_migration_file *fd;
++};
++
++struct i915_vfio_pci_mappable_resource_ops {
++	size_t (*size)(struct pci_dev *pf, unsigned int vfid, unsigned int tile);
++	void * (*map)(struct pci_dev *pf, unsigned int vfid, unsigned int tile);
++	void (*unmap)(struct pci_dev *pf, unsigned int vfid, unsigned int tile);
++};
++
++struct i915_vfio_pci_resource_ops {
++	size_t (*size)(struct pci_dev *pf, unsigned int vfid, unsigned int tile);
++	ssize_t (*save)(struct pci_dev *pf, unsigned int vfid, unsigned int tile,
++			void *buf, size_t size);
++	int (*load)(struct pci_dev *pf, unsigned int vfid, unsigned int tile,
++		    const void *buf, size_t size);
++};
++
++struct i915_vfio_pci_migration_pf_ops {
++	int (*pause)(struct pci_dev *pf, unsigned int vfid);
++	int (*resume)(struct pci_dev *pf, unsigned int vfid);
++	int (*wait_flr_done)(struct pci_dev *pf, unsigned int vfid);
++	struct i915_vfio_pci_resource_ops ggtt, fw;
++	struct i915_vfio_pci_mappable_resource_ops lmem;
++};
++
++#define i915_vdev_to_dev(i915_vdev) (&(i915_vdev)->core_device.pdev->dev)
++#define i915_vdev_to_pdev(i915_vdev) ((i915_vdev)->core_device.pdev)
++
++void i915_vfio_pci_reset(struct i915_vfio_pci_core_device *i915_vdev);
++ssize_t i915_vfio_data_read(struct i915_vfio_pci_migration_file *migf, char __user *buf,
++			    size_t len);
++ssize_t i915_vfio_data_write(struct i915_vfio_pci_migration_file *migf, const char __user *buf,
++			     size_t len);
++void i915_vfio_save_data_release(struct i915_vfio_pci_migration_file *migf);
++
++int i915_vfio_pci_produce_save_data(struct i915_vfio_pci_migration_file *migf);
+diff --git a/drivers/vfio/pci/i915/main.c b/drivers/vfio/pci/i915/main.c
+new file mode 100644
+index 0000000000000..7905f6eb61977
+--- /dev/null
++++ b/drivers/vfio/pci/i915/main.c
+@@ -0,0 +1,397 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright © 2023 Intel Corporation
++ */
++
++#include <linux/anon_inodes.h>
++#include <linux/delay.h>
++#include <linux/file.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/types.h>
++#include <linux/vfio.h>
++
++#include "i915_vfio_pci.h"
++
++static void i915_vfio_pci_reset_done(struct pci_dev *pdev)
++{
++	struct i915_vfio_pci_core_device *i915_vdev = pci_get_drvdata(pdev);
++	int ret;
++
++	ret = i915_vdev->pf_ops->wait_flr_done(i915_vdev->pf, i915_vdev->vfid);
++	if (ret)
++		dev_err(&pdev->dev, "Failed to wait for FLR: %d\n", ret);
++
++	i915_vfio_pci_reset(i915_vdev);
++}
++
++static const struct pci_error_handlers i915_vfio_pci_err_handlers = {
++	.reset_done = &i915_vfio_pci_reset_done,
++};
++
++static int i915_vfio_pci_open_device(struct vfio_device *core_vdev)
++{
++	struct i915_vfio_pci_core_device *i915_vdev =
++		container_of(core_vdev, struct i915_vfio_pci_core_device, core_device.vdev);
++	struct vfio_pci_core_device *vdev = &i915_vdev->core_device;
++	int ret;
++
++	ret = vfio_pci_core_enable(vdev);
++	if (ret)
++		return ret;
++
++	vfio_pci_core_finish_enable(vdev);
++
++	return 0;
++}
++
++static void i915_vfio_pci_disable_file(struct i915_vfio_pci_migration_file *migf)
++{
++	struct i915_vfio_pci_core_device *i915_vdev = migf->i915_vdev;
++
++	mutex_lock(&migf->lock);
++	i915_vfio_save_data_release(i915_vdev->fd);
++	i915_vdev->fd = NULL;
++	mutex_unlock(&migf->lock);
++}
++
++static int i915_vfio_pci_release_file(struct inode *inode, struct file *filp)
++{
++	struct i915_vfio_pci_migration_file *migf = filp->private_data;
++
++	i915_vfio_pci_disable_file(migf);
++	mutex_destroy(&migf->lock);
++	kfree(migf);
++
++	return 0;
++}
++
++static ssize_t i915_vfio_pci_save_read(struct file *filp, char __user *buf, size_t len, loff_t *pos)
++{
++	struct i915_vfio_pci_migration_file *migf = filp->private_data;
++	ssize_t ret;
++
++	if (pos)
++		return -ESPIPE;
++
++	mutex_lock(&migf->lock);
++	ret = i915_vfio_data_read(migf, buf, len);
++	mutex_unlock(&migf->lock);
++
++	return ret;
++}
++
++static const struct file_operations i915_vfio_pci_save_fops = {
++	.owner = THIS_MODULE,
++	.read = i915_vfio_pci_save_read,
++	.release = i915_vfio_pci_release_file,
++};
++
++static ssize_t i915_vfio_pci_resume_write(struct file *filp, const char __user *buf,
++					  size_t len, loff_t *pos)
++{
++	struct i915_vfio_pci_migration_file *migf = filp->private_data;
++	ssize_t ret;
++
++	if (pos)
++		return -ESPIPE;
++
++	mutex_lock(&migf->lock);
++	ret = i915_vfio_data_write(migf, buf, len);
++	mutex_unlock(&migf->lock);
++
++	return ret;
++}
++
++static const struct file_operations i915_vfio_pci_resume_fops = {
++	.owner = THIS_MODULE,
++	.write = i915_vfio_pci_resume_write,
++	.release = i915_vfio_pci_release_file,
++};
++
++void i915_vfio_pci_reset(struct i915_vfio_pci_core_device *i915_vdev)
++{
++	if (i915_vdev->fd)
++		i915_vfio_pci_disable_file(i915_vdev->fd);
++
++	i915_vdev->mig_state = VFIO_DEVICE_STATE_RUNNING;
++}
++
++static const char *i915_vfio_dev_state_str(u32 state)
++{
++	switch (state) {
++	case VFIO_DEVICE_STATE_RUNNING: return "running";
++	case VFIO_DEVICE_STATE_STOP_COPY: return "stopcopy";
++	case VFIO_DEVICE_STATE_STOP: return "stop";
++	case VFIO_DEVICE_STATE_RESUMING: return "resuming";
++	case VFIO_DEVICE_STATE_ERROR: return "error";
++	default: return "";
++	}
++}
++
++enum i915_vfio_pci_file_type {
++	I915_VFIO_FILE_SAVE = 0,
++	I915_VFIO_FILE_RESUME,
++};
++
++static struct i915_vfio_pci_migration_file *
++i915_vfio_pci_alloc_file(struct i915_vfio_pci_core_device *i915_vdev,
++			 enum i915_vfio_pci_file_type type)
++{
++	struct i915_vfio_pci_migration_file *migf;
++	const struct file_operations *fops;
++	int flags;
++
++	migf = kzalloc(sizeof(*migf), GFP_KERNEL);
++	if (!migf)
++		return ERR_PTR(-ENOMEM);
++
++	fops = type == I915_VFIO_FILE_SAVE ? &i915_vfio_pci_save_fops : &i915_vfio_pci_resume_fops;
++	flags = type == I915_VFIO_FILE_SAVE ? O_RDONLY : O_WRONLY;
++	migf->filp = anon_inode_getfile("i915_vfio_mig", fops, migf, flags);
++	if (IS_ERR(migf->filp)) {
++		kfree(migf);
++		return ERR_CAST(migf->filp);
++	}
++
++	INIT_LIST_HEAD(&migf->save_data);
++	mutex_init(&migf->lock);
++	migf->i915_vdev = i915_vdev;
++	migf->copy_from = copy_from_user;
++	migf->copy_to = copy_to_user;
++	i915_vdev->fd = migf;
++
++	stream_open(migf->filp->f_inode, migf->filp);
++
++	return migf;
++}
++
++static struct file *
++i915_vfio_set_state(struct i915_vfio_pci_core_device *i915_vdev, u32 new)
++{
++	const struct i915_vfio_pci_migration_pf_ops *ops = i915_vdev->pf_ops;
++	u32 cur = i915_vdev->mig_state;
++	int ret;
++
++	dev_dbg(i915_vdev_to_dev(i915_vdev),
++		"state: %s->%s\n", i915_vfio_dev_state_str(cur), i915_vfio_dev_state_str(new));
++
++	if (cur == VFIO_DEVICE_STATE_RUNNING && new == VFIO_DEVICE_STATE_STOP) {
++		ret = ops->pause(i915_vdev->pf, i915_vdev->vfid);
++		if (ret) {
++			dev_dbg(i915_vdev_to_dev(i915_vdev),
++				"Failed to transition state: %s->%s err=%d\n",
++				i915_vfio_dev_state_str(cur), i915_vfio_dev_state_str(new), ret);
++			return ERR_PTR(ret);
++		}
++		return NULL;
++	}
++
++	if (cur == VFIO_DEVICE_STATE_STOP && new == VFIO_DEVICE_STATE_RUNNING) {
++		ret = ops->resume(i915_vdev->pf, i915_vdev->vfid);
++		if (ret) {
++			dev_dbg(i915_vdev_to_dev(i915_vdev),
++				"Failed to transition state: %s->%s err=%d\n",
++				i915_vfio_dev_state_str(cur), i915_vfio_dev_state_str(new), ret);
++			return ERR_PTR(ret);
++		}
++		return NULL;
++	}
++
++	if (cur == VFIO_DEVICE_STATE_STOP && new == VFIO_DEVICE_STATE_STOP_COPY) {
++		struct i915_vfio_pci_migration_file *migf;
++		int ret;
++
++		migf = i915_vfio_pci_alloc_file(i915_vdev, I915_VFIO_FILE_SAVE);
++		if (IS_ERR(migf))
++			return ERR_CAST(migf);
++
++		ret = i915_vfio_pci_produce_save_data(migf);
++		if (ret) {
++			fput(migf->filp);
++			return ERR_PTR(ret);
++		}
++
++		return migf->filp;
++	}
++
++	if ((cur == VFIO_DEVICE_STATE_STOP_COPY && new == VFIO_DEVICE_STATE_STOP)) {
++		if (i915_vdev->fd)
++			i915_vfio_pci_disable_file(i915_vdev->fd);
++
++		return NULL;
++	}
++
++	if (cur == VFIO_DEVICE_STATE_STOP && new == VFIO_DEVICE_STATE_RESUMING) {
++		struct i915_vfio_pci_migration_file *migf;
++
++		migf = i915_vfio_pci_alloc_file(i915_vdev, I915_VFIO_FILE_RESUME);
++		if (IS_ERR(migf))
++			return ERR_CAST(migf);
++
++		return migf->filp;
++	}
++
++	if (cur == VFIO_DEVICE_STATE_RESUMING && new == VFIO_DEVICE_STATE_STOP) {
++		if (i915_vdev->fd)
++			i915_vfio_pci_disable_file(i915_vdev->fd);
++
++		return NULL;
++	}
++
++	WARN_ON(true);
++	return ERR_PTR(-EINVAL);
++}
++
++static struct file *
++i915_vfio_pci_set_device_state(struct vfio_device *core_vdev,
++			       enum vfio_device_mig_state new_state)
++{
++	struct i915_vfio_pci_core_device *i915_vdev =
++		container_of(core_vdev, struct i915_vfio_pci_core_device, core_device.vdev);
++	enum vfio_device_mig_state next_state;
++	struct file *f = NULL;
++	int ret;
++
++	while (new_state != i915_vdev->mig_state) {
++		ret = vfio_mig_get_next_state(core_vdev, i915_vdev->mig_state,
++					      new_state, &next_state);
++		if (ret) {
++			f = ERR_PTR(ret);
++			break;
++		}
++		f = i915_vfio_set_state(i915_vdev, next_state);
++		if (IS_ERR(f))
++			break;
++
++		i915_vdev->mig_state = next_state;
++
++		/* Multiple state transitions with non-NULL file in the middle */
++		if (f && new_state != i915_vdev->mig_state) {
++			fput(f);
++			f = ERR_PTR(-EINVAL);
++			break;
++		}
++	}
++
++	return f;
++}
++
++static int i915_vfio_pci_get_device_state(struct vfio_device *core_vdev,
++					  enum vfio_device_mig_state *curr_state)
++{
++	struct i915_vfio_pci_core_device *i915_vdev =
++		container_of(core_vdev, struct i915_vfio_pci_core_device, core_device.vdev);
++
++	*curr_state = i915_vdev->mig_state;
++
++	return 0;
++}
++
++static int i915_vfio_pci_get_data_size(struct vfio_device *vdev,
++				       unsigned long *stop_copy_length)
++{
++	return 0;
++}
++
++static const struct vfio_migration_ops i915_vfio_pci_migration_ops = {
++	.migration_set_state = i915_vfio_pci_set_device_state,
++	.migration_get_state = i915_vfio_pci_get_device_state,
++	.migration_get_data_size = i915_vfio_pci_get_data_size,
++};
++
++static const struct i915_vfio_pci_migration_pf_ops pf_ops = {
++	.pause = i915_sriov_pause_vf,
++	.resume = i915_sriov_resume_vf,
++	.wait_flr_done = i915_sriov_wait_vf_flr_done,
++	.ggtt.size = i915_sriov_ggtt_size,
++	.ggtt.save = i915_sriov_ggtt_save,
++	.ggtt.load = i915_sriov_ggtt_load,
++	.fw.size = i915_sriov_fw_state_size,
++	.fw.save = i915_sriov_fw_state_save,
++	.fw.load = i915_sriov_fw_state_load,
++};
++
++static int i915_vfio_pci_init_dev(struct vfio_device *core_vdev)
++{
++	struct i915_vfio_pci_core_device *i915_vdev =
++		container_of(core_vdev, struct i915_vfio_pci_core_device, core_device.vdev);
++	struct pci_dev *pdev = to_pci_dev(core_vdev->dev);
++
++	/* vfid starts from 1 for i915 */
++	i915_vdev->vfid = pci_iov_vf_id(pdev) + 1;
++	i915_vdev->pf = pdev->physfn;
++	i915_vdev->pf_ops = &pf_ops;
++
++	core_vdev->migration_flags = VFIO_MIGRATION_STOP_COPY;
++	core_vdev->mig_ops = &i915_vfio_pci_migration_ops;
++
++	return vfio_pci_core_init_dev(core_vdev);
++}
++
++static const struct vfio_device_ops i915_vfio_pci_ops = {
++	.name		= "i915-vfio-pci",
++	.init		= i915_vfio_pci_init_dev,
++	.release	= vfio_pci_core_release_dev,
++	.open_device	= i915_vfio_pci_open_device,
++	.close_device	= vfio_pci_core_close_device,
++	.ioctl		= vfio_pci_core_ioctl,
++	.device_feature = vfio_pci_core_ioctl_feature,
++	.read		= vfio_pci_core_read,
++	.write		= vfio_pci_core_write,
++	.mmap		= vfio_pci_core_mmap,
++	.request	= vfio_pci_core_request,
++	.match		= vfio_pci_core_match,
++	.bind_iommufd	= vfio_iommufd_physical_bind,
++	.unbind_iommufd = vfio_iommufd_physical_unbind,
++	.attach_ioas	= vfio_iommufd_physical_attach_ioas,
++};
++
++static int i915_vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++{
++	struct i915_vfio_pci_core_device *i915_vdev;
++	int ret;
++
++	if (!pdev->is_virtfn)
++		return -EINVAL;
++
++	if (strcmp(pdev->physfn->dev.driver->name, "i915"))
++		return -EINVAL;
++
++	i915_vdev = vfio_alloc_device(i915_vfio_pci_core_device, core_device.vdev, &pdev->dev,
++				      &i915_vfio_pci_ops);
++	if (IS_ERR(i915_vdev))
++		return PTR_ERR(i915_vdev);
++
++	dev_set_drvdata(&pdev->dev, &i915_vdev->core_device);
++
++	ret = vfio_pci_core_register_device(&i915_vdev->core_device);
++	if (ret) {
++		vfio_put_device(&i915_vdev->core_device.vdev);
++		return ret;
++	}
++
++	return 0;
++}
++
++static const struct pci_device_id i915_vfio_pci_table[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_ANY_ID),
++	  .class = PCI_BASE_CLASS_DISPLAY << 8, .class_mask = 0xff << 16,
++	  .override_only = PCI_ID_F_VFIO_DRIVER_OVERRIDE },
++	{}
++};
++MODULE_DEVICE_TABLE(pci, i915_vfio_pci_table);
++
++static struct pci_driver i915_vfio_pci_driver = {
++	.name = "i915-vfio-pci",
++	.id_table = i915_vfio_pci_table,
++	.probe = i915_vfio_pci_probe,
++	.err_handler = &i915_vfio_pci_err_handlers,
++	.driver_managed_dma = true,
++};
++module_pci_driver(i915_vfio_pci_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Intel Corporation");
++MODULE_DESCRIPTION("VFIO PCI driver with migration support for Intel Graphics");
++MODULE_IMPORT_NS(DRM_I915);
+diff --git a/drivers/vfio/pci/i915/test/data_test.c b/drivers/vfio/pci/i915/test/data_test.c
+new file mode 100644
+index 0000000000000..13150801572eb
+--- /dev/null
++++ b/drivers/vfio/pci/i915/test/data_test.c
+@@ -0,0 +1,308 @@
++#include <kunit/test.h>
++
++#include <linux/mman.h>
++#include <linux/random.h>
++
++#include <linux/sched/mm.h>
++
++static unsigned long i915_vfio_test_copy(void *from, const void *to, unsigned long n)
++{
++	memcpy(from, to, n);
++
++	return 0;
++}
++
++struct i915_vfio_pci_data_test {
++	struct {
++		void *vaddr;
++		size_t size;
++	} resource;
++	struct i915_vfio_pci_core_device *i915_vdev;
++};
++
++static size_t
++i915_vfio_test_res_size(struct pci_dev *pdev, unsigned int vfid, unsigned int tile)
++{
++	struct i915_vfio_pci_data_test *priv = pci_get_drvdata(pdev);
++
++	return priv->resource.size;
++}
++
++static ssize_t i915_vfio_test_res_save(struct pci_dev *pdev, unsigned int vfid, unsigned int tile,
++				void *buf, size_t size)
++{
++	struct i915_vfio_pci_data_test *priv = pci_get_drvdata(pdev);
++
++	memcpy(buf, priv->resource.vaddr, size);
++
++	return size;
++}
++
++static int
++i915_vfio_test_res_load(struct pci_dev *pdev, unsigned int vfid, unsigned int tile,
++			const void *buf, size_t size)
++{
++	struct i915_vfio_pci_data_test *priv = pci_get_drvdata(pdev);
++
++	memcpy(priv->resource.vaddr, buf, size);
++
++	return 0;
++}
++
++static const struct i915_vfio_pci_migration_pf_ops pf_test_ops = {
++	.ggtt.size = i915_vfio_test_res_size,
++	.ggtt.save = i915_vfio_test_res_save,
++	.ggtt.load = i915_vfio_test_res_load,
++};
++
++#define I915_VFIO_TEST_RES_SIZE SZ_4K
++static int i915_vfio_pci_data_test_init(struct kunit *test)
++{
++	struct i915_vfio_pci_core_device *i915_vdev;
++	struct i915_vfio_pci_migration_file *fd;
++	struct i915_vfio_pci_data_test *priv;
++	struct pci_dev *pdev;
++	unsigned long *resource;
++	size_t resource_size = I915_VFIO_TEST_RES_SIZE;
++	int i;
++
++	priv = kunit_kzalloc(test, sizeof(*priv), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, priv);
++
++	i915_vdev = kunit_kzalloc(test, sizeof(*i915_vdev), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, i915_vdev);
++
++	resource = kunit_kzalloc(test, resource_size, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, resource);
++
++	for (i = 0; i < resource_size / sizeof(*resource); i++)
++		resource[i] = get_random_long();
++
++	priv->i915_vdev = i915_vdev;
++	priv->resource.vaddr = resource;
++	priv->resource.size = resource_size;
++
++	i915_vdev->lmem[0].vaddr = resource;
++	i915_vdev->lmem[0].size = resource_size;
++
++	i915_vdev->pf_ops = &pf_test_ops;
++
++	fd = kunit_kzalloc(test, sizeof(*fd), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, fd);
++	i915_vdev->fd = fd;
++	INIT_LIST_HEAD(&fd->save_data);
++	fd->i915_vdev = i915_vdev;
++	fd->copy_from = i915_vfio_test_copy;
++	fd->copy_to = i915_vfio_test_copy;
++
++	pdev = kunit_kzalloc(test, sizeof(*pdev), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, pdev);
++	i915_vdev->core_device.pdev = pdev;
++	i915_vdev->pf = pdev;
++
++	pdev->vendor = 0x1234;
++	pdev->device = 0x4321;
++
++	pci_set_drvdata(pdev, priv);
++
++	test->priv = priv;
++
++	return 0;
++}
++
++static void i915_vfio_pci_data_test_exit(struct kunit *test)
++{
++	struct i915_vfio_pci_data_test *priv = test->priv;
++	struct i915_vfio_pci_core_device *i915_vdev = priv->i915_vdev;
++
++	i915_vfio_save_data_release(i915_vdev->fd);
++}
++
++static void test_produce_consume_desc(struct kunit *test)
++{
++	struct i915_vfio_pci_data_test *priv = test->priv;
++	struct i915_vfio_pci_core_device *i915_vdev = priv->i915_vdev;
++	struct i915_vfio_pci_migration_data *data;
++	size_t data_len;
++	ssize_t ret;
++	void *buf;
++
++	KUNIT_ASSERT_TRUE(test, list_empty(&i915_vdev->fd->save_data));
++	ret = i915_vfio_produce_desc(i915_vdev->fd);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_FALSE(test, list_empty(&i915_vdev->fd->save_data));
++
++	data = list_first_entry_or_null(&i915_vdev->fd->save_data, typeof(*data), link);
++	KUNIT_ASSERT_PTR_NE(test, data, NULL);
++	data_len = data->hdr.size + sizeof(data->hdr);
++
++	buf = kunit_kzalloc(test, data_len, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, buf);
++
++	ret = i915_vfio_data_read(i915_vdev->fd, buf, data_len);
++	KUNIT_EXPECT_EQ(test, ret, data_len);
++
++	KUNIT_EXPECT_TRUE(test, list_empty(&i915_vdev->fd->save_data));
++
++	ret = i915_vfio_data_write(i915_vdev->fd, buf, data_len);
++	KUNIT_EXPECT_EQ(test, ret, data_len);
++}
++
++static void test_produce_res(struct kunit *test)
++{
++	struct i915_vfio_pci_data_test *priv = test->priv;
++	struct i915_vfio_pci_core_device *i915_vdev = priv->i915_vdev;
++	struct i915_vfio_pci_migration_data *data;
++	struct i915_vfio_pci_migration_header hdr;
++	size_t data_len;
++	ssize_t ret;
++	void *buf;
++
++	ret = i915_vfio_produce_ggtt(i915_vdev->fd, 0);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	KUNIT_ASSERT_FALSE(test, list_empty(&i915_vdev->fd->save_data));
++
++	data = list_first_entry_or_null(&i915_vdev->fd->save_data, typeof(*data), link);
++	KUNIT_ASSERT_PTR_NE(test, data, NULL);
++	KUNIT_EXPECT_EQ(test, data->hdr.size, priv->resource.size);
++
++	data_len = data->hdr.size + sizeof(data->hdr);
++	hdr = data->hdr;
++
++	buf = kunit_kzalloc(test, data_len, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, buf);
++
++	ret = i915_vfio_data_read(i915_vdev->fd, buf, data_len);
++	KUNIT_ASSERT_EQ(test, ret, data_len);
++
++	KUNIT_EXPECT_TRUE(test, list_empty(&i915_vdev->fd->save_data));
++
++	KUNIT_EXPECT_EQ(test, memcmp(buf, &hdr, sizeof(hdr)), 0);
++
++	KUNIT_EXPECT_EQ(test,
++			memcmp(buf + sizeof(hdr), priv->resource.vaddr, priv->resource.size),
++			0);
++}
++
++static void test_consume_res(struct kunit *test)
++{
++	struct i915_vfio_pci_data_test *priv = test->priv;
++	struct i915_vfio_pci_core_device *i915_vdev = priv->i915_vdev;
++	struct i915_vfio_pci_migration_data *data = &i915_vdev->fd->resume_data;
++	struct i915_vfio_pci_migration_header hdr = {
++		.type = I915_VFIO_DATA_GGTT,
++		.tile = 0,
++		.offset = 0,
++		.size = priv->resource.size,
++		.flags = 0,
++	};
++	void *buf;
++	size_t data_len, data_chunk;
++	ssize_t ret;
++
++	data_len = hdr.size + sizeof(hdr);
++	data_chunk = sizeof(hdr) + 16;
++
++	buf = kunit_kzalloc(test, data_len, GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, buf);
++
++	memcpy(buf, &hdr, sizeof(hdr));
++
++	KUNIT_EXPECT_FALSE(test, data->hdr_processed);
++	ret = i915_vfio_data_write(i915_vdev->fd, buf, data_chunk);
++	KUNIT_ASSERT_EQ(test, ret, data_chunk);
++	KUNIT_EXPECT_TRUE(test, data->hdr_processed);
++
++	KUNIT_EXPECT_EQ(test, memcmp(&hdr, &data->hdr, sizeof(hdr)), 0);
++
++	ret = i915_vfio_data_write(i915_vdev->fd, buf + ret, data_len - data_chunk);
++	KUNIT_ASSERT_EQ(test, ret, data_len - data_chunk);
++
++	KUNIT_EXPECT_EQ(test,
++			memcmp(buf + sizeof(hdr), priv->resource.vaddr, priv->resource.size),
++			0);
++}
++
++struct invalid_device_desc_test {
++	char *name;
++	int expected_err;
++	struct i915_vfio_data_device_desc desc;
++};
++
++static void test_invalid_device_desc(struct kunit *test)
++{
++	const struct invalid_device_desc_test *param = test->param_value;
++	struct i915_vfio_pci_data_test *priv = test->priv;
++	struct i915_vfio_pci_core_device *i915_vdev = priv->i915_vdev;
++	struct i915_vfio_pci_migration_header *hdr = &i915_vdev->fd->resume_data.hdr;
++	void *buf;
++	int ret;
++
++	hdr->type = I915_VFIO_DATA_DESC;
++	hdr->tile = 0;
++	hdr->offset = 0;
++	hdr->size = sizeof(param->desc);
++	hdr->flags = 0;
++
++	buf = kunit_kzalloc(test, sizeof(*hdr) + sizeof(param->desc), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, buf);
++
++	ret = i915_vfio_consume_data(i915_vdev->fd, buf, sizeof(param->desc));
++	KUNIT_EXPECT_EQ(test, ret, param->expected_err);
++}
++
++static const struct invalid_device_desc_test invalid_device_desc_tests[] = {
++	{
++		.name = "bad magic",
++		.expected_err = -EINVAL,
++		.desc = {
++			.magic = 0xbad,
++		},
++	},
++	{
++		.name = "bad version",
++		.expected_err = -EINVAL,
++		.desc = {
++			.version = 0xbad,
++		},
++	},
++	{
++		.name = "bad vendor",
++		.expected_err = -EINVAL,
++		.desc = {
++			.vendor = 0xbad,
++		},
++	},
++	{
++		.name = "bad device",
++		.expected_err = -EINVAL,
++		.desc = {
++			.device = 0xbad,
++		},
++	},
++};
++
++static void invalid_device_desc_test_name(const struct invalid_device_desc_test *t,
++					  char *name)
++{
++	snprintf(name, KUNIT_PARAM_DESC_SIZE, "%s", t->name);
++}
++
++KUNIT_ARRAY_PARAM(invalid_device_desc, invalid_device_desc_tests, invalid_device_desc_test_name);
++
++static struct kunit_case i915_vfio_pci_data_tests[] = {
++	KUNIT_CASE(test_produce_consume_desc),
++	KUNIT_CASE(test_produce_res),
++	KUNIT_CASE(test_consume_res),
++	KUNIT_CASE_PARAM(test_invalid_device_desc, invalid_device_desc_gen_params),
++	{},
++};
++
++static struct kunit_suite i915_vfio_pci_data_test_suite = {
++	.name = "i915_vfio_pci_data",
++	.init = i915_vfio_pci_data_test_init,
++	.exit = i915_vfio_pci_data_test_exit,
++	.test_cases = i915_vfio_pci_data_tests
++};
++
++kunit_test_suite(i915_vfio_pci_data_test_suite);
+diff --git a/include/drm/i915_sriov.h b/include/drm/i915_sriov.h
+index 512ed2d52b470..2912a60a16a10 100644
+--- a/include/drm/i915_sriov.h
++++ b/include/drm/i915_sriov.h
+@@ -8,7 +8,7 @@ int i915_sriov_resume_vf(struct pci_dev *pdev, unsigned int vfid);
+ 
+ int i915_sriov_wait_vf_flr_done(struct pci_dev *pdev, unsigned int vfid);
+ 
+-ssize_t
++size_t
+ i915_sriov_ggtt_size(struct pci_dev *pdev, unsigned int vfid, unsigned int tile);
+ ssize_t i915_sriov_ggtt_save(struct pci_dev *pdev, unsigned int vfid, unsigned int tile,
+ 			     void *buf, size_t size);
+@@ -16,7 +16,7 @@ int
+ i915_sriov_ggtt_load(struct pci_dev *pdev, unsigned int vfid, unsigned int tile,
+ 		     const void *buf, size_t size);
+ 
+-ssize_t
++size_t
+ i915_sriov_fw_state_size(struct pci_dev *pdev, unsigned int vfid,
+ 			 unsigned int tile);
+ ssize_t
+-- 
+2.25.1
+

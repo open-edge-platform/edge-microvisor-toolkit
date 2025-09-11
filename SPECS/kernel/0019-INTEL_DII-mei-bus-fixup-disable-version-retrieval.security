@@ -1,0 +1,33 @@
+From 3762af44691416522ec6708ee7580e23d1ff6436 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Thu, 10 Nov 2022 16:04:26 +0200
+Subject: [PATCH 19/19] INTEL_DII: mei: bus-fixup: disable version retrieval
+ when force-wake is enabled
+
+With force-wake workaround version retrieval in bus rescan
+races with call to the same client from the user-space.
+Disable version retrieval in this case.
+
+Co-developed-by: Tomas Winkler <tomasw@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/bus-fixup.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/misc/mei/bus-fixup.c b/drivers/misc/mei/bus-fixup.c
+index 9eebeffcd8fd0..1bf8df9c9caec 100644
+--- a/drivers/misc/mei/bus-fixup.c
++++ b/drivers/misc/mei/bus-fixup.c
+@@ -246,6 +246,9 @@ static void mei_gsc_mkhi_ver(struct mei_cl_device *cldev)
+ 	 */
+ 	if (!cldev->bus->fw_f_fw_ver_supported || cldev->bus->fw_ver_received)
+ 		return;
++	/* Force-wake races with this call */
++	if (cldev->bus->forcewake_needed)
++		return;
+ 
+ 	ret = mei_cldev_enable(cldev);
+ 	if (ret)
+-- 
+2.25.1
+

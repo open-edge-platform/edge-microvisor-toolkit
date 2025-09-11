@@ -1,0 +1,192 @@
+From a900ea04e1eb7174706f7a5129f7b71f6815012b Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 15 Feb 2024 11:04:55 +0800
+Subject: [PATCH 19/42] arch: x86: Add IPC mailbox accessor function and add
+ SoC register access
+
+- Exports intel_pmc_ipc() for host access to the PMC IPC mailbox
+- Add support to use IPC command allows host to access SoC registers
+through PMC firmware that are otherwise inaccessible to the host due to
+security policies.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Signed-off-by: Chao Qin <chao.qin@intel.com>
+Signed-off-by: Choong Yong Liang <yong.liang.choong@linux.intel.com>
+---
+ MAINTAINERS                                   |  2 +
+ arch/x86/Kconfig                              |  9 +++
+ arch/x86/platform/intel/Makefile              |  1 +
+ arch/x86/platform/intel/pmc_ipc.c             | 75 +++++++++++++++++++
+ .../linux/platform_data/x86/intel_pmc_ipc.h   | 34 +++++++++
+ 5 files changed, 121 insertions(+)
+ create mode 100644 arch/x86/platform/intel/pmc_ipc.c
+ create mode 100644 include/linux/platform_data/x86/intel_pmc_ipc.h
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6bb4ec0c162a5..47142103a443b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11648,8 +11648,10 @@ M:	Rajneesh Bhardwaj <irenic.rajneesh@gmail.com>
+ M:	David E Box <david.e.box@intel.com>
+ L:	platform-driver-x86@vger.kernel.org
+ S:	Maintained
++F:	arch/x86/platform/intel/pmc_ipc.c
+ F:	Documentation/ABI/testing/sysfs-platform-intel-pmc
+ F:	drivers/platform/x86/intel/pmc/
++F:	linux/platform_data/x86/intel_pmc_ipc.h
+ 
+ INTEL PMIC GPIO DRIVERS
+ M:	Andy Shevchenko <andy@kernel.org>
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 7b9a7e8f39acc..d022508f9c1fc 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -681,6 +681,15 @@ config X86_AMD_PLATFORM_DEVICE
+ 	  I2C and UART depend on COMMON_CLK to set clock. GPIO driver is
+ 	  implemented under PINCTRL subsystem.
+ 
++config INTEL_PMC_IPC
++	tristate "Intel Core SoC Power Management Controller IPC mailbox"
++	depends on ACPI
++	help
++	  This option enables sideband register access support for Intel SoC
++	  power management controller IPC mailbox.
++
++	  If you don't require the option or are in doubt, say N.
++
+ config IOSF_MBI
+ 	tristate "Intel SoC IOSF Sideband support for SoC platforms"
+ 	depends on PCI
+diff --git a/arch/x86/platform/intel/Makefile b/arch/x86/platform/intel/Makefile
+index dbee3b00f9d0d..470fc68de6ba8 100644
+--- a/arch/x86/platform/intel/Makefile
++++ b/arch/x86/platform/intel/Makefile
+@@ -1,2 +1,3 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ obj-$(CONFIG_IOSF_MBI)			+= iosf_mbi.o
++obj-$(CONFIG_INTEL_PMC_IPC)		+= pmc_ipc.o
+\ No newline at end of file
+diff --git a/arch/x86/platform/intel/pmc_ipc.c b/arch/x86/platform/intel/pmc_ipc.c
+new file mode 100644
+index 0000000000000..a962349827108
+--- /dev/null
++++ b/arch/x86/platform/intel/pmc_ipc.c
+@@ -0,0 +1,75 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Intel Core SoC Power Management Controller IPC mailbox
++ *
++ * Copyright (c) 2023, Intel Corporation.
++ * All Rights Reserved.
++ *
++ * Authors: Choong Yong Liang <yong.liang.choong@linux.intel.com>
++ *          David E. Box <david.e.box@linux.intel.com>
++ */
++#include <linux/module.h>
++#include <linux/acpi.h>
++#include <linux/platform_data/x86/intel_pmc_ipc.h>
++
++#define PMC_IPCS_PARAM_COUNT           7
++
++int intel_pmc_ipc(struct pmc_ipc_cmd *ipc_cmd, u32 *rbuf)
++{
++	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
++	union acpi_object params[PMC_IPCS_PARAM_COUNT] = {
++		{.type = ACPI_TYPE_INTEGER,},
++		{.type = ACPI_TYPE_INTEGER,},
++		{.type = ACPI_TYPE_INTEGER,},
++		{.type = ACPI_TYPE_INTEGER,},
++		{.type = ACPI_TYPE_INTEGER,},
++		{.type = ACPI_TYPE_INTEGER,},
++		{.type = ACPI_TYPE_INTEGER,},
++	};
++	struct acpi_object_list arg_list = { PMC_IPCS_PARAM_COUNT, params };
++	union acpi_object *obj;
++	int status;
++
++	if (!ipc_cmd || !rbuf)
++		return -EINVAL;
++
++	/*
++	 * 0: IPC Command
++	 * 1: IPC Sub Command
++	 * 2: Size
++	 * 3-6: Write Buffer for offset
++	 */
++	params[0].integer.value = ipc_cmd->cmd;
++	params[1].integer.value = ipc_cmd->sub_cmd;
++	params[2].integer.value = ipc_cmd->size;
++	params[3].integer.value = ipc_cmd->wbuf[0];
++	params[4].integer.value = ipc_cmd->wbuf[1];
++	params[5].integer.value = ipc_cmd->wbuf[2];
++	params[6].integer.value = ipc_cmd->wbuf[3];
++
++	status = acpi_evaluate_object(NULL, "\\IPCS", &arg_list, &buffer);
++	if (ACPI_FAILURE(status))
++		return -ENODEV;
++
++	obj = buffer.pointer;
++	/* Check if the number of elements in package is 5 */
++	if (obj && obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
++		const union acpi_object *objs = obj->package.elements;
++
++		if ((u8)objs[0].integer.value != 0)
++			return -EINVAL;
++
++		rbuf[0] = objs[1].integer.value;
++		rbuf[1] = objs[2].integer.value;
++		rbuf[2] = objs[3].integer.value;
++		rbuf[3] = objs[4].integer.value;
++	} else {
++		return -EINVAL;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(intel_pmc_ipc);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Intel PMC IPC Mailbox accessor");
+diff --git a/include/linux/platform_data/x86/intel_pmc_ipc.h b/include/linux/platform_data/x86/intel_pmc_ipc.h
+new file mode 100644
+index 0000000000000..d47b89f873fca
+--- /dev/null
++++ b/include/linux/platform_data/x86/intel_pmc_ipc.h
+@@ -0,0 +1,34 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Intel Core SoC Power Management Controller Header File
++ *
++ * Copyright (c) 2023, Intel Corporation.
++ * All Rights Reserved.
++ *
++ * Authors: Choong Yong Liang <yong.liang.choong@linux.intel.com>
++ *          David E. Box <david.e.box@linux.intel.com>
++ */
++#ifndef INTEL_PMC_IPC_H
++#define INTEL_PMC_IPC_H
++
++#define IPC_SOC_REGISTER_ACCESS			0xAA
++#define IPC_SOC_SUB_CMD_READ			0x00
++#define IPC_SOC_SUB_CMD_WRITE			0x01
++
++struct pmc_ipc_cmd {
++	u32 cmd;
++	u32 sub_cmd;
++	u32 size;
++	u32 wbuf[4];
++};
++
++/**
++ * intel_pmc_ipc() - PMC IPC Mailbox accessor
++ * @ipc_cmd:  struct pmc_ipc_cmd prepared with input to send
++ * @rbuf:     Allocated u32[4] array for returned IPC data
++ *
++ * Return: 0 on success. Non-zero on mailbox error
++ */
++int intel_pmc_ipc(struct pmc_ipc_cmd *ipc_cmd, u32 *rbuf);
++
++#endif /* INTEL_PMC_IPC_H */
+-- 
+2.25.1
+

@@ -1,0 +1,103 @@
+From fb7a518c4b011aa5ab3519af32749dc756badd4f Mon Sep 17 00:00:00 2001
+From: Your Name <you@example.com>
+Date: Tue, 19 Nov 2024 18:53:49 +0800
+Subject: [PATCH 35/42] Revert "net: stmmac: drop stmmac_fpe_handshake"
+
+This reverts commit 59dd7fc932e54083b0e7d3e1f4ddf6ba3a158b0e.
+---
+ drivers/net/ethernet/stmicro/stmmac/stmmac.h  |  1 +
+ .../net/ethernet/stmicro/stmmac/stmmac_main.c | 23 ++++++++++++++++++-
+ .../net/ethernet/stmicro/stmmac/stmmac_tc.c   |  8 +++++++
+ 3 files changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac.h b/drivers/net/ethernet/stmicro/stmmac/stmmac.h
+index b4e64a0272944..8f542bf44ced3 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac.h
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac.h
+@@ -427,6 +427,7 @@ bool stmmac_eee_init(struct stmmac_priv *priv);
+ int stmmac_reinit_queues(struct net_device *dev, u32 rx_cnt, u32 tx_cnt);
+ int stmmac_reinit_ringparam(struct net_device *dev, u32 rx_size, u32 tx_size);
+ int stmmac_bus_clks_config(struct stmmac_priv *priv, bool enabled);
++void stmmac_fpe_handshake(struct stmmac_priv *priv, bool enable);
+ 
+ static inline bool stmmac_xdp_is_enabled(struct stmmac_priv *priv)
+ {
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 4a0c447c22a88..99be13ea4dd42 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -3596,9 +3596,13 @@ static int stmmac_hw_setup(struct net_device *dev, bool ptp_register)
+ 
+ 	stmmac_set_hw_vlan_mode(priv, priv->hw);
+ 
+-	if (priv->dma_cap.fpesel)
++	if (priv->dma_cap.fpesel) {
+ 		stmmac_fpe_start_wq(priv);
+ 
++		if (priv->fpe_cfg.enable)
++			stmmac_fpe_handshake(priv, true);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -7548,6 +7552,22 @@ static void stmmac_fpe_lp_task(struct work_struct *work)
+ 	clear_bit(__FPE_TASK_SCHED, &priv->fpe_task_state);
+ }
+ 
++void stmmac_fpe_handshake(struct stmmac_priv *priv, bool enable)
++{
++	if (priv->fpe_cfg.hs_enable != enable) {
++		if (enable) {
++			stmmac_fpe_send_mpacket(priv, priv->ioaddr,
++						&priv->fpe_cfg,
++						MPACKET_VERIFY);
++		} else {
++			priv->fpe_cfg.lo_fpe_state = FPE_STATE_OFF;
++			priv->fpe_cfg.lp_fpe_state = FPE_STATE_OFF;
++		}
++
++		priv->fpe_cfg.hs_enable = enable;
++	}
++}
++
+ static int stmmac_xdp_rx_timestamp(const struct xdp_md *_ctx, u64 *timestamp)
+ {
+ 	const struct stmmac_xdp_buff *ctx = (void *)_ctx;
+@@ -8015,6 +8035,7 @@ int stmmac_suspend(struct device *dev)
+ 				     priv->plat->tx_queues_to_use,
+ 				     priv->plat->rx_queues_to_use, false);
+ 
++		stmmac_fpe_handshake(priv, false);
+ 		stmmac_fpe_stop_wq(priv);
+ 	}
+ 
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_tc.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_tc.c
+index fee83ad048f90..ffe00209fbd50 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_tc.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_tc.c
+@@ -1079,6 +1079,11 @@ static int tc_taprio_configure(struct stmmac_priv *priv,
+ 
+ 	netdev_info(priv->dev, "configured EST\n");
+ 
++	if (fpe) {
++		stmmac_fpe_handshake(priv, true);
++		netdev_info(priv->dev, "start FPE handshake\n");
++	}
++
+ 	return 0;
+ 
+ disable:
+@@ -1103,6 +1108,9 @@ static int tc_taprio_configure(struct stmmac_priv *priv,
+ 			     false);
+ 	netdev_info(priv->dev, "disabled FPE\n");
+ 
++	stmmac_fpe_handshake(priv, false);
++	netdev_info(priv->dev, "stop FPE handshake\n");
++
+ 	return ret;
+ }
+ 
+-- 
+2.25.1
+
