@@ -30,26 +30,24 @@ Before you can build OS images you need to build the toolchain and make sure to
   the entire toolchain.
 
 
-1. Clone the stable branch of the Edge Microvisor Toolkit repository.
+### Clone the Edge Microvisor Toolkit repository
 
-   Check the [tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
-   the `<stable_tag_name>`.
+Checkout the stable branch of the repository. See the
+[tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
+`<stable_tag_name>`.
 
-   ```bash
-   git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=<stable_tag_name>
-   ```
+```bash
+git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=<stable_tag_name>
+```
 
-2. Navigate to the `toolkit` subdirectory.
+### Build the tools
 
-   ```bash
-   cd edge-microvisor-toolkit/toolkit
-   ```
+Navigate to the `edge-microvisor-toolkit/toolkit` directory and build the toolchain.
 
-3. Build the tools.
-
-   ```bash
-   sudo make toolchain REBUILD_TOOLS=y
-   ```
+```bash
+cd edge-microvisor-toolkit/toolkit
+sudo make toolchain REBUILD_TOOLS=y
+```
 
 ## Build the Edge Microvisor Toolkit Image
 
@@ -188,7 +186,7 @@ sudo apt-get install rpm
 1. Manually create the necessary directories:
 
    ```bash
-   mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+   mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
    echo '%_topdir %(echo $HOME)/rpmbuild' > ~/.rpmmacros
    ```
 
@@ -199,7 +197,7 @@ sudo apt-get install rpm
    touch helloworld.spec
    ```
 
-3. Open the spec file using the method of your choice, for example:
+3. Open the SPEC file using the method of your choice, for example:
 
    ```bash
    nano helloworld.spec
@@ -234,12 +232,8 @@ sudo apt-get install rpm
    mkdir -p %{buildroot}/usr/bin
    install -m 0755 helloworld.sh %{buildroot}/usr/bin/helloworld
 
-   mkdir -p %{buildroot}/usr/share/helloworld
-   install -m 0644 helloworld.signature.json %{buildroot}/usr/share/helloworld/
-
    %files
    /usr/bin/helloworld
-   /usr/share/helloworld/helloworld.signature.json
 
    %changelog
    * Wed May 01 2025 Your Name <you@example.com> - 1.0-1
@@ -276,10 +270,11 @@ sudo apt-get install rpm
    ```bash
    tar -czf helloworld-1.0.tar.gz ./helloworld-1.0
    sum=$(sha256sum helloworld-1.0.tar.gz | awk '{print $1}')
-   cat > helloworld-1.0.tar.gz.signature.json <<EOF
+   cat > helloworld.signatures.json <<EOF
    {
-     "file": "helloworld-1.0.tar.gz",
-     "sha256": "$sum"
+    "Signatures": {
+     "helloworld-1.0.tar.gz": "$sum"
+    }
    }
    EOF
    ```
@@ -296,24 +291,28 @@ sudo apt-get install rpm
 
 1. Create the `helloworld` folder in the `edge-microvisor-toolkit/SPECS` directory.
 
+   Make sure you use the [stable branch](#clone-the-edge-microvisor-toolkit-repository)
+   of the Edge Microvisor Toolkit repository.
+
    ```bash
    mkdir ./edge-microvisor-toolkit/SPECS/helloworld
    ```
 
-2. Copy the `helloworld.spec` and `helloworld.signature.json` files to the
-   `helloworld` folder.
+2. Copy the `helloworld.spec`, `helloworld.signature.json` and `helloworld-1.0.tar.gz` files
+   to the `helloworld` folder.
 
    ```bash
    cp ./helloworld.spec ./edge-microvisor-toolkit/SPECS/helloworld
    cp ./helloworld-1.0/helloworld.signature.json ./edge-microvisor-toolkit/SPECS/helloworld
+   cp helloworld-1.0.tar.gz ./edge-microvisor-toolkit/SPECS/helloworld
    ```
 
 3. Finally, update the `cgmanifest` by using the provided `python` script.
 
    ```bash
-       cd ./edge-microvisor-toolkit/toolkit
-       python3 -m pip install -r ./scripts/requirements.txt
-       python3 ./scripts/update_cgmanifest.py first ../cgmanifest.json ../SPECS/helloworld.spec
+   cd ./edge-microvisor-toolkit/toolkit
+   python3 -m pip install -r ./scripts/requirements.txt
+   python3 ./scripts/update_cgmanifest.py first ../cgmanifest.json ../SPECS/helloworld/helloworld.spec
    ```
 
 **Building the package and testing it locally**
@@ -321,11 +320,21 @@ sudo apt-get install rpm
 1. Build your package by running the following command:
 
    ```bash
-   make build-packages # to rebuild the packages
+   sudo make -j8 build-packages REBUILD_TOOLS=y CONFIG_FILE= SRPM_PACK_LIST="helloworld" CONCURRENT_PACKAGE_BUILDS=8 VALIDATE_TOOLCHAIN_GPG=n
    ```
 
-2. Build the image containing the package by following the steps outlined in [Building the Edge Microvisor Toolkit Image](#build-the-edge-microvisor-toolkit-image), and pointing to your modified imageconfig file.
+   > **NOTE:** The value of `SRPM_PACK_LIST` can be updated based on the
+   > user-created SPEC file.
 
+2. Build the image containing the package.
+
+   Follow the steps outlined in
+   [Building the Edge Microvisor Toolkit Image](#build-the-edge-microvisor-toolkit-image),
+   point to your modified imageconfig file, for example:
+
+   ```bash
+   sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image.json
+   ```
 
 ### Example 3: Generating user passwords
 
