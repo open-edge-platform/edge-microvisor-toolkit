@@ -304,6 +304,7 @@ prepare_rpmcache:
 	@echo "Preparing rpmcache copy toolchain RPMs to rpmcache $(rpmcache_build_dir)"
 	@cp $(toolchain_build_rpms)/noarch/* $(rpmcache_build_dir) || true
 	@cp $(toolchain_build_rpms)/x86_64/* $(rpmcache_build_dir) || true
+
 $(toolchain_rpms): prepare_rpmcache $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_REBUILD_TOOLCHAIN) $(go-downloader) $(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh $(TOOLCHAIN_GPG_VALIDATION_KEYS)
 	@log_file="$(toolchain_downloads_logs_dir)/$(notdir $@).log" && \
 	rm -f "$$log_file" && \

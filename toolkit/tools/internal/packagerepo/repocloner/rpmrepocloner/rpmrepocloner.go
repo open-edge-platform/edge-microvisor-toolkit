@@ -866,7 +866,7 @@ func tdnfDownload(args ...string) (err error, retriable bool) {
 	)
 
 	stdout, stderr, err := shell.Execute("tdnf", args...)
-
+        logger.Log.Debugf("tdnf args %v err %v", args, err)
 	logger.Log.Debugf("stdout: %s", stdout)
 	logger.Log.Debugf("stderr: %s", stderr)
 
