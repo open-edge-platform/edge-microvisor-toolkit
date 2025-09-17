@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20250509
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -83,12 +83,16 @@ cp -r i915 %{buildroot}%{_firmwarepath}
 cp -r xe %{buildroot}%{_firmwarepath}
 cp -r intel %{buildroot}%{_firmwarepath}
 cp iwlwifi-8000C-*.ucode %{buildroot}%{_firmwarepath}
+cp iwlwifi-9000-*.ucode %{buildroot}%{_firmwarepath}
+cp iwlwifi-9260-*.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-so-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 cp iwlwifi-ma-b0-gf-a0-83.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-ma-b0-gf-a0-86.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-ma-b0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
+cp iwlwifi-ty-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
+cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 
 %files
 %defattr(-,root,root)
@@ -150,6 +154,10 @@ cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/iwlwifi-ma-b0-gf-a0-86.ucode
 %{_firmwarepath}/iwlwifi-ma-b0-gf-a0-89.ucode
 %{_firmwarepath}/iwlwifi-ma-b0-gf-a0.pnvm
+%{_firmwarepath}/iwlwifi-ty-a0-gf-a0-89.ucode
+%{_firmwarepath}/iwlwifi-ty-a0-gf-a0.pnvm
+%{_firmwarepath}/iwlwifi-9000-*.ucode
+%{_firmwarepath}/iwlwifi-9260-*.ucode
 
 %files ice
 %defattr(-,root,root)
@@ -157,6 +165,9 @@ cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/intel/ice
 
 %changelog
+* Wed Sep 17 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 20250509-2
+- Added iwlwifi package for Intel Wi-Fi AX210, Jefferson Peak, Thunder Peak.
+
 * Wed Jun 18 2025 Junxiao Chang <junxiao.chang@intel.com> - 20250509-1
 - Upgrade i915 GuC firmware version to 70.44.1.
 
