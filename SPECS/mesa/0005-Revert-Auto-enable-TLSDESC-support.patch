@@ -1,21 +1,19 @@
-From 65300d3c9c5f4b6facf1e30dd0343c8ce58cb79d Mon Sep 17 00:00:00 2001
-From: "Chew, Tong Liang" <tong.liang.chew@intel.com>
-Date: Tue, 8 Aug 2023 20:50:51 +0000
-Subject: [PATCH 6/6] Revert "Auto-enable TLSDESC support"
-
-This reverts commit 60d95c5d0feef4e4b2820a26c4708aff10f5730d
+From 40c3c14b3bb1926d5232cf138d841386a512e774 Mon Sep 17 00:00:00 2001
+From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
+Date: Wed, 28 Aug 2024 16:38:31 +0800
+Subject: [PATCH 05/11] Revert "Auto-enable TLSDESC support"
 
 Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
 ---
- meson.build | 34 ----------------------------------
- 1 file changed, 34 deletions(-)
+ meson.build | 42 ------------------------------------------
+ 1 file changed, 42 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index 927e62255cf..2a04ea3bc4f 100644
+index 67243458b54..d6dd612165b 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -422,40 +422,6 @@ if with_platform_android and get_option('platform-sdk-version') >= 29
-   c_cpp_args += '-fno-emulated-tls'
+@@ -512,48 +512,6 @@ if with_platform_android and get_option('platform-sdk-version') >= 29
+   add_project_link_arguments('-Wl,-plugin-opt=-emulated-tls=0', language: ['c', 'cpp'])
  endif
  
 -# -mtls-dialect=gnu2 speeds up non-initial-exec TLS significantly but requires
@@ -32,23 +30,31 @@ index 927e62255cf..2a04ea3bc4f 100644
 -  # cross-compiling, but because this is just an optimization we can skip it
 -  if meson.is_cross_build() and not meson.can_run_host_binaries()
 -    warning('cannot auto-detect -mtls-dialect when cross-compiling, using compiler default')
+-  elif host_machine.system() == 'freebsd'
+-    warning('cannot use -mtls-dialect for FreeBSD, using compiler default')
 -  else
--    # -fpic to force dynamic tls, otherwise TLS relaxation defeats check
--    gnu2_test = cc.run('int __thread x; int main() { return x; }',
--                       args: ['-mtls-dialect=gnu2', '-fpic'],
--                       name: '-mtls-dialect=gnu2')
--    if gnu2_test.returncode() == 0 and (
--          # check for lld 13 bug: https://gitlab.freedesktop.org/mesa/mesa/-/issues/5665
--          host_machine.cpu_family() != 'x86_64' or
--          # get_linker_id misses LDFLAGS=-fuse-ld=lld: https://github.com/mesonbuild/meson/issues/6377
--          #cc.get_linker_id() != 'ld.lld' or
--          cc.links('''int __thread x; int y; int main() { __asm__(
--                "leaq x@TLSDESC(%rip), %rax\n"
--                "movq y@GOTPCREL(%rip), %rdx\n"
--                "call *x@TLSCALL(%rax)\n"); }''', name: 'split TLSDESC')
--          )
--      c_cpp_args += '-mtls-dialect=gnu2'
--    endif
+-    # The way to specify the TLSDESC dialect is architecture-specific.
+-    # We probe both because there is not a fallback guaranteed to work for all
+-    # future architectures.
+-    foreach tlsdesc_arg : ['-mtls-dialect=gnu2', '-mtls-dialect=desc']
+-      # -fpic to force dynamic tls, otherwise TLS relaxation defeats check
+-      tlsdesc_test = cc.run('int __thread x; int main() { return x; }',
+-                            args: [tlsdesc_arg, '-fpic'],
+-                            name: tlsdesc_arg)
+-      if tlsdesc_test.returncode() == 0 and (
+-            # check for lld 13 bug: https://gitlab.freedesktop.org/mesa/mesa/-/issues/5665
+-            host_machine.cpu_family() != 'x86_64' or
+-            # get_linker_id misses LDFLAGS=-fuse-ld=lld: https://github.com/mesonbuild/meson/issues/6377
+-            #cc.get_linker_id() != 'ld.lld' or
+-            cc.links('''int __thread x; int y; int main() { __asm__(
+-                  "leaq x@TLSDESC(%rip), %rax\n"
+-                  "movq y@GOTPCREL(%rip), %rdx\n"
+-                  "call *x@TLSCALL(%rax)\n"); }''', name: 'split TLSDESC')
+-            )
+-        c_cpp_args += tlsdesc_arg
+-        break
+-      endif
+-    endforeach
 -  endif
 -endif
 -
