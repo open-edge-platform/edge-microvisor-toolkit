@@ -1,0 +1,27 @@
+From 1ac0cec27d85c9c7177934d82de7dfa56aaf1a9e Mon Sep 17 00:00:00 2001
+From: "Qiao, Wei" <wei.qiao@intel.com>
+Date: Mon, 6 Jan 2025 16:55:07 +0800
+Subject: [PATCH 9/9] Revert "Revert "bus: mhi: host: pci_generic: add support
+ for sc8280xp-crd SDX55 variant""
+
+This reverts commit 4ee10246e0dd22818f20b3812c5ca74b3f0a1148.
+---
+ drivers/bus/mhi/host/pci_generic.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/bus/mhi/host/pci_generic.c b/drivers/bus/mhi/host/pci_generic.c
+index f12d6d0d3e52d..9938bb034c1cb 100644
+--- a/drivers/bus/mhi/host/pci_generic.c
++++ b/drivers/bus/mhi/host/pci_generic.c
+@@ -722,6 +722,8 @@ static const struct mhi_pci_dev_info mhi_netprisma_fcun69_info = {
+ static const struct pci_device_id mhi_pci_id_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_QCOM, 0x0304),
+ 		.driver_data = (kernel_ulong_t) &mhi_qcom_sdx24_info },
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x0306, PCI_VENDOR_ID_QCOM, 0x010c),
++		.driver_data = (kernel_ulong_t) &mhi_foxconn_sdx55_info },
+ 	/* EM919x (sdx55), use the same vid:pid as qcom-sdx55m */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_QCOM, 0x0306, 0x18d7, 0x0200),
+ 		.driver_data = (kernel_ulong_t) &mhi_sierra_em919x_info },
+-- 
+2.25.1
+

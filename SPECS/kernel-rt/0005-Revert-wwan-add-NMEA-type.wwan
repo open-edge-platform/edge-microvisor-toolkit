@@ -1,0 +1,54 @@
+From 4a563eb1c4e43fd10878c600f6e5a9bb2b87039d Mon Sep 17 00:00:00 2001
+From: "Qiao, Wei" <wei.qiao@intel.com>
+Date: Mon, 6 Jan 2025 16:54:33 +0800
+Subject: [PATCH 5/9] Revert "wwan: add NMEA type"
+
+This reverts commit ef2afddce75ec3edad3c69561f9af32e9d5aca8e.
+---
+ drivers/net/wwan/mhi_wwan_ctrl.c | 1 -
+ drivers/net/wwan/wwan_core.c     | 4 ----
+ include/linux/wwan.h             | 1 -
+ 3 files changed, 6 deletions(-)
+
+diff --git a/drivers/net/wwan/mhi_wwan_ctrl.c b/drivers/net/wwan/mhi_wwan_ctrl.c
+index 9dd70f9cb6e36..290510489d673 100644
+--- a/drivers/net/wwan/mhi_wwan_ctrl.c
++++ b/drivers/net/wwan/mhi_wwan_ctrl.c
+@@ -266,7 +266,6 @@ static const struct mhi_device_id mhi_wwan_ctrl_match_table[] = {
+ 	{ .chan = "DIAG", .driver_data = WWAN_PORT_QCDM },
+ 	{ .chan = "FIREHOSE", .driver_data = WWAN_PORT_FIREHOSE },
+ 	{ .chan = "SAHARA", .driver_data = WWAN_PORT_SAHARA },
+-	{ .chan = "NMEA", .driver_data = WWAN_PORT_NMEA },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(mhi, mhi_wwan_ctrl_match_table);
+diff --git a/drivers/net/wwan/wwan_core.c b/drivers/net/wwan/wwan_core.c
+index 80d93ded93c26..d524bec8286ae 100644
+--- a/drivers/net/wwan/wwan_core.c
++++ b/drivers/net/wwan/wwan_core.c
+@@ -338,10 +338,6 @@ static const struct {
+ 		.name = "SAHARA",
+ 		.devsuf = "sahara",
+ 	},
+-	[WWAN_PORT_NMEA] = {
+-		.name = "NMEA",
+-		.devsuf = "nmea",
+-	},
+ };
+ 
+ static ssize_t type_show(struct device *dev, struct device_attribute *attr,
+diff --git a/include/linux/wwan.h b/include/linux/wwan.h
+index 4306b87c46bbe..ef4dd4f3757e3 100644
+--- a/include/linux/wwan.h
++++ b/include/linux/wwan.h
+@@ -31,7 +31,6 @@ enum wwan_port_type {
+ 	WWAN_PORT_XMMRPC,
+ 	WWAN_PORT_FASTBOOT,
+ 	WWAN_PORT_SAHARA,
+-	WWAN_PORT_NMEA,
+ 
+ 	/* Add new port types above this line */
+ 
+-- 
+2.25.1
+

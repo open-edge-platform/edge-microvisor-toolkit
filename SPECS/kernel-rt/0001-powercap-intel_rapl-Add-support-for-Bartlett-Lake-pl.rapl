@@ -1,0 +1,28 @@
+From 1694a0ed9cf013dbcf0eb558b3ef660c6700d6ed Mon Sep 17 00:00:00 2001
+From: "Qiao, Wei" <wei.qiao@intel.com>
+Date: Wed, 2 Apr 2025 13:14:18 +0800
+Subject: [PATCH 7/8] powercap: intel_rapl: Add support for Bartlett Lake
+ platform
+
+Add support for Bartlett Lake platform to the RAPL common driver.
+
+Signed-off-by: Qiao, Wei <wei.qiao@intel.com>
+---
+ drivers/powercap/intel_rapl_common.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/powercap/intel_rapl_common.c b/drivers/powercap/intel_rapl_common.c
+index 5e793b80fd6b6..3290e0af884b5 100644
+--- a/drivers/powercap/intel_rapl_common.c
++++ b/drivers/powercap/intel_rapl_common.c
+@@ -1260,6 +1260,7 @@ static const struct x86_cpu_id rapl_ids[] __initconst = {
+ 	X86_MATCH_VFM(INTEL_RAPTORLAKE,		&rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_RAPTORLAKE_P,        &rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_RAPTORLAKE_S,	&rapl_defaults_core),
++	X86_MATCH_VFM(INTEL_BARTLETTLAKE,	&rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_METEORLAKE,		&rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_METEORLAKE_L,	&rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_SAPPHIRERAPIDS_X,	&rapl_defaults_spr_server),
+-- 
+2.34.1
+

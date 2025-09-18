@@ -1,0 +1,40 @@
+From 359fed1b06879918ad728213a9fd289620fd7942 Mon Sep 17 00:00:00 2001
+From: Gerd Hoffmann <kraxel@redhat.com>
+Date: Wed, 7 May 2025 10:28:21 +0200
+Subject: [PATCH 4/4] drm/virtio: implement virtio_gpu_shutdown
+
+Calling drm_dev_unplug() is the drm way to say the device
+is gone and can not be accessed any more.
+
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+Reviewed-by: Eric Auger <eric.auger@redhat.com>
+Tested-by: Eric Auger <eric.auger@redhat.com>
+Message-Id: <20250507082821.2710706-1-kraxel@redhat.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/gpu/drm/virtio/virtgpu_drv.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/virtio/virtgpu_drv.c b/drivers/gpu/drm/virtio/virtgpu_drv.c
+index c1c0d03767ffb..d6fb1dbfaa27e 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_drv.c
++++ b/drivers/gpu/drm/virtio/virtgpu_drv.c
+@@ -125,10 +125,10 @@ static void virtio_gpu_remove(struct virtio_device *vdev)
+ 
+ static void virtio_gpu_shutdown(struct virtio_device *vdev)
+ {
+-	/*
+-	 * drm does its own synchronization on shutdown.
+-	 * Do nothing here, opt out of device reset.
+-	 */
++	struct drm_device *dev = vdev->priv;
++
++	/* stop talking to the device */
++	drm_dev_unplug(dev);
+ }
+ 
+ static void virtio_gpu_config_changed(struct virtio_device *vdev)
+-- 
+2.43.0
+

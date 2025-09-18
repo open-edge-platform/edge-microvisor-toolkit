@@ -1,0 +1,47 @@
+From 28f4a8fd24ecc9f0d4a956fcdcec3126952e0326 Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Wed, 2 Jul 2025 08:53:30 +0800
+Subject: [PATCH 75/76] drm/xe/gsc: mei interrupt top half should be in irq
+ disabled context
+
+MEI GSC interrupt comes from xe. It has top half and bottom half.
+Top half is called from xe interrupt handler. It should be in irq
+disabled context.
+
+With RT kernel, by default xe IRQ handler is in threaded IRQ. MEI GSC
+top half might be in threaded IRQ context. generic_handle_irq_safe API
+could be called from either IRQ or process context, it disables local
+IRQ then calls MEI GSC interrupt top half.
+
+This change fixes B580 GPU boot hang issue with RT kernel.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ drivers/gpu/drm/xe/xe_heci_gsc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_heci_gsc.c b/drivers/gpu/drm/xe/xe_heci_gsc.c
+index 65b2e147c4b92..894a6bd332853 100644
+--- a/drivers/gpu/drm/xe/xe_heci_gsc.c
++++ b/drivers/gpu/drm/xe/xe_heci_gsc.c
+@@ -230,7 +230,7 @@ void xe_heci_gsc_irq_handler(struct xe_device *xe, u32 iir)
+ 	if (xe->heci_gsc.irq < 0)
+ 		return;
+ 
+-	ret = generic_handle_irq(xe->heci_gsc.irq);
++	ret = generic_handle_irq_safe(xe->heci_gsc.irq);
+ 	if (ret)
+ 		drm_err_ratelimited(&xe->drm, "error handling GSC irq: %d\n", ret);
+ }
+@@ -250,7 +250,7 @@ void xe_heci_csc_irq_handler(struct xe_device *xe, u32 iir)
+ 	if (xe->heci_gsc.irq < 0)
+ 		return;
+ 
+-	ret = generic_handle_irq(xe->heci_gsc.irq);
++	ret = generic_handle_irq_safe(xe->heci_gsc.irq);
+ 	if (ret)
+ 		drm_err_ratelimited(&xe->drm, "error handling GSC irq: %d\n", ret);
+ }
+-- 
+2.43.0
+

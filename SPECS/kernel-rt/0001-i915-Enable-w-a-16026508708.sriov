@@ -1,0 +1,48 @@
+From f498c312ba9a0b7f28fbb7e5b52e08cfc58d4390 Mon Sep 17 00:00:00 2001
+From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
+Date: Tue, 20 May 2025 17:02:59 +0800
+Subject: [PATCH] i915: Enable w/a 16026508708
+
+Enable workaround 16026508708 which is SRIOV only but applies to all
+current platforms. It is also implemented by GuC, so bump to the
+latest GuC release.
+
+Signed-off-by: John Harrison <John.C.Harrison@Intel.com>
+Reviewed-by: Daniele Ceraolo Spurio <daniele.ceraolospurio@intel.com>
+Rebased-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+---
+ drivers/gpu/drm/i915/gt/uc/abi/guc_klvs_abi.h | 1 +
+ drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c    | 5 +++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/gt/uc/abi/guc_klvs_abi.h b/drivers/gpu/drm/i915/gt/uc/abi/guc_klvs_abi.h
+index 77a2fc3d3acdc..ed1eceec90922 100644
+--- a/drivers/gpu/drm/i915/gt/uc/abi/guc_klvs_abi.h
++++ b/drivers/gpu/drm/i915/gt/uc/abi/guc_klvs_abi.h
+@@ -125,6 +125,7 @@ enum {
+ 	GUC_WORKAROUND_KLV_SERIALIZED_RA_MODE				= 0x9001,
+ 	GUC_WORKAROUND_KLV_BLOCK_INTERRUPTS_WHEN_MGSR_BLOCKED		= 0x9002,
+ 	GUC_WORKAROUND_KLV_AVOID_GFX_CLEAR_WHILE_ACTIVE			= 0x9006,
++	GUC_WORKAROUND_KLV_RESET_BB_STACK_PTR_ON_VF_SWITCH		= 0x900b,
+ };
+ /**
+  * DOC: GuC VGT Policy KLVs
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c b/drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c
+index 2717bb5f05cdc..1260c66312d79 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_guc_ads.c
+@@ -868,6 +868,11 @@ static void guc_waklv_init(struct intel_guc *guc)
+ 		guc_waklv_enable_simple(guc, &offset, &remain,
+ 					GUC_WORKAROUND_KLV_BLOCK_INTERRUPTS_WHEN_MGSR_BLOCKED);
+ 
++	/* Wa_16026508708 */
++	if (GUC_FIRMWARE_VER(guc) >= MAKE_GUC_VER(70, 44, 0))
++		guc_waklv_enable_simple(guc, &offset, &remain,
++					GUC_WORKAROUND_KLV_RESET_BB_STACK_PTR_ON_VF_SWITCH);
++
+ 	size = guc_ads_waklv_size(guc) - remain;
+ 	if (!size)
+ 		return;
+-- 
+2.34.1
+

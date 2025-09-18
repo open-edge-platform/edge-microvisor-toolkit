@@ -1,0 +1,90 @@
+From 336527b4043dda2dfd40f37dd3817f0852b705e8 Mon Sep 17 00:00:00 2001
+From: Hao Li <hao3.li@intel.com>
+Date: Wed, 25 Sep 2024 13:36:58 +0800
+Subject: [PATCH 42/43] ptp/tgpio: Fix return type of remove function in tgpio
+ drivers
+
+update return type of remove function from int to void in driver
+gpio-ehl-pse-plat, ptp-intel-pmc-tgpio and ptp-intel-tgpio-plat
+
+Signed-off-by: Hao Li <hao3.li@intel.com>
+---
+ drivers/gpio/gpio-ehl-pse-plat.c   | 5 +----
+ drivers/ptp/ptp-intel-pmc-tgpio.c  | 5 +----
+ drivers/ptp/ptp-intel-tgpio-plat.c | 4 +---
+ 3 files changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/gpio/gpio-ehl-pse-plat.c b/drivers/gpio/gpio-ehl-pse-plat.c
+index d2120108f0c25..d35728f70c102 100644
+--- a/drivers/gpio/gpio-ehl-pse-plat.c
++++ b/drivers/gpio/gpio-ehl-pse-plat.c
+@@ -426,10 +426,7 @@ static int ehl_pse_gpio_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int ehl_pse_gpio_remove(struct platform_device *pdev)
+-{
+-	return 0;
+-}
++static void ehl_pse_gpio_remove(struct platform_device *pdev) {}
+ 
+ static int ehl_pse_gpio_suspend(struct device *dev)
+ {
+diff --git a/drivers/ptp/ptp-intel-pmc-tgpio.c b/drivers/ptp/ptp-intel-pmc-tgpio.c
+index 8fb55d63b59be..107948ac86860 100644
+--- a/drivers/ptp/ptp-intel-pmc-tgpio.c
++++ b/drivers/ptp/ptp-intel-pmc-tgpio.c
+@@ -765,12 +765,11 @@ static int intel_pmc_tgpio_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
+-static int intel_pmc_tgpio_remove(struct platform_device *pdev)
++static void intel_pmc_tgpio_remove(struct platform_device *pdev)
+ {
+ 	struct intel_pmc_tgpio_t *tgpio = platform_get_drvdata(pdev);
+ 	unsigned int pin_index;
+ 	struct intel_pmc_tgpio_pin *tgpio_pin;
+-	int ret = 0;
+ 
+ 	mutex_lock(&tgpio->lock);
+ 
+@@ -780,7 +779,6 @@ static int intel_pmc_tgpio_remove(struct platform_device *pdev)
+ 			break;
+ 	}
+ 	if (pin_index == MAX_PINS_PER_PLAT || tgpio_pin->pdev == NULL) {
+-		ret = -ENODEV;
+ 		goto unlock;
+ 	}
+ 
+@@ -801,7 +799,6 @@ static int intel_pmc_tgpio_remove(struct platform_device *pdev)
+ 
+ unlock:
+ 	mutex_unlock(&tgpio->lock);
+-	return ret;
+ }
+ 
+ static const struct acpi_device_id intel_pmc_acpi_match[] = {
+diff --git a/drivers/ptp/ptp-intel-tgpio-plat.c b/drivers/ptp/ptp-intel-tgpio-plat.c
+index 2173612609ed0..185fcae81e602 100644
+--- a/drivers/ptp/ptp-intel-tgpio-plat.c
++++ b/drivers/ptp/ptp-intel-tgpio-plat.c
+@@ -676,15 +676,13 @@ static int intel_tgpio_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
+-static int intel_tgpio_remove(struct platform_device *pdev)
++static void intel_tgpio_remove(struct platform_device *pdev)
+ {
+ 	struct intel_tgpio *tgpio = platform_get_drvdata(pdev);
+ 	int irq = platform_get_irq(pdev, 0);
+ 
+ 	devm_free_irq(&pdev->dev, irq, tgpio);
+ 	ptp_clock_unregister(tgpio->clock);
+-
+-	return 0;
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+-- 
+2.25.1
+

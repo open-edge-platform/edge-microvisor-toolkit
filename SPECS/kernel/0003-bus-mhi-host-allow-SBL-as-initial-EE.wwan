@@ -1,0 +1,58 @@
+From 32f346ee23bcf98937fab2356321563d1640c839 Mon Sep 17 00:00:00 2001
+From: Daniele Palmas <dnlplm@gmail.com>
+Date: Tue, 30 May 2023 11:13:40 +0200
+Subject: [PATCH 3/9] bus: mhi: host: allow SBL as initial EE
+
+There are situations in which SBL is a legitimate initial execution
+environment (e.g. modem stuck in SBL due to a firmware failure...), but
+mhi refuses to start:
+
+mhi-pci-generic 0000:01:00.0: MHI PCI device found: foxconn-sdx55
+mhi-pci-generic 0000:01:00.0: BAR 0: assigned
+mhi-pci-generic 0000:01:00.0: enabling device (0000 -> 0002)
+mhi mhi0: Requested to power ON
+mhi mhi0: SECONDARY BOOTLOADER is not a valid EE for power on
+mhi-pci-generic 0000:01:00.0: failed to power up MHI controller
+mhi-pci-generic: probe of 0000:01:00.0 failed with error -5
+
+Fix this by adding SBL as an allowed initial execution environment.
+
+Signed-off-by: Daniele Palmas <dnlplm@gmail.com>
+---
+ drivers/bus/mhi/host/internal.h | 2 +-
+ drivers/bus/mhi/host/pm.c       | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bus/mhi/host/internal.h b/drivers/bus/mhi/host/internal.h
+index d057e877932e3..304870cb7611e 100644
+--- a/drivers/bus/mhi/host/internal.h
++++ b/drivers/bus/mhi/host/internal.h
+@@ -67,7 +67,7 @@ extern const char * const mhi_ee_str[MHI_EE_MAX];
+ 
+ #define MHI_IN_PBL(ee) (ee == MHI_EE_PBL || ee == MHI_EE_PTHRU || \
+ 			ee == MHI_EE_EDL)
+-#define MHI_POWER_UP_CAPABLE(ee) (MHI_IN_PBL(ee) || ee == MHI_EE_AMSS)
++#define MHI_POWER_UP_CAPABLE(ee) (MHI_IN_PBL(ee) || ee == MHI_EE_AMSS || ee == MHI_EE_SBL)
+ #define MHI_FW_LOAD_CAPABLE(ee) (ee == MHI_EE_PBL || ee == MHI_EE_EDL)
+ #define MHI_IN_MISSION_MODE(ee) (ee == MHI_EE_AMSS || ee == MHI_EE_WFW || \
+ 				 ee == MHI_EE_FP)
+diff --git a/drivers/bus/mhi/host/pm.c b/drivers/bus/mhi/host/pm.c
+index 11c0e751f2239..a69d21075e98a 100644
+--- a/drivers/bus/mhi/host/pm.c
++++ b/drivers/bus/mhi/host/pm.c
+@@ -1263,10 +1263,11 @@ int mhi_sync_power_up(struct mhi_controller *mhi_cntrl)
+ 		mhi_cntrl->ready_timeout_ms : mhi_cntrl->timeout_ms;
+ 	wait_event_timeout(mhi_cntrl->state_event,
+ 			   MHI_IN_MISSION_MODE(mhi_cntrl->ee) ||
++			   mhi_cntrl->ee == MHI_EE_SBL ||
+ 			   MHI_PM_IN_ERROR_STATE(mhi_cntrl->pm_state),
+ 			   msecs_to_jiffies(timeout_ms));
+ 
+-	ret = (MHI_IN_MISSION_MODE(mhi_cntrl->ee)) ? 0 : -ETIMEDOUT;
++	ret = (MHI_IN_MISSION_MODE(mhi_cntrl->ee) || mhi_cntrl->ee == MHI_EE_SBL) ? 0 : -ETIMEDOUT;
+ 	if (ret)
+ 		mhi_power_down(mhi_cntrl, false);
+ 
+-- 
+2.25.1
+

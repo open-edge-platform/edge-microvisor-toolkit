@@ -1,0 +1,182 @@
+From 7f36119fd0bcdc0fee9bb16b971f924bb502b888 Mon Sep 17 00:00:00 2001
+From: "D, Lakshmi Sowjanya" <lakshmi.sowjanya.d@intel.com>
+Date: Fri, 19 Feb 2021 19:06:16 +0530
+Subject: [PATCH 23/43] ptp: tgpio: PSE TGPIO crosststamp, counttstamp
+
+Driver gets the art time from get_art() function for PSE TGPIO crosststamp.
+Counttstamp implementation for PSE TGPIO.
+
+Signed-off-by: D, Lakshmi Sowjanya <lakshmi.sowjanya.d@intel.com>
+---
+ arch/x86/include/asm/tsc.h         |  2 ++
+ arch/x86/kernel/tsc.c              | 52 +++++++++++++++++++++++++++++
+ drivers/ptp/ptp-intel-tgpio-plat.c | 53 +++++++++++++++++++++++++++++-
+ 3 files changed, 106 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/asm/tsc.h b/arch/x86/include/asm/tsc.h
+index 4017430b46933..2b02e7f09e7d7 100644
+--- a/arch/x86/include/asm/tsc.h
++++ b/arch/x86/include/asm/tsc.h
+@@ -32,6 +32,8 @@ extern struct system_counterval_t convert_art_to_tsc(u64 art);
+ extern struct system_counterval_t convert_art_ns_to_tsc(u64 art_ns);
+ extern struct timespec64 get_tsc_ns_now(struct system_counterval_t
+ 					*system_counter);
++extern int convert_tsc_to_art(const struct system_counterval_t *tsc, u64 *art);
++extern u64 read_art(void);
+ extern u64 convert_tsc_ns_to_art(struct timespec64 *tsc_ns);
+ extern u64 convert_tsc_ns_to_art_duration(struct timespec64 *tsc_ns);
+ extern struct timespec64 convert_art_to_tsc_ns(u64 art);
+diff --git a/arch/x86/kernel/tsc.c b/arch/x86/kernel/tsc.c
+index 076ab1db32b56..ebd4c4ce89cab 100644
+--- a/arch/x86/kernel/tsc.c
++++ b/arch/x86/kernel/tsc.c
+@@ -1324,6 +1324,58 @@ int unsynchronized_tsc(void)
+ 	return 0;
+ }
+ 
++/**
++ * convert_tsc_to_art() - Returns ART value associated with system counter
++ *
++ * Converts input TSC to the corresponding ART value using conversion
++ * factors discovered by detect_art()
++ *
++ * Return:
++ * u64 ART value
++ */
++int convert_tsc_to_art(
++	const struct system_counterval_t *system_counter, u64 *art)
++{
++	u64 tmp, res, rem;
++
++	if (system_counter->cs_id != CSID_X86_TSC)
++		return -EINVAL;
++
++	res = system_counter->cycles - art_to_tsc_offset;
++	rem = do_div(res, art_to_tsc_numerator);
++
++	*art = res * art_to_tsc_denominator;
++	tmp = rem * art_to_tsc_denominator;
++
++	do_div(tmp, art_to_tsc_numerator);
++	*art += tmp;
++
++	return 0;
++}
++EXPORT_SYMBOL(convert_tsc_to_art);
++
++/**
++ * read_art() - Returns current ART value
++ *
++ * Converts the current TSC to the current ART value using conversion
++ * factors discovered by detect_art()
++ *
++ * Return:
++ * u64 ART value
++ */
++u64 read_art(void)
++{
++	struct system_counterval_t tsc;
++	u64 art = 0;
++
++	tsc.cs_id = have_art ? CSID_X86_TSC : CSID_GENERIC,
++	tsc.cycles = read_tsc(NULL);
++	convert_tsc_to_art(&tsc, &art);
++
++	return art;
++}
++EXPORT_SYMBOL(read_art);
++
+ /*
+  * Convert ART to TSC given numerator/denominator found in detect_art()
+  */
+diff --git a/drivers/ptp/ptp-intel-tgpio-plat.c b/drivers/ptp/ptp-intel-tgpio-plat.c
+index b7eece6d3db62..4f7363d60ca70 100644
+--- a/drivers/ptp/ptp-intel-tgpio-plat.c
++++ b/drivers/ptp/ptp-intel-tgpio-plat.c
+@@ -139,9 +139,14 @@ struct intel_tgpio {
+ 	u32			pin_state[TGPIO_MAX_PIN];
+ 	u32			saved_ctl_regs[TGPIO_MAX_PIN];
+ 	u64			saved_piv_regs[TGPIO_MAX_PIN];
++	bool                    busy[TGPIO_MAX_PIN];
++	struct completion       transact_comp[TGPIO_MAX_PIN];
+ };
+ #define to_intel_tgpio(i)	(container_of((i), struct intel_tgpio, info))
+ 
++#define ts64_to_ptp_clock_time(x) ((struct ptp_clock_time){.sec = (x).tv_sec, \
++				    .nsec = (x).tv_nsec})
++
+ static inline u64 to_intel_tgpio_time(struct ptp_clock_time *t)
+ {
+ 	return t->sec * NSECS_PER_SEC + t->nsec;
+@@ -485,7 +490,7 @@ static int intel_tgpio_get_time_fn(ktime_t *device_time,
+ 
+ 	intel_tgpio_get_time(tgpio, &ts);
+ 	*device_time = timespec64_to_ktime(ts);
+-	cycles = intel_tgpio_readq(tgpio->base, LXTS_ART_LOW_GLOBAL);
++	cycles = read_art();
+ 	*system_counter = convert_art_to_tsc(cycles);
+ 
+ 	pm_runtime_put(tgpio->dev->parent);
+@@ -502,6 +507,51 @@ static int intel_tgpio_getcrosststamp(struct ptp_clock_info *info,
+ 			NULL, cts);
+ }
+ 
++static int intel_tgpio_counttstamp(struct ptp_clock_info *info,
++				   struct ptp_event_count_tstamp *count)
++{
++	struct intel_tgpio *tgpio = to_intel_tgpio(info);
++	u32                 dt_hi_s;
++	u32                 dt_hi_e;
++	u32                 dt_lo;
++	struct timespec64   dt_ts;
++	struct timespec64   tsc_now;
++
++	spin_lock(&tgpio->lock);
++	while (tgpio->busy[count->index]) {
++		spin_unlock(&tgpio->lock);
++		wait_for_completion(&tgpio->transact_comp[count->index]);
++		spin_lock(&tgpio->lock);
++	}
++
++	tgpio->busy[count->index] = true;
++	spin_unlock(&tgpio->lock);
++
++	tsc_now = get_tsc_ns_now(NULL);
++	dt_hi_s = convert_tsc_ns_to_art(&tsc_now) >> 32;
++
++	/* Reading lower 32-bit word of Time Capture Value (TCV) loads */
++	/* the event time and event count capture */
++	dt_lo = intel_tgpio_readl(tgpio->base, TGPIOTCV31_0(count->index));
++	count->event_count = intel_tgpio_readl(tgpio->base,
++					      TGPIOECCV63_32(count->index));
++	count->event_count <<= 32;
++	count->event_count |= intel_tgpio_readl(tgpio->base,
++						TGPIOECCV31_0(count->index));
++	dt_hi_e = intel_tgpio_readl(tgpio->base, TGPIOTCV63_32(count->index));
++
++	if (dt_hi_e != dt_hi_s && dt_lo >> 31)
++		dt_ts = convert_art_to_tsc_ns(((u64)dt_hi_s << 32) | dt_lo);
++	else
++		dt_ts = convert_art_to_tsc_ns(((u64)dt_hi_e << 32) | dt_lo);
++
++	count->device_time = ts64_to_ptp_clock_time(dt_ts);
++
++	tgpio->busy[count->index] = false;
++
++	return 0;
++}
++
+ static int intel_tgpio_verify(struct ptp_clock_info *ptp, unsigned int pin,
+ 		enum ptp_pin_function func, unsigned int chan)
+ {
+@@ -522,6 +572,7 @@ static const struct ptp_clock_info intel_tgpio_info = {
+ 	.settime64	= intel_tgpio_settime64,
+ 	.enable		= intel_tgpio_enable,
+ 	.getcrosststamp	= intel_tgpio_getcrosststamp,
++	.counttstamp    = intel_tgpio_counttstamp,
+ 	.verify		= intel_tgpio_verify,
+ };
+ 
+-- 
+2.25.1
+

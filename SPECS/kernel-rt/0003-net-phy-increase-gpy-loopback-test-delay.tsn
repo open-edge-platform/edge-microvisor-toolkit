@@ -1,0 +1,29 @@
+From e7eeb3cea2cd09e940481b7c62602f32c5991724 Mon Sep 17 00:00:00 2001
+From: Michael Sit Wei Hong <michael.wei.hong.sit@intel.com>
+Date: Tue, 18 Oct 2022 17:12:48 +0800
+Subject: [PATCH 03/42] net: phy: increase gpy loopback test delay
+
+Increase the gpy loopback delay to avoid phy getting stuck in an unknown
+state.
+
+Signed-off-by: Michael Sit Wei Hong <michael.wei.hong.sit@intel.com>
+---
+ drivers/net/phy/mxl-gpy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/phy/mxl-gpy.c b/drivers/net/phy/mxl-gpy.c
+index e5f8ac4b4604b..d6ce43e918049 100644
+--- a/drivers/net/phy/mxl-gpy.c
++++ b/drivers/net/phy/mxl-gpy.c
+@@ -814,7 +814,7 @@ static int gpy_loopback(struct phy_device *phydev, bool enable)
+ 		/* It takes some time for PHY device to switch into
+ 		 * loopback mode.
+ 		 */
+-		msleep(100);
++		msleep(600);
+ 	} else {
+ 		priv->lb_dis_to = get_jiffies_64() + HZ * 3;
+ 	}
+-- 
+2.25.1
+
