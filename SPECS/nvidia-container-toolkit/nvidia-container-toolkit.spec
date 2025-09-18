@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 Summary:        NVIDIA container runtime hook
 Name:           nvidia-container-toolkit
-Version:        1.17.4
-Release:        4%{?dist}
+Version:        1.17.8
+Release:        1%{?dist}
 License:        ALS2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -87,6 +87,10 @@ rm -f %{_bindir}/nvidia-container-toolkit
 %{_bindir}/nvidia-cdi-hook
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.17.8-1
+- merge from Azure Linux 3.0.20250822-3.0.
+- Upgrade to 1.17.8 to resolve CVE-2025-23266
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.17.4-4
 - merge from Azure Linux 3.0.20250521-3.0
 - Removed extraction command from prep

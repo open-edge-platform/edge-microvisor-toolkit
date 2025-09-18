@@ -3,7 +3,7 @@
 
 Name:         kata-containers-cc
 Version:      3.15.0.aks0
-Release:      2%{?dist}
+Release:      4%{?dist}
 Summary:      Kata Confidential Containers package developed for Confidential Containers on AKS
 License:      ASL 2.0
 URL:          https://github.com/microsoft/kata-containers
@@ -28,7 +28,7 @@ BuildRequires:  fuse-devel
 # kernel-uvm is required for debuggability, exercising confidential guest (confidential_guest=true)
 # code paths without actual SEV SNP enablement (sev_snp_guest=false)
 Requires:  kernel-uvm
-Requires:  moby-containerd-cc
+Requires:  containerd2
 # Must match the version specified by the `assets.virtiofsd.version` field in the source's versions.yaml.
 Requires:  virtiofsd = 1.8.0
 
@@ -150,6 +150,11 @@ fi
 %{tools_pkg}/tools/osbuilder/node-builder/azure-linux/agent-install/usr/lib/systemd/system/kata-agent.service
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.15.0.aks0-4
+- merge from Azure Linux 3.0.20250822-3.0.
+- Bump release to rebuild with rust
+- Update dependency on containerd2
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.15.0.aks0-2
 - merge from Azure Linux 3.0.20250521-3.0
 - Auto-upgrade to 3.15.0.aks0
@@ -247,7 +252,7 @@ fi
 *   Mon Aug 07 2023 CBL-Mariner Servicing Account <cblmargh@microsoft.com> - 0.6.0-2
 -   Bump release to rebuild with go 1.19.12
 
-*   Tue Jul 11 2023 Dallas Delaney <dadelan@microsoft.com> 0.6.0-1
+*   Fri Jul 28 2023 Dallas Delaney <dadelan@microsoft.com> 0.6.0-1
 -   Upgrade to version 0.6.0
 
 *   Thu Jul 13 2023 CBL-Mariner Servicing Account <cblmargh@microsoft.com> - 0.4.2-2

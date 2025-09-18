@@ -1,7 +1,7 @@
 Summary:        Cloud instance init scripts
 Name:           cloud-init
 Version:        24.3.1
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        GPLv3
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -12,6 +12,8 @@ Source1:        10-azure-kvp.cfg
 Patch0:         Add-Network-Interface-Renaming-Support-for-CAPM3-Met.patch
 Patch1:         no-single-process.patch
 Patch2:         0001-feat-Add-new-distro.patch
+Patch3:         CVE-2024-6174.patch
+Patch4:         CVE-2024-11584.patch
 %define cl_services cloud-config.service cloud-config.target cloud-final.service cloud-init.service cloud-init.target cloud-init-local.service
 BuildRequires:  automake
 BuildRequires:  dbus
@@ -143,6 +145,10 @@ make check %{?_smp_mflags}
 %config(noreplace) %{_sysconfdir}/cloud/cloud.cfg.d/10-azure-kvp.cfg
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 24.3.1-6
+- merge from Azure Linux 3.0.20250822-3.0.
+- Patch CVE-2024-6174 & CVE-2024-11584
+
 * Tue Mar 27 2025 Naveen Saini <naveen.kumar.saini@intel.com> - 24.3.1-5
 - Added edgemicrovisortoolkit distro support to install ca_certs.
 - Refresh patch.
