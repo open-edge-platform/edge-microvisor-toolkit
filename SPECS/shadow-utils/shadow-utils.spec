@@ -1,7 +1,7 @@
 Summary:        Programs for handling passwords in a secure way
 Name:           shadow-utils
 Version:        4.14.3
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -181,6 +181,9 @@ rm -rf %{buildroot}/*
 %{_libdir}/libsubid.so
 
 %changelog
+* Fri Sep 19 2025 Mun Chun Yep <mun.chun.yep@intel.com> - 4.14.3-4
+- Resolve PAM password expiration issue for ISO installer.
+
 * Thu Dec 19 2024 Mun Chun Yep <mun.chun.yep@intel.com> - 4.14.3-3
 - Change PASS_MAX_DAYS and PASS_WARN_AGE in login-defs.
 
