@@ -1,5 +1,5 @@
-# Series file for v6.12.44 linux kernel
-# 11a24528d080a Linux 6.12.44
+# Series file for v6.12.47 linux kernel
+# f6cf124428f51 Linux 6.12.47
 #sriov
 0001-drm-i915-mtl-Add-C10-table-for-HDMI-Clock-25175.sriov
 0002-drm-i915-mtl-Copy-c10-phy-pll-sw-state-from-master-t.sriov
@@ -58,6 +58,7 @@
 0002-virtio-break-and-reset-virtio-devices-on-device_shut.sriov
 0003-virtgpu-don-t-reset-on-shutdown.sriov
 0004-drm-virtio-implement-virtio_gpu_shutdown.sriov
+0001-drm-virtio-Wait-until-the-control-and-cursor-queues-.sriov
 #security
 0001-mei-bus-add-api-to-query-capabilities-of-ME-clien.security
 0002-mei-virtio-virtualization-frontend-driver.security
@@ -392,14 +393,8 @@
 #CVE-2025-21709
 CVE-2025-21709.patch
 
-#CVE-2025-21807
-CVE-2025-21807.patch
-
 #CVE-2025-21817
 CVE-2025-21817.patch
-
-#CVE-2025-22103
-CVE-2025-22103.patch
 
 #CVE-2025-22104
 CVE-2025-22104.patch
@@ -417,10 +412,6 @@ CVE-2025-22108.patch
 #CVE-2025-22111
 CVE-2025-22111.patch
 
-#CVE-2025-22113
-CVE-2025-22113.patch
-CVE-2025-22113-1.patch
-
 #CVE-2025-22116
 CVE-2025-22116.patch
 
@@ -430,9 +421,6 @@ CVE-2025-22117.patch
 #CVE-2025-22121
 CVE-2025-22121.patch
 CVE-2025-22121-1.patch
-
-#CVE-2025-22124
-CVE-2025-22124.patch
 
 #CVE-2025-23131
 CVE-2025-23131.patch
@@ -454,9 +442,6 @@ CVE-2025-38029.patch
 
 #CVE-2025-38311
 CVE-2025-38311.patch
-
-#CVE-2025-38306
-CVE-2025-38306.patch
 
 #CVE-2025-38248
 CVE-2025-38248.patch
@@ -481,11 +466,6 @@ CVE-2025-38284.patch
 CVE-2025-38284-1.patch
 CVE-2025-38284-2.patch
 
-#CVE-2025-38272
-CVE-2025-38272.patch
-CVE-2025-38272-1.patch
-CVE-2025-38272-2.patch
-
 #CVE-2025-38199
 CVE-2025-38199.patch
 
@@ -499,9 +479,6 @@ CVE-2025-38132-1.patch
 #CVE-2025-37743
 CVE-2025-37743.patch
 
-#CVE-2025-23133
-CVE-2025-23133.patch
-
 #CVE-2025-23132
 CVE-2025-23132.patch
 
@@ -513,9 +490,6 @@ CVE-2025-23129.patch
 
 #CVE-2025-22127
 CVE-2025-22127.patch
-
-#CVE-2025-22125
-CVE-2025-22125.patch
 
 #CVE-2025-22109
 CVE-2025-22109.patch
@@ -543,11 +517,20 @@ CVE-2024-52560-1.patch
 #CVE-2025-38621
 CVE-2025-38621.patch
 
-#CVE-2025-38502
-CVE-2025-38502.patch
-
 #CVE-2025-38627
 CVE-2025-38627.patch
 
 #CVE-2025-38643
 CVE-2025-38643.patch
+
+#CVE-2025-39789
+CVE-2025-39789.patch
+
+#CVE-2025-39764
+CVE-2025-39764.patch
+
+#CVE-2025-39745
+CVE-2025-39745.patch
+
+#CVE-2025-39677
+CVE-2025-39677.patch
