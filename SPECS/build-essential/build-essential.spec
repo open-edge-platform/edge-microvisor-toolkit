@@ -1,10 +1,10 @@
 Summary:        Metapackage to install all build tools
 Name:           build-essential
 Version:        %{emt}.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Requires:       autoconf
 Requires:       automake
 Requires:       binutils
@@ -33,6 +33,9 @@ Metapackage to install all build tools
 %defattr(-,root,root,0755)
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 3.0-4
+- Bump version for release
+
 * Tue Sep 03 2024 Neha Agarwal <nehaagarwal@microsoft.com> - 3.0-3
 - Add missing Vendor and Distribution tags.
 

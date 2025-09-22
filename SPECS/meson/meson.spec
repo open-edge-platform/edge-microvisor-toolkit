@@ -1,10 +1,10 @@
 Summary:        Extremely fast and user friendly build system
 Name:           meson
-Version:        1.3.1
+Version:        1.8.5
 Release:        1%{?dist}
 License:        ASL 2.0
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://mesonbuild.com/
 Source0:        https://github.com/mesonbuild/meson/releases/download/%{version}/%{name}-%{version}.tar.gz
 BuildRequires:  gcc
@@ -67,6 +67,10 @@ python3 ./run_tests.py
 %{_datadir}/polkit-1/actions/com.mesonbuild.install.policy
 
 %changelog
+* Tue Oct 07 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.8.5-1
+- Update to version 1.8.5 with guidance based on Fedora f43 (licence MIT).
+- License verified
+
 * Thu Feb 29 2024 Betty Lakes <bettylakes@microsoft.com> - 1.3.1-1
 - Update version to 1.3.1
 - Remove flaky and unsupported tests

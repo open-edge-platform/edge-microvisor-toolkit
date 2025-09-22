@@ -1,7 +1,7 @@
-From 1562270a76dbfa05a761f75e30089403f5b6d760 Mon Sep 17 00:00:00 2001
+From efe403fa0e4198c7b2a041c27c243d9c1685f969 Mon Sep 17 00:00:00 2001
 From: Tina Zhang <tina.zhang@intel.com>
 Date: Fri, 12 Mar 2021 12:57:41 +0800
-Subject: [PATCH 1/6] iris: Add renderonly support
+Subject: [PATCH 01/11] iris: Add renderonly support
 
 With this renderonly support, iris can work with other display device to
 show display. For example, in virtualization env, a virtio-gpu's display
@@ -13,29 +13,30 @@ v2: Add iris_resource_create_renderonly() helper function. (Kenneth)
 Signed-off-by: Tina Zhang <tina.zhang@intel.com>
 Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
 ---
- src/gallium/drivers/iris/iris_resource.c      | 56 ++++++++++++++++++-
+ src/gallium/drivers/iris/iris_resource.c      | 57 ++++++++++++++++++-
  src/gallium/drivers/iris/iris_resource.h      |  1 +
  src/gallium/drivers/iris/iris_screen.c        |  2 +
  src/gallium/drivers/iris/iris_screen.h        |  1 +
  src/gallium/winsys/iris/drm/iris_drm_public.h |  5 ++
  src/gallium/winsys/iris/drm/iris_drm_winsys.c | 20 +++++++
  src/gallium/winsys/iris/drm/meson.build       |  8 ++-
- 7 files changed, 91 insertions(+), 2 deletions(-)
+ 7 files changed, 92 insertions(+), 2 deletions(-)
 
 diff --git a/src/gallium/drivers/iris/iris_resource.c b/src/gallium/drivers/iris/iris_resource.c
-index 68f5a43c3e0..2b0a42b451e 100644
+index 302afa9ae84..9359d98ec67 100644
 --- a/src/gallium/drivers/iris/iris_resource.c
 +++ b/src/gallium/drivers/iris/iris_resource.c
-@@ -53,6 +53,8 @@
+@@ -55,6 +55,9 @@
+ #include "intel/dev/intel_debug.h"
  #include "isl/isl.h"
  #include "drm-uapi/drm_fourcc.h"
- #include "drm-uapi/i915_drm.h"
++#include "drm-uapi/i915_drm.h"
 +#include "renderonly/renderonly.h"
 +#include "util/u_drm.h"
  
  enum modifier_priority {
     MODIFIER_PRIORITY_INVALID = 0,
-@@ -530,7 +532,12 @@ static void
+@@ -527,7 +530,12 @@ static void
  iris_resource_destroy(struct pipe_screen *screen,
                        struct pipe_resource *p_res)
  {
@@ -48,8 +49,8 @@ index 68f5a43c3e0..2b0a42b451e 100644
  
     if (p_res->target == PIPE_BUFFER)
        util_range_destroy(&res->valid_buffer_range);
-@@ -1199,6 +1206,43 @@ iris_resource_create_for_buffer(struct pipe_screen *pscreen,
-    return &res->base.b;
+@@ -1080,6 +1088,43 @@ iris_resource_image_is_pat_compressible(const struct iris_screen *screen,
+    return true;
  }
  
 +static struct pipe_resource *
@@ -92,7 +93,7 @@ index 68f5a43c3e0..2b0a42b451e 100644
  static struct pipe_resource *
  iris_resource_create_for_image(struct pipe_screen *pscreen,
                                 const struct pipe_resource *templ,
-@@ -1208,8 +1252,14 @@ iris_resource_create_for_image(struct pipe_screen *pscreen,
+@@ -1089,8 +1134,14 @@ iris_resource_create_for_image(struct pipe_screen *pscreen,
  {
     struct iris_screen *screen = (struct iris_screen *)pscreen;
     const struct intel_device_info *devinfo = screen->devinfo;
@@ -108,7 +109,7 @@ index 68f5a43c3e0..2b0a42b451e 100644
     if (!res)
        return NULL;
  
-@@ -1925,6 +1975,10 @@ iris_resource_get_handle(struct pipe_screen *pscreen,
+@@ -1893,6 +1944,10 @@ iris_resource_get_handle(struct pipe_screen *pscreen,
     case WINSYS_HANDLE_TYPE_KMS: {
        iris_gem_set_tiling(bo, &res->surf);
  
@@ -120,7 +121,7 @@ index 68f5a43c3e0..2b0a42b451e 100644
         * we export a GEM handle we must make sure it is valid in the DRM file
         * descriptor the caller is using (this is the FD given at screen
 diff --git a/src/gallium/drivers/iris/iris_resource.h b/src/gallium/drivers/iris/iris_resource.h
-index ffb50af9796..baa77c36518 100644
+index 4b946242636..7b1fa8366f2 100644
 --- a/src/gallium/drivers/iris/iris_resource.h
 +++ b/src/gallium/drivers/iris/iris_resource.h
 @@ -55,6 +55,7 @@ struct iris_format_info {
@@ -132,7 +133,7 @@ index ffb50af9796..baa77c36518 100644
     /**
      * The ISL surface layout information for this resource.
 diff --git a/src/gallium/drivers/iris/iris_screen.c b/src/gallium/drivers/iris/iris_screen.c
-index 74094b016ce..70838aa8a01 100644
+index 29c6ead4acb..514a2239026 100644
 --- a/src/gallium/drivers/iris/iris_screen.c
 +++ b/src/gallium/drivers/iris/iris_screen.c
 @@ -59,6 +59,7 @@
@@ -143,7 +144,7 @@ index 74094b016ce..70838aa8a01 100644
  
  #define genX_call(devinfo, func, ...)             \
     switch ((devinfo)->verx10) {                   \
-@@ -672,6 +673,7 @@ iris_screen_destroy(struct iris_screen *screen)
+@@ -596,6 +597,7 @@ iris_screen_destroy(struct iris_screen *screen)
     iris_bufmgr_unref(screen->bufmgr);
     disk_cache_destroy(screen->disk_cache);
     close(screen->winsys_fd);
@@ -152,10 +153,10 @@ index 74094b016ce..70838aa8a01 100644
  }
  
 diff --git a/src/gallium/drivers/iris/iris_screen.h b/src/gallium/drivers/iris/iris_screen.h
-index 1b22cb12a18..7bc0b996722 100644
+index d8e9edf45eb..6d23ca80748 100644
 --- a/src/gallium/drivers/iris/iris_screen.h
 +++ b/src/gallium/drivers/iris/iris_screen.h
-@@ -156,6 +156,7 @@ struct iris_address {
+@@ -171,6 +171,7 @@ struct iris_address {
  
  struct iris_screen {
     struct pipe_screen base;
@@ -218,12 +219,12 @@ index 15095e2d3fa..b414b64ef22 100644
 +   return &pscreen->base;
 +}
 diff --git a/src/gallium/winsys/iris/drm/meson.build b/src/gallium/winsys/iris/drm/meson.build
-index 3dcdc4a455e..cc9ea810756 100644
+index 1ed56b2e8cd..eeac906e6d3 100644
 --- a/src/gallium/winsys/iris/drm/meson.build
 +++ b/src/gallium/winsys/iris/drm/meson.build
-@@ -18,12 +18,18 @@
- # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- # SOFTWARE.
+@@ -1,13 +1,19 @@
+ # Copyright © 2017 Intel Corporation
+ # SPDX-License-Identifier: MIT
  
 +iris_drm_winsys_c_args = []
 +if with_gallium_kmsro
@@ -240,6 +241,7 @@ index 3dcdc4a455e..cc9ea810756 100644
    ],
 +  c_args : [iris_drm_winsys_c_args],
    gnu_symbol_visibility : 'hidden',
+   dependencies: idep_mesautil,
  )
 -- 
 2.34.1

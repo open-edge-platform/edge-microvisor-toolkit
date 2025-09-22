@@ -15,7 +15,9 @@ Intel is committed to rapidly addressing security vulnerabilities affecting our 
 ## Reporting a Vulnerability
 Please report any security vulnerabilities in this project [utilizing the guidelines here](https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html).
 
+<!--hide_directive
 :::{toctree}
 ./security-considerations/emt-sb-howto.md
 ./security-considerations/emt-security-overview.md
 :::
+hide_directive-->

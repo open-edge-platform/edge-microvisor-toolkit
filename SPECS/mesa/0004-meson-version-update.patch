@@ -1,7 +1,7 @@
-From b127c544c18af3d82a80dc873001d35a79e52233 Mon Sep 17 00:00:00 2001
+From 721755d43bea02e981385a84dfa093ee237427ae Mon Sep 17 00:00:00 2001
 From: "Chew, Tong Liang" <tong.liang.chew@intel.com>
 Date: Fri, 1 Apr 2022 12:47:43 +0800
-Subject: [PATCH 4/6] meson: version update
+Subject: [PATCH 04/11] meson: version update
 
 Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
 ---
@@ -13,10 +13,10 @@ Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
  5 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/src/egl/meson.build b/src/egl/meson.build
-index f387bde4bde..33d762e414e 100644
+index b6c803a85c4..fb638479d8a 100644
 --- a/src/egl/meson.build
 +++ b/src/egl/meson.build
-@@ -164,7 +164,7 @@ endif
+@@ -153,7 +153,7 @@ endif
  
  if not with_glvnd
    egl_lib_name = 'EGL' + get_option('egl-lib-suffix')
@@ -26,12 +26,12 @@ index f387bde4bde..33d762e414e 100644
  else
    egl_lib_name = 'EGL_@0@'.format(glvnd_vendor_name)
 diff --git a/src/gbm/meson.build b/src/gbm/meson.build
-index df65361aef7..0cc8650ba0c 100644
+index eaed028d049..07809d94793 100644
 --- a/src/gbm/meson.build
 +++ b/src/gbm/meson.build
-@@ -60,7 +60,7 @@ libgbm = shared_library(
-   link_with : libloader,
-   dependencies : [deps_gbm, dep_dl, dep_thread, idep_mesautil, idep_xmlconfig],
+@@ -34,7 +34,7 @@ libgbm = shared_library(
+   link_with : [libloader],
+   dependencies : [dep_libdrm, idep_xmlconfig],
    gnu_symbol_visibility : 'hidden',
 -  version : '1.0.0',
 +  version : '1.1.0',
@@ -39,10 +39,10 @@ index df65361aef7..0cc8650ba0c 100644
  )
  
 diff --git a/src/glx/meson.build b/src/glx/meson.build
-index 20f04742894..b051881e07f 100644
+index b52b91c5269..1f89b5a2573 100644
 --- a/src/glx/meson.build
 +++ b/src/glx/meson.build
-@@ -109,7 +109,7 @@ endif
+@@ -91,7 +91,7 @@ endif
  
  if not with_glvnd
    gl_lib_name = 'GL'
@@ -52,11 +52,11 @@ index 20f04742894..b051881e07f 100644
    gl_lib_name = 'GLX_@0@'.format(glvnd_vendor_name)
    gl_lib_version = '0.0.0'
 diff --git a/src/mapi/es1api/meson.build b/src/mapi/es1api/meson.build
-index 9ee093dd34e..e4bde547eeb 100644
+index 8a7c57e03d9..4010b65a26e 100644
 --- a/src/mapi/es1api/meson.build
 +++ b/src/mapi/es1api/meson.build
-@@ -56,7 +56,7 @@ libglesv1_cm = shared_library(
-   link_with : libglapi,
+@@ -39,7 +39,7 @@ libglesv1_cm = shared_library(
+   link_with : shared_glapi_lib,
    dependencies : [dep_thread, dep_libdrm, dep_m, dep_dl, idep_mesautilc11],
    soversion : host_machine.system() == 'windows' ? '' : '1',
 -  version : '1.1.0',
@@ -65,11 +65,11 @@ index 9ee093dd34e..e4bde547eeb 100644
    name_prefix : host_machine.system() == 'windows' ? 'lib' : [],  # always use lib, but avoid warnings on !windows
    install : true,
 diff --git a/src/mapi/es2api/meson.build b/src/mapi/es2api/meson.build
-index 7bce741984e..8c467878637 100644
+index afc5b95c856..922d06f2c73 100644
 --- a/src/mapi/es2api/meson.build
 +++ b/src/mapi/es2api/meson.build
-@@ -56,7 +56,7 @@ libgles2 = shared_library(
-   link_with : libglapi,
+@@ -39,7 +39,7 @@ libgles2 = shared_library(
+   link_with : shared_glapi_lib,
    dependencies : [dep_thread, dep_libdrm, dep_m, dep_dl, idep_mesautilc11],
    soversion : host_machine.system() == 'windows' ? '' : '2',
 -  version : '2.0.0',

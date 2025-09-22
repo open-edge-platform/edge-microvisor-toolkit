@@ -7,20 +7,24 @@
 
 Summary:        GStreamer streaming media framework runtime
 Name:           gstreamer1
-Version:        1.20.0
-Release:        2%{?dist}
+Version:        1.26.5
+Release:        1%{?dist}
 License:        LGPLv2+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            http://gstreamer.freedesktop.org/
 Source0:        http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar.xz
 ## For GStreamer RPM provides
-Patch0:         gstreamer-inspect-rpm-format.patch
+Patch0:         0001-gst-inspect-add-mode-to-output-RPM-requires-format.patch
 Source1:        gstreamer1.prov
 Source2:        gstreamer1.attr
 
-BuildRequires:  meson >= 0.48.0
+# from platform
+Patch10:        0001-gstreamer-Disable-miniobject-inline-functions-for-go.patch
+
+BuildRequires:  meson >= 1.4.0
 BuildRequires:  gcc
+BuildRequires:  libatomic
 BuildRequires:  glib2-devel >= %{_glib2}
 BuildRequires:  libxml2-devel >= %{_libxml2}
 BuildRequires:  gobject-introspection-devel >= %{_gobject_introspection}
@@ -32,6 +36,7 @@ BuildRequires:  pkgconfig
 BuildRequires:  libcap-devel
 BuildRequires:  elfutils-devel
 BuildRequires:  bash-completion
+BuildRequires:  rust >= 1.70.0
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
@@ -57,7 +62,7 @@ developing applications that use %{name}.
 
 %prep
 %setup -q -n gstreamer-%{version}
-%patch 0 -p1 -b .rpm-provides
+%patch -P 0 -p3 -b .rpm-provides
 
 %build
 %meson	\
@@ -84,14 +89,19 @@ install -m0644 -D %{SOURCE2} $RPM_BUILD_ROOT%{_rpmconfigdir}/fileattrs/gstreamer
 
 %files -f gstreamer-%{majorminor}.lang
 %license COPYING
-%doc AUTHORS NEWS README RELEASE
+%doc AUTHORS NEWS README.md README.static-linking RELEASE
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstbase-%{majorminor}.so.*
 %{_libdir}/libgstcheck-%{majorminor}.so.*
 %{_libdir}/libgstcontroller-%{majorminor}.so.*
 %{_libdir}/libgstnet-%{majorminor}.so.*
 
-%{_libexecdir}/gstreamer-%{majorminor}/
+%dir %{_libexecdir}/gstreamer-%{majorminor}/
+%{_libexecdir}/gstreamer-%{majorminor}/gst-completion-helper
+%{_libexecdir}/gstreamer-%{majorminor}/gst-hotdoc-plugins-scanner
+%{_libexecdir}/gstreamer-%{majorminor}/gst-plugins-doc-cache-generator
+%{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
+%attr(755,root,root) %caps(cap_net_bind_service,cap_net_admin,cap_sys_nice=ep) %{_libexecdir}/gstreamer-%{majorminor}/gst-ptp-helper
 
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreelements.so
@@ -147,7 +157,7 @@ install -m0644 -D %{SOURCE2} $RPM_BUILD_ROOT%{_rpmconfigdir}/fileattrs/gstreamer
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 
-%dir %{_datadir}/gstreamer-%{majorminor}/gdb/
+%dir %{_datadir}/gstreamer-%{majorminor}/gdb
 %{_datadir}/gstreamer-%{majorminor}/gdb/
 %{_datadir}/gdb/auto-load/
 
@@ -157,9 +167,134 @@ install -m0644 -D %{SOURCE2} $RPM_BUILD_ROOT%{_rpmconfigdir}/fileattrs/gstreamer
 %{_libdir}/pkgconfig/gstreamer-check-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-net-%{majorminor}.pc
 
+%{_datadir}/cmake/FindGStreamer.cmake
+
 %changelog
+* Mon Oct 06 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.26.5-1
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+- Upgrading to 1.26.5 based on Fedora 44 (license: MIT) for guidance.
+
+* Fri Aug 08 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.5-1
+- 1.26.5
+
+* Thu Jul 24 2025 Fedora Release Engineering <releng@fedoraproject.org> - 1.26.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_43_Mass_Rebuild
+
+* Fri Jun 27 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.3-1
+- 1.26.3
+
+* Fri May 30 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.2-1
+- 1.26.2
+
+* Fri Apr 25 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.1-1
+- 1.26.1
+
+* Wed Mar 12 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.0-1
+- 1.26.0
+
+* Fri Jan 17 2025 Fedora Release Engineering <releng@fedoraproject.org> - 1.24.11-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_42_Mass_Rebuild
+
+* Tue Jan 07 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.24.11-1
+- 1.24.11
+
+* Wed Dec 04 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.10-1
+- 1.24.10
+
+* Thu Oct 31 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.9-1
+- 1.24.9
+
+* Thu Sep 19 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.8-1
+- 1.24.8
+
+* Wed Aug 21 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.7-1
+- 1.24.7
+
+* Mon Jul 29 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.6-1
+- 1.24.6
+
+* Thu Jul 18 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.24.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
+* Fri Jun 21 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.5-1
+- 1.24.5
+
+* Wed May 29 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.4-1
+- 1.24.4
+
+* Tue Apr 30 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.3-1
+- 1.24.3
+
+* Tue Mar 05 2024 Wim Taymans <wtaymans@redhat.com> - 1.24.0-1
+- Update to 1.24.0
+
 * Wed Feb 28 2024 Nicolas Guibourge <nicolasg@microsoft.com> - 1.20.0-2
 - Fix remaining issues linked to CBL-Mariner re-branding to Azure Linux
+
+* Thu Jan 25 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.22.9-1
+- 1.22.9
+
+* Wed Jan 24 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.8-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Sat Jan 20 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.8-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Mon Dec 18 2023 Gwyn Ciesla <gwync@protonmail.com> - 1.22.8-1
+- 1.22.8
+
+* Mon Nov 20 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.7-2
+- Set cap information correctly
+- Resolves: rhbz#2238703
+
+* Mon Nov 13 2023 Gwyn Ciesla <gwync@protonmail.com> - 1.22.7-1
+- 1.22.7
+
+* Wed Sep 20 2023 Gwyn Ciesla <gwync@protonmail.com> - 1.22.6-1
+- 1.22.6
+
+* Fri Jul 21 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.5-1
+- Update to 1.22.5
+
+* Thu Jul 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.4-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Tue Jun 20 2023 Gwyn Ciesla <gwync@protonmail.com> - 1.22.4-1
+- 1.22.4
+
+* Thu Jun 8 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.3-2
+- Do setcap on gst-ptp-helper to give the right permissions.
+
+* Thu May 25 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.3-1
+- Update to 1.22.3
+
+* Thu Apr 13 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.2-1
+- Update to 1.22.2
+
+* Mon Mar 13 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.1-1
+- Update to 1.22.1
+
+* Tue Jan 24 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.0-1
+- Update to 1.22.0
+
+* Fri Jan 20 2023 Wim Taymans <wtaymans@redhat.com> - 1.21.90-1
+- Update to 1.21.90
+
+* Thu Jan 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1.20.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Wed Jan 11 2023 Wim Taymans <wtaymans@redhat.com> - 1.20.5-1
+- Update to 1.20.5
+
+* Thu Oct 13 2022 Wim Taymans <wtaymans@redhat.com> - 1.20.4-1
+- Update to 1.20.4
+
+* Thu Jul 21 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.20.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Mon Jul 18 2022 Wim Taymans <wtaymans@redhat.com> - 1.20.3-1
+- Update to 1.20.3
 
 * Thu Mar 03 2022 Pawel Winogrodzki <pawelwi@microsoft.com> - 1.20.0-1
 - Updating to version 1.20.0 using Fedora 36 spec (license: MIT) for guidance.
