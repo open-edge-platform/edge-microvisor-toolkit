@@ -446,7 +446,7 @@ Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
 Summary: QEMU is a FAST! processor emulator
 Name: qemu
 Version: 9.1.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND FSFAP AND GPL-1.0-or-later AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-2.0-or-later WITH GCC-exception-2.0 AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT AND LicenseRef-Fedora-Public-Domain AND CC-BY-3.0
 URL: http://www.qemu.org/
 
@@ -535,6 +535,9 @@ Patch53: 0050-gtk-Abort-if-there-is-no-connector-set-for-primary-w.patch
 Patch54: 0051-hw-display-virtio-gpu-Initialize-dmabuf_fd-for-the-b.patch
 Patch55: 0052-gtk-Adding-funcs-for-destroying-textures-in-gtk-egl-.patch
 Patch56: 0053-hw-display-virtio-gpu-Redundant-call-of-dpy_gfx_repl.patch
+Patch57: 0054-hw-display-virtio-gpu-Manual-res-flush-to-redraw-sav.patch
+Patch58: 0055-hw-display-virtio-gpu-Properly-free-current_cursor.patch
+Patch59: 0056-ui-gtk-Re-grabbing-PTR-KBD-individually.patch
 
 BuildRequires: gnupg2
 BuildRequires: meson >= %{meson_version}
@@ -3533,6 +3536,11 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 
 
 %changelog
+* Wed Sep 24 2025 Dongwon Kim <dongwon.kim@intel.com> - 9.1.0-3
+- Added 3 patches from Intel Distribution Qemu Commit 2a16676
+- IOmediator save/restore fix
+- Mouse regrabbing upon HPD fix
+
 * Mon Aug 4 2025 Tong Liang Chew <tong.liang.chew@intel.com> - 9.1.0-2
 - Added 3 patches from Intel Distribution Qemu Commit 29ed545
 - Resolved Qemu memory-leak issue.
