@@ -28,7 +28,7 @@ applications.
 
 ## Host Guest VMs under Edge Microvisor Toolkit
 
-[Deploying Oth<!--hide_directiveer OS as Guest Virtual Machines under EMT Host](./get-started/deployment/emt-vm-host.md)
+[Deploying Other OS as Guest Virtual Machines under EMT Host](./get-started/deployment/emt-vm-host.md)
 
 <!--hide_directive
 :::{toctree}
