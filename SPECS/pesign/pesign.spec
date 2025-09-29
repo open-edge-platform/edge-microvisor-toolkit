@@ -6,12 +6,12 @@
 Name:    pesign
 Summary: Signing utility for UEFI binaries
 Version: 116
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: GPL-2.0-only
 URL:     https://github.com/rhboot/pesign
 
-Vendor:        Microsoft Corporation
-Distribution:  Azure Linux
+Vendor:        Intel Corporation
+Distribution:  Edge Microvisor Toolkit
 
 Obsoletes: pesign-rh-test-certs <= 0.111-7
 BuildRequires: efivar-devel >= 38-1
@@ -166,6 +166,9 @@ certutil -d %{_sysconfdir}/pki/pesign/ -X -L > /dev/null
 %{python3_sitelib}/mockbuild/plugins/pesign.*
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 116-4
+- Bump version for release
+
 * Thu Feb 08 2024 Dan Streetman <ddstreet@ieee.org> - 116-3
 - Initial Azure Linux import from Fedora 39 (license: MIT).
 - license verified

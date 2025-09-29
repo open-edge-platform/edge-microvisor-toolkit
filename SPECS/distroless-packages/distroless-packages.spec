@@ -1,10 +1,10 @@
 Summary:        Metapackage with core sets of packages for distroless containers.
 Name:           distroless-packages
 Version:        %{emt}.0
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        MIT
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
 URL:            https://aka.ms/cbl-mariner
 
@@ -57,6 +57,9 @@ Requires:       busybox
 %files debug
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 3.0-6
+- Bump version for release
+
 * Fri Apr 26 2024 Tobias Brick <tobiasb@microsoft.com> - 3.0-5
 - Add SymCrypt and SymCrypt-OpenSSL
 
