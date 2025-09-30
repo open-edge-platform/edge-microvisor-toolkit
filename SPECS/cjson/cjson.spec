@@ -1,6 +1,6 @@
 Summary:        Ultralightweight JSON parser in ANSI C
 Name:           cjson
-Version:        1.7.18
+Version:        1.7.19
 Release:        1%{?dist}
 # several files in tests/ are Apache-2.0 but are not packaged
 License:        MIT
@@ -55,6 +55,9 @@ rm -f %{buildroot}%{_libdir}/*.{la,a}
 %{_includedir}/cjson/
 
 %changelog
+* Thu Sep 18 2025 Rajesh Shanmugam <rajesh1x.shanmugam@intel.com> - 1.7.19-1
+- Update to new upstream version.
+
 * Wed July 02 2025 Tan Jia Yong <jia.yong.tan@intel.com> - 1.7.18-1
 - Update to new upstream version.
 
