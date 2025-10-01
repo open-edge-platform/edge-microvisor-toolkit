@@ -1,10 +1,10 @@
 Summary:        Wayland protocols that adds functionality not available in the core protocol
 Name:           wayland-protocols
-Version:        1.36
+Version:        1.38
 Release:        1%{?dist}
 License:        MIT
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://wayland.freedesktop.org/
 Source0:        https://gitlab.freedesktop.org/wayland/%{name}/-/releases/%{version}/downloads/%{name}-%{version}.tar.xz
 BuildRequires:  gcc
@@ -45,8 +45,12 @@ wayland-protocols.
 %doc README.md
 %{_datadir}/pkgconfig/%{name}.pc
 %{_datadir}/%{name}/
+%{_includedir}/%{name}/
 
 %changelog
+* Mon Sep 15 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.38-1
+- Upgrade to version 1.38
+
 * Thu Jun 27 2024 Hideyuki Nagase <hideyukn@microsoft.com> - 1.36-1
 - Upgrade to version 1.36
 
