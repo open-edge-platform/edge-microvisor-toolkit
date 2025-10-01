@@ -911,19 +911,21 @@ func SystemBlockDevices() (systemDevices []SystemBlockDevice, err error) {
 			return nil, fmt.Errorf("failed to parse size for %s: %v", devicePath, err)
 		}
 
-		isBoot := isBootDevice(devicePath)
+		isRemovable := isRemovableDevice(devicePath)
+		isReadOnly := isReadOnlyISO(devicePath)
+		isRemovableInstaller := isRemovable && isReadOnly
 
-		logger.Log.Debugf("Device: %s, Size: %d, Model: %s, IsBoot: %v",
-			devicePath, rawSize, strings.TrimSpace(device.Model), isBoot)
+		logger.Log.Debugf("Device: %s, Size: %d, Model: %s, IsRemovableInstaller: %v (IsRemovable: %v, IsReadOnly: %v)",
+			devicePath, rawSize, strings.TrimSpace(device.Model), isRemovableInstaller, isRemovable, isReadOnly)
 
-		if !isBoot {
+		if !isRemovableInstaller {
 			systemDevices = append(systemDevices, SystemBlockDevice{
 				DevicePath:  devicePath,
 				RawDiskSize: rawSize,
 				Model:       strings.TrimSpace(device.Model),
 			})
 		} else {
-			logger.Log.Debugf("Excluded boot device: %s", devicePath)
+			logger.Log.Debugf("Excluded removable installer device: %s", devicePath)
 		}
 	}
 
@@ -931,61 +933,43 @@ func SystemBlockDevices() (systemDevices []SystemBlockDevice, err error) {
 	return systemDevices, nil
 }
 
-// isBootDevice determines if a device is the boot device by detecting the system boot path and checking for removable devices.
-// It uses /proc/cmdline and /proc/mounts for detection.
-func isBootDevice(devicePath string) bool {
-	// Detect the system boot path once
-	var bootPath string
-	cmdline, err := os.ReadFile("/proc/cmdline")
-	if err == nil {
-		for _, field := range strings.Fields(string(cmdline)) {
-			if strings.HasPrefix(field, "root=") {
-				bootPath = strings.TrimPrefix(field, "root=")
-				break
-			}
-			if strings.HasPrefix(field, "inst.repo=") {
-				bootPath = strings.TrimPrefix(field, "inst.repo=")
-				break
-			}
-		}
-	}
-
-	// Fallback: Check /proc/mounts for a boot device if cmdline fails
-	if bootPath == "" {
-		mounts, err := os.ReadFile("/proc/mounts")
-		if err == nil {
-			for _, line := range strings.Split(string(mounts), "\n") {
-				fields := strings.Fields(line)
-				if len(fields) >= 2 && (strings.HasPrefix(fields[0], "/dev/sr") || strings.HasPrefix(fields[0], "/dev/loop")) &&
-					strings.Contains(fields[1], "iso") {
-					bootPath = fields[0]
-					break
-				}
-			}
-		}
-	}
-
-	if bootPath != "" {
-		logger.Log.Debugf("Detected boot device: %s", bootPath)
-	}
-
-	// Exclude the boot device itself
-	if bootPath != "" && devicePath == bootPath {
-		return true
-	}
-
-	// Check if the device is removable (e.g., USB or similar boot media)
+// isRemovableDevice determines if a device is removable (e.g., USB or similar media).
+func isRemovableDevice(devicePath string) bool {
 	deviceName := devicePath[5:] // Extract 'sda', 'sdb', 'nvme0n1', etc. from '/dev/'
 	removableFile := fmt.Sprintf("/sys/block/%s/removable", deviceName)
 	if exists, err := file.PathExists(removableFile); err == nil && exists {
 		if content, err := os.ReadFile(removableFile); err == nil {
 			if strings.TrimSpace(string(content)) == "1" {
-				logger.Log.Debugf("Excluded %s as removable boot device", devicePath)
+				logger.Log.Debugf("isRemovableDevice(%s) returning true", devicePath)
 				return true
 			}
 		}
 	}
+	logger.Log.Debugf("isRemovableDevice(%s) returning false", devicePath)
+	return false
+}
 
+// isReadOnlyISO checks if a device is mounted read-only (ISO on USB/CD).
+func isReadOnlyISO(devicePath string) bool {
+	mounts, err := os.ReadFile("/proc/mounts")
+	if err != nil {
+		logger.Log.Debugf("Failed to read /proc/mounts: %v", err)
+		logger.Log.Debugf("isReadOnlyISO(%s) returning false", devicePath)
+		return false
+	}
+	for _, line := range strings.Split(string(mounts), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) >= 4 && fields[0] == devicePath {
+			options := strings.Split(fields[3], ",")
+			for _, opt := range options {
+				if opt == "ro" {
+					logger.Log.Debugf("isReadOnlyISO(%s) returning true", devicePath)
+					return true
+				}
+			}
+		}
+	}
+	logger.Log.Debugf("isReadOnlyISO(%s) returning false", devicePath)
 	return false
 }
 
