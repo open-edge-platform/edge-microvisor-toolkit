@@ -1,0 +1,126 @@
+From 6b4560d0885d433ce29e011177b81d11ba004e44 Mon Sep 17 00:00:00 2001
+From: florent pirou <florent.pirou@intel.com>
+Date: Fri, 26 Aug 2022 01:59:06 -0700
+Subject: [PATCH 01/20] kernel/trace: Add DISALLOW_TRACE_PRINTK make option
+
+trace_printk is meant as a debugging tool, and should not be
+compiled into production code without specific debug Kconfig
+options enabled, or source code changes, as indicated by the
+warning that shows up on boot if any trace_printk is called:
+**   NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE   **
+**                                                      **
+** trace_printk() being used. Allocating extra memory.  **
+**                                                      **
+** This means that this is a DEBUG kernel and it is     **
+** unsafe for production use.                           **
+
+If DISALLOW_TRACE_PRINTK=1 is passed on the make command
+line, the kernel will generate a build-time error if
+trace_printk is used. We expect distributors to set this
+option for their production kernels.
+
+Note that the code to handle trace_printk is still present,
+so this does not prevent people from compiling out-of-tree
+kernel modules, or BPF programs.
+
+Also, we are not making this a kernel config option as we
+want the developer convenience of being able to reuse a
+production kernel config, add trace_printk for debugging,
+and rebuild, without any config changes.
+
+https://patchwork.kernel.org/project/linux-kbuild/patch/20200928152840.v6.1.I4feb11d34ce7a0dd5ee2c3327fb5a1a9a646be30@changeid/
+
+Signed-off-by: Nicolas Boichat <drinkcat@chromium.org>
+Signed-off-by: florent pirou <florent.pirou@intel.com>
+---
+ Makefile               | 14 ++++++++++++++
+ include/linux/kernel.h | 17 ++++++++++++++++-
+ 2 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index c891f51637d5..5089db3ad2b8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -156,6 +156,16 @@ endif
+ 
+ export KBUILD_EXTRA_WARN
+ 
++# Disallow use of trace_printk. Can be used by production kernels.
++ifeq ("$(origin DISALLOW_TRACE_PRINTK)", "command line")
++  KBUILD_DISALLOW_TRACE_PRINTK = $(DISALLOW_TRACE_PRINTK)
++endif
++ifndef KBUILD_DISALLOW_TRACE_PRINTK
++  KBUILD_DISALLOW_TRACE_PRINTK = 0
++endif
++
++export KBUILD_DISALLOW_TRACE_PRINTK
++
+ # Kbuild will save output files in the current working directory.
+ # This does not need to match to the root of the kernel source tree.
+ #
+@@ -884,6 +894,10 @@ ifdef CONFIG_ZERO_CALL_USED_REGS
+ KBUILD_CFLAGS	+= -fzero-call-used-regs=used-gpr
+ endif
+ 
++ifeq ($(KBUILD_DISALLOW_TRACE_PRINTK),1)
++KBUILD_CFLAGS += -DDISALLOW_TRACE_PRINTK
++endif
++
+ ifdef CONFIG_FUNCTION_TRACER
+ ifdef CONFIG_FTRACE_MCOUNT_USE_CC
+   CC_FLAGS_FTRACE	+= -mrecord-mcount
+diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+index be2e8c0a187e..33ffcc915b79 100644
+--- a/include/linux/kernel.h
++++ b/include/linux/kernel.h
+@@ -238,6 +238,12 @@ do {									\
+ 		____trace_printk_check_format(fmt, ##args);		\
+ } while (0)
+ 
++#ifdef DISALLOW_TRACE_PRINTK
++#define ALLOW_TRACE_PRINTK 0
++#else
++#define ALLOW_TRACE_PRINTK 1
++#endif
++
+ /**
+  * trace_printk - printf formatting in the ftrace buffer
+  * @fmt: the printf format for printing
+@@ -271,10 +277,13 @@ do {									\
+ #define trace_printk(fmt, ...)				\
+ do {							\
+ 	char _______STR[] = __stringify((__VA_ARGS__));	\
++							\
++	static_assert(ALLOW_TRACE_PRINTK, "trace_printk called.");	\
++							\
+ 	if (sizeof(_______STR) > 3)			\
+ 		do_trace_printk(fmt, ##__VA_ARGS__);	\
+ 	else						\
+-		trace_puts(fmt);			\
++		do_trace_puts(fmt);			\
+ } while (0)
+ 
+ #define do_trace_printk(fmt, args...)					\
+@@ -323,6 +332,11 @@ int __trace_printk(unsigned long ip, const char *fmt, ...);
+  */
+ 
+ #define trace_puts(str) ({						\
++	static_assert(ALLOW_TRACE_PRINTK, "trace_puts called.");	\
++	do_trace_puts(str);						\
++})
++
++#define do_trace_puts(str) ({						\
+ 	static const char *trace_printk_fmt __used			\
+ 		__section("__trace_printk_fmt") =			\
+ 		__builtin_constant_p(str) ? str : NULL;			\
+@@ -344,6 +358,7 @@ extern void trace_dump_stack(int skip);
+  */
+ #define ftrace_vprintk(fmt, vargs)					\
+ do {									\
++	static_assert(ALLOW_TRACE_PRINTK, "ftrace_vprintk called.");	\
+ 	if (__builtin_constant_p(fmt)) {				\
+ 		static const char *trace_printk_fmt __used		\
+ 		  __section("__trace_printk_fmt") =			\
+-- 
+2.34.1
+

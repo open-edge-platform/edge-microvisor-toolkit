@@ -1,0 +1,1630 @@
+From 0f29414f79e2de5fb5cce8fa50cfb26b0c829567 Mon Sep 17 00:00:00 2001
+From: Raymond Tan <raymond.tan@intel.com>
+Date: Mon, 27 Apr 2020 03:13:04 +0800
+Subject: [PATCH 16/43] mfd: intel-ehl-gpio: Introduce MFD framework to PSE
+ GPIO/TGPIO
+
+In Elkhart Lake, the PSE GPIO and TGPIO shares the PCI device,
+albeit being accessed at different MMIO BAR offset. Thus, to properly
+register device drivers and enable support of both functionalities,
+we choose Linux MFD framework.
+
+1) intel-ehl-gpio - probe base on the PCI device, and split the resources
+accordingly.
+2) gpio-ehl-pse-plat - platform driver which will register support of
+PSE GPIO (30 pins max per device)
+3) ptp-intel-tgpio-plat - platform driver which will register support of
+PSE TGPIO (20 pins max per device)
+
+Note: BIOS configuration is required to properly assign the pin-mux.
+Note: PSE TGPIO driver is based on Balbi Felipe's original driver.
+Note: PSE GPIO driver is based on Pandith N's original driver.
+
+Signed-off-by: N Pandith <pandith.n@intel.com>
+Signed-off-by: Raymond Tan <raymond.tan@intel.com>
+Signed-off-by: Lakshmi Sowjanya D <lakshmi.sowjanya.d@intel.com>
+---
+ drivers/gpio/Kconfig               |  11 +
+ drivers/gpio/Makefile              |   1 +
+ drivers/gpio/gpio-ehl-pse-plat.c   | 494 ++++++++++++++++++++
+ drivers/mfd/Kconfig                |  12 +
+ drivers/mfd/Makefile               |   1 +
+ drivers/mfd/intel-ehl-gpio.c       | 248 ++++++++++
+ drivers/ptp/Kconfig                |  11 +
+ drivers/ptp/Makefile               |   1 +
+ drivers/ptp/ptp-intel-tgpio-plat.c | 714 +++++++++++++++++++++++++++++
+ include/uapi/linux/ptp_clock.h     |   1 +
+ 10 files changed, 1494 insertions(+)
+ create mode 100644 drivers/gpio/gpio-ehl-pse-plat.c
+ create mode 100644 drivers/mfd/intel-ehl-gpio.c
+ create mode 100644 drivers/ptp/ptp-intel-tgpio-plat.c
+
+diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
+index d93cd4f722b40..037522ec28941 100644
+--- a/drivers/gpio/Kconfig
++++ b/drivers/gpio/Kconfig
+@@ -279,6 +279,17 @@ config GPIO_EN7523
+ 	  Say Y or M here to support the GPIO controller block on the
+ 	  Airoha EN7523 SoC. It supports two banks of 32 GPIOs.
+ 
++config GPIO_EHL_PSE_PLAT
++	tristate "Intel EHL PSE GPIO support as platform MFD"
++	depends on ACPI && X86
++	select GPIOLIB_IRQCHIP
++	help
++	  Enable Intel EHL PSE GPIO support as platform
++	  MFD.
++
++	  Driver for GPIO functionality on Intel Elkhart Lake SoC on
++	  PSE under Host-Owned mode.
++
+ config GPIO_EP93XX
+ 	def_bool y
+ 	depends on ARCH_EP93XX
+diff --git a/drivers/gpio/Makefile b/drivers/gpio/Makefile
+index 1429e8c0229b9..a60db0fe44f54 100644
+--- a/drivers/gpio/Makefile
++++ b/drivers/gpio/Makefile
+@@ -93,6 +93,7 @@ obj-$(CONFIG_GPIO_LP873X)		+= gpio-lp873x.o
+ obj-$(CONFIG_GPIO_LP87565)		+= gpio-lp87565.o
+ obj-$(CONFIG_GPIO_LPC18XX)		+= gpio-lpc18xx.o
+ obj-$(CONFIG_GPIO_LPC32XX)		+= gpio-lpc32xx.o
++obj-$(CONFIG_GPIO_EHL_PSE_PLAT)		+= gpio-ehl-pse-plat.o
+ obj-$(CONFIG_GPIO_MADERA)		+= gpio-madera.o
+ obj-$(CONFIG_GPIO_MAX3191X)		+= gpio-max3191x.o
+ obj-$(CONFIG_GPIO_MAX7300)		+= gpio-max7300.o
+diff --git a/drivers/gpio/gpio-ehl-pse-plat.c b/drivers/gpio/gpio-ehl-pse-plat.c
+new file mode 100644
+index 0000000000000..f597d8cd05902
+--- /dev/null
++++ b/drivers/gpio/gpio-ehl-pse-plat.c
+@@ -0,0 +1,494 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Intel Elkhart Lake PSE GPIO driver
++ *
++ * Copyright (c) 2016 Intel Corporation.
++ * Author: N. Pandith <pandith.n@intel.com>
++ */
++
++#include <linux/acpi.h>
++#include <linux/bitops.h>
++#include <linux/gpio/driver.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/pinctrl/consumer.h>
++#include <linux/pm_runtime.h>
++#include <linux/mfd/core.h>
++
++#define GCCR		0x0000	/* controller configuration */
++#define GPLR		0x0004	/* pin level r/o */
++#define GPDR		0x001c	/* pin direction */
++#define GPSR		0x0034	/* pin set w/o */
++#define GPCR		0x004c	/* pin clear w/o */
++#define GRER		0x0064	/* rising edge detect */
++#define GFER		0x007c	/* falling edge detect */
++#define GFBR		0x0094	/* glitch filter bypass */
++#define GIMR		0x00ac	/* interrupt mask */
++#define GISR		0x00c4	/* interrupt source */
++#define GWMR		0x0100	/* wake mask */
++#define GWSR		0x0118	/* wake source */
++#define GSIR		0x0130	/* secure input */
++
++/* Each Intel EHL PSE GPIO Controller has 30 GPIO pins */
++#define EHL_PSE_NGPIO		30
++
++#define TGPIO_D0I3C 0x2000
++#define TGPIO_CGSR 0x2004
++
++#define TGPIO_D0I3_CIP BIT(0)
++#define TGPIO_D0I3_EN BIT(2)
++#define TGPIO_D0I3_RR BIT(3)
++#define TGPIO_CGSR_CG BIT(16)
++
++struct ehl_pse_gpio_context {
++	u32 gplr;
++	u32 gpdr;
++	u32 grer;
++	u32 gfer;
++	u32 gimr;
++	u32 gwmr;
++};
++
++struct ehl_pse_gpio {
++	struct gpio_chip		chip;
++	void __iomem			*reg_base;
++	raw_spinlock_t			lock;
++	struct device			*dev;
++	struct ehl_pse_gpio_context	*ctx;
++};
++
++static inline u32 intel_gpio_readl(void __iomem *base, u32 offset)
++{
++	return readl(base + offset);
++}
++
++static inline void intel_gpio_writel(void __iomem *base, u32 offset, u32 value)
++{
++	writel(value, base + offset);
++}
++
++static int ehl_pse_gpio_request(struct gpio_chip *chip, unsigned int offset)
++{
++	/* increase runtime_usage counter */
++	pm_runtime_get_sync(chip->parent);
++	return 0;
++}
++
++static void ehl_pse_gpio_free(struct gpio_chip *chip, unsigned int offset)
++{
++	/* decrease runtime_usage counter */
++	pm_runtime_put_sync(chip->parent);
++}
++
++static void __iomem *gpio_reg(struct gpio_chip *chip, unsigned int offset,
++				unsigned int reg_type_offset)
++{
++	struct ehl_pse_gpio *priv = gpiochip_get_data(chip);
++	u8 reg = offset / 32;
++
++	return priv->reg_base + reg_type_offset + reg * 4;
++}
++
++static int ehl_pse_gpio_get(struct gpio_chip *chip, unsigned int offset)
++{
++	struct ehl_pse_gpio *priv = gpiochip_get_data(chip);
++	u32 reg_gplr;
++
++	reg_gplr = intel_gpio_readl(priv->reg_base, GPLR);
++
++	return !!(reg_gplr & BIT(offset));
++}
++
++static void ehl_pse_gpio_set(struct gpio_chip *chip, unsigned int offset,
++				int value)
++{
++	struct ehl_pse_gpio *priv = gpiochip_get_data(chip);
++	unsigned long flags;
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	if (value)
++		intel_gpio_writel(priv->reg_base, GPSR, BIT(offset));
++
++	else
++		intel_gpio_writel(priv->reg_base, GPCR, BIT(offset));
++
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++}
++
++static int ehl_pse_gpio_direction_input(struct gpio_chip *chip,
++					unsigned int offset)
++{
++	struct ehl_pse_gpio *priv = gpiochip_get_data(chip);
++	unsigned long flags;
++	u32 value;
++
++	pm_runtime_get_sync(priv->dev->parent);
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	value = intel_gpio_readl(priv->reg_base, GPDR);
++	value &= ~BIT(offset);
++	intel_gpio_writel(priv->reg_base, GPDR, value);
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++
++	pm_runtime_put(priv->dev->parent);
++
++	return 0;
++}
++
++static int ehl_pse_gpio_direction_output(struct gpio_chip *chip,
++					unsigned int offset, int value)
++{
++	struct ehl_pse_gpio *priv = gpiochip_get_data(chip);
++	unsigned long flags;
++
++	pm_runtime_get_sync(priv->dev->parent);
++
++	ehl_pse_gpio_set(chip, offset, value);
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	value = intel_gpio_readl(priv->reg_base, GPDR);
++	value |= BIT(offset);
++	intel_gpio_writel(priv->reg_base, GPDR, value);
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++
++	pm_runtime_put(priv->dev->parent);
++
++	return 0;
++}
++
++static int ehl_pse_gpio_get_direction(struct gpio_chip *chip,
++			unsigned int offset)
++{
++	struct ehl_pse_gpio *priv = gpiochip_get_data(chip);
++	int direction = 0;
++
++	pm_runtime_get_sync(priv->dev->parent);
++
++	u32 reg_gpdr = intel_gpio_readl(priv->reg_base, GPDR);
++
++	direction = !(reg_gpdr & BIT(offset));
++
++	pm_runtime_put(priv->dev->parent);
++
++	return direction;
++}
++
++static void ehl_pse_irq_ack(struct irq_data *d)
++{
++	struct ehl_pse_gpio *priv = irq_data_get_irq_chip_data(d);
++	u32 gpio = irqd_to_hwirq(d);
++	void __iomem *gisr = gpio_reg(&priv->chip, gpio, GISR);
++	unsigned long flags;
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	writel(BIT(gpio % 32), gisr);
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++}
++
++static void ehl_pse_irq_unmask_mask(struct irq_data *d, bool unmask)
++{
++	struct ehl_pse_gpio *priv = irq_data_get_irq_chip_data(d);
++	u32 gpio = irqd_to_hwirq(d);
++	void __iomem *gimr = gpio_reg(&priv->chip, gpio, GIMR);
++	unsigned long flags;
++	u32 value;
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	if (unmask)
++		value = readl(gimr) | BIT(gpio % 32);
++	else
++		value = readl(gimr) & ~BIT(gpio % 32);
++	writel(value, gimr);
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++}
++
++static void ehl_pse_irq_mask(struct irq_data *d)
++{
++	ehl_pse_irq_unmask_mask(d, false);
++}
++
++static void ehl_pse_irq_unmask(struct irq_data *d)
++{
++	ehl_pse_irq_unmask_mask(d, true);
++}
++
++static int ehl_pse_irq_set_type(struct irq_data *d, unsigned int type)
++{
++	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
++	struct ehl_pse_gpio *priv = gpiochip_get_data(gc);
++	u32 gpio = irqd_to_hwirq(d);
++	void __iomem *grer = gpio_reg(&priv->chip, gpio, GRER);
++	void __iomem *gfer = gpio_reg(&priv->chip, gpio, GFER);
++	unsigned long flags;
++	u32 value;
++
++	pm_runtime_get_sync(priv->dev->parent);
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	if (type & IRQ_TYPE_EDGE_RISING)
++		value = readl(grer) | BIT(gpio % 32);
++	else
++		value = readl(grer) & ~BIT(gpio % 32);
++	writel(value, grer);
++
++	if (type & IRQ_TYPE_EDGE_FALLING)
++		value = readl(gfer) | BIT(gpio % 32);
++	else
++		value = readl(gfer) & ~BIT(gpio % 32);
++	writel(value, gfer);
++
++	/* We only support edge IRQs */
++	if (type & IRQ_TYPE_EDGE_BOTH)
++		irq_set_handler_locked(d, handle_edge_irq);
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++
++	pm_runtime_put(priv->dev->parent);
++
++	return 0;
++}
++
++static int ehl_pse_irq_set_wake(struct irq_data *d, unsigned int on)
++{
++	struct gpio_chip *gc = irq_data_get_irq_chip_data(d);
++	struct ehl_pse_gpio *priv = gpiochip_get_data(gc);
++	u32 gpio = irqd_to_hwirq(d);
++	void __iomem *gwmr = gpio_reg(&priv->chip, gpio, GWMR);
++	void __iomem *gwsr = gpio_reg(&priv->chip, gpio, GWSR);
++	unsigned long flags;
++	u32 value;
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	/* Clear the existing wake status */
++	writel(BIT(gpio % 32), gwsr);
++
++	if (on)
++		value = readl(gwmr) | BIT(gpio % 32);
++	else
++		value = readl(gwmr) & ~BIT(gpio % 32);
++	writel(value, gwmr);
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++
++	dev_dbg(priv->dev, "%sable wake for gpio %u\n", on ?
++			"en" : "dis", gpio);
++	return 0;
++}
++
++static struct irq_chip ehl_pse_irqchip = {
++	.name		= "gpi-ehl-pse",
++	.irq_ack	= ehl_pse_irq_ack,
++	.irq_mask	= ehl_pse_irq_mask,
++	.irq_unmask	= ehl_pse_irq_unmask,
++	.irq_set_type	= ehl_pse_irq_set_type,
++	.irq_set_wake	= ehl_pse_irq_set_wake,
++};
++
++
++
++static void ehl_pse_irq_handler(struct irq_desc *desc)
++{
++
++	struct gpio_chip *gc = irq_desc_get_handler_data(desc);
++	struct irq_chip *irqchip = irq_desc_get_chip(desc);
++	struct ehl_pse_gpio *priv = gpiochip_get_data(gc);
++	unsigned long base, gpio;
++
++	chained_irq_enter(irqchip, desc);
++
++	for (base = 0; base < priv->chip.ngpio; base += 32) {
++		void __iomem *gisr = gpio_reg(&priv->chip, base, GISR);
++		void __iomem *gimr = gpio_reg(&priv->chip, base, GIMR);
++		unsigned long pending, enabled;
++
++		pending = readl(gisr);
++		enabled = readl(gimr);
++
++		/* Only interrupts that are enabled */
++		pending &= enabled;
++
++		if (pending) {
++			for_each_set_bit(gpio, &pending, 32) {
++				unsigned int irq =
++					irq_find_mapping(gc->irq.domain, gpio);
++
++				generic_handle_irq(irq);
++			}
++		}
++	}
++
++	chained_irq_exit(irqchip, desc);
++}
++
++static int ehl_pse_irq_init_hw(struct gpio_chip *chip)
++{
++	void __iomem *reg;
++	unsigned int base;
++
++	for (base = 0; base < chip->ngpio; base += 32) {
++		/* Clear the interrupt-mask register */
++		reg = gpio_reg(chip, base, GIMR);
++		writel(0, reg);
++		/* Clear the interrupt-source register */
++		reg = gpio_reg(chip, base, GISR);
++		writel(0, reg);
++		/* Clear the rising-edge detect register */
++		reg = gpio_reg(chip, base, GRER);
++		writel(0, reg);
++		/* Clear the rising-edge detect register */
++		reg = gpio_reg(chip, base, GRER);
++		writel(0, reg);
++	}
++	return 0;
++}
++
++static int ehl_pse_gpio_probe(struct platform_device *pdev)
++{
++	struct gpio_irq_chip *girq;
++	struct ehl_pse_gpio *priv;
++	struct resource *res;
++	void __iomem *base;
++	u32 irq;
++	int ret;
++
++	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	priv->ctx = devm_kzalloc(&pdev->dev, sizeof(*priv->ctx), GFP_KERNEL);
++	if (!priv->ctx)
++		return -ENOMEM;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return NULL;
++
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0)
++		return NULL;
++
++	priv->dev = &pdev->dev;
++	priv->reg_base = devm_ioremap_resource(&pdev->dev, res);
++
++	priv->chip.label = dev_name(&pdev->dev);
++	priv->chip.parent = &pdev->dev;
++	priv->chip.request = ehl_pse_gpio_request;
++	priv->chip.free = ehl_pse_gpio_free;
++	priv->chip.direction_input = ehl_pse_gpio_direction_input;
++	priv->chip.direction_output = ehl_pse_gpio_direction_output;
++	priv->chip.get = ehl_pse_gpio_get;
++	priv->chip.set = ehl_pse_gpio_set;
++	priv->chip.get_direction = ehl_pse_gpio_get_direction;
++	priv->chip.base = -1;
++	/* 30 pins only per instance according to spec */
++	priv->chip.ngpio = EHL_PSE_NGPIO;
++	priv->chip.can_sleep = false;
++	priv->chip.add_pin_ranges = NULL;
++
++	raw_spin_lock_init(&priv->lock);
++
++	girq = &priv->chip.irq;
++	girq->chip = &ehl_pse_irqchip;
++	girq->init_hw = ehl_pse_irq_init_hw;
++	girq->parent_handler = ehl_pse_irq_handler;
++	girq->num_parents = 1;
++	girq->parents = devm_kcalloc(&pdev->dev, girq->num_parents,
++				sizeof(*girq->parents), GFP_KERNEL);
++	if (!girq->parents)
++		return -ENOMEM;
++
++	girq->parents[0] = irq;
++	girq->first = 0;
++	girq->default_type = IRQ_TYPE_NONE;
++	girq->handler = handle_bad_irq;
++
++	platform_set_drvdata(pdev, priv);
++
++	ret = devm_gpiochip_add_data(&pdev->dev, &priv->chip, priv);
++	if (ret) {
++		dev_err(&pdev->dev, "gpiochip_add error %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int ehl_pse_gpio_remove(struct platform_device *pdev)
++{
++	return 0;
++}
++
++static int ehl_pse_gpio_suspend(struct device *dev)
++{
++	struct ehl_pse_gpio *priv = dev_get_drvdata(dev);
++	struct ehl_pse_gpio_context *ctx = priv->ctx;
++	unsigned long flags;
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	ctx->gplr = intel_gpio_readl(priv->reg_base, GPLR);
++	ctx->gpdr = intel_gpio_readl(priv->reg_base, GPDR);
++	ctx->grer = intel_gpio_readl(priv->reg_base, GRER);
++	ctx->gfer = intel_gpio_readl(priv->reg_base, GFER);
++	ctx->gimr = intel_gpio_readl(priv->reg_base, GIMR);
++	ctx->gwmr = intel_gpio_readl(priv->reg_base, GWMR);
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++
++	return 0;
++}
++
++static int ehl_pse_gpio_resume(struct device *dev)
++{
++	struct ehl_pse_gpio *priv = dev_get_drvdata(dev);
++	struct ehl_pse_gpio_context *ctx = priv->ctx;
++	unsigned long flags;
++
++	raw_spin_lock_irqsave(&priv->lock, flags);
++
++	/* GPLR is RO, values read will restore using GPSR */
++	intel_gpio_writel(priv->reg_base, GPSR, ctx->gplr);
++	intel_gpio_writel(priv->reg_base, GPDR, ctx->gpdr);
++	intel_gpio_writel(priv->reg_base, GRER, ctx->grer);
++	intel_gpio_writel(priv->reg_base, GFER, ctx->gfer);
++	intel_gpio_writel(priv->reg_base, GIMR, ctx->gimr);
++	intel_gpio_writel(priv->reg_base, GWMR, ctx->gwmr);
++
++	raw_spin_unlock_irqrestore(&priv->lock, flags);
++
++	return 0;
++}
++
++static SIMPLE_DEV_PM_OPS(ehl_pse_gpio_pm_ops, ehl_pse_gpio_suspend,
++			 ehl_pse_gpio_resume);
++
++
++static struct platform_driver ehl_pse_gpio_driver = {
++	.driver		= {
++		.name		= "gpio-ehl-pse",
++		.pm	= &ehl_pse_gpio_pm_ops,
++	},
++	.probe		= ehl_pse_gpio_probe,
++	.remove		= ehl_pse_gpio_remove,
++};
++
++module_platform_driver(ehl_pse_gpio_driver);
++
++MODULE_AUTHOR("N. Pandith <pandith.n@intel.com>");
++MODULE_DESCRIPTION("Intel Elkhart Lake PSE GPIO driver");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:gpio-ehl-pse");
+diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
+index f9325bcce1b94..fd7a3460a8702 100644
+--- a/drivers/mfd/Kconfig
++++ b/drivers/mfd/Kconfig
+@@ -597,6 +597,18 @@ config MFD_INTEL_QUARK_I2C_GPIO
+ 	  their respective IO driver.
+ 	  The GPIO exports a total amount of 8 interrupt-capable GPIOs.
+ 
++config MFD_INTEL_EHL_PSE_GPIO
++	tristate "Intel Elkhart Lake PSE GPIO MFD"
++	depends on PCI
++	depends on X86
++	select MFD_CORE
++	help
++	  This MFD provides support for GPIO and TGPIO that exist only
++	  in a signle PCI device.
++
++	  IT splits the 2 IO devices to their
++	  respective drivers.
++
+ config LPC_ICH
+ 	tristate "Intel ICH LPC"
+ 	depends on PCI
+diff --git a/drivers/mfd/Makefile b/drivers/mfd/Makefile
+index 2a9f91e81af83..16a2e26bd5201 100644
+--- a/drivers/mfd/Makefile
++++ b/drivers/mfd/Makefile
+@@ -196,6 +196,7 @@ obj-$(CONFIG_PMIC_ADP5520)	+= adp5520.o
+ obj-$(CONFIG_MFD_ADP5585)	+= adp5585.o
+ obj-$(CONFIG_MFD_KEMPLD)	+= kempld-core.o
+ obj-$(CONFIG_MFD_INTEL_QUARK_I2C_GPIO)	+= intel_quark_i2c_gpio.o
++obj-$(CONFIG_MFD_INTEL_EHL_PSE_GPIO)	+= intel-ehl-gpio.o
+ obj-$(CONFIG_LPC_SCH)		+= lpc_sch.o
+ obj-$(CONFIG_LPC_ICH)		+= lpc_ich.o
+ obj-$(CONFIG_MFD_RDC321X)	+= rdc321x-southbridge.o
+diff --git a/drivers/mfd/intel-ehl-gpio.c b/drivers/mfd/intel-ehl-gpio.c
+new file mode 100644
+index 0000000000000..c1bcb88397462
+--- /dev/null
++++ b/drivers/mfd/intel-ehl-gpio.c
+@@ -0,0 +1,248 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Intel Multi-Functional driver for Elkhart Lake -
++ * Programmable Service Engine (PSE) GPIO & TGPIO Functions
++ *
++ * Copyright(c) 2022 Intel Corporation.
++ *
++ * Intel Elkhart Lake PSE has 2 PCI devices which exposes 2 different
++ * functions of GPIO and Timed-GPIO based on the BIOS configurations
++ * and exposes the programmability through different offset from the
++ * MMIO BAR of the PCI device.
++ */
++
++#include <linux/device.h>
++#include <linux/kernel.h>
++#include <linux/mfd/core.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/pm_runtime.h>
++
++#define PSE_GPIO_OFFSET		0x0000
++#define PSE_TGPIO_OFFSET	0x1000
++#define PSE_PRIV_OFFSET		0x2000
++#define PSE_GPIO_SIZE		0x134
++#define PSE_TGPIO_SIZE		0x6B0
++#define PSE_PRIV_SIZE		0x8
++
++#define PSE_GPIO_D0I3C		1000
++#define PSE_GPIO_CGSR		1004
++#define PSE_GPIO_D0I3_CIP	BIT(0)
++#define PSE_GPIO_D0I3_IR	BIT(1)
++#define PSE_GPIO_D0I3_EN	BIT(2)
++#define PSE_GPIO_D0I3_RR	BIT(3)
++#define PSE_GPIO_CGSR_CG	BIT(16)
++
++static struct resource intel_ehl_pse_gpio_resources[] = {
++	DEFINE_RES_MEM(PSE_GPIO_OFFSET, PSE_GPIO_SIZE),
++	DEFINE_RES_IRQ(0),
++};
++
++static struct resource intel_ehl_pse_tgpio_resources[] = {
++	DEFINE_RES_MEM(PSE_TGPIO_OFFSET, PSE_TGPIO_SIZE),
++	DEFINE_RES_IRQ(1),
++};
++
++struct intel_ehl_pse_gpio_data {
++	struct resource *mem;
++	int irq;
++	struct device *dev;
++	void __iomem *priv;
++};
++
++struct intel_ehl_pse_gpio_priv {
++	const struct intel_ehl_pse_gpio_data *info; // array for gpio & tgpio
++
++	struct mfd_cell *cell; // array for gpio & tgpio
++};
++
++static struct mfd_cell intel_ehl_pse_gpio_mfd_devs[] = {
++	{
++		.name = "gpio-ehl-pse",
++		.num_resources = ARRAY_SIZE(intel_ehl_pse_gpio_resources),
++		.resources = intel_ehl_pse_gpio_resources,
++		.ignore_resource_conflicts = true,
++	},
++	{
++		.name = "intel-ehl-tgpio",
++		.num_resources = ARRAY_SIZE(intel_ehl_pse_tgpio_resources),
++		.resources = intel_ehl_pse_tgpio_resources,
++		.ignore_resource_conflicts = true,
++	},
++};
++
++
++static int intel_ehl_pse_gpio_mfd_probe(struct pci_dev *pci,
++					const struct pci_device_id *id)
++{
++	struct intel_ehl_pse_gpio_data *pdata;
++	int ret;
++
++	pdata = devm_kzalloc(&pci->dev, sizeof(*pdata), GFP_KERNEL);
++	if (!pdata)
++		return -ENOMEM;
++
++	ret = pcim_enable_device(pci);
++	if (ret)
++		return ret;
++
++	pci_set_master(pci);
++
++	ret = pci_alloc_irq_vectors(pci, 2, 2, PCI_IRQ_ALL_TYPES);
++	if (ret < 0)
++		return ret;
++
++	pdata->irq = pci_irq_vector(pci, 0);
++	pdata->mem = &pci->resource[0];
++
++	pdata->priv = devm_ioremap(&pci->dev, pdata->mem->start +
++			PSE_PRIV_OFFSET, PSE_PRIV_SIZE);
++	if (!pdata->priv)
++		return -ENOMEM;
++
++	pci_set_drvdata(pci, pdata);
++
++	ret = mfd_add_devices(&pci->dev, PLATFORM_DEVID_AUTO,
++			intel_ehl_pse_gpio_mfd_devs,
++			ARRAY_SIZE(intel_ehl_pse_gpio_mfd_devs),
++			pdata->mem, pdata->irq, NULL);
++
++	pm_runtime_set_autosuspend_delay(&pci->dev, 1000);
++	pm_runtime_use_autosuspend(&pci->dev);
++	pm_runtime_put_autosuspend(&pci->dev);
++	pm_runtime_allow(&pci->dev);
++
++	return 0;
++}
++
++static void intel_ehl_pse_gpio_mfd_remove(struct pci_dev *pci)
++{
++	pm_runtime_forbid(&pci->dev);
++	pm_runtime_get_noresume(&pci->dev);
++}
++
++#ifdef CONFIG_PM_SLEEP
++static int intel_ehl_pse_gpio_mfd_suspend(struct device *dev)
++{
++	struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);
++	struct intel_ehl_pse_gpio_data	*pdata = pci_get_drvdata(pdev);
++	u32 d0i3c_reg, cgsr_reg = 0;
++
++	d0i3c_reg = readl(pdata->priv + PSE_GPIO_D0I3C);
++	cgsr_reg = readl(pdata->priv + PSE_GPIO_CGSR);
++
++	/* enable D0i3 BIT(2) & disable interrupt BIT(1)*/
++	d0i3c_reg |= PSE_GPIO_D0I3_EN;
++	d0i3c_reg &= ~PSE_GPIO_D0I3_IR;
++
++	/* enable clock gating BIT(16)*/
++	cgsr_reg |= PSE_GPIO_CGSR_CG;
++
++	writel(d0i3c_reg, pdata->priv + PSE_GPIO_D0I3C);
++	writel(cgsr_reg, pdata->priv + PSE_GPIO_CGSR);
++
++	return 0;
++}
++
++static int intel_ehl_pse_gpio_mfd_resume(struct device *dev)
++{
++	struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);
++	struct intel_ehl_pse_gpio_data	*pdata = pci_get_drvdata(pdev);
++	u32 d0i3c_reg, cgsr_reg = 0;
++	struct timespec64 *ts;
++
++	ts = devm_kzalloc(dev, sizeof(*ts), GFP_KERNEL);
++
++	d0i3c_reg = readl(pdata->priv + PSE_GPIO_D0I3C);
++	cgsr_reg = readl(pdata->priv + PSE_GPIO_CGSR);
++
++	/* disable D0i3 BIT(2) & disable interrupt BIT(1)*/
++	d0i3c_reg &= ~(PSE_GPIO_D0I3_IR | PSE_GPIO_D0I3_EN);
++
++	/* disable clock gating BIT(16)*/
++	cgsr_reg &= ~PSE_GPIO_CGSR_CG;
++
++	writel(d0i3c_reg, pdata->priv + PSE_GPIO_D0I3C);
++	writel(cgsr_reg, pdata->priv + PSE_GPIO_CGSR);
++
++	return 0;
++}
++#endif
++
++#ifdef CONFIG_PM
++static int intel_ehl_pse_gpio_mfd_runtime_suspend(struct device *dev)
++{
++	struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);
++	struct intel_ehl_pse_gpio_data	*pdata = pci_get_drvdata(pdev);
++	u32 d0i3c_reg, cgsr_reg = 0;
++
++	d0i3c_reg = readl(pdata->priv + PSE_GPIO_D0I3C);
++	cgsr_reg = readl(pdata->priv + PSE_GPIO_CGSR);
++
++	/* enable D0i3 BIT(2) & disable interrupt BIT(1)*/
++	d0i3c_reg |= PSE_GPIO_D0I3_EN;
++	d0i3c_reg &= ~PSE_GPIO_D0I3_IR;
++
++	/* enable clock gating BIT(16)*/
++	cgsr_reg |= PSE_GPIO_CGSR_CG;
++
++	writel(d0i3c_reg, pdata->priv + PSE_GPIO_D0I3C);
++	writel(cgsr_reg, pdata->priv + PSE_GPIO_CGSR);
++
++	return 0;
++}
++
++static int intel_ehl_pse_gpio_mfd_runtime_resume(struct device *dev)
++{
++	struct pci_dev *pdev = container_of(dev, struct pci_dev, dev);
++	struct intel_ehl_pse_gpio_data	*pdata = pci_get_drvdata(pdev);
++	u32 d0i3c_reg, cgsr_reg = 0;
++	struct timespec64 *ts;
++
++	ts = devm_kzalloc(dev, sizeof(*ts), GFP_KERNEL);
++
++	d0i3c_reg = readl(pdata->priv + PSE_GPIO_D0I3C);
++	cgsr_reg = readl(pdata->priv + PSE_GPIO_CGSR);
++
++	/* disable D0i3 BIT(2) & disable interrupt BIT(1)*/
++	d0i3c_reg &= ~(PSE_GPIO_D0I3_IR | PSE_GPIO_D0I3_EN);
++
++	/* disable clock gating BIT(16)*/
++	cgsr_reg &= ~PSE_GPIO_CGSR_CG;
++
++	writel(d0i3c_reg, pdata->priv + PSE_GPIO_D0I3C);
++	writel(cgsr_reg, pdata->priv + PSE_GPIO_CGSR);
++
++	return 0;
++}
++#endif
++
++static const struct dev_pm_ops intel_ehl_pse_gpio_mfd_pm_ops = {
++	SET_RUNTIME_PM_OPS(intel_ehl_pse_gpio_mfd_runtime_suspend,
++			   intel_ehl_pse_gpio_mfd_runtime_resume, NULL)
++	SET_SYSTEM_SLEEP_PM_OPS(intel_ehl_pse_gpio_mfd_suspend,
++				intel_ehl_pse_gpio_mfd_resume)
++};
++
++static const struct pci_device_id intel_ehl_pse_gpio_mfd_ids[] = {
++	{ PCI_VDEVICE(INTEL, 0x4b88), NULL},
++	{ PCI_VDEVICE(INTEL, 0x4b89), NULL},
++	{ },
++};
++MODULE_DEVICE_TABLE(pci, intel_ehl_pse_gpio_mfd_ids);
++
++static struct pci_driver intel_ehl_pse_gpio_mfd_driver = {
++	.name		= "intel_ehl_pse_gpio_mfd",
++	.id_table	= intel_ehl_pse_gpio_mfd_ids,
++	.probe		= intel_ehl_pse_gpio_mfd_probe,
++	.remove		= intel_ehl_pse_gpio_mfd_remove,
++	.driver = {
++		.pm = &intel_ehl_pse_gpio_mfd_pm_ops,
++	},
++};
++
++module_pci_driver(intel_ehl_pse_gpio_mfd_driver);
++
++MODULE_AUTHOR("Raymond Tan <raymond.tan@intel.com>");
++MODULE_DESCRIPTION("Intel MFD Driver for Elkhart Lake PSE TGPIO/GPIO");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/ptp/Kconfig b/drivers/ptp/Kconfig
+index 7faedb945e226..147d1f14e076b 100644
+--- a/drivers/ptp/Kconfig
++++ b/drivers/ptp/Kconfig
+@@ -119,6 +119,17 @@ config PTP_1588_CLOCK_PCH
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called ptp_pch.
+ 
++config PTP_INTEL_TGPIO_PLAT
++	tristate "Intel Timed GPIO Platform Driver"
++	depends on X86
++	imply PTP_1588_CLOCK
++	help
++	  This driver adds support for Intel Timed-Aware GPIO (TGPIO)
++	  Controller as MFD Cell.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called ptp-intel-tgpio-plat.
++
+ config PTP_INTEL_PMC_TGPIO
+ 	tristate "Intel PMC Timed GPIO"
+ 	depends on X86
+diff --git a/drivers/ptp/Makefile b/drivers/ptp/Makefile
+index 76409bd9e4475..07bb054ee1825 100644
+--- a/drivers/ptp/Makefile
++++ b/drivers/ptp/Makefile
+@@ -22,3 +22,4 @@ obj-$(CONFIG_PTP_1588_CLOCK_VMW)	+= ptp_vmw.o
+ obj-$(CONFIG_PTP_1588_CLOCK_OCP)	+= ptp_ocp.o
+ obj-$(CONFIG_PTP_DFL_TOD)		+= ptp_dfl_tod.o
+ obj-$(CONFIG_PTP_INTEL_PMC_TGPIO)	+= ptp-intel-pmc-tgpio.o
++obj-$(CONFIG_PTP_INTEL_TGPIO_PLAT)	+= ptp-intel-tgpio-plat.o
+diff --git a/drivers/ptp/ptp-intel-tgpio-plat.c b/drivers/ptp/ptp-intel-tgpio-plat.c
+new file mode 100644
+index 0000000000000..94adfe74ad7d9
+--- /dev/null
++++ b/drivers/ptp/ptp-intel-tgpio-plat.c
+@@ -0,0 +1,714 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Intel Timed GPIO Controller Driver
++ *
++ * Copyright (C) 2022 Intel Corporation
++ * Author: Felipe Balbi <felipe.balbi@linux.intel.com>
++ */
++
++#include <linux/acpi.h>
++#include <linux/bitops.h>
++#include <linux/io-64-nonatomic-lo-hi.h>
++#include <linux/interrupt.h>
++#include <linux/mfd/core.h>
++#include <linux/module.h>
++#include <linux/pm_runtime.h>
++#include <linux/ptp_clock_kernel.h>
++#include <linux/spinlock.h>
++
++#define TGPIOCTL(n)		(((n) * 0x40) + 0x00)
++#define TGPIOCOMPV31_0(n)	(((n) * 0x40) + 0x04)
++#define TGPIOCOMPV63_32(n)	(((n) * 0x40) + 0x08)
++#define TGPIOPIV31_0(n)		(((n) * 0x40) + 0x0c)
++#define TGPIOPIV63_32(n)	(((n) * 0x40) + 0x10)
++#define TGPIOTCV31_0(n)		(((n) * 0x40) + 0x14)
++#define TGPIOTCV63_32(n)	(((n) * 0x40) + 0x18)
++#define TGPIOECCV31_0(n)	(((n) * 0x40) + 0x1c)
++#define TGPIOECCV63_32(n)	(((n) * 0x40) + 0x20)
++#define TGPIOEC31_0(n)		(((n) * 0x40) + 0x24)
++#define TGPIOEC63_32(n)		(((n) * 0x40) + 0x28)
++
++#define TGPIOINTRCTL		0x0500
++#define TGPIORIS		0x0504
++#define TGPIOMSC		0x0508
++#define TGPIOMIS		0x050c
++#define TGPIOICR		0x0510
++#define TGPIO_CLK_SEL		0x0514
++#define TGPIO_TS_SEL_0		0x0520
++#define TGPIO_TS_SEL_1		0x0524
++#define TMT_CLK_SEL		0x0528
++#define TGPIO_TSC_CTL		0x0530
++#define TGPIO_TSC_STATUS	0x0534
++#define TMTCTL_TSG		0x0600
++#define TMTR_TSG		0x0604
++#define TMTL_TSG		0x0608
++#define TMTH_TSG		0x060C
++#define TIMINCA_TSG		0x0610
++#define TIMADJ_TSG		0x0614
++#define LXTS_TMT_LOW_TSG	0x0618
++#define LXTS_TMT_HIGH_TSG	0x061C
++#define LXTS_ART_LOW_TSG	0x0620
++#define LXTS_ART_HIGH_TSG	0x0624
++#define RXTS_TMT_LOW_TSG	0x0628
++#define RXTS_TMT_HIGH_TSG	0x062C
++#define TMTCTL_GLOBAL		0x0640
++#define TMTR_GLOBAL		0x0644
++#define TMTL_GLOBAL		0x0648
++#define TMTH_GLOBAL		0x064C
++#define TIMINCA_GLOBAL		0x0650
++#define TIMADJ_GLOBAL		0x0654
++#define LXTS_TMT_LOW_GLOBAL	0x0658
++#define LXTS_TMT_HIGH_GLOBAL	0x065C
++#define LXTS_ART_LOW_GLOBAL	0x0660
++#define LXTS_ART_HIGH_GLOBAL	0x0664
++#define RXTS_TMT_LOW_GLOBAL	0x0668
++#define RXTS_TMT_HIGH_GLOBAL	0x066C
++#define TMTCTL_WORKING		0x0680
++#define TMTR_WORKING		0x0684
++#define TMTL_WORKING		0x0688
++#define TMTH_WORKING		0x068C
++#define TIMINCA_WORKING		0x0690
++#define TIMADJ_WORKING		0x0694
++#define LXTS_TMT_LOW_WORKING	0x0698
++#define LXTS_TMT_HIGH_WORKING	0x069C
++#define LXTS_ART_LOW_WORKING	0x06A0
++#define LXTS_ART_HIGH_WORKING	0x06A4
++#define RXTS_TMT_LOW_WORKING	0x06A8
++#define RXTS_TMT_HIGH_WORKING	0x06AC
++
++/* Control Register */
++#define TGPIOCTL_EN		BIT(0)
++#define TGPIOCTL_DIR		BIT(1)
++#define TGPIOCTL_EP		GENMASK(3, 2)
++#define TGPIOCTL_EP_RISING_EDGE	(0 << 2)
++#define TGPIOCTL_EP_FALLING_EDGE (1 << 2)
++#define TGPIOCTL_EP_TOGGLE_EDGE	(2 << 2)
++#define TGPIOCTL_PM		BIT(4)
++#define TGPIOCTL_PWS		GENMASK(8, 5)
++#define TGPIOCTL_PWS_N(n)	(((n) & 0xf) << 5)
++#define TGPIOCTL_ICS		BIT(9)
++#define TGPIOCTL_TSCS		BIT(10)
++#define TGPIOCTL_OEC		BIT(12)
++#define TGPIOCTL_FIT		BIT(13)
++#define TGPIOCTL_IEC		GENMASK(15, 14)
++#define TGPIOCTL_IEC_EC		BIT(14)
++#define TGPIOCTL_ECC		BIT(16)
++#define TGPIOCTL_PSL		GENMASK(24, 17)
++#define TGPIOCTL_TS		GENMASK(29, 28)
++#define TGPIOCTL_TS_TMT0	(0 << 28)
++#define TGPIOCTL_TS_TMT1	(1 << 28)
++#define TGPIOCTL_TS_TMT2	(2 << 28)
++#define TGPIOCTL_TS_LART	(3 << 28)
++
++/* Timed GPIO Interrupt Status/Mask/Clear registers */
++#define TGPIOINT_TMT_NSEC_WRAP_GLOBAL	BIT(25)
++#define TGPIOINT_TMT_NSEC_WRAP_WORKING	BIT(24)
++#define TGPIOINT_TMT_NSEC_WRAP_TSG	BIT(23)
++#define TGPIOINT_TADJ_TMT_GLOBAL_CMPLT	BIT(22)
++#define TGPIOINT_TADJ_TMT_WORKING_CMPLT	BIT(21)
++#define TGPIOINT_TADJ_TMT_TSG_CMPLT	BIT(20)
++#define TGPIOINT_EVENT_INTERRUPT(n)	BIT((n))
++
++/* Tunable Monotonous Timer Control Register */
++#define TMTCTL_TMT_ENABLE	BIT(0)
++
++#define NSECS_PER_SEC		1000000000
++#define TGPIO_MAX_ADJ_TIME	999999900
++
++#define TGPIO_MAX_PIN		20
++
++#define TGPIO_D0I3C		1000
++#define TGPIO_CGSR		1004
++#define TGPIO_D0I3_CIP		BIT(0)
++#define TGPIO_D0I3_IR		BIT(1)
++#define TGPIO_D0I3_EN		BIT(2)
++#define TGPIO_D0I3_RR		BIT(3)
++#define TGPIO_CGSR_CG		BIT(16)
++
++struct intel_tgpio {
++	struct ptp_clock_info	info;
++	struct ptp_clock	*clock;
++
++	spinlock_t		lock;
++	struct device		*dev;
++	void __iomem		*base;
++
++	u32			irq_status;
++	u32			irq_mask;
++
++	u32			pin_state[TGPIO_MAX_PIN];
++	u32			saved_ctl_regs[TGPIO_MAX_PIN];
++	u64			saved_piv_regs[TGPIO_MAX_PIN];
++};
++#define to_intel_tgpio(i)	(container_of((i), struct intel_tgpio, info))
++
++static inline u64 to_intel_tgpio_time(struct ptp_clock_time *t)
++{
++	return t->sec * NSECS_PER_SEC + t->nsec;
++}
++
++static inline u64 intel_tgpio_readq(void __iomem *base, u32 offset)
++{
++	return lo_hi_readq(base + offset);
++}
++
++static inline void intel_tgpio_writeq(void __iomem *base, u32 offset, u64 v)
++{
++	return lo_hi_writeq(v, base + offset);
++}
++
++static inline u32 intel_tgpio_readl(void __iomem *base, u32 offset)
++{
++	return readl(base + offset);
++}
++
++static inline void intel_tgpio_writel(void __iomem *base, u32 offset, u32 value)
++{
++	writel(value, base + offset);
++}
++
++static void intel_tgpio_get_time(struct intel_tgpio *tgpio,
++		struct timespec64 *ts)
++{
++	(void) intel_tgpio_readl(tgpio->base, TMTR_TSG);
++	ts->tv_nsec = intel_tgpio_readl(tgpio->base, TMTL_TSG);
++	ts->tv_sec = intel_tgpio_readl(tgpio->base, TMTH_TSG);
++}
++
++static void intel_tgpio_set_time(struct intel_tgpio *tgpio,
++		const struct timespec64 *ts)
++{
++	/* Disable TMT0 */
++	intel_tgpio_writel(tgpio->base, TMTCTL_TSG, 0x00);
++
++	intel_tgpio_writel(tgpio->base, TMTR_TSG, 0x00);
++	intel_tgpio_writel(tgpio->base, TMTL_TSG, ts->tv_nsec);
++	intel_tgpio_writel(tgpio->base, TMTH_TSG, (u32) ts->tv_sec);
++
++	/* Enable TMT0 */
++	intel_tgpio_writel(tgpio->base, TMTCTL_TSG, TMTCTL_TMT_ENABLE);
++}
++
++#define TGPIO_PIN(n)					\
++	{						\
++		.name	= "pin" __stringify((n)),	\
++		.index	= (n),				\
++		.chan	= (n),				\
++		.func	= PTP_PF_NONE,			\
++	}
++
++static struct ptp_pin_desc intel_tgpio_pin_config[] = {
++	TGPIO_PIN(0),
++	TGPIO_PIN(1),
++	TGPIO_PIN(2),
++	TGPIO_PIN(3),
++	TGPIO_PIN(4),
++	TGPIO_PIN(5),
++	TGPIO_PIN(6),
++	TGPIO_PIN(7),
++	TGPIO_PIN(8),
++	TGPIO_PIN(9),
++	TGPIO_PIN(10),
++	TGPIO_PIN(11),
++	TGPIO_PIN(12),
++	TGPIO_PIN(13),
++	TGPIO_PIN(14),
++	TGPIO_PIN(15),
++	TGPIO_PIN(16),
++	TGPIO_PIN(17),
++	TGPIO_PIN(18),
++	TGPIO_PIN(19),
++};
++
++static int intel_tgpio_adjfine(struct ptp_clock_info *info, long scaled_ppm)
++{
++	struct intel_tgpio	*tgpio = to_intel_tgpio(info);
++	unsigned long		flags;
++	u32			reg;
++	bool			isgn = false;
++
++	pm_runtime_get_sync(tgpio->dev->parent);
++
++	spin_lock_irqsave(&tgpio->lock, flags);
++	if (scaled_ppm < 0) {
++		isgn = true;
++		scaled_ppm = -scaled_ppm;
++	}
++
++	/*
++	 * HW uses a 200MHz clock, meaning it has a 5ns period. Just
++	 * multiply scaled_ppm by 5 to get our increment.
++	 */
++	reg = 5 * scaled_ppm;
++
++	/* bit 31 is sign bit */
++	reg &= ~BIT(31);
++	reg |= isgn << 31;
++
++	intel_tgpio_writel(tgpio->base, TIMINCA_GLOBAL, reg);
++	spin_unlock_irqrestore(&tgpio->lock, flags);
++
++	pm_runtime_put(tgpio->dev->parent);
++
++	return 0;
++}
++
++static int intel_tgpio_adjtime(struct ptp_clock_info *info, s64 delta)
++{
++	struct intel_tgpio	*tgpio = to_intel_tgpio(info);
++	struct timespec64	then;
++	struct timespec64	now;
++	unsigned long		flags;
++
++	if (delta > TGPIO_MAX_ADJ_TIME)
++		return -EINVAL;
++
++	pm_runtime_get_sync(tgpio->dev->parent);
++
++	then = ns_to_timespec64(delta);
++
++	spin_lock_irqsave(&tgpio->lock, flags);
++	intel_tgpio_get_time(tgpio, &now);
++	now = timespec64_add(now, then);
++	intel_tgpio_set_time(tgpio, &now);
++	spin_unlock_irqrestore(&tgpio->lock, flags);
++
++	pm_runtime_put(tgpio->dev->parent);
++
++	return 0;
++}
++
++static int intel_tgpio_gettime64(struct ptp_clock_info *info,
++		struct timespec64 *ts)
++{
++	struct intel_tgpio	*tgpio = to_intel_tgpio(info);
++	unsigned long		flags;
++
++	pm_runtime_get_sync(tgpio->dev->parent);
++
++	spin_lock_irqsave(&tgpio->lock, flags);
++	intel_tgpio_get_time(tgpio, ts);
++	spin_unlock_irqrestore(&tgpio->lock, flags);
++
++	pm_runtime_put(tgpio->dev->parent);
++
++	return 0;
++}
++
++static int intel_tgpio_settime64(struct ptp_clock_info *info,
++		const struct timespec64 *ts)
++{
++	struct intel_tgpio	*tgpio = to_intel_tgpio(info);
++	unsigned long		flags;
++
++	pm_runtime_get_sync(tgpio->dev->parent);
++
++	spin_lock_irqsave(&tgpio->lock, flags);
++	intel_tgpio_set_time(tgpio, ts);
++	spin_unlock_irqrestore(&tgpio->lock, flags);
++
++	pm_runtime_put(tgpio->dev->parent);
++
++	return 0;
++}
++
++static int intel_tgpio_config_input(struct intel_tgpio *tgpio,
++		struct ptp_extts_request *extts, int on)
++{
++	unsigned int		index = extts->index;
++	u32			offset;
++	u32			ctrl;
++
++	/* +1 reference if pin OFF -> ON */
++	if (!tgpio->pin_state[index] && on)
++		pm_runtime_get_sync(tgpio->dev->parent);
++
++	offset = TGPIOCTL(index);
++	ctrl = intel_tgpio_readl(tgpio->base, offset);
++	ctrl &= ~(TGPIOCTL_TS | TGPIOCTL_EP | TGPIOCTL_DIR |
++				TGPIOCTL_PWS | TGPIOCTL_IEC_EC | TGPIOCTL_ICS);
++
++	if (on) {
++		int rising_cap, falling_cap;
++
++		tgpio->irq_mask |= TGPIOINT_EVENT_INTERRUPT(index);
++		ctrl |= TGPIOCTL_DIR | TGPIOCTL_TS_TMT0;
++
++		/* To enable for Input Event Counter & Input Event Control */
++		/* TODO: temporarily using rsv0 to store the counter */
++		if ((extts->flags & PTP_EVENT_COUNTER_MODE) && extts->rsv[0]) {
++			ctrl |= TGPIOCTL_IEC_EC;
++			ctrl |= TGPIOCTL_ICS;
++
++			intel_tgpio_writel(tgpio->base, TGPIOCOMPV31_0(index),
++				extts->rsv[0]);
++			intel_tgpio_writel(tgpio->base, TGPIOCOMPV63_32(index),
++				0);
++		}
++
++		/* To enable Event Polarity for inout mode, */
++		/* default to capture both rising & failling */
++		rising_cap = extts->flags & PTP_RISING_EDGE;
++		falling_cap = extts->flags & PTP_FALLING_EDGE;
++
++		if (rising_cap && !falling_cap)
++			ctrl |= TGPIOCTL_EP_RISING_EDGE;
++		else if (!rising_cap && falling_cap)
++			ctrl |= TGPIOCTL_EP_FALLING_EDGE;
++		else
++			ctrl |= TGPIOCTL_EP_TOGGLE_EDGE;
++
++		/* gotta program all other bits before EN bit is set */
++		intel_tgpio_writel(tgpio->base, offset, ctrl);
++
++		ctrl |= TGPIOCTL_EN;
++	} else {
++		ctrl &= ~TGPIOCTL_EN;
++		intel_tgpio_writel(tgpio->base, offset, ctrl);
++
++		intel_tgpio_writeq(tgpio->base, TGPIOCOMPV31_0(index), 0);
++		tgpio->irq_mask &= ~TGPIOINT_EVENT_INTERRUPT(index);
++		ctrl = 0x0;
++	}
++
++	/* For everytime we mask the interrupt, we need to */
++	/* flush the corresponding Raw Interrupt Status  */
++	intel_tgpio_writel(tgpio->base, TGPIOMSC, tgpio->irq_mask);
++	intel_tgpio_writel(tgpio->base, TGPIOICR, tgpio->irq_mask);
++	intel_tgpio_writel(tgpio->base, offset, ctrl);
++
++	/* -1 refernce if on ON -> OFF */
++	if (tgpio->pin_state[index] && !on)
++		pm_runtime_put(tgpio->dev->parent);
++
++	/* Keep current pin state */
++	tgpio->pin_state[index] = on;
++
++	return 0;
++}
++
++static int intel_tgpio_config_output(struct intel_tgpio *tgpio,
++		struct ptp_perout_request *perout, int on)
++{
++	unsigned int		index = perout->index;
++	u32			offset;
++	u32			ctrl;
++
++	/* +1 reference if pin OFF -> ON */
++	if (!tgpio->pin_state[index] && on)
++		pm_runtime_get_sync(tgpio->dev->parent);
++
++	offset = TGPIOCTL(index);
++	ctrl = intel_tgpio_readl(tgpio->base, offset);
++	ctrl &= ~(TGPIOCTL_TS | TGPIOCTL_EP | TGPIOCTL_DIR |
++			TGPIOCTL_PWS  | TGPIOCTL_IEC_EC | TGPIOCTL_ICS);
++
++	if (on) {
++		struct ptp_clock_time *period = &perout->period;
++		struct ptp_clock_time *start = &perout->start;
++
++		ctrl |= TGPIOCTL_TS_TMT0 | TGPIOCTL_ECC | TGPIOCTL_PWS_N(2);
++
++		if (perout->flags & PTP_PEROUT_ONE_SHOT)
++			ctrl &= ~TGPIOCTL_PM;
++		else
++			ctrl |= TGPIOCTL_PM;
++
++		intel_tgpio_writel(tgpio->base, TGPIOCOMPV31_0(index),
++				start->nsec);
++		intel_tgpio_writel(tgpio->base, TGPIOCOMPV63_32(index),
++				start->sec);
++
++		intel_tgpio_writeq(tgpio->base, TGPIOPIV31_0(index),
++				to_intel_tgpio_time(period));
++
++		/* gotta program all other bits before EN bit is set */
++		intel_tgpio_writel(tgpio->base, offset, ctrl);
++
++		ctrl |= TGPIOCTL_EN;
++	} else {
++		ctrl &= ~TGPIOCTL_EN;
++		intel_tgpio_writel(tgpio->base, offset, ctrl);
++
++		intel_tgpio_writeq(tgpio->base, TGPIOCOMPV31_0(index), 0);
++		intel_tgpio_writeq(tgpio->base, TGPIOPIV31_0(index), 0);
++		ctrl = 0x0;
++	}
++
++	intel_tgpio_writel(tgpio->base, offset, ctrl);
++
++	/* -1 refernce if on ON -> OFF */
++	if (tgpio->pin_state[index] && !on)
++		pm_runtime_put(tgpio->dev->parent);
++
++	/* Keep current pin state */
++	tgpio->pin_state[index] = on;
++
++	return 0;
++}
++
++static int intel_tgpio_enable(struct ptp_clock_info *info,
++		struct ptp_clock_request *req, int on)
++{
++	struct intel_tgpio	*tgpio = to_intel_tgpio(info);
++	unsigned long		flags;
++	int			ret = -EOPNOTSUPP;
++
++	spin_lock_irqsave(&tgpio->lock, flags);
++	switch (req->type) {
++	case PTP_CLK_REQ_EXTTS:
++		ret = intel_tgpio_config_input(tgpio, &req->extts, on);
++		break;
++	case PTP_CLK_REQ_PEROUT:
++		ret = intel_tgpio_config_output(tgpio, &req->perout, on);
++		break;
++	default:
++		break;
++	}
++	spin_unlock_irqrestore(&tgpio->lock, flags);
++
++	return ret;
++}
++
++static int intel_tgpio_get_time_fn(ktime_t *device_time,
++		struct system_counterval_t *system_counter, void *_tgpio)
++{
++	struct intel_tgpio	*tgpio = _tgpio;
++	struct timespec64	ts = { 0, 0 };
++	u64			cycles;
++
++	pm_runtime_get_sync(tgpio->dev->parent);
++
++	intel_tgpio_get_time(tgpio, &ts);
++	*device_time = timespec64_to_ktime(ts);
++	cycles = intel_tgpio_readq(tgpio->base, LXTS_ART_LOW_GLOBAL);
++	*system_counter = convert_art_to_tsc(cycles);
++
++	pm_runtime_put(tgpio->dev->parent);
++
++	return 0;
++}
++
++static int intel_tgpio_getcrosststamp(struct ptp_clock_info *info,
++		struct system_device_crosststamp *cts)
++{
++	struct intel_tgpio	*tgpio = to_intel_tgpio(info);
++
++	return get_device_system_crosststamp(intel_tgpio_get_time_fn, tgpio,
++			NULL, cts);
++}
++
++static int intel_tgpio_verify(struct ptp_clock_info *ptp, unsigned int pin,
++		enum ptp_pin_function func, unsigned int chan)
++{
++	return 0;
++}
++
++static const struct ptp_clock_info intel_tgpio_info = {
++	.owner		= THIS_MODULE,
++	.name		= "Intel TGPIO",
++	.max_adj	= 50000000,
++	.n_pins		= 20,
++	.n_ext_ts	= 20,
++	.n_per_out	= 20,
++	.pin_config	= intel_tgpio_pin_config,
++	.adjfine	= intel_tgpio_adjfine,
++	.adjtime	= intel_tgpio_adjtime,
++	.gettime64	= intel_tgpio_gettime64,
++	.settime64	= intel_tgpio_settime64,
++	.enable		= intel_tgpio_enable,
++	.getcrosststamp	= intel_tgpio_getcrosststamp,
++	.verify		= intel_tgpio_verify,
++};
++
++static irqreturn_t intel_tgpio_irq_thread(int irq, void *_tgpio)
++{
++	struct intel_tgpio	*tgpio = _tgpio;
++	unsigned long		irq_status;
++	unsigned long		pin;
++
++	spin_lock(&tgpio->lock);
++
++	irq_status = tgpio->irq_status;
++	for_each_set_bit(pin, &irq_status, BITS_PER_LONG) {
++		struct ptp_clock_event event;
++
++		event.type = PTP_CLOCK_EXTTS;
++		event.index = pin;
++		event.timestamp = intel_tgpio_readq(tgpio->base,
++				TGPIOTCV31_0(pin));
++
++		ptp_clock_event(tgpio->clock, &event);
++	}
++
++	/*
++	 * Clear RIS (Raw Interrupt Status) after we mask the MIS for any
++	 * pending interrupts in RIS through ICR register.
++	 */
++	intel_tgpio_writel(tgpio->base, TGPIOMSC, tgpio->irq_mask);
++	intel_tgpio_writel(tgpio->base, TGPIOICR, tgpio->irq_mask);
++	spin_unlock(&tgpio->lock);
++
++	return IRQ_HANDLED;
++}
++
++static irqreturn_t intel_tgpio_irq(int irq, void *_tgpio)
++{
++	struct intel_tgpio	*tgpio = _tgpio;
++	u32			intr;
++
++	intr = intel_tgpio_readl(tgpio->base, TGPIOMIS);
++	if (intr) {
++		tgpio->irq_status = intr;
++		intel_tgpio_writel(tgpio->base, TGPIOMSC, 0x00);
++		intel_tgpio_writel(tgpio->base, TGPIOICR, intr);
++		return IRQ_WAKE_THREAD;
++	}
++
++	return IRQ_HANDLED;
++}
++
++static void intel_tgpio_disable_all_pins(struct intel_tgpio *tgpio)
++{
++	int	i;
++
++	for (i = 0; i < 20; i++)
++		intel_tgpio_writel(tgpio->base, TGPIOCTL(i), 0);
++}
++
++static int intel_tgpio_probe(struct platform_device *pdev)
++{
++	struct intel_tgpio	*tgpio;
++	struct resource		*res;
++	int			ret;
++	int			irq;
++
++	tgpio = devm_kzalloc(&pdev->dev, sizeof(*tgpio), GFP_KERNEL);
++	if (!tgpio)
++		return -ENOMEM;
++
++	tgpio->dev = &pdev->dev;
++	tgpio->info = intel_tgpio_info;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0)
++		return -ENODEV;
++
++	tgpio->base = devm_ioremap_resource(&pdev->dev, res);
++
++	/* make sure all pins are disabled */
++	intel_tgpio_disable_all_pins(tgpio);
++
++	/* mask all interrupt events */
++	intel_tgpio_writel(tgpio->base, TGPIOMIS, 0x00);
++
++	/* enable TMT0 */
++	intel_tgpio_writel(tgpio->base, TMTCTL_TSG, TMTCTL_TMT_ENABLE);
++
++	spin_lock_init(&tgpio->lock);
++
++	platform_set_drvdata(pdev, tgpio);
++
++	tgpio->clock = ptp_clock_register(&tgpio->info, &pdev->dev);
++	if (IS_ERR(tgpio->clock))
++		return PTR_ERR(tgpio->clock);
++
++	ret = devm_request_threaded_irq(&pdev->dev, irq, intel_tgpio_irq,
++			intel_tgpio_irq_thread, IRQF_TRIGGER_RISING |
++			IRQF_SHARED,
++			dev_name(&pdev->dev), tgpio);
++	if (ret)
++		goto err0;
++
++	return 0;
++
++err0:
++	ptp_clock_unregister(tgpio->clock);
++	return ret;
++}
++
++static int intel_tgpio_remove(struct platform_device *pdev)
++{
++	struct intel_tgpio *tgpio = platform_get_drvdata(pdev);
++	int irq = platform_get_irq(pdev, 0);
++
++	devm_free_irq(&pdev->dev, irq, tgpio);
++	ptp_clock_unregister(tgpio->clock);
++
++	return 0;
++}
++
++#ifdef CONFIG_PM_SLEEP
++static int intel_tgpio_suspend(struct device *dev)
++{
++	struct intel_tgpio	*tgpio = dev_get_drvdata(dev);
++	int i = 0;
++
++	/* Store and disable PIN */
++	for (i = 0; i < TGPIO_MAX_PIN; i++) {
++		tgpio->saved_ctl_regs[i] = intel_tgpio_readl(tgpio->base,
++					TGPIOCTL(i));
++		tgpio->saved_piv_regs[i] = intel_tgpio_readq(tgpio->base,
++					TGPIOPIV31_0(i));
++		intel_tgpio_writel(tgpio->base, TGPIOCTL(i), 0);
++	}
++
++	/* Disable TMT0 */
++	intel_tgpio_writel(tgpio->base, TMTCTL_TSG, 0);
++
++	return 0;
++}
++
++static int intel_tgpio_resume(struct device *dev)
++{
++	struct intel_tgpio	*tgpio = dev_get_drvdata(dev);
++	int i = 0;
++	struct timespec64 *ts;
++
++	ts = devm_kzalloc(dev, sizeof(*ts), GFP_KERNEL);
++
++	/* Enable TMT0 */
++	intel_tgpio_writel(tgpio->base, TMTCTL_TSG, TMTCTL_TMT_ENABLE);
++
++	/* Reset the COMPV for output pin, 2 seconds into future */
++	intel_tgpio_get_time(tgpio, ts);
++	ts->tv_sec += 2;
++
++	/* Restore and enable PIN */
++	for (i = 0; i < TGPIO_MAX_PIN; i++) {
++		intel_tgpio_writel(tgpio->base, TGPIOCOMPV31_0(i), ts->tv_nsec);
++		intel_tgpio_writel(tgpio->base, TGPIOCOMPV63_32(i), ts->tv_sec);
++		intel_tgpio_writeq(tgpio->base, TGPIOPIV31_0(i),
++				tgpio->saved_piv_regs[i]);
++		intel_tgpio_writel(tgpio->base, TGPIOCTL(i),
++				(tgpio->saved_ctl_regs[i] & ~TGPIOCTL_EN));
++		intel_tgpio_writel(tgpio->base, TGPIOCTL(i),
++				tgpio->saved_ctl_regs[i]);
++	}
++
++	return 0;
++}
++#endif
++
++static SIMPLE_DEV_PM_OPS(intel_tgpio_pm_ops, intel_tgpio_suspend,
++			 intel_tgpio_resume);
++
++static struct platform_driver intel_tgpio_driver = {
++	.driver = {
++		.name	= "intel-ehl-tgpio",
++		.pm	= &intel_tgpio_pm_ops,
++	},
++	.probe		= intel_tgpio_probe,
++	.remove		= intel_tgpio_remove,
++};
++
++module_platform_driver(intel_tgpio_driver);
++
++MODULE_AUTHOR("Felipe Balbi <felipe.balbi@linux.intel.com>");
++MODULE_LICENSE("GPL v2");
++MODULE_DESCRIPTION("Intel PSE Timed GPIO Controller Driver");
++MODULE_ALIAS("platform:intel-ehl-tgpio");
+diff --git a/include/uapi/linux/ptp_clock.h b/include/uapi/linux/ptp_clock.h
+index 4ecceb6451356..62320cccd1a28 100644
+--- a/include/uapi/linux/ptp_clock.h
++++ b/include/uapi/linux/ptp_clock.h
+@@ -33,6 +33,7 @@
+ #define PTP_FALLING_EDGE   (1<<2)
+ #define PTP_STRICT_FLAGS   (1<<3)
+ #define PTP_EXT_OFFSET     (1<<4)
++#define PTP_EVENT_COUNTER_MODE (1<<5)
+ #define PTP_EXTTS_EDGES    (PTP_RISING_EDGE | PTP_FALLING_EDGE)
+ 
+ /*
+-- 
+2.25.1
+

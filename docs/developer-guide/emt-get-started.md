@@ -30,9 +30,10 @@ applications.
 
 [Deploying Other OS as Guest Virtual Machines under EMT Host](./get-started/deployment/emt-vm-host.md)
 
-
+<!--hide_directive
 :::{toctree}
 ./get-started/emt-building-howto.md
 ./get-started/emt-build-and-deploy.md
 ./get-started/emt-installation-howto.md
 :::
+hide_directive-->

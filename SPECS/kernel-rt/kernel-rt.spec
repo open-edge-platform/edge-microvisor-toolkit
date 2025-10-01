@@ -1,58 +1,523 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
-Version:        6.12.39
+Version:        6.12.44
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
-URL:            https://github.com/intel/linux-intel-lts
-Source0:        https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.39-emt-250721T212915Z.tar.gz
+URL:            https://www.kernel.org/pub/linux/kernel
+Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
 Source5:        cpupower
 Source6:        cpupower.service
 
-Patch0:         CVE-2025-21751.patch
-Patch1:         CVE-2025-21709.patch
-Patch2:         CVE-2025-21807.patch
-Patch3:         CVE-2025-21817.patch
-Patch4:         CVE-2025-21884.patch
-Patch5:         CVE-2025-21884-1.patch
-Patch6:         CVE-2025-22103.patch
-Patch7:         CVE-2025-22104.patch
-Patch8:         CVE-2025-22105.patch
-Patch9:         CVE-2025-22105-1.patch
-Patch10:        CVE-2025-22106.patch
-Patch11:        CVE-2025-22108.patch
-Patch12:        CVE-2025-22111.patch
-Patch13:        CVE-2025-22113.patch
-Patch14:        CVE-2025-22113-1.patch
-Patch15:        CVE-2025-22116.patch
-Patch16:        CVE-2025-22117.patch
-Patch17:        CVE-2025-22121.patch
-Patch18:        CVE-2025-22121-1.patch
-Patch19:        CVE-2025-22124.patch
-Patch20:        CVE-2025-23131.patch
-Patch21:        CVE-2025-37746.patch
-Patch22:        CVE-2025-37746-1.patch
-Patch23:        CVE-2025-37906.patch
-Patch24:        CVE-2025-38029.patch
-Patch25:        CVE-2025-38041.patch
-Patch26:        CVE-2025-38041-1.patch
-Patch27:        CVE-2025-38041-2.patch
-Patch28:        CVE-2025-38064.patch
-Patch29:        CVE-2025-38064-1.patch
-Patch30:        CVE-2025-38105.patch
-Patch31:        CVE-2025-38137.patch
-Patch32:        CVE-2025-38207.patch
-Patch33:        CVE-2025-38234.patch
-Patch34:        CVE-2025-38248.patch
-Patch35:        CVE-2025-38306.patch
-Patch36:        CVE-2025-38311.patch
-Patch37:        CVE-2025-38351.patch
-
+# Intel not-upstreamed kernel features
+#sriov
+Patch0:	0001-drm-i915-mtl-Add-C10-table-for-HDMI-Clock-25175.sriov
+Patch1:	0002-drm-i915-mtl-Copy-c10-phy-pll-sw-state-from-master-t.sriov
+Patch2:	0003-drm-i915-guc-Define-MAX_DWORDS-for-CTB-HXG-Message.sriov
+Patch3:	0004-drm-i915-call-taint_for_CI-on-FLR-failure.sriov
+Patch4:	0005-drm-i915-huc-load-HuC-via-non-POR-GSC-engine-flow.sriov
+Patch5:	0006-drm-i915-SR-IOV-Enabling-and-Support.sriov
+Patch6:	0007-Revert-drm-i915-move-platform_engine_mask-and-memory.sriov
+Patch7:	0008-drm-i915-gt-Enable-the-early-register-to-working-win.sriov
+Patch8:	0009-drm-i915-gt-Modify-the-adls-mocs-table-same-as-tgl-m.sriov
+Patch9:	0010-drm-i915-Bypass-gem_set_tiling-and-gem_get_tiling.sriov
+Patch10:	0011-drm-i915-enable-CCS-on-DG1-and-TGL-for-testing.sriov
+Patch11:	0012-drm-i915-force-VF-using-v70-GuC-API.sriov
+Patch12:	0013-drm-i915-fix-regression-on-sriov-vf-failures-due-to-.sriov
+Patch13:	0014-drm-i915-add-null-pointer-protection-inside-intel_fb.sriov
+Patch14:	0015-drm-i915-use-the-original-Wa_14010685332-for-PCH_ADP.sriov
+Patch15:	0016-drm-i915-fix-bitmap-clear-API-region-start-issue.sriov
+Patch16:	0017-drm-i915-iov-Expose-early-runtime-registers-for-MTL.sriov
+Patch17:	0018-drm-i915-gt-fix-empty-workaround-list-access-issue.sriov
+Patch18:	0019-drm-i915-mtl-Add-module-parameter-override-for-Wa_16.sriov
+Patch19:	0020-drm-i915-mtl-Provide-user-the-option-to-disable-ccs.sriov
+Patch20:	0021-drm-i915-mtl-Turn-on-Wa_16019325821-Wa_14019159160-b.sriov
+Patch21:	0022-drm-i915-pf-Use-GPU-to-set-PTE-owner.sriov
+Patch22:	0023-drm-i915-pf-Use-GPU-to-set-PTE-owner-on-platforms-wi.sriov
+Patch23:	0024-drm-i915-access-ddc-pointer-only-if-it-is-available.sriov
+Patch24:	0025-drm-i915-guc-Upgrade-GuC-fw-version-to-70.20.0.sriov
+Patch25:	0026-drm-i915-iov-Adding-runtime-reg-for-MTL-HuC-status.sriov
+Patch26:	0027-drm-i915-guc-Upgrade-GuC-fw-version-to-70.29.2.sriov
+Patch27:	0028-drm-i915-Re-add-enable_rc6-modparam.sriov
+Patch28:	0032-drm-virtio-freeze-and-restore-hooks-to-support-suspe.sriov
+Patch29:	0033-drm-virtio-save-and-restore-virtio_gpu_objects.sriov
+Patch30:	0001-drm-virtio-Use-drm_gem_plane_helper_prepare_fb.patch
+Patch31:	0034-drm-i915-pf-Introduce-i915_ggtt_save_ptes-and-i915_g.sriov
+Patch32:	0035-drm-i915-iov-Introduce-VFs-shadow-copy-of-GGTT-on-PF.sriov
+Patch33:	0036-drm-i915-iov-Shadow-GGTT-mock-selftestes.sriov
+Patch34:	0037-drm-i915-gt-Don-t-support-GGTT-save-restore-via-BAR-.sriov
+Patch35:	0038-drm-i915-pf-Add-helpers-for-saving-loading-GGTT-stat.sriov
+Patch36:	0039-drm-i915-pf-Handle-VF-pause-complete-notification.sriov
+Patch37:	0040-drm-i915-pf-Allow-to-save-restore-GuC-VF-state.sriov
+Patch38:	0041-drm-i915-pf-Save-and-restore-VFs-state-during-S2idle.sriov
+Patch39:	0042-drm-i915-pf-Skip-VF-save-restore-on-S2idle-S3-S4-if-.sriov
+Patch40:	0043-drm-i915-pf-Start-use-shadow-GGTT-to-save-restore-du.sriov
+Patch41:	0044-drm-i915-pf-Export-API-to-be-used-by-i915-vfio-pci.sriov
+Patch42:	0045-drm-i915-iov-Flag-which-tells-whether-PAUSE-is-in-pr.sriov
+Patch43:	0046-drm-i915-iov-Remember-run-state-on-suspend-and-resto.sriov
+Patch44:	0047-drm-i915-pf-Pause-VF-before-restore-GuC-state-after-.sriov
+Patch45:	0048-drm-i915-iov-fix-i915-sriov-build-issue.sriov
+Patch46:	0001-drm-i915-CTB-TLB-invalidation-fix-on-VM.sriov
+Patch47:	0002-vfio-i915-Add-vfio_pci-driver-for-Intel-graphics.sriov
+Patch48:	0003-drm-i915-guc-Upgrade-GuC-fw-version-to-70.36.0.sriov
+Patch49:	0001-drm-i915-Fix-logic-for-GUC-Process.sriov
+Patch50:	0001-vfio-i915-Add-support-for-MMIO-save-restore.sriov
+Patch51:	0002-drm-i915-SR-IOV-Save-Restore-Feature-support.sriov
+Patch52:	0001-i915-Enable-w-a-16026508708.sriov
+Patch53:	0001-virtio-hookup-irq_get_affinity-callback.sriov
+Patch54:	0002-virtio-break-and-reset-virtio-devices-on-device_shut.sriov
+Patch55:	0003-virtgpu-don-t-reset-on-shutdown.sriov
+Patch56:	0004-drm-virtio-implement-virtio_gpu_shutdown.sriov
+#security
+Patch57:	0001-mei-bus-add-api-to-query-capabilities-of-ME-clien.security
+Patch58:	0002-mei-virtio-virtualization-frontend-driver.security
+Patch59:	0003-INTEL_DII-mei-avoid-reset-if-fw-is-down.security
+Patch60:	0004-INTEL_DII-FIXME-mei-iaf-add-iaf-Intel-Accelerator.security
+Patch61:	0005-INTEL_DII-mei-add-check-for-offline-bit-in-every-.security
+Patch62:	0006-INTEL_DII-mei-add-empty-handlers-for-ops-function.security
+Patch63:	0007-INTEL_DII-mei-gsc-add-fields-to-support-force-wak.security
+Patch64:	0008-INTEL_DII-mei-add-waitqueue-for-device-state-chan.security
+Patch65:	0009-INTEL_DII-mei-add-force-wake-workaround-infra.security
+Patch66:	0010-INTEL_DII-mei-add-force-wake-workaround-in-init.security
+Patch67:	0011-INTEL_DII-mei-add-force-wake-workaround-on-sessio.security
+Patch68:	0012-INTEL_DII-mei-add-force-wake-workaround-in-runtim.security
+Patch69:	0013-INTEL_DII-mei-add-force-wake-workaround-in-resume.security
+Patch70:	0014-INTEL_DII-mei-disable-immediate-enum-if-forcewake.security
+Patch71:	0015-INTEL_DII-mei-put-force-wake-in-error-flows.security
+Patch72:	0016-INTEL_DII-mei-add-force-wake-callbacks-to-empty-h.security
+Patch73:	0017-INTEL_DII-mei-optimize-force-wake-wait.security
+Patch74:	0018-mei-me-apply-GSC-error-supression-to-systems-with.security
+Patch75:	0019-INTEL_DII-mei-bus-fixup-disable-version-retrieval.security
+#tgpio
+Patch76:	0001-Revert-timekeeping-Add-function-to-convert-realtime-.tgpio
+Patch77:	0002-Revert-x86-tsc-Remove-obsolete-ART-to-TSC-conversion.tgpio
+Patch78:	0003-Revert-ice-ptp-Remove-convert_art_to_tsc.tgpio
+Patch79:	0004-Revert-ALSA-hda-Remove-convert_art_to_tsc.tgpio
+Patch80:	0005-Revert-stmmac-intel-Remove-convert_art_to_tsc.tgpio
+Patch81:	0006-Revert-igc-Remove-convert_art_ns_to_tsc.tgpio
+Patch82:	0007-Revert-e1000e-Replace-convert_art_to_tsc.tgpio
+Patch83:	0008-Revert-x86-tsc-Provide-ART-base-clock-information-fo.tgpio
+Patch84:	0009-Revert-timekeeping-Provide-infrastructure-for-conver.tgpio
+Patch85:	0010-drivers-ptp-Add-Enhanced-handling-of-reserve-fields.tgpio
+Patch86:	0011-drivers-ptp-Add-PEROUT2-ioctl-frequency-adjustment-i.tgpio
+Patch87:	0012-drivers-ptp-Add-user-space-input-polling-interface.tgpio
+Patch88:	0013-x86-tsc-Add-TSC-support-functions-to-support-ART-dri.tgpio
+Patch89:	0014-drivers-ptp-Add-support-for-PMC-Time-Aware-GPIO-Driv.tgpio
+Patch90:	0015-x86-core-TSC-reliable-kernel-arg-prevents-DQ-of-TSC-.tgpio
+Patch91:	0016-mfd-intel-ehl-gpio-Introduce-MFD-framework-to-PSE-GP.tgpio
+Patch92:	0017-TGPIO-Calling-power-management-calls-without-enterin.tgpio
+Patch93:	0018-TGPIO-Fix-PSE-TGPIO-PTP-driver-ioctls-fail.tgpio
+Patch94:	0019-Kernel-Argument-Bypassing-ART-Detection.tgpio
+Patch95:	0020-GPIO-Fix-for-PSE-GPIO-generating-only-one-event-as-i.tgpio
+Patch96:	0021-Added-TGPIO-pin-check-before-input-event-read.tgpio
+Patch97:	0022-Added-an-Example-to-adjust-frequency-for-output.tgpio
+Patch98:	0023-ptp-tgpio-PSE-TGPIO-crosststamp-counttstamp.tgpio
+Patch99:	0024-ptp-Fixed-read-issue-on-PHC-with-zero-n_pins.tgpio
+Patch100:	0025-ptp-S-W-workaround-for-PMC-TGPIO-h-w-bug.tgpio
+Patch101:	0026-ptp-Fix-for-PSE-TGPIO-Oneshot-output-and-counttstamp.tgpio
+Patch102:	0027-ptp-Fix-for-PSE-TGPIO-frequency-Adjustment-issue.tgpio
+Patch103:	0028-tgpio-Fix-compilation-errors-for-PSE-TGPIO.tgpio
+Patch104:	0029-Added-single-shot-output-mode-support-for-TGPIO.tgpio
+Patch105:	0030-Added-an-example-to-poll-for-edges.tgpio
+Patch106:	0031-Added-support-to-get-TGPIO-System-Clock-Offset.tgpio
+Patch107:	0032-Added-single-shot-output-mode-option-for-TGPIO-pin.tgpio
+Patch108:	0033-selftests-ptp-Added-COMPV-GPIO-Input-Mode-for-TGPIO.tgpio
+Patch109:	0034-ptp-Introduce-PTP_PINDESC_INPUTPOLL-for-Intel-PMC-TG.tgpio
+Patch110:	0035-drivers-ptp-Add-COMPV-GPIO-Mode-for-PSE-TGPIO.tgpio
+Patch111:	0036-net-ice-fix-braces-around-scalar-initializer.tgpio
+Patch112:	0037-ptp-Add-PTP_EVENT_COUNTER_MODE-in-v1-valid-flags.tgpio
+Patch113:	0038-ptp-Enable-preempt-if-it-is-disabled.tgpio
+Patch114:	0039-ptp-Generate-sqaure-wave-on-PSE-TGPIO.tgpio
+Patch115:	0040-ptp-tgpio-Add-an-edge-if-the-output-signal-ends-high.tgpio
+Patch116:	0041-ptp-pmc-tgpio-Initialize-variable-to-zero.tgpio
+Patch117:	0042-ptp-tgpio-Fix-return-type-of-remove-function-in-tgpi.tgpio
+Patch118:	0043-net-mlx5-reuse-convert_art_ns_to_tsc-to-convert-ART-.tgpio
+#edac
+Patch119:	0001-x86-mce-Add-MCACOD-code-for-generic-I-O-error.edac
+Patch120:	0002-EDAC-ieh-Add-I-O-device-EDAC-driver-for-Intel-CPUs-wi.edac
+Patch121:	0003-EDAC-ieh-Add-I-O-device-EDAC-support-for-Intel-Tiger-.edac
+Patch122:	0004-EDAC-igen6-Add-registration-APIs-for-In-Band-ECC-erro.edac
+Patch123:	0005-EDAC-i10nm-Print-DRAM-rules-debug-purpose.edac
+Patch124:	0006-EDAC-skx_common-skx-i10nm-Make-skx_register_mci-indep.edac
+Patch125:	0007-EDAC-skx_common-Prepare-skx_get_edac_list.edac
+Patch126:	0008-EDAC-skx_common-Prepare-skx_set_hi_lo.edac
+Patch127:	0009-EDAC-igen6-Add-Intel-Pnther-Lake-H-SoCs-support.edac
+Patch128:	0002-EDAC-ie31200-Add-Kaby-Lake-S-dual-core-host-bridge-ID.edac
+Patch129:	0006-EDAC-ie31200-Fix-the-3rd-parameter-name-of-populate_d.edac
+Patch130:	0007-EDAC-ie31200-Simplify-the-pci_device_id-table.edac
+Patch131:	0008-EDAC-ie31200-Make-the-memory-controller-resources-con.edac
+Patch132:	0009-EDAC-ie31200-Make-struct-dimm_data-contain-decoded-in.edac
+Patch133:	0010-EDAC-ie31200-Fold-the-two-channel-loops-into-one-loop.edac
+Patch134:	0011-EDAC-ie31200-Break-up-ie31200_probe1.edac
+Patch135:	0012-EDAC-ie31200-Add-Intel-Raptor-Lake-S-SoCs-support.edac
+Patch136:	0013-EDAC-ie31200-Switch-Raptor-Lake-S-to-interrupt-mode.edac
+Patch137:	0001-EDAC-ie31200-Add-two-Intel-SoCs-for-EDAC-support.edac
+Patch138:	0002-ie31200-EDAC-Add-Intel-Bartlett-Lake-S-SoCs-support.edac
+#tsn
+Patch139:	0001-net-pcs-xpcs-enable-xpcs-reset-skipping.tsn
+Patch140:	0002-net-stmmac-Bugfix-on-stmmac_interrupt-for-WOL.tsn
+Patch141:	0003-net-phy-increase-gpy-loopback-test-delay.tsn
+Patch142:	0004-net-stmmac-Resolve-poor-line-rate-after-switching-from.tsn
+Patch143:	0005-net-phy-dp83867-perform-restart-AN-after-modifying-AN-.tsn
+Patch144:	0006-stmmac-intel-Separate-ADL-N-and-RPL-P-device-ID-from-T.tsn
+Patch145:	0007-net-stmmac-Adjust-mac_capabilities-for-Intel-mGbE-2.5G.tsn
+Patch146:	0008-stmmac-intel-skip-xpcs-reset-for-2.5Gbps-on-Intel-Alde.tsn
+Patch147:	0009-net-stmmac-add-check-for-2.5G-mode-to-prevent-MAC-capa.tsn
+Patch148:	0010-stmmac-intel-Enable-PHY-WoL-in-ADL-N.tsn
+Patch149:	0011-net-phy-reconfigure-PHY-WoL-when-WoL-option-is-enabled.tsn
+Patch150:	0012-net-stmmac-fix-MAC-and-phylink-mismatch-issue-after-re.tsn
+Patch151:	0013-net-stmmac-restructure-Rx-Tx-hardware-timestamping-fun.tsn
+Patch152:	0014-net-stmmac-Add-per-packet-time-based-scheduling-for-XD.tsn
+Patch153:	0015-net-stmmac-introduce-AF_XDP-ZC-RX-HW-timestamps.tsn
+Patch154:	0016-net-stmmac-add-fsleep-in-HW-Rx-timestamp-checking-loop.tsn
+Patch155:	0017-net-stmmac-select-PCS-negotiation-mode-according-to-th.tsn
+Patch156:	0018-net-pcs-xpcs-re-initiate-clause-37-Auto-negotiation.tsn
+Patch157:	0019-arch-x86-Add-IPC-mailbox-accessor-function-and-add-SoC.tsn
+Patch158:	0020-net-stmmac-configure-SerDes-according-to-the-interface.tsn
+Patch159:	0021-stmmac-intel-interface-switching-support-for-intel-pla.tsn
+Patch160:	0022-net-stmmac-Set-mac_managed_pm-flag-from-stmmac-to-reso.tsn
+Patch161:	0023-net-phylink-Add-module_exit.tsn
+Patch162:	0024-net-stmmac-introduce-AF_XDP-ZC-TX-HW-timestamps.tsn
+Patch163:	0025-net-sched-taprio-fix-too-early-schedules-switching.tsn
+Patch164:	0026-net-sched-taprio-fix-cycle-time-adjustment-for-next-en.tsn
+Patch165:	0027-net-sched-taprio-fix-impacted-fields-value-during-cycl.tsn
+Patch166:	0028-net-sched-taprio-get-corrected-value-of-cycle_time-and.tsn
+Patch167:	0029-xsk-add-txtime-field-in-xdp_desc-struct.tsn
+Patch168:	0030-Revert-net-stmmac-silence-FPE-kernel-logs.tsn
+Patch169:	0031-Revert-net-stmmac-support-fp-parameter-of-tc-taprio.tsn
+Patch170:	0032-Revert-net-stmmac-support-fp-parameter-of-tc-mqprio.tsn
+Patch171:	0033-Revert-net-stmmac-configure-FPE-via-ethtool-mm.tsn
+Patch172:	0034-Revert-net-stmmac-refactor-FPE-verification-process.tsn
+Patch173:	0035-Revert-net-stmmac-drop-stmmac_fpe_handshake.tsn
+Patch174:	0036-Revert-net-stmmac-move-stmmac_fpe_cfg-to-stmmac_priv-d.tsn
+Patch175:	0037-net-stmmac-add-FPE-preempt-setting-for-TxQ-preemptible.tsn
+Patch176:	0038-taprio-Add-support-for-frame-preemption-offload.tsn
+Patch177:	0039-net-stmmac-set-initial-EEE-policy-configuration.tsn
+Patch178:	0040-net-phy-fix-phylib-s-dual-eee_enabled.tsn
+Patch179:	0041-net-phy-ensure-that-genphy_c45_an_config_eee_aneg-sees.tsn
+Patch180:	0042-net-phy-fix-phy_ethtool_set_eee-incorrectly-enabling-L.tsn
+Patch181:	0001-igc-Set-the-RX-packet-buffer-size-for-TSN-mode.tsn
+Patch182:	0002-igc-Only-dump-registers-if-configured-to-dump-HW-infor.tsn
+Patch183:	0003-ethtool-Add-support-for-configuring-frame-preemption.tsn
+Patch184:	0004-ethtool-Add-support-for-Frame-Preemption-verification.tsn
+Patch185:	0005-igc-Add-support-for-enabling-frame-preemption-via-etht.tsn
+Patch186:	0006-igc-Add-support-for-TC_SETUP_PREEMPT.tsn
+Patch187:	0007-igc-Add-support-for-setting-frame-preemption-configura.tsn
+Patch188:	0008-igc-Add-support-for-Frame-Preemption-verification.tsn
+Patch189:	0009-igc-Add-support-for-exposing-frame-preemption-stats-re.tsn
+Patch190:	0010-igc-Optimize-the-packet-buffer-utilization.tsn
+Patch191:	0011-igc-Add-support-for-enabling-all-packets-to-be-receive.tsn
+Patch192:	0012-igc-Add-support-for-DMA-timestamp-for-non-PTP-packets.tsn
+Patch193:	0013-bpf-add-btf-register-unregister-API.tsn
+Patch194:	0014-net-core-XDP-metadata-BTF-netlink-API.tsn
+Patch195:	0015-rtnetlink-Fix-unchecked-return-value-of-dev_xdp_query_.tsn
+Patch196:	0016-rtnetlink-Add-return-value-check.tsn
+Patch197:	0017-tools-bpf-Query-XDP-metadata-BTF-ID.tsn
+Patch198:	0018-tools-bpf-Add-xdp-set-command-for-md-btf.tsn
+Patch199:	0019-igc-Add-BTF-based-metadata-for-XDP.tsn
+Patch200:	0020-igc-Enable-HW-RX-Timestamp-for-AF_XDP-ZC.tsn
+Patch201:	0021-igc-Take-care-of-DMA-timestamp-rollover.tsn
+Patch202:	0022-igc-Add-SO_TXTIME-for-AF_XDP-ZC.tsn
+Patch203:	0023-igc-Reodering-the-empty-packet-buffers-and-descriptors.tsn
+Patch204:	0024-Revert-igc-Add-support-for-PTP-.getcyclesx64.tsn
+Patch205:	0025-core-Introduce-netdev_tc_map_to_queue_mask.tsn
+Patch206:	0026-taprio-Replace-tc_map_to_queue_mask.tsn
+Patch207:	0027-mqprio-Add-support-for-frame-preemption-offload.tsn
+Patch208:	0030-igc-Reduce-retry-count-to-a-more-reasonable-number.tsn
+Patch209:	0001-igc-Enable-HW-TX-Timestamp-for-AF_XDP-ZC.tsn
+Patch210:	0002-igc-Enable-trace-for-HW-TX-Timestamp-AF_XDP-ZC.tsn
+Patch211:	0003-igc-Remove-the-CONFIG_DEBUG_MISC-condition-for-trace.tsn
+Patch212:	0006-Revert-net-stmmac-set-initial-EEE-policy-configurati.tsn
+Patch213:	0001-net-phy-Set-eee_cfg.eee_enabled-according-to-PHY.tsn
+Patch214:	0001-Revert-net-stmmac-add-FPE-preempt-setting-for-TxQ-pree.tsn
+Patch215:	0002-Reapply-net-stmmac-move-stmmac_fpe_cfg-to-stmmac_priv-.tsn
+Patch216:	0003-Reapply-net-stmmac-drop-stmmac_fpe_handshake.tsn
+Patch217:	0004-Reapply-net-stmmac-refactor-FPE-verification-process.tsn
+Patch218:	0005-Reapply-net-stmmac-configure-FPE-via-ethtool-mm.tsn
+Patch219:	0006-Reapply-net-stmmac-support-fp-parameter-of-tc-mqprio.tsn
+Patch220:	0007-Reapply-net-stmmac-support-fp-parameter-of-tc-taprio.tsn
+Patch221:	0008-Reapply-net-stmmac-silence-FPE-kernel-logs.tsn
+#camera
+Patch222:	0001-media-intel-ipu6-remove-buttress-ish-structure.camera
+Patch223:	0001-media-i2c-Add-ar0234-camera-sensor-driver.camera
+Patch224:	0002-media-i2c-add-support-for-lt6911uxe.camera
+Patch225:	0003-INT3472-Support-LT6911UXE.camera
+Patch226:	0004-upstream-Use-module-parameter-to-set-isys-freq.camera
+Patch227:	0005-upstream-Use-module-parameter-to-set-psys-freq.camera
+Patch228:	0006-media-pci-Enable-ISYS-reset.camera
+Patch229:	0007-media-i2c-add-support-for-ar0234-and-lt6911uxe.camera
+Patch230:	0008-driver-media-i2c-remove-useless-header-file.camera
+Patch231:	0009-media-i2c-update-lt6911uxe-for-upstream-and-bug-fix.camera
+Patch232:	0010-media-i2c-add-support-for-lt6911uxc.camera
+Patch233:	0011-media-i2c-add-lt6911uxc-driver-and-enable-in-ipu-br.camera
+Patch234:	0012-media-pci-intel-psys-driver.camera
+Patch235:	0013-media-i2c-Remove-unused-variables-in-Lontium-driver.camera
+Patch236:	0001-media-intel-ipu6-remove-buttress-ish-structure-1.camera
+Patch237:	0002-media-pci-intel-include-psys-driver.camera
+Patch238:	0003-Revert-media-ipu6-use-the-IPU6-DMA-mapping-APIs-to-.camera
+Patch239:	0004-Revert-media-ipu6-remove-architecture-DMA-ops-depen.camera
+Patch240:	0005-Revert-media-ipu6-not-override-the-dma_ops-of-devic.camera
+Patch241:	0001-Reapply-media-ipu6-not-override-the-dma_ops-of-devi.camera
+Patch242:	0002-Reapply-media-ipu6-remove-architecture-DMA-ops-depe.camera
+Patch243:	0003-Reapply-media-ipu6-use-the-IPU6-DMA-mapping-APIs-to.camera
+Patch244:	0001-media-pci-update-IPU6-PSYS-driver.camera
+Patch245:	0002-media-i2c-update-lt6911uxc-driver-to-fix-COV-issue.camera
+Patch246:	0003-lt6911-2-pads-linked-to-ipu-2-ports-for-split-mode.camera
+Patch247:	0004-media-i2c-add-dv_timings-api-in-lt6911uxe.camera
+Patch248:	0005-media-intel-ipu6-use-vc1-dma-for-MTL-and-ARL.camera
+Patch249:	0006-media-i2c-some-changes-in-lt6911uxe.camera
+Patch250:	0001-Revert-media-intel-ipu6-use-vc1-dma-for-MTL-and-ARL.camera
+Patch251:	0002-media-i2c-update-format-in-irq-for-lt6911uxe.camera
+Patch252:	0003-media-i2c-remove-unused-func-in-lt6911uxe.camera
+Patch253:	0001-media-intel-ipu6-use-vc1-dma-for-MTL-and-ARL.camera
+Patch254:	0002-media-ipu-Dma-sync-at-buffer_prepare-callback-as-DM.camera
+Patch255:	0003-Support-IPU6-ISYS-FW-trace-dump-for-upstream-driver.camera
+Patch256:	0004-Support-IPU6-PSYS-FW-trace-dump-for-upstream-driver.camera
+Patch257:	0005-media-pci-The-order-of-return-buffers-should-be-FIF.camera
+Patch258:	0006-media-i2c-fix-power-on-issue-for-on-board-LT6911UXC.camera
+Patch259:	0007-media-i2c-fix-power-on-issue-for-on-board-LT6911UXE.camera
+Patch260:	0001-media-pci-Modify-enble-disable-stream-in-CSI2.camera
+Patch261:	0002-media-pci-Set-the-correct-SOF-for-different-stream.camera
+Patch262:	0003-media-pci-support-imx390-for-6.11.0-rc3.camera
+Patch263:	0004-i2c-media-fix-cov-issue.camera
+Patch264:	0005-mv-ipu-acpi-module-to-linux-drivers.camera
+Patch265:	0006-kernel-enable-VC-support-in-v4l2.camera
+Patch266:	0007-media-pci-intel-support-PDATA-in-Kconfig-Makefile.camera
+Patch267:	0008-media-pci-unregister-i2c-device-to-complete-ext_sub.camera
+Patch268:	0009-media-pci-align-params-for-non-MIPI-split-and-split.camera
+Patch269:	0010-media-pci-add-missing-if-for-PDATA.camera
+Patch270:	0011-media-platform-fix-allyesconfig-build-error.camera
+Patch271:	0012-media-pci-refine-PDATA-related-config.camera
+Patch272:	0013-kernel-align-ACPI-PDATA-and-ACPI-fwnode-build-for-E.camera
+Patch273:	0014-media-i2c-add-gmsl-isx031-support.camera
+Patch274:	0015-media-i2c-add-support-for-isx031-max9296.camera
+Patch275:	0016-fix-S4-issue-on-TWL.camera
+Patch276:	0017-code-changes-for-link-frequency-and-sensor-physical.camera
+#wwan
+Patch277:	0001-Revert-bus-mhi-host-pci_generic-add-support-for-sc828.wwan
+Patch278:	0002-wwan-add-SAHARA-device.wwan
+Patch279:	0003-bus-mhi-host-allow-SBL-as-initial-EE.wwan
+Patch280:	0004-drivers-bus-mhi-let-userspace-manage-xfp-fw-update-st.wwan
+Patch281:	0005-wwan-add-NMEA-type.wwan
+Patch282:	0006-drivers-bus-mhi-add-FN980-v2-support.wwan
+Patch283:	0007-drivers-bus-mhi-add-FN990-NMEA-and-DIAG-in-SBL-device.wwan
+Patch284:	0008-drivers-net-wwan-add-simple-DTR-driver.wwan
+Patch285:	0009-drivers-bus-mhi-host-fix-recovery-process-when-modem-.wwan
+Patch286:	0001-Revert-drivers-bus-mhi-host-fix-recovery-process-when.wwan
+Patch287:	0002-Revert-drivers-net-wwan-add-simple-DTR-driver.wwan
+Patch288:	0003-Revert-drivers-bus-mhi-add-FN990-NMEA-and-DIAG-in-SBL.wwan
+Patch289:	0004-Revert-drivers-bus-mhi-add-FN980-v2-support.wwan
+Patch290:	0005-Revert-wwan-add-NMEA-type.wwan
+Patch291:	0006-Revert-drivers-bus-mhi-let-userspace-manage-xfp-fw-up.wwan
+Patch292:	0007-Revert-bus-mhi-host-allow-SBL-as-initial-EE.wwan
+Patch293:	0008-Revert-wwan-add-SAHARA-device.wwan
+Patch294:	0009-Revert-Revert-bus-mhi-host-pci_generic-add-support-fo.wwan
+#pmc_core
+Patch295:	0001-platform-x86-intel-pmc-Add-Arrow-Lake-U-H-support.pmc_core
+Patch296:	0002-platform-x86-intel-pmc-Add-Bartlett-Lake-support-to-.pmc_core
+Patch297:	0001-platform-x86-intel-pmc-Fix-Arrow-Lake-U-H-NPU-PCI.pmc_core
+#lpss
+Patch298:	0001-Added-spi_set_cs-for-more-stable-r-w-operations-in-S.lpss
+Patch299:	0002-mtd-core-Don-t-fail-mtd_device_parse_register-if-OTP.lpss
+Patch300:	0003-spi-intel-pci-Add-support-for-Arrow-Lake-H-SPI-seria.lpss
+Patch301:	0004-spi-intel-Add-protected-and-locked-attributes.lpss
+#preempt_rt patches backported
+Patch302:	0001-Revert-sched-core-Remove-the-unnecessary-need_resche.rt
+Patch303:	0001-hrtimer-Use-__raise_softirq_irqoff-to-raise-the-softirq.rt
+Patch304:	0002-timers-Use-__raise_softirq_irqoff-to-raise-the-softirq.rt
+Patch305:	0003-softirq-Use-a-dedicated-thread-for-timer-wakeups-on-PRE.rt
+Patch306:	0004-serial-8250-Switch-to-nbcon-console.rt
+Patch307:	0005-serial-8250-Revert-drop-lockdep-annotation-from-serial8.rt
+Patch308:	0006-locking-rt-Remove-one-__cond_lock-in-RT-s-spin_trylock_.rt
+Patch309:	0007-locking-rt-Add-sparse-annotation-for-RCU.rt
+Patch310:	0008-locking-rt-Annotate-unlock-followed-by-lock-for-sparse.rt
+Patch311:	0009-drm-i915-Use-preempt_disable-enable_rt-where-recommende.rt
+Patch312:	0010-drm-i915-Don-t-disable-interrupts-on-PREEMPT_RT-during-.rt
+Patch313:	0011-drm-i915-Don-t-check-for-atomic-context-on-PREEMPT_RT.rt
+Patch314:	0012-drm-i915-Disable-tracing-points-on-PREEMPT_RT.rt
+Patch315:	0013-drm-i915-gt-Use-spin_lock_irq-instead-of-local_irq_disa.rt
+Patch316:	0014-drm-i915-Drop-the-irqs_disabled-check.rt
+Patch317:	0015-drm-i915-guc-Consider-also-RCU-depth-in-busy-loop.rt
+Patch318:	0016-Revert-drm-i915-Depend-on-PREEMPT_RT.rt
+Patch319:	0017-sched-Add-TIF_NEED_RESCHED_LAZY-infrastructure.rt
+Patch320:	0018-sched-Add-Lazy-preemption-model.rt
+Patch321:	0019-sched-Enable-PREEMPT_DYNAMIC-for-PREEMPT_RT.rt
+Patch322:	0020-sched-x86-Enable-Lazy-preemption.rt
+Patch323:	0021-sched-Add-laziest-preempt-model.rt
+Patch324:	0022-sched-Fixup-the-IS_ENABLED-check-for-PREEMPT_LAZY.rt
+Patch325:	0023-tracing-Remove-TRACE_FLAG_IRQS_NOSUPPORT.rt
+Patch326:	0024-tracing-Record-task-flag-NEED_RESCHED_LAZY.rt
+Patch327:	0025-sysfs-Add-sys-kernel-realtime-entry.rt
+Patch328:	0001-serial-8250-enable-original-console-by-default.rt
+Patch329:	0001-kernel-trace-Add-DISALLOW_TRACE_PRINTK-make-option.rt
+Patch330:	0002-Revert-scripts-remove-bin2c.rt
+Patch331:	0003-extend-uio-driver-to-supports-msix.rt
+Patch332:	0004-virtio-add-VIRTIO_PMD-support.rt
+Patch333:	0005-virt-acrn-Introduce-interfaces-for-PIO-device.rt
+Patch334:	0006-Add-hypercall-to-access-MSR.rt
+Patch335:	0007-Revert-spi-Remove-unused-function-spi_busnum_to_master.rt
+Patch336:	0008-igc-add-CONFIG_IGC_TSN_TRACE-conditional-trace_printk-u.rt
+Patch337:	0009-stmmac_pci-add-CONFIG_STMMAC_TSN_TRACE-conditional-trac.rt
+Patch338:	0010-igb-prepare-for-AF_XDP-zero-copy-support.rt
+Patch339:	0011-igb-Introduce-XSK-data-structures-and-helpers.rt
+Patch340:	0012-igb-add-AF_XDP-zero-copy-Rx-support.rt
+Patch341:	0013-igb-add-AF_XDP-zero-copy-Tx-support.rt
+Patch342:	0014-igb-Add-BTF-based-metadata-for-XDP.rt
+Patch343:	0015-ANDROID-trace-power-add-trace_clock_set_parent.rt
+Patch344:	0016-ANDROID-trace-net-use-pK-for-kernel-pointers.rt
+Patch345:	0017-ANDROID-trace-add-non-hierarchical-function_graph-optio.rt
+Patch346:	0018-virtio-fix-VIRTIO_PMD-support.rt
+Patch347:	0019-drm-i915-add-i915-perf-event-capacity.rt
+Patch348:	0020-drm-xe-pm-allow-xe-with-CONFIG_PM.rt
+#drm
+Patch349:	0001-drm-i915-enable-guc-submission-for-ADLs-by-default.drm
+Patch350:	0001-drm-i915-disable-a-couple-of-RT-functions-if-RT-is-d.drm
+Patch351:	0001-drm-i915-disable-dGPU-support-with-RT-kernel.drm
+Patch352:	0001-i915-Update-GUC-to-v70.44.1-for-i915-platforms.drm
+Patch353:	0001-Revert-drm-i915-disable-dGPU-support-with-RT-kernel.drm
+Patch354:	0001-drm-i915-gt-Avoid-using-masked-workaround-for-CCS_MODE.drm
+Patch355:	0002-drm-i915-gt-Move-the-CCS-mode-variable-to-a-global-pos.drm
+Patch356:	0003-drm-i915-gt-Allow-the-creation-of-multi-mode-CCS-masks.drm
+Patch357:	0004-drm-i915-gt-Refactor-uabi-engine-class-instance-list-c.drm
+Patch358:	0005-drm-i915-gem-Mark-and-verify-UABI-engine-validity.drm
+Patch359:	0006-drm-i915-gt-Introduce-for_each_enabled_engine-and-appl.drm
+Patch360:	0007-drm-i915-gt-Manage-CCS-engine-creation-within-UABI-exp.drm
+Patch361:	0008-drm-i915-gt-Remove-cslices-mask-value-from-the-CCS-str.drm
+Patch362:	0009-drm-i915-gt-Expose-the-number-of-total-CCS-slices.drm
+Patch363:	0010-drm-i915-gt-Store-engine-related-sysfs-kobjects.drm
+Patch364:	0011-drm-i915-gt-Store-active-CCS-mask.drm
+Patch365:	0012-drm-i915-Protect-access-to-the-UABI-engines-list-with-.drm
+Patch366:	0013-drm-i915-gt-Isolate-single-sysfs-engine-file-creation.drm
+Patch367:	0014-drm-i915-gt-Implement-creation-and-removal-routines-fo.drm
+Patch368:	0015-drm-i915-gt-Allow-the-user-to-change-the-CCS-mode-thro.drm
+Patch369:	0016-drm-i915-gt-Refactor-CCS-mode-handling-and-improve-app.drm
+Patch370:	0017-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
+Patch371:	0001-Remove-unneeded-files.patch
+#rapl
+Patch372:	0001-powercap-intel_rapl-Add-support-for-Bartlett-Lake-pl.rapl
+#misc
+Patch373:	0001-Add-security.md-file.misc
+#emt-drm
+Patch374:	0075-drm-xe-gsc-mei-interrupt-top-half-should-be-in-irq-d.patch
+# CVE Patches
+#CVE-2025-21709
+Patch375:	CVE-2025-21709.patch
+#CVE-2025-21807
+Patch376:	CVE-2025-21807.patch
+#CVE-2025-21817
+Patch377:	CVE-2025-21817.patch
+#CVE-2025-22103
+Patch378:	CVE-2025-22103.patch
+#CVE-2025-22104
+Patch379:	CVE-2025-22104.patch
+#CVE-2025-22105
+Patch380:	CVE-2025-22105.patch
+Patch381:	CVE-2025-22105-1.patch
+#CVE-2025-22106
+Patch382:	CVE-2025-22106.patch
+#CVE-2025-22108
+Patch383:	CVE-2025-22108.patch
+#CVE-2025-22111
+Patch384:	CVE-2025-22111.patch
+#CVE-2025-22113
+Patch385:	CVE-2025-22113.patch
+Patch386:	CVE-2025-22113-1.patch
+#CVE-2025-22116
+Patch387:	CVE-2025-22116.patch
+#CVE-2025-22117
+Patch388:	CVE-2025-22117.patch
+#CVE-2025-22121
+Patch389:	CVE-2025-22121.patch
+Patch390:	CVE-2025-22121-1.patch
+#CVE-2025-22124
+Patch391:	CVE-2025-22124.patch
+#CVE-2025-23131
+Patch392:	CVE-2025-23131.patch
+#CVE-2025-37746
+Patch393:	CVE-2025-37746.patch
+Patch394:	CVE-2025-37746-1.patch
+#CVE-2025-37906
+Patch395:	CVE-2025-37906.patch
+#CVE-2025-38041
+Patch396:	CVE-2025-38041.patch
+Patch397:	CVE-2025-38041-1.patch
+Patch398:	CVE-2025-38041-2.patch
+#CVE-2025-38029
+Patch399:	CVE-2025-38029.patch
+#CVE-2025-38311
+Patch400:	CVE-2025-38311.patch
+#CVE-2025-38306
+Patch401:	CVE-2025-38306.patch
+#CVE-2025-38248
+Patch402:	CVE-2025-38248.patch
+#CVE-2025-38234
+Patch403:	CVE-2025-38234.patch
+#CVE-2025-38207
+Patch404:	CVE-2025-38207.patch
+#CVE-2025-38137
+Patch405:	CVE-2025-38137.patch
+#CVE-2025-38105
+Patch406:	CVE-2025-38105.patch
+#CVE-2025-40325
+Patch407:	CVE-2025-40325.patch
+#CVE-2025-38284
+Patch408:	CVE-2025-38284.patch
+Patch409:	CVE-2025-38284-1.patch
+Patch410:	CVE-2025-38284-2.patch
+#CVE-2025-38272
+Patch411:	CVE-2025-38272.patch
+Patch412:	CVE-2025-38272-1.patch
+Patch413:	CVE-2025-38272-2.patch
+#CVE-2025-38199
+Patch414:	CVE-2025-38199.patch
+#CVE-2025-38140
+Patch415:	CVE-2025-38140.patch
+#CVE-2025-38132
+Patch416:	CVE-2025-38132.patch
+Patch417:	CVE-2025-38132-1.patch
+#CVE-2025-37743
+Patch418:	CVE-2025-37743.patch
+#CVE-2025-23133
+Patch419:	CVE-2025-23133.patch
+#CVE-2025-23132
+Patch420:	CVE-2025-23132.patch
+#CVE-2025-23130
+Patch421:	CVE-2025-23130.patch
+#CVE-2025-23129
+Patch422:	CVE-2025-23129.patch
+#CVE-2025-22127
+Patch423:	CVE-2025-22127.patch
+#CVE-2025-22125
+Patch424:	CVE-2025-22125.patch
+#CVE-2025-22109
+Patch425:	CVE-2025-22109.patch
+#CVE-2025-21752
+Patch426:	CVE-2025-21752.patch
+Patch427:	CVE-2025-21752-1.patch
+#CVE-2025-37860
+Patch428:	CVE-2025-37860.patch
+#CVE-2024-58095
+Patch429:	CVE-2024-58095.patch
+#CVE-2024-58094
+Patch430:	CVE-2024-58094.patch
+#CVE-2024-57995
+Patch431:	CVE-2024-57995.patch
+#CVE-2024-52560
+Patch432:	CVE-2024-52560.patch
+Patch433:	CVE-2024-52560-1.patch
+#CVE-2025-38621
+Patch434:	CVE-2025-38621.patch
+#CVE-2025-38502
+Patch435:	CVE-2025-38502.patch
+#CVE-2025-38627
+Patch436:	CVE-2025-38627.patch
+#CVE-2025-38643
+Patch437:	CVE-2025-38643.patch
 
 %global security_hardening none
 %global sha512hmac bash %{_sourcedir}/sha512hmac-openssl.sh
@@ -199,7 +664,9 @@ This package contains the bpftool, which allows inspection and simple
 manipulation of eBPF programs and maps.
 
 %prep
-%autosetup -p1 -n lts-v6.12.39-emt-250721T212915Z
+%define _default_patch_flags -p1 --fuzz=3 --force
+%setup -q -n linux-6.12.44
+%autosetup -p1 -n linux-6.12.44
 # %patch 0 -p1
 make mrproper
 
@@ -471,6 +938,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Tue Sep 09 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.44-1
+- Update kernel to 6.12.44
+
 * Thu Jul 24 2025 Ren Jiaojiao <jiaojiaox.ren@intel.com> - 6.12.39-1
 - Update kernel to 6.12.39
 

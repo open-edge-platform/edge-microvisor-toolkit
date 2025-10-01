@@ -1,0 +1,87 @@
+From c80b29753431a020525317ad95bbf397828f99f8 Mon Sep 17 00:00:00 2001
+From: Andi Shyti <andi.shyti@linux.intel.com>
+Date: Sat, 17 Aug 2024 23:00:21 +0200
+Subject: [PATCH 09/17] drm/i915/gt: Expose the number of total CCS slices
+
+Implement a sysfs interface to show the number of available CCS
+slices. The displayed number does not take into account the CCS
+balancing mode.
+
+Signed-off-by: Andi Shyti <andi.shyti@linux.intel.com>
+---
+ drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.c | 21 +++++++++++++++++++++
+ drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.h |  1 +
+ drivers/gpu/drm/i915/gt/intel_gt_sysfs.c    |  2 ++
+ 3 files changed, 24 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.c b/drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.c
+index fc8a23fc28b67..edb6a4b638265 100644
+--- a/drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.c
++++ b/drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.c
+@@ -5,7 +5,9 @@
+ 
+ #include "i915_drv.h"
+ #include "intel_gt_ccs_mode.h"
++#include "intel_gt_print.h"
+ #include "intel_gt_regs.h"
++#include "intel_gt_sysfs.h"
+ 
+ static void intel_gt_apply_ccs_mode(struct intel_gt *gt)
+ {
+@@ -100,3 +102,22 @@ void intel_gt_ccs_mode_init(struct intel_gt *gt)
+ 	/* Initialize the CCS mode setting */
+ 	intel_gt_apply_ccs_mode(gt);
+ }
++
++static ssize_t num_cslices_show(struct device *dev,
++				struct device_attribute *attr,
++				char *buff)
++{
++	struct intel_gt *gt = kobj_to_gt(&dev->kobj);
++	u32 num_slices;
++
++	num_slices = hweight32(CCS_MASK(gt));
++
++	return sysfs_emit(buff, "%u\n", num_slices);
++}
++static DEVICE_ATTR_RO(num_cslices);
++
++void intel_gt_sysfs_ccs_init(struct intel_gt *gt)
++{
++	if (sysfs_create_file(&gt->sysfs_gt, &dev_attr_num_cslices.attr))
++		gt_warn(gt, "Failed to create sysfs num_cslices files\n");
++}
+diff --git a/drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.h b/drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.h
+index 4a6763b95a78d..9696cc9017f68 100644
+--- a/drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.h
++++ b/drivers/gpu/drm/i915/gt/intel_gt_ccs_mode.h
+@@ -9,5 +9,6 @@
+ #include "intel_gt.h"
+ 
+ void intel_gt_ccs_mode_init(struct intel_gt *gt);
++void intel_gt_sysfs_ccs_init(struct intel_gt *gt);
+ 
+ #endif /* __INTEL_GT_CCS_MODE_H__ */
+diff --git a/drivers/gpu/drm/i915/gt/intel_gt_sysfs.c b/drivers/gpu/drm/i915/gt/intel_gt_sysfs.c
+index 33cba406b5698..895eedc402ae5 100644
+--- a/drivers/gpu/drm/i915/gt/intel_gt_sysfs.c
++++ b/drivers/gpu/drm/i915/gt/intel_gt_sysfs.c
+@@ -12,6 +12,7 @@
+ #include "i915_drv.h"
+ #include "i915_sysfs.h"
+ #include "intel_gt.h"
++#include "intel_gt_ccs_mode.h"
+ #include "intel_gt_print.h"
+ #include "intel_gt_sysfs.h"
+ #include "intel_gt_sysfs_pm.h"
+@@ -101,6 +102,7 @@ void intel_gt_sysfs_register(struct intel_gt *gt)
+ 		goto exit_fail;
+ 
+ 	intel_gt_sysfs_pm_init(gt, &gt->sysfs_gt);
++	intel_gt_sysfs_ccs_init(gt);
+ 
+ 	return;
+ 
+-- 
+2.34.1
+

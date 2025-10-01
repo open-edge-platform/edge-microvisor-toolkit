@@ -1,0 +1,213 @@
+From 32bb8f64a1a821e4424783a502ec5f19725eb12a Mon Sep 17 00:00:00 2001
+From: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Date: Mon, 14 Jun 2021 11:16:14 +0800
+Subject: [PATCH 14/32] net/core: XDP metadata BTF netlink API
+
+Add new devlink XDP attributes to be used to query or setup XDP metadata
+BTF state.
+
+IFLA_XDP_MD_BTF_ID: type NLA_U32.
+IFLA_XDP_MD_BTF_STATE: type = NLA_U8.
+
+On XDP query driver reports current loaded BTF ID, and its state if
+active or not.
+
+On XDP setup, driver will use these attributes to activate/deactivate
+a specific BTF ID.
+
+Signed-off-by: Saeed Mahameed <saeedm@mellanox.com>
+Signed-off-by: Jithu Joseph <jithu.joseph@intel.com>
+Signed-off-by: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
+---
+ include/linux/netdevice.h    | 15 +++++++++-
+ include/uapi/linux/if_link.h |  2 ++
+ net/core/dev.c               | 53 ++++++++++++++++++++++++++++++++++++
+ net/core/rtnetlink.c         | 18 +++++++++++-
+ 4 files changed, 86 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 411cf64248740..b4e0b9d25c014 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -929,6 +929,10 @@ enum bpf_netdev_command {
+ 	 */
+ 	XDP_SETUP_PROG,
+ 	XDP_SETUP_PROG_HW,
++	/* Setup/query XDP Meta Data BTF */
++	XDP_SETUP_MD_BTF,
++	XDP_QUERY_MD_BTF,
++
+ 	/* BPF program for offload callbacks, invoked at program load time. */
+ 	BPF_OFFLOAD_MAP_ALLOC,
+ 	BPF_OFFLOAD_MAP_FREE,
+@@ -952,6 +956,7 @@ struct bpf_xdp_entity {
+ 	struct bpf_prog *prog;
+ 	struct bpf_xdp_link *link;
+ };
++struct btf;
+ 
+ struct netdev_bpf {
+ 	enum bpf_netdev_command command;
+@@ -960,7 +965,11 @@ struct netdev_bpf {
+ 		struct {
+ 			u32 flags;
+ 			struct bpf_prog *prog;
+-			struct netlink_ext_ack *extack;
++		};
++		/* XDP_{SETUP/QUERY}_MD_BTF */
++		struct {
++			u8 btf_enable;
++			u32 btf_id;
+ 		};
+ 		/* BPF_OFFLOAD_MAP_ALLOC, BPF_OFFLOAD_MAP_FREE */
+ 		struct {
+@@ -971,6 +980,7 @@ struct netdev_bpf {
+ 			struct xsk_buff_pool *pool;
+ 			u16 queue_id;
+ 		} xsk;
++		struct netlink_ext_ack *extack;
+ 	};
+ };
+ 
+@@ -3968,6 +3978,9 @@ u32 dev_xdp_prog_id(struct net_device *dev, enum bpf_xdp_mode mode);
+ 
+ u32 dev_get_min_mp_channel_count(const struct net_device *dev);
+ 
++int dev_xdp_setup_md_btf(struct net_device *dev, struct netlink_ext_ack *extack,
++			 u8 enable);
++u32 dev_xdp_query_md_btf(struct net_device *dev, u8 *enabled);
+ int __dev_forward_skb(struct net_device *dev, struct sk_buff *skb);
+ int dev_forward_skb(struct net_device *dev, struct sk_buff *skb);
+ int dev_forward_skb_nomtu(struct net_device *dev, struct sk_buff *skb);
+diff --git a/include/uapi/linux/if_link.h b/include/uapi/linux/if_link.h
+index 6dc258993b177..380d38f999f49 100644
+--- a/include/uapi/linux/if_link.h
++++ b/include/uapi/linux/if_link.h
+@@ -1881,6 +1881,8 @@ enum {
+ 	IFLA_XDP_SKB_PROG_ID,
+ 	IFLA_XDP_HW_PROG_ID,
+ 	IFLA_XDP_EXPECTED_FD,
++	IFLA_XDP_MD_BTF_ID,
++	IFLA_XDP_MD_BTF_STATE,
+ 	__IFLA_XDP_MAX,
+ };
+ 
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 8453e14d301b6..04c09a75c1fa1 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -9861,6 +9861,59 @@ u32 dev_get_min_mp_channel_count(const struct net_device *dev)
+ 	return 0;
+ }
+ 
++/**
++ *	dev_xdp_query_md_btf - Query meta data btf of a device
++ *	@dev: device
++ *	@enabled: 1 if enabled, 0 otherwise
++ *
++ *	Returns btf id > 0 if valid
++ */
++u32 dev_xdp_query_md_btf(struct net_device *dev, u8 *enabled)
++{
++	struct netdev_bpf xdp;
++	bpf_op_t ndo_bpf;
++
++	ndo_bpf = dev->netdev_ops->ndo_bpf;
++	if (!ndo_bpf)
++		return 0;
++
++	memset(&xdp, 0, sizeof(xdp));
++	xdp.command = XDP_QUERY_MD_BTF;
++
++	if (ndo_bpf(dev, &xdp))
++		return 0; /* 0 is an invalid btf id */
++
++	*enabled = xdp.btf_enable;
++	return xdp.btf_id;
++}
++
++/**
++ *	dev_xdp_setup_md_btf - enable or disable meta data btf for a device
++ *	@dev: device
++ *	@extack: netlink extended ack
++ *	@enable: 1 to enable, 0 to disable
++ *
++ *	Returns 0 on success
++ */
++int dev_xdp_setup_md_btf(struct net_device *dev, struct netlink_ext_ack *extack,
++			 u8 enable)
++{
++	struct netdev_bpf xdp;
++	bpf_op_t ndo_bpf;
++
++	ndo_bpf = dev->netdev_ops->ndo_bpf;
++	if (!ndo_bpf)
++		return -EOPNOTSUPP;
++
++	memset(&xdp, 0, sizeof(xdp));
++
++	xdp.command = XDP_SETUP_MD_BTF;
++	xdp.btf_enable = enable;
++	xdp.extack = extack;
++
++	return ndo_bpf(dev, &xdp);
++}
++
+ /**
+  * dev_index_reserve() - allocate an ifindex in a namespace
+  * @net: the applicable net namespace
+diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
+index 2ba5cd965d3fa..5ec6dcea18bbe 100644
+--- a/net/core/rtnetlink.c
++++ b/net/core/rtnetlink.c
+@@ -1553,8 +1553,9 @@ static int rtnl_xdp_report_one(struct sk_buff *skb, struct net_device *dev,
+ 
+ static int rtnl_xdp_fill(struct sk_buff *skb, struct net_device *dev)
+ {
++	u32 prog_id, md_btf_id;
++	u8 md_btf_enabled = 0;
+ 	struct nlattr *xdp;
+-	u32 prog_id;
+ 	int err;
+ 	u8 mode;
+ 
+@@ -1587,6 +1588,10 @@ static int rtnl_xdp_fill(struct sk_buff *skb, struct net_device *dev)
+ 			goto err_cancel;
+ 	}
+ 
++	md_btf_id = dev_xdp_query_md_btf(dev, &md_btf_enabled);
++	nla_put_u32(skb, IFLA_XDP_MD_BTF_ID, md_btf_id);
++	nla_put_u8(skb, IFLA_XDP_MD_BTF_STATE, md_btf_enabled);
++
+ 	nla_nest_end(skb, xdp);
+ 	return 0;
+ 
+@@ -2110,6 +2115,8 @@ static const struct nla_policy ifla_xdp_policy[IFLA_XDP_MAX + 1] = {
+ 	[IFLA_XDP_ATTACHED]	= { .type = NLA_U8 },
+ 	[IFLA_XDP_FLAGS]	= { .type = NLA_U32 },
+ 	[IFLA_XDP_PROG_ID]	= { .type = NLA_U32 },
++	[IFLA_XDP_MD_BTF_ID]	= { .type = NLA_U32 },
++	[IFLA_XDP_MD_BTF_STATE] = { .type = NLA_U8 },
+ };
+ 
+ static const struct rtnl_link_ops *linkinfo_to_kind_ops(const struct nlattr *nla)
+@@ -3161,6 +3168,15 @@ static int do_setlink(const struct sk_buff *skb,
+ 				goto errout;
+ 			status |= DO_SETLINK_NOTIFY;
+ 		}
++
++		if (xdp[IFLA_XDP_MD_BTF_STATE]) {
++			u8 enable = nla_get_u8(xdp[IFLA_XDP_MD_BTF_STATE]);
++
++			err = dev_xdp_setup_md_btf(dev, extack, enable);
++			if (err)
++				goto errout;
++			status |= DO_SETLINK_NOTIFY;
++		}
+ 	}
+ 
+ errout:
+-- 
+2.25.1
+

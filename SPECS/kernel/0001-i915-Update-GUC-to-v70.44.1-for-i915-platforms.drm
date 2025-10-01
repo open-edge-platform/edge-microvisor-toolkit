@@ -1,0 +1,39 @@
+From 3c5a1154bf960a9bef74c1bfa8ae7e45c6a57410 Mon Sep 17 00:00:00 2001
+From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
+Date: Wed, 16 Apr 2025 17:21:57 +0800
+Subject: [PATCH 8/8] i915: Update GUC to v70.44.1 for i915 platforms
+
+Release latest recommended GUC firmware for DG1, DG2, TGL, ADL and MTL.
+
+Reference commit:
+https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/commit/i915?id=a21b7f3e500b13ac168788ac638e85db66c338dc
+
+Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+---
+ drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c b/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
+index 1bf99ada99b59..86afc6d175c48 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
+@@ -88,12 +88,12 @@ void intel_uc_fw_change_status(struct intel_uc_fw *uc_fw,
+  * security fixes, etc. to be enabled.
+  */
+ #define INTEL_GUC_FIRMWARE_DEFS(fw_def, guc_maj, guc_mmp) \
+-	fw_def(METEORLAKE,   0, guc_maj(mtl,  70, 36, 0)) \
+-	fw_def(DG2,          0, guc_maj(dg2,  70, 36, 0)) \
+-	fw_def(ALDERLAKE_P,  0, guc_maj(adlp, 70, 36, 0)) \
++	fw_def(METEORLAKE,   0, guc_maj(mtl,  70, 44, 1)) \
++	fw_def(DG2,          0, guc_maj(dg2,  70, 44, 1)) \
++	fw_def(ALDERLAKE_P,  0, guc_maj(adlp, 70, 44, 1)) \
+ 	fw_def(ALDERLAKE_P,  0, guc_mmp(adlp, 70, 1, 1)) \
+ 	fw_def(ALDERLAKE_P,  0, guc_mmp(adlp, 69, 0, 3)) \
+-	fw_def(ALDERLAKE_S,  0, guc_maj(tgl,  70, 36, 0)) \
++	fw_def(ALDERLAKE_S,  0, guc_maj(tgl,  70, 44, 1)) \
+ 	fw_def(ALDERLAKE_S,  0, guc_mmp(tgl,  70, 1, 1)) \
+ 	fw_def(ALDERLAKE_S,  0, guc_mmp(tgl,  69, 0, 3)) \
+ 	fw_def(DG1,          0, guc_maj(dg1,  70, 5, 1)) \
+-- 
+2.34.1
+

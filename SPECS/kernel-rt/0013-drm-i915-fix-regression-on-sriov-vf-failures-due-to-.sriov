@@ -1,0 +1,77 @@
+From f386ca35c56b7c37100bf10ecdfbe1b0f2532225 Mon Sep 17 00:00:00 2001
+From: "Zawawi, Muhammad Zul Husni" <muhammad.zul.husni.zawawi@intel.com>
+Date: Fri, 17 Mar 2023 15:42:04 +0800
+Subject: [PATCH 13/48] drm/i915: fix regression on sriov vf failures due to
+ new GuC interface with v70
+
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+---
+ drivers/gpu/drm/i915/gt/intel_ggtt.c              | 8 ++++----
+ drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c | 9 +++++----
+ 2 files changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/intel_ggtt.c b/drivers/gpu/drm/i915/gt/intel_ggtt.c
+index 6959f791a68fd..32d9aacc87d70 100644
+--- a/drivers/gpu/drm/i915/gt/intel_ggtt.c
++++ b/drivers/gpu/drm/i915/gt/intel_ggtt.c
+@@ -1614,12 +1614,12 @@ static int ggtt_probe_hw(struct i915_ggtt *ggtt, struct intel_gt *gt)
+ 
+ 	if (IS_SRIOV_VF(i915))
+ 		ret = gen12vf_ggtt_probe(ggtt);
+-	else if (GRAPHICS_VER(i915) >= 8)
+-		ret = gen8_gmch_probe(ggtt);
+-	else if (GRAPHICS_VER(i915) >= 6)
++	else if (GRAPHICS_VER(i915) <= 5)
++		ret = intel_ggtt_gmch_probe(ggtt);
++	else if (GRAPHICS_VER(i915) < 8)
+ 		ret = gen6_gmch_probe(ggtt);
+ 	else
+-		ret = intel_ggtt_gmch_probe(ggtt);
++		ret = gen8_gmch_probe(ggtt);
+ 
+ 	if (ret) {
+ 		dma_resv_fini(&ggtt->vm._resv);
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c b/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
+index a95447378385c..3a37978ae7f4a 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
+@@ -2100,7 +2100,8 @@ int intel_guc_submission_init(struct intel_guc *guc)
+ 	if (guc->submission_initialized)
+ 		return 0;
+ 
+-	if (GUC_SUBMIT_VER(guc) < MAKE_GUC_VER(1, 0, 0)) {
++	if (GUC_SUBMIT_VER(guc) < MAKE_GUC_VER(1, 0, 0) &&
++			IS_SRIOV_PF(guc_to_gt(guc)->i915)) {
+ 		ret = guc_lrc_desc_pool_create_v69(guc);
+ 		if (ret)
+ 			return ret;
+@@ -2616,7 +2617,7 @@ static int register_context(struct intel_context *ce, bool loop)
+ 		set_context_registered(ce);
+ 		spin_unlock_irqrestore(&ce->guc_state.lock, flags);
+ 
+-		if (GUC_SUBMIT_VER(guc) >= MAKE_GUC_VER(1, 0, 0))
++		if (GUC_SUBMIT_VER(guc) >= MAKE_GUC_VER(1, 0, 0) || IS_SRIOV_VF(guc_to_gt(guc)->i915))
+ 			guc_context_policy_init_v70(ce, loop);
+ 	}
+ 
+@@ -3272,7 +3273,7 @@ static void __guc_context_set_preemption_timeout(struct intel_guc *guc,
+ 						 u16 guc_id,
+ 						 u32 preemption_timeout)
+ {
+-	if (GUC_SUBMIT_VER(guc) >= MAKE_GUC_VER(1, 0, 0)) {
++	if (GUC_SUBMIT_VER(guc) >= MAKE_GUC_VER(1, 0, 0) || IS_SRIOV_VF(guc_to_gt(guc)->i915)) {
+ 		struct context_policy policy;
+ 
+ 		__guc_context_policy_start_klv(&policy, guc_id);
+@@ -3649,7 +3650,7 @@ static int guc_context_alloc(struct intel_context *ce)
+ static void __guc_context_set_prio(struct intel_guc *guc,
+ 				   struct intel_context *ce)
+ {
+-	if (GUC_SUBMIT_VER(guc) >= MAKE_GUC_VER(1, 0, 0)) {
++	if (GUC_SUBMIT_VER(guc) >= MAKE_GUC_VER(1, 0, 0) || IS_SRIOV_VF(guc_to_gt(guc)->i915)) {
+ 		struct context_policy policy;
+ 
+ 		__guc_context_policy_start_klv(&policy, ce->guc_id.id);
+-- 
+2.25.1
+

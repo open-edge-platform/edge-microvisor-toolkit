@@ -1,0 +1,238 @@
+From 24bfea596d34654f88ec483eb2e7b832314d0e2b Mon Sep 17 00:00:00 2001
+From: Tomasz Lis <tomasz.lis@intel.com>
+Date: Mon, 26 Aug 2024 22:56:59 +0200
+Subject: [PATCH 46/48] drm/i915/iov: Remember run state on suspend and restore
+ it
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+During PM suspend, some VFs may be running while others may be paused.
+
+This change makes sure that all VFs are paused during suspend, and
+only those which were running before are restored back to running
+state during PM resume.
+
+v2: Put pause with wait into a separate function.
+v3: Removed log spam, renamed the flag to mention suspend.
+
+Signed-off-by: Tomasz Lis <tomasz.lis@intel.com>
+Reviewed-by: Piotr Piórkowski <piotr.piorkowski@intel.com>
+---
+ drivers/gpu/drm/i915/gt/iov/intel_iov_state.c | 42 +++++++++
+ drivers/gpu/drm/i915/gt/iov/intel_iov_state.h |  1 +
+ drivers/gpu/drm/i915/gt/iov/intel_iov_types.h |  1 +
+ drivers/gpu/drm/i915/i915_sriov.c             | 87 ++++++++++++++++---
+ 4 files changed, 117 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c b/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
+index ba2c3883f1951..82009bbada9f2 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
+@@ -561,6 +561,48 @@ int intel_iov_state_pause_vf(struct intel_iov *iov, u32 vfid)
+ 	return 0;
+ }
+ 
++#define I915_VF_PAUSE_TIMEOUT_MS 500
++
++/**
++ * intel_iov_state_pause_vf_sync - Pause VF on one GuC, wait until the state settles.
++ * @iov: the IOV struct instance linked to target GuC
++ * @vfid: VF identifier
++ * @inferred: marks if the pause was not requested by user, but by the kernel
++ *
++ * The function issues a pause command only if the VF is not already paused or
++ * in process of pausing. Then it waits for the confirmation of pause completion.
++ * This function is for PF only.
++ *
++ * Return: 0 on success or a negative error code on failure.
++ */
++int intel_iov_state_pause_vf_sync(struct intel_iov *iov, u32 vfid, bool inferred)
++{
++	struct intel_iov_data *data = &iov->pf.state.data[vfid];
++	unsigned long timeout_ms = I915_VF_PAUSE_TIMEOUT_MS;
++	int ret;
++
++	if (intel_iov_state_no_pause(iov, vfid)) {
++		ret = intel_iov_state_pause_vf(iov, vfid);
++		if (ret) {
++			IOV_ERROR(iov, "Failed to pause VF%u: (%pe)", vfid, ERR_PTR(ret));
++			return ret;
++		}
++		if (inferred)
++			set_bit(IOV_VF_PAUSE_BY_SUSPEND, &data->state);
++	}
++
++	if (!inferred)
++		clear_bit(IOV_VF_PAUSE_BY_SUSPEND, &data->state);
++
++	/* FIXME: How long we should wait? */
++	if (wait_for(data->paused, timeout_ms)) {
++		IOV_ERROR(iov, "VF%u pause didn't complete within %lu ms\n", vfid, timeout_ms);
++		return -ETIMEDOUT;
++	}
++
++	return 0;
++}
++
+ /**
+  * intel_iov_state_resume_vf - Resume VF.
+  * @iov: the IOV struct
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_state.h b/drivers/gpu/drm/i915/gt/iov/intel_iov_state.h
+index 64704278e5eaf..802b558acb004 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_state.h
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_state.h
+@@ -18,6 +18,7 @@ void intel_iov_state_start_flr(struct intel_iov *iov, u32 vfid);
+ bool intel_iov_state_no_flr(struct intel_iov *iov, u32 vfid);
+ 
+ int intel_iov_state_pause_vf(struct intel_iov *iov, u32 vfid);
++int intel_iov_state_pause_vf_sync(struct intel_iov *iov, u32 vfid, bool inferred);
+ bool intel_iov_state_no_pause(struct intel_iov *iov, u32 vfid);
+ int intel_iov_state_resume_vf(struct intel_iov *iov, u32 vfid);
+ int intel_iov_state_stop_vf(struct intel_iov *iov, u32 vfid);
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_types.h b/drivers/gpu/drm/i915/gt/iov/intel_iov_types.h
+index 3a1147652d976..5a86850dfa10b 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_types.h
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_types.h
+@@ -135,6 +135,7 @@ struct intel_iov_data {
+ #define IOV_VF_NEEDS_FLR_FINISH		3
+ #define IOV_VF_NEEDS_FLR_DONE_SYNC	4
+ #define IOV_VF_PAUSE_IN_PROGRESS	5
++#define IOV_VF_PAUSE_BY_SUSPEND		6
+ #define IOV_VF_FLR_FAILED		(BITS_PER_LONG - 1)
+ 	bool paused;
+ 	unsigned int adverse_events[IOV_THRESHOLD_MAX];
+diff --git a/drivers/gpu/drm/i915/i915_sriov.c b/drivers/gpu/drm/i915/i915_sriov.c
+index 2b8c5b3546255..4701893e4a62c 100644
+--- a/drivers/gpu/drm/i915/i915_sriov.c
++++ b/drivers/gpu/drm/i915/i915_sriov.c
+@@ -721,32 +721,57 @@ static void pf_restore_vfs_pci_state(struct drm_i915_private *i915, unsigned int
+ 	}
+ }
+ 
+-#define I915_VF_PAUSE_TIMEOUT_MS 500
+ #define I915_VF_REPROVISION_TIMEOUT_MS 1000
+ 
+-static int pf_gt_save_vf_guc_state(struct intel_gt *gt, unsigned int vfid)
++static int pf_gt_save_vf_running(struct intel_gt *gt, unsigned int vfid)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(gt->i915->drm.dev);
+ 	struct intel_iov *iov = &gt->iov;
+-	struct intel_iov_data *data = &iov->pf.state.data[vfid];
+-	unsigned long timeout_ms = I915_VF_PAUSE_TIMEOUT_MS;
+-	int ret, size;
+ 
+ 	GEM_BUG_ON(!vfid);
+ 	GEM_BUG_ON(vfid > pci_num_vf(pdev));
+ 
+-	ret = intel_iov_state_pause_vf(iov, vfid);
+-	if (ret) {
+-		IOV_ERROR(iov, "Failed to pause VF%u: (%pe)", vfid, ERR_PTR(ret));
+-		return ret;
+-	}
++	return intel_iov_state_pause_vf_sync(iov, vfid, true);
++}
+ 
+-	/* FIXME: How long we should wait? */
+-	if (wait_for(data->paused, timeout_ms)) {
+-		IOV_ERROR(iov, "VF%u pause didn't complete within %lu ms\n", vfid, timeout_ms);
+-		return -ETIMEDOUT;
++static void pf_save_vfs_running(struct drm_i915_private *i915, unsigned int num_vfs)
++{
++	unsigned int saved = 0;
++	struct intel_gt *gt;
++	unsigned int gt_id;
++	unsigned int vfid;
++
++	for (vfid = 1; vfid <= num_vfs; vfid++) {
++		if (!needs_save_restore(i915, vfid)) {
++			drm_dbg(&i915->drm, "Save of VF%u running state has been skipped\n", vfid);
++			continue;
++		}
++
++		for_each_gt(gt, i915, gt_id) {
++			int err = pf_gt_save_vf_running(gt, vfid);
++
++			if (err < 0)
++				goto skip_vf;
++		}
++		saved++;
++		continue;
++skip_vf:
++		break;
+ 	}
+ 
++	drm_dbg(&i915->drm, "%u of %u VFs running state successfully saved", saved, num_vfs);
++}
++
++static int pf_gt_save_vf_guc_state(struct intel_gt *gt, unsigned int vfid)
++{
++	struct pci_dev *pdev = to_pci_dev(gt->i915->drm.dev);
++	struct intel_iov *iov = &gt->iov;
++	struct intel_iov_data *data = &iov->pf.state.data[vfid];
++	int ret, size;
++
++	GEM_BUG_ON(!vfid);
++	GEM_BUG_ON(vfid > pci_num_vf(pdev));
++
+ 	ret = intel_iov_state_save_vf_size(iov, vfid);
+ 	if (unlikely(ret < 0)) {
+ 		IOV_ERROR(iov, "Failed to get size of VF%u GuC state: (%pe)", vfid, ERR_PTR(ret));
+@@ -891,6 +916,38 @@ static void pf_restore_vfs_irqs(struct drm_i915_private *i915, unsigned int num_
+ 	}
+ }
+ 
++static int pf_gt_restore_vf_running(struct intel_gt *gt, unsigned int vfid)
++{
++	struct intel_iov *iov = &gt->iov;
++
++	if (!test_and_clear_bit(IOV_VF_PAUSE_BY_SUSPEND, &iov->pf.state.data[vfid].state))
++		return 0;
++
++	return intel_iov_state_resume_vf(iov, vfid);
++}
++
++static void pf_restore_vfs_running(struct drm_i915_private *i915, unsigned int num_vfs)
++{
++	unsigned int running = 0;
++	struct intel_gt *gt;
++	unsigned int gt_id;
++	unsigned int vfid;
++
++	for (vfid = 1; vfid <= num_vfs; vfid++) {
++		for_each_gt(gt, i915, gt_id) {
++			int err = pf_gt_restore_vf_running(gt, vfid);
++
++			if (err < 0)
++				goto skip_vf;
++		}
++		running++;
++skip_vf:
++		continue;
++	}
++
++	drm_dbg(&i915->drm, "%u of %u VFs restored to proper running state", running, num_vfs);
++}
++
+ static void pf_suspend_active_vfs(struct drm_i915_private *i915)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(i915->drm.dev);
+@@ -901,6 +958,7 @@ static void pf_suspend_active_vfs(struct drm_i915_private *i915)
+ 	if (num_vfs == 0)
+ 		return;
+ 
++	pf_save_vfs_running(i915, num_vfs);
+ 	pf_save_vfs_guc_state(i915, num_vfs);
+ }
+ 
+@@ -917,6 +975,7 @@ static void pf_resume_active_vfs(struct drm_i915_private *i915)
+ 	pf_restore_vfs_pci_state(i915, num_vfs);
+ 	pf_restore_vfs_guc_state(i915, num_vfs);
+ 	pf_restore_vfs_irqs(i915, num_vfs);
++	pf_restore_vfs_running(i915, num_vfs);
+ }
+ 
+ /**
+-- 
+2.25.1
+

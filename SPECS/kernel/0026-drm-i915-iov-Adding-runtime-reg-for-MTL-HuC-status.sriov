@@ -1,0 +1,65 @@
+From fd0e463dfa23721a2bb90e50e43a196aac3e7fdc Mon Sep 17 00:00:00 2001
+From: "Zawawi, Muhammad Zul Husni" <muhammad.zul.husni.zawawi@intel.com>
+Date: Fri, 26 Apr 2024 09:06:15 +0800
+Subject: [PATCH 26/48] drm/i915/iov: Adding runtime reg for MTL HuC status.
+
+Adding extra runtime reg for HuC loading status for
+Window VM.
+
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+---
+ drivers/gpu/drm/i915/gt/iov/intel_iov_service.c | 12 ++++++++++++
+ drivers/gpu/drm/i915/i915_sriov.c               |  4 +---
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_service.c b/drivers/gpu/drm/i915/gt/iov/intel_iov_service.c
+index eea28ad3d9f2f..88bb4f1568f00 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_service.c
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_service.c
+@@ -58,6 +58,7 @@ static const i915_reg_t mtl_runtime_regs[] = {
+ 	_MMIO(MTL_GSC_HECI1_BASE + HECI_FWSTS5),/* _MMIO(0x116c68) */
+ 	MTL_GT_ACTIVITY_FACTOR,		/* _MMIO(0x138010) */
+ 	_MMIO(0x389140),
++	_MMIO(0x38C1DC),                /* _MMIO(0x38C1DC) */
+ };
+ 
+ static const i915_reg_t *get_runtime_regs(struct drm_i915_private *i915,
+@@ -229,9 +230,20 @@ void intel_iov_service_release(struct intel_iov *iov)
+  */
+ void intel_iov_service_update(struct intel_iov *iov)
+ {
++	struct intel_gt *media_gt = iov_to_i915(iov)->media_gt;
++	enum forcewake_domains fw;
++
+ 	GEM_BUG_ON(!intel_iov_is_pf(iov));
+ 
++	if (media_gt) {
++		fw = intel_uncore_forcewake_for_reg(media_gt->uncore, _MMIO(0x38c1dc), FW_REG_READ);
++		intel_uncore_forcewake_get(media_gt->uncore, fw);
++	}
++
+ 	pf_prepare_runtime_info(iov);
++
++	if (media_gt)
++		intel_uncore_forcewake_put(media_gt->uncore, fw);
+ }
+ 
+ /**
+diff --git a/drivers/gpu/drm/i915/i915_sriov.c b/drivers/gpu/drm/i915/i915_sriov.c
+index d87d19ebd6a1d..4dce932833db5 100644
+--- a/drivers/gpu/drm/i915/i915_sriov.c
++++ b/drivers/gpu/drm/i915/i915_sriov.c
+@@ -536,9 +536,7 @@ int i915_sriov_pf_enable_vfs(struct drm_i915_private *i915, int num_vfs)
+ 		 * Update cached values of runtime registers shared with the VFs in case
+ 		 * HuC status register has been updated by the GSC after our initial probe.
+ 		 */
+-		if (intel_uc_wants_huc(&gt->uc) && intel_huc_is_loaded_by_gsc(&gt->uc.huc)) {
+-			intel_iov_service_update(&gt->iov);
+-		}
++		intel_iov_service_update(&gt->iov);
+ 	}
+ 
+ 	for_each_gt(gt, i915, id) {
+-- 
+2.25.1
+

@@ -1,0 +1,31 @@
+From 457a743c5d70f6848b4ecc58c1b92508de3a487a Mon Sep 17 00:00:00 2001
+From: "Pan, Kris" <kris.pan@intel.com>
+Date: Fri, 17 Jan 2025 05:18:09 +0000
+Subject: [PATCH 4/5] Revert "media: ipu6: remove architecture DMA ops
+ dependency in Kconfig"
+
+This reverts commit 11b0543efe54357b94dccb88dac2099c59358cd4.
+---
+ drivers/media/pci/intel/ipu6/Kconfig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/media/pci/intel/ipu6/Kconfig b/drivers/media/pci/intel/ipu6/Kconfig
+index 7176d16756fb2..b5d09f207cc9f 100644
+--- a/drivers/media/pci/intel/ipu6/Kconfig
++++ b/drivers/media/pci/intel/ipu6/Kconfig
+@@ -4,6 +4,12 @@ config VIDEO_INTEL_IPU6
+ 	depends on VIDEO_DEV
+ 	depends on X86 && X86_64 && HAS_DMA
+ 	depends on IPU_BRIDGE || !IPU_BRIDGE
++	#
++	# This driver incorrectly tries to override the dma_ops.  It should
++	# never have done that, but for now keep it working on architectures
++	# that use dma ops
++	#
++	depends on ARCH_HAS_DMA_OPS
+ 	select AUXILIARY_BUS
+ 	select IOMMU_IOVA
+ 	select VIDEO_V4L2_SUBDEV_API
+-- 
+2.25.1
+
