@@ -10,7 +10,6 @@
    export http_proxy="<url_and_port_of_your_proxy_server>"
    export https_proxy="<url_and_port_of_your_proxy_server>"
    ```
-   
 3. Install the required X11 packages through the tdnf package manager. Remove "-E" from the command if your system is not behind a proxy server:
 
    ```bash
