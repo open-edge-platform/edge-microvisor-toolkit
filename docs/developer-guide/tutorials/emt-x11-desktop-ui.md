@@ -20,7 +20,6 @@
    ```bash
    sudo -E tdnf install nano
    ```
-   
 5. Install the PyXDG library through the Python package installer. Remove "-E" from the command if your system is not behind a proxy server:
 
    ```bash
