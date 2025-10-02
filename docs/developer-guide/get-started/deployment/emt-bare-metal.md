@@ -74,7 +74,7 @@ the instructions below:
 10. Wait for completion and safely eject the USB.
 
 Next, set up the target machine to [boot from the USB drive](#boot-from-usb) to
-[install Edge Microvisor Toolkit Developer Node](#installing-edge-microvisor-toolkit-developer-node).
+[install Edge Microvisor Toolkit Developer Node](#install-edge-microvisor-toolkit-developer-node).
 
 ### Flash the RAW Image
 
