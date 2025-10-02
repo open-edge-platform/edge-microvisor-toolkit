@@ -73,7 +73,7 @@ the instructions below:
 9. Confirm warnings about data being erased.
 10. Wait for completion and safely eject the USB.
 
-Next, set up the target machine to [boot from the USB drive](#booting-from-usb) to
+Next, set up the target machine to [boot from the USB drive](#boot-from-usb) to
 [install Edge Microvisor Toolkit Developer Node](#installing-edge-microvisor-toolkit-developer-node).
 
 ### Flash the RAW Image
