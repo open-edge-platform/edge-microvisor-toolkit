@@ -1,14 +1,14 @@
 Name:           rpmdevtools
 Version:        9.6
-Release:        9%{?dist}
+Release:        10%{?dist}
 Summary:        RPM Development Tools
 
 # rpmdev-md5 and rpmdev-setuptree are GPL-2.0-only,
 # everything else is GPL-2.0-or-later.
 License:        GPL-2.0-or-later AND GPL-2.0-only
 URL:            https://pagure.io/rpmdevtools
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Source0:        https://releases.pagure.org/rpmdevtools/%{name}-%{version}.tar.xz
 Source1:        progressbar.py
 
@@ -159,6 +159,9 @@ $check_ok
 
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 9.6-10
+- Bump version for release
+
 * Tue Sep 03 2024 Neha Agarwal <nehaagarwal@microsoft.com> - 9.6-9
 - Add missing Vendor and Distribution tags.
 

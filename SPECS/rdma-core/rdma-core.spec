@@ -1,10 +1,10 @@
 Summary:        RDMA core userspace libraries and daemons
 Name:           rdma-core
 Version:        49.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 URL:            https://github.com/linux-rdma/rdma-core
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 
 # Almost everything is licensed under the OFA dual GPLv2, 2 Clause BSD license
 #  providers/ipathverbs/ Dual licensed using a BSD license with an extra patent clause
@@ -624,6 +624,9 @@ fi
 %endif
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 49.1-2
+- Bump version for release
+
 * Mon Jan 22 2024 Kanika Nema <kanikanema@microsoft.com> - 49.1-1
 - Upgrade to version 49.1 for AzL 3.0 release
 - Disable pyverbs as it cannot build with Cython > 3, the default for AzL 3.0

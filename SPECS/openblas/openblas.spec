@@ -21,10 +21,10 @@ Summary:        An optimized BLAS library based on GotoBLAS2
 # "obsoleted" features are still kept in the spec.
 Name:           openblas
 Version:        0.3.26
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        BSD-3-Clause
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/OpenMathLib/OpenBLAS/
 Source0:        https://github.com/OpenMathLib/OpenBLAS/archive/v%{version}/openblas-%{version}.tar.gz
 # Use system lapack
@@ -558,6 +558,9 @@ rm -rf %{buildroot}%{_libdir}/pkgconfig
 %{_libdir}/lib%{name}p64_.a
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 0.3.26-3
+- Bump version for release
+
 * Tue Apr 09 2024 Daniel McIlvaney <damcilva@microsoft.com> - 0.3.26-2
 - Remove multilib handling since azl doesn't support it
 

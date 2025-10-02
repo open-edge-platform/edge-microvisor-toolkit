@@ -2,12 +2,12 @@
 %global python3 /usr/libexec/platform-python
 %endif
 
-Name:       mock-core-configs
-Version:    41.2
-Release:    1%{?dist}
-Vendor:     Microsoft Corporation
-Distribution: Azure Linux
-Summary:    Mock core config files basic chroots
+Name:         mock-core-configs
+Version:      41.2
+Release:      2%{?dist}
+Vendor:       Intel Corporation
+Distribution: Edge Microvisor Toolkit
+Summary:      Mock core config files basic chroots
 
 License:    GPL-2.0-or-later
 URL:        https://github.com/rpm-software-management/mock/
@@ -154,6 +154,9 @@ fi
 %ghost %config(noreplace,missingok) %{_sysconfdir}/mock/default.cfg
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 41.2-2
+- Bump version for release
+
 * Wed Aug 28 2024 Reuben Olinsky <reubeno@microsoft.com> - 41.2-1
 - Sync with Fedora 41 version of spec.
 

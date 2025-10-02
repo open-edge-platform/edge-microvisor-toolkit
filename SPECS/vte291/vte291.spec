@@ -18,15 +18,15 @@
 
 Name:           vte291
 Version:        0.74.2
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        GTK+ 3 terminal emulator library
 
 # libvte-2.91.so is generated from LGPLv2+ and MIT sources
 License:        GPL-3.0-or-later AND LGPL-3.0-or-later AND MIT AND X11 AND CC-BY-4.0
 
 URL:            https://wiki.gnome.org/Apps/Terminal/VTE
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Source0:        https://download.gnome.org/sources/vte/%{majorver}/vte-%{version}.tar.xz
 # https://bugzilla.gnome.org/show_bug.cgi?id=711059
 # https://bugzilla.redhat.com/show_bug.cgi?id=1103380
@@ -196,6 +196,9 @@ sed -i -e "/^vte_systemduserunitdir =/s|vte_prefix|'/usr'|" meson.build
 %{_sysconfdir}/profile.d/vte.sh
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 0.74.2-8
+- Bump version for release
+
 * Tue Sep 03 2024 Neha Agarwal <nehaagarwal@microsoft.com> - 0.74.2-7
 - Add missing Vendor and Distribution tags.
 

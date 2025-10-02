@@ -19,9 +19,9 @@
 
 Name:          python-%{canonicalname}
 Version:       0.1.5
-Release:       1%{?dist}
-Vendor:        Microsoft Corporation
-Distribution:  Azure Linux
+Release:       2%{?dist}
+Vendor:        Intel Corporation
+Distribution:  Edge Microvisor Toolkit
 Summary:       Minimum functionality for rpmautospec
 
 License:       MIT
@@ -96,6 +96,9 @@ echo '%{python3_sitelib}/%{srcname}*' > %{pyproject_files}
 %endif
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 0.1.5-2
+- Bump version for release
+
 * Wed Aug 28 2028 Reuben Olinsky <reubeno@microsoft.com> - 0.1.5-1
 - Initial Azure Linux import from Fedora 41 (license: MIT)
 - License verified
