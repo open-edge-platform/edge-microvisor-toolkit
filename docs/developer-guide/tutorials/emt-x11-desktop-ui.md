@@ -53,7 +53,6 @@
    export XDG_RUNTIME_DIR=/tmp
    sudo -E bash -c 'xinit /usr/bin/openbox-session &'
    ```
-   
 ### Auto Launch
 
 For X Server to launch automatically during startup, you need to create a systemd service file as follows:
