@@ -82,7 +82,6 @@ For X Server to launch automatically during startup, you need to create a system
    [Install]
    WantedBy=multi-user.target
    ```
-   
 3. Enable the openbox-session service on startup, and restart the system:
 
    ```bash
