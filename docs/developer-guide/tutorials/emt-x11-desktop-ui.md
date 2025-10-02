@@ -25,7 +25,6 @@
    ```bash
    sudo -E python -m pip install PyXDG
    ```
-   
 6. Add a basic X11 configuration file for the Intel chipset (optional):
 
    ```bash
