@@ -87,7 +87,6 @@ For X Server to launch automatically during startup, you need to create a system
    sudo systemctl enable openbox-session.service
    sudo reboot
    ```
-   
 ## Verify the X Server
 
 1. In another remote terminal, launch the X11 client application to confirm the functionality:
