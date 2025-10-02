@@ -43,7 +43,6 @@
        Option "DRI" "3"
    EndSection
    ```
-   
 ## Launch X Server
 
 ### Manual Launch
