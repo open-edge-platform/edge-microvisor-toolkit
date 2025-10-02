@@ -1,10 +1,10 @@
 Summary:        Package to deploy azurelinux-sysinfo service
 Name:           azurelinux-sysinfo
 Version:        %{emt}.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        MIT
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
 URL:            https://aka.ms/azurelinux
 Source0:        collect-sysinfo
@@ -63,6 +63,9 @@ if rpm -q selinux-policy &> /dev/null; then
 fi
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 3.0-4
+- Bump version for release
+
 * Mon Sep 09 2024 Amrita Kohli <amritakohli@microsoft.com> - 3.0-3
 - Add rpm as a requirement.
 

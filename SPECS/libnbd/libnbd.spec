@@ -8,12 +8,12 @@
 %global source_directory 1.18-stable
 Name:           libnbd
 Version:        1.18.3
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        NBD client library in userspace
 License:        LGPL-2.0-or-later AND BSD-3-Clause
 URL:            https://gitlab.com/nbdkit/libnbd
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Source0:        https://libguestfs.org/download/libnbd/%{source_directory}/%{name}-%{version}.tar.gz
 
 %if !0%{?emt}
@@ -333,6 +333,9 @@ skip_test tests/connect-tcp6
 
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 1.18.3-4
+- Bump version for release
+
 * Tue Sep 03 2024 Neha Agarwal <nehaagarwal@microsoft.com> - 1.18.3-3
 - Add missing Vendor and Distribution tags.
 

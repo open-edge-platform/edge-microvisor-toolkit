@@ -903,7 +903,7 @@ func SystemBlockDevices() (systemDevices []SystemBlockDevice, err error) {
 	}
 
 	// Process each device to build the filtered list
-	systemDevices = make([]SystemBlockDevice, 0, len(blockDevices.Devices))
+	systemDevices = []SystemBlockDevice{}
 	for _, device := range blockDevices.Devices {
 		devicePath := fmt.Sprintf("/dev/%s", device.Name)
 		rawSize, err := strconv.ParseUint(device.Size.String(), 10, 64)
@@ -911,14 +911,12 @@ func SystemBlockDevices() (systemDevices []SystemBlockDevice, err error) {
 			return nil, fmt.Errorf("failed to parse size for %s: %v", devicePath, err)
 		}
 
-		isRemovable := isRemovableDevice(devicePath)
-		isReadOnly := isReadOnlyISO(devicePath)
-		isRemovableInstaller := isRemovable && isReadOnly
+		isISOInstaller := isReadOnlyISO(devicePath)
 
-		logger.Log.Debugf("Device: %s, Size: %d, Model: %s, IsRemovableInstaller: %v (IsRemovable: %v, IsReadOnly: %v)",
-			devicePath, rawSize, strings.TrimSpace(device.Model), isRemovableInstaller, isRemovable, isReadOnly)
+		logger.Log.Debugf("Device: %s, Size: %d, Model: %s, isISOInstaller : %v ",
+			devicePath, rawSize, strings.TrimSpace(device.Model), isISOInstaller)
 
-		if !isRemovableInstaller {
+		if !isISOInstaller {
 			systemDevices = append(systemDevices, SystemBlockDevice{
 				DevicePath:  devicePath,
 				RawDiskSize: rawSize,
@@ -933,43 +931,24 @@ func SystemBlockDevices() (systemDevices []SystemBlockDevice, err error) {
 	return systemDevices, nil
 }
 
-// isRemovableDevice determines if a device is removable (e.g., USB or similar media).
-func isRemovableDevice(devicePath string) bool {
-	deviceName := devicePath[5:] // Extract 'sda', 'sdb', 'nvme0n1', etc. from '/dev/'
-	removableFile := fmt.Sprintf("/sys/block/%s/removable", deviceName)
-	if exists, err := file.PathExists(removableFile); err == nil && exists {
-		if content, err := os.ReadFile(removableFile); err == nil {
-			if strings.TrimSpace(string(content)) == "1" {
-				logger.Log.Debugf("isRemovableDevice(%s) returning true", devicePath)
-				return true
-			}
-		}
-	}
-	logger.Log.Debugf("isRemovableDevice(%s) returning false", devicePath)
-	return false
-}
-
 // isReadOnlyISO checks if a device is mounted read-only (ISO on USB/CD).
 func isReadOnlyISO(devicePath string) bool {
 	mounts, err := os.ReadFile("/proc/mounts")
 	if err != nil {
 		logger.Log.Debugf("Failed to read /proc/mounts: %v", err)
-		logger.Log.Debugf("isReadOnlyISO(%s) returning false", devicePath)
 		return false
 	}
 	for _, line := range strings.Split(string(mounts), "\n") {
 		fields := strings.Fields(line)
-		if len(fields) >= 4 && fields[0] == devicePath {
+		if len(fields) >= 4 && fields[0] == devicePath && fields[2] == "iso9660" {
 			options := strings.Split(fields[3], ",")
 			for _, opt := range options {
 				if opt == "ro" {
-					logger.Log.Debugf("isReadOnlyISO(%s) returning true", devicePath)
 					return true
 				}
 			}
 		}
 	}
-	logger.Log.Debugf("isReadOnlyISO(%s) returning false", devicePath)
 	return false
 }
 

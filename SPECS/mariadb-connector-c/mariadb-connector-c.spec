@@ -3,10 +3,10 @@
 Summary:        The MariaDB Native Client library (C driver)
 Name:           mariadb-connector-c
 Version:        3.3.8
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        LGPLv2+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://mariadb.org/
 Source0:        https://archive.mariadb.org/connector-c-%{version}/%{name}-%{version}-src.tar.gz
 Source2:        my.cnf
@@ -210,6 +210,9 @@ popd
 #      NEW:         PR submitted, problem explained, waiting on upstream response
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 3.3.8-4
+- Bump version for release
+
 * Thu Apr 10 2025 Andy Zaugg <azaugg@linkedin.com> - 3.3.8-3
 - Run ldconfig as part of post install to ensure new libs are in ld cache
 
