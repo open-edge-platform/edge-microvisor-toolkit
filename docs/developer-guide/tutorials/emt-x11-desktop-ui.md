@@ -96,7 +96,6 @@ For X Server to launch automatically during startup, you need to create a system
    xhost +
    xclock
    ```
-   
 2. Verify the output where "xclock" is rendered onto the X11 Desktop as follows:
 
    ![overview of key software components](../assets/emt-xclock.png)
