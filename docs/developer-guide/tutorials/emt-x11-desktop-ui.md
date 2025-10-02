@@ -10,11 +10,13 @@
    export http_proxy="<url_and_port_of_your_proxy_server>"
    export https_proxy="<url_and_port_of_your_proxy_server>"
    ```
+   
 3. Install the required X11 packages through the tdnf package manager. Remove "-E" from the command if your system is not behind a proxy server:
 
    ```bash
    sudo -E tdnf install xorg-x11-server-Xorg xorg-x11-xinit xorg-x11-xinit-session xorg-x11-drv-libinput xorg-x11-apps xterm openbox libXfont2 freefont freetype gtk3 qemu-with-ui
    ```
+   
 4. Install the nano text editor (optional). Remove "-E" from the command if your system is not behind a proxy server:
 
    ```bash
@@ -26,6 +28,7 @@
    ```bash
    sudo -E python -m pip install PyXDG
    ```
+   
 6. Add a basic X11 configuration file for the Intel chipset (optional):
 
    ```bash
@@ -45,6 +48,7 @@
        Option "DRI" "3"
    EndSection
    ```
+   
 ## Launch X Server
 
 ### Manual Launch
@@ -65,6 +69,7 @@ For X Server to launch automatically during startup, you need to create a system
    ```bash
    sudo touch /lib/systemd/system/openbox-session.service
    ```
+   
 2. Add the following service content into the openbox-session.service file:
 
    ```bash
@@ -80,6 +85,7 @@ For X Server to launch automatically during startup, you need to create a system
    [Install]
    WantedBy=multi-user.target
    ```
+   
 3. Enable the openbox-session service on startup, and restart the system:
 
    ```bash
@@ -89,6 +95,7 @@ For X Server to launch automatically during startup, you need to create a system
    sudo systemctl enable openbox-session.service
    sudo reboot
    ```
+   
 ## Verify the X Server
 
 1. In another remote terminal, launch the X11 client application to confirm the functionality:
@@ -98,6 +105,7 @@ For X Server to launch automatically during startup, you need to create a system
    xhost +
    xclock
    ```
+   
 2. Verify the output where "xclock" is rendered onto the X11 Desktop as follows:
 
    ![overview of key software components](../assets/emt-xclock.png)
