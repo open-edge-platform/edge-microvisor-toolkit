@@ -32,7 +32,6 @@
    sudo touch 20-modesetting.conf
    sudo nano 20-modesetting.conf
    ```
-   
 7. Add the following configuration into 20-modesetting.conf, and save:
 
    ```bash
