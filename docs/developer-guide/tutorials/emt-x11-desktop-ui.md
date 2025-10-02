@@ -63,7 +63,6 @@ For X Server to launch automatically during startup, you need to create a system
    ```bash
    sudo touch /lib/systemd/system/openbox-session.service
    ```
-   
 2. Add the following service content into the openbox-session.service file:
 
    ```bash
