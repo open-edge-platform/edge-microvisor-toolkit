@@ -1,8 +1,8 @@
 # Edge Microvisor Toolkit Documentation
 
-Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. The Linux patches optimize performance and other capabilities for Intel silicon---a result that streamlines integration for operating system vendors and other technology partners.
+Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. The Linux patches optimize performance and other capabilities for Intel silicon -- a result that streamlines integration for operating system vendors and other technology partners.
 
-The toolkit's immutable and mutable versions --- including a standalone node prepared for partner evaluation and a real-time developer node designed with the Preempt RT Linux Kernel for predictable performance --- results in a reference Linux operating system primed to demonstrate how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads. 
+The toolkit's immutable and mutable versions -- including a standalone node prepared for partner evaluation and a real-time developer node designed with the Preempt RT Linux Kernel for predictable performance -- results in a reference Linux operating system primed to demonstrate how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads. 
 
 Here are the published versions of the toolkit:
 
@@ -21,13 +21,15 @@ Through its optimizations for Intel platforms, Edge Microvisor Toolkit showcases
 
 **Flexibility and modularity with foundational extensions:** Rapidly evaluate a diversity of deployments and applications, including cloud native, bare metal, and virtual machines. Image formats include ISO, VHD, VHDX, and RAW. The flexible build infrastructure of Edge Microvisor Toolkit enables you to create custom images from a large set of pre-provisioned packages by using .spec files.
 
+## Showcasing Intel Processors and GPUs with Kernel Optimizations
+
 Edge Microvisor Toolkit has undergone extensive validation across the Intel Xeon®, Intel® Core Ultra™, Intel Core™, and Intel® Atom® processor families. The toolkit provides robust support for integrated and Intel discrete GPU cards as well as an integrated NPU. There are pre-tuned drivers and acceleration libraries for Intel® CPUs and GPUs.
 
 The kernel used in the developer node of Edge Microvisor Toolkit, for example, includes the following: iGPU, dGPU (Intel® Arc™), SR-IOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, and RAS.
 
 Intel® Arc™ B-Series Graphics and other components are discoverable for containerized applications and VMs with pass-through mode to deliver processing power to distributed applications at the edge -- and that processing power can be fine tuned to minimize latency.
 
-### Performance Indicators
+## Performance Indicators
 
 - Boot time of less than 8 seconds on entry-level Intel® Core™ platforms.
 - Fast A/B image updates (<30s) with automatic rollback support on Edge Microvisor Toolkit.
