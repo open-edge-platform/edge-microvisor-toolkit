@@ -1,10 +1,10 @@
 Summary:        Metapackage with core sets of packages
 Name:           core-packages
 Version:        %{emt}.0
-Release:        6%{?dist}
+Release:        7%{?dist}
 License:        ASL 2.0
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
 URL:            https://aka.ms/mariner
 
@@ -89,6 +89,9 @@ Requires:       zlib
 %files container
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 3.0-7
+- Bump version for release
+
 * Mon July 16 2024 Jon Slobodzian <joslobo@microsoft.com> - 3.0-6
 - Restore azurelinux-repos to their production versions for all images.
 
