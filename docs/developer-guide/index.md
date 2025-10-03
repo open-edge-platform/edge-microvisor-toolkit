@@ -1,13 +1,5 @@
 # Edge Microvisor Toolkit Documentation
 
-<!--
-Content Requirements:
-
-1. Clearly define the OS purpose and its target users.
-2. Highlight key features that differentiate this OS.
-3. Include any unique design principles or philosophies.
--->
-
 Edge Microvisor Toolkit is an open-source, lightweight operating system based on Azure Linux,
 and optimized for Intel® architecture. As a container-first, immutable OS, it is a perfect
 foundation for high-performance edge computing workloads that benefit from scalability and
@@ -101,14 +93,6 @@ to create your own, custom images.
   compressed RAW image size.
 
 ## License Information
-
-<!--
-Content Requirements:
-
-1. Clearly state the license type and link to the LICENSE file.
-2. Mention any third-party open-source licenses if applicable.
-3. Provide guidance on how contributions are licensed.
--->
 
 Edge Microvisor Toolkit is based on [Azure Linux](https://github.com/microsoft/azurelinux),
 sharing its permissive open-source license:
