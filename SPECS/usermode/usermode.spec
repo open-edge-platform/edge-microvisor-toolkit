@@ -9,9 +9,9 @@
 Summary: Tools for certain user account management tasks
 Name: usermode
 Version:       1.114
-Release:       1%{?dist}
-Vendor:        Microsoft Corporation
-Distribution:  Azure Linux
+Release:       2%{?dist}
+Vendor:        Intel Corporation
+Distribution:  Edge Microvisor Toolkit
 License:       GPL-2.0-or-later
 URL:           https://pagure.io/%{name}/
 Source:        https://releases.pagure.org/%{name}/%{name}-%{version}.tar.xz
@@ -115,6 +115,9 @@ done
 %endif
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 1.114-2
+- Bump version for release
+
 * Wed Aug 28 2024 Reuben Olinsky <reubeno@microsoft.com> - 1.114-1
 - Upgraded to 1.114 and sync'd with Fedora spec.
 

@@ -1,10 +1,10 @@
 Summary:        OCaml library for common file and filename operations
 Name:           ocaml-fileutils
 Version:        0.6.4
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        LGPLv2 WITH exceptions
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/gildor478/ocaml-fileutils
 # NOTE: the "_2" suffix was added to avoid conflicts with an older source tarball for the same version of the sources.
 #       Please remove it during a version update.
@@ -62,6 +62,9 @@ developing applications that use %{name}.
 %doc README.md CHANGES.md
 
 %changelog
+* Tue Sep 30 2025 Andy <andy.peng@intel.com> - 0.6.4-2
+- Bump version for release
+
 * Tue May 07 2024 Mykhailo Bykhovtsev <mbykhovtsev@microsoft.com> - 0.6.4-1
 - Converted spec file to match with Fedora 41.
 - Upgrade to 0.6.4
