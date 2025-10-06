@@ -98,7 +98,8 @@ For X Server to launch automatically during startup, you need to create a system
 2. Verify the output where "xclock" is rendered onto the X11 Desktop as follows:
 
    ![overview of key software components](../assets/emt-xclock.png)
-3. Disable the screen from going into the sleep mode by running the following in a separate, new terminal:
+
+**Note:** If you want to disable the OpenBox Desktop UI from going into the sleep mode (blank screen), run the following command in a newly connected remote SSH terminal:
 
    ```bash
    export DISPLAY=:0
