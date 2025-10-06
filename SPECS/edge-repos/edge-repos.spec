@@ -1,7 +1,7 @@
 Summary:        Edge Microvisor Toolkit repo files, gpg keys
 Name:           edge-repos
 Version:        3.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
