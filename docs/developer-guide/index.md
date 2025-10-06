@@ -19,7 +19,9 @@ Through its optimizations for Intel platforms, Edge Microvisor Toolkit showcases
 **Support for multiple scenarios:** Use industry-specific sample applications with benchmarks, as well as edge AI libraries with OpenVINO™ inferencing runtime software development kits, to rapidly build, validate, and optimize edge AI
 solutions on Intel silicon across scenarios and industries.
 
-**Built-in security:** Protect computers, hypervisors, apps, and data with such capabilities as trusted compute, single-root I/O virtualization (SR-IOV), secure boot, full-disk encryption, dm-verity, and Trusted Platform Module (TPM). The microvisor uses a Unified Kernel Image (UKI), which is a single EFI binary that packages together the Intel® kernel, `initramfs`, and associated kernel command-line parameters, a design that simplifies the boot process on UEFI systems and improves security, especially when combined with Secure Boot.
+**Built-in security:** Protect computers, hypervisors, apps, and data with such capabilities as trusted compute, single-root I/O virtualization (SR-IOV), secure boot, full-disk encryption, dm-verity, and Trusted Platform Module (TPM).
+The microvisor uses a Unified Kernel Image (UKI), which is a single EFI binary that packages together the Intel® kernel, `initramfs`, and associated kernel command-line parameters, a design that simplifies the boot process on UEFI
+systems and improves security, especially when combined with Secure Boot.
 
 **Flexibility and modularity with foundational extensions:** Rapidly evaluate a diversity of deployments and applications, including cloud native, bare metal, and virtual machines. Image formats include ISO, VHD, VHDX, and RAW. The flexible build infrastructure of Edge Microvisor Toolkit enables you to create custom images from a large set of pre-provisioned packages by using .spec files.
 
