@@ -165,7 +165,8 @@ function download() {
         log_num=$((log_num + 1))
         attempt_log_file="$log_file.$log_num"
         src_url="$url/$rpm_name"
-
+        first_char=$(echo "${rpm_name:0:1}" | tr '[:upper:]' '[:lower:]')
+        src_url="$url/Packages/$first_char/$rpm_name"
         echo "$src_url -> $attempt_log_file" >> "$log_file"
         { $downloader_tool $cert $key --no-clobber --output-file="$dst_file" --log-file="$attempt_log_file" "$src_url" 1>/dev/null 2>&1 ; res=$? ; } || true
 

@@ -65,6 +65,8 @@ endif
 
 ifneq ($(DAILY_BUILD_REPO),)
    PACKAGE_ROOT := $(shell grep -m 1 "baseurl" $(DAILY_BUILD_REPO) | sed 's|baseurl=||g')
+   PACKAGE_DEBUGINFO := $(subst base,debuginfo,$(PACKAGE_ROOT))
+   PACKAGE_SRPM := $(subst base,srpm,$(PACKAGE_ROOT))
    $(warning )
    $(warning ######################### WARNING #########################)
    $(warning Using a Daily Build Repo at following location:)
@@ -72,12 +74,11 @@ ifneq ($(DAILY_BUILD_REPO),)
    $(warning ######################### WARNING #########################)
    $(warning )
    override PACKAGE_URL_LIST  := $(PACKAGE_URL_LIST) \
-                                 $(PACKAGE_ROOT)/RPMS/x86_64 \
-                                 $(PACKAGE_ROOT)/RPMS/noarch \
-                                 $(PACKAGE_ROOT)/RPMS/debuginfo
+                                 $(PACKAGE_ROOT) \
+                                 $(PACKAGE_DEBUGINFO)
 
    override SRPM_URL_LIST     := $(SRPM_URL_LIST) \
-                                 $(PACKAGE_ROOT)/SRPMS
+                                 $(PACKAGE_SRPM)
 
    override PACKAGE_REPO_LIST := $(PACKAGE_REPO_LIST) \
                                  $(PACKAGE_ROOT)
