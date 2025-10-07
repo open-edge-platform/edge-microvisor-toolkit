@@ -20,7 +20,6 @@ update_health_check_config() {
 update_health_check_config
 
 if [ -n "$MAX_AGENT_MEMORY" ]; then
-	local UPDATED_MAX_AGENT_MEMORY
 	UPDATED_MAX_AGENT_MEMORY=$(sed "s/MemoryMax=.*/MemoryMax=$MAX_AGENT_MEMORY/g" /lib/systemd/system/platform-observability-health-check.service)
 	echo -E "${UPDATED_MAX_AGENT_MEMORY}" > /lib/systemd/system/platform-observability-health-check.service
 fi
