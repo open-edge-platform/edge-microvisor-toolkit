@@ -1,0 +1,63 @@
+# Edge Microvisor Toolkit Documentation
+
+Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. The Linux patches optimize performance and other capabilities for Intel silicon -- a result that streamlines integration for operating system vendors and other technology partners.
+
+The toolkit's immutable and mutable versions -- including a standalone node prepared for partner evaluation and a real-time developer node designed with the Preempt RT Linux Kernel for predictable performance -- results in a reference Linux operating system primed to demonstrate how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads. 
+
+Here are the published versions of the toolkit:
+
+* [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
+* [Edge Microvisor Toolkit Developer Node with or without real-time extensions (mutable)](./emt-architecture-overview.md)
+* [Edge Microvisor Toolkit (immutable or mutable) for deploying with Edge Manageability Framework](./emt-deployment-edge-orchestrator.md)
+* [Edge Microvisor Bootkit](./emt-bootkit.md)
+
+## Demonstrating the Capabilities of Intel Technology
+
+Through its optimizations for Intel platforms, Edge Microvisor Toolkit showcases distinctive capabilities for operating system vendors and other partners, who can typically obtain early access to next-generation Intel platform innovations, features, and optimizations. Here are some of the toolkit's capabilities that help highlight the power of Intel technology: 
+
+**Support for multiple scenarios:** Use industry-specific sample applications with benchmarks, as well as edge AI libraries with OpenVINO™ inferencing runtime software development kits, to rapidly build, validate, and optimize edge AI solutions on Intel silicon across scenarios and industries. 
+
+**Built-in security:** Protect computers, hypervisors, apps, and data with such capabilities as trusted compute, single-root I/O virtualization (SR-IOV), secure boot, full-disk encryption, dm-verity, and Trusted Platform Module (TPM). The microvisor uses a Unified Kernel Image (UKI), which is a single EFI binary that packages together the Intel® kernel, `initramfs`, and associated kernel command-line parameters, a design that simplifies the boot process on UEFI systems and improves security, especially when combined with Secure Boot.
+
+**Flexibility and modularity with foundational extensions:** Rapidly evaluate a diversity of deployments and applications, including cloud native, bare metal, and virtual machines. Image formats include ISO, VHD, VHDX, and RAW. The flexible build infrastructure of Edge Microvisor Toolkit enables you to create custom images from a large set of pre-provisioned packages by using .spec files.
+
+## Showcasing Intel Processors and GPUs with Kernel Optimizations
+
+Edge Microvisor Toolkit has undergone extensive validation across the Intel Xeon®, Intel® Core Ultra™, Intel Core™, and Intel® Atom® processor families. The toolkit provides robust support for integrated and Intel discrete GPU cards as well as an integrated NPU. There are pre-tuned drivers and acceleration libraries for Intel® CPUs and GPUs.
+
+The kernel used in the developer node of Edge Microvisor Toolkit, for example, includes the following: iGPU, dGPU (Intel® Arc™), SR-IOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, and RAS.
+
+Intel® Arc™ B-Series Graphics and other components are discoverable for containerized applications and VMs with pass-through mode to deliver processing power to distributed applications at the edge -- and that processing power can be fine tuned to minimize latency.
+
+## Performance Indicators
+
+- Boot time of less than 8 seconds on entry-level Intel® Core™ platforms.
+- Fast A/B image updates (<30s) with automatic rollback support on Edge Microvisor Toolkit.
+- Small footprint with less than 750MB of disk space required for the operating system and a compressed RAW image size less than 350MB.
+
+## License Information
+
+Based on [Azure Linux](https://github.com/microsoft/azurelinux), Edge Microvisor Toolkit shares its permissive open-source license:
+[MIT](https://github.com/microsoft/azurelinux/blob/3.0/LICENSE).
+
+See the
+[LICENSE](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/LICENSE)
+document.
+
+## Next Steps
+
+[Architecture Overview](./emt-architecture-overview.md)
+
+<!--hide_directive
+:::{toctree}
+
+emt-get-started
+emt-architecture-overview
+emt-deployment-edge-orchestrator
+emt-bootkit
+emt-security-considerations
+emt-contribution
+emt-troubleshooting
+emt-system-requirements
+:::
+hide_directive-->
