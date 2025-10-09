@@ -11,3 +11,13 @@ sudo grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
 ```
 
 Contact Your Intel representative for more details on configuring guest OS for SRIOV specific use cases.
+
+## Setup Guides
+
+[Kernel and Host User Space Setup](./emt-vm-host-setup.md)
+
+[Windows Guest VM](./emt-vm-host-win-guest.md)
+
+[Ubuntu Guest VM](./emt-vm-host-ubuntu-guest.md)
+
+<!--[EMT]-->
