@@ -1,4 +1,4 @@
-# Ubuntu
+# Hosting Windows 11 Guest VM under EMT Host
 
 ## Install and Setup Ubuntu VM
 
@@ -153,9 +153,9 @@ $ cp ovmf/OVMF_VARS.fd OVMF_VARS_ubuntu.fd
 
    The ubuntu.qcow2 image is now ready to use.
 
-### Configuration Options for Running Ubuntu VM
+## Configuration Options for Running Ubuntu VM
 
-#### Changing Guest VM Memory and Number of CPUs
+### Changing Guest VM Memory and Number of CPUs
 
 The default launch command without any parameters is for 2 cores and 2G RAM. You can change that with startup parameters.
 
@@ -167,7 +167,7 @@ Example guest start configuration for 4 cores, 4G RAM:
 $ sudo -E ./start_ubuntu.sh -m 4G -c 4
 ```
 
-#### Enabling USB Devices in Guest VM
+### Enabling USB Devices in Guest VM
 
 For Ubuntu guest VMs, USB devices can be setup in two ways:
 
@@ -206,7 +206,7 @@ $ sudo -E ./start_ubuntu.sh -e "-device usb-host,vendorid=0x046d,productid=0xc06
 
 > **Note:** A passthrough device option can only be used once because a device can be passthrough to only 1 guest VM at a time.
 
-#### Enabling PCIe Wi-Fi Adapter Device in Guest VM
+### Enabling PCIe Wi-Fi Adapter Device in Guest VM
 
 For Ubuntu guest VMs, PCI Wi-Fi device passthrough can be setup by adding `--passthrough-pci-wifi` parameter to guest VM launch command:
 

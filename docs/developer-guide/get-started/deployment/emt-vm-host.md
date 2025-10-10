@@ -2,6 +2,8 @@
 
 Edge Microvisor Toolit supports SR-IOV (Single Root Input/Output Virtualization), which allows it to serve as host OS for virtualization of other operating systems, running as Guest OS in a virtual machine.
 
+## Prerequisites
+
 To enable SR-IOV you need to ensure the following Kernel parameters are set:
 
 ```bash
