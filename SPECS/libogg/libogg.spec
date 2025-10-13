@@ -1,5 +1,5 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Summary:        The Ogg bitstream file format library
 Name:           libogg
 Version:        1.3.4
@@ -81,6 +81,10 @@ mv $RPM_BUILD_ROOT%{_docdir}/%{name} __installed_docs
 
 
 %changelog
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.3.4-4
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+
 * Mon Nov 01 2021 Muhammad Falak <mwani@microsft.com> - 1.3.4-4
 - Remove epoch
 

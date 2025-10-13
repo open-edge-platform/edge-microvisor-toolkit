@@ -3,8 +3,8 @@ Name:           libtheora
 Version:        1.1.1
 Release:        1%{?dist}
 License:        BSD-3-Clause
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          Productivity/Multimedia/Other
 URL:            https://www.theora.org/
 Source0:        https://ftp.osuosl.org/pub/xiph/releases/theora/%{name}-%{version}.tar.gz
@@ -141,6 +141,10 @@ make check
 %exclude %{_libdir}/*.la
 
 %changelog
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.1.1-1
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+
 * Tue Nov 22 2022 Sumedh Sharma <sumsharma@microsoft.com> - 1.1.1-1
 - Initial CBL-Mariner import from openSUSE Tumbleweed (license: same as "License" tag)
 - Converting the 'Release' tag to the '[number].[distribution]' format

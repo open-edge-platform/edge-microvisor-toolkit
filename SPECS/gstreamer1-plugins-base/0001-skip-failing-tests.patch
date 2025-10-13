@@ -1,0 +1,25 @@
+Description: Disable a number of failing GL tests on ppc64el
+ A regression in mesa causes instability on ppc64el, so until that is
+ fixed, disable the tests.
+ .
+ See https://gitlab.freedesktop.org/mesa/mesa/-/issues/12452
+Author: Marc Leeman <marc.leeman@gmail.com>
+Forwarded: not-needed
+Last-Update: 2025-01-29
+
+Index: gst-plugins-base1.0/tests/check/meson.build
+===================================================================
+--- gst-plugins-base1.0.orig/tests/check/meson.build
++++ gst-plugins-base1.0/tests/check/meson.build
+@@ -103,9 +103,9 @@ if build_gstgl and host_machine.system()
+     [ 'libs/gstglslstage.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
+     [ 'libs/gstglupload.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
+     [ 'libs/gstglvideomixerelement.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
+-    [ 'elements/glimagesink.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
++    [ 'elements/glimagesink.c', true, [gstgl_dep, gstglproto_dep]],
+     [ 'elements/glbin.c', not build_gstgl ],
+-    [ 'pipelines/gl-launch-lines.c', not build_gstgl ],
++    [ 'pipelines/gl-launch-lines.c', true ],
+     [ 'elements/glfilter.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
+     [ 'elements/glstereo.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],
+     [ 'elements/glmixer.c', not build_gstgl, [gstgl_dep, gstglproto_dep]],

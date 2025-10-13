@@ -1,5 +1,5 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Name:       iso-codes
 Summary:    ISO code lists and translations
 Version:    4.4
@@ -51,6 +51,10 @@ when building programs that use %{name}.
 %{_datadir}/pkgconfig/iso-codes.pc
 
 %changelog
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 4.4-3
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+
 * Fri Oct 15 2021 Pawel Winogrodzki <pawelwi@microsoft.com> - 4.4-3
 - Initial CBL-Mariner import from Fedora 32 (license: MIT).
 

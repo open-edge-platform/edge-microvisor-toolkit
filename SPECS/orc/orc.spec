@@ -4,8 +4,8 @@ Release:	2%{?dist}
 Summary:	The Oil Run-time Compiler
 
 License:	BSD-2-Clause AND BSD-3-Clause
-Vendor:         Microsoft Corporation                              
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:		http://cgit.freedesktop.org/gstreamer/orc/
 Source0:	https://gstreamer.freedesktop.org/src/orc/%{name}-%{version}.tar.xz
 
@@ -91,6 +91,10 @@ rm -rf %{buildroot}/%{_libdir}/orc
 
 
 %changelog
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 0.4.39-2
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+
 * Tue Dec 17 2024 Jyoti kanase <v-jykanase@microsoft.com> - 0.4.39-2
 - Initial Azure Linux import from Fedora 41 (license: MIT).
 - License verified.

@@ -1,0 +1,50 @@
+From 20de7236a6fa022a7c52b1c1ccf6ce33a3142f7a Mon Sep 17 00:00:00 2001
+From: He Junyan <junyan.he@intel.com>
+Date: Thu, 16 May 2024 14:22:42 +0800
+Subject: [PATCH] glimagesink: set last sample disabled if input is
+ "external-oes"
+
+The last sample causes error log of:
+  gstglmemory.c:926:_gl_tex_copy: Cannot copy External OES textures
+
+So we should disable last sample if the input is "external-oes".
+
+Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6863#note_2415780>
+
+This is a temporary fix for error message that occcured after a successful
+playback. Need to be removed after upstream have produced their fix.
+---
+ ext/gl/gstglimagesink.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/ext/gl/gstglimagesink.c b/ext/gl/gstglimagesink.c
+index dd32d5f1..019df309 100644
+--- a/ext/gl/gstglimagesink.c
++++ b/ext/gl/gstglimagesink.c
+@@ -1647,6 +1647,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+   GstGLImageSink *glimage_sink;
+   gboolean ok;
+   GstVideoInfo vinfo;
++  GstStructure *structure;
+ 
+   GST_DEBUG_OBJECT (bsink, "set caps with %" GST_PTR_FORMAT, caps);
+ 
+@@ -1668,6 +1669,15 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+ 
+   GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
+ 
++  structure = gst_caps_get_structure (caps, 0);
++  if (gst_structure_has_field_typed
++      (structure, "texture-target", G_TYPE_STRING)) {
++    const gchar *str = gst_structure_get_string (structure, "texture-target");
++
++    if (g_strcmp0 (str, GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR) == 0)
++      gst_base_sink_set_last_sample_enabled (bsink, FALSE);
++  }
++
+   return ok;
+ }
+ 
+-- 
+2.34.1
+

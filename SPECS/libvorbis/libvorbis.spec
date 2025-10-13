@@ -1,5 +1,5 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Summary:	The Vorbis General Audio Compression Codec
@@ -77,6 +77,10 @@ make check
 %ldconfig_scriptlets
 
 %changelog
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.3.7-1
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+
 * Wed Sep 06 2023 Archana Choudhary <archana1@microsoft.com> - 1.3.7-1
 - Upgrade to 1.3.7 - CVE-2018-10392 CVE-2018-10393
 - Remove patch libvorbis-1.3.6-git.patch

@@ -1,5 +1,5 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Name:           graphene
 Version:        1.10.8
 Release:        1%{?dist}
@@ -65,6 +65,10 @@ the functionality of the installed %{name} package.
 %{_datadir}/installed-tests/
 
 %changelog
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.10.8-1
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+
 * Thu Oct 17 2024 Kevin Lockwood <v-klockwood@microsoft.com> - 1.10.8-1
 - Upgrade to 1.10.8
 - License Verified

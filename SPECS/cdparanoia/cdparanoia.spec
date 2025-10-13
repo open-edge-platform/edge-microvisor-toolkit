@@ -3,8 +3,8 @@ Name:           cdparanoia
 Version:        10.2
 Release:        1%{?dist}
 License:        GPL-2.0-or-later
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          Productivity/Multimedia/CD/Grabbers
 URL:            https://www.xiph.org/paranoia/index.html
 Source:         https://downloads.xiph.org/releases/%{name}/%{name}-III-%{version}.src.tgz
@@ -108,6 +108,10 @@ install -m644 cdparanoia.1.jp $JAPN_MANDIR/cdparanoia.1
 %{_libdir}/libcdda_interface.so
 
 %changelog
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 10.2-1
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+
 * Wed Nov 23 2022 Sumedh Sharma <sumsharma@microsoft.com> - 10.2-1
 - Initial CBL-Mariner import from openSUSE Tumbleweed (license: same as "License" tag)
 - Converting the 'Release' tag to the '[number].[distribution]' format
