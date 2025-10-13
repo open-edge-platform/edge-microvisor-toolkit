@@ -11,14 +11,16 @@
    Unzip and install the script file on host OS:
 
    ```bash
-   $ unzip -jo rpls_sriov_kvm_multios_emt-3.1_ww2525.zip
+   unzip -jo rpls_sriov_kvm_multios_emt-3.1_ww2525.zip
    ```
 
    If you have already installed the script as part of the host setup, skip this step.
 
 2. Windows ISO Image
 
-   Download [Windows 11 Enterprise internal test version 24H2](file://10.106.47.116/iotg-sriov/SRIOV_OS/Win11_24H2/26100.1.240331-1435.ge_release_CLIENTENTERPRISE_OEM_x64FRE_en-us.iso) into your working directory, where you unzipped the installation scripts and ran the host setup. For purpose of this guide we're assuming `/home/$USER`.
+   Download [Windows 11 Enterprise internal test version 24H2](file://10.106.47.116/iotg-sriov/SRIOV_OS/Win11_24H2/26100.1.240331-1435.ge_release_CLIENTENTERPRISE_OEM_x64FRE_en-us.iso) into your working
+   directory, where you unzipped the installation scripts and ran the host setup.
+   For purpose of this guide we're assuming this directory to be `/home/$USER`.
 
 ### Prepare Windows VM Image
 
@@ -26,21 +28,21 @@
 
    ```bash
    # Windows 11
-   $ ln -s 26100.1.240331-1435.ge_release_CLIENTENTERPRISE_OEM_x64FRE_en-us.iso windows.iso
+   ln -s 26100.1.240331-1435.ge_release_CLIENTENTERPRISE_OEM_x64FRE_en-us.iso windows.iso
    ```
 
 2. Create empty windows image file:
 
    ```bash
-   $ cd /home/$USER/
-   $ qemu-img create -f qcow2 win.qcow2 80G
+   cd /home/$USER/
+   qemu-img create -f qcow2 win.qcow2 80G
    ```
 
 3. Prepare OVMF files:
 
    ```bash
-   $ ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
-   $ cp ovmf/OVMF_VARS.fd OVMF_VARS_windows.fd
+   ln -sf ovmf/OVMF_CODE.fd OVMF_CODE.fd
+   cp ovmf/OVMF_VARS.fd OVMF_VARS_windows.fd
    ```
 
 ### Install Windows VM Image
@@ -49,11 +51,13 @@
 
    ```bash
    # Start guest VM to install Windows
-   $ cd /home/$USER/
-   $ sudo ./install_windows.sh
+   cd /home/$USER/
+   sudo ./install_windows.sh
    ```
 
-   > **Note:** If you miss the “Press Any Key” message, press ESC key until you reach the EFI shell prompt, then type “reset” to start over again. Then, follow the Windows installation steps.
+   > **Note:** If you miss the “Press Any Key” message, press ESC key until you
+   reach the EFI shell prompt, then type “reset” to start over again.
+   Then, follow the Windows installation steps.
 
 2. Select **Install Windows 11** and click **Next**:
 
@@ -72,15 +76,15 @@
    ![setup4](./assets/emt-vm-host-win/image-2025-3-11_20-51-6.png)
 
 6. Follow the Windows installation steps as usual. Windows will be installed to
-`win.qcow2`.
+   `win.qcow2`.
 
 7. Once the installation is done, disable the automatic updates temporarily with the
-following steps:
+   following steps:
 
-   a. Open **Settings**.
-   b. Click **Updates & Security**.
-   c. Click **Windows Update**.
-   d. Click **Pause updates for 7 days**.
+   - Open **Settings**.
+   - Click **Updates & Security**.
+   - Click **Windows Update**.
+   - Click **Pause updates for 7 days**.
 
 8. Properly shut down the Windows guest OS.
 
@@ -100,25 +104,28 @@ following steps:
    - [KB5043080](https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/d8b7f92b-bd35-4b4c-96e5-46ce984b31e0/public/windows11.0-kb5043080-x64_953449672073f8fb99badb4cc6d5d7849b9c83e8.msu)
    - [KB5050094](https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/2d3f9ba9-5096-4b23-9709-3af7d7a2103f/public/windows11.0-kb5050094-x64_3d5a5f9ef20fc35cc1bd2ccb08921ee8713ce622.msu)
 
-  > **Note:** To get access to **Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733** and **SRIOV ZeroCopy Windows driver (v1797)**, apply for access in [Intel AGS](https://ags.intel.com/identityiq/identityRequest/identityRequest.jsf).
+   > **Note:** To get access to **Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733**
+   and **SRIOV ZeroCopy Windows driver (v1797)**, apply for access in [Intel AGS](https://ags.intel.com/identityiq/identityRequest/identityRequest.jsf).
 
 #### Launch Windows Guest VM and Install Drivers
 
 ##### Launch Windows Guest VM**
 
-From Host OS launch Windows guest VM with start_windows.sh.
+From Host OS launch Windows guest VM with `start_windows.sh`.
 
 ```bash
 # Start guest VM to install Windows drivers
-$ cd /home/$USER/
-$ sudo ./start_windows.sh
+cd /home/$USER/
+sudo ./start_windows.sh
 ```
 
 ##### Download and install Windows 11 OS patches in correct order
 
-1. Double click on the **KB5043080** *.msu file to start the installation. After successful installation reboot the Windows Guest VM.
+1. Double click on the **KB5043080** *.msu file to start the installation.
+   After successful installation reboot the Windows Guest VM.
 
-2. Double click on the **KB5050094** *.msu file to start the installation. After successful installation reboot the Windows Guest VM.
+2. Double click on the **KB5050094** *.msu file to start the installation.
+   After successful installation reboot the Windows Guest VM.
 
 <!--3. Open a command prompt in administrator mode and enter “winver” to check the
 version. It should show 21H2 OS Builds 19044.4412.-->
@@ -127,13 +134,17 @@ version. It should show 21H2 OS Builds 19044.4412.-->
 
 1. Download [Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733](https://dl.dell.com/FOLDER13027935M/2/Intel-Graphics-UHD-Iris-Xe-Graphics-Driver_VFN34_WIN64_32.0.101.6733_A04.EXE)
 
-2. Use File Explorer to navigate to the downloaded .exe file, then double click it to launch.
+2. Use the File Explorer to navigate to the downloaded .exe file, and launch it.
 
-3. Click **INSTALL** and follow the prompts.
+3. Wait for the **Dell Update Package** window to open, then click
+   **INSTALL** and follow the prompts.
 
-4. Click the **Begin Installation** button:
+   ![setup5a](./assets/emt-vm-host-win/Zrzut%20ekranu%202025-10-13%20130453.png)
 
-![setup5](./assets/emt-vm-host-win/begin.PNG)
+4. After intel GFX Driver installation windows opens, click the
+   **Begin Installation** button:
+
+   ![setup5](./assets/emt-vm-host-win/begin.PNG)
 
 <!--2. Use File Explorer to extract the zip file
 
@@ -144,29 +155,30 @@ installer.
 
 5. After the installation is completed, reboot the Windows guest VM:
 
-![setup6](./assets/emt-vm-host-win/reboot.PNG)
+   ![setup6](./assets/emt-vm-host-win/reboot.PNG)
 
 6. Launch the Device Manager to verify the installation.
 
 7. Expand the Display adapters item in the device list as shown in Figure 2.
 
-8. Right-click on the graphics device and select Properties. Click Drivertab. Check
-that the Intel® Graphics version is 32.0.101.6733.
+8. Right-click on the graphics device and select Properties. Click Drivertab.
+   Verify that the Intel® Graphics version is 32.0.101.6733.
 
 <!--> **Note:** If you see the yellow triangle with exclamation, please install the driver manually by selecting the 32.0.101.5972 version. (Right-click to update the driver and select the
 option to point to the main installation directory.)-->
 
 ##### Install SR-IOV Zero Copy Driver
 
-1. Download Windows Zero Copy Drivers Release 1797 [DVServer, DVServerKMD] [SRIOV ZeroCopy Windows driver (v1797)](https://www.intel.com/content/www/us/en/download/844242/844243/display-virtualization-drivers-for-arrow-lake-uh-arrow-lake-s.html)
+1. Download Windows Zero Copy Drivers Release 1797 [DVServer, DVServerKMD]
+   [SRIOV ZeroCopy Windows driver (v1797)](https://www.intel.com/content/www/us/en/download/844242/844243/display-virtualization-drivers-for-arrow-lake-uh-arrow-lake-s.html)
 
-   Please make sure the correct ZCBuild version is chosen from the drop-down. By
-   default, the latest ZCBuild version will be the first one.
+   Please make sure the correct ZCBuild version is chosen from the drop-down.
+   By default, the latest ZCBuild version will be the first one.
 
 2. Use File Explorer to extract the .zip file.
 
-   The SR-IOV Zero Copy Driver can be installed either with the GUI installer or through
-   the command line.
+   The SR-IOV Zero Copy Driver can be installed either with the GUI installer
+   or through the command line.
 
 **Install SR-IOV Zero Copy Driver Using GUI Installer**
 
@@ -187,16 +199,16 @@ Windows.
 
 3. Enter the following command to perform the installation:
 
-```shell
-C:\> .\ZeroCopyInstaller.exe /VERYSILENT /SUPPRESSMSGBOXES
-```
+   ```shell
+   C:\> .\ZeroCopyInstaller.exe /VERYSILENT /SUPPRESSMSGBOXES
+   ```
 
-> **Note:** Option usage details:
-    - `/VERYSILENT` Runs silently without displaying windows
-    - `/SUPPRESSMSGBOXES` Suppresses message boxes from displaying
-    - `/NORESTART` Avoids restarting the system after installation.
+   > **Note:** Option usage details:
+   - `/VERYSILENT` Runs silently without displaying windows
+   - `/SUPPRESSMSGBOXES` Suppresses message boxes from displaying
+   - `/NORESTART` Avoids restarting the system after installation.
 
-4. Wait forthe Windows guest to automatically restart.
+4. Wait for the Windows guest to automatically restart.
 
 **Verify SR-IOV Zero Copy Driver Installation**
 
@@ -204,7 +216,7 @@ C:\> .\ZeroCopyInstaller.exe /VERYSILENT /SUPPRESSMSGBOXES
 
 2. Expand the **Display adapters** item in the device list, as shown below:
 
-![setup6](./assets/emt-vm-host-win/image2022-10-20_18-5-36.png)
+   ![setup6](./assets/emt-vm-host-win/image2022-10-20_18-5-36.png)
 
 3. Verify that **DVServerUMD Device** and  **VServerKMD driver** are loaded properly.
 
@@ -214,17 +226,18 @@ C:\> .\ZeroCopyInstaller.exe /VERYSILENT /SUPPRESSMSGBOXES
 
 ##### Identify the Graphics Hardware ID
 
-1. Launch the Device Manager
+1. Launch the Device Manager.
 
 2. Expand the Display adapters item in the device list:
 
-![setup7](./assets/emt-vm-host-win/image-2023-8-14_11-26-2.png)
+   ![setup7](./assets/emt-vm-host-win/image-2023-8-14_11-26-2.png)
 
 3. Right click on the graphics device and select **Properties**.
 
-4. Switch to the **Details** tab and select **Hardware IDs** from the **Property** pull down list.
+4. Switch to the **Details** tab and select **Hardware IDs** from the
+   **Property** drop down list.
 
-![setup8](./assets/emt-vm-host-win/image-2023-8-14_11-26-19.png)
+   ![setup8](./assets/emt-vm-host-win/image-2023-8-14_11-26-19.png)
 
 5. Right click on the second ID in the list and select **Copy** from the context menu.
 
@@ -232,50 +245,56 @@ C:\> .\ZeroCopyInstaller.exe /VERYSILENT /SUPPRESSMSGBOXES
 
 1. In the windows search bar type `gpedit.msc` and launch the Group Policy Editor.
 
-2. On the left pane, navigate to **Computer Configuration** -> **Administrative Templates** -> **System** -> **Device Installation** -> **Device Installation Restrictions**
+2. On the left pane, navigate to **Computer Configuration**
+   -> **Administrative Templates** -> **System** -> **Device Installation**
+   -> **Device Installation Restrictions**
 
-![setup9](./assets/emt-vm-host-win/image-2023-8-14_11-29-27.png)
+   ![setup9](./assets/emt-vm-host-win/image-2023-8-14_11-29-27.png)
 
-3. On the right pane, double click **Prevent installation of devices that match any of these device IDs** to display additional configuration options.
+3. On the right pane, double click **Prevent installation of devices that match**
+   **any of these device IDs** to display additional configuration options.
 
-![setup10](./assets/emt-vm-host-win/image-2023-8-14_11-29-42.png)
+   ![setup10](./assets/emt-vm-host-win/image-2023-8-14_11-29-42.png)
 
 4. In the new pop-up window, click the **Enabled** radio button.
 
-![](./assets/emt-vm-host-win/image-2023-8-14_11-29-59.png)
+   ![setup11](./assets/emt-vm-host-win/image-2023-8-14_11-29-59.png)
 
-5. Clicking **Show…** will bring up a new window. Enter the device hardware ID copied earlier:
+5. Clicking **Show…** will bring up a new window. Enter the device hardware
+   ID copied earlier:
 
-![](./assets/emt-vm-host-win/image-2023-8-14_11-30-24.png)
+   ![setup12](./assets/emt-vm-host-win/image-2023-8-14_11-30-24.png)
 
 6. Click **OK** in all the dialog windows to disable graphics driver updates.
 
-   >**Note:** To allow the graphics driver to be updated, follow the steps above but select the **Disabled** radio button instead of **Enabled**.
+   >**Note:** To allow the graphics driver to be updated, follow the steps above,
+   but select the **Disabled** radio button instead of **Enabled**.
 
 ##### Resume Windows Update
 
 Resume the automatic Windows updates (excluding Graphics driver) with the following steps:
 
-1. Open **Settings**
+1. Open **Settings**.
 
-2. Select **Update and Security**
+2. Select **Update and Security**.
 
-3. Select **Windows Update**
+3. Select **Windows Update**.
 
-4. Click the **Resume Updates** button
+4. Click the **Resume Updates** button.
 
 ## Configuration Options for Running Windows Guest VM
 
 ### Changing Guest VM Memory and Number of CPUs
 
-The default launch command without any parameters is for 2 cores and 2G RAM. You can change that with startup parameters:
+The default launch command without any parameters is for 2 cores and 2G RAM.
+You can change that with startup parameters:
 
 Example guest start configuration for 4 cores, 4G RAM:
 
 ```bash
 # Add -m option to specify 4G of memory
 # Add -c option to specify 4 cpu cores for guest VM
-$ sudo -E ./start_windows.sh -m 4G -c 4
+sudo -E ./start_windows.sh -m 4G -c 4
 ```
 
 #### Enabling USB Devices in Windows Guest VM**
@@ -284,25 +303,27 @@ For Windows guest VMs, USB devices can be setup in two ways:
 
 1. Passthrough of all USB Host Devices
 
-   USB host passthrough parameter option can be added in the launch command to passthrough all USB devices on the USB host.
+   USB host passthrough parameter option can be added in the launch command
+   to passthrough all USB devices on the USB host.
 
    Add an additional parameter to the Guest VM launch command as shown below.
 
    ```bash
    # Note: all connected USB devices will be passthrough to the
    guest VM with USB host passthrough option
-   $ sudo -E ./start_windows.sh --passthrough-pci-usb
+   sudo -E ./start_windows.sh --passthrough-pci-usb
    ```
 
 2. Passthrough of Selected USB Devices
 
    An external command option can be used to passthrough only a few selected USB devices.
 
-   Retrieve the vendorid and productid of USB device. In this example, `046d` is vendor ID, `c06a` is product ID.
+   Retrieve the vendorid and productid of USB device. In this example, `046d`
+   is vendor ID, `c06a` is product ID.
 
    ```bash
    # On target terminal.
-   $ lsusb
+   lsusb
    Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
    Mouse
    ```
@@ -311,16 +332,18 @@ For Windows guest VMs, USB devices can be setup in two ways:
 
    ```bash
    # Add extra command when start guest
-   $ sudo -E ./start_windows.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
+   sudo -E ./start_windows.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
    ```
 
-   > **Note:** A passthrough device option can only be used once because a device can be passthrough to only 1 guest VM at a time.
+   > **Note:** A passthrough device option can only be used once because a device
+   can be passed through to only 1 guest VM at a time.
 
 #### Enabling PCIe Wi-Fi Adapter Device in Windows Guest VM**
 
-For Windows guest VMs, PCI Wi-Fi device passthrough can be setup by adding `--passthrough-pci-wifi` parameter to guest VM launch command:
+For Windows guest VMs, PCI Wi-Fi device passthrough can be setup by adding
+`--passthrough-pci-wifi` parameter to guest VM launch command:
 
 ```bash
 # Add --passthrough-pci-wifi for passing through Wifi adapter
-$ sudo -E ./start_windows.sh --passthrough-pci-wifi
+sudo -E ./start_windows.sh --passthrough-pci-wifi
 ```
