@@ -1,10 +1,13 @@
 # Setting up Kernel and Host User Space
 
-Follow the steps below to generate the necessary kernel and userspace files to set up an Ubuntu 22.04 hypervisor for hosting guest VMs.
+Follow the steps below to generate the necessary kernel and userspace files
+to set up an Ubuntu 22.04 hypervisor for hosting guest VMs.
 
-> **Note:** To run Windows VM installation for SR-IOV, you need an Ubuntu host with SR-IOV on a supported Intel Core platform with iGPU (RPL).
+> **Note:** To run Windows VM installation for SR-IOV, you need an Ubuntu host
+with SR-IOV on a supported Intel Core platform with iGPU (RPL).
 
-You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host or in an Ubuntu 22.04 docker container on an Ubuntu host.
+You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host
+or in an Ubuntu 22.04 docker container on an Ubuntu host.
 
 ## Required Host BIOS Settings
 
@@ -21,7 +24,7 @@ You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host or
 
 ## Install Ubuntu host
 
-1. Download [Ubuntu 22.04 (Jammy Jellyfish) Intel IOT iso](https://cdimage.ubuntu.com/releases/jammy/release/inteliot/ubuntu-22.04-desktop-amd64+intel-iot.iso)
+1. Download [Ubuntu 22.04 (Jammy Jellyfish) Intel IOT ISO](https://cdimage.ubuntu.com/releases/jammy/release/inteliot/ubuntu-22.04-desktop-amd64+intel-iot.iso)
 
 2. Install Ubuntu 22.04 (Jammy Jellyfish):
 
@@ -41,9 +44,9 @@ You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host or
 
 > **Note:** If operating behind a corporate firewall, setup proxy settings as required.
 
-3. In the "Software & Updates" GUI, make sure to download from **Main server**, as shown below:
+3. In the **Software & Updates** GUI, make sure to download from **Main server**, as shown below:
 
-![Software and Updates](./assets/emt-vm-host-setup/image2022-7-21_0-58-12.png)
+   ![Software and Updates](./assets/emt-vm-host-setup/image2022-7-21_0-58-12.png)
 
 4. Upgrade the Ubuntu host software to the latest version:
 
@@ -150,7 +153,8 @@ You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host or
    cd ~
    ```
 
-2. Extract files from `sriov_patches.zip` (included in `virtualization.multios.kvm.scripts-rpls_sriov_kvm_multios_emt-3.1_ww2525.zip`)
+2. Extract files from `sriov_patches.zip` (included in
+   `virtualization.multios.kvm.scripts-rpls_sriov_kvm_multios_emt-3.1_ww2525.zip`)
 
    ```bash
    # Extract files
@@ -167,7 +171,8 @@ You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host or
    sudo reboot
    ```
 
-   > **Note:** If you need to run any benchmarks or reliability tests on the host, make sure to disable auto suspend and hibernation by running the following commands:
+   > **Note:** If you need to run any benchmarks or reliability tests on the host,
+   make sure to disable auto suspend and hibernation by running the following commands:
 
    ```bash
    # Disable the suspend and hibernate services
@@ -178,11 +183,15 @@ You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host or
 
 ### OPTIONAL: Generate guest VM installation files
 
-You can generate guest VM installation files by either running an initial full setup on an Ubuntu 22.04 host with SR-IOV installed, or by generating the files in an Ubuntu 22.04 docker container.
+You can generate guest VM installation files by either running an initial full
+setup on an Ubuntu 22.04 host with SR-IOV installed, or by generating the files
+in an Ubuntu 22.04 docker container.
 
 #### Option 1: Initial full setup of Ubuntu 22.04 SRIOV host
 
-Once you have performed a full initial setup of the first host OS, that is, installation of [IOTG host kernel](#install-iotg-host-kernel-on-ubuntu-sr-iov-host) and [SR-IOV](#setup-ubuntu-host-for-sr-iov) on Ubuntu, there should be the `packages` and `sriov_install` directories with install files.
+Once you have performed a full initial setup of the first host OS, (meaning
+installation of [IOTG host kernel](#install-iotg-host-kernel-on-ubuntu-sr-iov-host) and [SR-IOV](#setup-ubuntu-host-for-sr-iov) on Ubuntu) you should see
+`packages` and `sriov_install` directories with install files.
 
 Copy these directories to use in future setups of the second or subsequent hosts.
 
@@ -194,7 +203,8 @@ cp -r sriov_install <target path>
 
 #### Option 2: Ubuntu 22.04 Docker container
 
-Alternatively, the install files can be generated in an Ubuntu docker container by performing the following steps:
+Alternatively, the install files can be generated in an Ubuntu docker container
+by performing the following steps:
 
 ```bash
 # Update and upgrade Ubuntu docker container
