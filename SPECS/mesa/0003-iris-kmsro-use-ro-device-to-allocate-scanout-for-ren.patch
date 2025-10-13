@@ -1,7 +1,8 @@
-From b05b95d83dc737b59bf9d20f04041d0270740b90 Mon Sep 17 00:00:00 2001
+From 8282ccb489d5d2172574b9f59b720c480024dfd7 Mon Sep 17 00:00:00 2001
 From: tchew6 <tong.liang.chew@intel.com>
 Date: Thu, 24 Jun 2021 13:20:53 +0800
-Subject: [PATCH 3/6] iris/kmsro: use ro device to allocate scanout for render
+Subject: [PATCH 03/11] iris/kmsro: use ro device to allocate scanout for
+ render
 
 Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
 Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
@@ -10,10 +11,10 @@ Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
  1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/src/gallium/drivers/iris/iris_resource.c b/src/gallium/drivers/iris/iris_resource.c
-index 2b0a42b451e..63245f4014a 100644
+index 9359d98ec67..0f1aef8678b 100644
 --- a/src/gallium/drivers/iris/iris_resource.c
 +++ b/src/gallium/drivers/iris/iris_resource.c
-@@ -1252,11 +1252,14 @@ iris_resource_create_for_image(struct pipe_screen *pscreen,
+@@ -1134,11 +1134,14 @@ iris_resource_create_for_image(struct pipe_screen *pscreen,
  {
     struct iris_screen *screen = (struct iris_screen *)pscreen;
     const struct intel_device_info *devinfo = screen->devinfo;
@@ -29,7 +30,7 @@ index 2b0a42b451e..63245f4014a 100644
     }
  
     struct iris_resource *res = iris_alloc_resource(pscreen, templ);
-@@ -1975,8 +1978,7 @@ iris_resource_get_handle(struct pipe_screen *pscreen,
+@@ -1944,8 +1947,7 @@ iris_resource_get_handle(struct pipe_screen *pscreen,
     case WINSYS_HANDLE_TYPE_KMS: {
        iris_gem_set_tiling(bo, &res->surf);
  
