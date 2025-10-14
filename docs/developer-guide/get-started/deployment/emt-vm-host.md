@@ -44,7 +44,7 @@ sudo grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
 
 5. Update the config file according to your specific use case:
 
-   Refer to [EMT-Standalone Get Started Guide](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/Get-Started-Guide.md) and [cloud init configuration guide](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/desktop-virtualization-cloud-init.md)
+   Refer to [EMT Get Started Guide](../../emt-get-started.md).
 
    Add the following commands to the config-file to launch the automated deployment of applications VMs:
 

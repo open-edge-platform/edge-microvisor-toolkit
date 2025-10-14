@@ -6,7 +6,7 @@
 
 1. Installation Script
 
-   If you already have installed the required `rpls_sriov_kvm_multios_emt-3.1_ww2525.zip` script as part of the host setup, skip this step. Otherwise, download [the script](https://github.com/intel-innersource/virtualization.multios.kvm.scripts/archive/refs/tags/rpls_sriov_kvm_multios_emt-3.1_ww2525.zip).
+   If you already have installed the required `rpls_sriov_kvm_multios_emt-3.1_ww2525.zip` script as part of the host setup, skip this step. Otherwise, download the installation script from a source provided by Your Intel Representative.
 
    Unzip and install it on the host OS:
 
