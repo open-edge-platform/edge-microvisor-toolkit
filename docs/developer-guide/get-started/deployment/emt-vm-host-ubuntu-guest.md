@@ -29,20 +29,20 @@
 
 #### Prepare Ubuntu VM image
 
-1. Create symlink
+1. Create a symlink.
 
    ```bash
    ln -s ubuntu-22.04-desktop-amd64+intel-iot.iso ubuntu.iso
    ```
 
-2. Create empty Ubuntu image file
+2. Create an empty Ubuntu image file.
 
    ```bash
    cd /home/$USER/
    qemu-img create -f qcow2 ubuntu.qcow2 64G
    ```
 
-3. Prepare OVMF Files
+3. Prepare OVMF files.
 
    ```bash
    cd /home/$USER/
@@ -76,11 +76,11 @@
    grubx64.efi
    ```
 
-   Then press enter and continue boot to Ubuntu as shown below.
+   Then, press the enter key and continue booting to Ubuntu, as shown below.
 
    ![Ubuntu Boot Screen](./assets/emt-vm-host-ubuntu/install.png)
 
-2. Run Ubuntu OS installation to install the guest OS.
+2. Install Ubuntu for the guest OS.
 
    ![Ubuntu Install UI](./assets/emt-vm-host-ubuntu/image2021-12-14_14-10-9.png)
 
@@ -92,7 +92,7 @@
 
 1. Open a terminal within the Ubuntu guest VM.
 
-2. Run the command shown below to upgrade Ubuntu software to the latest in the guest VM.
+2. Run the command shown below to upgrade Ubuntu software.
 
    ```bash
    # Upgrade Ubuntu software
@@ -102,14 +102,14 @@
 
    > **Note:** If operating behind a corporate firewall, setup proxy settings as required.
 
-3. Install IOTG kernel and configure Ubuntu Guest OS
+3. Install IOTG kernel and configure the Ubuntu guest OS.
 
    Copy the following files and directories from the `/home/$USER` directory of
    the host OS to the `/home/$USER/` directory of the guest OS:
 
    - lts2024-iotg-kernel-rel.tar.gz
-   - packages directory.
-   - sriov_install directory.
+   - the `packages` directory
+   - the `sriov_install` directory
 
    Boot into the Ubuntu guest image:
 
@@ -166,7 +166,7 @@
 The default launch command without any parameters is for 2 cores and 2G RAM.
 You can change that with startup parameters.
 
-Example guest start configuration for 4 cores, 4G RAM:
+Below is an example of guest start configuration for 4 cores and 4GB of RAM:
 
 ```bash
 # Add -m option to specify 4G of memory
@@ -178,7 +178,7 @@ sudo -E ./start_ubuntu.sh -m 4G -c 4
 
 For Ubuntu guest VMs, USB devices can be setup in two ways:
 
-1. Passthrough of All USB Host Devices
+1. Passthrough of all USB host devices.
 
    USB host passthrough parameter option can be added in the launch command
    to passthrough all USB devices on the USB host.
@@ -191,7 +191,7 @@ For Ubuntu guest VMs, USB devices can be setup in two ways:
    sudo -E ./start_ubuntu.sh --passthrough-pci-usb
    ```
 
-2. Passthrough of Selected USB Devices
+2. Passthrough of selected USB devices.
 
    An external command option can be used to passthrough only a few selected USB devices.
 
