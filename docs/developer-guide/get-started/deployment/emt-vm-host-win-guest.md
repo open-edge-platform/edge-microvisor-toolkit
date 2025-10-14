@@ -330,11 +330,11 @@ Displays the following information:
    Mouse
    ```
 
-   Add an additonal parameter to the Guest VM launch command:
+   Specify an additional parameter to the Guest VM launch command:
 
    ```bash
-   # Add extra command when start guest
-   sudo -E ./start_windows.sh -e "-device usb￾host,vendorid=0x046d,productid=0xc06a"
+   # Add extra command when starting the guest OS
+   sudo -E ./start_windows.sh -e "-device usbhost,vendorid=0x046d,productid=0xc06a"
    ```
 
    > **Note:** A passthrough device option can only be used once because a device
