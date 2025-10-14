@@ -4,7 +4,7 @@ Follow the steps below to generate the necessary kernel and userspace files
 to set up an Ubuntu 22.04 hypervisor for hosting guest VMs.
 
 > **Note:** To run Windows VM installation for SR-IOV, you need an Ubuntu host
-with SR-IOV on a supported Intel Core platform with iGPU (RPL).
+> with SR-IOV on a supported Intel Core platform with iGPU (RPL).
 
 You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host
 or in an Ubuntu 22.04 docker container on an Ubuntu host.
@@ -173,7 +173,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
    ```
 
    > **Note:** If you need to run any benchmarks or reliability tests on the host,
-   make sure to disable auto suspend and hibernation by running the following commands:
+   > make sure to disable auto suspend and hibernation by running the following commands:
 
    ```bash
    # Disable the suspend and hibernate services

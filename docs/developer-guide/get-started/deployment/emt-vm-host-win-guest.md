@@ -54,8 +54,8 @@
    ```
 
    > **Note:** If you miss the “Press Any Key” message, press ESC key until you
-   reach the EFI shell prompt, then type “reset” to start over again.
-   Then, follow the Windows installation steps.
+   > reach the EFI shell prompt, then type “reset” to start over again.
+   > Then, follow the Windows installation steps.
 
 2. Select **Install Windows 11** and click **Next**:
 
@@ -216,9 +216,9 @@ option to point to the main installation directory.-->
    ```
 
    > **Note:** Option usage details:
-   - `/VERYSILENT` Runs silently without displaying windows
-   - `/SUPPRESSMSGBOXES` Suppresses message boxes from displaying
-   - `/NORESTART` Avoids restarting the system after installation.
+   > - `/VERYSILENT` Runs silently without displaying windows
+   > - `/SUPPRESSMSGBOXES` Suppresses message boxes from displaying
+   > - `/NORESTART` Avoids restarting the system after installation.
 
 4. Wait for the Windows guest to automatically restart.
 
@@ -387,7 +387,7 @@ Displays the following information:
    ```
 
    > **Note:** A passthrough device option can only be used once because a device
-   can be passed through to only 1 guest VM at a time.
+   > can be passed through to only 1 guest VM at a time.
 
 #### Enabling PCIe Wi-Fi Adapter Device in Windows Guest VM
 
