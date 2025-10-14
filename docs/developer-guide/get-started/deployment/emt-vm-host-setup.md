@@ -75,6 +75,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
    mkdir <work directory>
    cd <work directory>
    ```
+
 2. Extract files
 
    ```bash
