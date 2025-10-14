@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "pm-agent-0.2.0.tar.gz": "9ea5f27d6cf42579d89ece748a85621a9a07d4bca4ed0efc1b3f2ba715afed13",
+    "pm-agent-0.2.0.tar.gz": "2ed11f4b04b65d756fea8dee555b44b282f647469c1075f6d3ebd4d49d4e9cf6",
     "platform-manageability-agent.service": "fdd68c7ab244785c4dda515bb0daff7abf75dec45ffa8e99f1f0c6e50fa1355d",
     "env_wrapper.sh": "88061a00697508d90a9ecce9bd43f3a00cc8d028a181337895ac1368d970a6f9",
     "platform-manageability-agent.conf": "efe3d39585266222720a828f4617a25beaf6e6334ee7d9bfa57fba4e4bd7f6ef",
