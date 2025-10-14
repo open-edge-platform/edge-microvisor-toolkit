@@ -62,7 +62,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
 
 ### Kernel Setup prerequisites
 
-1. MultiOS virtualization [scripts](https://github.com/intel-innersource/virtualization.multios.kvm.scripts/archive/refs/tags/rpls_sriov_kvm_multios_emt-3.1_ww2525.zip)
+1. MultiOS virtualization scripts, obtained from Your Intel Representative.
 
 2. **kernel-config-6_12.zip** (included in the package above)
 

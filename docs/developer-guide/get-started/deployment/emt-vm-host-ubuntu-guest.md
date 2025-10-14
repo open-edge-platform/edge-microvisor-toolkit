@@ -7,7 +7,7 @@
 1. Installation scripts
 
    Download the required installation scripts from the release package
-   [RPL-S_RPL-SR_KVM_MultiOS.zip](https://github.com/intel-innersource/virtualization.multios.kvm.scripts/archive/refs/tags/rpls_sriov_kvm_multios_emt-3.1_ww2525.zip)
+   `RPL-S_RPL-SR_KVM_MultiOS.zip`, obtained from Your Intel Representative.
 
    Run the following
 
