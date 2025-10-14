@@ -96,11 +96,7 @@
 
 1. [Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733](https://dl.dell.com/FOLDER13027935M/2/Intel-Graphics-UHD-Iris-Xe-Graphics-Driver_VFN34_WIN64_32.0.101.6733_A04.EXE)
 
-<!--- [Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733](https://af-owr.devtools.intel.com/artifactory/one-windows-local/Submissions/gfx/prod-hini-releases_25ww10-ci-master-18612-revenue-pr-1016733-ms-attestation-sign-1133-arl-whql/GFX-prod-hini-releases_25ww10-ci-master-18612-revenue-pr-1016733-ms-attestation-sign-1133-ARL-Rx64.zip)-->
-
 2. [SRIOV ZeroCopy Windows driver (v1797)](https://www.intel.com/content/www/us/en/download/844242/844243/display-virtualization-drivers-for-arrow-lake-uh-arrow-lake-s.html)
-<!--- [SRIOV ZeroCopy Windows driver (v1797)](https://downloadmirror.intel.com/844243/ZCBuild_1797_Installer.zip)-->
-<!--- [SRIOV ZeroCopy Windows driver (v1797)](https://ubit-artifactory-ba.intel.com/artifactory/gfx_sriov-ba-local/Windows_VM_Package/External/ZC_1797_Package/ZCBuild_1797_Installer.zip)-->
 
 3. Windows 11 OS Patch 26100.3037:
    - [KB5043080](https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/d8b7f92b-bd35-4b4c-96e5-46ce984b31e0/public/windows11.0-kb5043080-x64_953449672073f8fb99badb4cc6d5d7849b9c83e8.msu)
@@ -111,7 +107,7 @@
    - [https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win-gt-x64.msi](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win-gt-x64.msi)
 
    > **Note:** To get access to **Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733**
-   and **SRIOV ZeroCopy Windows driver (v1797)**, apply for access in [Intel AGS](https://ags.intel.com/identityiq/identityRequest/identityRequest.jsf).
+   and **SRIOV ZeroCopy Windows driver (v1797)**, apply for access in **Intel AGS**.
 
    > **Note:** Remember to setup the proxy settings if operating from behind
    a corporate firewall.
