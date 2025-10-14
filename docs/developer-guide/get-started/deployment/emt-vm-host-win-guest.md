@@ -107,8 +107,8 @@
    - [https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win-gt-x64.msi](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win-gt-x64.msi)
 
    > **Note:** To get access to **Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733**
-   and **SRIOV ZeroCopy Windows driver (v1797)**, apply for access in **Intel AGS**.
-   Remember to setup the proxy settings if operating from behind a corporate firewall.
+   > and **SRIOV ZeroCopy Windows driver (v1797)**, apply for access in **Intel AGS**.
+   > Remember to setup the proxy settings if operating from behind a corporate firewall.
 
 #### Launch Windows Guest VM and Install Drivers
 
