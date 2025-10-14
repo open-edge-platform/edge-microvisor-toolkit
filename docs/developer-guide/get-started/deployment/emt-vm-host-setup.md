@@ -46,7 +46,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
 
 3. In the **Software & Updates** GUI, make sure to download from **Main server**, as shown below:
 
-   ![Software and Updates](./assets/emt-vm-host-setup/image2022-7-21_0-58-12.png)
+   ![Software and Updates](./assets/emt-vm-host-setup/ubuntu-softwareupdates.png)
 
 4. Upgrade the Ubuntu host software to the latest version:
 

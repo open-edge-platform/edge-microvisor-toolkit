@@ -78,11 +78,11 @@
 
    Then, press the enter key and continue booting to Ubuntu, as shown below.
 
-   ![Ubuntu Boot Screen](./assets/emt-vm-host-ubuntu/install.png)
+   ![Ubuntu Boot Screen](./assets/emt-vm-host-ubuntu/ubuntu-boot-screen.png)
 
 2. Install Ubuntu for the guest OS.
 
-   ![Ubuntu Install UI](./assets/emt-vm-host-ubuntu/image2021-12-14_14-10-9.png)
+   ![Ubuntu Install UI](./assets/emt-vm-host-ubuntu/ubuntu-install.png)
 
    > **Note:** At the end of Ubuntu installation, the installer will ask you to
    remove the installation disk. Just press 'Enter' to reboot to the newly
