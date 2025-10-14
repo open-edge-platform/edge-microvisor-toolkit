@@ -16,7 +16,7 @@
 
 2. Windows ISO Image
 
-   Download [Windows 11 Enterprise internal test version 24H2](file://10.106.47.116/iotg-sriov/SRIOV_OS/Win11_24H2/26100.1.240331-1435.ge_release_CLIENTENTERPRISE_OEM_x64FRE_en-us.iso) into your working
+   Download [Windows 11 Enterprise version 24H2](https://www.microsoft.com/en-us/software-download/windows11) into your working
    directory, where you unzipped the installation scripts and ran the host setup.
    For purpose of this guide we're assuming this directory to be `/home/$USER`.
 
@@ -108,9 +108,7 @@
 
    > **Note:** To get access to **Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733**
    and **SRIOV ZeroCopy Windows driver (v1797)**, apply for access in **Intel AGS**.
-
-   > **Note:** Remember to setup the proxy settings if operating from behind
-   a corporate firewall.
+   Remember to setup the proxy settings if operating from behind a corporate firewall.
 
 #### Launch Windows Guest VM and Install Drivers
 
