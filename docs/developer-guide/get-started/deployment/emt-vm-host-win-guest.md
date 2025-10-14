@@ -319,8 +319,13 @@ For Windows guest VMs, USB devices can be setup in two ways:
    is vendor ID, `c06a` is product ID.
 
    ```bash
-   # On target terminal.
-   lsusb
+   # On the target terminal.
+   $ lsusb
+```
+
+Displays the following information:
+
+```text
    Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
    Mouse
    ```
