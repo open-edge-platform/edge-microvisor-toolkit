@@ -75,7 +75,7 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
-* Tue Oct 13 2025 Ipsita Nayak <ipsita.nayak@intel.com> - 0.2.0-1
+* Mon Oct 13 2025 Ipsita Nayak <ipsita.nayak@intel.com> - 0.2.0-1
 - Updated PMA Version.
 - Support AMT feature capabilities
 
