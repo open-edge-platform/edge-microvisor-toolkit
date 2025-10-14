@@ -1,7 +1,7 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
 Version:        6.12.44
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -938,6 +938,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Fri Oct 10 2025 Zhang Baoli <baoli.zhang@intel.com> - 6.12.44-3
+- Fix ISO mouse detection and cmdline params in non-rt kernel
+
 * Tue Sep 30 2025 Zhang Baoli <baoli.zhang@intel.com> - 6.12.44-2
 - Fix the boot failure of ISO and raw image
 

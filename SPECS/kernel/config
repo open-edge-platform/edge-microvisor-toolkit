@@ -524,9 +524,7 @@ CONFIG_HOTPLUG_CPU=y
 # CONFIG_COMPAT_VDSO is not set
 CONFIG_LEGACY_VSYSCALL_XONLY=y
 # CONFIG_LEGACY_VSYSCALL_NONE is not set
-CONFIG_CMDLINE_BOOL=y
-CONFIG_CMDLINE="processor.max_cstate=0 intel_idle.max_cstate=0 intel.max_cstate=0 clocksource=tsc tsc=reliable nowatchdog nmi_watchdog=0 nosoftlockup intel_pstate=disable idle=poll nosmt isolcpus=1-3 rcu_nocbs=1-3 rcu_nocb_poll i915.enable_dc=0 i915.disable_power_well=0 irqaffinity=0 mce=off hpet=disable numa_balancing=disable cpufreq.off=1 efi=Runtime art=virtallow iommu=pt rcupdate.rcu_cpu_stall_suppress=1"
-# CONFIG_CMDLINE_OVERRIDE is not set
+# CONFIG_CMDLINE_BOOL is not set
 CONFIG_MODIFY_LDT_SYSCALL=y
 # CONFIG_STRICT_SIGALTSTACK_SIZE is not set
 CONFIG_HAVE_LIVEPATCH=y
@@ -4379,13 +4377,13 @@ CONFIG_INPUT_VIVALDIFMAP=y
 #
 # Userland interfaces
 #
-CONFIG_INPUT_MOUSEDEV=y
+CONFIG_INPUT_MOUSEDEV=m
 CONFIG_INPUT_MOUSEDEV_PSAUX=y
 CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
 CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
 CONFIG_INPUT_JOYDEV=m
 CONFIG_INPUT_EVDEV=y
-CONFIG_INPUT_EVBUG=m
+# CONFIG_INPUT_EVBUG is not set
 
 #
 # Input Device Drivers
