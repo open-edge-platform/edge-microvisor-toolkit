@@ -68,7 +68,7 @@
    ```
 
    > **Note:** If guest VM enters UEFI shell instead of Ubuntu, please type the
-   following in the EFI shell:
+   > following in the EFI shell:
 
    ```bash
    fs0:
@@ -85,8 +85,8 @@
    ![Ubuntu Install UI](./assets/emt-vm-host-ubuntu/ubuntu-install.png)
 
    > **Note:** At the end of Ubuntu installation, the installer will ask you to
-   remove the installation disk. Just press 'Enter' to reboot to the newly
-   installed Ubuntu guest OS.
+   > remove the installation disk. Just press 'Enter' to reboot to the newly
+   > installed Ubuntu guest OS.
 
 ### Configure Ubuntu Guest VM
 
@@ -213,7 +213,7 @@ For Ubuntu guest VMs, USB devices can be setup in two ways:
    ```
 
 > **Note:** A passthrough device option can only be used once because a device
-can be passed through to only 1 guest VM at a time.
+> can be passed through to only 1 guest VM at a time.
 
 ### Enabling PCIe Wi-Fi Adapter Device in Guest VM
 
