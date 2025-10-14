@@ -225,7 +225,7 @@ Windows.
 
 1. Launch the Device Manager.
 
-2. Expand the Display adapters item in the device list:
+2. Expand the **Display adapters** item in the device list:
 
    ![setup7](./assets/emt-vm-host-win/image-2023-8-14_11-26-2.png)
 
@@ -240,7 +240,7 @@ Windows.
 
 ##### Enable Group Policy Disabling Graphics Driver Update
 
-1. In the windows search bar type `gpedit.msc` and launch the Group Policy Editor.
+1. In the Windows search bar type `gpedit.msc` and launch the Group Policy Editor.
 
 2. On the left pane, navigate to **Computer Configuration**
    -> **Administrative Templates** -> **System** -> **Device Installation**
@@ -286,7 +286,7 @@ Resume the automatic Windows updates (excluding Graphics driver) with the follow
 The default launch command without any parameters is for 2 cores and 2G RAM.
 You can change that with startup parameters:
 
-Example guest start configuration for 4 cores, 4G RAM:
+Below is an example of guest start configuration for 4 cores and 4GB of RAM:
 
 ```bash
 # Add -m option to specify 4G of memory
@@ -303,7 +303,7 @@ For Windows guest VMs, USB devices can be setup in two ways:
    USB host passthrough parameter option can be added in the launch command
    to passthrough all USB devices on the USB host.
 
-   Add an additional parameter to the Guest VM launch command as shown below.
+   Specify an additional parameter to the Guest VM launch command as shown below.
 
    ```bash
    # Note: all connected USB devices will be passthrough to the
@@ -311,7 +311,7 @@ For Windows guest VMs, USB devices can be setup in two ways:
    sudo -E ./start_windows.sh --passthrough-pci-usb
    ```
 
-2. Passthrough of Selected USB Devices
+2. Passthrough of selected USB devices.
 
    An external command option can be used to passthrough only a few selected USB devices.
 
@@ -335,7 +335,7 @@ For Windows guest VMs, USB devices can be setup in two ways:
    > **Note:** A passthrough device option can only be used once because a device
    can be passed through to only 1 guest VM at a time.
 
-#### Enabling PCIe Wi-Fi Adapter Device in Windows Guest VM**
+#### Enabling PCIe Wi-Fi Adapter Device in Windows Guest VM
 
 For Windows guest VMs, PCI Wi-Fi device passthrough can be setup by adding
 `--passthrough-pci-wifi` parameter to guest VM launch command:
