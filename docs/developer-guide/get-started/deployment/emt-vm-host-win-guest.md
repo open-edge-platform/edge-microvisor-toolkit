@@ -6,15 +6,13 @@
 
 1. Installation Script
 
-   Download the required installation [script](https://github.com/intel-innersource/virtualization.multios.kvm.scripts/archive/refs/tags/rpls_sriov_kvm_multios_emt-3.1_ww2525.zip).
+   If you already have installed the required `rpls_sriov_kvm_multios_emt-3.1_ww2525.zip` script as part of the host setup, skip this step. Otherwise, download [the script](https://github.com/intel-innersource/virtualization.multios.kvm.scripts/archive/refs/tags/rpls_sriov_kvm_multios_emt-3.1_ww2525.zip).
 
-   Unzip and install the script file on host OS:
+   Unzip and install it on the host OS:
 
    ```bash
    unzip -jo rpls_sriov_kvm_multios_emt-3.1_ww2525.zip
    ```
-
-   If you have already installed the script as part of the host setup, skip this step.
 
 2. Windows ISO Image
 
@@ -24,14 +22,14 @@
 
 ### Prepare Windows VM Image
 
-1. Create Symlink
+1. Create a symlink.
 
    ```bash
    # Windows 11
    ln -s 26100.1.240331-1435.ge_release_CLIENTENTERPRISE_OEM_x64FRE_en-us.iso windows.iso
    ```
 
-2. Create empty windows image file:
+2. Create an empty Windows image file:
 
    ```bash
    cd /home/$USER/
@@ -47,7 +45,7 @@
 
 ### Install Windows VM Image
 
-1. Run install_windows.sh to start Windows guest installation.
+1. Run `install_windows.sh` to install the Windows guest OS.
 
    ```bash
    # Start guest VM to install Windows
@@ -63,7 +61,7 @@
 
    ![setup1](./assets/emt-vm-host-win/image-2025-3-11_20-48-5.png)
 
-3. Select **Windows 11 IoT Enterprise**"
+3. Select **Windows 11 IoT Enterprise**":
 
    ![setup2](./assets/emt-vm-host-win/image-2025-3-11_20-48-59.png)
 
@@ -109,7 +107,7 @@
 
 #### Launch Windows Guest VM and Install Drivers
 
-##### Launch Windows Guest VM**
+##### Launch Windows Guest VM
 
 From Host OS launch Windows guest VM with `start_windows.sh`.
 
@@ -127,7 +125,7 @@ sudo ./start_windows.sh
 2. Double click on the **KB5050094** *.msu file to start the installation.
    After successful installation reboot the Windows Guest VM.
 
-<!--3. Open a command prompt in administrator mode and enter “winver” to check the
+<!--3. Start Command Prompt in administrator mode and enter “winver” to check the
 version. It should show 21H2 OS Builds 19044.4412.-->
 
 ##### Install GFX Graphics Driver
@@ -146,26 +144,25 @@ version. It should show 21H2 OS Builds 19044.4412.-->
 
    ![setup5](./assets/emt-vm-host-win/begin.PNG)
 
-<!--2. Use File Explorer to extract the zip file
+<!--2. Use File Explorer to extract the zip file.
 
-3. Navigate into the install folder and double click on installer.exe to launch the
-installer.
+3. Navigate into the installation folder and double click installer.exe to start it.
 
-4. Click the Begin installation button.-->
+4. Click the "Begin Installation" button.-->
 
 5. After the installation is completed, reboot the Windows guest VM:
 
    ![setup6](./assets/emt-vm-host-win/reboot.PNG)
 
-6. Launch the Device Manager to verify the installation.
+6. Launch Device Manager to verify the installation.
 
-7. Expand the Display adapters item in the device list as shown in Figure 2.
+7. Expand the "Display adapters" item in the device list.
 
 8. Right-click on the graphics device and select Properties. Click Drivertab.
    Verify that the Intel® Graphics version is 32.0.101.6733.
 
-<!--> **Note:** If you see the yellow triangle with exclamation, please install the driver manually by selecting the 32.0.101.5972 version. (Right-click to update the driver and select the
-option to point to the main installation directory.)-->
+<!-- > **Note:** If you see the yellow triangle with exclamation, install the driver manually by selecting the 32.0.101.5972 version. Right-click to update the driver and select the
+option to point to the main installation directory.-->
 
 ##### Install SR-IOV Zero Copy Driver
 
@@ -188,7 +185,7 @@ option to point to the main installation directory.)-->
 
 3. Click on the Install button when prompted.
 
-4. Once the installation has completed, click on the Finish button to restart
+4. Once the installation has completed, click on the **Finish** button to restart
 Windows.
 
 **Install SR-IOV Zero Copy Driver Using Command Line**
@@ -212,7 +209,7 @@ Windows.
 
 **Verify SR-IOV Zero Copy Driver Installation**
 
-1. Launch the Device Manager to verify the installation.
+1. Launch **Device Manager** to verify the installation.
 
 2. Expand the **Display adapters** item in the device list, as shown below:
 
