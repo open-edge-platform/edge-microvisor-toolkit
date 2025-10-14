@@ -1,4 +1,4 @@
-# Hosting Windows 11 Guest VM under EMT Host
+# Creting Windows 11 Guest VM under Ubuntu Host
 
 ## Install and Setup Windows 11 VM
 
@@ -33,7 +33,7 @@
 
    ```bash
    cd /home/$USER/
-   qemu-img create -f qcow2 win.qcow2 80G
+   qemu-img create -f qcow2 win.qcow2 64G
    ```
 
 3. Prepare OVMF files:
@@ -73,8 +73,12 @@
 
    ![Ready to Install](./assets/emt-vm-host-win/win11-ready-to-install.png)
 
-6. Follow the Windows installation steps as usual. Windows will be installed to
-   `win.qcow2`.
+6. Follow the Windows installation steps as usual, rebooting as necessary.
+   When the installer asks for a network connection, select **I don't have internet**.
+
+   ![Network](./assets/emt-vm-host-win/win11-install-connect.png)
+
+   Windows will be installed to `win.qcow2`.
 
 7. Once the installation is done, disable the automatic updates temporarily with the
    following steps:
@@ -86,7 +90,7 @@
 
 8. Properly shut down the Windows guest OS.
 
-### Setup required MultiOS Drivers in Windows Guest VM
+### Configure SRIOV on Windows 11 Enterprise VM
 
 #### Required Drivers
 
@@ -102,8 +106,15 @@
    - [KB5043080](https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/d8b7f92b-bd35-4b4c-96e5-46ce984b31e0/public/windows11.0-kb5043080-x64_953449672073f8fb99badb4cc6d5d7849b9c83e8.msu)
    - [KB5050094](https://catalog.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/2d3f9ba9-5096-4b23-9709-3af7d7a2103f/public/windows11.0-kb5050094-x64_3d5a5f9ef20fc35cc1bd2ccb08921ee8713ce622.msu)
 
+4. Windows VirtIO Drivers:
+   - [https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/)
+   - [https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win-gt-x64.msi](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.271-1/virtio-win-gt-x64.msi)
+
    > **Note:** To get access to **Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733**
    and **SRIOV ZeroCopy Windows driver (v1797)**, apply for access in [Intel AGS](https://ags.intel.com/identityiq/identityRequest/identityRequest.jsf).
+
+   > **Note:** Remember to setup the proxy settings if operating from behind
+   a corporate firewall.
 
 #### Launch Windows Guest VM and Install Drivers
 
@@ -125,10 +136,14 @@ sudo ./start_windows.sh
 2. Double click on the **KB5050094** *.msu file to start the installation.
    After successful installation reboot the Windows Guest VM.
 
+   ![patch1](./assets/emt-vm-host-win/win11-install-patch1.png)
+
+   ![patch2](./assets/emt-vm-host-win/win11-install-patch2.png)
+
 <!--3. Start Command Prompt in administrator mode and enter “winver” to check the
 version. It should show 21H2 OS Builds 19044.4412.-->
 
-##### Install GFX Graphics Driver
+##### Install GFX Driver
 
 1. Download [Intel Graphics UHD Iris Xe GFX driver ver. 32.0.101.6733](https://dl.dell.com/FOLDER13027935M/2/Intel-Graphics-UHD-Iris-Xe-Graphics-Driver_VFN34_WIN64_32.0.101.6733_A04.EXE)
 
@@ -191,8 +206,8 @@ option to point to the main installation directory.-->
 
    ![Zero Copy Installer UI](./assets/emt-vm-host-win/win11-zc-installer.png)
 
-4. Once the installation is completed, click on the **Finish** button to restart
-Windows.
+4. Once the installation is completed, click the **Finish**
+   button to restart Windows.
 
 **Install SR-IOV Zero Copy Driver Using Command Line**
 
@@ -285,7 +300,41 @@ Resume the automatic Windows updates (excluding Graphics driver) with the follow
 
 4. Click the **Resume Updates** button.
 
+#### Install Windows VirtIO Drivers
+
+Use one of the provided [links](#required-drivers), or download the most recent
+`virtio-win-gt-x64.msi or virtio-win-gt-x86.msi` from inside the VM.
+
+Run the downloaded installer and follow the installation process.
+
+> **IMPORTANT NOTE:** Please shutdown the guest properly once the
+installation is completed!
+
 ## Configuration Options for Running Windows Guest VM
+
+### HMI Buildtime and Runtime Customer Applications
+
+Contact Your Intel Representative to obtain the required application.
+
+1. Launch Windows VM
+
+   ```bash
+   # Change to work directory
+   cd <work directory>
+
+   # Launch Windows 11 guest VM
+   sudo ./start_windows.sh
+   ```
+
+2. Install the HMI applications
+
+   Download the HMI application to the host OS. In the Winodws guest VM
+   use SCP to get the HMI application.
+
+   Follow the HMI installation user guide to install and configure the License.
+
+   > **IMPORTANT NOTE:** Please shutdown the guest properly once the
+   installation is completed! The win.qcow2 image is now ready to use.
 
 ### Changing Guest VM Memory and Number of CPUs
 
@@ -327,11 +376,11 @@ For Windows guest VMs, USB devices can be setup in two ways:
    ```bash
    # On the target terminal.
    $ lsusb
-```
+   ```
 
 Displays the following information:
 
-```text
+   ```bash
    Bus 004 Device 003: ID 046d:c06a Logitech, Inc. USB Optical
    Mouse
    ```
