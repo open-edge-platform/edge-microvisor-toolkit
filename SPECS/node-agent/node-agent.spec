@@ -1,6 +1,6 @@
 Summary:        Edge node registration and trust management
 Name:           node-agent
-Version:        1.7.3
+Version:        1.8.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -159,6 +159,9 @@ sed -i '/client-proxy/{N;d;}' %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Wed Oct 15 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.8.1-1
+- Send status initializing after provision
+
 * Thu Jul 31 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 1.7.3-1
 - Upgrade for platform-manageability-agent handling
 
