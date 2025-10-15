@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "node-agent-1.7.3.tar.gz": "68ccbd5e951934617c9d1a284e7637df5fee52b8c9fea61699ca7c3d505cdfd7",
+    "node-agent-1.8.1.tar.gz": "373f869d4cbc69241a669f6e3a14d81c092a9431df73ca6ff51e18a0ab05cb04",
     "node-agent.service": "aa4da847c625e36ba6e22d769e9442521ec6e8eeb542af8ef24f2cad60da03c2",
     "env_wrapper.sh": "ee5d31b33495426840a742c944088e7f7fe56ec95f0547990f9283e24bf792d1",
     "node-agent.conf": "f5304d46df115cbe2e8f9e018f22d03e19f3a2cd35ee269478454bf0b269b90f",
