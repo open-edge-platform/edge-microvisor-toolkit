@@ -35,7 +35,6 @@ Summary:        %{name} SELinux policy
 Requires:       %{name} = %{version}-%{release}
 Requires:       fluent-bit-selinux
 Requires:       hardware-discovery-agent-selinux
-Requires:       inbm-selinux
 Requires:       node-agent-selinux
 Requires:       otelcol-contrib-selinux
 Requires:       platform-telemetry-agent-selinux
