@@ -23,6 +23,8 @@
   "sysusers.generate-pre.sh": "6d503de2db2374125cb5c3b6034636514b58a38dcff193550768c3c49c6d7419",
   "sysusers.prov": "0dcc4b699030c11eccedb850d4d2c097ebdc725766e17db56f942ee445b93cf6",
   "triggers.systemd": "ee7398bec872cc3717d396d201c0a9d4239b883d5f43cb609ab83b229119ceb6",
-  "yum-protect-systemd.conf": "5a5aa0a6cdfb432f890351ebd1f62d05f9a04d5aa58f57d0758686afaa8d3617"
+  "yum-protect-systemd.conf": "5a5aa0a6cdfb432f890351ebd1f62d05f9a04d5aa58f57d0758686afaa8d3617",
+  "stop-journal-flush.service": "005b20eff19b00155dbe0419bc0273fc879d4f87a4f2a296b163c18a73bc4b86",
+  "stop-journal-flush.sh": "8c0c1293bb3fa5a324689deb97e651e4c3e19bd621eecea2179eacd007f8d210"
  }
 }

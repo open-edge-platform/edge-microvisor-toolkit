@@ -1,0 +1,14 @@
+[Unit]
+Description=Stop systemd-journal-flush before shutdown
+DefaultDependencies=no
+Before=shutdown.target reboot.target 
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/systemd/system/stop-journal-flush.sh
+StandardOutput=journal
+StandardError=journal
+RemainAfterExit=yes
+
+[Install]
+WantedBy=shutdown.target reboot.target

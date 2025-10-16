@@ -50,7 +50,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        29%{?dist}
+Release:        30%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -110,6 +110,8 @@ Source28:       99-yama-ptrace.conf
 Source29:       99-net-core-bpf-jit-harden.conf
 Source30:       99-kernel.conf
 Source31:       99-tcp-timestamps.conf
+Source32:       stop-journal-flush.service
+Source33:       stop-journal-flush.sh
 
 %if 0
 GIT_DIR=../../src/systemd/.git git format-patch-ab --no-signature -M -N v235..v235-stable
@@ -871,6 +873,7 @@ install -Dm0644 -t %{buildroot}%{_pkgdocdir}/ %{SOURCE28}
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1378974
 install -Dm0644 -t %{buildroot}%{system_unit_dir}/systemd-udev-trigger.service.d/ %{SOURCE10}
+install -Dm0777 -t %{buildroot}%{_unitdir} %{SOURCE33}
 
 # systemd-oomd default configuration
 install -Dm0644 -t %{buildroot}%{_prefix}/lib/systemd/oomd.conf.d/ %{SOURCE14}
@@ -885,6 +888,7 @@ install -Dm0644 -t %{buildroot}%{_prefix}/lib/sysctl.d/ %{SOURCE17}
 
 # Install TCP timestamp setting
 install -Dm0644 -t %{buildroot}%{_prefix}/lib/sysctl.d/ %{SOURCE31}
+install -Dpm 644 %{SOURCE32} %{buildroot}%{_unitdir}/stop-journal-flush.service
 
 %if 0%{?emt}
 install -Dm0644 -t %{buildroot}%{_prefix}/lib/sysctl.d/ %{SOURCE18}
@@ -975,6 +979,8 @@ systemd-tmpfiles --create &>/dev/null || :
 # https://fedoraproject.org/wiki/Changes/Systemd_presets_for_user_units.
 systemctl preset-all &>/dev/null || :
 systemctl --global preset-all &>/dev/null || :
+systemctl enable stop-journal-flush.service
+systemctl daemon-reload
 
 %postun
 if [ $1 -eq 1 ]; then
@@ -982,7 +988,7 @@ if [ $1 -eq 1 ]; then
    systemd-tmpfiles --create &>/dev/null || :
 fi
 
-%systemd_postun_with_restart systemd-timedated.service systemd-hostnamed.service systemd-journald.service systemd-localed.service systemd-userdbd.service
+%systemd_postun_with_restart systemd-timedated.service systemd-hostnamed.service systemd-journald.service systemd-localed.service systemd-userdbd.service stop-journal-flush.service
 
 # FIXME: systemd-logind.service is excluded (https://github.com/systemd/systemd/pull/17558)
 
@@ -1050,6 +1056,9 @@ grep -q -E '^KEYMAP="?fi-latin[19]"?' /etc/vconsole.conf 2>/dev/null &&
 
 %preun udev
 %systemd_preun %udev_services
+
+%preun
+%systemd_preun stop-journal-flush.service
 
 %postun udev
 # Restart some services.
@@ -1237,6 +1246,11 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+
+* Thu Oct 16 2025 Basavaraj unniche <basavarajx.unniche@intel.com> - 255-30
+- Add new service to stop systemd-journal-flush.service which is
+- umount issues during reboot
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 255-29
 - merge from Azure Linux 3.0.20250521-3.0
 - Bumping 'Release' tag to match the 'signed' version of the spec.
