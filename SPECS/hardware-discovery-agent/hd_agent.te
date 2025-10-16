@@ -27,7 +27,6 @@ require {
     type http_port_t;
     type hwdata_t;
     type ifconfig_exec_t;
-    type inbm_conf_rw_t;
     type init_runtime_t;
     type init_t;
     type initrc_runtime_t;
@@ -282,6 +281,3 @@ allow hd_agent_conf_t fs_t:filesystem associate;
 
 allow hd_agent_t kubernetes_config_t:dir getattr;
 allow hd_agent_t removable_device_t:blk_file { getattr ioctl open read };
-
-#============= inbm_conf_rw_t ==============
-allow hd_agent_t inbm_conf_rw_t:file getattr;

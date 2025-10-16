@@ -7400,16 +7400,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "inbm",
-          "version": "4.2.8.6",
-          "downloadUrl": "https://github.com/intel/intel-inb-manageability/archive/refs/tags/v4.2.8.6.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "incron",
           "version": "0.5.12",
           "downloadUrl": "https://github.com/ar-/incron/archive/refs/tags/0.5.12.tar.gz"

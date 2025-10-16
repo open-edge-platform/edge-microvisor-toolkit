@@ -38,7 +38,6 @@ network and usb devices.
 Summary:        %{name} SELinux policy
 Requires:       %{name} = %{version}-%{release}
 Requires:       fluent-bit-selinux
-Requires:       inbm-selinux
 Requires:       otelcol-contrib-selinux
 BuildRequires:  selinux-policy
 BuildRequires:  selinux-policy-devel

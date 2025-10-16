@@ -55,7 +55,6 @@ Development files for %{name}
 Summary:        %{name} SELinux policy
 Requires:       %{name} = %{version}-%{release}
 Requires:       otelcol-contrib-selinux
-Requires:       inbm-selinux
 BuildRequires:  selinux-policy
 BuildRequires:  selinux-policy-devel
 BuildArch:      noarch
