@@ -12,7 +12,7 @@ Source2:        env_wrapper.sh
 Source3:        %{name}.conf
 Source4:        node_agent.te
 Source5:        node_agent.fc
-BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang >= 1.24.6
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       (%{name}-selinux if selinux-policy-targeted)
