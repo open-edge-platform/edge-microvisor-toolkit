@@ -200,23 +200,23 @@ being scheduled on those cores. This ensures that designated cores are available
 for RT tasks. This way, for example, the workloads can be shifted between efficient
 and performance cores. The parameter takes lists as values:
 
-- isolcpus=\<cpu core number>,...,\<cpu core number>
-
-  ```bash
-  isolcpus=1,2,3
-  ```
-
-- isolcpus=\<cpu core number>-\<cpu core number>
-
-  ```bash
-  isolcpus=1-3
-  ```
-
-- isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
-
-  ```bash
-  isolcpus=1,4-5
-  ```
+  - isolcpus=\<cpu core number>,...,\<cpu core number>
+  
+    ```bash
+    isolcpus=1,2,3
+    ```
+  
+  - isolcpus=\<cpu core number>-\<cpu core number>
+  
+    ```bash
+    isolcpus=1-3
+    ```
+  
+  - isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
+  
+    ```bash
+    isolcpus=1,4-5
+    ```
 
 - **nohz_full=<list>**
 Enables full tickless (nohz) mode on specified cores, reducing periodic timer interrupts
