@@ -284,6 +284,7 @@ clean:
 	rm -rf $(OUT_DIR)
 	rm -rf $(BUILD_DIR)
 	rm -rf $(toolkit_root)/out
+	$(SCRIPTS_DIR)/toolchain/toolchain_update_git_submodule.sh
 
 ######## VARIABLE PRINTING ########
 
