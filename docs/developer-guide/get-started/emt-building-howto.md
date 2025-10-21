@@ -14,7 +14,7 @@ of the resulting image, such as:
   configurations).
 - Any required post-installation scripts that should be executed once the image has been
   generated.
-- Kernel and command line options.
+- [Kernel and command line options](../../developer-guide/emt-architecture-overview.md#kernel-command-line).
 - Final configuration properties that should be applied (e.g. enable full disc encryption,
   immutable image, second stage bootloader provider, purge documentation etc.).
 
@@ -73,7 +73,7 @@ microvisor/
 ```
 
 Different image types can be built by using different JSON config files and parameters.
-You can find more information about specific parameters [here.](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables)
+You can find more information about specific parameters in the [build variables](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables) section.
 
 To build an ISO image, run the following command:
 
