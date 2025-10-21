@@ -75,7 +75,7 @@ your use case, you can use the [kernel with real-time extensions](#preempt-rt-ke
 
 The Standalone Node is an immutable, ready-made solution for deploying and validating Edge AI applications. It uses Secure
 Boot technology to protect against injecting malicious software, both at rest and during
-runtime. This image cannot be modified after deployment. 
+runtime. This image cannot be modified after deployment.
 
 You can download the Edge Microvisor Toolkit Standalone Node installer to your device, run it to
 create a bootable USB stick, and use the USB stick to install the Standalone Node.
@@ -180,6 +180,9 @@ The kernel command line for the RT kernel can be customized specifically for cus
 workloads. Currently, `idle` is the only configured command-line argument that affects
 real-time performance.
 
+To configure kernel command line arguments, add them in the `"ExtraCommandLine"` parameter
+inside the imageconfig file, as shown in [edge-image](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/e22a8f4e72d0edc652f1aacd514d0b5bf5de8b80/toolkit/imageconfigs/edge-image.json#L107).
+
 - **idle=poll**
 Forces the CPU to actively poll for work when idle, rather than entering low-power idle
 states. In RT systems, this can reduce latency by ensuring the CPU is always ready to
@@ -194,7 +197,26 @@ handle high-priority tasks immediately, at the cost of higher power consumption.
 - **isolcpus=<list>**
 Isolates specific CPU cores from the general scheduler, preventing non-RT tasks from
 being scheduled on those cores. This ensures that designated cores are available solely
-for RT tasks.
+for RT tasks. This way, for example, the workloads can be shifted between efficient
+and performance cores. The parameter takes lists as values:
+
+  - isolcpus=\<cpu core number>,...,\<cpu core number>
+  
+    ```bash
+    isolcpus=1,2,3
+    ```
+  
+  - isolcpus=\<cpu core number>-\<cpu core number>
+  
+    ```bash
+    isolcpus=1-3
+    ```
+  
+  - isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
+  
+    ```bash
+    isolcpus=1,4-5
+    ```
 
 - **nohz_full=<list>**
 Enables full tickless (nohz) mode on specified cores, reducing periodic timer interrupts
