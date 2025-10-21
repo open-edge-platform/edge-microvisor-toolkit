@@ -7,15 +7,15 @@ The toolkit has an `imageconfig` construct in the JSON format that defines the c
 of the resulting image, such as:
 
 - Type and size of partitioning table.
-- Partitions, their types (such as EFI, rootfs, etc.), settings, file system, and size.
-- Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in
+- [Partitions](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/c06d33454db7b1cf772d04cc2c412b1a10c406a8/docs/developer-guide/emt-architecture-overview.md#packaging), their types (such as EFI, rootfs, etc.), settings, file system, and size.
+- Reference to [packagelists](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/96eb3660c58a48ada021e2c0eaa0510cad6dc119/toolkit/docs/formats/imageconfig.md#packagelists) which defines what packages (i.e. `rpms`) should be included in
   the image.
 - Additional configuration files that should be embedded in the image (e.g. network-, systemd
   configurations).
 - Any required post-installation scripts that should be executed once the image has been
   generated.
 - [Kernel and command line options](../../developer-guide/emt-architecture-overview.md#kernel-command-line).
-- Final configuration properties that should be applied (e.g. enable full disc encryption,
+- Final [configuration properties](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/c06d33454db7b1cf772d04cc2c412b1a10c406a8/docs/developer-guide/emt-architecture-overview.md#packaging) that should be applied (e.g. enable full disc encryption,
   immutable image, second stage bootloader provider, purge documentation etc.).
 
 ## Build the Toolchain
