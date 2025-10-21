@@ -82,7 +82,7 @@ skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
 
 7. Build the toolkit image:
 
-   All available image configurations are stored in JSON files, located in the `imageconfigs` folder. If you want to configure any additional kernel command line arguments for the image, follow the instructions in [architecture overview](../emt-architecture-overview.md#kernel-command-line).
+   All available image configurations are stored in JSON files, located in the `imageconfigs` folder. If you want to configure any additional kernel command line arguments, follow the instructions in [Architecture Overview](../emt-architecture-overview.md#kernel-command-line).
    For example, to build a RAW image without real-time extensions, use `edge-image.json` and run
    the following command:
 
