@@ -1,0 +1,253 @@
+module inbm 1.0.0;
+
+type inbm_t;
+type inbm_exec_t;
+type inbm_conf_rw_t;
+
+require {
+    type bin_t;
+    type binfmt_misc_fs_t;
+    type boot_t;
+    type bootloader_exec_t;
+    type bpf_t;
+    type cert_t;
+    type cgroup_t;
+    type configfs_t;
+    type debugfs_t;
+    type device_t;
+    type devpts_t;
+    type dosfs_t;
+    type efivarfs_t;
+    type etc_t;
+    type etc_runtime_t;
+    type fixed_disk_device_t;
+    type fs_t;
+    type fsadm_exec_t;
+    type fsadm_run_t;
+    type fusefs_t;
+    type http_port_t;
+    type hugetlbfs_t;
+    type ifconfig_t;
+    type init_t;
+    type initrc_t;
+    type kernel_t;
+    type lib_t;
+    type locale_t;
+    type loop_control_device_t;
+    type lvm_t;
+    type lvm_control_t;
+    type lvm_exec_t;
+    type lvm_runtime_t;
+    type mount_t;
+    type mount_exec_t;
+    type mount_runtime_t;
+    type net_conf_t;
+    type node_t;
+    type pstore_t;
+    type random_device_t;
+    type security_t;
+    type selinux_config_t;
+    type shell_exec_t;
+    type sysctl_fs_t;
+    type sysctl_kernel_t;
+    type sysfs_t;
+    type system_dbusd_t;
+    type systemd_logind_t;
+    type systemd_resolved_runtime_t;
+    type systemd_unit_t;
+    type tmp_t;
+    type tmpfs_t;
+    type tpm2_abrmd_t;
+    type tracefs_t;
+    type udev_t;
+    type proc_t;
+    type unconfined_t;
+    type unlabeled_t;
+    type urandom_device_t;
+    type unreserved_port_t;
+    type user_home_dir_t;
+    type user_runtime_root_t;
+    type usr_t;
+    type var_t;
+    type var_lib_t;
+    type var_lock_t;
+    type var_log_t;
+    
+    attribute daemon;
+    attribute domain;
+    attribute entry_type;
+    attribute exec_type;
+    attribute file_type;
+
+    class blk_file { getattr ioctl open read write };
+    class capability { fsetid net_admin sys_ptrace sys_rawio linux_immutable };
+    class chr_file { getattr ioctl open read write };
+    class dbus send_msg;
+    class dir { add_name create getattr mounton open read search write remove_name rmdir };
+    class fifo_file { append open getattr ioctl read write lock };
+    class filesystem { getattr mount unmount associate };
+    class file { append create entrypoint execute execute_no_trans getattr ioctl lock map open read rename setattr write link unlink relabelto };
+    class lnk_file { getattr read };
+    class netlink_route_socket { bind create getattr nlmsg_read read write };
+    class process signal;
+    class process { getsched setpgid setrlimit setsched signal signull sigchld getpgid };
+    class system module_request;
+    class tcp_socket { accept bind connect create getattr getopt listen name_connect node_bind read setopt write };
+    class udp_socket { connect create getattr read setopt write };
+    class unix_dgram_socket { create ioctl sendto };
+    class unix_stream_socket { getattr read write ioctl };
+    class fd use;
+
+    role system_r;
+}
+
+########################################
+#Basic rules needed for a service to run
+
+# Define the domain and entry point for the inbm service
+typeattribute inbm_t domain, daemon;
+typeattribute inbm_exec_t entry_type, exec_type, file_type;
+
+# Type transition rule
+type_transition init_t inbm_exec_t:process inbm_t;
+
+# Role assignment
+role system_r types inbm_t;
+
+########################################
+#Grant permissions for INBM service
+
+#============= inbm_t ==============
+allow inbm_t boot_t:dir { getattr search };
+allow inbm_t bootloader_exec_t:file { execute execute_no_trans getattr map open read };
+allow inbm_t bin_t:dir { getattr open read search };
+allow inbm_t bin_t:file { execute_no_trans ioctl open execute getattr map read };
+allow inbm_t bin_t:lnk_file { getattr read };
+allow inbm_t binfmt_misc_fs_t:filesystem getattr;
+allow inbm_t bpf_t:filesystem getattr;
+allow inbm_t cgroup_t:filesystem getattr;
+allow inbm_t configfs_t:filesystem getattr;
+allow inbm_t cert_t:dir search;
+allow inbm_t cert_t:file { getattr open read };
+allow inbm_t cert_t:lnk_file read;
+allow inbm_t debugfs_t:filesystem getattr;
+allow inbm_t device_t:filesystem getattr;
+allow inbm_t devpts_t:filesystem getattr;
+allow inbm_t dosfs_t:dir { create add_name getattr open read remove_name rmdir search write };
+allow inbm_t dosfs_t:file { append create getattr ioctl open read rename setattr unlink write };
+allow inbm_t dosfs_t:filesystem { getattr mount unmount };
+allow inbm_t efivarfs_t:dir { add_name write search };
+allow inbm_t efivarfs_t:file { getattr setattr open create write read };
+allow inbm_t efivarfs_t:filesystem getattr;
+allow inbm_t etc_runtime_t:file { getattr open read };
+allow inbm_t etc_t:file { getattr ioctl open read };
+allow inbm_t etc_t:lnk_file { getattr read };
+allow inbm_t fixed_disk_device_t:blk_file { getattr ioctl open read write };
+allow inbm_t fsadm_exec_t:file { execute execute_no_trans getattr map open read };
+allow inbm_t fsadm_run_t:dir { add_name getattr remove_name search write };
+allow inbm_t fsadm_run_t:file { create getattr link open read rename setattr unlink write };
+allow inbm_t fs_t:filesystem getattr;
+allow inbm_t fusefs_t:filesystem getattr;
+allow inbm_t http_port_t:tcp_socket name_connect;
+allow inbm_t hugetlbfs_t:filesystem getattr;
+allow inbm_t inbm_conf_rw_t:file { getattr ioctl open read write };
+allow inbm_t inbm_exec_t:file { entrypoint execute execute_no_trans getattr ioctl map open read };
+allow inbm_t init_t:dir search;
+allow inbm_t init_t:file { getattr ioctl open read };
+allow inbm_t init_t:process { sigchld signull getpgid };
+allow inbm_t init_t:fd use;
+allow inbm_t init_t:fifo_file { getattr read write append ioctl lock };
+allow inbm_t init_t:unix_stream_socket { getattr read write ioctl };
+allow inbm_t init_t:unix_dgram_socket sendto;
+allow inbm_t kernel_t:system module_request;
+allow inbm_t lib_t:dir { add_name create remove_name write };
+allow inbm_t lib_t:file { create rename write };
+allow inbm_t locale_t:dir { getattr search open read };
+allow inbm_t locale_t:file { getattr ioctl map open read };
+allow inbm_t loop_control_device_t:chr_file { getattr ioctl open read write };
+allow inbm_t lvm_control_t:chr_file { getattr ioctl open read write };
+allow inbm_t lvm_exec_t:file { execute execute_no_trans getattr map open read };
+allow inbm_t lvm_runtime_t:dir { add_name open read remove_name search write };
+allow inbm_t lvm_runtime_t:file { create getattr lock open read unlink write };
+allow inbm_t mount_exec_t:file { execute execute_no_trans getattr map open read };
+allow inbm_t mount_runtime_t:dir { getattr read search write };
+allow inbm_t net_conf_t:file { getattr open read };
+allow inbm_t node_t:tcp_socket node_bind;
+allow inbm_t proc_t:file { getattr open read };
+allow inbm_t proc_t:filesystem getattr;
+allow inbm_t pstore_t:filesystem getattr;
+allow inbm_t random_device_t:chr_file { open read };
+allow inbm_t security_t:filesystem getattr;
+allow inbm_t self:capability { net_admin fsetid sys_ptrace sys_rawio linux_immutable };
+allow inbm_t self:fifo_file { append open getattr ioctl read write };
+allow inbm_t self:netlink_route_socket { bind create getattr nlmsg_read read write };
+allow inbm_t self:tcp_socket { accept bind connect create getattr getopt listen read setopt write };
+allow inbm_t self:udp_socket { connect create getattr read setopt write };
+allow inbm_t self:unix_dgram_socket { create ioctl };
+allow inbm_t self:process signal;
+allow inbm_t selinux_config_t:dir search;
+allow inbm_t shell_exec_t:file { getattr execute map open read };
+allow inbm_t sysctl_fs_t:dir search;
+allow inbm_t sysctl_kernel_t:dir search;
+allow inbm_t sysctl_kernel_t:file { getattr ioctl open read };
+allow inbm_t sysfs_t:dir read;
+allow inbm_t sysfs_t:file { getattr open read };
+allow inbm_t sysfs_t:filesystem getattr;
+allow inbm_t sysfs_t:lnk_file { getattr read };
+allow inbm_t systemd_resolved_runtime_t:dir search;
+allow inbm_t systemd_resolved_runtime_t:file { getattr open read };
+allow inbm_t systemd_unit_t:dir { open read getattr search };
+allow inbm_t tmp_t:dir { add_name create getattr open read search write remove_name rmdir };
+allow inbm_t tmp_t:file { create execute getattr ioctl map open read setattr write unlink };
+allow inbm_t tmpfs_t:dir search;
+allow inbm_t tmpfs_t:file { execute map read open getattr setattr write };
+allow inbm_t tmpfs_t:filesystem getattr;
+allow inbm_t tracefs_t:filesystem getattr;
+allow inbm_t unlabeled_t:dir search;
+allow inbm_t unlabeled_t:file { getattr open read };
+allow inbm_t urandom_device_t:chr_file { open read };
+allow inbm_t unreserved_port_t:tcp_socket name_connect;
+allow inbm_t user_home_dir_t:dir search;
+allow inbm_t user_runtime_root_t:dir search;
+allow inbm_t usr_t:dir { add_name create mounton read remove_name rmdir write };
+allow inbm_t usr_t:file { create unlink getattr ioctl open read write };
+allow inbm_t var_lib_t:dir { add_name getattr write search };
+allow inbm_t var_lib_t:file { create getattr ioctl open read write };
+allow inbm_t var_lock_t:lnk_file read;
+allow inbm_t var_lock_t:dir { add_name search write };
+allow inbm_t var_lock_t:file { create lock open read write };
+allow inbm_t var_log_t:dir search;
+allow inbm_t var_log_t:file { getattr ioctl open read write };
+allow inbm_t var_t:dir { add_name remove_name read write };
+allow inbm_t var_t:file { getattr setattr lock open read write create ioctl unlink };
+
+#============= ifconfig_t ==============
+allow ifconfig_t initrc_t:unix_stream_socket { read write };
+allow ifconfig_t var_log_t:file read;
+
+#============= systemd_logind_t ==============
+allow systemd_logind_t initrc_t:dir search;
+allow systemd_logind_t initrc_t:file { getattr ioctl open read };
+
+#============= initrc_t ==============
+allow initrc_t inbm_conf_rw_t:file { ioctl read write open getattr setattr };
+
+#============= udev_t ==============
+allow udev_t var_t:file getattr;
+
+#============= unconfined_t ==============
+# for root to manage files
+# for ab-update script to manage files
+allow unconfined_t inbm_conf_rw_t:file { getattr open read unlink relabelto };
+allow inbm_conf_rw_t fs_t:filesystem associate;
+
+
+#============= system_dbusd_t ==============
+allow system_dbusd_t initrc_t:dbus send_msg;
+allow system_dbusd_t tpm2_abrmd_t:unix_stream_socket { read write };
+
+#============= mount_t  ==============
+allow mount_t etc_t:dir mounton;
+
+#============= lvm_t  ==============
+allow lvm_t var_t:file { read open getattr write ioctl lock };

@@ -7380,6 +7380,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "in-band-manageability",
+          "version": "1.0.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.0.0.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "incron",
           "version": "0.5.12",
           "downloadUrl": "https://github.com/ar-/incron/archive/refs/tags/0.5.12.tar.gz"
