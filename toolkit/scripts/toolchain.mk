@@ -283,7 +283,7 @@ $(STATUS_FLAGS_DIR)/toolchain_local_temp.flag: $(selected_toolchain_archive) $(t
 #	The .rpm doesn't exist
 #	The .rpm is older than the archive we are extracting it from
 #	The toolchain configuration has been changed (depend_TOOLCHAIN_ARCHIVE and depend_REBUILD_TOOLCHAIN)
-$(toolchain_rpms): update_git_submodule $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_local_temp.flag $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_TOOLCHAIN_ARCHIVE) $(depend_REBUILD_TOOLCHAIN)
+$(toolchain_rpms): $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_local_temp.flag $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_TOOLCHAIN_ARCHIVE) $(depend_REBUILD_TOOLCHAIN)
 	tempFile=$(toolchain_local_temp)/$(notdir $@) && \
 	if [ ! -f $@ \
 			-o $(selected_toolchain_archive) -nt $@ \
@@ -298,7 +298,7 @@ $(toolchain_rpms): update_git_submodule $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR
 
 # No archive was selected, so download from online package server instead. All packages must be available for this step to succeed.
 else
-$(toolchain_rpms): update_git_submodule $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_REBUILD_TOOLCHAIN) $(go-downloader) $(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh $(TOOLCHAIN_GPG_VALIDATION_KEYS)
+$(toolchain_rpms): $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_REBUILD_TOOLCHAIN) $(go-downloader) $(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh $(TOOLCHAIN_GPG_VALIDATION_KEYS)
 	@log_file="$(toolchain_downloads_logs_dir)/$(notdir $@).log" && \
 	rm -f "$$log_file" && \
 	$(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh \

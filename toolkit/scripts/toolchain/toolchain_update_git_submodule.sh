@@ -14,8 +14,6 @@ if [ -d "${REPO_ROOT}/azurelinux" ]; then
     git reset --hard
     git submodule update --init
     cd ${REPO_ROOT}
-    git clean -xfd
-    git reset --hard
     [ ! -d ./SPECS-SIGNED ] && cp -r azurelinux/SPECS-SIGNED ./ 
     [ ! -d ./SPECS-EXTENDED ] && cp -r azurelinux/SPECS-EXTENDED ./
     skip_list=("xpmem" "iser" "isert" "mlnx-ethtool" "mlnx-iproute2" "mlnx-nfsrdma" "mlnx-ofa_kernel" "mlnx-tools" "azurelinux-image-tools" "azurelinux-release" "azurelinux-repos" "azurelinux-rpm-macros")
