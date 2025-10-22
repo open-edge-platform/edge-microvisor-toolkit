@@ -1,40 +1,37 @@
 # Architecture Overview
 
-Edge Microvisor Toolkit is an OS build pipeline based on
-Azure Linux (as an RPM-based OS), designed to produce Linux OS images optimized for Intel®
-platforms. This article provides an overview of the build infrastructure, as well as
+Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. With an OS build pipeline based on
+Azure Linux, which uses the RPM Package Manager system, Edge Microvisor Toolkit is designed to produce Linux images optimized for Intel®
+platforms. This article provides an overview of the build infrastructure as well as
 architectural details of the OS itself.
 
 ## Edge Microvisor Toolkit
 
 Edge Microvisor Toolkit is produced and maintained in several editions, in both immutable and
-mutable images. It enables users to quickly deploy and run their workloads on Intel®
-platforms, offering quick solutions to multiple scenarios. Currently, it is deployed as:
+mutable images. It enables you to quickly deploy and validate workloads on Intel®
+platforms in order to demonstrate the full capabilities of Intel silicon for various scenarios. There are several options for deploying the toolkit:
 
 - ISO installer with a mutable image using GRUB as the second-stage bootloader.
-- ISO installer with an immutable image, systemd-boot as the second-stage bootloader with Kubernetes.
-- RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader.
-- RAW and VHD/X - immutable image, systemd-boot as the second-stage bootloader, with
-  real-time support.
+- ISO installer with an immutable image using systemd-boot as the second-stage bootloader with Kubernetes.
+- RAW and VHD/X: immutable image using systemd-boot as the second-stage bootloader.
+- RAW and VHD/X: immutable image using systemd-boot as the second-stage bootloader, with the Preempt_RT kernel patches to support real-time computing.
 
-The two immutable image microvisor versions integrate the Intel® kernel and
-enable the software and features offered by Intel® Open Edge Platform. Check out the
-overview of key software components:
+The two immutable image versions integrate the Intel® kernel and
+enable the software and features offered by [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework). Here's an overview of key software components:
 
 ![overview of key software components](./assets/emt-architecture-key-components.drawio.svg)
 
 ## Edge Microvisor Toolkit Image Versions
 
-The toolkit comes pre-configured to produce different images, the table below
-outlines the key differences between those.
+The toolkit comes pre-configured to produce different images; the following table outlines the key differences between them.
 
 |  Feature         | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit Standalone Node & Orchestrated                                   |
 | -----------------| -------------------- | ------------------------------------------------- |
-| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with toolkit to build image with an opt-in data integrity and security features.</li></ul> | <ul><li>Designed for Open Edge Platforms and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare-metal and as guest OS.</li><li>Fast atomic updates & rollback support with small image footprint and short boot time.|
+| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with a toolkit to build an image with opt-in data integrity and security features.</li></ul> | <ul><li>Designed for [Open Edge Platform](https://github.com/open-edge-platform) and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare metal or as a guest OS.</li><li>Fast atomic updates and rollback support with a small image footprint and short boot time.|
 | Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
 | Update Mechanism | RPM package updates with TDNF | Image based A/B updates + Rollback       |
 | Linux Kernel     | Intel® Kernel 6.12   | Intel® Kernel 6.12                                |
-| Real time        | Available for opt-in | Image variants with standard and RT Kernel provided |
+| Real time        | Available for opt-in | Image variants with standard and RT kernel provided |
 | Desktop Virtualization | Available      | Dedicated non-RT image variant provided                                    |
 | Add-on packages  | Available for opt-in: Docker + K3s | Downloaded during installation: K3s and extensions    |
 | OS Bootloader    | GRUB                 | systemd-boot                                      |
@@ -45,16 +42,16 @@ outlines the key differences between those.
 
 ### Developer Node mutable ISO image
 
-Mutable Developer node in an ISO format allows you to add packages and
+The mutable developer node in an ISO format allows you to add packages and
 customize the system after deployment. During setup you can select one of four versions:
 
 - Standard kernel
-- Standard kernel - Docker and K3S provisioned during installation
+- Standard kernel with Docker and K3s provisioned during installation
 - [Kernel with real-time extensions](#preempt-rt-kernel)
-- [Kernel with real-time extensions](#preempt-rt-kernel) - Docker and K3S provisioned during installation
+- [Kernel with real-time extensions](#preempt-rt-kernel) and Docker and K3s provisioned during installation
 
-This image is a customizable developer version that includes only essential pre-installed
-packages, providing a basic ready-to-use environment:
+As a customizable developer version that includes only essential pre-installed
+packages, it provides a basic ready-to-use environment:
 
 | Item              | Details                                         |
 | ------------------| ----------------------------------------------- |
@@ -67,35 +64,31 @@ packages, providing a basic ready-to-use environment:
 | Filesystem        | e2fsprogs, mount                                |
 | Included in kernel | iGPU, dGPU (Intel® Arc&trade;), SR-IOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, RAS |
 
-You can install additional RPM packages, using DNF to tailor the OS to your specific needs.
-The supported package repository offers additional `rpm` for tailoring the image
-to specific needs of container runtime, virtualization, orchestration software,
-monitoring tools, standard cloud-edge (CNCF) software, and more.
+You can install additional RPM packages, using DNF to tailor the operating system to your needs.
+The supported package repository enables you to tailor the image with a container runtime, orchestration software,
+monitoring tools, cloud-native software, and other edge software.
 
-Use [kernel with real-time extensions](#preempt-rt-kernel) for enhanced real-time performance
-compared to the standard kernel, if quick responses to critical events are crucial for
-your use case.
+If quick responses to critical events are crucial for
+your use case, you can use the [kernel with real-time extensions](#preempt-rt-kernel).
 
 ### Standalone Node immutable RAW images
 
-Intel® ready-made solution for Edge AI applications. Immutable Standalone Node uses Secure
+The Standalone Node is an immutable, ready-made solution for deploying and validating Edge AI applications. It uses Secure
 Boot technology to protect against injecting malicious software, both at rest and during
-runtime. This image cannot be modified after deployment, providing the best security for
-your Edge Node.
+runtime. This image cannot be modified after deployment.
 
-Download the Edge Microvisor Toolkit Standalone Node installer to your device, run it to
-create a bootable USB stick, and use that USB stick to install the EMT Standalone OS.
+You can download the Edge Microvisor Toolkit Standalone Node installer to your device, run it to
+create a bootable USB stick, and use the USB stick to install the Standalone Node.
 
-#### Standard kernel with integrated Docker and K3S
+#### Standard kernel with integrated Docker and K3s
 
-This image has integrated Docker and K3S for deploying and managing applications. The image
-uses the standard linux kernel.
+This image has integrated Docker and K3s for deploying and managing applications.
 
-#### Kernel with real-time extensions, and integrated Docker and K3S
+#### Kernel with real-time extensions and integrated Docker and K3s
 
-This image has integrated Docker and K3S for deploying and managing applications. The image
-uses [kernel with real-time extensions](#preempt-rt-kernel), offering enhanced real-time
-performance compared to the standard kernel. Use this image if quick responses to critical
+This image has integrated Docker and K3s for deploying and managing applications. The image
+uses [kernel with real-time extensions](#preempt-rt-kernel) to enhance real-time
+performance. Use this image if quick responses to critical
 events are crucial for your use case.
 
 #### Desktop Virtualization - standard Kernel without real-time extensions
@@ -187,6 +180,9 @@ The kernel command line for the RT kernel can be customized specifically for cus
 workloads. Currently, `idle` is the only configured command-line argument that affects
 real-time performance.
 
+To configure kernel command line arguments, add them in the `"ExtraCommandLine"` parameter
+inside the imageconfig file, as shown in [edge-image](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/e22a8f4e72d0edc652f1aacd514d0b5bf5de8b80/toolkit/imageconfigs/edge-image.json#L107).
+
 - **idle=poll**
 Forces the CPU to actively poll for work when idle, rather than entering low-power idle
 states. In RT systems, this can reduce latency by ensuring the CPU is always ready to
@@ -201,7 +197,26 @@ handle high-priority tasks immediately, at the cost of higher power consumption.
 - **isolcpus=<list>**
 Isolates specific CPU cores from the general scheduler, preventing non-RT tasks from
 being scheduled on those cores. This ensures that designated cores are available solely
-for RT tasks.
+for RT tasks. This way, for example, the workloads can be shifted between efficient
+and performance cores. The parameter takes lists as values:
+
+  - isolcpus=\<cpu core number>,...,\<cpu core number>
+  
+    ```bash
+    isolcpus=1,2,3
+    ```
+  
+  - isolcpus=\<cpu core number>-\<cpu core number>
+  
+    ```bash
+    isolcpus=1-3
+    ```
+  
+  - isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
+  
+    ```bash
+    isolcpus=1,4-5
+    ```
 
 - **nohz_full=<list>**
 Enables full tickless (nohz) mode on specified cores, reducing periodic timer interrupts
@@ -506,8 +521,5 @@ overall update flow and state transitions.
 The Edge Microvisor Toolkit may also be updated as a standalone solution, through a manual
 update procedure, without the automation offered by Open Edge Platform. You can download the
 new version of the microvisor and run the update by invoking the `os-update-script` and
-providing the path to the downloaded image.
-
-> **Note:**
-  Future versions of Edge Microvisor Toolkit will implement automatic image validation,
+providing the path to the downloaded image. Plans for future versions of Edge Microvisor Toolkit may include implementing automatic image validation,
   update checks, and releases.
