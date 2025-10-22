@@ -197,8 +197,10 @@ STOP_ON_FETCH_FAIL ?= n
 
 ######## HIGH LEVEL TARGETS ########
 
-.PHONY: all clean
+.PHONY: all clean update_git_submodule
 all: toolchain go-tools chroot-tools
+update_git_submodule:
+	$(SCRIPTS_DIR)/toolchain/toolchain_update_git_submodule.sh
 
 ######## SUBMAKE INCLUDES ########
 

@@ -49,12 +49,12 @@ $(call create_folder,$(populated_toolchain_chroot))
 
 .PHONY: raw-toolchain toolchain clean-toolchain clean-toolchain-containers check-manifests check-aarch64-manifests check-x86_64-manifests
 ##help:target:raw-toolchain=Build the initial toolchain bootstrap stage.
-raw-toolchain: $(raw_toolchain)
+raw-toolchain: update_git_submodule $(raw_toolchain)
 ##help:target:toolchain=Ensure all toolchain RPMs are present.
-toolchain: $(toolchain_rpms)
+toolchain: update_git_submodule $(toolchain_rpms)
 ifeq ($(REBUILD_TOOLCHAIN),y)
 # If we are rebuilding the toolchain, we also expect the built RPMs to end up in out/RPMS
-toolchain: $(toolchain_out_rpms)
+toolchain: update_git_submodule $(toolchain_out_rpms)
 endif
 
 clean: clean-toolchain
