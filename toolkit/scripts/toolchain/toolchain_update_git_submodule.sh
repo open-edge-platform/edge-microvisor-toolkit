@@ -25,7 +25,7 @@ if [ -d "${REPO_ROOT}/azurelinux" ]; then
         fi
         [ -d "$folder" ] && [ ! -d "SPECS/$fbasename" ] && cp -r "$folder" SPECS/ #&& echo "Copied $folder to SPECS/$fbasename"
     done
-else
+#else
     # echo "Directory ${TIBEROS_DIR}/azurelinux does not exist. Skipping submodule update."
 fi
 # echo "Submodules updated successfully"
