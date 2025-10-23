@@ -28,7 +28,7 @@ final_toolchain = $(toolchain_build_dir)/toolchain_built_rpms_all.tar.gz
 toolchain_files = \
 	$(call shell_real_build_only, find $(SCRIPTS_DIR)/toolchain -name '*.sh') \
 	$(SCRIPTS_DIR)/toolchain/container/Dockerfile
-toolchain_spec_list := $(call shell_real_build_only, $(SCRIPTS_DIR)/toolchain/list_toolchain_specs.sh $(SCRIPTS_DIR)/toolchain/build_official_toolchain_rpms.sh)
+toolchain_spec_list := $(call shell_real_build_only, $(SCRIPTS_DIR)/toolchain/toolchain_update_git_submodule.sh $(SCRIPTS_DIR)/toolchain/list_toolchain_specs.sh $(SCRIPTS_DIR)/toolchain/build_official_toolchain_rpms.sh)
 # Find the *.rpm corresponding to each of the entries in the manifest
 # regex operation: (.*\.([^\.]+)\.rpm) extracts *.(<arch>).rpm" to determine
 # the exact path of the required rpm
@@ -49,12 +49,12 @@ $(call create_folder,$(populated_toolchain_chroot))
 
 .PHONY: raw-toolchain toolchain clean-toolchain clean-toolchain-containers check-manifests check-aarch64-manifests check-x86_64-manifests
 ##help:target:raw-toolchain=Build the initial toolchain bootstrap stage.
-raw-toolchain: update_git_submodule $(raw_toolchain)
+raw-toolchain: $(raw_toolchain)
 ##help:target:toolchain=Ensure all toolchain RPMs are present.
-toolchain: update_git_submodule $(toolchain_rpms)
+toolchain: $(toolchain_rpms)
 ifeq ($(REBUILD_TOOLCHAIN),y)
 # If we are rebuilding the toolchain, we also expect the built RPMs to end up in out/RPMS
-toolchain: update_git_submodule $(toolchain_out_rpms)
+toolchain: $(toolchain_out_rpms)
 endif
 
 clean: clean-toolchain
