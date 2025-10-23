@@ -3,8 +3,8 @@
 
 Summary:        An agent for updating the OS and bare metal agents packages
 Name:           platform-update-agent
-Version:        1.5.2
-Release:        3%{?dist}
+Version:        1.7.0
+Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -134,7 +134,8 @@ rm -rf %{_var}/edge-node/pua
 echo "Successfully purged platform-update-agent"
 
 %changelog
-* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.5.2-3
+* Thu Oct 23 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.0-1
+- remove provision-tc step from PUA
 - build with golang < 1.25
 
 * Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 1.5.2-2
