@@ -154,7 +154,7 @@ $(image_package_cache_summary): $(go-imagepkgfetcher) $(chroot_worker) $(toolcha
 		--timestamp-file=$(TIMESTAMP_DIR)/imagepkgfetcher.jsonl
 
 ##help:target:make-raw-image=Create the raw base image.
-make-raw-image: update_git_submodule $(imager_disk_output_dir)
+make-raw-image: $(imager_disk_output_dir)
 $(imager_disk_output_dir): $(STATUS_FLAGS_DIR)/imager_disk_output.flag
 	@touch $@
 	@echo Finished updating $@
@@ -193,7 +193,7 @@ $(STATUS_FLAGS_DIR)/imager_disk_output.flag: $(go-imager) $(image_package_cache_
 $(imager_disk_output_dir)/%: ;
 
 ##help:target:image=Generate an image.
-image: update_git_submodule $(imager_disk_output_dir) $(imager_disk_output_files) $(go-roast) $(depend_CONFIG_FILE) $(CONFIG_FILE) $(validate-config)
+image: $(imager_disk_output_dir) $(imager_disk_output_files) $(go-roast) $(depend_CONFIG_FILE) $(CONFIG_FILE) $(validate-config)
 	$(if $(CONFIG_FILE),,$(error Must set CONFIG_FILE=))
 	VMXTEMPLATE=$(ova_vmxtemplate) OVFINFO=$(ova_ovfinfo) \
 	$(go-roast) \
@@ -249,7 +249,7 @@ iso_deps = $(go-isomaker) $(go-imager) $(depend_CONFIG_FILE) $(CONFIG_FILE) $(va
 # The initrd bundles these files into the image, we should rebuild it if they change
 initrd_bundled_files = $(go-liveinstaller) $(go-imager) $(assets_files) $(initrd_assets_files) $(imggen_local_repo)
 
-$(initrd_img): update_git_submodule $(initrd_bundled_files) $(initrd_config_json) $(INITRD_CACHE_SUMMARY) | $(iso_deps)
+$(initrd_img): $(initrd_bundled_files) $(initrd_config_json) $(INITRD_CACHE_SUMMARY) | $(iso_deps)
 	# Recursive make call to build the initrd image $(artifact_dir)/iso-initrd.img
 	$(MAKE) image MAKEOVERRIDES= CONFIG_FILE=$(initrd_config_json) IMAGE_CACHE_SUMMARY=$(INITRD_CACHE_SUMMARY) IMAGE_TAG= RELEASE_VERSION=$(RELEASE_VERSION) BUILD_NUMBER=$(BUILD_NUMBER)
 

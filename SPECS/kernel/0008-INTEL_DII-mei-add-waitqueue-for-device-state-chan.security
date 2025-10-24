@@ -1,0 +1,63 @@
+From 21c727bd41419b45b48f238895bd775c7f13d40c Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Thu, 29 Sep 2022 11:54:30 +0300
+Subject: [PATCH 08/19] INTEL_DII: mei: add waitqueue for device state change
+
+Upon force wake assert the firmware goes into reset.
+The wait queue is used for waiting for the reset flow completion.
+
+Co-developed-by: Tomas Winkler <tomasw@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/init.c    | 1 +
+ drivers/misc/mei/main.c    | 1 +
+ drivers/misc/mei/mei_dev.h | 2 ++
+ 3 files changed, 4 insertions(+)
+
+diff --git a/drivers/misc/mei/init.c b/drivers/misc/mei/init.c
+index 22e21a237cf58..af91f86afc58b 100644
+--- a/drivers/misc/mei/init.c
++++ b/drivers/misc/mei/init.c
+@@ -403,6 +403,7 @@ void mei_device_init(struct mei_device *dev,
+ 	init_waitqueue_head(&dev->wait_pg);
+ 	init_waitqueue_head(&dev->wait_hbm_start);
+ 	dev->dev_state = MEI_DEV_INITIALIZING;
++	init_waitqueue_head(&dev->wait_dev_state);
+ 	dev->reset_count = 0;
+ 
+ 	INIT_LIST_HEAD(&dev->write_list);
+diff --git a/drivers/misc/mei/main.c b/drivers/misc/mei/main.c
+index d5e124095e5bf..ec6b5328be89e 100644
+--- a/drivers/misc/mei/main.c
++++ b/drivers/misc/mei/main.c
+@@ -1117,6 +1117,7 @@ void mei_set_devstate(struct mei_device *dev, enum mei_dev_state state)
+ 		return;
+ 
+ 	dev->dev_state = state;
++	wake_up(&dev->wait_dev_state);
+ 
+ 	clsdev = class_find_device_by_devt(&mei_class, dev->cdev.dev);
+ 	if (clsdev) {
+diff --git a/drivers/misc/mei/mei_dev.h b/drivers/misc/mei/mei_dev.h
+index 91f9dc5d56d9f..aa092ef795f6a 100644
+--- a/drivers/misc/mei/mei_dev.h
++++ b/drivers/misc/mei/mei_dev.h
+@@ -495,6 +495,7 @@ struct mei_dev_timeouts {
+  *
+  * @reset_count : number of consecutive resets
+  * @dev_state   : device state
++ * @wait_dev_state : wait queue for receive dev state changes
+  * @hbm_state   : state of host bus message protocol
+  * @pxp_mode    : PXP device mode
+  * @init_clients_timer : HBM init handshake timeout
+@@ -586,6 +587,7 @@ struct mei_device {
+ 	 */
+ 	unsigned long reset_count;
+ 	enum mei_dev_state dev_state;
++	wait_queue_head_t wait_dev_state;
+ 	enum mei_hbm_state hbm_state;
+ 	enum mei_dev_pxp_mode pxp_mode;
+ 	u16 init_clients_timer;
+-- 
+2.25.1
+

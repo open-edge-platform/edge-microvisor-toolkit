@@ -1,0 +1,80 @@
+From 67bbb0b43f1a161082ad04d986d1faac4ada075f Mon Sep 17 00:00:00 2001
+From: Christopher Hall <christopher.s.hall@intel.com>
+Date: Tue, 3 Dec 2019 06:25:44 -0800
+Subject: [PATCH 12/43] drivers/ptp: Add user-space input polling interface
+
+The Intel PMC Time-Aware GPIO controller doesn't implement interrupts to
+notify software that an input event has occurred. To solve this problem,
+implement a user-space polling interface allowing the application to check
+for input events. The API returns an event count and time. This interface
+(EVENT_COUNT_TSTAMP2) is *reused* from the output frequency adjustment API.
+The event count delta indicates that one or more events have occurred and
+how many events may have been missed.
+
+For periodic input use cases, polling is fairly efficient. Using PPS input,
+as an example, polling 3x per second is more than sufficient to capture
+rising and falling edge timestamps. Generalizing, the poll period should
+be:
+
+	poll_period = (nominal_input_period / (1 + freq_offset)) / 2
+
+	Where freq_offset = <remote:local clock ratio> - 1;
+
+A flag that indicates a pin isn't capable of generating interrupts is
+added. Software should not expect notification through the read() interface
+on pins marked as such. If all pins are marked as poll only, the read
+interface is marked 'defunct' and immediately returns an error because no
+interrupt would ever occur to exit the wait state.
+
+Signed-off-by: Christopher Hall <christopher.s.hall@intel.com>
+---
+ drivers/ptp/ptp_clock.c        | 13 +++++++++++++
+ include/uapi/linux/ptp_clock.h |  1 +
+ 2 files changed, 14 insertions(+)
+
+diff --git a/drivers/ptp/ptp_clock.c b/drivers/ptp/ptp_clock.c
+index c56cd0f63909a..ea984abdc1590 100644
+--- a/drivers/ptp/ptp_clock.c
++++ b/drivers/ptp/ptp_clock.c
+@@ -229,6 +229,17 @@ static void ptp_aux_kworker(struct kthread_work *work)
+ 		kthread_queue_delayed_work(ptp->kworker, &ptp->aux_work, delay);
+ }
+ 
++static bool check_for_readability(struct ptp_pin_desc *pin_desc, size_t size)
++{
++	int i;
++	unsigned int flags = PTP_PINDESC_INPUTPOLL;
++
++	for (i = 0; i < size && flags != 0; ++i)
++		flags &= pin_desc[i].flags;
++
++	return flags == 0;
++}
++
+ /* public interface */
+ 
+ struct ptp_clock *ptp_clock_register(struct ptp_clock_info *info,
+@@ -255,6 +266,8 @@ struct ptp_clock *ptp_clock_register(struct ptp_clock_info *info,
+ 	if (err)
+ 		goto no_slot;
+ 
++	ptp->defunct = !check_for_readability(info->pin_config, info->n_pins);
++
+ 	ptp->clock.ops = ptp_clock_ops;
+ 	ptp->info = info;
+ 	ptp->devid = MKDEV(major, index);
+diff --git a/include/uapi/linux/ptp_clock.h b/include/uapi/linux/ptp_clock.h
+index ed7cf6cbf0801..4ecceb6451356 100644
+--- a/include/uapi/linux/ptp_clock.h
++++ b/include/uapi/linux/ptp_clock.h
+@@ -39,6 +39,7 @@
+  * Bits of the ptp_pin_desc.flags field:
+  */
+ #define PTP_PINDESC_EVTCNTVALID	(1<<0)
++#define PTP_PINDESC_INPUTPOLL	(1<<1)
+ 
+ /*
+  * flag fields valid for the new PTP_EXTTS_REQUEST2 ioctl.
+-- 
+2.25.1
+

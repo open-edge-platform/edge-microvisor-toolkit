@@ -902,20 +902,54 @@ func SystemBlockDevices() (systemDevices []SystemBlockDevice, err error) {
 		return
 	}
 
-	systemDevices = make([]SystemBlockDevice, len(blockDevices.Devices))
-
-	for i, disk := range blockDevices.Devices {
-		systemDevices[i].DevicePath = fmt.Sprintf("/dev/%s", disk.Name)
-
-		systemDevices[i].RawDiskSize, err = strconv.ParseUint(disk.Size.String(), 10, 64)
+	// Process each device to build the filtered list
+	systemDevices = []SystemBlockDevice{}
+	for _, device := range blockDevices.Devices {
+		devicePath := fmt.Sprintf("/dev/%s", device.Name)
+		rawSize, err := strconv.ParseUint(device.Size.String(), 10, 64)
 		if err != nil {
-			return
+			return nil, fmt.Errorf("failed to parse size for %s: %v", devicePath, err)
 		}
 
-		systemDevices[i].Model = strings.TrimSpace(disk.Model)
+		isISOInstaller := isReadOnlyISO(devicePath)
+
+		logger.Log.Debugf("Device: %s, Size: %d, Model: %s, isISOInstaller : %v ",
+			devicePath, rawSize, strings.TrimSpace(device.Model), isISOInstaller)
+
+		if !isISOInstaller {
+			systemDevices = append(systemDevices, SystemBlockDevice{
+				DevicePath:  devicePath,
+				RawDiskSize: rawSize,
+				Model:       strings.TrimSpace(device.Model),
+			})
+		} else {
+			logger.Log.Debugf("Excluded removable installer device: %s", devicePath)
+		}
 	}
 
-	return
+	logger.Log.Debugf("Final device list: %v", systemDevices)
+	return systemDevices, nil
+}
+
+// isReadOnlyISO checks if a device is mounted read-only (ISO on USB/CD).
+func isReadOnlyISO(devicePath string) bool {
+	mounts, err := os.ReadFile("/proc/mounts")
+	if err != nil {
+		logger.Log.Debugf("Failed to read /proc/mounts: %v", err)
+		return false
+	}
+	for _, line := range strings.Split(string(mounts), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) >= 4 && fields[0] == devicePath && fields[2] == "iso9660" {
+			options := strings.Split(fields[3], ",")
+			for _, opt := range options {
+				if opt == "ro" {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func GetDiskPartitions(diskDevPath string) ([]PartitionInfo, error) {

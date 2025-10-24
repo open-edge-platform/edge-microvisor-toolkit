@@ -1,0 +1,245 @@
+From 633295480c4e6e0ca9d7a03bd9ef85f33122084c Mon Sep 17 00:00:00 2001
+From: "Pan, Kris" <kris.pan@intel.com>
+Date: Fri, 17 Jan 2025 05:18:00 +0000
+Subject: [PATCH 3/5] Revert "media: ipu6: use the IPU6 DMA mapping APIs to do
+ mapping"
+
+This reverts commit d38610a978d68cbc381bbbafb7e6945de24fb188.
+---
+ drivers/media/pci/intel/ipu6/Kconfig          |  2 +-
+ .../media/pci/intel/ipu6/ipu6-isys-queue.c    | 66 ++++---------------
+ .../media/pci/intel/ipu6/ipu6-isys-queue.h    |  1 -
+ drivers/media/pci/intel/ipu6/ipu6-isys.c      | 19 +++---
+ 4 files changed, 24 insertions(+), 64 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu6/Kconfig b/drivers/media/pci/intel/ipu6/Kconfig
+index f48b8333605b1..7176d16756fb2 100644
+--- a/drivers/media/pci/intel/ipu6/Kconfig
++++ b/drivers/media/pci/intel/ipu6/Kconfig
+@@ -8,7 +8,7 @@ config VIDEO_INTEL_IPU6
+ 	select IOMMU_IOVA
+ 	select VIDEO_V4L2_SUBDEV_API
+ 	select MEDIA_CONTROLLER
+-	select VIDEOBUF2_DMA_SG
++	select VIDEOBUF2_DMA_CONTIG
+ 	select V4L2_FWNODE
+ 	help
+ 	  This is the 6th Gen Intel Image Processing Unit, found in Intel SoCs
+diff --git a/drivers/media/pci/intel/ipu6/ipu6-isys-queue.c b/drivers/media/pci/intel/ipu6/ipu6-isys-queue.c
+index 69fde84283d99..e849a050f626a 100644
+--- a/drivers/media/pci/intel/ipu6/ipu6-isys-queue.c
++++ b/drivers/media/pci/intel/ipu6/ipu6-isys-queue.c
+@@ -16,11 +16,10 @@
+ 
+ #include <media/media-entity.h>
+ #include <media/v4l2-subdev.h>
+-#include <media/videobuf2-dma-sg.h>
++#include <media/videobuf2-dma-contig.h>
+ #include <media/videobuf2-v4l2.h>
+ 
+ #include "ipu6-bus.h"
+-#include "ipu6-dma.h"
+ #include "ipu6-fw-isys.h"
+ #include "ipu6-isys.h"
+ #include "ipu6-isys-video.h"
+@@ -28,39 +27,9 @@
+ #include "ipu6-cpd.h"
+ #endif
+ 
+-static int ipu6_isys_buf_init(struct vb2_buffer *vb)
+-{
+-	struct ipu6_isys *isys = vb2_get_drv_priv(vb->vb2_queue);
+-	struct sg_table *sg = vb2_dma_sg_plane_desc(vb, 0);
+-	struct vb2_v4l2_buffer *vvb = to_vb2_v4l2_buffer(vb);
+-	struct ipu6_isys_video_buffer *ivb =
+-		vb2_buffer_to_ipu6_isys_video_buffer(vvb);
+-	int ret;
+-
+-	ret = ipu6_dma_map_sgtable(isys->adev, sg, DMA_TO_DEVICE, 0);
+-	if (ret)
+-		return ret;
+-
+-	ivb->dma_addr = sg_dma_address(sg->sgl);
+-
+-	return 0;
+-}
+-
+-static void ipu6_isys_buf_cleanup(struct vb2_buffer *vb)
+-{
+-	struct ipu6_isys *isys = vb2_get_drv_priv(vb->vb2_queue);
+-	struct sg_table *sg = vb2_dma_sg_plane_desc(vb, 0);
+-	struct vb2_v4l2_buffer *vvb = to_vb2_v4l2_buffer(vb);
+-	struct ipu6_isys_video_buffer *ivb =
+-		vb2_buffer_to_ipu6_isys_video_buffer(vvb);
+-
+-	ivb->dma_addr = 0;
+-	ipu6_dma_unmap_sgtable(isys->adev, sg, DMA_TO_DEVICE, 0);
+-}
+-
+-static int ipu6_isys_queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
+-				 unsigned int *num_planes, unsigned int sizes[],
+-				 struct device *alloc_devs[])
++static int queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
++		       unsigned int *num_planes, unsigned int sizes[],
++		       struct device *alloc_devs[])
+ {
+ 	struct ipu6_isys_queue *aq = vb2_queue_to_isys_queue(q);
+ 	struct ipu6_isys_video *av = ipu6_isys_queue_to_video(aq);
+@@ -254,11 +223,9 @@ ipu6_isys_buf_to_fw_frame_buf_pin(struct vb2_buffer *vb,
+ 				  struct ipu6_fw_isys_frame_buff_set_abi *set)
+ {
+ 	struct ipu6_isys_queue *aq = vb2_queue_to_isys_queue(vb->vb2_queue);
+-	struct vb2_v4l2_buffer *vvb = to_vb2_v4l2_buffer(vb);
+-	struct ipu6_isys_video_buffer *ivb =
+-		vb2_buffer_to_ipu6_isys_video_buffer(vvb);
+ 
+-	set->output_pins[aq->fw_output].addr = ivb->dma_addr;
++	set->output_pins[aq->fw_output].addr =
++		vb2_dma_contig_plane_dma_addr(vb, 0);
+ 	set->output_pins[aq->fw_output].out_buf_id = vb->index + 1;
+ }
+ 
+@@ -381,7 +348,7 @@ static void buf_queue(struct vb2_buffer *vb)
+ 
+ 	dev_dbg(dev, "queue buffer %u for %s\n", vb->index, av->vdev.name);
+ 
+-	dma = ivb->dma_addr;
++	dma = vb2_dma_contig_plane_dma_addr(vb, 0);
+ 	dev_dbg(dev, "iova: iova %pad\n", &dma);
+ 
+ 	spin_lock_irqsave(&aq->lock, flags);
+@@ -1008,14 +975,10 @@ void ipu6_isys_queue_buf_ready(struct ipu6_isys_stream *stream,
+ 	}
+ 
+ 	list_for_each_entry_reverse(ib, &aq->active, head) {
+-		struct ipu6_isys_video_buffer *ivb;
+-		struct vb2_v4l2_buffer *vvb;
+ 		dma_addr_t addr;
+ 
+ 		vb = ipu6_isys_buffer_to_vb2_buffer(ib);
+-		vvb = to_vb2_v4l2_buffer(vb);
+-		ivb = vb2_buffer_to_ipu6_isys_video_buffer(vvb);
+-		addr = ivb->dma_addr;
++		addr = vb2_dma_contig_plane_dma_addr(vb, 0);
+ 
+ 		if (info->pin.addr != addr) {
+ 			if (first)
+@@ -1054,12 +1017,10 @@ void ipu6_isys_queue_buf_ready(struct ipu6_isys_stream *stream,
+ }
+ 
+ static const struct vb2_ops ipu6_isys_queue_ops = {
+-	.queue_setup = ipu6_isys_queue_setup,
++	.queue_setup = queue_setup,
+ 	.wait_prepare = vb2_ops_wait_prepare,
+ 	.wait_finish = vb2_ops_wait_finish,
+-	.buf_init = ipu6_isys_buf_init,
+ 	.buf_prepare = ipu6_isys_buf_prepare,
+-	.buf_cleanup = ipu6_isys_buf_cleanup,
+ 	.start_streaming = start_streaming,
+ 	.stop_streaming = stop_streaming,
+ 	.buf_queue = buf_queue,
+@@ -1069,17 +1030,16 @@ int ipu6_isys_queue_init(struct ipu6_isys_queue *aq)
+ {
+ 	struct ipu6_isys *isys = ipu6_isys_queue_to_video(aq)->isys;
+ 	struct ipu6_isys_video *av = ipu6_isys_queue_to_video(aq);
+-	struct ipu6_bus_device *adev = isys->adev;
+ 	int ret;
+ 
+ 	/* no support for userptr */
+ 	if (!aq->vbq.io_modes)
+ 		aq->vbq.io_modes = VB2_MMAP | VB2_DMABUF;
+ 
+-	aq->vbq.drv_priv = isys;
++	aq->vbq.drv_priv = aq;
+ 	aq->vbq.ops = &ipu6_isys_queue_ops;
+ 	aq->vbq.lock = &av->mutex;
+-	aq->vbq.mem_ops = &vb2_dma_sg_memops;
++	aq->vbq.mem_ops = &vb2_dma_contig_memops;
+ 	aq->vbq.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+ 	aq->vbq.min_queued_buffers = 1;
+ 	aq->vbq.timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
+@@ -1088,8 +1048,8 @@ int ipu6_isys_queue_init(struct ipu6_isys_queue *aq)
+ 	if (ret)
+ 		return ret;
+ 
+-	aq->dev = &adev->auxdev.dev;
+-	aq->vbq.dev = &adev->isp->pdev->dev;
++	aq->dev = &isys->adev->auxdev.dev;
++	aq->vbq.dev = &isys->adev->auxdev.dev;
+ 	spin_lock_init(&aq->lock);
+ 	INIT_LIST_HEAD(&aq->active);
+ 	INIT_LIST_HEAD(&aq->incoming);
+diff --git a/drivers/media/pci/intel/ipu6/ipu6-isys-queue.h b/drivers/media/pci/intel/ipu6/ipu6-isys-queue.h
+index 78f3c2ff2a36e..ffbf781b578bd 100644
+--- a/drivers/media/pci/intel/ipu6/ipu6-isys-queue.h
++++ b/drivers/media/pci/intel/ipu6/ipu6-isys-queue.h
+@@ -41,7 +41,6 @@ struct ipu6_isys_buffer {
+ struct ipu6_isys_video_buffer {
+ 	struct vb2_v4l2_buffer vb_v4l2;
+ 	struct ipu6_isys_buffer ib;
+-	dma_addr_t dma_addr;
+ };
+ 
+ #define IPU6_ISYS_BUFFER_LIST_FL_INCOMING	BIT(0)
+diff --git a/drivers/media/pci/intel/ipu6/ipu6-isys.c b/drivers/media/pci/intel/ipu6/ipu6-isys.c
+index 4958a28373238..49c0ae0bd8b34 100644
+--- a/drivers/media/pci/intel/ipu6/ipu6-isys.c
++++ b/drivers/media/pci/intel/ipu6/ipu6-isys.c
+@@ -34,7 +34,6 @@
+ 
+ #include "ipu6-bus.h"
+ #include "ipu6-cpd.h"
+-#include "ipu6-dma.h"
+ #include "ipu6-isys.h"
+ #include "ipu6-isys-csi2.h"
+ #include "ipu6-mmu.h"
+@@ -934,27 +933,29 @@ static const struct dev_pm_ops isys_pm_ops = {
+ 
+ static void free_fw_msg_bufs(struct ipu6_isys *isys)
+ {
++	struct device *dev = &isys->adev->auxdev.dev;
+ 	struct isys_fw_msgs *fwmsg, *safe;
+ 
+ 	list_for_each_entry_safe(fwmsg, safe, &isys->framebuflist, head)
+-		ipu6_dma_free(isys->adev, sizeof(struct isys_fw_msgs), fwmsg,
+-			      fwmsg->dma_addr, 0);
++		dma_free_attrs(dev, sizeof(struct isys_fw_msgs), fwmsg,
++			       fwmsg->dma_addr, 0);
+ 
+ 	list_for_each_entry_safe(fwmsg, safe, &isys->framebuflist_fw, head)
+-		ipu6_dma_free(isys->adev, sizeof(struct isys_fw_msgs), fwmsg,
+-			      fwmsg->dma_addr, 0);
++		dma_free_attrs(dev, sizeof(struct isys_fw_msgs), fwmsg,
++			       fwmsg->dma_addr, 0);
+ }
+ 
+ static int alloc_fw_msg_bufs(struct ipu6_isys *isys, int amount)
+ {
++	struct device *dev = &isys->adev->auxdev.dev;
+ 	struct isys_fw_msgs *addr;
+ 	dma_addr_t dma_addr;
+ 	unsigned long flags;
+ 	unsigned int i;
+ 
+ 	for (i = 0; i < amount; i++) {
+-		addr = ipu6_dma_alloc(isys->adev, sizeof(*addr),
+-				      &dma_addr, GFP_KERNEL, 0);
++		addr = dma_alloc_attrs(dev, sizeof(struct isys_fw_msgs),
++				       &dma_addr, GFP_KERNEL, 0);
+ 		if (!addr)
+ 			break;
+ 		addr->dma_addr = dma_addr;
+@@ -973,8 +974,8 @@ static int alloc_fw_msg_bufs(struct ipu6_isys *isys, int amount)
+ 					struct isys_fw_msgs, head);
+ 		list_del(&addr->head);
+ 		spin_unlock_irqrestore(&isys->listlock, flags);
+-		ipu6_dma_free(isys->adev, sizeof(struct isys_fw_msgs), addr,
+-			      addr->dma_addr, 0);
++		dma_free_attrs(dev, sizeof(struct isys_fw_msgs), addr,
++			       addr->dma_addr, 0);
+ 		spin_lock_irqsave(&isys->listlock, flags);
+ 	}
+ 	spin_unlock_irqrestore(&isys->listlock, flags);
+-- 
+2.25.1
+

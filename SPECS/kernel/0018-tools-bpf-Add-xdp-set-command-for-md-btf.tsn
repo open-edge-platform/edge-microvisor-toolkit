@@ -1,0 +1,491 @@
+From ce6a6d2988ee17b952e2ac9e1ae1868ad093e777 Mon Sep 17 00:00:00 2001
+From: Saeed Mahameed <saeedm@mellanox.com>
+Date: Tue, 9 Apr 2019 22:01:47 -0700
+Subject: [PATCH 18/32] tools/bpf: Add xdp set command for md btf
+
+Add new bpftool net subcommand and use it to report and set XDP attrs:
+
+$ /usr/local/sbin/bpftool net xdp help
+Usage: /usr/local/sbin/bpftool net xdp
+       { show | list | set | md_btf} [dev <devname>]
+       /usr/local/sbin/bpftool xdp help
+
+$ /usr/local/sbin/bpftool net xdp set dev mlx0 md_btf on
+
+$ /usr/local/sbin/bpftool net xdp show
+xdp:
+mlx0(3) md_btf_id(1) md_btf_enabled(1)
+
+Signed-off-by: Saeed Mahameed <saeedm@mellanox.com>
+Signed-off-by: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
+---
+ tools/bpf/bpftool/main.h |   2 +
+ tools/bpf/bpftool/net.c  |   7 +-
+ tools/bpf/bpftool/xdp.c  | 308 +++++++++++++++++++++++++++++++++++++++
+ tools/lib/bpf/libbpf.h   |   1 +
+ tools/lib/bpf/libbpf.map |   1 +
+ tools/lib/bpf/netlink.c  |  49 +++++++
+ 6 files changed, 365 insertions(+), 3 deletions(-)
+ create mode 100644 tools/bpf/bpftool/xdp.c
+
+diff --git a/tools/bpf/bpftool/main.h b/tools/bpf/bpftool/main.h
+index 9eb764fe4cc8b..feeb39deb832f 100644
+--- a/tools/bpf/bpftool/main.h
++++ b/tools/bpf/bpftool/main.h
+@@ -153,6 +153,7 @@ int do_btf(int argc, char **argv);
+ 
+ /* non-bootstrap only commands */
+ int do_prog(int argc, char **arg) __weak;
++int do_xdp(int argc, char **argv) __weak;
+ int do_map(int argc, char **arg) __weak;
+ int do_link(int argc, char **arg) __weak;
+ int do_event_pipe(int argc, char **argv) __weak;
+@@ -239,6 +240,7 @@ struct tcmsg;
+ int do_xdp_dump(struct ifinfomsg *ifinfo, struct nlattr **tb);
+ int do_filter_dump(struct tcmsg *ifinfo, struct nlattr **tb, const char *kind,
+ 		   const char *devname, int ifindex);
++int xdp_dump_link_nlmsg(void *cookie, void *msg, struct nlattr **tb);
+ 
+ int print_all_levels(__maybe_unused enum libbpf_print_level level,
+ 		     const char *format, va_list args);
+diff --git a/tools/bpf/bpftool/net.c b/tools/bpf/bpftool/net.c
+index d2242d9f84411..a2f9f08824f6e 100644
+--- a/tools/bpf/bpftool/net.c
++++ b/tools/bpf/bpftool/net.c
+@@ -362,7 +362,7 @@ static int netlink_get_link(int sock, unsigned int nl_pid,
+ 			    dump_link_nlmsg, cookie);
+ }
+ 
+-static int dump_link_nlmsg(void *cookie, void *msg, struct nlattr **tb)
++int xdp_dump_link_nlmsg(void *cookie, void *msg, struct nlattr **tb)
+ {
+ 	struct bpf_netdev_t *netinfo = cookie;
+ 	struct ifinfomsg *ifinfo = msg;
+@@ -934,7 +934,7 @@ static int do_show(int argc, char **argv)
+ 		jsonw_start_array(json_wtr);
+ 	NET_START_OBJECT;
+ 	NET_START_ARRAY("xdp", "%s:\n");
+-	ret = netlink_get_link(sock, nl_pid, dump_link_nlmsg, &dev_array);
++	ret = netlink_get_link(sock, nl_pid, xdp_dump_link_nlmsg, &dev_array);
+ 	NET_END_ARRAY("\n");
+ 
+ 	if (!ret) {
+@@ -981,7 +981,7 @@ static int do_help(int argc, char **argv)
+ 	}
+ 
+ 	fprintf(stderr,
+-		"Usage: %1$s %2$s { show | list } [dev <devname>]\n"
++		"Usage: %1$s %2$s { show | list | xdp } [dev <devname>]\n"
+ 		"       %1$s %2$s attach ATTACH_TYPE PROG dev <devname> [ overwrite ]\n"
+ 		"       %1$s %2$s detach ATTACH_TYPE dev <devname>\n"
+ 		"       %1$s %2$s help\n"
+@@ -1008,6 +1008,7 @@ static const struct cmd cmds[] = {
+ 	{ "list",	do_show },
+ 	{ "attach",	do_attach },
+ 	{ "detach",	do_detach },
++	{ "xdp",	do_xdp },
+ 	{ "help",	do_help },
+ 	{ 0 }
+ };
+diff --git a/tools/bpf/bpftool/xdp.c b/tools/bpf/bpftool/xdp.c
+new file mode 100644
+index 0000000000000..d33671de877b8
+--- /dev/null
++++ b/tools/bpf/bpftool/xdp.c
+@@ -0,0 +1,308 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++// Copyright (C) 2019 Mellanox.
++
++#define _GNU_SOURCE
++#include <errno.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <time.h>
++#include <net/if.h>
++#include <linux/if.h>
++#include <linux/rtnetlink.h>
++#include <sys/socket.h>
++
++#include "bpf/nlattr.h"
++#include "main.h"
++#include "netlink_dumper.h"
++
++/* TODO: reuse  form net.c */
++#ifndef SOL_NETLINK
++#define SOL_NETLINK 270
++#endif
++
++static int netlink_open(__u32 *nl_pid)
++{
++	struct sockaddr_nl sa;
++	socklen_t addrlen;
++	int one = 1, ret;
++	int sock;
++
++	memset(&sa, 0, sizeof(sa));
++	sa.nl_family = AF_NETLINK;
++
++	sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
++	if (sock < 0)
++		return -errno;
++
++	if (setsockopt(sock, SOL_NETLINK, NETLINK_EXT_ACK,
++		       &one, sizeof(one)) < 0) {
++		p_err("Netlink error reporting not supported");
++	}
++
++	if (bind(sock, (struct sockaddr *)&sa, sizeof(sa)) < 0) {
++		ret = -errno;
++		goto cleanup;
++	}
++
++	addrlen = sizeof(sa);
++	if (getsockname(sock, (struct sockaddr *)&sa, &addrlen) < 0) {
++		ret = -errno;
++		goto cleanup;
++	}
++
++	if (addrlen != sizeof(sa)) {
++		ret = -LIBBPF_ERRNO__INTERNAL;
++		goto cleanup;
++	}
++
++	*nl_pid = sa.nl_pid;
++	return sock;
++
++cleanup:
++	close(sock);
++	return ret;
++}
++
++typedef int (*dump_nlmsg_t)(void *cookie, void *msg, struct nlattr **tb);
++
++typedef int (*__dump_nlmsg_t)(struct nlmsghdr *nlmsg, dump_nlmsg_t, void *cookie);
++
++static int netlink_recv(int sock, __u32 nl_pid, __u32 seq,
++			__dump_nlmsg_t _fn, dump_nlmsg_t fn,
++			void *cookie)
++{
++	bool multipart = true;
++	struct nlmsgerr *err;
++	struct nlmsghdr *nh;
++	char buf[4096];
++	int len, ret;
++
++	while (multipart) {
++		multipart = false;
++		len = recv(sock, buf, sizeof(buf), 0);
++		if (len < 0) {
++			ret = -errno;
++			goto done;
++		}
++
++		if (len == 0)
++			break;
++
++		for (nh = (struct nlmsghdr *)buf; NLMSG_OK(nh, len);
++		     nh = NLMSG_NEXT(nh, len)) {
++			if (nh->nlmsg_pid != nl_pid) {
++				ret = -LIBBPF_ERRNO__WRNGPID;
++				goto done;
++			}
++			if (nh->nlmsg_seq != seq) {
++				ret = -LIBBPF_ERRNO__INVSEQ;
++				goto done;
++			}
++			if (nh->nlmsg_flags & NLM_F_MULTI)
++				multipart = true;
++			switch (nh->nlmsg_type) {
++			case NLMSG_ERROR:
++				err = (struct nlmsgerr *)NLMSG_DATA(nh);
++				if (!err->error)
++					continue;
++				ret = err->error;
++				libbpf_nla_dump_errormsg(nh);
++				goto done;
++			case NLMSG_DONE:
++				return 0;
++			default:
++				break;
++			}
++			if (_fn) {
++				ret = _fn(nh, fn, cookie);
++				if (ret)
++					return ret;
++			}
++		}
++	}
++	ret = 0;
++done:
++	return ret;
++}
++
++static int __dump_link_nlmsg(struct nlmsghdr *nlh,
++			     dump_nlmsg_t dump_link_nlmsg, void *cookie)
++{
++	struct nlattr *tb[IFLA_MAX + 1], *attr;
++	struct ifinfomsg *ifi = NLMSG_DATA(nlh);
++	int len;
++
++	len = nlh->nlmsg_len - NLMSG_LENGTH(sizeof(*ifi));
++	attr = (struct nlattr *) ((void *) ifi + NLMSG_ALIGN(sizeof(*ifi)));
++	if (libbpf_nla_parse(tb, IFLA_MAX, attr, len, NULL) != 0)
++		return -LIBBPF_ERRNO__NLPARSE;
++
++	return dump_link_nlmsg(cookie, ifi, tb);
++}
++
++static int netlink_get_link(int sock, unsigned int nl_pid,
++			    dump_nlmsg_t dump_link_nlmsg, void *cookie)
++{
++	struct {
++		struct nlmsghdr nlh;
++		struct ifinfomsg ifm;
++	} req = {
++		.nlh.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg)),
++		.nlh.nlmsg_type = RTM_GETLINK,
++		.nlh.nlmsg_flags = NLM_F_DUMP | NLM_F_REQUEST,
++		.ifm.ifi_family = AF_PACKET,
++	};
++	int seq = time(NULL);
++
++	req.nlh.nlmsg_seq = seq;
++	if (send(sock, &req, req.nlh.nlmsg_len, 0) < 0)
++		return -errno;
++
++	return netlink_recv(sock, nl_pid, seq, __dump_link_nlmsg,
++			    dump_link_nlmsg, cookie);
++}
++
++struct ip_devname_ifindex {
++	char	devname[64];
++	int	ifindex;
++};
++
++struct bpf_netdev_t {
++	struct ip_devname_ifindex *devices;
++	int	used_len;
++	int	array_len;
++	int	filter_idx;
++};
++
++static int do_show(int argc, char **argv)
++{
++	int sock, ret, filter_idx = -1;
++	struct bpf_netdev_t dev_array;
++	unsigned int nl_pid = 0;
++	char err_buf[256];
++
++	if (argc == 2) {
++		if (strcmp(argv[0], "dev") != 0)
++			usage();
++		filter_idx = if_nametoindex(argv[1]);
++		if (filter_idx == 0) {
++			fprintf(stderr, "invalid dev name %s\n", argv[1]);
++			return -1;
++		}
++	} else if (argc != 0) {
++		usage();
++	}
++
++	sock = netlink_open(&nl_pid);
++	if (sock < 0) {
++		fprintf(stderr, "failed to open netlink sock\n");
++		return -1;
++	}
++
++	dev_array.devices = NULL;
++	dev_array.used_len = 0;
++	dev_array.array_len = 0;
++	dev_array.filter_idx = filter_idx;
++
++	if (json_output)
++		jsonw_start_array(json_wtr);
++	NET_START_OBJECT;
++	NET_START_ARRAY("xdp", "%s:\n");
++	ret = netlink_get_link(sock, nl_pid, xdp_dump_link_nlmsg, &dev_array);
++	NET_END_ARRAY("\n");
++
++	NET_END_OBJECT;
++	if (json_output)
++		jsonw_end_array(json_wtr);
++
++	if (ret) {
++		if (json_output)
++			jsonw_null(json_wtr);
++		libbpf_strerror(ret, err_buf, sizeof(err_buf));
++		fprintf(stderr, "Error: %s\n", err_buf);
++	}
++	free(dev_array.devices);
++	close(sock);
++	return ret;
++}
++
++static int set_usage(void)
++{
++	fprintf(stderr,
++		"Usage: %s net xdp set dev <devname> {md_btf {on|off}}\n"
++		"       %s net xdp set help\n"
++		"       md_btf {on|off}: enable/disable meta data btf\n",
++		bin_name, bin_name);
++
++	return -1;
++}
++
++static int xdp_set_md_btf(int ifindex, char *arg)
++{
++	__u8 enable = (strcmp(arg, "on") == 0) ? 1 : 0;
++	int ret;
++
++	ret = bpf_set_link_xdp_md_btf(ifindex, enable);
++	if (ret)
++		fprintf(stderr, "Failed to setup xdp md, err=%d\n", ret);
++
++	return -ret;
++}
++
++static int do_set(int argc, char **argv)
++{
++	char *set_cmd, *set_arg;
++	int dev_idx = -1;
++
++	if (argc < 4)
++		return set_usage();
++
++	if (strcmp(argv[0], "dev") != 0)
++		return set_usage();
++
++	dev_idx = if_nametoindex(argv[1]);
++	if (dev_idx == 0) {
++		fprintf(stderr, "invalid dev name %s\n", argv[1]);
++		return -1;
++	}
++
++	set_cmd = argv[2];
++	set_arg = argv[3];
++
++	if (strcmp(set_cmd, "md_btf") != 0)
++		return set_usage();
++
++	if (strcmp(set_arg, "on") != 0 && strcmp(set_arg, "off") != 0)
++		return set_usage();
++
++	return xdp_set_md_btf(dev_idx, set_arg);
++}
++
++static int do_help(int argc, char **argv)
++{
++	if (json_output) {
++		jsonw_null(json_wtr);
++		return 0;
++	}
++
++	fprintf(stderr,
++		"Usage: %s %s xdp { show | list | set } [dev <devname>]\n"
++		"       %s %s help\n",
++		bin_name, argv[-2], bin_name, argv[-2]);
++
++	return 0;
++}
++
++static const struct cmd cmds[] = {
++	{ "show",        do_show },
++	{ "list",        do_show },
++	{ "set",         do_set  },
++	{ "help",        do_help },
++	{ 0 }
++};
++
++int do_xdp(int argc, char **argv)
++{
++	return cmd_select(cmds, argc, argv, do_help);
++}
+diff --git a/tools/lib/bpf/libbpf.h b/tools/lib/bpf/libbpf.h
+index 91484303849c8..49bec1ebe93a6 100644
+--- a/tools/lib/bpf/libbpf.h
++++ b/tools/lib/bpf/libbpf.h
+@@ -1554,6 +1554,7 @@ LIBBPF_API struct perf_buffer *
+ perf_buffer__new(int map_fd, size_t page_cnt,
+ 		 perf_buffer_sample_fn sample_cb, perf_buffer_lost_fn lost_cb, void *ctx,
+ 		 const struct perf_buffer_opts *opts);
++LIBBPF_API int bpf_set_link_xdp_md_btf(int ifindex, __u8 enable);
+ 
+ enum bpf_perf_event_ret {
+ 	LIBBPF_PERF_EVENT_DONE	= 0,
+diff --git a/tools/lib/bpf/libbpf.map b/tools/lib/bpf/libbpf.map
+index 0096e483f7eb9..82e9f7bad33e5 100644
+--- a/tools/lib/bpf/libbpf.map
++++ b/tools/lib/bpf/libbpf.map
+@@ -73,6 +73,7 @@ LIBBPF_0.0.2 {
+ 		bpf_map_lookup_elem_flags;
+ 		bpf_object__btf;
+ 		bpf_object__find_map_fd_by_name;
++		bpf_set_link_xdp_md_btf;
+ 		btf__get_raw_data;
+ 		btf_ext__free;
+ 		btf_ext__get_raw_data;
+diff --git a/tools/lib/bpf/netlink.c b/tools/lib/bpf/netlink.c
+index 68a2def171751..c820a027f1b44 100644
+--- a/tools/lib/bpf/netlink.c
++++ b/tools/lib/bpf/netlink.c
+@@ -341,6 +341,55 @@ int bpf_xdp_detach(int ifindex, __u32 flags, const struct bpf_xdp_attach_opts *o
+ 	return bpf_xdp_attach(ifindex, -1, flags, opts);
+ }
+ 
++int bpf_set_link_xdp_md_btf(int ifindex, __u8  enable)
++{
++	struct nlattr *nla, *nla_xdp;
++	int sock, seq = 0, ret;
++	__u32 nl_pid;
++	struct {
++		struct nlmsghdr  nh;
++		struct ifinfomsg ifinfo;
++		char             attrbuf[64];
++	} req;
++
++	sock = libbpf_netlink_open(&nl_pid, NETLINK_ROUTE);
++	if (sock < 0)
++		return sock;
++
++	memset(&req, 0, sizeof(req));
++	req.nh.nlmsg_len = NLMSG_LENGTH(sizeof(struct ifinfomsg));
++	req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK;
++	req.nh.nlmsg_type = RTM_SETLINK;
++	req.nh.nlmsg_pid = 0;
++	req.nh.nlmsg_seq = ++seq;
++	req.ifinfo.ifi_family = AF_UNSPEC;
++	req.ifinfo.ifi_index = ifindex;
++
++	/* started nested attribute for XDP */
++	nla = (struct nlattr *)(((char *)&req)
++				+ NLMSG_ALIGN(req.nh.nlmsg_len));
++	nla->nla_type = NLA_F_NESTED | IFLA_XDP;
++	nla->nla_len = NLA_HDRLEN;
++	/* add XDP MD setup */
++	nla_xdp = (struct nlattr *)((char *)nla + nla->nla_len);
++	nla_xdp->nla_type = IFLA_XDP_MD_BTF_STATE;
++	nla_xdp->nla_len = NLA_HDRLEN + sizeof(__u8);
++	memcpy((char *)nla_xdp + NLA_HDRLEN, &enable, sizeof(__u8));
++	nla->nla_len += nla_xdp->nla_len;
++
++	req.nh.nlmsg_len += NLA_ALIGN(nla->nla_len);
++
++	if (send(sock, &req, req.nh.nlmsg_len, 0) < 0) {
++		ret = -errno;
++		goto cleanup;
++	}
++	ret = libbpf_netlink_recv(sock, nl_pid, seq, NULL, NULL, NULL);
++
++cleanup:
++	close(sock);
++	return ret;
++}
++
+ static int __dump_link_nlmsg(struct nlmsghdr *nlh,
+ 			     libbpf_dump_nlmsg_t dump_link_nlmsg, void *cookie)
+ {
+-- 
+2.25.1
+

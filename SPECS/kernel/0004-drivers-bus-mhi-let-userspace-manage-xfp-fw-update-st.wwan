@@ -1,0 +1,209 @@
+From 88eacd54a1d5ad86212e05334158dcd3e69ffc2a Mon Sep 17 00:00:00 2001
+From: Daniele Palmas <dnlplm@gmail.com>
+Date: Thu, 28 Jul 2022 16:07:54 +0200
+Subject: [PATCH 4/9] drivers: bus: mhi: let userspace manage xfp fw update
+ states
+
+After performing the firmware update in SBL through the XFP
+protocol, FN980 resets and is not detected anymore by the host.
+
+Add a new controller file to be used when performing the firmware update
+in order to:
+
+- Make the mhi stack aware of the process and not to reset the
+function during the update.
+- Force a reset of the mhi stack at the end of the process in order to
+detect the modem again.
+
+This file should be used both when performing the update through the USB
+composition 0x1055 (FN980 old hw revision) that through PCIe (both FN980
+and FN990).
+
+For PCIe the flow is the following:
+
+- Disable runtime power management on the mhi pci device
+- Write 1 to the fw_update sysfs file to races between
+  the recovery work and other mhi operations
+- Start the firmware update
+- Write 0 to the fw_update sysfs file to reset the mhi stack
+
+Firmware update requires also upstream commit
+d651ce8e917fa("bus: mhi: core: Fix race while handling SYS_ERR at power up")
+
+Signed-off-by: Daniele Palmas <dnlplm@gmail.com>
+---
+ drivers/bus/mhi/host/init.c        | 27 +++++++++++++++++++++++++++
+ drivers/bus/mhi/host/pci_generic.c | 14 +++++++++++++-
+ drivers/net/wwan/mhi_wwan_ctrl.c   |  2 ++
+ drivers/net/wwan/wwan_core.c       |  6 ++++++
+ include/linux/mhi.h                | 15 +++++++++++++++
+ include/linux/wwan.h               |  6 ++++++
+ 6 files changed, 69 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/bus/mhi/host/init.c b/drivers/bus/mhi/host/init.c
+index a9b1f8beee7bc..80b581b918de1 100644
+--- a/drivers/bus/mhi/host/init.c
++++ b/drivers/bus/mhi/host/init.c
+@@ -78,6 +78,32 @@ const char *to_mhi_pm_state_str(u32 state)
+ 	return mhi_pm_state_str[index];
+ }
+ 
++static ssize_t fw_update_show(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct mhi_device *mhi_dev = to_mhi_device(dev);
++	struct mhi_controller *mhi_cntrl = mhi_dev->mhi_cntrl;
++
++	return sprintf(buf, "%u\n", mhi_cntrl->xfp);
++}
++
++static ssize_t fw_update_store(struct device *dev,  struct device_attribute *attr, const char *buf, size_t len)
++{
++	struct mhi_device *mhi_dev = to_mhi_device(dev);
++	struct mhi_controller *mhi_cntrl = mhi_dev->mhi_cntrl;
++	bool enable;
++
++	if (kstrtobool(buf, &enable))
++		return -EINVAL;
++
++	if (enable)
++		mhi_cntrl->xfp = XFP_STATE_FLASHING;
++	else
++		mhi_cntrl->xfp = XFP_STATE_NEED_RESET;
++
++	return len;
++}
++static DEVICE_ATTR_RW(fw_update);
++
+ static ssize_t serial_number_show(struct device *dev,
+ 				  struct device_attribute *attr,
+ 				  char *buf)
+@@ -155,6 +181,7 @@ static struct attribute *mhi_dev_attrs[] = {
+ 	&dev_attr_serial_number.attr,
+ 	&dev_attr_oem_pk_hash.attr,
+ 	&dev_attr_soc_reset.attr,
++	&dev_attr_fw_update.attr,
+ 	NULL,
+ };
+ ATTRIBUTE_GROUPS(mhi_dev);
+diff --git a/drivers/bus/mhi/host/pci_generic.c b/drivers/bus/mhi/host/pci_generic.c
+index f12d6d0d3e52d..c9696279eef16 100644
+--- a/drivers/bus/mhi/host/pci_generic.c
++++ b/drivers/bus/mhi/host/pci_generic.c
+@@ -21,7 +21,7 @@
+ 
+ #define MHI_POST_RESET_DELAY_MS 2000
+ 
+-#define HEALTH_CHECK_PERIOD (HZ * 2)
++#define HEALTH_CHECK_PERIOD (HZ / 2)
+ 
+ /* PCI VID definitions */
+ #define PCI_VENDOR_ID_THALES	0x1269
+@@ -1051,6 +1051,18 @@ static void health_check(struct timer_list *t)
+ 			test_bit(MHI_PCI_DEV_SUSPENDED, &mhi_pdev->status))
+ 		return;
+ 
++	if (mhi_cntrl->xfp == XFP_STATE_FLASHING) {
++		mod_timer(&mhi_pdev->health_check_timer, jiffies + HEALTH_CHECK_PERIOD);
++		return;
++	}
++
++	if (mhi_cntrl->xfp == XFP_STATE_NEED_RESET) {
++		mhi_cntrl->xfp = XFP_STATE_IDLE;
++		dev_dbg(mhi_cntrl->cntrl_dev, "Device needs to be resetted EE = %d\n", mhi_cntrl->ee);
++		queue_work(system_long_wq, &mhi_pdev->recovery_work);
++		return;
++	}
++
+ 	if (!mhi_pci_is_alive(mhi_cntrl)) {
+ 		dev_err(mhi_cntrl->cntrl_dev, "Device died\n");
+ 		queue_work(system_long_wq, &mhi_pdev->recovery_work);
+diff --git a/drivers/net/wwan/mhi_wwan_ctrl.c b/drivers/net/wwan/mhi_wwan_ctrl.c
+index 79bf6ce48ad5d..290510489d673 100644
+--- a/drivers/net/wwan/mhi_wwan_ctrl.c
++++ b/drivers/net/wwan/mhi_wwan_ctrl.c
+@@ -129,6 +129,8 @@ static int mhi_wwan_ctrl_start(struct wwan_port *port)
+ static void mhi_wwan_ctrl_stop(struct wwan_port *port)
+ {
+ 	struct mhi_wwan_dev *mhiwwan = wwan_port_get_drvdata(port);
++	struct mhi_device *mhi_dev = mhiwwan->mhi_dev;
++	struct mhi_controller *cntrl = mhi_dev->mhi_cntrl;
+ 
+ 	spin_lock_bh(&mhiwwan->rx_lock);
+ 	clear_bit(MHI_WWAN_RX_REFILL, &mhiwwan->flags);
+diff --git a/drivers/net/wwan/wwan_core.c b/drivers/net/wwan/wwan_core.c
+index a25333580438e..d524bec8286ae 100644
+--- a/drivers/net/wwan/wwan_core.c
++++ b/drivers/net/wwan/wwan_core.c
+@@ -564,6 +564,12 @@ void *wwan_port_get_drvdata(struct wwan_port *port)
+ }
+ EXPORT_SYMBOL_GPL(wwan_port_get_drvdata);
+ 
++enum wwan_port_type wwan_port_get_type(struct wwan_port *port)
++{
++	return port->type;
++}
++EXPORT_SYMBOL_GPL(wwan_port_get_type);
++
+ static int wwan_port_op_start(struct wwan_port *port)
+ {
+ 	int ret = 0;
+diff --git a/include/linux/mhi.h b/include/linux/mhi.h
+index 059dc94d20bb6..63980f0546af1 100644
+--- a/include/linux/mhi.h
++++ b/include/linux/mhi.h
+@@ -288,6 +288,18 @@ struct mhi_controller_config {
+ 	bool m2_no_db;
+ };
+ 
++/**
++ * enum xfp_state - xfp flashing state
++ * @XFP_STATE_IDLE: not flashing
++ * @XFP_STATE_FLASHING: flashing
++ * @XFP_STATE_NEED_RESET: mhi stack needs to be resetted
++ */
++enum xfp_state {
++	XFP_STATE_IDLE = 0x0,
++	XFP_STATE_FLASHING = 0x1,
++	XFP_STATE_NEED_RESET = 0x2,
++};
++
+ /**
+  * struct mhi_controller - Master MHI controller structure
+  * @name: Device name of the MHI controller
+@@ -361,6 +373,7 @@ struct mhi_controller_config {
+  * @fbc_download: MHI host needs to do complete image transfer (optional)
+  * @wake_set: Device wakeup set flag
+  * @irq_flags: irq flags passed to request_irq (optional)
++ * @xfp: xfp state used for flashing
+  * @mru: the default MRU for the MHI device
+  *
+  * Fields marked as (required) need to be populated by the controller driver
+@@ -447,6 +460,8 @@ struct mhi_controller {
+ 	bool wake_set;
+ 	unsigned long irq_flags;
+ 	u32 mru;
++	/* Flag to manage flashing status  */
++	enum xfp_state xfp;
+ };
+ 
+ /**
+diff --git a/include/linux/wwan.h b/include/linux/wwan.h
+index 739b90a1f216e..ef4dd4f3757e3 100644
+--- a/include/linux/wwan.h
++++ b/include/linux/wwan.h
+@@ -144,6 +144,12 @@ void wwan_port_txon(struct wwan_port *port);
+  */
+ void *wwan_port_get_drvdata(struct wwan_port *port);
+ 
++/**
++ * wwan_port_get_type - Retrieve the WWAN port type
++ * @port: Related WWAN port
++ */
++enum wwan_port_type wwan_port_get_type(struct wwan_port *port);
++
+ /**
+  * struct wwan_netdev_priv - WWAN core network device private data
+  * @link_id: WWAN device data link id
+-- 
+2.25.1
+

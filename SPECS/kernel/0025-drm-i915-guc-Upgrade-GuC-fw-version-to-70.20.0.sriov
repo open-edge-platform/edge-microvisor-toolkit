@@ -1,0 +1,39 @@
+From fa39c5c65651851327371a949d07ca55a4b8b161 Mon Sep 17 00:00:00 2001
+From: "Chew, Tong Liang" <tong.liang.chew@intel.com>
+Date: Wed, 20 Mar 2024 07:55:45 +0800
+Subject: [PATCH 25/48] drm/i915/guc: Upgrade GuC fw version to 70.20.0
+
+Update GuC for ALDERLAKE_S , ALDERLAKE_P, MTL and DG2 to version
+GuC v70.20.0.
+
+Suggested-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+Signed-off-by: Kooran Paul, Princy <princy.kooran.paul@intel.com>
+Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
+---
+ drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c b/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
+index 2b6c9dbbccada..ae7fb7097e606 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
+@@ -88,12 +88,12 @@ void intel_uc_fw_change_status(struct intel_uc_fw *uc_fw,
+  * security fixes, etc. to be enabled.
+  */
+ #define INTEL_GUC_FIRMWARE_DEFS(fw_def, guc_maj, guc_mmp) \
+-	fw_def(METEORLAKE,   0, guc_maj(mtl,  70, 12, 1)) \
+-	fw_def(DG2,          0, guc_maj(dg2,  70, 12, 1)) \
+-	fw_def(ALDERLAKE_P,  0, guc_maj(adlp, 70, 12, 1)) \
++	fw_def(METEORLAKE,   0, guc_maj(mtl,  70, 20, 0)) \
++	fw_def(DG2,          0, guc_maj(dg2,  70, 20, 0)) \
++	fw_def(ALDERLAKE_P,  0, guc_maj(adlp, 70, 20, 0)) \
+ 	fw_def(ALDERLAKE_P,  0, guc_mmp(adlp, 70, 1, 1)) \
+ 	fw_def(ALDERLAKE_P,  0, guc_mmp(adlp, 69, 0, 3)) \
+-	fw_def(ALDERLAKE_S,  0, guc_maj(tgl,  70, 12, 1)) \
++	fw_def(ALDERLAKE_S,  0, guc_maj(tgl,  70, 20, 0)) \
+ 	fw_def(ALDERLAKE_S,  0, guc_mmp(tgl,  70, 1, 1)) \
+ 	fw_def(ALDERLAKE_S,  0, guc_mmp(tgl,  69, 0, 3)) \
+ 	fw_def(DG1,          0, guc_maj(dg1,  70, 5, 1)) \
+-- 
+2.25.1
+

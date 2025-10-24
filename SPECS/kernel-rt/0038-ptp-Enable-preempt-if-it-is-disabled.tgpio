@@ -1,0 +1,55 @@
+From 23c0cbad18a451285661da8f5b4d8b7071fe96b1 Mon Sep 17 00:00:00 2001
+From: Lakshmi Sowjanya D <lakshmi.sowjanya.d@intel.com>
+Date: Mon, 4 Apr 2022 17:05:59 +0530
+Subject: [PATCH 38/43] ptp: Enable preempt if it is disabled
+
+Enable preempt if it is disabled in all the cases. In the existing code,
+the preemption isn't enabled though disabled in the case where TGPIO is
+disabled which results in crash.
+
+Signed-off-by: Lakshmi Sowjanya D <lakshmi.sowjanya.d@intel.com>
+---
+ drivers/ptp/ptp-intel-pmc-tgpio.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ptp/ptp-intel-pmc-tgpio.c b/drivers/ptp/ptp-intel-pmc-tgpio.c
+index 8d4f0d4036774..5bf103a082621 100644
+--- a/drivers/ptp/ptp-intel-pmc-tgpio.c
++++ b/drivers/ptp/ptp-intel-pmc-tgpio.c
+@@ -243,7 +243,6 @@ static int _intel_pmc_tgpio_config_output(struct intel_pmc_tgpio_t *tgpio,
+ 	u32 ctrl, ctrl_new;
+ 	u64 new_period;
+ 	int enable_toggle;
+-	bool enable_preempt = false;
+ 
+ 	ctrl = INTEL_PMC_TGPIO_RD_REG(TGPIOCTL, index);
+ 	/*
+@@ -303,7 +302,6 @@ static int _intel_pmc_tgpio_config_output(struct intel_pmc_tgpio_t *tgpio,
+ 		ktime_t delta;
+ 
+ 		preempt_disable();
+-		enable_preempt = true;
+ 
+ 		/* Calculate time delta until next edge */
+ 		tsc_tmp = get_tsc_ns_now(NULL);
+@@ -325,6 +323,8 @@ static int _intel_pmc_tgpio_config_output(struct intel_pmc_tgpio_t *tgpio,
+ 		delta = timespec64_to_ktime
+ 			(timespec64_sub(next_edge_tsc, tsc_now));
+ 
++		preempt_enable();
++
+ 		/* If there's a chance our write will get stepped on, wait */
+ 		if (delta < FREQ_CHANGE_BLACKOUT_THRESH) {
+ 			unsigned long		min, max;
+@@ -371,8 +371,6 @@ static int _intel_pmc_tgpio_config_output(struct intel_pmc_tgpio_t *tgpio,
+ 			(TGPIOPIV31_0, index, new_period & 0xFFFFFFFF);
+ 		INTEL_PMC_TGPIO_WR_REG
+ 			(TGPIOPIV63_32, index, new_period >> 32);
+-		if (enable_preempt)
+-			preempt_enable();
+ 		tgpio->pin[index].curr_ns = timespec64_to_ktime(new_period_ns);
+ 		tgpio->pin[index].curr_art = new_period;
+ 	}
+-- 
+2.25.1
+

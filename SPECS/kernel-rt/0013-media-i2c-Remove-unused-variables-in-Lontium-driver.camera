@@ -1,0 +1,62 @@
+From 361fb041c182effa174e93a0f0d6630f4b9fbf2f Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Thu, 9 Jan 2025 09:52:56 +0800
+Subject: [PATCH 13/13] media: i2c: Remove unused variables in Lontium drivers
+
+Removed unused variables in LT6911UXC and LT6911UXE drivers that
+cause build issue.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/i2c/lt6911uxc.c | 22 ----------------------
+ drivers/media/i2c/lt6911uxe.c |  1 -
+ 2 files changed, 23 deletions(-)
+
+diff --git a/drivers/media/i2c/lt6911uxc.c b/drivers/media/i2c/lt6911uxc.c
+index 1309bcb98a43a..a049f937bfd64 100644
+--- a/drivers/media/i2c/lt6911uxc.c
++++ b/drivers/media/i2c/lt6911uxc.c
+@@ -163,28 +163,6 @@ static u64 get_pixel_rate(struct lt6911uxc *lt6911uxc)
+ 	return pixel_rate;
+ }
+ 
+-static int lt6911uxc_get_audio_sampling_rate(struct lt6911uxc *lt6911uxc)
+-{
+-	int audio_fs, idx;
+-	u64 fs;
+-	static const int eps = 1500;
+-	static const int rates_default[] = {
+-		32000, 44100, 48000, 88200, 96000, 176400, 192000
+-	};
+-
+-	cci_read(lt6911uxc->regmap, REG_AUDIO_SR, &fs, NULL);
+-	audio_fs = fs * 1000;
+-
+-	/* audio_fs is an approximation of sample rate - search nearest */
+-	for (idx = 0; idx < ARRAY_SIZE(rates_default); ++idx) {
+-		if ((rates_default[idx] - eps < audio_fs) &&
+-		    (rates_default[idx] + eps > audio_fs))
+-			return rates_default[idx];
+-	}
+-
+-	return 0;
+-}
+-
+ static int lt6911uxc_status_update(struct lt6911uxc *lt6911uxc)
+ {
+ 	u64 int_event;
+diff --git a/drivers/media/i2c/lt6911uxe.c b/drivers/media/i2c/lt6911uxe.c
+index 9002015a397c5..4b56611176f63 100644
+--- a/drivers/media/i2c/lt6911uxe.c
++++ b/drivers/media/i2c/lt6911uxe.c
+@@ -389,7 +389,6 @@ static int lt6911uxe_init_state(struct v4l2_subdev *sd,
+ 		.which = sd_state ? V4L2_SUBDEV_FORMAT_TRY
+ 		: V4L2_SUBDEV_FORMAT_ACTIVE,
+ 	};
+-	struct lt6911uxe *lt6911uxe = to_lt6911uxe(sd);
+ 
+ 	return lt6911uxe_set_format(sd, sd_state, &fmt);
+ }
+-- 
+2.25.1
+

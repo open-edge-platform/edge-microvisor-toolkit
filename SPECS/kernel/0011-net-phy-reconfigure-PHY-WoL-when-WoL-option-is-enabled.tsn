@@ -1,0 +1,121 @@
+From 8181b34c0306647fd881f4346432be8420d4253c Mon Sep 17 00:00:00 2001
+From: Gan Yi Fang <yi.fang.gan@intel.com>
+Date: Mon, 24 Jul 2023 03:10:06 -0400
+Subject: [PATCH 11/42] net: phy: reconfigure PHY WoL when WoL option is
+ enabled
+
+This patch reconfigures the PHY WoL event from two scenarios.
+They are needed for the PHY that operated in PHY_POLL mode
+where there is no ISR available to handle the WoL event.
+
+1. PHY WoL status will only be clear after hard reboot. PHY WoL
+reconfiguration is needed in init_phy for the WoL to set properly
+after soft reboot.
+2. After the PHY enables the WoL event, arm the WoL INT bit
+before suspending to ensure the WoL is set properly.
+
+Below are additional background.
+In order for the WoL to work, the interrupt header needs to be
+connected to the PMC for the platform to wake up when there is a
+rising edge from the WoL INT bit.
+
+Ideal case to trigger the WoL:
+1. User enables WoL (WoL INT bit: 0)
+2. Sleep the platform
+3. Platform receives magic packet (WoL INT bit: change from 0 to 1)
+4. Platform wakes up
+
+Issue might occur when:
+1. User enables WoL (WoL INT bit: 0)
+2. Platform receives 1st magic packet (WoL INT bit: change from 0 to 1)
+3. Without handling the INT, sleeps the platform (WoL INT bit: 1)
+4. Platform receives second magic packet (There is no change in
+WoL INT bit)
+5. Platform cannot wake up
+
+Check and set the WoL INT bit to 0 will reset the PHY interrupt
+before suspending so the issue can be avoided.
+
+Signed-off-by: Gan Yi Fang <yi.fang.gan@intel.com>
+---
+ .../net/ethernet/stmicro/stmmac/dwmac-intel.c |  5 ++++
+ drivers/net/ethernet/stmicro/stmmac/stmmac.h  |  1 +
+ .../net/ethernet/stmicro/stmmac/stmmac_main.c | 25 ++++++++++++++++++-
+ 3 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+index 0f05608595bbe..68c2269b871cd 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+@@ -1185,8 +1185,13 @@ static void intel_eth_pci_remove(struct pci_dev *pdev)
+ static int __maybe_unused intel_eth_pci_suspend(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
++	struct net_device *ndev = dev_get_drvdata(&pdev->dev);
+ 	int ret;
+ 
++	rtnl_lock();
++	stmmac_rearm_wol(ndev);
++	rtnl_unlock();
++
+ 	ret = stmmac_suspend(dev);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac.h b/drivers/net/ethernet/stmicro/stmmac/stmmac.h
+index ea135203ff2e6..874d78d1f9c31 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac.h
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac.h
+@@ -409,6 +409,7 @@ void stmmac_ptp_register(struct stmmac_priv *priv);
+ void stmmac_ptp_unregister(struct stmmac_priv *priv);
+ int stmmac_xdp_open(struct net_device *dev);
+ void stmmac_xdp_release(struct net_device *dev);
++void stmmac_rearm_wol(struct net_device *dev);
+ int stmmac_resume(struct device *dev);
+ int stmmac_suspend(struct device *dev);
+ void stmmac_dvr_remove(struct device *dev);
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 64b2682181e7b..d480ec249b5f6 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -4086,6 +4086,29 @@ static int stmmac_release(struct net_device *dev)
+ 	return 0;
+ }
+ 
++void stmmac_rearm_wol(struct net_device *dev)
++{
++	struct stmmac_priv *priv = netdev_priv(dev);
++
++	if (priv->plat->flags & STMMAC_FLAG_USE_PHY_WOL) {
++		struct ethtool_wolinfo wol =  { .cmd = ETHTOOL_GWOL };
++
++		phylink_ethtool_get_wol(priv->phylink, &wol);
++
++		if (wol.wolopts) {
++			phylink_ethtool_set_wol(priv->phylink, &wol);
++			device_set_wakeup_enable(priv->device, !!wol.wolopts);
++		}
++	}
++}
++EXPORT_SYMBOL_GPL(stmmac_rearm_wol);
++
++static int stmmac_stop(struct net_device *dev)
++{
++	stmmac_rearm_wol(dev);
++	return stmmac_release(dev);
++}
++
+ static bool stmmac_vlan_insert(struct stmmac_priv *priv, struct sk_buff *skb,
+ 			       struct stmmac_tx_queue *tx_q)
+ {
+@@ -7126,7 +7149,7 @@ static void stmmac_get_stats64(struct net_device *dev, struct rtnl_link_stats64
+ static const struct net_device_ops stmmac_netdev_ops = {
+ 	.ndo_open = stmmac_open,
+ 	.ndo_start_xmit = stmmac_xmit,
+-	.ndo_stop = stmmac_release,
++	.ndo_stop = stmmac_stop,
+ 	.ndo_change_mtu = stmmac_change_mtu,
+ 	.ndo_fix_features = stmmac_fix_features,
+ 	.ndo_set_features = stmmac_set_features,
+-- 
+2.25.1
+
