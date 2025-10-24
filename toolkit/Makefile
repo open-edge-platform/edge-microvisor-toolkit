@@ -172,6 +172,8 @@ TOOLCHAIN_GPG_VALIDATION_KEYS ?= $(wildcard $(PROJECT_ROOT)/SPECS/edge-repos/INT
 # Variable prerequisite tracking
 include $(SCRIPTS_DIR)/utils.mk
 
+$(call shell_real_build_only, $(SCRIPTS_DIR)/toolchain/toolchain_update_git_submodule.sh)
+
 ######## REMAINING BUILD FLAGS ########
 
 # Set the variables for build number, distro tag, etc

@@ -28,7 +28,7 @@ final_toolchain = $(toolchain_build_dir)/toolchain_built_rpms_all.tar.gz
 toolchain_files = \
 	$(call shell_real_build_only, find $(SCRIPTS_DIR)/toolchain -name '*.sh') \
 	$(SCRIPTS_DIR)/toolchain/container/Dockerfile
-toolchain_spec_list := $(call shell_real_build_only, $(SCRIPTS_DIR)/toolchain/toolchain_update_git_submodule.sh $(SCRIPTS_DIR)/toolchain/list_toolchain_specs.sh $(SCRIPTS_DIR)/toolchain/build_official_toolchain_rpms.sh)
+toolchain_spec_list := $(call shell_real_build_only, $(SCRIPTS_DIR)/toolchain/list_toolchain_specs.sh $(SCRIPTS_DIR)/toolchain/build_official_toolchain_rpms.sh)
 # Find the *.rpm corresponding to each of the entries in the manifest
 # regex operation: (.*\.([^\.]+)\.rpm) extracts *.(<arch>).rpm" to determine
 # the exact path of the required rpm
