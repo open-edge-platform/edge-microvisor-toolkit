@@ -3,7 +3,7 @@ Vendor:           Intel Corporation
 Distribution:     Edge Microvisor Toolkit
 Name:             xdp-tools
 Version:          1.4.2
-Release:          3%{?dist}
+Release:          4%{?dist}
 Summary:          Utilities and example programs for use with XDP
 License:          GPL-2.0-only
 URL:              https://github.com/xdp-project/%{name}
@@ -37,6 +37,7 @@ Requires:         libxdp = %{version}-%{release}
 
 # TSN patches
 Patch0:           0001-if_xdp.h-add-txtime-field-in-xdp_desc-struct.patch
+Patch1:           0001-remove-prefix-version-9999.patch
 
 # find-debuginfo produces empty debugsourcefiles.list
 # disable the debug package to avoid rpmbuild error'ing out because of this
@@ -146,6 +147,9 @@ make install V=1
 %{_libdir}/pkgconfig/libxdp.pc
 
 %changelog
+* Fri Oct 24 2025 polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> 1.4.2-4
+- Add patch support to remove the '9999.' version prefix from libbpf in configure
+
 * Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> 1.4.2-3
 - Add TSN patches/support
 

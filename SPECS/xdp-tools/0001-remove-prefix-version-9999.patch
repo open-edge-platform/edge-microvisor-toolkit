@@ -1,0 +1,30 @@
+From a9f15ee30463c1a1c5ffdbd97370c60e178036e4 Mon Sep 17 00:00:00 2001
+From: Lee Chee Yang <chee.yang.lee@intel.com>
+Date: Thu, 9 Nov 2023 13:24:59 +0800
+Subject: [PATCH] remove prefix version 9999
+
+provided libbpf9999 where we added 9999 version prefix, this prefix can cause compilation error.
+
+/usr/include/x86_64-linux-gnu/bits/string_fortified.h:95:10: error: 'strncpy' output truncated copying 9 bytes from a string of length 10 [-Werror=stringop-truncation]
+
+Signed-off-by: Lee Chee Yang <chee.yang.lee@intel.com>
+---
+ configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 70fdfdf..8b6a254 100755
+--- a/configure
++++ b/configure
+@@ -236,7 +236,7 @@ check_libbpf()
+ 
+         LIBBPF_CFLAGS=$(${PKG_CONFIG} libbpf --cflags)
+         LIBBPF_LDLIBS=$(${PKG_CONFIG} libbpf --libs)
+-        LIBBPF_VERSION=$(${PKG_CONFIG} libbpf --modversion)
++        LIBBPF_VERSION=$(${PKG_CONFIG} libbpf --modversion | sed 's/^9999.//')
+ 
+         cat >$TMPDIR/libbpftest.c <<EOF
+ #include <bpf/libbpf.h>
+-- 
+2.34.1
+
