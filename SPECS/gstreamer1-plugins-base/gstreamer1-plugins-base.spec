@@ -1,9 +1,11 @@
 %global debug_package %{nil}
+%bcond cdparanoia %{undefined rhel}
+%bcond libvisual %{undefined rhel}
 %global         majorminor      1.0
 Summary:        GStreamer streaming media framework base plugins
 Name:           gstreamer1-plugins-base
-Version:        1.20.0
-Release:        3%{?dist}
+Version:        1.26.5
+Release:        1%{?dist}
 License:        LGPLv2+
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -17,12 +19,17 @@ BuildRequires:  gstreamer1-devel >= %{version}
 BuildRequires:  gobject-introspection-devel >= 1.31.1
 BuildRequires:  iso-codes-devel
 BuildRequires:  alsa-lib-devel
+%if %{with cdparanoia}
 BuildRequires:  cdparanoia-devel
+%endif
 BuildRequires:  libogg-devel >= 1.0
 BuildRequires:  libtheora-devel >= 1.1
+%if %{with libvisual}
 BuildRequires:  libvisual-devel
+%endif
 BuildRequires:  libvorbis-devel >= 1.0
 BuildRequires:  libXv-devel
+BuildRequires:  opus-devel
 BuildRequires:  orc-devel >= 0.4.18
 BuildRequires:  pango-devel
 BuildRequires:  pkgconfig
@@ -37,7 +44,6 @@ BuildRequires:  mesa-libEGL-devel
 BuildRequires:  mesa-libgbm-devel
 BuildRequires:  libgudev-devel
 BuildRequires:  wayland-devel
-BuildRequires:  egl-wayland-devel
 BuildRequires:  graphene-devel
 # pkgconfig-style deps specifically searched-for by autotools/configure
 BuildRequires:  pkgconfig(wayland-client) >= 1.0
@@ -88,12 +94,16 @@ for developing applications that use %{name}.
 
 %build
 %meson \
+  -D package-name='Fedora GStreamer-plugins-base package' \
+  -D package-origin='http://download.fedoraproject.org' \
+  -D gl_winsys=wayland,x11,gbm \
+  %{!?with_cdparanoia:-D cdparanoia=disabled} \
+  %{!?with_libvisual:-D libvisual=disabled} \
   -D doc=disabled \
   -D orc=enabled \
   -D tremor=disabled \
   -D tests=disabled \
   -D examples=disabled \
-  -D opus=disabled
 %meson_build
 
 %install
@@ -203,25 +213,31 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_libdir}/gstreamer-%{majorminor}/libgstcompositor.so
 %{_libdir}/gstreamer-%{majorminor}/libgstencoding.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgio.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbasedebug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoverlaycomposition.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdsd.so
 %{_libdir}/gstreamer-%{majorminor}/libgstplayback.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpbtypes.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttypefindfunctions.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvideoconvert.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideoconvertscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideorate.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvideoscale.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideotestsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvolume.so
 
 # base plugins with dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
+%if %{with cdparanoia}
 %{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
+%endif
 %{_libdir}/gstreamer-%{majorminor}/libgstopengl.so
+%if %{with libvisual}
 %{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
+%endif
 %{_libdir}/gstreamer-%{majorminor}/libgstogg.so
+%{_libdir}/gstreamer-%{majorminor}/libgstopus.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpango.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
@@ -243,6 +259,8 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstdmabuf.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstfdmemory.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstphysmemory.h
+%{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstdrmdumb.h
+%{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstshmallocator.h
 %dir %{_includedir}/gstreamer-%{majorminor}/gst/app
 %{_includedir}/gstreamer-%{majorminor}/gst/app/app.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/app-prelude.h
@@ -275,6 +293,8 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiostreamalign.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstdsd.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstdsdformat.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/streamvolume.h
 %dir %{_includedir}/gstreamer-%{majorminor}/gst/fft
 %{_includedir}/gstreamer-%{majorminor}/gst/fft/fft.h
@@ -371,8 +391,10 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-frame.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-hdr.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-info.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/video-info-dma.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-multiview.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-resampler.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/video-sei.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-scaler.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-tile.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
@@ -415,6 +437,9 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_libdir}/pkgconfig/*.pc
 
 %changelog
+* Wed Jan 22 2025 Andrew Phelps <anphel@microsoft.com> - 1.26.6-1
+- update to 1.26.5
+
 * Wed Jan 22 2025 Andrew Phelps <anphel@microsoft.com> - 1.20.4-3
 - Remove dependency on opus
 
