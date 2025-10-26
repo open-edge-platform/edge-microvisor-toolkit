@@ -1,0 +1,31 @@
+From 4fd0fdcf71939f3e008e5941b835731af7ce9a18 Mon Sep 17 00:00:00 2001
+From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
+Date: Mon, 16 Jun 2025 08:18:23 +0800
+Subject: [PATCH 17/17] WA: Remove confusion warning
+
+Temporary remove the warning as it does not calculate correctly for each
+frame.
+
+Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+---
+ server/gstreamer-encoder.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/server/gstreamer-encoder.c b/server/gstreamer-encoder.c
+index a08a75fd41b4..a0b88402fa51 100644
+--- a/server/gstreamer-encoder.c
++++ b/server/gstreamer-encoder.c
+@@ -549,10 +549,6 @@ static void update_next_frame_mm_time(SpiceGstEncoder *encoder)
+ {
+     uint64_t period_ns = NSEC_PER_SEC / get_source_fps(encoder);
+     uint64_t min_delay_ns = get_average_encoding_time(encoder);
+-    if (min_delay_ns > period_ns) {
+-        spice_warning("your system seems to be too slow to encode this %dx%d@%d video in real time",
+-                      encoder->width, encoder->height, get_source_fps(encoder));
+-    }
+ 
+     min_delay_ns = MIN(min_delay_ns, SPICE_GST_MAX_PERIOD);
+     if (encoder->vbuffer_free >= 0) {
+-- 
+2.43.0
+
