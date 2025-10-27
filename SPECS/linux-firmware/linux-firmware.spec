@@ -1,13 +1,18 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20250509
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/
 Source0:        https://www.kernel.org/pub/linux/kernel/firmware/%{name}-%{version}.tar.xz
+Source1:        linux-firmware-patch-binaries.tar.xz
+Patch0:         0001-Adding-IPU7-firmware-for-PTL.patch
+Patch1:         0001-WHENCE-sync-ipu-20240617_2000_134.patch
+Patch2:         0004-Update-GuC-major-version-naming-HuC-and-DMC-version.patch
+Patch3:         0005-WHENCE-Update-WiFI-FW-binaries-for-GAP2-GFP2-modules.patch
 %global debug_package %{nil}
 %global __os_install_post %{nil}
 %global _firmwarepath    /lib/firmware
@@ -67,7 +72,7 @@ Summary:        Firmware for Intel Ethernet controller
 Firmware for Intel Ethernet controller.
 
 %prep
-%setup -q
+%autosetup -p 1 -a 1
 
 %build
 
@@ -82,6 +87,11 @@ cp -r ath10k %{buildroot}%{_firmwarepath}
 cp -r i915 %{buildroot}%{_firmwarepath}
 cp -r xe %{buildroot}%{_firmwarepath}
 cp -r intel %{buildroot}%{_firmwarepath}
+cp -r linux-firmware-patch-binaries/intel %{buildroot}%{_firmwarepath}
+cp -r linux-firmware-patch-binaries/xe %{buildroot}%{_firmwarepath}
+cp -r linux-firmware-patch-binaries/i915 %{buildroot}%{_firmwarepath}
+cp linux-firmware-patch-binaries/iwlwifi-bz-b0-gf-a0-100.ucode %{buildroot}%{_firmwarepath}
+cp linux-firmware-patch-binaries/iwlwifi-gl-c0-fm-c0-100.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-8000C-*.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-9000-*.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-9260-*.ucode %{buildroot}%{_firmwarepath}
@@ -144,6 +154,9 @@ cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/i915/mtl_gsc_1.bin
 %{_firmwarepath}/xe/bmg_guc_70.bin
 %{_firmwarepath}/xe/bmg_huc.bin
+%{_firmwarepath}/i915/xe3lpd_dmc.bin
+%{_firmwarepath}/xe/ptl_guc_70.bin
+%{_firmwarepath}/xe/ptl_huc.bin
 
 %files iwlwifi
 %defattr(-,root,root)
@@ -158,6 +171,8 @@ cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/iwlwifi-ty-a0-gf-a0.pnvm
 %{_firmwarepath}/iwlwifi-9000-*.ucode
 %{_firmwarepath}/iwlwifi-9260-*.ucode
+%{_firmwarepath}/iwlwifi-bz-b0-gf-a0-100.ucode
+%{_firmwarepath}/iwlwifi-gl-c0-fm-c0-100.ucode
 
 %files ice
 %defattr(-,root,root)
@@ -165,6 +180,9 @@ cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/intel/ice
 
 %changelog
+* Fri Oct 24 2025 Basavarajx unniche <basavarajx.unniche@intel.com> - 20250509-3
+- Integrate intel patches.
+
 * Wed Sep 17 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 20250509-2
 - Added iwlwifi package for Intel Wi-Fi AX210, Jefferson Peak, Thunder Peak.
 

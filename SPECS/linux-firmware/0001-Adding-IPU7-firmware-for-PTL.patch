@@ -1,0 +1,36 @@
+From ba3927f85401839ae31baed053ecbd844b5fac6c Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 25 Jun 2025 09:30:36 +0800
+Subject: [PATCH] Adding IPU7 firmware for PTL.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ WHENCE | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/WHENCE b/WHENCE
+index c14632e8..b33b4ca3 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1223,6 +1223,18 @@ Licence: Redistributable. See LICENSE.ivsc for details
+ 
+ --------------------------------------------------------------------------
+ 
++Driver: intel-ipu6-isys - Intel IPU7 (Image Processing Unit 7) driver
++
++File: intel/ipu/ipu7_fw.bin
++File: intel/ipu/ipu7ptl_fw.bin
++File: intel/ipu/unsigned/ipu7_fw.bin
++
++Version: scci_master_20250327_1730_128
++
++Licence: Redistributable. See LICENSE.ivsc for details
++
++--------------------------------------------------------------------------
++
+ Driver: mei-vsc-hw - Intel Visual Sensing Controller
+ 
+ File: intel/vsc/ivsc_fw.bin
+-- 
+2.43.0
+

@@ -1,0 +1,43 @@
+From d53cac8f09c44f8c4455700dc344bc63e7682ec6 Mon Sep 17 00:00:00 2001
+From: Suman Mallela <suman.m@intel.com>
+Date: Tue, 23 Sep 2025 12:52:53 +0545
+Subject: [PATCH] Add the WiFI FW binaries for GAP2 and GFP2 module for PTL and
+ WCL.
+
+Updated the latest WiFi firmware binaries for GAP2 and GFP2 from
+https://git.launchpad.net/ubuntu/+source/linux-firmware/tree/intel/iwlwifi?h=850489a9683271a5ec19f4e9baf3cee2449e6d6e
+
+* update patch for WHENCE and include-binaries
+
+Signed-off-by: Suman Mallela <suman.m@intel.com>
+---
+ WHENCE | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/WHENCE b/WHENCE
+index 3c4d27d2..6fb4457c 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1163,6 +1163,9 @@
+ File: iwlwifi-bz-b0-gf-a0-98.ucode
+ Version: 95.d661c37c.0
+
++File: iwlwifi-bz-b0-gf-a0-100.ucode
++Version: 97.09e46595.0
++
+ File: iwlwifi-bz-b0-gf-a0.pnvm
+
+ File: iwlwifi-gl-c0-fm-c0-83.ucode
+@@ -1189,6 +1192,9 @@
+ File: iwlwifi-gl-c0-fm-c0-98.ucode
+ Version: 95.d661c37c.0
+
++File: iwlwifi-gl-c0-fm-c0-100.ucode
++Version: 97.3f3ef548.0
++
+ File: iwlwifi-gl-c0-fm-c0.pnvm
+
+ File: iwlwifi-bz-b0-fm-c0-92.ucode
+-- 
+2.25.1
+

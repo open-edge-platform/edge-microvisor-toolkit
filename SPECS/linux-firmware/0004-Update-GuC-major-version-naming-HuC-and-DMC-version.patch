@@ -1,0 +1,33 @@
+From 4e082cf010c3926f0c1094c9395c7499f0383ffe Mon Sep 17 00:00:00 2001
+From: "Wong, Chee Yin" <chee.yin.wong@intel.com>
+Date: Mon, 30 Jun 2025 14:23:59 +0800
+Subject: [PATCH 4/4] Update GuC major version naming, HuC and DMC version
+
+Signed-off-by: Wong, Chee Yin <chee.yin.wong@intel.com>
+---
+ WHENCE | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/WHENCE b/WHENCE
+index 37330d406..56511ae0f 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -5268,6 +5268,15 @@ Version: GuC API/APB ver 70.44.1 for Battlemage
+ File: xe/bmg_huc.bin
+ Version: HuC API/APB ver 8.2.10 for Battlemage
+ 
++File: xe/ptl_guc_70.bin
++Version: GuC API/APB ver 70.47.0 for Pantherlake
++
++File: xe/ptl_huc.bin
++Version: HuC API/APB ver 10.3.3 for Pantherlake
++
++File: i915/xe3lpd_dmc.bin
++Version: GuC API/APB ver 2.23 for Pantherlake
++
+ License: Redistributable. See LICENSE.xe for details
+ --------------------------------------------------------------------------
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,35 @@
+From 12670db863d991efd85b3fc02ec2e7c100b40ce5 Mon Sep 17 00:00:00 2001
+From: Lee Chee Yang <chee.yang.lee@intel.com>
+Date: Mon, 1 Jul 2024 16:17:21 +0800
+Subject: [PATCH 1/4] WHENCE: sync ipu 20240617_2000_134
+
+sync ipu binaries from
+https://github.com/intel/ipu6-camera-bins/tree/ead3e79b280537f395451d113288b32bf38faf9c/lib/firmware/intel
+
+including unsigned binaries.
+
+Signed-off-by: Lee Chee Yang <chee.yang.lee@intel.com>
+---
+ WHENCE | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/WHENCE b/WHENCE
+index 3c4d27d2e..6baaa3fb9 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -1249,7 +1249,11 @@ File: intel/ipu/ipu6epadln_fw.bin
+ File: intel/ipu/ipu6ep_fw.bin
+ File: intel/ipu/ipu6epmtl_fw.bin
+ File: intel/ipu/ipu6_fw.bin
+-Version: scci_master_20230926_0007
++File: intel/ipu/unsigned/ipu6epadln_fw.bin
++File: intel/ipu/unsigned/ipu6ep_fw.bin
++File: intel/ipu/unsigned/ipu6epmtl_fw.bin
++File: intel/ipu/unsigned/ipu6_fw.bin
++Version: scci_master_20240617_2000_134
+ 
+ File: intel/ipu/ipu6se_fw.bin
+ Version: scci_master_20210502_1459
+-- 
+2.43.0
+
