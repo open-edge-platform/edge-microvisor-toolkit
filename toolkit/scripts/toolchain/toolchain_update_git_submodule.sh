@@ -16,7 +16,7 @@ if [ -d "${REPO_ROOT}/azurelinux" ]; then
     cd ${REPO_ROOT}
     [ ! -d ./SPECS-SIGNED ] && cp -r azurelinux/SPECS-SIGNED ./ 
     [ ! -d ./SPECS-EXTENDED ] && cp -r azurelinux/SPECS-EXTENDED ./
-    skip_list=("kernel-mshv" "srp" "mft_kernel" "knem" "xpmem" "iser" "isert" "mlnx-ethtool" "mlnx-iproute2" "mlnx-nfsrdma" "mlnx-ofa_kernel" "mlnx-tools" "azurelinux-image-tools" "azurelinux-release" "azurelinux-repos" "azurelinux-rpm-macros")
+    skip_list=("mlx-bootctl" "kernel-mshv" "srp" "mft_kernel" "knem" "xpmem" "iser" "isert" "mlnx-ethtool" "mlnx-iproute2" "mlnx-nfsrdma" "mlnx-ofa_kernel" "mlnx-tools" "azurelinux-image-tools" "azurelinux-release" "azurelinux-repos" "azurelinux-rpm-macros")
     for folder in azurelinux/SPECS/*; do
         fbasename=$(basename "$folder")
         if [[ " ${skip_list[@]} " == *" ${fbasename} "* ]]; then
