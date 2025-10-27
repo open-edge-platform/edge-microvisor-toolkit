@@ -30,8 +30,8 @@ Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
  drivers/net/ethernet/intel/igc/igc_main.c    | 216 +++++++++++++++++++
  4 files changed, 261 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/igc/igc.h b/drivers/net/ethernet/intel/igc/igc.h
-index b2b6da3e9c8d3..479dcd7500f56 100644
+Index: b/drivers/net/ethernet/intel/igc/igc.h
+===================================================================
 --- a/drivers/net/ethernet/intel/igc/igc.h
 +++ b/drivers/net/ethernet/intel/igc/igc.h
 @@ -198,6 +198,13 @@ struct igc_ring {
@@ -48,10 +48,10 @@ index b2b6da3e9c8d3..479dcd7500f56 100644
  /* Board specific private data structure */
  struct igc_adapter {
  	struct net_device *netdev;
-@@ -339,6 +346,14 @@ struct igc_adapter {
- 	/* LEDs */
+@@ -341,6 +348,14 @@ struct igc_adapter {
  	struct mutex led_mutex;
  	struct igc_led_classdev *leds;
+ 	bool leds_available;
 +
 +	struct delayed_work fp_verification_work;
 +	unsigned long fp_start;
@@ -63,8 +63,8 @@ index b2b6da3e9c8d3..479dcd7500f56 100644
  };
  
  void igc_up(struct igc_adapter *adapter);
-diff --git a/drivers/net/ethernet/intel/igc/igc_defines.h b/drivers/net/ethernet/intel/igc/igc_defines.h
-index e08dfba0ea69d..45da4ffd4ec75 100644
+Index: b/drivers/net/ethernet/intel/igc/igc_defines.h
+===================================================================
 --- a/drivers/net/ethernet/intel/igc/igc_defines.h
 +++ b/drivers/net/ethernet/intel/igc/igc_defines.h
 @@ -308,6 +308,8 @@
@@ -97,11 +97,11 @@ index e08dfba0ea69d..45da4ffd4ec75 100644
  #define IGC_RXDEXT_STATERR_L4E		0x20000000
  #define IGC_RXDEXT_STATERR_IPE		0x40000000
  #define IGC_RXDEXT_STATERR_RXE		0x80000000
-diff --git a/drivers/net/ethernet/intel/igc/igc_ethtool.c b/drivers/net/ethernet/intel/igc/igc_ethtool.c
-index 52ca64569cb59..761bafd585b37 100644
+Index: b/drivers/net/ethernet/intel/igc/igc_ethtool.c
+===================================================================
 --- a/drivers/net/ethernet/intel/igc/igc_ethtool.c
 +++ b/drivers/net/ethernet/intel/igc/igc_ethtool.c
-@@ -1789,6 +1789,8 @@ static int igc_ethtool_get_preempt(struct net_device *netdev,
+@@ -1789,6 +1789,8 @@ static int igc_ethtool_get_preempt(struc
  
  	fpcmd->enabled = adapter->frame_preemption_active;
  	fpcmd->add_frag_size = adapter->add_frag_size;
@@ -110,7 +110,7 @@ index 52ca64569cb59..761bafd585b37 100644
  
  	return 0;
  }
-@@ -1805,10 +1807,22 @@ static int igc_ethtool_set_preempt(struct net_device *netdev,
+@@ -1805,10 +1807,22 @@ static int igc_ethtool_set_preempt(struc
  		return -EINVAL;
  	}
  
@@ -136,8 +136,8 @@ index 52ca64569cb59..761bafd585b37 100644
  }
  
  static int igc_ethtool_get_link_ksettings(struct net_device *netdev,
-diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
-index ca720ddff3af8..a81e9240cf6c8 100644
+Index: b/drivers/net/ethernet/intel/igc/igc_main.c
+===================================================================
 --- a/drivers/net/ethernet/intel/igc/igc_main.c
 +++ b/drivers/net/ethernet/intel/igc/igc_main.c
 @@ -30,6 +30,11 @@
@@ -152,7 +152,7 @@ index ca720ddff3af8..a81e9240cf6c8 100644
  static int debug = -1;
  
  MODULE_DESCRIPTION(DRV_SUMMARY);
-@@ -2448,6 +2453,79 @@ static int igc_xdp_init_tx_descriptor(struct igc_ring *ring,
+@@ -2449,6 +2454,79 @@ unmap:
  	return -ENOMEM;
  }
  
@@ -232,7 +232,7 @@ index ca720ddff3af8..a81e9240cf6c8 100644
  static struct igc_ring *igc_xdp_get_tx_ring(struct igc_adapter *adapter,
  					    int cpu)
  {
-@@ -2577,6 +2655,19 @@ static void igc_update_rx_stats(struct igc_q_vector *q_vector,
+@@ -2578,6 +2656,19 @@ static void igc_update_rx_stats(struct i
  	q_vector->rx.total_bytes += bytes;
  }
  
@@ -252,7 +252,7 @@ index ca720ddff3af8..a81e9240cf6c8 100644
  static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
  {
  	unsigned int total_bytes = 0, total_packets = 0;
-@@ -2592,6 +2683,7 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
+@@ -2593,6 +2684,7 @@ static int igc_clean_rx_irq(struct igc_q
  		union igc_adv_rx_desc *rx_desc;
  		unsigned int size, truesize;
  		int pkt_offset = 0;
@@ -260,7 +260,7 @@ index ca720ddff3af8..a81e9240cf6c8 100644
  		void *pktbuf;
  
  		/* return some buffers to hardware, one at a time is too slow */
-@@ -2622,6 +2714,22 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
+@@ -2623,6 +2715,22 @@ static int igc_clean_rx_irq(struct igc_q
  			size -= IGC_TS_HDR_LEN;
  		}
  
@@ -283,7 +283,7 @@ index ca720ddff3af8..a81e9240cf6c8 100644
  		if (!skb) {
  			xdp_init_buff(&ctx.xdp, truesize, &rx_ring->xdp_rxq);
  			xdp_prepare_buff(&ctx.xdp, pktbuf - igc_rx_offset(rx_ring),
-@@ -6548,6 +6656,107 @@ static int igc_tsn_enable_cbs(struct igc_adapter *adapter,
+@@ -6552,6 +6660,107 @@ static int igc_tsn_enable_cbs(struct igc
  	return igc_tsn_offload_apply(adapter);
  }
  
@@ -391,7 +391,7 @@ index ca720ddff3af8..a81e9240cf6c8 100644
  static int igc_tc_query_caps(struct igc_adapter *adapter,
  			     struct tc_query_caps_base *base)
  {
-@@ -7122,6 +7331,7 @@ static int igc_probe(struct pci_dev *pdev,
+@@ -7130,6 +7339,7 @@ static int igc_probe(struct pci_dev *pde
  
  	INIT_WORK(&adapter->reset_task, igc_reset_task);
  	INIT_WORK(&adapter->watchdog_task, igc_watchdog_task);
@@ -399,7 +399,7 @@ index ca720ddff3af8..a81e9240cf6c8 100644
  
  	hrtimer_init(&adapter->hrtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
  	adapter->hrtimer.function = &igc_qbv_scheduling_timer;
-@@ -7148,6 +7358,12 @@ static int igc_probe(struct pci_dev *pdev,
+@@ -7156,6 +7366,12 @@ static int igc_probe(struct pci_dev *pde
  
  	igc_tsn_clear_schedule(adapter);
  
@@ -412,6 +412,3 @@ index ca720ddff3af8..a81e9240cf6c8 100644
  	/* reset the hardware with the new settings */
  	igc_reset(adapter);
  
--- 
-2.25.1
-
