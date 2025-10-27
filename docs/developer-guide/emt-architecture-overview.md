@@ -43,7 +43,8 @@ The toolkit comes pre-configured to produce different images; the following tabl
 ### Developer Node mutable ISO image
 
 The mutable developer node in an ISO format allows you to add packages and
-customize the system after deployment. During setup you can select one of four versions:
+[customize the system after deployment](./emt-tutorials.md).
+During setup you can select one of four versions:
 
 - Standard kernel
 - Standard kernel with Docker and K3s provisioned during installation
@@ -201,19 +202,19 @@ for RT tasks. This way, for example, the workloads can be shifted between effici
 and performance cores. The parameter takes lists as values:
 
   - isolcpus=\<cpu core number>,...,\<cpu core number>
-  
+
     ```bash
     isolcpus=1,2,3
     ```
-  
+
   - isolcpus=\<cpu core number>-\<cpu core number>
-  
+
     ```bash
     isolcpus=1-3
     ```
-  
+
   - isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
-  
+
     ```bash
     isolcpus=1,4-5
     ```
