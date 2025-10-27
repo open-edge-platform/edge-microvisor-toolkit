@@ -1,0 +1,28 @@
+From 858e5aa2d5a6d84ed26b07f30a414ed8669ca9f1 Mon Sep 17 00:00:00 2001
+From: Aaron Chan <aaron.chun.yew.chan@intel.com>
+Date: Fri, 30 May 2025 09:38:18 +0800
+Subject: [PATCH 1/2] if_xdp.h: add txtime field in xdp_desc struct
+
+Add a xdp_desc entry to specify packet LaunchTime for drivers
+that support the feature.
+
+Signed-off-by: Lee Chee Yang <chee.yang.lee@intel.com>
+---
+ headers/linux/if_xdp.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/headers/linux/if_xdp.h b/headers/linux/if_xdp.h
+index a78a809..7c5168c 100644
+--- a/headers/linux/if_xdp.h
++++ b/headers/linux/if_xdp.h
+@@ -104,6 +104,7 @@ struct xdp_desc {
+ 	__u64 addr;
+ 	__u32 len;
+ 	__u32 options;
++	__u64 txtime;
+ };
+ 
+ /* UMEM descriptor is __u64 */
+-- 
+2.34.1
+
