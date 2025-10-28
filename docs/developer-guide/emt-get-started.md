@@ -1,22 +1,15 @@
 # Get Started
 
-Edge Microvisor Toolkit is a lightweight, container-first Linux distribution,
-optimized for Intel® architecture. It provides a secure and high-performing
-environment for deploying edge workloads across multiple deployment models.
+Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full capabilities of Intel platforms for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. The Linux patches optimize performance and other capabilities for Intel silicon -- a result that streamlines integration for operating system vendors and other technology partners.
 
 [Hardware and Software Requirements](./emt-system-requirements.md)
 
 ## Usage Scenarios
 
-This section outlines the key usage models intended for the initial release of
-Edge Microvisor Toolkit.
+To validate workloads on Intel silicon, you can deploy Edge Microvisor Toolkit as a [standalone edge node](./get-started/emt-build-and-deploy.md) or with Edge Manageability Framework -- a complete integrated system for edge devices with full lifecycle
+management, including remote deployment and management of applications orchestrated by Kubernetes.
 
-It can be used for [standalone edge node deployments](./get-started/emt-build-and-deploy.md),
-or with Edge Manageability Framework - a complete integrated system providing full lifecycle
-management for your edge devices, including remote deployment and management of Kubernetes
-applications.
-
-[Choose pre-configured Edge Microvisor Toolkit Image](./emt-architecture-overview.md#edge-microvisor-toolkit-image-versions)
+[Choose a pre-configured Edge Microvisor Toolkit Image](./emt-architecture-overview.md#edge-microvisor-toolkit-image-versions)
 
 [Build Your Own Edge Microvisor Toolkit](./get-started/emt-building-howto.md)
 
