@@ -46,7 +46,8 @@ outlines the key differences between those.
 ### Developer Node mutable ISO image
 
 Mutable Developer node in an ISO format allows you to add packages and
-customize the system after deployment. During setup you can select one of four versions:
+[customize the system after deployment](./emt-tutorials.md).
+During setup you can select one of four versions:
 
 - Standard kernel
 - Standard kernel - Docker and K3S provisioned during installation

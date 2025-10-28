@@ -1,4 +1,4 @@
-# Deploying Edge Microvisor Toolkit on Bare Metal
+# Deploy Edge Microvisor Toolkit on Bare Metal
 
 In this article, you will learn how to deploy Edge Microvisor Toolkit on bare metal using ISO or
 RAW images.
@@ -18,7 +18,7 @@ RAW images.
 - Access to the target machine
 - Optional: monitor and keyboard, or BMC/iDRAC/iKVM access
 
-## Creating Bootable USB
+## Create Bootable USB
 
 ### Flashing ISO
 
@@ -76,7 +76,7 @@ the instructions below:
 Next, set up the target machine to [boot from the USB drive](#booting-from-usb) to
 [install Edge Microvisor Toolkit Developer Node](#installing-edge-microvisor-toolkit-developer-node).
 
-### Flashing RAW
+### Flash RAW
 
 You can [Build](../emt-building-howto.md#build-the-edge-microvisor-toolkit-image) a custom
 immutable RAW image from a chosen version of Edge Microvisor Toolkit.
@@ -103,13 +103,13 @@ Once you have built the image, flash it on a USB drive.
    > **Note:** Successful flashing of the image should produce partitions such as `/dev/sdb`
      and `/dev/sdc`.
 
-### Booting from USB
+### Boot from USB
 
 1. Insert the USB into the target machine.
 2. Enter the BIOS/Boot menu.
 3. Choose the USB drive as the boot device.
 
-## Installing Edge Microvisor Toolkit Developer Node
+## Install Edge Microvisor Toolkit Developer Node
 
 1. Choose *Terminal Installer* or *Graphical Installer* when prompted
 
@@ -146,7 +146,7 @@ Once you have built the image, flash it on a USB drive.
    cat /etc/os-release
    ```
 
-## Installing Edge Microvisor Toolkit Standalone Node
+## Install Edge Microvisor Toolkit Standalone Node
 
 To deploy a selected version of Edge Microvisor Toolkit Standalone Node, build the OS image
 and prepare a bootable USB drive, using
@@ -158,3 +158,7 @@ image versions:
 - Edge Microvisor Toolkit Non-RT (default)
 - Edge Microvisor Toolkit Desktop Virtualization
 - [Immutable custom build](../emt-building-howto.md) of Edge Microvisor Toolkit Developer Node
+
+## Enable X11 Desktop UI in ISO Image for Edge Microvisor Toolkit Developer Node
+
+(Optional) If you would like to enable the X11 desktop UI in the ISO image for Edge Microvisor Toolkit Developer Node, see [Enable X11 Desktop UI in ISO Image for Edge Microvisor Toolkit Developer Node](../../tutorials/emt-x11-desktop-ui.md).
