@@ -7,15 +7,15 @@ The toolkit has an `imageconfig` construct in the JSON format that defines the c
 of the resulting image, such as:
 
 - Type and size of partitioning table.
-- Partitions, their types (such as EFI, rootfs, etc.), settings, file system, and size.
-- Reference to `packagelists` which defines what packages (i.e. `rpms`) should be included in
+- [Partitions](../emt-architecture-overview.md#packaging), their types (such as EFI, rootfs, etc.), settings, file system, and size.
+- Reference to [packagelists](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/formats/imageconfig.md#packagelists) which defines what packages (i.e. `rpms`) should be included in
   the image.
 - Additional configuration files that should be embedded in the image (e.g. network-, systemd
   configurations).
 - Any required post-installation scripts that should be executed once the image has been
   generated.
-- Kernel and command line options.
-- Final configuration properties that should be applied (e.g. enable full disc encryption,
+- [Kernel and command line options](../../developer-guide/emt-architecture-overview.md#kernel-command-line).
+- Final [configuration properties](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/formats/imageconfig.md) that should be applied (e.g. enable full disc encryption,
   immutable image, second stage bootloader provider, purge documentation etc.).
 
 ## Build the Toolchain
@@ -73,7 +73,7 @@ microvisor/
 ```
 
 Different image types can be built by using different JSON config files and parameters.
-You can find more information about specific parameters [here.](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables)
+You can find more information about specific parameters in the [build variables](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables) section.
 
 To build an ISO image, run the following command:
 
