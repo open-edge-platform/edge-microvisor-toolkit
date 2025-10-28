@@ -8,7 +8,7 @@ of a mutable developer node:
 
 <!--hide_directive
 :::{toctree}
-./tutorials/customize-developer-node.md
+./tutorials/emt-gdb-debugging.md
 ./tutorials/emt-x11-desktop-ui.md
 :::
 hide_directive-->
