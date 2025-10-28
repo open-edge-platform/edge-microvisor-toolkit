@@ -26,10 +26,14 @@ Toolkit are available as open source.
 
 ## Get Started
 
-To find out how to deploy and work with Edge Microvisor Toolkit, see [Get Started](./docs/developer-guide/emt-get-started.md), check out the video demonstrations on [YouTube](https://www.youtube.com/playlist?list=PLg-UKERBljNxIMUUPWHpA8ZJ_YUU5tPP9), or [view the documentation website](https://docs.openedgeplatform.intel.com/2025.1/edge-microvisor-toolkit/index.html).
+To find out how to deploy and work with Edge Microvisor Toolkit, see
+[Get Started](./docs/developer-guide/emt-get-started.md), check out the video demonstrations on
+[YouTube](https://www.youtube.com/playlist?list=PLg-UKERBljNxIMUUPWHpA8ZJ_YUU5tPP9), or
+[view the documentation website](https://docs.openedgeplatform.intel.com/2025.1/edge-microvisor-toolkit/index.html).
 
-For a quick start, get the current [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum).
+For a quick start, get the current
+[ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
+\ [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum).
 
 If you're interested in most up-to-date versions, check out the
 [weekly Immutable Raw Images](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements+weekly+build)
@@ -41,21 +45,23 @@ and
 Vendors, developers, and technology partners can take part in the GitHub
 community for Edge Microvisor Toolkit in various ways: contributing code, proposing
 a design, downloading and trying out a release, opening an issue,
-benchmarking application performance, and participating in [Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions). To get help with Edge Microvisor Toolkit, contribute to its
-development, or learn more, see the following resources:
+benchmarking application performance, and participating in [Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions).
+To get help with Edge Microvisor Toolkit, contribute to its development, or learn more, see
+the following resources:
 
 - [Open an issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues)
 - [Submit a pull request](https://github.com/open-edge-platform/edge-microvisor-toolkit/pulls)
-- [Read the Contribution Guide](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/emt-contribution.md)
+- [Read the Contribution Guide](./docs/developer-guide/emt-contribution.md)
 - [View the Azure Linux documentation](toolkit/docs/), a copy of which is included in the Edge Microvisor Toolkit repository for ease of access.
-- [Report a security vulnerability](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SECURITY.md)
+- [Report a security vulnerability](./SECURITY.md)
 - [Read and respond to blog posts](https://medium.com/open-edge-platform/subpage/5f0ac5579c60)
 - [Download the latest weekly release](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements)
 - [Participate in discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions)
 
 ## License Information
 
-Based on [Azure Linux](https://github.com/microsoft/azurelinux), Edge Microvisor Toolkit shares its permissive open-source license: [MIT](https://github.com/microsoft/azurelinux/blob/3.0/LICENSE). For more information, see the [LICENSE](./LICENSE) document.
+Based on [Azure Linux](https://github.com/microsoft/azurelinux), Edge Microvisor Toolkit shares
+its permissive open-source license: [MIT](./LICENSE).
 
 ### Attribution
 
