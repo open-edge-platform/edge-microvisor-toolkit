@@ -1,4 +1,4 @@
-## Enable Debugging with GDB in Edge Microvisor Toolkit Developer Node
+# Enable Debugging with GDB in Edge Microvisor Toolkit Developer Node
 
 In a mutable developer node installed from an ISO image, you can enable
 unrestricted debugging. To debug any process in the system, you need to change
