@@ -50,7 +50,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        29%{?dist}
+Release:        30%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -110,6 +110,7 @@ Source28:       99-yama-ptrace.conf
 Source29:       99-net-core-bpf-jit-harden.conf
 Source30:       99-kernel.conf
 Source31:       99-tcp-timestamps.conf
+Source32:       systemd-flush-umount-override.conf
 
 %if 0
 GIT_DIR=../../src/systemd/.git git format-patch-ab --no-signature -M -N v235..v235-stable
@@ -872,6 +873,9 @@ install -Dm0644 -t %{buildroot}%{_pkgdocdir}/ %{SOURCE28}
 # https://bugzilla.redhat.com/show_bug.cgi?id=1378974
 install -Dm0644 -t %{buildroot}%{system_unit_dir}/systemd-udev-trigger.service.d/ %{SOURCE10}
 
+# systemd-journal-flush.service override conf file
+install -Dm0644 -t %{buildroot}%{system_unit_dir}/systemd-journal-flush.service.d/ %{SOURCE32}
+
 # systemd-oomd default configuration
 install -Dm0644 -t %{buildroot}%{_prefix}/lib/systemd/oomd.conf.d/ %{SOURCE14}
 install -Dm0644 -t %{buildroot}%{system_unit_dir}/system.slice.d/ %{SOURCE15}
@@ -1237,6 +1241,10 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+* Tue Oct 17 2025 Basavaraj unniche <basavarajx.unniche@intel.com> - 255-30
+- Add systemd-flush-umount-override.conf to systemd-journal-flush 
+- .service to fix conflict issues during unmounting /var.
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 255-29
 - merge from Azure Linux 3.0.20250521-3.0
 - Bumping 'Release' tag to match the 'signed' version of the spec.

@@ -1,7 +1,7 @@
 Summary:        Fast and Lightweight Log processor and forwarder for Linux, BSD and OSX
 Name:           fluent-bit
 Version:        3.1.9
-Release:        14%{?dist}
+Release:        15%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -34,6 +34,7 @@ BuildRequires:  pkgconfig
 BuildRequires:  systemd-devel
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  zlib-devel
+BuildRequires:  cjson-devel
 Requires:       (%{name}-selinux if selinux-policy-targeted)
 
 %description
@@ -186,6 +187,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Oct 13 2025 polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 3.1.9-15
+- Use system installed cjson to address CVE-2023-53154 and CVE-2025-57052
+
 * Thu Sep 11 2025 shalinix singhal <shalinix.singhal@intel.com> - 3.1.9-14
 - Address CVE-2023-53154 with a patch
 
