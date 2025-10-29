@@ -1,0 +1,101 @@
+From 0531e3e7659d3fcda5ad867e33313232d157f5e1 Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Wed, 8 Jan 2025 01:27:05 -0800
+Subject: [PATCH 14/14] dcc: Ensure that we send gl_draw_done only once
+
+Sometimes, when there are unexpected Gst pipeline errors, there is
+a chance that the gl_draw_done async is sent multiple times leading
+to confusion. Therefore, convert the gl_draw_ongoing flag to int
+and use g_atomic_int_dec_and_test() to ensure that gl_draw_done
+is sent only once.
+
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+---
+ server/dcc-private.h |  2 +-
+ server/dcc-send.cpp  | 11 ++++++-----
+ server/dcc.cpp       |  8 ++++----
+ 3 files changed, 11 insertions(+), 10 deletions(-)
+
+diff --git a/server/dcc-private.h b/server/dcc-private.h
+index 842c14b2..149e0270 100644
+--- a/server/dcc-private.h
++++ b/server/dcc-private.h
+@@ -66,7 +66,7 @@ struct DisplayChannelClientPrivate
+     std::array<VideoStreamAgent, NUM_STREAMS> stream_agents;
+     uint32_t streams_max_latency;
+     uint64_t streams_max_bit_rate;
+-    bool gl_draw_ongoing;
++    int gl_draw_ongoing;
+ };
+ 
+ #include "pop-visibility.h"
+diff --git a/server/dcc-send.cpp b/server/dcc-send.cpp
+index 7bc20a22..7d5b0a7b 100644
+--- a/server/dcc-send.cpp
++++ b/server/dcc-send.cpp
+@@ -1757,8 +1757,9 @@ static void red_free_cb(VideoEncoderDmabufData *dmabuf_data)
+     auto dcc = static_cast<DisplayChannelClient *>(dmabuf_data->dcc);
+     DisplayChannel *display = DCC_TO_DC(dcc);
+ 
+-    dcc->priv->gl_draw_ongoing = false;
+-    display_channel_gl_draw_done(display);
++    if (g_atomic_int_dec_and_test(&dcc->priv->gl_draw_ongoing)) {
++        display_channel_gl_draw_done(display);
++    }
+     delete dmabuf_data;
+ }
+ 
+@@ -1815,9 +1816,9 @@ static void red_marshall_gl_draw_stream(DisplayChannelClient *dcc,
+                           ret);
+         }
+ 
+-        dcc->priv->gl_draw_ongoing = false;
+-        display_channel_gl_draw_done(display);
+-        delete dmabuf_data;
++        if (g_atomic_int_dec_and_test(&dcc->priv->gl_draw_ongoing)) {
++            display_channel_gl_draw_done(display);
++        }
+         return;
+     }
+ 
+diff --git a/server/dcc.cpp b/server/dcc.cpp
+index 0031e66b..091ddda0 100644
+--- a/server/dcc.cpp
++++ b/server/dcc.cpp
+@@ -447,7 +447,7 @@ static void dcc_stop(DisplayChannelClient *dcc)
+     dcc_destroy_stream_agents(dcc);
+     image_encoders_free(&dcc->priv->encoders);
+ 
+-    if (dcc->priv->gl_draw_ongoing) {
++    if (g_atomic_int_dec_and_test(&dcc->priv->gl_draw_ongoing)) {
+         display_channel_gl_draw_done(dc);
+     }
+ }
+@@ -532,7 +532,7 @@ RedPipeItemPtr dcc_gl_draw_item_new(RedChannelClient *rcc, void *data, int num)
+         }
+     }
+ 
+-    dcc->priv->gl_draw_ongoing = TRUE;
++    g_atomic_int_set(&dcc->priv->gl_draw_ongoing, 1);
+     auto item = red::make_shared<RedGlDrawItem>();
+     item->draw = *draw;
+ 
+@@ -988,13 +988,13 @@ static bool dcc_handle_gl_draw_done(DisplayChannelClient *dcc)
+ {
+     DisplayChannel *display = DCC_TO_DC(dcc);
+ 
+-    if (G_UNLIKELY(!dcc->priv->gl_draw_ongoing)) {
++    if (G_UNLIKELY(!g_atomic_int_get(&dcc->priv->gl_draw_ongoing))) {
+         g_warning("unexpected DRAW_DONE received\n");
+         /* close client connection */
+         return FALSE;
+     }
+ 
+-    dcc->priv->gl_draw_ongoing = FALSE;
++    g_atomic_int_set(&dcc->priv->gl_draw_ongoing, 0);
+     display_channel_gl_draw_done(display);
+ 
+     return TRUE;
+-- 
+2.43.0
+

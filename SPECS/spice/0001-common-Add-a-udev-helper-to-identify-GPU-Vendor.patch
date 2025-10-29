@@ -1,0 +1,252 @@
+From be01d4a0c2d7ed5c50fad2dec431d1f44ccca9c5 Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Tue, 17 Oct 2023 00:23:12 -0700
+Subject: [PATCH 1/8] common: Add a udev helper to identify GPU Vendor
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Given that libudev is widely available on many Linux distros, we
+can use the relevant APIs to iterate over all the devices associated
+with the drm subsystem to figure out if a specific vendor GPU
+is available or not.
+
+This capability (identifying GPU Vendor) is useful to determine
+whether to launch Gstreamer pipeline using h/w accelerated
+plugins. On systems where libudev is not available (Windows,
+MacOS, etc) we'd have to make this determination based on the
+availability of the relevant plugins in the Gstreamer registry.
+
+Cc: Frediano Ziglio <freddy77@gmail.com>
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Dongwon Kim <dongwon.kim@intel.com>
+Cc: Hazwan Arif Mazlan <hazwan.arif.mazlan@intel.com>
+Cc: Jin Chung Teng <jin.chung.teng@intel.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Acked-by: Frediano Ziglio <freddy77@gmail.com>
+---
+ subprojects/spice-common/common/Makefile.am |  3 +
+ subprojects/spice-common/common/meson.build |  2 +
+ subprojects/spice-common/common/udev.c      | 78 +++++++++++++++++++++
+ subprojects/spice-common/common/udev.h      | 33 +++++++++
+ subprojects/spice-common/configure.ac       |  1 +
+ subprojects/spice-common/m4/spice-deps.m4   | 12 ++++
+ subprojects/spice-common/meson.build        |  7 ++
+ 7 files changed, 136 insertions(+)
+ create mode 100644 subprojects/spice-common/common/udev.c
+ create mode 100644 subprojects/spice-common/common/udev.h
+
+diff --git a/subprojects/spice-common/common/Makefile.am b/subprojects/spice-common/common/Makefile.am
+index 13184009bb6e..4f754288d010 100644
+--- a/subprojects/spice-common/common/Makefile.am
++++ b/subprojects/spice-common/common/Makefile.am
+@@ -52,6 +52,8 @@ libspice_common_la_SOURCES =		\
+ 	rop3.h				\
+ 	snd_codec.c			\
+ 	snd_codec.h			\
++	udev.c				\
++	udev.h				\
+ 	utils.c				\
+ 	utils.h				\
+ 	verify.h			\
+@@ -108,6 +110,7 @@ AM_CPPFLAGS =				\
+ 
+ libspice_common_la_LIBADD =				\
+ 	$(SPICE_COMMON_LIBS)				\
++	$(UDEV_LIBS)					\
+ 	$(NULL)
+ 
+ MARSHALLERS_DEPS =					\
+diff --git a/subprojects/spice-common/common/meson.build b/subprojects/spice-common/common/meson.build
+index 09e3ea73d4f0..63bd2db01a2a 100644
+--- a/subprojects/spice-common/common/meson.build
++++ b/subprojects/spice-common/common/meson.build
+@@ -39,6 +39,8 @@ spice_common_sources = [
+   'snd_codec.h',
+   'utils.c',
+   'utils.h',
++  'udev.c',
++  'udev.h',
+   'verify.h',
+   'recorder.h'
+ ]
+diff --git a/subprojects/spice-common/common/udev.c b/subprojects/spice-common/common/udev.c
+new file mode 100644
+index 000000000000..800a4abb3170
+--- /dev/null
++++ b/subprojects/spice-common/common/udev.c
+@@ -0,0 +1,78 @@
++/*
++   Copyright (C) 2023 Intel Corporation.
++
++   This library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   This library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with this library; if not, see <http://www.gnu.org/licenses/>.
++*/
++
++#include <config.h>
++#include "udev.h"
++
++#ifdef HAVE_UDEV
++#include <libudev.h>
++#include <stdbool.h>
++#include <stdlib.h>
++
++GpuVendor spice_udev_detect_gpu(int gpu_vendor)
++{
++    struct udev *udev;
++    struct udev_device *drm_dev, *pci_dev;
++    struct udev_enumerate *udev_enum;
++    struct udev_list_entry *entry, *devices;
++    const char *path, *vendor_id;
++    GpuVendor vendor = VENDOR_GPU_NOTDETECTED;
++
++    udev = udev_new();
++    if (!udev) {
++        return VENDOR_GPU_UNKNOWN;
++    }
++
++    udev_enum = udev_enumerate_new(udev);
++    if (udev_enum) {
++        udev_enumerate_add_match_subsystem(udev_enum, "drm");
++        udev_enumerate_add_match_sysname(udev_enum, "card[0-9]");
++        udev_enumerate_scan_devices(udev_enum);
++        devices = udev_enumerate_get_list_entry(udev_enum);
++
++        udev_list_entry_foreach(entry, devices) {
++            path = udev_list_entry_get_name(entry);
++            drm_dev = udev_device_new_from_syspath(udev, path);
++            if (!drm_dev) {
++                continue;
++            }
++
++            pci_dev = udev_device_get_parent_with_subsystem_devtype(drm_dev,
++                                                                    "pci", NULL);
++            if (pci_dev) {
++                vendor_id = udev_device_get_sysattr_value(pci_dev, "vendor");
++                if (vendor_id && strtol(vendor_id, NULL, 16) == gpu_vendor) {
++                    vendor = VENDOR_GPU_DETECTED;
++                    udev_device_unref(drm_dev);
++                    break;
++                }
++            }
++            udev_device_unref(drm_dev);
++        }
++        udev_enumerate_unref(udev_enum);
++    }
++    udev_unref(udev);
++
++    return vendor;
++}
++#else
++GpuVendor spice_udev_detect_gpu(int gpu_vendor)
++{
++    return VENDOR_GPU_UNKNOWN;
++}
++#endif
++
+diff --git a/subprojects/spice-common/common/udev.h b/subprojects/spice-common/common/udev.h
+new file mode 100644
+index 000000000000..389bb3f35041
+--- /dev/null
++++ b/subprojects/spice-common/common/udev.h
+@@ -0,0 +1,33 @@
++/*
++   Copyright (C) 2023 Intel Corporation.
++
++   This library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   This library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with this library; if not, see <http://www.gnu.org/licenses/>.
++*/
++
++#pragma once
++#include <spice/macros.h>
++
++#define INTEL_VENDOR_ID 0x8086
++
++typedef enum {
++    VENDOR_GPU_UNKNOWN,
++    VENDOR_GPU_DETECTED,
++    VENDOR_GPU_NOTDETECTED,
++} GpuVendor;
++
++SPICE_BEGIN_DECLS
++
++GpuVendor spice_udev_detect_gpu(int gpu_vendor);
++
++SPICE_END_DECLS
+diff --git a/subprojects/spice-common/configure.ac b/subprojects/spice-common/configure.ac
+index 0d4c22b73a4b..42e873d6c705 100644
+--- a/subprojects/spice-common/configure.ac
++++ b/subprojects/spice-common/configure.ac
+@@ -61,6 +61,7 @@ SPICE_CHECK_GLIB2
+ SPICE_CHECK_OPUS
+ SPICE_CHECK_OPENSSL
+ SPICE_CHECK_GDK_PIXBUF
++SPICE_CHECK_UDEV
+ 
+ SPICE_COMMON_CFLAGS='$(PIXMAN_CFLAGS) $(SMARTCARD_CFLAGS) $(GLIB2_CFLAGS) $(OPUS_CFLAGS) $(OPENSSL_CFLAGS)'
+ SPICE_COMMON_CFLAGS="$SPICE_COMMON_CFLAGS -DG_LOG_DOMAIN=\\\"Spice\\\""
+diff --git a/subprojects/spice-common/m4/spice-deps.m4 b/subprojects/spice-common/m4/spice-deps.m4
+index e11fc4ec930e..6a07ee629597 100644
+--- a/subprojects/spice-common/m4/spice-deps.m4
++++ b/subprojects/spice-common/m4/spice-deps.m4
+@@ -302,6 +302,18 @@ AC_DEFUN([SPICE_CHECK_OPENSSL], [
+     PKG_CHECK_MODULES(OPENSSL, openssl)
+ ])
+ 
++# SPICE_CHECK_UDEV
++# -----------------
++# Check for the availability of libudev. If found, it will help to determine
++# if a given vendor GPU is available or not.
++#------------------
++AC_DEFUN([SPICE_CHECK_UDEV], [
++    PKG_CHECK_MODULES([UDEV], [libudev], [have_udev=yes],[have_udev=no])
++    if test "x$have_udev" = "xyes"; then
++      AC_DEFINE([HAVE_UDEV], 1, [whether libudev is available to identify GPU])
++    fi
++])
++
+ # SPICE_CHECK_INSTRUMENTATION
+ # -----------------
+ # Check for the availability of an instrumentation library.
+diff --git a/subprojects/spice-common/meson.build b/subprojects/spice-common/meson.build
+index eeccecd52700..10187694cf2e 100644
+--- a/subprojects/spice-common/meson.build
++++ b/subprojects/spice-common/meson.build
+@@ -147,6 +147,13 @@ if smartcard_dep.found()
+   spice_common_config_data.set('USE_SMARTCARD', '1')
+ endif
+ 
++# udev check
++udev_dep = dependency('libudev', required : false)
++if udev_dep.found()
++  spice_common_deps += udev_dep
++  spice_common_config_data.set('HAVE_UDEV', '1')
++endif
++
+ #
+ # global C defines
+ #
+-- 
+2.34.1
+
