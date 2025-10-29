@@ -726,7 +726,7 @@ BuildRequires: rutabaga-gfx-ffi-devel
 %endif
 %if 0%{?emt}
 # Builds on centos-stream 9 require python-tomli
-BuildRequires: python-tomli
+BuildRequires: python3-tomli
 %endif
 
 %if %{user_static}
