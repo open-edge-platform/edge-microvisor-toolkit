@@ -17,6 +17,11 @@ verbose=False
 
 version_release_matching_groups = [
     frozenset([
+        "SPECS-SIGNED/kernel-hwe-signed/kernel-hwe-signed.spec",
+        "SPECS/kernel-hwe/kernel-hwe.spec",
+        "SPECS/kernel-hwe-headers/kernel-hwe-headers.spec"
+    ]),
+    frozenset([
         "SPECS-SIGNED/kernel-signed/kernel-signed.spec",
         "SPECS-SIGNED/kernel-64k-signed/kernel-64k-signed.spec",
         "SPECS-SIGNED/kernel-uki-signed/kernel-uki-signed.spec",
@@ -136,21 +141,6 @@ mstflintver_matching_groups = [
     ])
 ]
 
-# OOT kernel module specs to match the `last-known-kernel` with kernel-headers `version`
-oot_kmodule_matching_groups = [
-    frozenset([
-        "SPECS/fwctl/fwctl.spec",
-        "SPECS/iser/iser.spec",
-        "SPECS/isert/isert.spec",
-        "SPECS/knem/knem.spec",
-        "SPECS/mft_kernel/mft_kernel.spec",
-        "SPECS/mlnx-nfsrdma/mlnx-nfsrdma.spec",
-        "SPECS/mlnx-ofa_kernel/mlnx-ofa_kernel.spec",
-        "SPECS/srp/srp.spec",
-        "SPECS/xpmem/xpmem.spec"
-    ])
-]
-
 def print_verbose(message: str):
     "Print 'message' to stdout if global variable 'verbose' is true."
     if verbose:
@@ -193,8 +183,7 @@ def check_matches(base_path: str):
     groups_to_check = [({'mstflintver':{}}, mstflintver_matching_groups),
                        ({'sdkver':{}}, sdkver_matching_groups),
                        ({'epoch':{}, 'version':{}, 'release':{}}, version_release_matching_groups),
-                       ({'epoch':{}, 'version':{}}, version_matching_groups),
-                       ({'last-known-kernel' : kernel_version_release}, oot_kmodule_matching_groups)]
+                       ({'epoch':{}, 'version':{}}, version_matching_groups)]
     
     check_result = []
     for check_args in groups_to_check:

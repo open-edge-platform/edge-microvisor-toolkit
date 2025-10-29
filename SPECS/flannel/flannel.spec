@@ -3,7 +3,7 @@
 Summary:        Simple and easy way to configure a layer 3 network fabric designed for Kubernetes
 Name:           flannel
 Version:        0.24.2
-Release:        15%{?dist}
+Release:        17%{?dist}
 License:        ASL 2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -18,8 +18,8 @@ Patch3:         CVE-2025-30204.patch
 Patch4:         CVE-2024-51744.patch
 BuildRequires:  gcc
 BuildRequires:  glibc-devel
-BuildRequires:  glibc-static >= 2.38-10%{?dist}
-BuildRequires:  golang >= 1.20
+BuildRequires:  glibc-static >= 2.38-12%{?dist}
+BuildRequires:  golang < 1.25
 BuildRequires:  kernel-headers
 
 %description
@@ -52,17 +52,23 @@ install -p -m 755 -t %{buildroot}%{_bindir} ./dist/flanneld
 %{_bindir}/flanneld
 
 %changelog
-* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 0.24.2-15
-- merge from Azure Linux 3.0.20250521-3.0
+* Fri Sep 05 2025 Andrew Phelps <anphel@microsoft.com> - 0.24.2-17
 - Bump to rebuild with updated glibc
+
+* Sun Aug 31 2025 Andrew Phelps <anphel@microsoft.com> - 0.24.2-16
+- Set BR for golang to < 1.25
+
+* Thu May 22 2025 Kanishk Bansal <kanbansal@microsoft.com> - 0.24.2-15
+- Bump to rebuild with updated glibc
+
+* Mon May 12 2025 Andrew Phelps <anphel@microsoft.com> - 0.24.2-14
+- Bump to rebuild with updated glibc
+
+* Wed Mar 31 2025 Jyoti Kanase <v-jykanase@microsoft.com> - 0.24.2-13
 - patch for CVE-2024-51744
 
-* Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 0.24.2-13
-- merge from Azure Linux tag 3.0.20250423-3.0
+* Sun Mar 30 2025 Kanishk Bansal <kanbansal@microsoft.com> - 0.24.2-12
 - Patch CVE-2025-30204
-
-* Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 0.24.2-12
-- Bump Release to rebuild
 
 * Tue Feb 25 2025 Chris Co <chrco@microsoft.com> - 0.24.2-11
 - Bump to rebuild with updated glibc

@@ -5,7 +5,7 @@
 Summary:        Prometheus exporter exposing process metrics from procfs
 Name:           prometheus-process-exporter
 Version:        0.8.2
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        MIT
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -32,7 +32,7 @@ Patch0:         01-fix-RSS-test-on-non4K-pagesize-systems.patch
 Patch1:         03-disable-fakescraper.patch
 Patch2:         CVE-2025-22870.patch
 
-BuildRequires:  golang
+BuildRequires:  golang < 1.25
 BuildRequires:  systemd-rpm-macros
 
 Requires(pre):  shadow-utils
@@ -95,6 +95,10 @@ getent passwd 'prometheus' >/dev/null || useradd -r -g 'prometheus' -d '%{_share
 %dir %attr(0755,prometheus,prometheus) %{_sharedstatedir}/prometheus
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 0.8.2-4
+- merge from Azure Linux 3.0.20250910-3.0
+- Set BR for golang to < 1.25
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 0.8.2-3
 - merge from Azure Linux 3.0.20250521-3.0
 - Patch CVE-2025-22870

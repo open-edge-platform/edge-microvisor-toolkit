@@ -4,7 +4,7 @@
 Summary:        A collection of utilities and DSOs to handle compiled objects
 Name:           elfutils
 Version:        0.189
-Release:        6%{?dist}
+Release:        7%{?dist}
 License:        GPLv3+ AND (GPLv2+ OR LGPLv3+)
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -16,6 +16,7 @@ Source1:        10-ptrace-yama.conf
 Patch0:         CVE-2025-1372.patch
 Patch1:         CVE-2025-1376.patch
 Patch2:         CVE-2025-1377.patch
+Patch3:         CVE-2025-1352.patch
 
 BuildRequires:  bison >= 1.875
 BuildRequires:  bzip2-devel
@@ -282,6 +283,10 @@ fi
 %defattr(-,root,root)
 
 %changelog
+* Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 0.189-7
+- merge from Azure Linux 3.0.20250910-3.0.
+- add patch for CVE-2025-1352
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 0.189-6
 - merge from Azure Linux 3.0.20250521-3.0
 - Add patch for CVE-2025-1372, CVE-2025-1376 & CVE-2025-1377
@@ -291,6 +296,7 @@ fi
 
 * Thu Nov 21 2024 Wang, Junyuan <junyuan.wang@intel.com> - 0.189-4
 - Change default value of kernel.yama.ptrace_scope to 2 (Admin-only for ptrace attach).
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
 
 * Mon Jun 24 2024 Chris Co <chrco@microsoft.com> - 0.189-3
 - Use our own ptrace yama conf file to override default yama scope setting to be more secure

@@ -1,7 +1,7 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
 Version:        0.1.8
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -12,6 +12,7 @@ Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        %{name}.sudoers
 BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang < 1.25.0
 BuildRequires:  systemd-rpm-macros
 Requires:       rpc
 
@@ -75,6 +76,9 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 0.1.8-2
+- build with golang < 1.25
+
 * Tue Aug 12 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.8-1
 - Updated PMA Version.
 - Fix for PROFILE enviroment variable for secure profile name.
