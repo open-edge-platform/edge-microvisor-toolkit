@@ -1,0 +1,35 @@
+From 99ad6972c2e982c4dcd75110d5d490d5945b8c2e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Sebastian=20Dr=C3=B6ge?= <sebastian@centricular.com>
+Date: Fri, 8 Aug 2025 17:50:03 +0300
+Subject: [PATCH] gstreamer: Disable miniobject inline functions for
+ gobject-introspection for non-subprojects too
+
+Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/9518>
+---
+ gst/meson.build | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/gst/meson.build b/gst/meson.build
+index 93501f1d44..c69a6dc889 100644
+--- a/gst/meson.build
++++ b/gst/meson.build
+@@ -300,13 +300,15 @@ pkgconfig.generate(libgst,
+
+ if build_gir
+   gst_gir_extra_args = gir_init_section + ['--c-include=gst/gst.h']
++  gst_gir_extra_args += ['--cflags-begin',
++    '-DGST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS',
++    '--cflags-end']
+   if meson.is_subproject()
+     # FIXME: There must be a better way to do this
+     # Need to pass the include path to find gst/gst.h and gst/gstenumtypes.h (built)
+     gst_gir_extra_args += ['--cflags-begin',
+       '-I' + meson.current_source_dir() + '/..',
+       '-I' + meson.current_build_dir() + '/..',
+-      '-DGST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS',
+       '--cflags-end']
+   endif
+
+--
+2.50.0
+
