@@ -64,7 +64,6 @@ RUN wget -nv --no-clobber --timeout=30 --continue --input-file=$LFS/tools/toolch
 # The 'toolchain-remote-wget-list' is still available and can be used as an alternate to $(SOURCE_URL) if desired.
 #RUN wget -nv --no-clobber --timeout=30 --continue --input-file=$LFS/tools/toolchain-remote-wget-list --directory-prefix=$LFS/sources; exit 0
 RUN wget -nv --no-clobber --timeout=30 --continue https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-tracking-pre-prod-v6.17-linux-251023T022625Z.tar.gz -O mainline-tracking-pre-prod-v6.17-linux-251023T022625Z.tar.gz --directory-prefix=$LFS/sources; exit 0
-
 USER root
 
 RUN mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin} && \
