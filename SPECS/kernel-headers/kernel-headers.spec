@@ -13,14 +13,14 @@
 
 Summary:        Linux API header files
 Name:           kernel-headers
-Version:        6.12.44
-Release:        5%{?dist}
+Version:        6.17.0
+Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
-URL:            https://www.kernel.org/pub/linux/kernel
-Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz
+URL:            https://github.com/intel/mainline-tracking
+Source0:        https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-tracking-pre-prod-v6.17-linux-251023T022625Z.tar.gz
 # Historical name shipped by other distros
 Provides:       glibc-kernheaders = %{version}-%{release}
 BuildArch:      noarch
@@ -41,7 +41,7 @@ cross-glibc package.
 %endif
 
 %prep
-%setup -q -n linux-6.12.44
+%setup -q -n mainline-tracking-mainline-tracking-pre-prod-v6.17-linux-251023T022625Z
 
 %build
 make mrproper
@@ -76,8 +76,8 @@ done
 %endif
 
 %changelog
-* Tue Nov 4 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-5
-- Update kernel config
+* Thu Oct 30 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-1
+- Upgate kernel to 6.17.0
 
 * Thu Oct 23 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-4
 - Revert to working kernel config
