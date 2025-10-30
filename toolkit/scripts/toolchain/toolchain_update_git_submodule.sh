@@ -15,7 +15,7 @@ if [ -d "${REPO_ROOT}/azurelinux" ]; then
     git submodule update --init &> /dev/null
     cd ${REPO_ROOT}
     [ ! -d ./SPECS-SIGNED ] && cp -r azurelinux/SPECS-SIGNED ./ 
-
+    mkdir -p ./SPECS-EXTENDED
     skip_list=("fwctl" "mlx-bootctl" "kernel-mshv" "srp" "mft_kernel" "knem" "xpmem" "iser" "isert" "mlnx-ethtool" "mlnx-iproute2" "mlnx-nfsrdma" "mlnx-ofa_kernel" "mlnx-tools" "azurelinux-image-tools" "azurelinux-release" "azurelinux-repos" "azurelinux-rpm-macros")
     for folder in azurelinux/SPECS/*; do
         fbasename=$(basename "$folder")
