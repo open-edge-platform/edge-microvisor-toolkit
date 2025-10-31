@@ -1,7 +1,7 @@
 Summary:        Installs/uninstalls orchestration software on an edge node using command obtained from Cluster Orchestrator.
 Name:           cluster-agent
 Version:        1.7.3
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit 
@@ -15,6 +15,7 @@ Source5:        cluster-agent.sudoers
 Source6:        cluster_agent.te
 Source7:        cluster_agent.fc
 BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang < 1.25.0
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       curl
@@ -52,7 +53,7 @@ SELinux policy for %{name}.
 %setup -q
 
 %build
-make cabuild GO_MOD=vendor
+make cabuild GO_MOD=vendor 
 
 mkdir selinux
 cp -p %{SOURCE6} selinux/
@@ -128,6 +129,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.7.3-3
+- build with golang < 1.25
+
 * Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 1.7.3-2
 - Update go version to use above 1.24.4
 

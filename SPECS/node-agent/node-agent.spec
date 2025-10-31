@@ -12,7 +12,8 @@ Source2:        env_wrapper.sh
 Source3:        %{name}.conf
 Source4:        node_agent.te
 Source5:        node_agent.fc
-BuildRequires:  golang >= 1.24.6
+BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang < 1.25.0
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       (%{name}-selinux if selinux-policy-targeted)
@@ -161,6 +162,9 @@ sed -i '/client-proxy/{N;d;}' %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 %changelog
 * Wed Oct 15 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.8.1-1
 - Send status initializing after provision
+
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.7.3-2
+- build with golang < 1.25
 
 * Thu Jul 31 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 1.7.3-1
 - Upgrade for platform-manageability-agent handling

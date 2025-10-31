@@ -1,8 +1,8 @@
 %global debug_package %{nil}
 Summary:        NVIDIA container runtime hook
 Name:           nvidia-container-toolkit
-Version:        1.17.4
-Release:        4%{?dist}
+Version:        1.17.8
+Release:        2%{?dist}
 License:        ALS2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -28,6 +28,7 @@ Source0:        %{name}-%{version}.tar.gz
 #         See: https://reproducible-builds.org/docs/archives/
 #       - For the value of "--mtime" use the date "2021-04-26 00:00Z" to simplify future updates.
 Source1:        %{name}-%{version}-vendor.tar.gz
+Patch0:         CVE-2025-22872.patch
 BuildRequires:  golang < 1.24.0
 Obsoletes: nvidia-container-runtime <= 3.5.0-1, nvidia-container-runtime-hook <= 1.4.0-2
 Provides: nvidia-container-runtime
@@ -87,12 +88,14 @@ rm -f %{_bindir}/nvidia-container-toolkit
 %{_bindir}/nvidia-cdi-hook
 
 %changelog
-* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.17.4-4
-- merge from Azure Linux 3.0.20250521-3.0
-- Removed extraction command from prep
+* Mon Jul 28 2025 Azure Linux Security Servicing Account <azurelinux-security@microsoft.com> - 1.17.8-2
+- Patch for CVE-2025-22872
 
-* Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.17.4-3
-- Bump Release to rebuild
+* Thu Jul 24 2025 Sam Meluch <sammeluch@microsoft.com> - 1.17.8-1
+- Upgrade to 1.17.8 to resolve CVE-2025-23266
+
+* Thu Apr 10 2025 Kanishk Bansal <kanbansal@microsoft.com> - 1.17.4-3
+- Removed extraction command from prep
 
 * Fri Mar 07 2025 Jon Slobodzian <joslobo@microsoft.com> - 1.17.4-2
 - Changing nvidia-container-toolkit to use latest golang before 1.24 as this will not compile without it.

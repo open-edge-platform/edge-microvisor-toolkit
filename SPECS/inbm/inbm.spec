@@ -4,7 +4,7 @@
 Summary:        An agent to manage systems via in-band connection
 Name:           inbm
 Version:        4.2.8.6
-Release:        2%{?dist}
+Release:        3%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
@@ -15,6 +15,7 @@ Source2:        inbm-configuration-replace-FQDN.sh
 Source3:        inbm.te
 Source4:        inbm.fc
 BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang < 1.25.0
 BuildRequires:  python3-devel
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
@@ -225,6 +226,9 @@ rm -rf %{buildroot}%{_docdir}
 %postun
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 4.2.8.6-3
+- build with golang < 1.25 
+
 * Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 4.2.8.6-2
 - Update go version to use above 1.24.4
 
