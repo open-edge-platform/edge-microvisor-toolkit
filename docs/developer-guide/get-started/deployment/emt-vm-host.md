@@ -1,4 +1,4 @@
-# Deploying Other OS as Guest Virtual Machines under EMT Host
+# Deploy Other OS as Guest Virtual Machines under EMT Host
 
 Edge Microvisor Toolit supports SR-IOV (Single Root Input/Output Virtualization), which allows it to serve as host OS for virtualization of other operating systems, running as Guest OS in a virtual machine.
 
