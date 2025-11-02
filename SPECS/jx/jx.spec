@@ -1,7 +1,7 @@
 Summary:        Command line tool for working with Jenkins X.
 Name:           jx
 Version:        3.10.182
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        Apache-2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -28,7 +28,7 @@ Source0:        https://github.com/jenkins-x/jx/archive/v%{version}.tar.gz#/%{na
 #       - For the value of "--mtime" use the date "2021-04-26 00:00Z" to simplify future updates.
 Source1:        %{name}-%{version}-vendor.tar.gz
 
-BuildRequires:  golang >= 1.17.1
+BuildRequires:  golang < 1.25
 %global debug_package %{nil}
 %define our_gopath %{_topdir}/.gopath
 
@@ -62,6 +62,10 @@ install -p -m 755 -t %{buildroot}%{_bindir} ./build/jx
 %{_bindir}/jx
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.10.182-3
+- merge from Azure Linux 3.0.20250910-3.0
+- Set BR for golang to < 1.25
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 3.10.182-2
 - Bump Release to rebuild
 

@@ -9,7 +9,7 @@
 Summary:        SELinux policy
 Name:           selinux-policy
 Version:        %{refpolicy_major}.%{refpolicy_minor}
-Release:        19%{?dist}
+Release:        20%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -149,7 +149,7 @@ enforced by the kernel when running with SELinux enabled.
 %{_sharedstatedir}/selinux/%{policy_name}/active/seusers
 %{_sharedstatedir}/selinux/%{policy_name}/active/file_contexts
 %{_sharedstatedir}/selinux/%{policy_name}/active/modules_checksum
-%exclude %{_sharedstatedir}/selinux/%{policy_name}/active/policy.kern
+%verify(not md5 size mtime) %{_sharedstatedir}/selinux/%{policy_name}/active/policy.kern
 %verify(not md5 size mtime) %{_sharedstatedir}/selinux/%{policy_name}/active/file_contexts.homedirs
 %{_sharedstatedir}/selinux/%{policy_name}/active/modules/100/*
 
@@ -346,6 +346,10 @@ exit 0
 selinuxenabled && semodule -nB
 exit 0
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.20240226-20
+- merge from Azure Linux 3.0.20250910-3.0
+- Include policy.kern otherwise some semanage operations fail without it.
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.20240226-19
 - merge from Azure Linux 3.0.20250521-3.0
 - Add fix for gpg-agent use in rpm scripts for watching root's secrets dir.

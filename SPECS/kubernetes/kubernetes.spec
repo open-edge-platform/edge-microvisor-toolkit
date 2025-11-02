@@ -10,7 +10,7 @@
 Summary:        Microsoft Kubernetes
 Name:           kubernetes
 Version:        1.30.10
-Release:        8%{?dist}
+Release:        11%{?dist}
 License:        ASL 2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -26,9 +26,10 @@ Patch4:         CVE-2025-22869.patch
 Patch5:         CVE-2024-51744.patch
 Patch6:         CVE-2025-30204.patch
 Patch7:         CVE-2025-22872.patch
+Patch8:         CVE-2025-4563.patch
 BuildRequires:  flex-devel
-BuildRequires:  glibc-static >= 2.38-10%{?dist}
-BuildRequires:  golang
+BuildRequires:  glibc-static >= 2.38-12%{?dist}
+BuildRequires:  golang < 1.25
 BuildRequires:  rsync
 BuildRequires:  systemd-devel
 BuildRequires:  which
@@ -277,18 +278,29 @@ fi
 %{_exec_prefix}/local/bin/pause
 
 %changelog
-* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.30.10-8
-- merge from Azure Linux 3.0.20250521-3.0
-- Patch CVE-2025-22872
+* Fri Sep 05 2025 Andrew Phelps <anphel@microsoft.com> - 1.30.10-11
 - Bump to rebuild with updated glibc
+
+* Sun Aug 31 2025 Andrew Phelps <anphel@microsoft.com> - 1.30.10-10
+- Set BR for golang to < 1.25
+
+* Mon Jun 30 2025 Durga Jagadeesh Palli <v-dpalli@microsoft.com> - 1.30.10-9
+- Patch CVE-2025-4563
+
+* Thu May 22 2025 Kanishk Bansal <kanbansal@microsoft.com> - 1.30.10-8
+- Bump to rebuild with updated glibc
+
+* Tue May 13 2025 Sreeniavsulu Malavathula <v-smalavathu@microsoft.com> - 1.30-10-7
+- Patch CVE-2025-22872
+
+* Mon May 12 2025 Andrew Phelps <anphel@microsoft.com> - 1.30-10-6
+- Bump to rebuild with updated glibc
+
+* Wed Apr 16 2025 Sreeniavsulu Malavathula <v-smalavathu@microsoft.com> - 1.30.10-5
 - Fix CVE-2024-51744 with an upstream patch
 
-* Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.30.10-5
-- merge from Azure Linux tag 3.0.20250423-3.0
+* Sat Mar 29 2025 Kanishk Bansal <kanbansal@microsoft.com> - 1.30.10-4
 - Patch CVE-2025-30204
-
-* Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.30.10-4
-- Bump Release to rebuild
 
 * Fri Feb 28 2025 Kanishk Bansal <kanbansal@microsoft.com> - 1.30.10-3
 - Fix CVE-2025-27144, CVE-2025-22868, CVE-2025-22869 with an upstream patch

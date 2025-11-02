@@ -4,7 +4,7 @@
 Summary:        dnf equivalent using C libs
 Name:           tdnf
 Version:        3.5.8
-Release:        10%{?dist}
+Release:        11%{?dist}
 License:        LGPLv2.1 AND GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -242,6 +242,10 @@ fi
 /%{_lib}/systemd/system/tdnf*
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.5.8-11
+- Bump up the version on merge from Azure Linux tag 3.0.20250910-3.0
+- Add kernel-hwe installonlypkgs entry
+
 * Fri Mar 07 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 3.5.8-10
 - Bump up the version on merge frm AZL tag 3.0.20250206-3.0
 - Fix an issue with autoremove for installonlypkgs on tdnf
