@@ -23,7 +23,7 @@ permissions: read-all
 jobs:
   lint:
     name: Lint Workflows and Code
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     permissions:
       contents: read
       packages: read
