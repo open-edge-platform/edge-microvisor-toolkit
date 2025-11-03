@@ -23,8 +23,7 @@ permissions: read-all
 jobs:
   lint:
     name: Lint Workflows and Code
-    runs-on: arc-runner-set-wh8pz-runner-p6kjz
-
+    runs-on: arc-runner-set
     permissions:
       contents: read
       packages: read
@@ -32,6 +31,11 @@ jobs:
       statuses: write
 
     steps:
+      - name: Test Docker
+        run: |
+          docker --version
+          sleep 300
+          sudo docker images
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
