@@ -658,6 +658,8 @@ package and is meant for use in exitrds.
 %autosetup -n %{?commit:%{name}%[%stable?"-stable":""]-%{commit}}%{!?commit:%{name}%[%stable?"-stable":""]-%{version_no_tilde}} -p1
 
 %build
+export CFLAGS="$CFLAGS -D__counted_by(x)="
+export CXXFLAGS="$CXXFLAGS -D__counted_by(x)="
 
 CONFIGURE_OPTS=(
         -Dmode=release
@@ -774,6 +776,8 @@ CONFIGURE_OPTS=(
         -Dbootloader=%[%{?want_bootloader}?"enabled":"disabled"]
         -Dukify=%[%{?want_bootloader}?"enabled":"disabled"]
 )
+
+
 
 %if %{without lto}
 %global _lto_cflags %nil

@@ -1,7 +1,7 @@
 Summary:          Library to support IDNA2008 internationalized domain names
 Name:             libidn2
-Version:          2.3.4
-Release:          5%{?dist}
+Version:          2.3.8
+Release:          6%{?dist}
 License:          (GPLv2+ or LGPLv3+) and GPLv3+
 URL:              https://www.gnu.org/software/libidn/#libidn2
 Vendor:           Microsoft Corporation
@@ -11,10 +11,6 @@ Source0:          https://ftp.gnu.org/gnu/libidn/%{name}-%{version}.tar.gz
 Source1:          https://ftp.gnu.org/gnu/libidn/%{name}-%{version}.tar.gz.sig
 Source2:          https://keys.openpgp.org/vks/v1/by-fingerprint/B1D2BD1375BECB784CF4F8C4D73CF638C53C06BE
 
-BuildRequires:    glibc-devel
-BuildRequires:    kernel-devel
-BuildRequires:    kernel-headers
-BuildRequires:    binutils
 BuildRequires:    gnupg2
 BuildRequires:    gcc
 BuildRequires:    make
