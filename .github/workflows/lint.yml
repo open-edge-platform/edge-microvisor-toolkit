@@ -36,7 +36,9 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
+      - name: Test Docker
+        run: |
+          sleep 300
       - name: Lint
         uses: github/super-linter/slim@v7
         env:
