@@ -1,0 +1,57 @@
+From dd95a5484388cc54448327e9709c68cc0ae04c5e Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Wed, 15 Mar 2023 14:16:50 -0700
+Subject: [PATCH 11/12] video-stream: Don't stop a stream associated with
+ gl_draw (v2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+We do not want to stop a stream associated with gl_draw as a result
+of timeout because we may not get another opportunity to create a
+new stream if the current one gets stopped. However, when the
+stream does get stopped for other reasons, we need to clear the
+gl_draw_stream pointer associated with the relevant DC.
+
+v2: (suggestions from Frediano)
+- Don't stop the stream regardless of whether gl_draw is ongoing
+  or not
+
+Cc: Frediano Ziglio <freddy77@gmail.com>
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Dongwon Kim <dongwon.kim@intel.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Acked-by: Frediano Ziglio <freddy77@gmail.com>
+---
+ server/video-stream.cpp | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/server/video-stream.cpp b/server/video-stream.cpp
+index f17b11f940d2..72a926ccb4ed 100644
+--- a/server/video-stream.cpp
++++ b/server/video-stream.cpp
+@@ -116,6 +116,10 @@ void video_stream_stop(DisplayChannel *display, VideoStream *stream)
+         }
+         dcc->pipe_add(video_stream_destroy_item_new(stream_agent));
+         video_stream_agent_stats_print(stream_agent);
++
++        if (stream == display->priv->gl_draw_stream) {
++            display->priv->gl_draw_stream = nullptr;
++        }
+     }
+     display->priv->streams_size_total -= stream->width * stream->height;
+     ring_remove(&stream->link);
+@@ -1076,7 +1080,8 @@ void video_stream_timeout(DisplayChannel *display)
+     while (item) {
+         VideoStream *stream = SPICE_CONTAINEROF(item, VideoStream, link);
+         item = ring_next(ring, item);
+-        if (now >= (stream->last_time + RED_STREAM_TIMEOUT)) {
++        if (now >= (stream->last_time + RED_STREAM_TIMEOUT) &&
++            stream != display->priv->gl_draw_stream) {
+             detach_video_stream_gracefully(display, stream, nullptr);
+             video_stream_stop(display, stream);
+         }
+-- 
+2.34.1
+

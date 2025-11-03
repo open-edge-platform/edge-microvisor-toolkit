@@ -3,10 +3,10 @@
 ##
 ## DP: Changeset 15338: Commit fix for 'private' becoming a reserved keyword as
 ## DP: of GCC 4.3+ (Closes: #499676).
-
+# shellcheck disable=SC1036,SC1088
 @DPATCH@
 
-================================================================================
+#================================================================================
 --- cdparanoia-III-10.2/interface/cdda_interface.h
 +++ cdparanoia-III-10.2/interface/cdda_interface.h
 @@ -84,7 +84,7 @@

@@ -5110,8 +5110,8 @@
         "type": "other",
         "other": {
           "name": "gstreamer1-plugins-base",
-          "version": "1.20.0",
-          "downloadUrl": "https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.20.0.tar.xz"
+          "version": "1.26.5",
+          "downloadUrl": "https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.26.5.tar.xz"
         }
       }
     },
@@ -15974,7 +15974,7 @@
         "other": {
           "name": "orc",
           "version": "0.4.39",
-          "downloadUrl": "http://gstreamer.freedesktop.org/src/orc/orc-0.4.39.tar.xz"
+          "downloadUrl": "https://gstreamer.freedesktop.org/src/orc/orc-0.4.39.tar.xz"
         }
       }
     },
@@ -16085,6 +16085,16 @@
           "name": "otelcol-contrib",
           "version": "0.117.0",
           "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.117.0/otelcol-contrib_0.117.0_linux_amd64.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "opus",
+          "version": "1.5.2",
+          "downloadUrl": "https://ftp.osuosl.org/pub/xiph/releases/opus/opus-1.5.2.tar.gz"
         }
       }
     },
@@ -28898,6 +28908,16 @@
           "name": "speexdsp",
           "version": "1.2.1",
           "downloadUrl": "https://downloads.xiph.org/releases/speex/speexdsp-1.2.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "spice",
+          "version": "0.15.2",
+          "downloadUrl": "http://www.spice-space.org/download/releases/spice-0.15.2.tar.bz2"
         }
       }
     },

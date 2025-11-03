@@ -1,0 +1,94 @@
+From 36115f77e0349cd7ee2f72de8e8bea8b600f2f0f Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Wed, 15 Mar 2023 13:09:48 -0700
+Subject: [PATCH 07/12] dcc: Check to see if the client supports multiple
+ codecs (v2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+We need to determine if the client is new enough to support multiple
+codecs -- which might include any of the Gstreamer based ones.
+
+v2: (suggestions and fixups from Frediano)
+- Add is_gl_client() method to DisplayChannelClient instead of a
+  dcc_is_gl_client() function.
+- Avoid the usage of XXX_CAST macro.
+
+Cc: Frediano Ziglio <freddy77@gmail.com>
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Marc-André Lureau <marcandre.lureau@redhat.com>
+Cc: Dongwon Kim <dongwon.kim@intel.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Acked-by: Frediano Ziglio <freddy77@gmail.com>
+---
+ server/dcc.cpp | 22 ++++++++++++----------
+ server/dcc.h   |  6 ++++++
+ 2 files changed, 18 insertions(+), 10 deletions(-)
+
+diff --git a/server/dcc.cpp b/server/dcc.cpp
+index 01c16ab78cda..ca73470ae279 100644
+--- a/server/dcc.cpp
++++ b/server/dcc.cpp
+@@ -494,29 +494,31 @@ RedSurfaceDestroyItem::RedSurfaceDestroyItem(uint32_t surface_id)
+ 
+ RedPipeItemPtr dcc_gl_scanout_item_new(RedChannelClient *rcc, void *data, int num)
+ {
+-    /* FIXME: on !unix peer, start streaming with a video codec */
+-    if (!red_stream_is_plain_unix(rcc->get_stream()) ||
+-        !rcc->test_remote_cap(SPICE_DISPLAY_CAP_GL_SCANOUT)) {
++    auto dcc = static_cast<DisplayChannelClient *>(rcc);
++
++    if (dcc->is_gl_client()) {
++        return red::make_shared<RedGlScanoutUnixItem>();
++    } else if (rcc->test_remote_cap(SPICE_DISPLAY_CAP_MULTI_CODEC)) {
++        return RedPipeItemPtr();
++    } else {
+         red_channel_warning(rcc->get_channel(),
+-                            "FIXME: client does not support GL scanout");
++                            "Client does not support GL scanout or multiple codecs");
+         rcc->disconnect();
+         return RedPipeItemPtr();
+     }
+-
+-    return red::make_shared<RedGlScanoutUnixItem>();
+ }
+ 
+ XXX_CAST(RedChannelClient, DisplayChannelClient, DISPLAY_CHANNEL_CLIENT);
+ 
+ RedPipeItemPtr dcc_gl_draw_item_new(RedChannelClient *rcc, void *data, int num)
+ {
+-    DisplayChannelClient *dcc = DISPLAY_CHANNEL_CLIENT(rcc);
++    auto dcc = static_cast<DisplayChannelClient *>(rcc);
+     auto draw = static_cast<const SpiceMsgDisplayGlDraw *>(data);
+ 
+-    if (!red_stream_is_plain_unix(rcc->get_stream()) ||
+-        !rcc->test_remote_cap(SPICE_DISPLAY_CAP_GL_SCANOUT)) {
++    if (!dcc->is_gl_client() &&
++        !rcc->test_remote_cap(SPICE_DISPLAY_CAP_MULTI_CODEC)) {
+         red_channel_warning(rcc->get_channel(),
+-                            "FIXME: client does not support GL scanout");
++                            "Client does not support GL scanout or multiple codecs");
+         rcc->disconnect();
+         return RedPipeItemPtr();
+     }
+diff --git a/server/dcc.h b/server/dcc.h
+index a8dd3bef38cd..47f082fe2b08 100644
+--- a/server/dcc.h
++++ b/server/dcc.h
+@@ -47,6 +47,12 @@ public:
+                          spice_wan_compression_t zlib_glz_state);
+     virtual void disconnect() override;
+ 
++    bool is_gl_client()
++    {
++        return red_stream_is_plain_unix(get_stream()) &&
++           test_remote_cap(SPICE_DISPLAY_CAP_GL_SCANOUT);
++    }
++
+ protected:
+     virtual bool handle_message(uint16_t type, uint32_t size, void *msg) override;
+     virtual bool config_socket() override;
+-- 
+2.34.1
+
