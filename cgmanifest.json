@@ -10061,8 +10061,8 @@
         "type": "other",
         "other": {
           "name": "libidn2",
-          "version": "2.3.4",
-          "downloadUrl": "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.4.tar.gz"
+          "version": "2.3.8",
+          "downloadUrl": "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.8.tar.gz"
         }
       }
     },
@@ -14914,16 +14914,6 @@
           "name": "nvidia-container-toolkit",
           "version": "1.17.8",
           "downloadUrl": "https://github.com/NVIDIA/nvidia-container-toolkit/archive/v1.17.8.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "nvidia-data-center-driver",
-          "version": "570.133.20",
-          "downloadUrl": "https://us.download.nvidia.com/tesla/570.133.20/NVIDIA-Linux-x86_64-570.133.20.run"
         }
       }
     },

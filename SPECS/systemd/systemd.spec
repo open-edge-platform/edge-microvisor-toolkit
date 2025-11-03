@@ -50,7 +50,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        31%{?dist}
+Release:        32%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -658,6 +658,8 @@ package and is meant for use in exitrds.
 %autosetup -n %{?commit:%{name}%[%stable?"-stable":""]-%{commit}}%{!?commit:%{name}%[%stable?"-stable":""]-%{version_no_tilde}} -p1
 
 %build
+export CFLAGS="$CFLAGS -D__counted_by(x)="
+export CXXFLAGS="$CXXFLAGS -D__counted_by(x)="
 
 CONFIGURE_OPTS=(
         -Dmode=release
@@ -774,6 +776,8 @@ CONFIGURE_OPTS=(
         -Dbootloader=%[%{?want_bootloader}?"enabled":"disabled"]
         -Dukify=%[%{?want_bootloader}?"enabled":"disabled"]
 )
+
+
 
 %if %{without lto}
 %global _lto_cflags %nil
@@ -1252,6 +1256,9 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+* Mon Nov 10 2025 Lishan Liu <lishan.liu@intel.com> - 255-32
+- Define empty macro to resolve GCC compatibility issue for kernel 6.17
+
 * Fri Oct 23 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 255-31
 - merge from Azure Linux 3.0.20250910-3.0
 - Bump release to match systemd-boot-signed spec
