@@ -13,7 +13,7 @@ jobs:
 
   build:
     name: Check Disallowed Files
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
     steps:
 
     - name: Check out code
