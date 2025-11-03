@@ -31,11 +31,6 @@ jobs:
       statuses: write
 
     steps:
-      - name: Test Docker
-        run: |
-          docker --version
-          sleep 300
-          sudo docker images
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
