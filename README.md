@@ -2,54 +2,78 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
-Edge Microvisor Toolkit is a reference Linux operating system that demonstrates
-the full capabilities of Intel processors for Edge AI workloads through
-Linux patches from Intel that are yet to be upstreamed. Built on Azure Linux,
-it incorporates all the latest kernel and user patches from a Linux
-Kernel maintained by Intel.
+The Edge Microvisor Toolkit is a streamlined container host that
+showcases the Intel silicon optimizations. Built on Azure Linux, it features a
+Linux Kernel maintained by Intel, incorporating all the latest kernel and user
+patches.
 
-Edge Microvisor Toolkit is published in several versions, both immutable and mutable, for quickly deploying, validating, and benchmarking edge AI workloads, including those requiring real-time processing. You can also use the toolkit's flexible build infrastructure to create custom images from a large set of pre-provisioned packages.
+It is published in several versions, both immutable and mutable. Use them to
+quickly deploy and run your solutions for multiple scenarios, like benchmarking
+and validation of edge AI computing workloads, including real-time processing,
+or build your own system, using the existing infrastructure.
 
-Here are the published versions:
+The currently published versions are:
 
 * [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
-* [Edge Microvisor Toolkit Developer Node with or without real-time extensions (mutable)](./docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image)
-* [Edge Microvisor Toolkit (mutuable or immutable) for use with Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
+* [Edge Microvisor Toolkit Developer Node with or without real time extensions (mutable)](./docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image)
+* [Edge Microvisor Toolkit (immutable) - deployable in Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
+* [Edge Microvisor Toolkit with real time extensions (immutable) - deployable in Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
 * [Edge Microvisor Bootkit](./docs/developer-guide/emt-bootkit.md)
 
-Edge Microvisor Toolkit has undergone extensive validation across the Intel Xeon®, Intel® Core Ultra™, Intel Core™, and Intel® Atom® processor families. It provides robust support for integrated NPU as well as a
+The Edge Microvisor Toolkit has undergone extensive validation across all Intel
+platforms such as  Xeon®, Intel® Core Ultra™, Intel Core™ and Intel® Atom®. It
+provides robust support for integrated NPU, as well as a
 [selection of discrete GPU cards](./docs/developer-guide/emt-system-requirements.md#hardware-requirements).
 
-You can either build Edge Microvisor Toolkit by following step-by-step
-instructions or download it directly. Both the build system and Edge Microvisor
-Toolkit are available as open source.
+
+You can either build the Edge Microvisor Toolkit by following step-by-step
+instructions or download it directly. Both the Build system and the Edge Microvisor
+Toolkit are available as Open-Source.
 
 ## Get Started
 
-To find out how to deploy and work with Edge Microvisor Toolkit, see [Get Started](./docs/developer-guide/emt-get-started.md), check out the video demonstrations on [YouTube](https://www.youtube.com/playlist?list=PLg-UKERBljNxIMUUPWHpA8ZJ_YUU5tPP9), or [view the documentation website](https://docs.openedgeplatform.intel.com/2025.1/edge-microvisor-toolkit/index.html).
+All articles required to quickly learn how to work with Edge Microvisor Toolkit can be found [here](./docs/developer-guide/emt-get-started.md).
 
-## Get Help or Contribute
+**Demos**
+* [Standalone Edge Microvisor Toolkit (EMT-S) integration with Edge Microvisor Bootkit](https://www.youtube.com/watch?v=rmgmWYi6OpE):
+  This demo includes the USB Device Preparation, Provisioning Process, System Readiness, and Final Boot with the cluster starting successfully.
+* [Edge Microvisor Toolkit Standalone Node 3.0](https://www.youtube.com/watch?v=j_4EX_wggSI):
+  This demo provides a brief walkthrough of Edge Microvisor Toolkit Standalone Node for the 3.0 release, covering various use cases.
 
-Vendors, developers, and technology partners can take part in the GitHub
-community for Edge Microvisor Toolkit in various ways: contributing code, proposing
-a design, downloading and trying out a release, opening an issue,
-benchmarking application performance, and participating in [Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions). To get help with Edge Microvisor Toolkit, contribute to its
-development, or learn more, see the following resources:
+**Demos**
+* [Standalone Edge Microvisor Toolkit (EMT-S) integration with EMT-Micro OS](https://www.youtube.com/watch?v=rmgmWYi6OpE):
+  This demo includes: USB Device Preparation, Provisioning Process, System Readiness, and Final Boot with the cluster starting successfully.
 
-- [Open an issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues)
-- [Submit a pull request](https://github.com/open-edge-platform/edge-microvisor-toolkit/pulls)
-- [Read the Contribution Guide](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0-dev/docs/developer-guide/emt-contribution.md)
-- [View the Azure Linux documentation](toolkit/docs/), a copy of which is included in the Edge Microvisor Toolkit repository for ease of access.
-- [Report a security vulnerability](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0-dev/SECURITY.md)
-- [Read and respond to blog posts](https://medium.com/open-edge-platform/subpage/5f0ac5579c60)
-- [Download the latest weekly release](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements)
-- [Participate in discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions)
+## Getting Help
+
+If you encounter bugs, have feature requests, or need assistance,
+[file a GitHub Issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues).
+
+Before submitting a new report, check the existing issues to see if a similar one has not
+been filed already. If no matching issue is found, feel free to file the issue as described
+in the [contribution guide](./docs/developer-guide/emt-contribution.md).
+
+For security-related concerns, please refer to [security considerations](./docs/developer-guide/emt-security-considerations.md).
+
+[Azure Linux Documentation](toolkit/docs/), may also be useful, if you encounter
+problems when using Edge Microvisor Toolkit. Its copy is part of the Edge
+Microvisor Toolkit repository, for easier access.
+
+## Contributing
+
+As an open-source project, Edge Microvisor Toolkit always looks for community-driven
+improvements. If you are interested in making the product even better, see how you can
+help in the [contribution guide](./docs/developer-guide/emt-contribution.md).
 
 ## License Information
 
-Based on [Azure Linux](https://github.com/microsoft/azurelinux), Edge Microvisor Toolkit shares its permissive open-source license: [MIT](https://github.com/microsoft/azurelinux/blob/3.0-dev/LICENSE). For more information, see the [LICENSE](./LICENSE) document.
+Edge Microvisor Toolkit is based on [Azure Linux](https://github.com/microsoft/azurelinux),
+sharing its permissive open-source license:
+[MIT](https://github.com/microsoft/azurelinux/blob/3.0/LICENSE).
+
+For more details, see the [LICENSE](./LICENSE) document.
 
 ### Attribution
 
 We acknowledge Microsoft's contributions to the open-source community and thank
-them for providing a secure and efficient Linux distribution.
+them for providing the secure and efficient Linux distribution.

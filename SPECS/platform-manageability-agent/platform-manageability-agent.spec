@@ -11,7 +11,8 @@ Source1:        %{name}.conf
 Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        %{name}.sudoers
-BuildRequires:  golang >= 1.24.6
+BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang < 1.25.0
 BuildRequires:  systemd-rpm-macros
 Requires:       rpc
 
@@ -82,6 +83,8 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 * Mon Oct 13 2025 Ipsita Nayak <ipsita.nayak@intel.com> - 0.2.0-1
 - Updated PMA Version.
 - Support AMT feature capabilities.
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 0.1.8-2
+- build with golang < 1.25
 
 * Tue Aug 12 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.8-1
 - Updated PMA Version.

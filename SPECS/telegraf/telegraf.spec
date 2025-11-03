@@ -1,7 +1,7 @@
 Summary:        agent for collecting, processing, aggregating, and writing metrics.
 Name:           telegraf
 Version:        1.31.0
-Release:        22%{?dist}
+Release:        23%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -66,7 +66,7 @@ SELinux policy for %{name}.
 %autosetup -a1 -p1
 
 %build
-CGO_ENABLED=0 go build -trimpath -tags \
+CGO_ENABLED=1 GOEXPERIMENT=opensslcrypto go build -trimpath -tags \
 "custom,inputs.cpu,inputs.disk,inputs.diskio,inputs.ethtool,inputs.ethtool,inputs.exec,inputs.intel_pmu,inputs.intel_pmu,\
 inputs.intel_powerstat,inputs.intel_powerstat,inputs.ipmi_sensor,inputs.lvm,inputs.mem,inputs.net,inputs.ras,inputs.ras,\
 inputs.redfish,inputs.smart,inputs.system,inputs.temp,outputs.opentelemetry,parsers.json_v2,parsers.json" \
@@ -129,6 +129,9 @@ fi
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-23
+- rebuilt with golang 1.25 and with flags GOEXPERIMENT=opensslcrypto
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.31.0-22
 - merge from Azure Linux 3.0.20250521-3.0
 - Fix CVE-2025-22872 with an upstream patch

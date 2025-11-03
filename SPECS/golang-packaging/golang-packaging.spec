@@ -18,7 +18,7 @@
 
 Name:           golang-packaging
 Version:        15.0.17
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A toolchain to help packaging golang
 License:        GPLv3
 Vendor:         Microsoft Corporation
@@ -29,7 +29,7 @@ URL:            https://github.com/openSUSE/%{name}
 Source0:        %{name}-%{version}.tar.gz
 BuildRequires:  rpm
 BuildRequires:  xz
-Requires:       go
+Recommends:     go
 BuildArch:      noarch
 
 %description
@@ -59,6 +59,10 @@ install -m0644 macros.go %{buildroot}%{_sysconfdir}/rpm/
 %config %{_sysconfdir}/rpm/macros.go
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 15.0.17-3
+- merge from Azure Linux 3.0.20250910-3.0
+- Change to "Recommends: go" to resolve build conflict with golang 1.24 and 1.25
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 15.0.17-2
 - Bump Release to rebuild
 

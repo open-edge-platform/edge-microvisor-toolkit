@@ -72,7 +72,7 @@
 Name:           mesa
 Summary:        Mesa graphics libraries
 Version:        25.0.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -779,6 +779,9 @@ popd
 %endif
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.0-2
+- Bump release to rebuild with rust
+
 * Fri Sep 19 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 25.0.0-1
 - Upgrade to Mesa 25 based on Fedora 41. License verified.
 - Upgrade to version 25.0.0 required for SRIOV

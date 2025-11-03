@@ -6,7 +6,7 @@
 Summary:        Fast and flexible DNS server
 Name:           coredns
 Version:        1.11.4
-Release:        7%{?dist}
+Release:        8%{?dist}
 License:        Apache License 2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -40,17 +40,15 @@ Patch1:         coredns-example-net-test.patch
 Patch2:         CVE-2025-29786.patch
 Patch3:         CVE-2025-30204.patch
 Patch4:         CVE-2024-53259.patch
+Patch5:         CVE-2025-47950.patch
 
-BuildRequires:  golang >= 1.23
+BuildRequires:  golang < 1.25
 
 %description
 CoreDNS is a fast and flexible DNS server.
 
 %prep
-%autosetup -N
-# Apply vendor before patching
-tar --no-same-owner -xf %{SOURCE1}
-%autopatch -p1
+%autosetup -a1 -p1
 
 %build
 export BUILDOPTS="-mod=vendor -v"
@@ -84,17 +82,20 @@ go install github.com/fatih/faillint@latest && \
 %{_bindir}/%{name}
 
 %changelog
-* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.11.4-7
-- merge from Azure Linux 3.0.20250521-3.0
+* Sun Aug 31 2025 Andrew Phelps <anphel@microsoft.com> - 1.11.4-8
+- Set BR for golang to < 1.25
+
+* Tue Jun 17 2025 Aninda Pradhan <v-anipradhan@microsoft.com> - 1.11.4-7
+- Fix CVE-2025-47950 with an upstream patch
+
+* Tue Apr 01 2025 Ankita Pareek <ankitapareek@microsoft.com> - 1.11.4-6
 - Add patch for CVE-2024-53259
 
-* Fri Apr 28 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 1.11.4-5
-- merge from Azure Linux 3.0.20250423.3.0
+* Sat Mar 29 2025 Kanishk Bansal <kanbansal@microsoft.com> - 1.11.4-5
 - Patch CVE-2025-30204
-- Fix CVE-2025-29786 with an upstream patch
 
-* Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.11.4-4
-- Bump Release to rebuild
+* Mon Mar 24 2025 Kshitiz Godara <kgodara@microsoft.com> - 1.11.4-4
+- Fix CVE-2025-29786 with an upstream patch
 
 * Mon Mar 03 2025 Kanishk Bansal <kanbansal@microsoft.com> - 1.11.4-3
 - Fix CVE-2025-22868 with an upstream patch
