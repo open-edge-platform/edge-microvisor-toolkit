@@ -23,7 +23,7 @@ permissions: read-all
 jobs:
   lint:
     name: Lint Workflows and Code
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
@@ -36,9 +36,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Test Docker
-        run: |
-          sleep 300
       - name: Lint
         uses: github/super-linter/slim@v7
         env:
