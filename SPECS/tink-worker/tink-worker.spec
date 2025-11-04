@@ -14,8 +14,7 @@ Source2:        tink-worker-v%{version}-vendor.tar.gz
 
 %{?systemd_requires}
 
-BuildRequires:  golang >= 1.24.4
-BuildRequires:  golang < 1.25.0
+BuildRequires:  golang <= 1.24.7
 BuildRequires:  systemd-rpm-macros
 
 %description
