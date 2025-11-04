@@ -1,7 +1,7 @@
 Summary:        Linux Kernel
 Name:           kernel
 Version:        6.12.44
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -913,6 +913,9 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Tue Nov 4 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-5
+- Update kernel config
+
 * Thu Oct 23 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-4
 - Revert to working kernel config
 
