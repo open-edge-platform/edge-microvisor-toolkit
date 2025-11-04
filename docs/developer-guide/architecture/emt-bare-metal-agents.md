@@ -4,12 +4,12 @@ The Bare Metal Agents (BMAs) are included in all immutable builds and are requir
 deployment with
 [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework).
 The BMAs are running on the system as systemd-services.
-In the standalone ISO version of the immutable edge node version, the BMAs are included in
+In the standalone ISO version of the edge node version, the BMAs are included in
 the image but not started by default, as the installation is designed to work autonomously
 without requiring a backend.
 
 Each Bare Metal Agent is developed in `golang` and has a corresponding resource manager it
-communicates with (dial-out). Below is a brief summary of the Bare Metal Agents included in
+communicates with. BMAs are always initiating the connection to its corresponding resource manager (dial-out paradigm). Below is a brief summary of the Bare Metal Agents included in
 the build and their purpose. For additional information on each agent, visit the
 [Edge Node Agents](https://github.com/open-edge-platform/edge-node-agents) repository.
 
