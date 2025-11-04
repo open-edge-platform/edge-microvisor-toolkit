@@ -15,8 +15,7 @@ Source1:        intel_manageability.conf
 Source2:        inbm-configuration-replace-FQDN.sh
 Source3:        inbm.te
 Source4:        inbm.fc
-BuildRequires:  golang >= 1.24.4
-BuildRequires:  golang < 1.25.0
+BuildRequires:  golang <= 1.24.7
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 BuildRequires:  make

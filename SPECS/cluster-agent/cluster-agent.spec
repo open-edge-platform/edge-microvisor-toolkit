@@ -14,8 +14,7 @@ Source4:        rke2-path.conf
 Source5:        cluster-agent.sudoers
 Source6:        cluster_agent.te
 Source7:        cluster_agent.fc
-BuildRequires:  golang >= 1.24.4
-BuildRequires:  golang < 1.25.0
+BuildRequires:  golang <= 1.24.7
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       curl
