@@ -11,8 +11,7 @@ Source1:        %{name}.conf
 Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        %{name}.sudoers
-BuildRequires:  golang >= 1.24.4
-BuildRequires:  golang < 1.25.0
+BuildRequires:  golang <= 1.24.7
 BuildRequires:  systemd-rpm-macros
 Requires:       rpc
 
