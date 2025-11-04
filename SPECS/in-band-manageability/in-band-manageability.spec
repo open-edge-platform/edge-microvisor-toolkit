@@ -195,8 +195,16 @@ if [ -f /etc/firmware_tool_info.conf ]; then
     chmod 644 /etc/firmware_tool_info.conf
 fi
 
+# Reload systemd manager configuration and enable/start the service
+%systemd_post inbd.service
+
 %preun
+# Before uninstallation, stop the service
+%systemd_preun inbd.service
+
 %postun
+# If this is an uninstall (not an upgrade), disable the service
+%systemd_postun inbd.service
 
 %changelog
 * Wed Oct 08 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.0.0-1
