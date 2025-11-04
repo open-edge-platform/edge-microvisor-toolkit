@@ -4,7 +4,7 @@ The Bare Metal Agents (BMAs) are included in all immutable builds and are requir
 deployment with
 [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework).
 The BMAs are running on the system as systemd-services.
-In the standalone ISO version of the edge node version, the BMAs are included in
+In the standalone ISO version of the edge node, the BMAs are included in
 the image but not started by default, as the installation is designed to work autonomously
 without requiring a backend.
 
