@@ -1,7 +1,7 @@
 Summary:        Edge node hardware information reporting
 Name:           hardware-discovery-agent
 Version:        1.7.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -114,6 +114,10 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.1-3
+- build with golang <= 1.24.7
+- remove inbm selinux
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.7.1-2
 - build with golang < 1.25 
 

@@ -135,7 +135,7 @@ echo "Successfully purged platform-update-agent"
 %changelog
 * Thu Oct 23 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.0-1
 - remove provision-tc step from PUA
-- build with golang < 1.25
+- build with golang <= 1.24.7
 
 * Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 1.5.2-2
 - Update go version to use above 1.24.4
