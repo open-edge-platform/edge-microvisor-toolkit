@@ -1,4 +1,4 @@
-name: RT image Build
+name: Test RT image Build
 on:
   workflow_dispatch:
   schedule:
@@ -9,10 +9,7 @@ permissions:
   contents: read
 
 env:
-  RELEASE_NAME: TiberOS RT
-  ARTIFACTORY_URL: https://af01p-png.devtools.intel.com/artifactory/tiberos-png-local
-  ARTIFACTORY_ACCOUNT: artifactory-token
-  ARTIFACTORY_PATH: rt/${{ github.ref_name }} #Artifactory deploy path
+  RELEASE_NAME: Test TiberOS RT
   CODE_REPO_URL: open-edge-platform/edge-microvisor-toolkit
   CODE_REPO_NAME: edge-microvisor-toolkit
   CODE_REPO_BRANCH: "3.0" 
@@ -182,24 +179,5 @@ jobs:
         echo "images=$STABLE_IMAGES" >> "$GITHUB_OUTPUT"
         echo "st_images=$ST_IMAGES" >> "$GITHUB_OUTPUT"
         echo "release_name=${{ env.RELEASE_NAME }}" >> "$GITHUB_OUTPUT"
-        echo "artifactory_url=${{ env.ARTIFACTORY_URL }}" >> "$GITHUB_OUTPUT"
-        echo "artifactory_path=${{ env.ARTIFACTORY_PATH }}" >> "$GITHUB_OUTPUT"
-
-    - name: prepare lkg
-      id: prepare-lkg
-      if: steps.build-rt-image.outcome == 'success'
-      run: |
-        cd ${{ env.CODE_REPO_NAME }}
-        
-        mkdir -p lkg
-        cat <<EOF > lkg/lkg-${CODE_REPO_BRANCH}-dev.json
-{
-    "date": "$(date -u +'%Y-%m-%d')",
-    "dailybuildid": "3.0.$(date -u +'%Y%m%d')",
-    "commit": "$(git rev-parse HEAD)"
-}
-EOF        
-        cp toolkit/resources/manifests/package/toolchain_x86_64.txt lkg/toolchain_x86_64.txt
-        cp toolkit/resources/manifests/package/pkggen_core_x86_64.txt lkg/pkggen_core_x86_64.txt
-    
-      
+        echo "artifactory_url=test-art-url" >> "$GITHUB_OUTPUT"
+        echo "artifactory_path=test-art-path" >> "$GITHUB_OUTPUT"
