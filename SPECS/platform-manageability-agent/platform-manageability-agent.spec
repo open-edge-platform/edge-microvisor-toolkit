@@ -1,6 +1,6 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
-Version:        0.1.8
+Version:        0.2.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -11,7 +11,7 @@ Source1:        %{name}.conf
 Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        %{name}.sudoers
-BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang <= 1.24.7
 BuildRequires:  systemd-rpm-macros
 Requires:       rpc
 
@@ -25,6 +25,8 @@ and performs device management operations requested by users.
 
 %prep
 %autosetup -n pm-agent-%{version}
+# Patch Makefile to use CGO_ENABLED=1 for Microsoft Go's FIPS crypto support
+sed -i 's/CGO_ENABLED=0/CGO_ENABLED=1/g' Makefile
 
 %build
 make pmabuild GO_MOD=vendor
@@ -75,6 +77,17 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
+* Mon Oct 31 2025 Ipsita Nayak <ipsita.nayak@intel.com> - 0.2.1-1
+- Updated PMA Version.
+- PMA Error Handling.
+
+* Mon Oct 13 2025 Ipsita Nayak <ipsita.nayak@intel.com> - 0.2.0-1
+- Updated PMA Version.
+- Support AMT feature capabilities.
+
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 0.1.8-2
+- build with golang < 1.25
+
 * Tue Aug 12 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.1.8-1
 - Updated PMA Version.
 - Fix for PROFILE enviroment variable for secure profile name.

@@ -2,7 +2,7 @@
 
 Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. The Linux patches optimize performance and other capabilities for Intel silicon -- a result that streamlines integration for operating system vendors and other technology partners.
 
-The toolkit's immutable and mutable versions -- including a standalone node prepared for partner evaluation and a real-time developer node designed with the Preempt RT Linux Kernel for predictable performance -- results in a reference Linux operating system primed to demonstrate how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads. 
+The toolkit's immutable and mutable versions -- including a standalone node prepared for partner evaluation and a real-time developer node designed with the Preempt RT Linux Kernel for predictable performance -- results in a reference Linux operating system primed to demonstrate how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads.
 
 Here are the published versions of the toolkit:
 
@@ -13,9 +13,9 @@ Here are the published versions of the toolkit:
 
 ## Demonstrating the Capabilities of Intel Technology
 
-Through its optimizations for Intel platforms, Edge Microvisor Toolkit showcases distinctive capabilities for operating system vendors and other partners, who can typically obtain early access to next-generation Intel platform innovations, features, and optimizations. Here are some of the toolkit's capabilities that help highlight the power of Intel technology: 
+Through its optimizations for Intel platforms, Edge Microvisor Toolkit showcases distinctive capabilities for operating system vendors and other partners, who can typically obtain early access to next-generation Intel platform innovations, features, and optimizations. Here are some of the toolkit's capabilities that help highlight the power of Intel technology:
 
-**Support for multiple scenarios:** Use industry-specific sample applications with benchmarks, as well as edge AI libraries with OpenVINO™ inferencing runtime software development kits, to rapidly build, validate, and optimize edge AI solutions on Intel silicon across scenarios and industries. 
+**Support for multiple scenarios:** Use industry-specific sample applications with benchmarks, as well as edge AI libraries with OpenVINO™ inferencing runtime software development kits, to rapidly build, validate, and optimize edge AI solutions on Intel silicon across scenarios and industries.
 
 **Built-in security:** Protect computers, hypervisors, apps, and data with such capabilities as trusted compute, single-root I/O virtualization (SR-IOV), secure boot, full-disk encryption, dm-verity, and Trusted Platform Module (TPM). The microvisor uses a Unified Kernel Image (UKI), which is a single EFI binary that packages together the Intel® kernel, `initramfs`, and associated kernel command-line parameters, a design that simplifies the boot process on UEFI systems and improves security, especially when combined with Secure Boot.
 
@@ -59,5 +59,6 @@ emt-security-considerations
 emt-contribution
 emt-troubleshooting
 emt-system-requirements
+emt-tutorials
 :::
 hide_directive-->

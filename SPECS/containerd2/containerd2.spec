@@ -5,7 +5,7 @@
 Summary: Industry-standard container runtime
 Name: %{upstream_name}2
 Version: 2.0.0
-Release: 8%{?dist}
+Release: 14%{?dist}
 License: ASL 2.0
 Group: Tools/Container
 URL: https://www.containerd.io
@@ -19,9 +19,13 @@ Source2: containerd.toml
 Patch0:	CVE-2024-45338.patch
 Patch1:	CVE-2025-27144.patch
 Patch2:	CVE-2024-40635.patch
+Patch3:	CVE-2025-22872.patch
+Patch4:	CVE-2025-47291.patch
+Patch5:	multi-snapshotters-support.patch
+Patch6:	tardev-support.patch
 %{?systemd_requires}
 
-BuildRequires: golang
+BuildRequires: golang < 1.25
 BuildRequires: go-md2man
 BuildRequires: make
 BuildRequires: systemd-rpm-macros
@@ -36,6 +40,10 @@ Requires: %{name}-stress = %{version}-%{release}
 # This package replaces the old name of moby-containerd
 Provides: moby-containerd = %{version}-%{release}
 Obsoletes: moby-containerd < %{version}-%{release}
+
+# This package replaces moby-containerd-cc
+Provides: moby-containerd-cc = %{version}-%{release}
+Obsoletes: moby-containerd-cc < %{version}-%{release}
 
 %description
 containerd is an industry-standard container runtime with an emphasis on
@@ -124,6 +132,16 @@ fi
 %{_bindir}/containerd-stress
 
 %changelog
+* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.0.0-14
+- merge from Azure Linux 3.0.20250910-3.0
+- Set BR for golang to < 1.25
+- Add "Provides/Obsoletes:" to shift all installs of moby-containerd-cc to containerd2
+- Add updated tardev-snapshotter support patch
+- Add updated multi-snapshotters-support patch
+- Patch CVE-2025-47291
+- Patch CVE-2025-22872
+- Fix CVE-2024-40635
+
 * Fri Jul 18 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.0.0-8
 - merge from Azure Linux 3.0.20250521-3.0
 - Fix CVE-2024-40635

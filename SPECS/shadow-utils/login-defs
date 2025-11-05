@@ -200,7 +200,7 @@ UMASK           022
 #       PASS_MIN_LEN    Minimum acceptable password length.
 #       PASS_WARN_AGE   Number of days warning given before a password expires.
 #
-PASS_MAX_DAYS   90
+PASS_MAX_DAYS   99999
 PASS_MIN_DAYS   7
 # PASS_MIN_LEN  5
 PASS_WARN_AGE   5

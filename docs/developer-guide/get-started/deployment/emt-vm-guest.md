@@ -1,4 +1,4 @@
-# Deploying Edge Microvisor Toolkit on Virtual Machines as Guest OS
+# Deploy Edge Microvisor Toolkit on Virtual Machines as Guest OS
 
 Below you will find all methods of deployment on Virtual Machines (VMs) supported by Edge
 Microvisor Toolkit.
@@ -70,7 +70,7 @@ See the steps below:
 7. Create the virtual disk image. If you use a pre-existing disk image (VHD or RAW), convert
   it to VDI first.
 
-### Converting Image File to VDI
+### Convert Image File to VDI
 
 You can convert a VHD or RAW image to the VDI format, which is natively supported by
 VirtualBox. Simply navigate to the installation folder of VirtualBox, e.g.
@@ -159,7 +159,7 @@ method:
 | VHD (.vhd, .vpc)   | ⚠️ Limited. Direct use is unreliable, conversion is recommended.     |
 | VDI (.vdi)         | ❌ No                                                                |
 
-### Converting Image File to QCOW2
+### Convert Image File to QCOW2
 
 You can convert a RAW or VHD image to the QCOW2 format, which is natively supported by
 KVM. Start a terminal and use `qemu-img` to convert:

@@ -18,7 +18,7 @@
 Summary:        Scalable datastore for metrics, events, and real-time analytics
 Name:           influxdb
 Version:        2.7.5
-Release:        6%{?dist}
+Release:        8%{?dist}
 License:        MIT
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -156,14 +156,23 @@ go test ./...
 %{_tmpfilesdir}/influxdb.conf
 
 %changelog
-* Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 2.7.5-6
-- merge from Azure Linux 3.0.20250521-3.0
-- Patch CVE-2025-22872
-- Pin rust version
-- Patch CVE-2025-22870, CVE-2024-51744
+* Mon Jul 21 2025 Jyoti Kanase <v-jykanase@microsoft.com> - 2.7.5-8
+- Bump release to rebuild with rust
 
-* Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 2.7.5-3
-- Bump Release to rebuild
+* Tue Jun 10 2025 Kavya Sree Kaitepalli <kkaitepalli@microsoft.com> - 2.7.5-7
+- Bump release to rebuild with rust
+
+* Wed May 28 2025 Mykhailo Bykhovtsev <mbykhovtsev@microsoft.com> - 2.7.5-6
+- Updated config.yaml file to include boltpath, engine path and nats port
+
+* Fri Apr 25 2025 Sreeniavsulu Malavathula <v-smalavathu@microsoft.com> - 2.7.5-5
+- Patch CVE-2025-22872
+
+* Mon Apr 21 2025 Kavya Sree Kaitepalli <kkaitepalli@microsoft.com> - 2.7.5-4
+- Pin rust version
+
+* Mon Mar 24 2025 Sreeniavsulu Malavathula <v-smalavathu@microsoft.com> - 2.7.5-3
+- Patch CVE-2025-22870, CVE-2024-51744
 
 * Mon Mar 03 2025 Kanishk Bansal <kanbansal@microsoft.com> - 2.7.5-2
 - Fix CVE-2025-22868, CVE-2025-27144 with an upstream patch
