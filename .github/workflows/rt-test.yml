@@ -1,8 +1,6 @@
 name: Test RT image Build
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 21 * * TUE' # weekly build on Sun & Wed at 21PM UTC  
 
 permissions:
   id-token: write
@@ -75,8 +73,6 @@ jobs:
 
         python3 -m pip install -r toolkit/scripts/requirements.txt
         python3 toolkit/scripts/spec_parser.py
-        
-    
       
     - name: Build packages
       run: |
