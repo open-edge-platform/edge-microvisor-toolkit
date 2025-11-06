@@ -58,8 +58,7 @@ jobs:
       shell: bash
       env:
           DEBIAN_FRONTEND: noninteractive
-          http_proxy: http://proxy-dmz.intel.com:912
-          https_proxy: http://proxy-dmz.intel.com:912   
+           
 
     - name: setup go
       uses: actions/setup-go@v5
