@@ -13,7 +13,7 @@ env:
   CODE_REPO_URL: open-edge-platform/edge-microvisor-toolkit
   CODE_REPO_NAME: edge-microvisor-toolkit
   CODE_REPO_BRANCH: "3.0" 
-  CHROOT_DIR: $(BUILD_DIR)/worker/chroot
+  CHROOT_DIR: $(GITHUB_WORKSPACE)/build/worker/chroot
 
 jobs:
   image_build:
@@ -34,7 +34,9 @@ jobs:
       kernel_version: ${{ steps.compress-image.outputs.kernel_version }}
       
     steps:
-    
+    - name: print workspace
+      run: echo "workspace is ${GITHUB_WORKSPACE}"
+      
     - name: Checkout default repo
       uses: actions/checkout@v4
     
@@ -51,7 +53,6 @@ jobs:
         DATETIME_AS_VERSION=$(date +'%Y%m%d.%H%M')
         echo "datetime_as_version=$DATETIME_AS_VERSION" >> "$GITHUB_OUTPUT"
         echo "DATETIME_AS_VERSION=$DATETIME_AS_VERSION" >> "$GITHUB_ENV"
-        echo "$GITHUB_ENV"
         
     - name: Install required packages
       run: |
