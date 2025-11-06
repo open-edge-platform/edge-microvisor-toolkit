@@ -34,9 +34,10 @@ jobs:
       kernel_version: ${{ steps.compress-image.outputs.kernel_version }}
       
     steps:
+    
     - name: Checkout default repo
       uses: actions/checkout@v4
-      
+    
     - name: Checkout
       uses: actions/checkout@v4
       with:
@@ -50,6 +51,7 @@ jobs:
         DATETIME_AS_VERSION=$(date +'%Y%m%d.%H%M')
         echo "datetime_as_version=$DATETIME_AS_VERSION" >> "$GITHUB_OUTPUT"
         echo "DATETIME_AS_VERSION=$DATETIME_AS_VERSION" >> "$GITHUB_ENV"
+        echo "$GITHUB_ENV"
         
     - name: Install required packages
       run: |
