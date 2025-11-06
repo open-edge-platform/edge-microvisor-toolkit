@@ -11,12 +11,6 @@ name: Linter
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches: [3.0, 3.0-dev]
-    paths-ignore:
-      - "**/CODEOWNERS"
-      - "**.spec"
-      - "**.patch"
 
 permissions: read-all
 
@@ -36,9 +30,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Test Lint
-        run: |
-          sleep 600
+
       - name: Lint
         uses: github/super-linter/slim@v7
         env:
