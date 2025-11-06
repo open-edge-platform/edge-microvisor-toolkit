@@ -94,6 +94,22 @@ To build a RAW image with real-time extensions, use the following command:
 sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image-rt.json
 ```
 
+> **IMPORTANT**:
+>
+> If you want to create an image with an older tag, for example
+> [3.0.20250806](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250806),
+> make sure to build it **without** the `REBUILD_PACKAGES=n` option.
+> Otherwise, the build process will download the latest available RPMs,
+> which do not match those included in the older tag, causing failure in the
+> installation of an image.
+>
+> ```bash
+> sudo make iso -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/full.json
+> ```
+>
+> Keep in mind, that it will perform a full rebuild based on the tag and take
+> very long time.
+
 ## Customize Your Edge Microvisor Toolkit Image
 
 To add packages to the default image, you can define your own `packagelist.json` file, pointing to RPMs that should be included in the image.

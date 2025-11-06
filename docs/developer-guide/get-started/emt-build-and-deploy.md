@@ -90,6 +90,22 @@ skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
    sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image.json
    ```
 
+   **IMPORTANT**:
+
+   If you want to create an image with an older tag, for example
+   [3.0.20250806](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250806),
+   make sure to build it **without** the `REBUILD_PACKAGES=n` option.
+   Otherwise, the build process will download the latest available RPMs,
+   which do not match those included in the older tag, causing failure in the
+   installation of the image.
+
+   ```bash
+   sudo make image -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/edge-image.json
+   ```
+
+   Keep in mind, that it will perform a full rebuild based on the tag and take
+   very long time.
+
    The built image will be located in its separate directory under  `edge-microvisor-toolkit/out/images/`.
 
    For more information about specific building parameters, refer to [this article](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables).
