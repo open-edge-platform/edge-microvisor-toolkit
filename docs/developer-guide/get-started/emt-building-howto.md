@@ -103,7 +103,7 @@ sudo make image -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/edge-image-rt.jso
 ```
 
 Keep in mind, that building without `REBUILD_PACKAGES=n` will perform a full
-rebuild based on the tag and take very long time (~18 hours on a machine with
+rebuild based on the tag and take time (~18 hours on a machine with
 a 20+ core CPU).
 
 ## Customize Your Edge Microvisor Toolkit Image

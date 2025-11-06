@@ -95,7 +95,7 @@ skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
    Edge Microvisor Toolkit code.
 
    Keep in mind, that it will perform a full rebuild based on the tag and take
-   very long time (~18 hours on a machine with a 20+ core CPU).
+   time (~18 hours on a machine with a 20+ core CPU).
 
    ```bash
    sudo make image -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/edge-image.json
