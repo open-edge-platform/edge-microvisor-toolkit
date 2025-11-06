@@ -34,7 +34,9 @@ jobs:
       kernel_version: ${{ steps.compress-image.outputs.kernel_version }}
       
     steps:
-   
+    - name: Checkout default repo
+      uses: actions/checkout@v4
+      
     - name: Checkout
       uses: actions/checkout@v4
       with:
