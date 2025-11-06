@@ -14702,8 +14702,8 @@
         "type": "other",
         "other": {
           "name": "node-agent",
-          "version": "1.7.3",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.7.3.tar.gz"
+          "version": "1.8.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.8.1.tar.gz"
         }
       }
     },
@@ -21663,8 +21663,8 @@
         "type": "other",
         "other": {
           "name": "platform-manageability-agent",
-          "version": "0.1.8",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.1.8.tar.gz"
+          "version": "0.2.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.2.1.tar.gz"
         }
       }
     },
