@@ -7,6 +7,6 @@
     "cluster-agent.sudoers": "cce49703eec0829dd619edbbd3ca11b2fb90f0c77a0c68436f7ccc4ad47e71b2",
     "rke2-path.conf": "4e8a48a0f89472e344e412cc3dee879a23e6e3d1cd207ecc2e8ec4d15b0bc8da",
     "cluster_agent.fc":"db265ba3b9b151ed58f8a42b33d37b2cbcd2dabec7e86e260ae0eb5061acbc2f",
-    "cluster_agent.te":"8a7a1d5508b37765ef2a3f9ffbba0f95f645ba8a98f5566941f05ad47b295c31"
+    "cluster_agent.te":"aa19efbef65b9383632db697f98db4718af117cb9ef3d329ada6aa6b4d5e9541"
   }
 }
