@@ -41,7 +41,6 @@ jobs:
         repository: ${{ env.CODE_REPO_URL }}
         ref: ${{ env.CODE_REPO_BRANCH }}
         path: ${{ env.CODE_REPO_NAME }}
-        token: ${{ secrets.SYS_MICROVISOR_BUILDER_PAT }}
 
     - name: Set DATETIME_AS_VERSION
       id: set-version
