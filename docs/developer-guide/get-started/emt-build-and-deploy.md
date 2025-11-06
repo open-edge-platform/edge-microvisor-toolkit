@@ -86,25 +86,20 @@ skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
    For example, to build a RAW image without real-time extensions, use `edge-image.json` and run
    the following command:
 
-   ```bash
-   sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image.json
-   ```
-
-   **IMPORTANT**:
-
-   If you want to create an image with an older tag, for example
+   **IMPORTANT**: If you want to create an image with an older tag, for example
    [3.0.20250806](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250806),
    make sure to build it **without** the `REBUILD_PACKAGES=n` option.
    Otherwise, the build process will download the latest available RPMs,
-   which do not match those included in the older tag, causing failure in the
-   installation of the image.
+   which do not match those included in the older tag. It will cause a mismatch
+   between versions of installed RPMS in the image and the available SPECs in
+   Edge Microvisor Toolkit code.
+
+   Keep in mind, that it will perform a full rebuild based on the tag and take
+   very long time (~18 hours on a machine with a 20+ core CPU).
 
    ```bash
    sudo make image -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/edge-image.json
    ```
-
-   Keep in mind, that it will perform a full rebuild based on the tag and take
-   very long time.
 
    The built image will be located in its separate directory under  `edge-microvisor-toolkit/out/images/`.
 

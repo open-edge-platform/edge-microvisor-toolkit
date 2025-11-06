@@ -75,40 +75,36 @@ microvisor/
 Different image types can be built by using different JSON config files and parameters.
 You can find more information about specific parameters in the [build variables](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables) section.
 
+**IMPORTANT**: If you want to create an image with an older tag, for example
+[3.0.20250806](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250806),
+make sure to build it **without** the `REBUILD_PACKAGES=n` option.
+Otherwise, the build process will download the latest available RPMs,
+which do not match those included in the older tag. It will cause a mismatch
+between versions of installed RPMS in the image and the available SPECs in
+Edge Microvisor Toolkit code.
+
 To build an ISO image, run the following command:
 
 ```bash
-sudo make iso -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/full.json
+sudo make iso -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/full.json
 ```
 
 To build a RAW image without real-time extensions, run the following command:
 
 
 ```bash
-sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image.json
+sudo make image -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/edge-image.json
 ```
 
 To build a RAW image with real-time extensions, use the following command:
 
 ```bash
-sudo make image -j8 REBUILD_TOOLS=y REBUILD_PACKAGES=n CONFIG_FILE=./imageconfigs/edge-image-rt.json
+sudo make image -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/edge-image-rt.json
 ```
 
-> **IMPORTANT**:
->
-> If you want to create an image with an older tag, for example
-> [3.0.20250806](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250806),
-> make sure to build it **without** the `REBUILD_PACKAGES=n` option.
-> Otherwise, the build process will download the latest available RPMs,
-> which do not match those included in the older tag, causing failure in the
-> installation of an image.
->
-> ```bash
-> sudo make iso -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/full.json
-> ```
->
-> Keep in mind, that it will perform a full rebuild based on the tag and take
-> very long time.
+Keep in mind, that building without `REBUILD_PACKAGES=n` will perform a full
+rebuild based on the tag and take very long time (~18 hours on a machine with
+a 20+ core CPU).
 
 ## Customize Your Edge Microvisor Toolkit Image
 
