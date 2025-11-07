@@ -1,7 +1,7 @@
 Summary:        Edge node hardware information reporting
 Name:           hardware-discovery-agent
 Version:        1.7.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -12,8 +12,7 @@ Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        hd_agent.te
 Source5:        hd_agent.fc
-BuildRequires:  golang >= 1.24.1
-BuildRequires:  golang < 1.25.0
+BuildRequires:  golang <= 1.24.7
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       dmidecode
@@ -39,7 +38,6 @@ network and usb devices.
 Summary:        %{name} SELinux policy
 Requires:       %{name} = %{version}-%{release}
 Requires:       fluent-bit-selinux
-Requires:       inbm-selinux
 Requires:       otelcol-contrib-selinux
 BuildRequires:  selinux-policy
 BuildRequires:  selinux-policy-devel
@@ -116,6 +114,10 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.1-3
+- build with golang <= 1.24.7
+- remove inbm selinux
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.7.1-2
 - build with golang < 1.25 
 

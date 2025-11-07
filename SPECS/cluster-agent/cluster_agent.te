@@ -33,7 +33,6 @@ require {
     type http_port_t;
     type hugetlbfs_t;
     type ifconfig_exec_t;
-    type inbm_t;
     type init_runtime_t;
     type init_t;
     type init_tmpfs_t;
@@ -227,8 +226,6 @@ allow cluster_agent_t hd_agent_t:file { open read };
 allow cluster_agent_t http_port_t:tcp_socket name_connect;
 allow cluster_agent_t hugetlbfs_t:dir getattr;
 allow cluster_agent_t ifconfig_exec_t:file { execute execute_no_trans getattr map open read };
-allow cluster_agent_t inbm_t:dir { getattr search };
-allow cluster_agent_t inbm_t:file { open read };
 allow cluster_agent_t init_runtime_t:dir { getattr search };
 allow cluster_agent_t init_runtime_t:file { getattr unlink };
 allow cluster_agent_t init_runtime_t:sock_file write;

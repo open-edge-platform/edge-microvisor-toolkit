@@ -3,8 +3,8 @@
 
 Summary:        An agent for updating the OS and bare metal agents packages
 Name:           platform-update-agent
-Version:        1.5.2
-Release:        3%{?dist}
+Version:        1.7.2
+Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -18,8 +18,7 @@ Source4:        platform-update-agent.te
 Source5:        platform-update-agent.fc
 %global debug_package %{nil}
 %global _build_id_links none
-BuildRequires:  golang >= 1.24.4
-BuildRequires:  golang < 1.25.0
+BuildRequires:  golang <= 1.24.7
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 Requires(pre):  %{_bindir}/systemd-sysusers
@@ -134,8 +133,12 @@ rm -rf %{_var}/edge-node/pua
 echo "Successfully purged platform-update-agent"
 
 %changelog
-* Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.5.2-3
-- build with golang < 1.25
+* Wed Nov 5 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.2-1
+- PUA changes to start inbd svc
+
+* Thu Oct 23 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.0-1
+- remove provision-tc step from PUA
+- build with golang <= 1.24.7
 
 * Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 1.5.2-2
 - Update go version to use above 1.24.4

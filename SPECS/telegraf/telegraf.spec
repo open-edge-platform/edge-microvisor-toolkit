@@ -1,7 +1,7 @@
 Summary:        agent for collecting, processing, aggregating, and writing metrics.
 Name:           telegraf
 Version:        1.31.0
-Release:        23%{?dist}
+Release:        24%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -52,7 +52,6 @@ Postgres, or Redis) and third party APIs (like Mailchimp, AWS CloudWatch, or Goo
 Summary:        %{name} SELinux policy
 Requires:       %{name} = %{version}-%{release}
 Requires:       fluent-bit-selinux
-Requires:       inbm-selinux
 Requires:       otelcol-contrib-selinux
 BuildRequires:  selinux-policy
 BuildRequires:  selinux-policy-devel
@@ -129,6 +128,9 @@ fi
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.31.0-24
+- remove inbm selinux
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-23
 - rebuilt with golang 1.25 and with flags GOEXPERIMENT=opensslcrypto
 

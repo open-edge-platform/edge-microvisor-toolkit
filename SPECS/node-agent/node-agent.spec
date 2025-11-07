@@ -1,7 +1,7 @@
 Summary:        Edge node registration and trust management
 Name:           node-agent
-Version:        1.7.3
-Release:        2%{?dist}
+Version:        1.8.1
+Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -160,6 +160,9 @@ sed -i '/client-proxy/{N;d;}' %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Wed Oct 15 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.8.1-1
+- Send status initializing after provision
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.7.3-2
 - build with golang < 1.25
 
