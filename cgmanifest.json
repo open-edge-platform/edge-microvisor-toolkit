@@ -4750,8 +4750,8 @@
         "type": "other",
         "other": {
           "name": "golang",
-          "version": "1.25.1",
-          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.25.1-1/go1.25.1-20250903.7.src.tar.gz"
+          "version": "1.24.7",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.24.7-1/go1.24.7-20250903.8.src.tar.gz"
         }
       }
     },
@@ -4760,8 +4760,8 @@
         "type": "other",
         "other": {
           "name": "golang",
-          "version": "1.24.7",
-          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.24.7-1/go1.24.7-20250903.8.src.tar.gz"
+          "version": "1.25.1",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.25.1-1/go1.25.1-20250903.7.src.tar.gz"
         }
       }
     },
@@ -8490,9 +8490,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "kernel-hwe",
-          "version": "6.12.40.1",
-          "downloadUrl": "https://github.com/microsoft/CBL-Mariner-Linux-Kernel/archive/rolling-lts/hwe/6.12.40.1.tar.gz"
+          "name": "kernel-headers",
+          "version": "6.12.44",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz"
         }
       }
     },
@@ -8500,9 +8500,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "kernel-headers",
-          "version": "6.12.44",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz"
+          "name": "kernel-hwe",
+          "version": "6.12.40.1",
+          "downloadUrl": "https://github.com/microsoft/CBL-Mariner-Linux-Kernel/archive/rolling-lts/hwe/6.12.40.1.tar.gz"
         }
       }
     },
@@ -24612,16 +24612,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "python3-pycares",
-          "version": "4.5.0",
-          "downloadUrl": "https://github.com/saghul/pycares/archive/refs/tags/v4.5.0.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "python-pycdlib",
           "version": "1.9.0",
           "downloadUrl": "https://github.com/clalancette/pycdlib/archive/v1.9.0/pycdlib-1.9.0.tar.gz"
@@ -26205,6 +26195,16 @@
           "name": "python3-mallard-ducktype",
           "version": "1.0.2",
           "downloadUrl": "https://github.com/projectmallard/mallard-ducktype/archive/1.0.2/1.0.2.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "python3-pycares",
+          "version": "4.5.0",
+          "downloadUrl": "https://github.com/saghul/pycares/archive/refs/tags/v4.5.0.tar.gz"
         }
       }
     },
@@ -29626,8 +29626,8 @@
         "type": "other",
         "other": {
           "name": "tink-worker",
-          "version": "1.1.1",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.1.tar.gz"
+          "version": "1.1.2",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.2.tar.gz"
         }
       }
     },
