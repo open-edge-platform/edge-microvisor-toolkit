@@ -14,7 +14,6 @@ require {
     type fsdaemon_t;
     type getty_t;
     type ifconfig_exec_t;
-    type inbm_t;
     type init_runtime_t;
     type init_t;
     type initrc_t;
@@ -123,8 +122,6 @@ allow fluent_bit_t fsdaemon_t:file { open read };
 allow fluent_bit_t getty_t:dir { getattr search };
 allow fluent_bit_t getty_t:file { open read };
 allow fluent_bit_t ifconfig_exec_t:file { execute execute_no_trans getattr map open read };
-allow fluent_bit_t inbm_t:dir { getattr search };
-allow fluent_bit_t inbm_t:file { open read };
 allow fluent_bit_t init_runtime_t:dir search;
 allow fluent_bit_t init_t:dbus send_msg;
 allow fluent_bit_t init_t:dir { getattr search };

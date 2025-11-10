@@ -1,5 +1,0 @@
-/usr/bin/inbm-dispatcher              -- system_u:object_r:inbm_exec_t:s0
-/usr/bin/inbm-diagnostic              -- system_u:object_r:inbm_exec_t:s0
-/usr/bin/inbm-configuration              -- system_u:object_r:inbm_exec_t:s0
-
-/etc/intel_manageability.conf -- system_u:object_r:inbm_conf_rw_t:s0

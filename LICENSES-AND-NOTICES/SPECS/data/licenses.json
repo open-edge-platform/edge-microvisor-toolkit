@@ -2281,7 +2281,7 @@
                 "edge-repos",
                 "edge-rpm-macros",
                 "hardware-discovery-agent",
-                "inbm",
+                "in-band-manageability",
                 "intel-idv-services",
                 "intel-igsc",
                 "intel-lms",

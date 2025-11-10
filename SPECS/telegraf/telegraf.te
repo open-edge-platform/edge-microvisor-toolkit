@@ -32,7 +32,6 @@ require {
     type fusefs_t;
     type fuse_device_t;
     type hugetlbfs_t;
-    type inbm_conf_rw_t;
     type init_runtime_t;
     type init_t;
     type init_tmpfs_t;
@@ -183,7 +182,6 @@ allow telegraf_t fusefs_t:filesystem getattr;
 allow telegraf_t fuse_device_t:chr_file getattr;
 allow telegraf_t hugetlbfs_t:dir getattr;
 allow telegraf_t hugetlbfs_t:filesystem getattr;
-allow telegraf_t inbm_conf_rw_t:file { getattr read write };
 allow telegraf_t init_t:dir search;
 allow telegraf_t init_t:fd use;
 allow telegraf_t init_t:fifo_file { getattr read write append ioctl lock };
