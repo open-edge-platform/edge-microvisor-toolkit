@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20250509
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -19,6 +19,7 @@ Requires:       %{name}-qlogic = %{version}-%{release}
 Requires:       %{name}-qualcomm = %{version}-%{release}
 Requires:       %{name}-iwlwifi = %{version}-%{release}
 Requires:       %{name}-ice = %{version}-%{release}
+Requires:       dracut
 BuildArch:      noarch
 
 %description
@@ -66,6 +67,12 @@ Summary:        Firmware for Intel Ethernet controller
 %description   ice
 Firmware for Intel Ethernet controller.
 
+%package       qat
+Summary:        Firmware for Intel QAT controller
+
+%description   qat
+Firmware for Intel QAT controller.
+
 %prep
 %setup -q
 
@@ -93,6 +100,10 @@ cp iwlwifi-ma-b0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 cp iwlwifi-ty-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
+cp qat*.bin  %{buildroot}%{_firmwarepath}
+
+%post qat
+dracut --force
 
 %files
 %defattr(-,root,root)
@@ -164,7 +175,26 @@ cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 %license WHENCE LICENSE.ice
 %{_firmwarepath}/intel/ice
 
+%files qat
+%defattr(-,root,root)
+%license WHENCE LICENCE.qat_firmware
+%{_firmwarepath}/qat_402xx.bin
+%{_firmwarepath}/qat_402xx_mmp.bin
+%{_firmwarepath}/qat_420xx.bin
+%{_firmwarepath}/qat_420xx_mmp.bin
+%{_firmwarepath}/qat_4xxx.bin
+%{_firmwarepath}/qat_4xxx_mmp.bin
+%{_firmwarepath}/qat_895xcc.bin
+%{_firmwarepath}/qat_895xcc_mmp.bin
+%{_firmwarepath}/qat_c3xxx.bin
+%{_firmwarepath}/qat_c3xxx_mmp.bin
+%{_firmwarepath}/qat_c62x.bin
+%{_firmwarepath}/qat_c62x_mmp.bin
+
 %changelog
+* Tue Oct 14 2025 Junxiao Chang <junxiao.chang@intel.com> - 20250509-3
+- Added QAT firmware.
+
 * Wed Sep 17 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 20250509-2
 - Added iwlwifi package for Intel Wi-Fi AX210, Jefferson Peak, Thunder Peak.
 
