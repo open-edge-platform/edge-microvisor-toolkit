@@ -3,7 +3,7 @@
 
 Summary:        An agent for updating the OS and bare metal agents packages
 Name:           platform-update-agent
-Version:        1.7.2
+Version:        1.7.3
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -133,6 +133,9 @@ rm -rf %{_var}/edge-node/pua
 echo "Successfully purged platform-update-agent"
 
 %changelog
+* Mon Nov 10 2025 Niket Kumar <niket.kumar@intel.com> - 1.7.3-1
+- PUA changes to update EMT kernel parameter
+
 * Wed Nov 5 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.2-1
 - PUA changes to start inbd svc
 
