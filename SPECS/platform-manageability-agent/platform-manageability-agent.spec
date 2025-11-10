@@ -1,6 +1,6 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
-Version:        0.2.1
+Version:        0.2.2
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
