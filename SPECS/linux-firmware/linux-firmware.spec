@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
-Version:        20250509
-Release:        3%{?dist}
+Version:        20251021
+Release:        1%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -89,17 +89,6 @@ cp -r ath10k %{buildroot}%{_firmwarepath}
 cp -r i915 %{buildroot}%{_firmwarepath}
 cp -r xe %{buildroot}%{_firmwarepath}
 cp -r intel %{buildroot}%{_firmwarepath}
-cp iwlwifi-8000C-*.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-9000-*.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-9260-*.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-so-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
-cp iwlwifi-ma-b0-gf-a0-83.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-ma-b0-gf-a0-86.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-ma-b0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
-cp iwlwifi-ty-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 cp qat*.bin  %{buildroot}%{_firmwarepath}
 
 %post qat
@@ -111,7 +100,7 @@ dracut --force
 %license WHENCE LICENCE.iwlwifi_firmware
 %{_firmwarepath}/rsi
 %{_firmwarepath}/rsi_91x.fw
-%{_firmwarepath}/iwlwifi-8000C-*.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-8000C-*.ucode
 
 %files broadcom
 %defattr(-,root,root)
@@ -153,22 +142,27 @@ dracut --force
 %{_firmwarepath}/i915/adls_dmc_ver2_01.bin
 %{_firmwarepath}/i915/dg2_dmc_ver2_08.bin
 %{_firmwarepath}/i915/mtl_gsc_1.bin
+%{_firmwarepath}/i915/xe3lpd_dmc.bin
 %{_firmwarepath}/xe/bmg_guc_70.bin
 %{_firmwarepath}/xe/bmg_huc.bin
+%{_firmwarepath}/xe/ptl_guc_70.bin
+%{_firmwarepath}/xe/ptl_huc.bin
 
 %files iwlwifi
 %defattr(-,root,root)
 %license WHENCE LICENCE.iwlwifi_firmware
-%{_firmwarepath}/iwlwifi-so-a0-gf-a0-89.ucode
-%{_firmwarepath}/iwlwifi-so-a0-gf-a0.pnvm
-%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-83.ucode
-%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-86.ucode
-%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-89.ucode
-%{_firmwarepath}/iwlwifi-ma-b0-gf-a0.pnvm
-%{_firmwarepath}/iwlwifi-ty-a0-gf-a0-89.ucode
-%{_firmwarepath}/iwlwifi-ty-a0-gf-a0.pnvm
-%{_firmwarepath}/iwlwifi-9000-*.ucode
-%{_firmwarepath}/iwlwifi-9260-*.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-so-a0-gf-a0-89.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-so-a0-gf-a0.pnvm
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-83.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-86.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-89.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0.pnvm
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ty-a0-gf-a0-89.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ty-a0-gf-a0.pnvm
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-9000-*.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-9260-*.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-bz-b0-gf-a0-100.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-gl-c0-fm-c0-100.ucode
 
 %files ice
 %defattr(-,root,root)
@@ -192,6 +186,9 @@ dracut --force
 %{_firmwarepath}/qat_c62x_mmp.bin
 
 %changelog
+* Tue Nov 11 2025 Shalini Singhal <shalinix.singhal@intel.com> - 20251021-1
+- Upgrade firmware to 20251021.
+
 * Tue Oct 14 2025 Junxiao Chang <junxiao.chang@intel.com> - 20250509-3
 - Added QAT firmware.
 
