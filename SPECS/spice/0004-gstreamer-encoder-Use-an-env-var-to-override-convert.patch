@@ -1,0 +1,124 @@
+From 6b5523d968392bcdeab150d08120729da800676e Mon Sep 17 00:00:00 2001
+From: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Date: Wed, 15 Nov 2023 01:04:45 -0800
+Subject: [PATCH 04/12] gstreamer-encoder: Use an env var to override converter
+ format
+
+If we use the x264enc encoder to encode a stream, then videoconvert
+would convert the BGRx data into Y444, which is the preferred format
+for x264enc. However, some decoders particularly the ones that are
+h/w based cannot work with Y444 if it was the format used by the
+encoder. Therefore, to address these situations, we need a way to
+override the format used during the encoding stage which can be
+accomplished by using the environment variable introduced in this
+patch: SPICE_CONVERTER_PREFERRED_FORMAT.
+
+For example, using NV12 as the output format for the videoconvert
+element would allow us to pair a s/w based encoder (such as x264enc)
+with a h/w based decoder (such as msdkh264dec) for decoding the
+stream as most h/w based decoders only work with NV12 format given
+its popularity.
+
+Note that choosing an encoder format such as NV12 over Y444 would
+probably result in decreased video quality although it would be
+compatible with more decoders. Ideally, the client and server need
+to negotiate a suitable format dynamically but the current
+capabilities do not allow for such exchange.
+
+Cc: Frediano Ziglio <freddy77@gmail.com>
+Cc: Dongwon Kim <dongwon.kim@intel.com>
+Based-on-patch-by: Hazwan Arif Mazlan <hazwan.arif.mazlan@intel.com>
+Signed-off-by: Jin Chung Teng <jin.chung.teng@intel.com>
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Acked-by: Frediano Ziglio <freddy77@gmail.com>
+---
+ AUTHORS                    |  1 +
+ server/gstreamer-encoder.c | 41 +++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 41 insertions(+), 1 deletion(-)
+
+diff --git a/AUTHORS b/AUTHORS
+index 6ad10e6ed1a1..073ed2b7ca4a 100644
+--- a/AUTHORS
++++ b/AUTHORS
+@@ -88,5 +88,6 @@ Patches also contributed by
+     Geoffrey McRae <geoff@hostfission.com>
+     Antonio Larrosa <antonio.larrosa@gmail.com>
+     Volker Rümelin <vr_qemu@t-online.de>
++    Vivek Kasireddy <vivek.kasireddy@intel.com>
+ 
+    ....send patches to get your name here...
+diff --git a/server/gstreamer-encoder.c b/server/gstreamer-encoder.c
+index d08de35a9780..40882f69cebb 100644
+--- a/server/gstreamer-encoder.c
++++ b/server/gstreamer-encoder.c
+@@ -861,13 +861,50 @@ static const gchar* get_gst_codec_name(const SpiceGstEncoder *encoder)
+     }
+ }
+ 
++/* At this time, only the following formats are supported by x264enc. */
++static const char valid_formats[][10] = {
++    { "Y444" },
++    { "Y42B" },
++    { "I420" },
++    { "YV12" },
++    { "NV12" },
++    { "GRAY8" },
++    { "Y444_10LE" },
++    { "I422_10LE" },
++    { "I420_10LE" },
++};
++
++static gpointer get_pref_format_once(gpointer data)
++{
++    const gchar *pref_format = getenv("SPICE_CONVERTER_PREFERRED_FORMAT");
++    int i;
++
++    if (pref_format) {
++        for (i = 0; i < G_N_ELEMENTS(valid_formats); i++) {
++            if (strcmp(valid_formats[i], pref_format) == 0) {
++                return g_strdup_printf("videoconvert ! video/x-raw,format=%s",
++                                       pref_format);
++            }
++        }
++    }
++    return g_strdup("videoconvert");
++}
++
++static gchar *get_gst_converter(void)
++{
++    static GOnce gst_once = G_ONCE_INIT;
++
++    g_once(&gst_once, get_pref_format_once, NULL);
++    return g_strdup(gst_once.retval);
++}
++
+ static gboolean create_pipeline(SpiceGstEncoder *encoder)
+ {
+-    const gchar *converter = "videoconvert";
+     const gchar* gstenc_name = get_gst_codec_name(encoder);
+     if (!gstenc_name) {
+         return FALSE;
+     }
++    gchar* converter = get_gst_converter();
+     gchar* gstenc_opts;
+     switch (encoder->base.codec_type)
+     {
+@@ -910,6 +947,7 @@ static gboolean create_pipeline(SpiceGstEncoder *encoder)
+     default:
+         /* gstreamer_encoder_new() should have rejected this codec type */
+         spice_warning("unsupported codec type %d", encoder->base.codec_type);
++        g_free(converter);
+         return FALSE;
+     }
+ 
+@@ -919,6 +957,7 @@ static gboolean create_pipeline(SpiceGstEncoder *encoder)
+                                   converter, gstenc_name, gstenc_opts);
+     spice_debug("GStreamer pipeline: %s", desc);
+     encoder->pipeline = gst_parse_launch_full(desc, NULL, GST_PARSE_FLAG_FATAL_ERRORS, &err);
++    g_free(converter);
+     g_free(gstenc_opts);
+     g_free(desc);
+     if (!encoder->pipeline || err) {
+-- 
+2.34.1
+
