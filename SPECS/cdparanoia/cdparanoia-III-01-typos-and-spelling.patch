@@ -2,10 +2,10 @@
 ## 01-typos-and-spelling.dpatch by A Costa <agcosta@gis.net>
 ##
 ## DP: Fixes some typos and spelling mistakes.
-
+# shellcheck disable=all
 @DPATCH@
 
-================================================================================
+#================================================================================
 --- cdparanoia-III-10.2/cdparanoia.1
 +++ cdparanoia-III-10.2/cdparanoia.1
 @@ -1,16 +1,17 @@

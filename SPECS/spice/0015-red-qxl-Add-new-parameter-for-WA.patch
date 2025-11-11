@@ -1,0 +1,97 @@
+From 204e2e049e1af6bf4c1f4432dcd7289e67735ecd Mon Sep 17 00:00:00 2001
+From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
+Date: Sat, 14 Jun 2025 16:00:21 +0800
+Subject: [PATCH 15/16] red-qxl: Add new parameter for WA
+
+Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+---
+ server/red-qxl.cpp  | 11 ++++++++++-
+ server/red-qxl.h    |  1 +
+ server/spice-core.h |  1 +
+ server/spice-qxl.h  |  3 ++-
+ 4 files changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/server/red-qxl.cpp b/server/red-qxl.cpp
+index 1135fd52f72a..c4f242cf76dd 100644
+--- a/server/red-qxl.cpp
++++ b/server/red-qxl.cpp
+@@ -59,6 +59,7 @@ struct QXLState {
+     size_t monitors_count;  // length of ^^^
+ 
+     bool running;
++    bool hw_bypass;
+ 
+     pthread_mutex_t scanout_mutex;
+     SpiceMsgDisplayGlScanoutUnix scanout;
+@@ -414,6 +415,11 @@ SpiceMsgDisplayGlScanoutUnix *red_qxl_get_gl_scanout(QXLInstance *qxl)
+     return nullptr;
+ }
+ 
++bool red_qxl_get_gl_hw_bypass(QXLInstance *qxl)
++{
++   return qxl->st->hw_bypass;
++}
++
+ void red_qxl_put_gl_scanout(QXLInstance *qxl, SpiceMsgDisplayGlScanoutUnix *scanout)
+ {
+     if (scanout) {
+@@ -426,7 +432,8 @@ void spice_qxl_gl_scanout(QXLInstance *qxl,
+                           int fd,
+                           uint32_t width, uint32_t height,
+                           uint32_t stride, uint32_t format,
+-                          int y_0_top)
++                          int y_0_top,
++                          bool hw_bypass)
+ {
+     RedWorkerMessageGlScanout payload = { /* empty */ };
+     spice_return_if_fail(qxl != nullptr);
+@@ -439,6 +446,8 @@ void spice_qxl_gl_scanout(QXLInstance *qxl,
+         close(qxl_state->scanout.drm_dma_buf_fd);
+     }
+ 
++    qxl_state->hw_bypass = hw_bypass;
++
+     qxl_state->scanout = (SpiceMsgDisplayGlScanoutUnix) {
+         .drm_dma_buf_fd = fd,
+         .width = width,
+diff --git a/server/red-qxl.h b/server/red-qxl.h
+index 2084acb1bfc2..5739725a1485 100644
+--- a/server/red-qxl.h
++++ b/server/red-qxl.h
+@@ -60,6 +60,7 @@ void red_qxl_update_area_complete(QXLInstance *qxl, uint32_t surface_id,
+ void red_qxl_set_client_capabilities(QXLInstance *qxl,
+                                      uint8_t client_present,
+                                      uint8_t caps[SPICE_CAPABILITIES_SIZE]);
++bool red_qxl_get_gl_hw_bypass (QXLInstance *qxl);
+ 
+ SPICE_END_DECLS
+ 
+diff --git a/server/spice-core.h b/server/spice-core.h
+index d77c4f9e8442..8de40e698d64 100644
+--- a/server/spice-core.h
++++ b/server/spice-core.h
+@@ -22,6 +22,7 @@
+ #error "Only spice.h can be included directly."
+ #endif
+ 
++#include <stdbool.h>
+ #include <stdint.h>
+ #ifndef _WIN32
+ #include <sys/socket.h>
+diff --git a/server/spice-qxl.h b/server/spice-qxl.h
+index bf17476b201a..575c5982bcc0 100644
+--- a/server/spice-qxl.h
++++ b/server/spice-qxl.h
+@@ -87,7 +87,8 @@ void spice_qxl_gl_scanout(QXLInstance *qxl,
+                           int fd,
+                           uint32_t width, uint32_t height,
+                           uint32_t stride, uint32_t format,
+-                          int y_0_top);
++                          int y_0_top,
++                          bool hw_bypass);
+ void spice_qxl_gl_draw_async(QXLInstance *qxl,
+                              uint32_t x, uint32_t y,
+                              uint32_t w, uint32_t h,
+-- 
+2.43.0
+
