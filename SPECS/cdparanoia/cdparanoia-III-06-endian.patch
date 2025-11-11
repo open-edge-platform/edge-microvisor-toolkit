@@ -5,10 +5,10 @@
 ## DP: tested: forcing a drive/host endian mismatch within the interface lib.
 ## DP: Doesn't check for null buff before trying a byteswap
 ## DP: (Closes: #499716, #506337, #507795, #509762).
-
+# shellcheck disable=SC1073,SC1050,SC1072,SC1141
 @DPATCH@
 
-================================================================================
+#================================================================================
 --- cdparanoia-III-10.2/interface/interface.c
 +++ cdparanoia-III-10.2/interface/interface.c
 @@ -118,7 +118,7 @@

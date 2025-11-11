@@ -1,0 +1,34 @@
+From 2a3e6e8bd726f15279569157983f99962a0bd0a7 Mon Sep 17 00:00:00 2001
+From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
+Date: Wed, 9 Oct 2024 16:21:16 +0800
+Subject: [PATCH] gstreamer-encoder: WA to overwrite the color format
+
+Signed-off-by: Teng, Jin Chung <jin.chung.teng@intel.com>
+Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+---
+ server/gstreamer-encoder.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/server/gstreamer-encoder.c b/server/gstreamer-encoder.c
+index 196b27ab544f..d3b9d439416e 100644
+--- a/server/gstreamer-encoder.c
++++ b/server/gstreamer-encoder.c
+@@ -817,6 +817,15 @@ static const SpiceFormatForGStreamer *map_drm_format(uint32_t fourcc)
+                 GstVideoFormat gst_format;
+ 
+                 gst_format = gst_video_dma_drm_fourcc_to_format(fourcc);
++		/* TODO: Currently iHD driver has removed RGBA and BGRx color format
++		 *  BGRA color format can still be used for BGRx use case.
++		 *  As for RGBA, we forced it to overwrite it to BGRx for now
++		 *  WA solution to allow the encode to works
++		 *  Need to revisit back once iHD and gstreamer side has fixed their end
++		 */
++                if (gst_format == GST_VIDEO_FORMAT_RGBA || GST_VIDEO_FORMAT_BGRx)
++                    gst_format = GST_VIDEO_FORMAT_BGRA;
++
+                 if (gst_format == GST_VIDEO_FORMAT_UNKNOWN) {
+                     break;
+                 }
+-- 
+2.43.0
+
