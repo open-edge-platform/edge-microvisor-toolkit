@@ -1,7 +1,7 @@
 Summary:        Fast and Lightweight Log processor and forwarder for Linux, BSD and OSX
 Name:           fluent-bit
 Version:        3.1.9
-Release:        16%{?dist}
+Release:        17%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -57,7 +57,6 @@ Development files for %{name}
 Summary:        %{name} SELinux policy
 Requires:       %{name} = %{version}-%{release}
 Requires:       otelcol-contrib-selinux
-Requires:       inbm-selinux
 BuildRequires:  selinux-policy
 BuildRequires:  selinux-policy-devel
 BuildArch:      noarch
@@ -188,6 +187,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 3.1.9-17
+- remove inbm selinux
+
 * Fri Oct 23 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.1.9-16
 - merge from Azure Linux 3.0.20250910-3.0
 - Patch for CVE-2025-54126

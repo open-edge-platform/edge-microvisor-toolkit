@@ -7380,9 +7380,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "inbm",
-          "version": "4.2.8.6",
-          "downloadUrl": "https://github.com/intel/intel-inb-manageability/archive/refs/tags/v4.2.8.6.tar.gz"
+          "name": "in-band-manageability",
+          "version": "1.0.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.0.2.tar.gz"
         }
       }
     },
@@ -21693,8 +21693,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.5.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.5.2.tar.gz"
+          "version": "1.7.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.7.2.tar.gz"
         }
       }
     },
@@ -29626,8 +29626,8 @@
         "type": "other",
         "other": {
           "name": "tink-worker",
-          "version": "1.1.1",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.1.tar.gz"
+          "version": "1.1.2",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.2.tar.gz"
         }
       }
     },
