@@ -46,7 +46,7 @@ and workloads. It has been validated on the following platforms:
 | Storage (SSD/NVMe or eMMC) | 32 GB        | 32 GB             | 32 GB   |
 | Networking (Ethernet)      | 1 GbE        | 1 GbE             | 1 GbE   |
 
-### Edge Microvisor Toolkit (Open Edge Platform or Standalone Node)
+### Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node)
 
 | Component                  | Intel® Atom™    | Core™/Core™ Ultra | Xeon®           |
 |----------------------------|-----------------|-------------------|-----------------|
@@ -57,7 +57,7 @@ and workloads. It has been validated on the following platforms:
 
 ## Software Requirements
 
-| Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Open Edge Platform or Standalone Node) |
+| Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node) |
 |------------------|-------------------------|-------------------------|
 | Kernel Version   | Intel® Kernel 6.12      | Intel® Kernel 6.12      |
 | Bootloader       | GRUB                    | Systemd-boot            |
