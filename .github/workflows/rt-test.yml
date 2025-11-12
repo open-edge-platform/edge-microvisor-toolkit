@@ -64,13 +64,7 @@ jobs:
       shell: bash
       env:
           DEBIAN_FRONTEND: noninteractive
-           
-
-    - name: setup go
-      uses: actions/setup-go@v5
-      with:
-        go-version: 1.23.1
-        
+    
     - name: Parse spec files
       continue-on-error: true
       run: |
