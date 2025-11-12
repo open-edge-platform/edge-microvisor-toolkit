@@ -53,17 +53,6 @@ jobs:
         DATETIME_AS_VERSION=$(date +'%Y%m%d.%H%M')
         echo "datetime_as_version=$DATETIME_AS_VERSION" >> "$GITHUB_OUTPUT"
         echo "DATETIME_AS_VERSION=$DATETIME_AS_VERSION" >> "$GITHUB_ENV"
-        
-    - name: Install required packages
-      run: |
-            #!/bin/bash
-            set -e
-            echo "Installing required packages..."
-            sudo -E apt-get update
-            sudo -E apt-get -y install make pip
-      shell: bash
-      env:
-          DEBIAN_FRONTEND: noninteractive
     
     - name: Parse spec files
       continue-on-error: true
