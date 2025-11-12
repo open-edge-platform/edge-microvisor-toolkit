@@ -7581,8 +7581,8 @@
         "type": "other",
         "other": {
           "name": "intel-metee",
-          "version": "4.2.1",
-          "downloadUrl": "https://github.com/intel/metee/archive/refs/tags/4.2.1.tar.gz"
+          "version": "5.0.0",
+          "downloadUrl": "https://github.com/intel/metee/archive/5.0.0/metee-5.0.0.tar.gz"
         }
       }
     },
