@@ -35,7 +35,7 @@ jobs:
       
     steps:
     - name: print workspace
-      run: echo "workspace is ${GITHUB_WORKSPACE} "
+      run: echo "workspace is ${GITHUB_WORKSPACE}"
       
     - name: Checkout default repo
       uses: actions/checkout@v4
