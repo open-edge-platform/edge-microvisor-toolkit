@@ -129,6 +129,8 @@ The patch refines locking mechanisms, reducing the time when critical sections c
 interrupted. This improves the overall responsiveness and guarantees that the system can
 handle real-time workloads with minimal jitter.
 
+> **Note:** You can learn more about preempt Kernel and its features at the [Linux Intel LTS Kernel Github](https://github.com/intel/linux-intel-lts/blob/main/README.md)
+
 ### perf tool
 
 The Linux `perf` tool is a powerful, integrated performance analysis suite, that taps
@@ -202,19 +204,19 @@ for RT tasks. This way, for example, the workloads can be shifted between effici
 and performance cores. The parameter takes lists as values:
 
   - isolcpus=\<cpu core number>,...,\<cpu core number>
-  
+
     ```bash
     isolcpus=1,2,3
     ```
-  
+
   - isolcpus=\<cpu core number>-\<cpu core number>
-  
+
     ```bash
     isolcpus=1-3
     ```
-  
+
   - isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
-  
+
     ```bash
     isolcpus=1,4-5
     ```

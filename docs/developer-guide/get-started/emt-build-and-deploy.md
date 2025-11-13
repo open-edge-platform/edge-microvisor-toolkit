@@ -374,6 +374,9 @@ Install and configure [kubectl](https://kubernetes.io/docs/tasks/tools/install-k
 
 ## 4 Deploy AI solution
 
-Now that you have the edge node ready, you can deploy a sample application from the AI Suites.
-Follow the [guide for Smart Parking application](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-parking)
+Now that you have the edge node ready, you can deploy a sample application from the AI Suites, such as one of [Metro](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/README.md),
+[Vision](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-vision/README.md)
+or [Time Series](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/README.md) sample apps.
+
+Follow the [guide for Smart Parking application](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/get-started.md)
 with AI-driven video analytics to optimize parking management.
