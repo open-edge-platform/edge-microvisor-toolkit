@@ -4,9 +4,9 @@ Follow the steps below to generate the necessary kernel and userspace files
 to set up an Ubuntu 22.04 hypervisor for hosting guest VMs.
 
 > **Note:** To run Windows VM installation for SR-IOV, you need an Ubuntu host
-> with SR-IOV on a supported Intel Core platform with iGPU (RPL).
+> with SR-IOV on a supported Intel Core platform with iGPU.
 
-You can [build the kernel](#build-iotg-kernel) either on an Ubuntu 22.04 host
+You can [build the kernel](#build-custom-intel-kernel) either on an Ubuntu 22.04 host
 or in an Ubuntu 22.04 docker container on an Ubuntu host.
 
 ## Required Host BIOS Settings
@@ -58,7 +58,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
    sudo apt -y upgrade
    ```
 
-## Setup IOTG kernel on Ubuntu Host
+## Setup custom Intel kernel on Ubuntu Host
 
 ### Kernel Setup prerequisites
 
@@ -66,7 +66,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
 
 2. **kernel-config-6_12.zip** (included in the package above)
 
-### Build IOTG Kernel
+### Build custom Intel Kernel
 
 1. Create a working directory:
 
@@ -110,7 +110,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
    cp sriov_build/lts2024-iotg-kernel-rel.tar.gz .
    ```
 
-### Install IOTG host kernel on Ubuntu SR-IOV host
+### Install custom Intel kernel on Ubuntu SR-IOV host
 
 1. Boot into the Ubuntu Host OS and navigate to the work directory:"
 
@@ -191,7 +191,7 @@ in an Ubuntu 22.04 docker container.
 #### Option 1: Initial full setup of Ubuntu 22.04 SRIOV host
 
 Once you have performed a full initial setup of the first host OS, (meaning
-installation of [IOTG host kernel](#install-iotg-host-kernel-on-ubuntu-sr-iov-host) and [SR-IOV](#setup-ubuntu-host-for-sr-iov) on Ubuntu) you should see
+installation of [Intel custom host kernel](#install-custom-intel-kernel-on-ubuntu-sr-iov-host) and [SR-IOV](#setup-ubuntu-host-for-sr-iov) on Ubuntu) you should see
 `packages` and `sriov_install` directories with install files.
 
 Copy these directories to use in future setups of the second or subsequent hosts.
