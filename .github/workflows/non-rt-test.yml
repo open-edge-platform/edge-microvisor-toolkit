@@ -38,7 +38,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        lfs: true
         repository: ${{ env.CODE_REPO_URL }}
         ref: ${{ env.CODE_REPO_BRANCH }}
         path: ${{ env.CODE_REPO_NAME }}
