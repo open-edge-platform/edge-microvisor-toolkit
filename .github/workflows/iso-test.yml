@@ -77,7 +77,7 @@ jobs:
         shopt -s nullglob
         iso_files=(../out/images/full/*.iso)
         if [ ${#iso_files[@]} -eq 0 ]; then
-          echo "No .iso files were found in the output directory "
+          echo "No .iso files were found in the output directory"
           exit 1
         else
           echo "Found .iso files in the output directory:"
