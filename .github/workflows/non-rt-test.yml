@@ -109,7 +109,7 @@ jobs:
           echo "No .raw files were found in the output directory."
           exit 1
         else
-          echo "Found .raw files in the output directory :"
+          echo "Found .raw files in the output directory:"
           printf '%s\n' "${raw_files[@]}"
         fi
         popd
