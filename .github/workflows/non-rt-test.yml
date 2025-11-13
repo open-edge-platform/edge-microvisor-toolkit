@@ -187,21 +187,3 @@ jobs:
         echo "release_name=${{ env.RELEASE_NAME }}" >> "$GITHUB_OUTPUT"
         echo "artifactory_url=test-art-url" >> "$GITHUB_OUTPUT"
         echo "artifactory_path=test-art-path" >> "$GITHUB_OUTPUT"
-
-    - name: prepare lkg
-      id: prepare-lkg
-      if: steps.build-image.outcome == 'success'
-      run: |
-        ##
-        cd ${{ env.CODE_REPO_NAME }}
-
-        mkdir lkg
-        cat <<EOF > lkg/lkg-${TIBEROS_BRANCH}-dev.json
-{
-    "date": "$(date -u +'%Y-%m-%d')",
-    "dailybuildid": "3.0.$(date -u +'%Y%m%d')",
-    "commit": "$(git rev-parse HEAD)"
-}
-EOF
-        cp toolkit/resources/manifests/package/toolchain_x86_64.txt lkg/toolchain_x86_64.txt
-        cp toolkit/resources/manifests/package/pkggen_core_x86_64.txt lkg/pkggen_core_x86_64.txt
