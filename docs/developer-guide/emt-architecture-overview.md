@@ -161,6 +161,13 @@ The data includes:
 - **Diagnostic Utility** is particularly useful for system tuning and benchmarking. It helps
   understand how modern Intel® CPUs manage power under varying workloads.
 
+### Resource Director Technology
+
+Edge Microvisor Toolkit provides basic support for Intel Resource Director Technology
+including, Cache Monitoring Technology (CMT), Memory Bandwidth Monitoring
+(MBM), Cache Allocation Technology (CAT), Code and Data Prioritization
+(CDP) and Memory Bandwidth Allocation (MBA). These technologies facilitate pinning workloads
+and isolating specific CPU cores, assigning them to specified tasks.
 
 ### cpupower
 
