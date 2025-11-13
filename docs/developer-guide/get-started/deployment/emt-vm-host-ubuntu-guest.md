@@ -102,7 +102,7 @@
 
    > **Note:** If operating behind a corporate firewall, setup proxy settings as required.
 
-3. Install IOTG kernel and configure the Ubuntu guest OS.
+3. Install custom intel kernel and configure the Ubuntu guest OS.
 
    Copy the following files and directories from the `/home/$USER` directory of
    the host OS to the `/home/$USER/` directory of the guest OS:
