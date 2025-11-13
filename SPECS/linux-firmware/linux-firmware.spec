@@ -89,7 +89,6 @@ cp -r ath10k %{buildroot}%{_firmwarepath}
 cp -r i915 %{buildroot}%{_firmwarepath}
 cp -r xe %{buildroot}%{_firmwarepath}
 cp -r intel %{buildroot}%{_firmwarepath}
-cp qat*.bin  %{buildroot}%{_firmwarepath}
 
 %post qat
 dracut --force
@@ -172,18 +171,18 @@ dracut --force
 %files qat
 %defattr(-,root,root)
 %license WHENCE LICENCE.qat_firmware
-%{_firmwarepath}/qat_402xx.bin
-%{_firmwarepath}/qat_402xx_mmp.bin
-%{_firmwarepath}/qat_420xx.bin
-%{_firmwarepath}/qat_420xx_mmp.bin
-%{_firmwarepath}/qat_4xxx.bin
-%{_firmwarepath}/qat_4xxx_mmp.bin
-%{_firmwarepath}/qat_895xcc.bin
-%{_firmwarepath}/qat_895xcc_mmp.bin
-%{_firmwarepath}/qat_c3xxx.bin
-%{_firmwarepath}/qat_c3xxx_mmp.bin
-%{_firmwarepath}/qat_c62x.bin
-%{_firmwarepath}/qat_c62x_mmp.bin
+%{_firmwarepath}/intel/qat/qat_402xx.bin
+%{_firmwarepath}/intel/qat/qat_402xx_mmp.bin
+%{_firmwarepath}/intel/qat/qat_420xx.bin
+%{_firmwarepath}/intel/qat/qat_420xx_mmp.bin
+%{_firmwarepath}/intel/qat/qat_4xxx.bin
+%{_firmwarepath}/intel/qat/qat_4xxx_mmp.bin
+%{_firmwarepath}/intel/qat/qat_895xcc.bin
+%{_firmwarepath}/intel/qat/qat_895xcc_mmp.bin
+%{_firmwarepath}/intel/qat/qat_c3xxx.bin
+%{_firmwarepath}/intel/qat/qat_c3xxx_mmp.bin
+%{_firmwarepath}/intel/qat/qat_c62x.bin
+%{_firmwarepath}/intel/qat/qat_c62x_mmp.bin
 
 %changelog
 * Tue Nov 11 2025 Shalini Singhal <shalinix.singhal@intel.com> - 20251021-1
