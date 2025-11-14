@@ -79,7 +79,7 @@ jobs:
                     DAILY_BUILD_REPO=./resources/manifests/package/development.repo
         # check for output image to determine the results
         shopt -s nullglob
-        raw_files=(../out/images/edge-image-dv/*.raw)
+        raw_files=(../out/images/edge-image-desktop-virtualization/*.raw)
         if [ ${#raw_files[@]} -eq 0 ]; then
           echo "No .raw files were found in the output directory"
           exit 1
