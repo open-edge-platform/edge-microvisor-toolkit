@@ -23,31 +23,49 @@ of the resulting image, such as:
 Before you can build OS images you need to build the toolchain and make sure to
 [**install pre-requisites (Ubuntu)**](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md).
 
-> **Note:**
-  Use the *stable* tag instead of *latest* for building the OS images with prebuilt packages.
-  This is the recommended approach, as building the **entire toolchain** may take a lot of
-  time. Adding the `REBUILD_TOOLCHAIN=y` parameter to the `make` command rebuilds
-  the entire toolchain.
-
-
 ### Clone the Edge Microvisor Toolkit repository
 
-Checkout the stable branch of the repository. See the
+Checkout the release tag of the repository. See the
 [tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
-`<stable_tag_name>`.
+`<release_tag_name>`. For example,
+[3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=<stable_tag_name>
+git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=3.0.20250718
 ```
 
 ### Build the tools
 
-Navigate to the `edge-microvisor-toolkit/toolkit` directory and build the toolchain.
+1. Navigate to the `edge-microvisor-toolkit/toolkit` directory and build the toolchain.
 
-```bash
-cd edge-microvisor-toolkit/toolkit
-sudo make toolchain REBUILD_TOOLS=y
-```
+   ```bash
+   cd edge-microvisor-toolkit/toolkit
+   sudo make toolchain \
+       PACKAGE_URL_LIST="" \
+       REPO_LIST="" \
+       DISABLE_UPSTREAM_REPOS=y \
+       REBUILD_TOOLCHAIN=y \
+       REBUILD_TOOLS=y
+   ```
+
+   > **Note:**
+   > Building the **entire toolchain** may take a lot of time. Adding the
+   > `REBUILD_TOOLCHAIN=y` parameter to the `make` command rebuilds
+   > the entire toolchain.
+
+
+2. Customize the toolkit image.
+
+   You can include additional components to your toolkit image by adding RPM packages.
+   For more details, see
+   [Customize Your Edge Microvisor Toolkit Image](#customize-your-edge-microvisor-toolkit-image).
+
+3. Rebuild RPM packages.
+
+   ```bash
+   # Rebuild packages/RPMs local toolchain
+   sudo make build-packages REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n
+   ```
 
 ## Build the Edge Microvisor Toolkit Image
 
@@ -75,9 +93,9 @@ microvisor/
 Different image types can be built by using different JSON config files and parameters.
 You can find more information about specific parameters in the [build variables](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables) section.
 
-**IMPORTANT**: If you want to create an image with an older tag, for example
-[3.0.20250806](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250806),
-make sure to build it **without** the `REBUILD_PACKAGES=n` option.
+**IMPORTANT**: To create an image from an older tag, for example the
+[3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718)
+release tag, make sure to build it **without** the `REBUILD_PACKAGES=n` option.
 Otherwise, the build process will download the latest available RPMs,
 which do not match those included in the older tag. It will cause a mismatch
 between versions of installed RPMS in the image and the available SPECs in
