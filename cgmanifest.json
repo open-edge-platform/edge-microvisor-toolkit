@@ -14921,6 +14921,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "nvidia-data-center-driver",
+          "version": "580.105.08",
+          "downloadUrl": "https://us.download.nvidia.com/tesla/580.105.08/NVIDIA-Linux-x86_64-580.105.08.run"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "nvidia-modprobe",
           "version": "550.54.14",
           "downloadUrl": "https://github.com/NVIDIA/nvidia-modprobe/archive/550.54.14.tar.gz"
