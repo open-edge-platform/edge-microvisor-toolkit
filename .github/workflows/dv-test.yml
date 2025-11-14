@@ -81,7 +81,7 @@ jobs:
         shopt -s nullglob
         raw_files=(../out/images/edge-image-dv/*.raw)
         if [ ${#raw_files[@]} -eq 0 ]; then
-          echo "No .raw files were found in the output directory."
+          echo "No .raw files were found in the output directory"
           exit 1
         else
           echo "Found .raw files in the output directory:"
