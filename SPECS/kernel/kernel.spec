@@ -410,6 +410,12 @@ echo "initrd of kernel %{uname_r} removed" >&2
 * Thu Oct 30 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-1
 - Upgate kernel to 6.17.0
 
+* Fri Nov 14 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-6
+- Update audio support in kernel config
+
+* Tue Nov 4 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-5
+- Update kernel config
+
 * Thu Oct 23 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-4
 - Revert to working kernel config
 

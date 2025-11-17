@@ -54,6 +54,15 @@ make INSTALL_MOD_PATH=%{buildroot} modules_install
 * Mon Nov 10 2025 Junxiao Chang <junxiao.chang@intel.com> - 580.105.08-1
 - Updrade Nvidia data center driver to 580.105.08
 
+* Fri Nov 14 2025 Lishan Liu <lishan.liu@intel.com> - 570.133.20-10
+- Bump release to rebuild
+
+* Tue Nov 4 2025 Lishan Liu <lishan.liu@intel.com> - 570.133.20-9
+- Bump release to rebuild
+
+* Thu Oct 23 2025 Lishan Liu <lishan.liu@intel.com> - 570.133.20-8
+- Revert to working kernel config
+
 * Fri Oct 10 2025 Zhang Baoli <baoli.zhang@intel.com> - 570.133.20-7
 - Fix ISO mouse detection and cmdline params in non-rt kernel
 
