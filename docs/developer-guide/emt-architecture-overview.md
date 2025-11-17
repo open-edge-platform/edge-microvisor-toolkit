@@ -86,6 +86,7 @@ create a bootable USB stick, and use the USB stick to install the Standalone Nod
 #### Standard kernel with integrated Docker and K3s
 
 This image has integrated Docker and K3s for deploying and managing applications.
+See the [K3s extensions](#k3s-extensions) section for more details.
 
 #### Kernel with real-time extensions and integrated Docker and K3s
 
@@ -266,6 +267,44 @@ the used image configuration. The artifacts come with associated `sha256` files.
 - Image in VHD format.
 - Signing key.
 
+## K3s Extensions
+
+Deploying of Edge Microvisor Toolkit with Lightweight Kubernetes (K3s)
+requires additional extensions which are downloaded as docker images. Below is
+a list of components essential for scaled deployment of the toolkit.
+
+- [Multus CNI](https://github.com/k8snetworkplumbingwg/multus-cni)
+
+  A Container Network Interface (CNI) plugin for Kubernetes that enables you to
+  attach multiple network interfaces to Kubernetes pods, which usually have only
+  one network interface.
+
+- [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
+  - [GPU Plugin](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md)
+
+    Intel GPU plugin provides access to discrete and integrated Intel GPU devices
+    supported by the host kernel. It enables offloading compute operations of
+    Kubernetes workload to GPU devices. It may be beneficial in such use cases as
+    media transcoding and analytics, cloud gaming, AI training and inference.
+
+- [Calico](https://github.com/projectcalico/calico)
+  - [CNI Plugin](https://github.com/projectcalico/calico/tree/master/cni-plugin)
+  \- as [docker image](https://hub.docker.com/r/calico/cni).
+
+    A plugin that enables you to use Calico for deployments based on Container
+    Network Interface (CNI).
+
+  - [Node](https://github.com/projectcalico/calico/tree/master/node)
+    \- as [docker image](https://hub.docker.com/r/calico/node/).
+
+    A CNI plugin that enables you to create a Layer 3 network for Kubernetes
+    pods and assign a unique IP address for each.
+
+  - [Kube controllers](https://github.com/projectcalico/calico/tree/master/kube-controllers)
+    \- as [docker image](https://hub.docker.com/r/calico/kube-controllers).
+
+    A set of controllers that monitor the resources in the Kubernetes API (network,
+    policies, nodes) and adjust Calico's CNI configuration.
 
 ## Packaging
 
