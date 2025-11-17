@@ -123,7 +123,7 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
    # Also supported:
    #    make -C toolkit install-prereqs
 
-   # Fix go 1.21 link
+   # Fix go 1.23 link
    sudo ln -vsf /usr/lib/go-1.23/bin/go /usr/bin/go
    sudo ln -vsf /usr/lib/go-1.23/bin/gofmt /usr/bin/gofmt
 
