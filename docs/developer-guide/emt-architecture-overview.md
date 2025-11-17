@@ -17,7 +17,9 @@ platforms in order to demonstrate the full capabilities of Intel silicon for var
 - RAW and VHD/X: immutable image using systemd-boot as the second-stage bootloader, with the Preempt_RT kernel patches to support real-time computing.
 
 The two immutable image versions integrate the Intel® kernel and
-enable the software and features offered by [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework). Here's an overview of key software components:
+enable the software and features offered by
+[Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework).
+Here's an overview of key software components:
 
 ![overview of key software components](./assets/emt-architecture-key-components.drawio.svg)
 
@@ -27,7 +29,7 @@ The toolkit comes pre-configured to produce different images; the following tabl
 
 |  Feature         | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit Standalone Node & Orchestrated                                   |
 | -----------------| -------------------- | ------------------------------------------------- |
-| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with a toolkit to build an image with opt-in data integrity and security features.</li></ul> | <ul><li>Designed for [Open Edge Platform](https://github.com/open-edge-platform) and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare metal or as a guest OS.</li><li>Fast atomic updates and rollback support with a small image footprint and short boot time.|
+| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with a toolkit to build an image with opt-in data integrity and security features.</li></ul> | <ul><li>Designed for [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework) and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare metal or as a guest OS.</li><li>Fast atomic updates and rollback support with a small image footprint and short boot time.|
 | Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
 | Update Mechanism | RPM package updates with TDNF | Image based A/B updates + Rollback       |
 | Linux Kernel     | Intel® Kernel 6.12   | Intel® Kernel 6.12                                |
@@ -354,9 +356,9 @@ a snapshot of the key directories for `tmpfs` and bind mounts:
   (logs, cache, OS runtime data, persistent application data and temporary files).
 - The `/etc/lp` holds assets and configuration for the system's printing subsystem.
 - The `/etc/node-agent`, `/etc/cluster-agent` and `/etc/health-check` are required for the
-  Open Edge Platform's bare-metal agents for configuration data.
+  [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)'s bare-metal agents for configuration data.
 - The `/etc/telegraf` and `/etc/otelcol` are used for telemetry data and configuration for
-  the `telemetry-agent` and `observability-agent`, required by the Open Edge Platform.
+  the `telemetry-agent` and `observability-agent`, required by the Edge Manageability Framework.
 - `/etc/caddy` is the ephemeral data required by the reverse-proxy required by the Open Edge
   Platform to communicate with the backend service(s).
 
@@ -387,149 +389,17 @@ PERSISTENT_BIND_PATHS="
 - Several key directories required for the OS to be writable for normal system operations are
   kept as persistent bind paths, such as `/etc/fstab`, `/etc/environemnt`, `/etc/hosts`,
   `/etc/pki`, `/etc/ssh`, `/etc/systemd`, `/etc/udev`, `/etc/sysconfig`, `/etc/netplan`.
-- The Kubernetes distribution used for Open Edge platform uses Rancher's RKE2 and requires
+- The Kubernetes distribution used for
+  [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
+  uses Rancher's RKE2 and requires
   additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`,
   `/var/lib/rancher`.
 
-## Bare Metal Agents
+<!--hide_directive
+:::{toctree}
+:hidden:
 
-The Bare Metal Agents (BMAs) are included in all immutable builds and are required for
-deployment with Open Edge Platform. The BMAs are running on the system as systemd-services.
-In the standalone ISO version of the immutable edge node version, the BMAs are included in
-the image but not started by default, as the installation is designed to work autonomously
-without requiring a backend.
-
-Each Bare Metal Agent is developed in `golang` and has a corresponding resource manager it
-communicates with (dial-out). Below is a brief summary of the Bare Metal Agents included in
-the build and their purpose. For additional information on each agent, visit the
-[Edge Node Agents](https://github.com/open-edge-platform/edge-node-agents) repository.
-
-### Hardware Discovery Agent
-
-[The hardware discovery agent](https://github.com/open-edge-platform/edge-node-agents/tree/main/hardware-discovery-agent)
-is responsible for initial discovery and introspection of the
-platform to ensure that it is provisioned and configured correctly.
-
-### Platform Update Agent
-
-[The platform update agent (PUA)](https://github.com/open-edge-platform/edge-node-agents/tree/main/platform-update-agent)
-is responsible for updating the edge node, particularly
-performing updates during scheduled maintenance windows. For Edge Microvisor Toolkit, this
-involves:
-
-- Downloading a new OS image when available in the remote registry service.
-- Verifying its integrity.
-- Writing the image to the inactive user partition.
-- Reconfiguring the bootloader to make the inactive partition active and reboot the system.
-
-If a failure occurs during the boot process to the image, the bootloader will revert back to
-the last image. Update flows are discussed in more detail in the following sections.
-
-### Node Agent
-
-[The node agent](https://github.com/open-edge-platform/edge-node-agents/tree/main/node-agent)
-is responsible for configuration aspects related to platform functions on the
-edge node. It also assists the onboarding process by providing JWT (JSON Web Tokens) to the
-other Bare Metal Agents.
-
-### Cluster Agent
-
-[The cluster agents](https://github.com/open-edge-platform/edge-node-agents/tree/main/cluster-agent)
-are responsible for installation and formation of the Kubernetes cluster,
-which may involve one or more edge nodes. The Kubernetes software, and associated extensions
-(scheduler extensions, device plugins, network extensions, etc.) are **not** included in the
-microvisor image itself, but installed on a writable portion of the filesystem.
-
-### Telemetry Agent
-
-[The telemetry agent](https://github.com/open-edge-platform/edge-node-agents/tree/main/platform-telemetry-agent)
-provides the configuration plane for telemetry collected from the edge
-node, including metrics and logs. It enables collection of various telemetry data, as well as
-configuration of scraping intervals and caching policies.
-
-### Observability Agent
-
-[The observability agent](https://github.com/open-edge-platform/edge-node-agents/tree/main/platform-observability-agent)
-provides the data plane portion of telemetry data. It uses
-configuration provided by the telemetry agent and uses  `Fluent Bit`, `Telegraf`,
-`OpenTelemetry`, and other standard Cloud Native Computing Foundation (CNCF) projects to
-collect, process, and transmit telemetry data to the backend for further processing and
-visualization purposes.
-
-### Reporting Agent
-
-[The reporting agent](https://github.com/open-edge-platform/edge-node-agents/tree/main/reporting-agent)
-collects system information and metrics from Open Edge Platform
-installations. It gathers data from a variety of sources, including `lscpu`, `lsblk`,
-`lshw`, `dmidecode`, and `kubectl`, to provide a comprehensive insight into hardware, software,
-and runtime environment.
-
-## Atomic Updates
-
-The immutable microvisor uses a read-only file system and avoids traditional differential
-package management (like `dnf` or `apt`) in favor of updating the entire system image. This
-approach simplifies system management and increases reliability by preventing configuration
-drifts.
-
-### A/B Update Paradigm
-
-At the heart of this design is an A/B update mechanism. Two dedicated partitions are reserved
-on the system — one holds the active image, while the other remains inactive. This section
-outlines the process.
-
-### Active vs. Inactive Partitions
-
-One partition is designated as active and is used during system boot via EFI and systemd-boot.
-The other remains inactive until an update is applied.
-
-### Update Process
-
-When a new update is available, the following steps occur:
-
-- The new image is downloaded and then verified for integrity and authenticity.
-  Once verified, the new image is written to the inactive partition.
-
-- The bootloader (systemd-boot) is then reconfigured to boot from the updated partition,
-  which will become the new active partition upon the next reboot.
-
-- Rollback Capability:
-
-  Systemd-boot has the ability to detect boot failures. If the system fails to boot from the
-  new image, the bootloader can automatically rollback to the previous, stable partition,
-  ensuring continuous availability of the system.
-
-### Benefits of The Approach
-
-- **Stability and Predictability**
-
-  By updating the entire image and maintaining immutable partitions, the system avoids
-  configuration drift, often seen with writable filesystems.
-
-- **Simplified Maintenance**
-
-  The A/B paradigm eliminates the complexities associated with handling partial updates or
-  rollbacks in traditional package management systems.
-
-- **Enhanced Security**
-
-  With a read-only filesystem and a verified update process, the risk of unauthorized
-  modifications is greatly reduced.
-
-This comprehensive update mechanism ensures that Edge Microvisor Toolkit remains stable,
-secure, and easy to maintain, even in environments where reliability is paramount.
-
-### Updating Open Edge Platform vs. Standalone
-
-Edge Microvisor Toolkit updates are well integrated when using the Open Edge Platform.
-The maintenance manager enables the administrator to configure when to run updates to edge
-nodes. While the update will only occur during these maintenance windows, new images will be
-downloaded in the background as soon as they become available. The diagram below shows the
-overall update flow and state transitions.
-
-![update flow and state transitions](./assets/emt-architecture-update-flow.drawio.svg)
-
-The Edge Microvisor Toolkit may also be updated as a standalone solution, through a manual
-update procedure, without the automation offered by Open Edge Platform. You can download the
-new version of the microvisor and run the update by invoking the `os-update-script` and
-providing the path to the downloaded image. Plans for future versions of Edge Microvisor Toolkit may include implementing automatic image validation,
-  update checks, and releases.
+architecture/emt-bare-metal-agents
+architecture/emt-updates
+:::
+hide_directive-->
