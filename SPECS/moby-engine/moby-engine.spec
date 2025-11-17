@@ -3,16 +3,17 @@
 Summary: The open-source application container engine
 Name:    moby-engine
 Version: 25.0.3
-Release: 14%{?dist}
+Release: 15%{?dist}
 License: ASL 2.0
 Group:   Tools/Container
 URL: https://mobyproject.org
-Vendor: Microsoft Corporation
-Distribution: Azure Linux
+Vendor: Intel Corporation
+Distribution: Edge Microvisor Toolkit
 
 Source0: https://github.com/moby/moby/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1: docker.service
 Source2: docker.socket
+Source3: daemon.json
 
 Patch0:  CVE-2022-2879.patch
 Patch1:  enable-docker-proxy-libexec-search.patch
@@ -104,10 +105,15 @@ mkdir -p %{buildroot}%{_unitdir}
 install -p -m 644 %{SOURCE1} %{buildroot}%{_unitdir}/docker.service
 install -p -m 644 %{SOURCE2} %{buildroot}%{_unitdir}/docker.socket
 
+mkdir -p -m 755 %{buildroot}%{_sysconfdir}/docker
+install -p -m 644 %{SOURCE3} %{buildroot}%{_sysconfdir}/docker/daemon.json
+
 %post
 if ! grep -q "^docker:" /etc/group; then
     groupadd --system docker
 fi
+mkdir -p /opt/docker-data
+chmod 0700 /opt/docker-data
 
 %preun
 %systemd_preun docker.service
@@ -119,10 +125,15 @@ fi
 %license LICENSE NOTICE
 %{_bindir}/dockerd
 %{_libexecdir}/docker-proxy
+%dir %{_sysconfdir}/docker
+%config(noreplace) %{_sysconfdir}/docker/daemon.json
 %{_sysconfdir}/*
 %{_unitdir}/*
 
 %changelog
+* Tue Nov 04 2025 Polmoorx Shiva Kumar <polmoorx.shiva.kumar@intel.com> - 25.0.3-15
+- Add daemon.json with overlay2 to fix container startup issue
+
 * Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.3-14
 - merge from Azure Linux 3.0.20250910-3.0.
 - Patch CVE-2024-51744
