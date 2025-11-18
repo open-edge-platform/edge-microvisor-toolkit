@@ -1,6 +1,6 @@
 Summary:        Platform Observability Agent
 Name:           platform-observability-agent
-Version:        1.9.0
+Version:        1.10.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -130,6 +130,9 @@ mkdir -p %{buildroot}%{_rundir}/platform-observability-agent/fluent-bit
 %{systemd_postun_with_restart platform-observability-metrics.service}
 
 %changelog
+* Fri Nov 07 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.10.1-1
+- cleanup old inbm entries from configs
+
 * Mon Aug 11 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.9.0-1
 - Add Platform Manageability Agent log collection to agent log service
 - Remove old services from log collection

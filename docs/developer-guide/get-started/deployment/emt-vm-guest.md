@@ -162,25 +162,22 @@ method:
 ### Convert Image File to QCOW2
 
 You can convert a RAW or VHD image to the QCOW2 format, which is natively supported by
-KVM. Start a terminal and use `qemu-img` to convert:
+KVM. Start a terminal and use `qemu-img` to detect the input format
+automatically and convert the image:
 
-- a RAW disk image:
+```bash
+qemu-img convert -O qcow2 <input-image.img> <output-image.qcow2>
+```
 
-  ```bash
-  qemu-img convert -f raw -O qcow2 <input-image.img> <output-image.qcow2>
-  ```
-
-- a VHD disk image:
-
-  ```bash
-  qemu-img convert -f vpc -O qcow2 <input-image.vhd> <output-image.qcow2>
-  ```
-
-> **NOTE**: You can also run `qemu-img` without the `-f` parameter to let it detect the input
-format:
+> **NOTE**: You can also run `qemu-img` with the `-f` parameter to specify the
+> input format explicitly:
 >
 > ```bash
-> qemu-img convert -O qcow2 <input-image.vhd> <output-image.qcow2>
+> qemu-img convert -f raw -O qcow2 <input-image.img> <output-image.qcow2>
+> ```
+>
+> ```bash
+> qemu-img convert -f vpc -O qcow2 <input-image.vhd> <output-image.qcow2>
 > ```
 
 ## QEMU and UEFI

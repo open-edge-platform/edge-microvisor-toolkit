@@ -21663,8 +21663,8 @@
         "type": "other",
         "other": {
           "name": "platform-manageability-agent",
-          "version": "0.2.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.2.1.tar.gz"
+          "version": "0.2.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.2.2.tar.gz"
         }
       }
     },
@@ -21673,8 +21673,8 @@
         "type": "other",
         "other": {
           "name": "platform-observability-agent",
-          "version": "1.9.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.9.0.tar.gz"
+          "version": "1.10.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.10.1.tar.gz"
         }
       }
     },
@@ -21683,8 +21683,8 @@
         "type": "other",
         "other": {
           "name": "platform-telemetry-agent",
-          "version": "1.4.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.4.0.tar.gz"
+          "version": "1.5.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.5.0.tar.gz"
         }
       }
     },
@@ -21693,8 +21693,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.7.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.7.2.tar.gz"
+          "version": "1.7.3",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.7.3.tar.gz"
         }
       }
     },
@@ -29626,8 +29626,8 @@
         "type": "other",
         "other": {
           "name": "tink-worker",
-          "version": "1.1.1",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.1.tar.gz"
+          "version": "1.1.2",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.2.tar.gz"
         }
       }
     },

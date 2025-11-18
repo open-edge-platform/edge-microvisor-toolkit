@@ -1,2 +1,7 @@
+#!/bin/sh
+
 mount -t proc proc /proc
-/lib/systemd/systemd
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+
+exec /lib/systemd/systemd

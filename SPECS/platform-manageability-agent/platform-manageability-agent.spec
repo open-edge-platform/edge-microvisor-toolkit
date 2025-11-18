@@ -1,6 +1,6 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
-Version:        0.2.1
+Version:        0.2.2
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -77,6 +77,10 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
+* Mon Nov 10 2025 Jagrat Acharya <jagrat.acharya@intel.com> - 0.2.2-1
+- Updated PMA Version.
+- PMA User Lock issue fixed.
+
 * Mon Oct 31 2025 Ipsita Nayak <ipsita.nayak@intel.com> - 0.2.1-1
 - Updated PMA Version.
 - PMA Error Handling.

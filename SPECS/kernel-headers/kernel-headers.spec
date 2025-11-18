@@ -14,7 +14,7 @@
 Summary:        Linux API header files
 Name:           kernel-headers
 Version:        6.12.44
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -76,6 +76,9 @@ done
 %endif
 
 %changelog
+* Fri Nov 14 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-6
+- Update audio support in kernel config
+
 * Tue Nov 4 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-5
 - Update kernel config
 

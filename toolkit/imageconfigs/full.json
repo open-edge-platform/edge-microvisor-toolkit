@@ -18,7 +18,7 @@
 		"packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=tty0 console=ttyS0,115200n8",
+                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
@@ -50,7 +50,7 @@
 		"packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=tty0 console=ttyS0,115200n8",
+                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
@@ -82,7 +82,7 @@
                 "packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=tty0 console=ttyS0,115200n8",
+                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
@@ -113,7 +113,7 @@
                 "packagelists/intel-wireless.json"
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=tty0 console=ttyS0,115200n8",
+                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
