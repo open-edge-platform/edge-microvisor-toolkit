@@ -79,7 +79,7 @@ jobs:
         echo "current pwd is"
         pwd
         mkdir -p ${UPLOAD_DIR}
-        echo "workspace is ${GITHUB_WORKSPACE}
+        echo "workspace is ${GITHUB_WORKSPACE}"
         tarFile=$(find "/home/hspe/actions-runner/_work/edge-microvisor-toolkit/edge-microvisor-toolkit/edge-microvisor-toolkit/out/images/edge-image-bootkit" -type f -name "*.tar.gz" | head -n 1)
         if [[ -z "$tarFile" ]]; then
             echo "No .tar.gz file found "
