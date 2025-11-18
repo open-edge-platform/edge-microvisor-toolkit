@@ -95,7 +95,7 @@ jobs:
             [[ $vmlinuzExists -eq 0 ]] && echo "Missing vmlinuz-*.img"
             exit 1
         fi
-        echo "Both initramfs-*.img and vmlinuz-* files exist in ${UPLOAD_DIR} "
+        echo "Both initramfs-*.img and vmlinuz-* files exist in ${UPLOAD_DIR}"
         cd $UPLOAD_DIR
         tar -cvzf emb_uos_x86_64_${DATE_AS_VERSION}.tar.gz vmlinuz*.emt3 initramfs*.img
         cp ../../../build/imagegen/edge-image-bootkit/image_deps.json ${UPLOAD_DIR}/ || echo 'image_deps.json not found'
