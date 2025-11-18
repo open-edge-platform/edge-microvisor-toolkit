@@ -1,0 +1,133 @@
+name: Test MinimalOS image build
+on:
+  workflow_dispatch:
+  #pull_request:
+  #  branches: [3.0]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RELEASE_NAME: Test MinimalOS
+  CODE_REPO_URL: open-edge-platform/edge-microvisor-toolkit
+  CODE_REPO_NAME: edge-microvisor-toolkit
+  CODE_REPO_BRANCH: "3.0" 
+
+jobs:
+  image_build:
+    name: MinimalOS Image Build
+    runs-on: Microvisor
+    timeout-minutes: 1440 # extend timeout from default 6 hour to 24 hour 
+    environment: production
+    outputs:
+      base_url: ${{ steps.compress-image.outputs.base_url }}
+      upload_dir: ${{ steps.compress-image.outputs.upload_dir }}
+      images: ${{ steps.compress-image.outputs.images }}
+      datetime_as_version: ${{ steps.set-version.outputs.datetime_as_version }}
+      release_name: ${{ steps.compress-image.outputs.release_name }}
+      artifactory_url: ${{ steps.compress-image.outputs.artifactory_url }}
+      artifactory_path: ${{ steps.compress-image.outputs.artifactory_path }}
+      kernel_version: ${{ steps.compress-image.outputs.kernel_version }}
+
+    steps:
+
+    - name: Checkout default repo
+      uses: actions/checkout@v4
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ env.CODE_REPO_URL }}
+        ref: ${{ env.CODE_REPO_BRANCH }}
+        path: ${{ env.CODE_REPO_NAME }}
+
+    - name: Set DATETIME_AS_VERSION
+      id: set-version
+      run: |
+        DATETIME_AS_VERSION=$(date +'%Y%m%d.%H%M')
+        echo "datetime_as_version=$DATETIME_AS_VERSION" >> "$GITHUB_OUTPUT"
+        echo "DATETIME_AS_VERSION=$DATETIME_AS_VERSION" >> "$GITHUB_ENV"
+
+    - name: Build packages
+      run: |
+        cd ${{ env.CODE_REPO_NAME }}
+
+        pushd toolkit
+        sudo make -j16 toolchain \
+                    REBUILD_TOOLS=y \
+                    VALIDATE_TOOLCHAIN_GPG=n \
+                    DAILY_BUILD_REPO=./resources/manifests/package/development.repo
+        popd
+    
+    - name: Build default image
+      id: build-image
+      run: |
+        cd ${{ env.CODE_REPO_NAME }}
+
+        pushd toolkit
+        sudo make image \
+                    REBUILD_PACKAGES=n \
+                    REBUILD_TOOLS=y \
+                    DATETIME_AS_VERSION="${DATETIME_AS_VERSION}" \
+                    LICENSE_CHECK_MODE=warn \
+                    CONFIG_FILE=./imageconfigs/edge-image-minimal-os.json \
+                    EMT_DISTRIB_SPECS=y \
+                    VALIDATE_TOOLCHAIN_GPG=n || true
+        # check for output image to determine the results
+        shopt -s nullglob
+        raw_files=(../out/images/edge-image-minimal-os/*.raw)
+        if [ ${#raw_files[@]} -eq 0 ]; then
+          echo "No .raw files were found in the output directory."
+          exit 1
+        else
+          echo "Found .raw files in the output directory:"
+          printf '%s\n' "${raw_files[@]}"
+        fi
+        popd
+
+    
+    - name: compress image
+      id: compress-image
+      if: steps.build-image.outcome == 'success'
+      run: |
+        cd ${{ env.CODE_REPO_NAME }}
+
+        UPLOAD_DIR=$DATETIME_AS_VERSION
+        echo "upload_dir=$UPLOAD_DIR" >> "$GITHUB_OUTPUT"
+        cp -r out/images/edge-image-minimal-os/ "$UPLOAD_DIR"
+
+        KERNEL_VERSION=$(jq '.[] | .[] | select(.Name=="kernel") | .Version' ./build/imagegen/edge-image-minimal-os/image_pkg_manifest.json)
+        echo "kernel_version=$KERNEL_VERSION" >> "$GITHUB_OUTPUT"
+        echo "KERNEL_VERSION=$KERNEL_VERSION"
+
+        # this is needed for the new code scanning wf
+        echo "base_url=${{ env.ARTIFACTORY_URL }}/${{ env.ARTIFACTORY_PATH }}" >> "$GITHUB_OUTPUT"
+
+        find "$UPLOAD_DIR" -type f -exec gzip {} \;
+        for dir in build/imagegen/edge-image-minimal-os;
+        do
+          json_files=("$dir"/*.json)
+          if [ -e "${json_files[0]}" ]; then
+            for file in "${json_files[@]}";
+            do
+              filename=$(basename "$file")
+              # Extract the directory name to use as a prefix
+              dirname=$(basename "$dir")
+              cp "$file" "$UPLOAD_DIR/$dirname-$filename"
+              echo "$file $UPLOAD_DIR/$dirname-$filename"
+            done
+          else
+            echo "No .json files found in $dir"
+          fi
+        done
+        
+        find "$UPLOAD_DIR" -type f -exec sh -c 'sha256sum "{}" > "{}".sha256sum' \;
+        # echo "build commit: $GITHUB_SHA" >> "$UPLOAD_DIR/build_ID"
+        commit_id=$(git rev-parse HEAD)
+        echo "build commit: $commit_id" >> "${UPLOAD_DIR}/build_ID"
+        echo "Github build ID: $GITHUB_RUN_ID" >> "$UPLOAD_DIR/build_ID"
+        IMAGES=$(find "$UPLOAD_DIR" -name *.raw.* | xargs -n 1 basename | tr '\n' ',')
+        echo "release_name=${{ env.RELEASE_NAME }}" >> "$GITHUB_OUTPUT"
+        echo "artifactory_url=test-art-url" >> "$GITHUB_OUTPUT"
+        echo "artifactory_path=test-art-path" >> "$GITHUB_OUTPUT"
