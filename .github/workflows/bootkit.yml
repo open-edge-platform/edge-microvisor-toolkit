@@ -58,7 +58,7 @@ jobs:
                     DAILY_BUILD_REPO=./resources/manifests/package/development.repo \
                     CONFIG_FILE=./imageconfigs/edge-image-bootkit.json \
                     REPO_LIST+=./resources/manifests/package/development.repo
-        # check for output image to determine the results
+        # check for output image to determine the results.
         shopt -s nullglob
         raw_files=(../out/images/edge-image-bootkit/*.raw)
         if [ ${#raw_files[@]} -eq 0 ]; then
