@@ -4,8 +4,8 @@
 
 Summary:        An agent for managing and updating metric and log configurations
 Name:           platform-telemetry-agent
-Version:        1.4.0
-Release:        3%{?dist}
+Version:        1.5.0
+Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -148,6 +148,9 @@ echo "Assigning KUBECONFIG End"
 %systemd_postun platform-telemetry-agent.service
 
 %changelog
+* Fri Nov 07 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.5.0-1
+- cleanup old inbm entries from configs
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.4.0-3
 - build with golang < 1.25
 
