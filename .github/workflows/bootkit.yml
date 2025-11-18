@@ -1,8 +1,8 @@
 name: Test EMTBootkit image build
 on:
   workflow_dispatch:
-  pull_request:
-    branches: [3.0]
+ # pull_request:
+ #   branches: [3.0]
 
 permissions:
   id-token: write
