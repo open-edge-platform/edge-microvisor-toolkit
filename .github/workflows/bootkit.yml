@@ -76,7 +76,7 @@ jobs:
         cd ${{ env.CODE_REPO_NAME }}
         UPLOAD_DIR=$DATETIME_AS_VERSION
         echo "upload_dir=$UPLOAD_DIR" >> "$GITHUB_OUTPUT"
-        tarFile=$(find "out/images//edge-image-bootkit" -type -f -name "*.tar.gz" | head -n 1)
+        tarFile=$(find "out/images/edge-image-bootkit" -type f -name "*.tar.gz" | head -n 1)
         if [[ -z "$tarFile" ]]; then
             echo "No .tar.gz file found"
             exit 1
