@@ -92,11 +92,11 @@ jobs:
         sudo ./generate-bootkit-initramfs.sh -f "${tarFile}" -o $UPLOAD_DIR
         echo "Validating extracted images in upload directory"
         initramfsExists=$(find ${UPLOAD_DIR} -type f -name "initramfs-*.img" | wc -l)
-        vmlinuzExists=$(find ${UPLOAD_DIR} -type f -name "vmlinuz-*.img" | wc -l)
+        vmlinuzExists=$(find ${UPLOAD_DIR} -type f -name "vmlinuz-*" | wc -l)
         if [[ $initramfsExists -eq 0 || $vmlinuzExists -eq 0 ]]; then
             echo "ERROR: Required files not found: " 
-            [[ $initramfsExists -eq 0 ]] && echo "Missing initramfs-*.img"
-            [[ $vmlinuzExists -eq 0 ]] && echo "Missing vmlinuz-*.img"
+            [[ $initramfsExists -eq 0 ]] && echo "Missing initramfs-*.img "
+            [[ $vmlinuzExists -eq 0 ]] && echo "Missing vmlinuz-* "
             exit 1
         fi
         echo "Both initramfs-*.img and vmlinuz-* files exist in ${UPLOAD_DIR}"
