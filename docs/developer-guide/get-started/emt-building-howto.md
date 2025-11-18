@@ -63,7 +63,7 @@ git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch
 3. Rebuild RPM packages.
 
    ```bash
-   # Rebuild packages/RPMs local toolchain
+   # Rebuild packages/RPMs
    sudo make build-packages REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n
    ```
 
