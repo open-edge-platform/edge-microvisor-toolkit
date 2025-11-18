@@ -1,0 +1,104 @@
+name: Test EMTBootkit image build
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [3.0]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  RELEASE_NAME: Test EMTBootkit
+  CODE_REPO_URL: open-edge-platform/edge-microvisor-toolkit
+  CODE_REPO_NAME: edge-microvisor-toolkit
+  CODE_REPO_BRANCH: "3.0" 
+
+jobs:
+  image_build:
+    name: EMTBootkit Image Build
+    runs-on: Microvisor
+    timeout-minutes: 1440 # extend timeout from default 6 hour to 24 hour 
+    environment: production
+    outputs:
+      upload_dir: ${{ steps.extract-files.outputs.upload_dir }}
+      datetime_as_version: ${{ steps.set-version.outputs.datetime_as_version }}
+
+    steps:
+
+    - name: Checkout default repo
+      uses: actions/checkout@v4
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ env.CODE_REPO_URL }}
+        ref: ${{ env.CODE_REPO_BRANCH }}
+        path: ${{ env.CODE_REPO_NAME }}
+
+    - name: Set DATETIME_AS_VERSION
+      id: set-version
+      run: |
+        DATETIME_AS_VERSION=$(date +'%Y%m%d.%H%M')
+        echo "datetime_as_version=$DATETIME_AS_VERSION" >> "$GITHUB_OUTPUT"
+        echo "DATETIME_AS_VERSION=$DATETIME_AS_VERSION" >> "$GITHUB_ENV"
+
+    - name: Build Edge microvisor Bootkit Image
+      id: build-image
+      run: |
+        cd ${{ env.CODE_REPO_NAME }}
+
+        pushd toolkit
+        sudo make image -j8 \
+                    REBUILD_TOOLS=y \
+                    REBUILD_PACKAGES=n \
+                    EMT_DISTRIB_SPECS=y \
+                    VALIDATE_TOOLCHAIN_GPG=n \
+                    DATETIME_AS_VERSION="${DATETIME_AS_VERSION}" \
+                    DAILY_BUILD_REPO=./resources/manifests/package/development.repo \
+                    CONFIG_FILE=./imageconfigs/edge-image-bootkit.json \
+                    REPO_LIST+=./resources/manifests/package/development.repo
+        # check for output image to determine the results
+        shopt -s nullglob
+        raw_files=(../out/images/edge-image-bootkit/*.raw)
+        if [ ${#raw_files[@]} -eq 0 ]; then
+          echo "No .raw files were found in the output directory."
+          exit 1
+        else
+          echo "Found .raw files in the output directory:"
+          printf '%s\n' "${raw_files[@]}"
+        fi
+        popd
+
+    - name: Extract vmlinuz & initramfs
+      id: extract-files
+      run: |
+        cd ${{ env.CODE_REPO_NAME }}
+        UPLOAD_DIR=$DATETIME_AS_VERSION
+        echo "upload_dir=$UPLOAD_DIR" >> "$GITHUB_OUTPUT"
+        tarFile=$(find "out/images//edge-image-bootkit" -type -f -name "*.tar.gz" | head -n 1)
+        if [[ -z "$tarFile" ]]; then
+            echo "No .tar.gz file found"
+            exit 1
+        fi
+        echo "Using tar file $tarFile"
+        echo "Extracting images vmlinuz.img & initramfs.emt3"
+        cd toolkit/imageconfigs/scripts
+        chmod +x generate-bootkit-initramfs.sh
+        sudo ./generate-bootkit-initramfs.sh -f "${tarFile}" -o $UPLOAD_DIR
+        echo "Validating extracted images in upload directory"
+        initramfsExists=$(find ${UPLOAD_DIR} -type f -name "initramfs-*.img" | wc -1)
+        vmlinuzExists=$(find ${UPLOAD_DIR} -type f -name "vmlinuz-*.img" | wc -1)
+        if [[ $initramfsExists -eq 0 || $vmlinuzExists -eq 0 ]]; then
+            echo "ERROR: Required files not found: " 
+            [[ $initramfsExists -eq 0 ]] && echo "Missing initramfs-*.img"
+            [[ $vmlinuzExists -eq 0 ]] && echo "Missing vmlinuz-*.img"
+            exit 1
+        fi
+        echo "Both initramfs-*.img and vmlinuz-* files exist in ${UPLOAD_DIR}"
+        cd $UPLOAD_DIR
+        tar -cvzf emb_uos_x86_64_${DATE_AS_VERSION}.tar.gz vmlinuz*.emt3 initramfs*.img
+        cp ../../../build/imagegen/edge-image-bootkit/image_deps.json ${UPLOAD_DIR}/ || echo 'image_deps.json not found'
+        cp ../../../build/imagegen/edge-image-bootkit/image_deps.json ${UPLOAD_DIR}/ || echo 'image_pkg_manifest.json not found'
+        
+    
