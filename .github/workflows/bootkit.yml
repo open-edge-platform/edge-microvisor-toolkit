@@ -74,13 +74,13 @@ jobs:
       id: extract-files
       run: |
         cd ${{ env.CODE_REPO_NAME }}
-        UPLOAD_DIR=$DATETIME_AS_VERSION
+        UPLOAD_DIR=${GITHUB_WORKSPACE}/${{ env.CODE_REPO_NAME }}/$DATETIME_AS_VERSION
         echo "upload_dir=$UPLOAD_DIR" >> "$GITHUB_OUTPUT"
         echo "current pwd is"
         pwd
         mkdir -p ${UPLOAD_DIR}
         echo "workspace is ${GITHUB_WORKSPACE}"
-        tarFile=$(find "/home/hspe/actions-runner/_work/edge-microvisor-toolkit/edge-microvisor-toolkit/edge-microvisor-toolkit/out/images/edge-image-bootkit" -type f -name "*.tar.gz" | head -n 1)
+        tarFile=$(find "${GITHUB_WORKSPACE}/edge-microvisor-toolkit/out/images/edge-image-bootkit" -type f -name "*.tar.gz" | head -n 1)
         if [[ -z "$tarFile" ]]; then
             echo "No .tar.gz file found "
             exit 1
