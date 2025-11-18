@@ -96,6 +96,13 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
 
 ### 1B. Build from a release tag
 
+> **IMPORTANT**: To create an image from an older tag, for example the
+> [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718),
+> release, make sure to build it **without** the `REBUILD_PACKAGES=n` option to
+> perform a full local rebuild.
+>
+> Keep in mind, that it will take time (~18 hours on a machine with a 20+ core CPU).
+
 1. Clone the release branch of edge-microvisor-toolkit repository:
 
    Check the [tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
@@ -166,13 +173,6 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
    ```
 
 8. Build the toolkit image:
-
-   > **IMPORTANT**: To create an image with an older tag, like
-   > [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718),
-   > make sure to build it **without** the `REBUILD_PACKAGES=n` option to
-   > perform a full local rebuild.
-   >
-   > Keep in mind, that it will take time (~18 hours on a machine with a 20+ core CPU).
 
    ```bash
    sudo make image -j8 REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n CONFIG_FILE=./imageconfigs/edge-image.json
