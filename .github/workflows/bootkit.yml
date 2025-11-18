@@ -60,13 +60,13 @@ jobs:
                     REPO_LIST+=./resources/manifests/package/development.repo
         # check for output image to determine the results.
         shopt -s nullglob
-        raw_files=(../out/images/edge-image-bootkit/*.raw)
-        if [ ${#raw_files[@]} -eq 0 ]; then
-          echo "No .raw files were found in the output directory."
+        tar_files=(../out/images/edge-image-bootkit/*.tar.gz)
+        if [ ${#tar_files[@]} -eq 0 ]; then
+          echo "No .tar files were found in the output directory."
           exit 1
         else
-          echo "Found .raw files in the output directory:"
-          printf '%s\n' "${raw_files[@]}"
+          echo "Found ..tar files in the output directory:"
+          printf '%s\n' "${tar_files[@]}"
         fi
         popd
 
