@@ -165,7 +165,7 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
    sudo make build-packages REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n
    ```
 
-7. Build the toolkit image:
+8. Build the toolkit image:
 
    > **IMPORTANT**: To create an image with an older tag, like
    > [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718),
