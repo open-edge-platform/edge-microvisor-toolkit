@@ -3,7 +3,7 @@
 
 Summary:        An agent for updating the OS and bare metal agents packages
 Name:           platform-update-agent
-Version:        1.7.3
+Version:        1.8.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -18,7 +18,7 @@ Source4:        platform-update-agent.te
 Source5:        platform-update-agent.fc
 %global debug_package %{nil}
 %global _build_id_links none
-BuildRequires:  golang <= 1.24.7
+BuildRequires:  golang <= 1.24.9
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 Requires(pre):  %{_bindir}/systemd-sysusers
@@ -133,6 +133,10 @@ rm -rf %{_var}/edge-node/pua
 echo "Successfully purged platform-update-agent"
 
 %changelog
+* Thu Nov 20 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.8.1-1
+- Update to golang 1.24.9
+- Fix CVE-2025-47913
+
 * Mon Nov 10 2025 Niket Kumar <niket.kumar@intel.com> - 1.7.3-1
 - PUA changes to update kernel paramter
 
