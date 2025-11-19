@@ -15,7 +15,8 @@
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
                 "packagelists/docker.json",
-		"packagelists/intel-wireless.json"
+                "packagelists/intel-wireless.json",
+                "packagelists/kernel-rt-drivers.json"
             ],
             "KernelCommandLine": {
                 "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
@@ -46,8 +47,9 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-	        "packagelists/docker.json",
-		"packagelists/intel-wireless.json"
+                "packagelists/docker.json",
+                "packagelists/intel-wireless.json",
+                "packagelists/kernel-drivers.json"
             ],
             "KernelCommandLine": {
                 "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
@@ -79,7 +81,8 @@
                 "packagelists/intel-rdt.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-                "packagelists/intel-wireless.json"
+                "packagelists/intel-wireless.json",
+                "packagelists/kernel-rt-drivers.json"
             ],
             "KernelCommandLine": {
                 "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
@@ -110,7 +113,8 @@
                 "packagelists/intel-gpu-base.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-                "packagelists/intel-wireless.json"
+                "packagelists/intel-wireless.json",
+                "packagelists/kernel-drivers.json"
             ],
             "KernelCommandLine": {
                 "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
