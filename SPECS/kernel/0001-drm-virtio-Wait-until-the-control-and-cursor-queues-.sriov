@@ -1,0 +1,35 @@
+From c907329d449811f5aa58f2b2a3633b6012774e37 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Wed, 10 Sep 2025 20:48:45 -0700
+Subject: [PATCH] drm/virtio: Wait until the control and cursor queues are
+ fully emptied
+
+It is needed to wait until the queues are fully emptied before
+doing freeze/suspend.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ drivers/gpu/drm/virtio/virtgpu_drv.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/gpu/drm/virtio/virtgpu_drv.c b/drivers/gpu/drm/virtio/virtgpu_drv.c
+index d6fb1dbfaa27e..d1b189b1a9b75 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_drv.c
++++ b/drivers/gpu/drm/virtio/virtgpu_drv.c
+@@ -176,6 +176,13 @@ static int virtgpu_freeze(struct virtio_device *vdev)
+ 	flush_work(&vgdev->ctrlq.dequeue_work);
+ 	flush_work(&vgdev->cursorq.dequeue_work);
+ 	flush_work(&vgdev->config_changed_work);
++
++	wait_event(vgdev->ctrlq.ack_queue,
++		   vgdev->ctrlq.vq->num_free == vgdev->ctrlq.vq->num_max);
++
++	wait_event(vgdev->cursorq.ack_queue,
++		   vgdev->cursorq.vq->num_free == vgdev->cursorq.vq->num_max);
++
+ 	vdev->config->del_vqs(vdev);
+ 
+ 	return 0;
+-- 
+2.43.0
+
