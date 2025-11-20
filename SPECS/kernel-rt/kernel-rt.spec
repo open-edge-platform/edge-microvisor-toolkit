@@ -173,7 +173,7 @@ sed -i 's#CONFIG_SYSTEM_TRUSTED_KEYS=""#CONFIG_SYSTEM_TRUSTED_KEYS="certs/emt.pe
 
 cp .config current_config
 sed -i 's/CONFIG_LOCALVERSION=""/CONFIG_LOCALVERSION="-%{release}"/' .config
-make LC_ALL=  ARCH=%{arch} oldconfig
+make LC_ALL=  ARCH=%{arch} olddefconfig
 
 # Verify the config files match
 cp .config new_config
@@ -434,6 +434,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %changelog
 * Thu Oct 30 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-1
 - Upgate kernel to 6.17.0
+
+* Tue Nov 18 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-1
+- Update kernel to 6.12.55
 
 * Fri Nov 14 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-6
 - Update audio support in kernel config

@@ -54,6 +54,9 @@ make INSTALL_MOD_PATH=%{buildroot} modules_install
 * Mon Nov 10 2025 Junxiao Chang <junxiao.chang@intel.com> - 580.105.08-1
 - Updrade Nvidia data center driver to 580.105.08
 
+* Tue Nov 18 2025 Lishan Liu <lishan.liu@intel.com> - 570.133.20-11
+- Bump release to rebuild
+
 * Fri Nov 14 2025 Lishan Liu <lishan.liu@intel.com> - 570.133.20-10
 - Bump release to rebuild
 
