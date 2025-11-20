@@ -7,7 +7,7 @@ Summary:        Installer from a live CD/DVD/USB to disk
 # https://github.com/calamares/calamares/issues/1051
 Name:           calamares
 Version:        3.3.1
-Release:        14%{?dist}
+Release:        15%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -61,6 +61,7 @@ Patch9:          ui_redesign.patch
 Patch10:         c69e229be0be9bd7a033776ebe3bec63206b8151.patch
 Patch11:         change-wording-in-welcomepage.patch
 Patch12:         0001-Change-users-module-to-use-attended_config.json.patch
+Patch13:         0002-partition-extend-device-filtering-to-exclude-vfat.patch
 # Compilation tools
 BuildRequires:  cmake
 BuildRequires:  extra-cmake-modules
@@ -162,6 +163,7 @@ mv %{SOURCE56} data/images/wait.png
 %patch -P 10 -p1
 %patch -P 11 -p1
 %patch -P 12 -p1
+%patch -P 13 -p1
 
 %build
 %cmake_kf \
@@ -239,6 +241,10 @@ install -p -m 644 %{SOURCE21} %{buildroot}%{_sysconfdir}/calamares/settings.conf
 %{_libdir}/libcalamaresui.so
 
 %changelog
+* Tue Nov 18 2025 kintalix jayanth <kintalix.jayanth@intel.com> - 3.3.1-15
+- Prevent installer from listing installation media devices like bootable USB sticks
+- formatted with FAT as valid target disks, thus avoiding accidental overwriting using rufus method
+
 * Tue Sep 01 2025 kintalix jayanth <kintalix.jayanth@intel.com> - 3.3.1-14
 -  switched config path to attended_config.json instead of unattended_config.json
 
