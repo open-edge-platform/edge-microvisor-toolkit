@@ -9,8 +9,8 @@ URL:            https://github.com/open-edge-platform/edge-node-agents
 Source0:        %{url}/archive/refs/tags/%{name}/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1:        %{name}.conf
 Source2:        edge-node-metrics.cron
-
-BuildRequires:  golang <= 1.24.9
+BuildRequires:  golang < 1.25
+BuildRequires:  golang >= 1.24.9
 BuildRequires:  systemd-rpm-macros
 
 Requires(pre):  %{_bindir}/systemd-sysusers
