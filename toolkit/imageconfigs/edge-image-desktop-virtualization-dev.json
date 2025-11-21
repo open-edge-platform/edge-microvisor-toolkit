@@ -97,6 +97,9 @@
                 },
                 {
                         "Path": "additionalconfigs/add-sudoer.sh"
+                },
+                {
+                        "Path": "additionalconfigs/add-docker-group.sh"
                 }
             ],
             "KernelOptions": {
