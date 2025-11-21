@@ -4760,8 +4760,8 @@
         "type": "other",
         "other": {
           "name": "golang",
-          "version": "1.24.7",
-          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.24.7-1/go1.24.7-20250903.8.src.tar.gz"
+          "version": "1.24.9",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.24.9-1/go1.24.9-20251013.3.src.tar.gz"
         }
       }
     },
@@ -8471,8 +8471,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.44",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz"
+          "version": "6.12.55",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.55.tar.gz"
         }
       }
     },
@@ -8501,8 +8501,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.44",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz"
+          "version": "6.12.55",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.55.tar.gz"
         }
       }
     },
@@ -8541,8 +8541,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.44",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz"
+          "version": "6.12.55",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.55.tar.gz"
         }
       }
     },

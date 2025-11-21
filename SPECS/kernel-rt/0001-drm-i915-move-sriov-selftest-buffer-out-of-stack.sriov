@@ -1,0 +1,68 @@
+From 140444823a5e75b687391abcd563af8d068c931f Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Thu, 25 Sep 2025 18:29:57 +0800
+Subject: [PATCH] drm/i915: move sriov selftest buffer out of stack
+
+this is to fix i915 sriov selftest buffer limit issue.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ .../drm/i915/gt/iov/selftests/selftest_live_iov_relay.c   | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/iov/selftests/selftest_live_iov_relay.c b/drivers/gpu/drm/i915/gt/iov/selftests/selftest_live_iov_relay.c
+index b3ef7dcedf534..d6f7b461302df 100644
+--- a/drivers/gpu/drm/i915/gt/iov/selftests/selftest_live_iov_relay.c
++++ b/drivers/gpu/drm/i915/gt/iov/selftests/selftest_live_iov_relay.c
+@@ -348,6 +348,7 @@ static int pf_loopback_one_way_to_vf(void *arg)
+ 	return ret;
+ }
+ 
++static u32 pf_full_loopback_to_vf_buf[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA];
+ static int pf_full_loopback_to_vf(void *arg)
+ {
+ 	struct intel_iov *iov = arg;
+@@ -356,7 +357,6 @@ static int pf_full_loopback_to_vf(void *arg)
+ 		FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA),
+ 		/* ... */
+ 	};
+-	u32 buf[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA];
+ 	unsigned int n;
+ 	int ret = 0;
+ 
+@@ -365,7 +365,7 @@ static int pf_full_loopback_to_vf(void *arg)
+ 	for (n = GUC_HXG_MSG_MIN_LEN; n <= ARRAY_SIZE(msg); n++) {
+ 
+ 		ret = intel_iov_relay_send_to_vf(&iov->relay, PFID, msg, n,
+-						 buf, ARRAY_SIZE(buf));
++						 pf_full_loopback_to_vf_buf, ARRAY_SIZE(pf_full_loopback_to_vf_buf));
+ 
+ 		if (ret < 0) {
+ 			IOV_SELFTEST_ERROR(iov, "failed to send msg len=%u, %d\n", n, ret);
+@@ -438,6 +438,7 @@ static int pf_loopback_one_way_to_pf(void *arg)
+ 	return ret;
+ }
+ 
++static u32 relay_request_to_pf_buf[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA];
+ static int relay_request_to_pf(struct intel_iov *iov)
+ {
+ 	u32 msg[VF2GUC_RELAY_TO_PF_REQUEST_MSG_NUM_RELAY_DATA] = {
+@@ -445,14 +446,13 @@ static int relay_request_to_pf(struct intel_iov *iov)
+ 		FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA),
+ 		/* ... */
+ 	};
+-	u32 buf[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA];
+ 	unsigned int n;
+ 	int ret = 0;
+ 
+ 	for (n = GUC_HXG_MSG_MIN_LEN; n <= ARRAY_SIZE(msg); n++) {
+ 
+ 		ret = intel_iov_relay_send_to_pf(&iov->relay, msg, n,
+-						 buf, ARRAY_SIZE(buf));
++						 relay_request_to_pf_buf, ARRAY_SIZE(relay_request_to_pf_buf));
+ 
+ 		if (ret < 0) {
+ 			IOV_SELFTEST_ERROR(iov, "failed to send len=%u, %d\n", n, ret);
+-- 
+2.43.0
+
