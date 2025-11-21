@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -931,22 +932,40 @@ func SystemBlockDevices() (systemDevices []SystemBlockDevice, err error) {
 	return systemDevices, nil
 }
 
-// isReadOnlyISO checks if a device is mounted read-only (ISO on USB/CD).
+// isReadOnlyISO checks whether a block device is installation media (ISO9660 or Rufus USB).
 func isReadOnlyISO(devicePath string) bool {
 	mounts, err := os.ReadFile("/proc/mounts")
 	if err != nil {
 		logger.Log.Debugf("Failed to read /proc/mounts: %v", err)
 		return false
 	}
+
 	for _, line := range strings.Split(string(mounts), "\n") {
 		fields := strings.Fields(line)
-		if len(fields) >= 4 && fields[0] == devicePath && fields[2] == "iso9660" {
-			options := strings.Split(fields[3], ",")
-			for _, opt := range options {
-				if opt == "ro" {
-					return true
-				}
-			}
+		if len(fields) < 4 {
+			continue
+		}
+
+		dev := fields[0]
+		fsType := fields[2]
+		options := strings.Split(fields[3], ",")
+
+		// Skip entries that are not part of this device (e.g., /dev/sdb should match /dev/sdb1)
+		if !strings.HasPrefix(dev, devicePath) {
+			continue
+		}
+
+		// Common helper to check for read-only flag
+		isReadOnly := slices.Contains(options, "ro")
+
+		if fsType == "iso9660" && isReadOnly {
+			// Case 1: dd USB or CD-based ISO
+			return true
+		} else if (fsType == "vfat" || fsType == "fat32" || fsType == "fat") && isReadOnly {
+			// Case 2: Rufus USB (FAT filesystem but read-only)
+			return true
+		} else {
+			logger.Log.Debugf("Non-installer mount detected on %s (fs=%s, ro=%v)", dev, fsType, isReadOnly)
 		}
 	}
 	return false

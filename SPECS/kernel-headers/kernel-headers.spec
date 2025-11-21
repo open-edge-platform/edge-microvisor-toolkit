@@ -13,14 +13,14 @@
 
 Summary:        Linux API header files
 Name:           kernel-headers
-Version:        6.12.44
-Release:        6%{?dist}
+Version:        6.12.55
+Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/pub/linux/kernel
-Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.44.tar.gz
+Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.55.tar.gz
 # Historical name shipped by other distros
 Provides:       glibc-kernheaders = %{version}-%{release}
 BuildArch:      noarch
@@ -41,7 +41,7 @@ cross-glibc package.
 %endif
 
 %prep
-%setup -q -n linux-6.12.44
+%setup -q -n linux-6.12.55
 
 %build
 make mrproper
@@ -76,6 +76,9 @@ done
 %endif
 
 %changelog
+* Tue Nov 18 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-1
+- Update kernel to 6.12.55
+
 * Fri Nov 14 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-6
 - Update audio support in kernel config
 
