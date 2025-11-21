@@ -6,7 +6,6 @@ patches that have not yet been upstreamed. These patches optimize performance an
 capabilities for Intel silicon, streamlining integration for operating system vendors and
 technology partners.
 
-
 [Hardware and Software Requirements](./emt-system-requirements.md)
 
 ## Usage Scenarios
@@ -16,9 +15,10 @@ To validate workloads on Intel silicon, you can deploy Edge Microvisor Toolkit a
 Framework, a complete integrated system for edge devices with full lifecycle management,
 including remote deployment and management of applications orchestrated by Kubernetes.
 
-[Choose a pre-configured Edge Microvisor Toolkit Image](./emt-architecture-overview.md#edge-microvisor-toolkit-image-versions)
-
-[Build Your Own Edge Microvisor Toolkit](./get-started/emt-building-howto.md)
+- [Choose a pre-configured Edge Microvisor Toolkit Image](./emt-architecture-overview.md#edge-microvisor-toolkit-image-versions).
+- [Build Your Own Edge Microvisor Toolkit](./get-started/emt-building-howto.md).
+- [Build and deploy the toolkit on edge](./get-started/emt-build-and-deploy.md).
+- [Deploy sample applications from Edge AI Suites](https://github.com/open-edge-platform/edge-ai-suites/blob/main/README.md#suites-and-use-cases).
 
 ## Install Edge Microvisor Toolkit
 
