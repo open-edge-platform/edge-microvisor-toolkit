@@ -388,32 +388,24 @@ PERSISTENT_BIND_PATHS="
 
 ## Boot Optimization
 
-You can try [Slim Bootloader (SBL)](https://github.com/slimbootloader/slimbootloader) -
-an Intel open-source boot firmware that can optimize and accelerate the boot performance
-of your device. SBL is designed to run on Intel x86 architecture. It is highly
-optimized, secure, modular, and lightweight at the same time. Slim Bootloader is
-based on the [EDK II](https://github.com/tianocore/edk2) build system.
-SBL also supports virtual platforms and can be build for QEMU.
-
-You can still use GRUB and systemd-boot for
+While EDKII BIOS is used for
 [specific image versions of Edge Microvisor Toolkit](#edge-microvisor-toolkit-image-versions),
-as long as SBL launches UEFI payload. If a payload is not specified in the SBL
-build command, SBL's
-[OsLoader](https://slimbootloader.github.io/developer-guides/osloader.html)
-will be the default payload and the toolkit boot image can be used natively
-without an additional stage like GRUB. This requires the boot image to be
-packaged as a container. Additionally, the boot image is verified for
-[secure boot](./security-considerations/emt-sb-howto.md) purposes. To learn
-how to create a container image, you can refer to the
-[official documentation](https://slimbootloader.github.io/how-tos/create-container-boot-image.html#create-container-boot-image).
+you can try [Slim Bootloader (SBL)](https://github.com/slimbootloader/slimbootloader)
+\- an open-source boot firmware that can optimize and accelerate the boot
+performance of your device.
 
-Using SBL and UEFI payload, enabling fast boot and disabling POST can provide
-a noticeable speed-up. In addition, removing unnecessary devices, for example,
-USB and network cards, will further shorten the boot time. Refer to the
-[Boot Performance](https://slimbootloader.github.io/developer-guides/boot-performance.html)
-section for more details. You can also visit the
-[GitHub page](https://github.com/slimbootloader/slimbootloader) for deployment
-instructions and full source code.
+SBL is designed to run on Intel x86 architecture. It is highly optimized, secure,
+and lightweight at the same time. Slim Bootloader supports modular payload
+architecture and can support UEFI through UEFI-payload. SBL provides a viable
+option for customers who prefer to develop their own boot firmware for their
+platforms.
+
+Switching to SBL and enabling fast boot will result in a noticeable speed-up.
+Refer to the
+[official documentation](https://slimbootloader.github.io/introduction/index.html)
+for more details. Visit the
+[GitHub page](https://github.com/slimbootloader/slimbootloader)
+for deployment instructions and full source code.
 
 
 <!--hide_directive
