@@ -86,6 +86,7 @@ create a bootable USB stick, and use the USB stick to install the Standalone Nod
 #### Standard kernel with integrated Docker and K3s
 
 This image has integrated Docker and K3s for deploying and managing applications.
+See the [K3s extensions](#k3s-extensions) section for more details.
 
 #### Kernel with real-time extensions and integrated Docker and K3s
 
@@ -131,6 +132,8 @@ The patch refines locking mechanisms, reducing the time when critical sections c
 interrupted. This improves the overall responsiveness and guarantees that the system can
 handle real-time workloads with minimal jitter.
 
+> **Note:** You can learn more about preempt Kernel and its features at the [Linux Intel LTS Kernel Github](https://github.com/intel/linux-intel-lts/blob/main/README.md)
+
 ### perf tool
 
 The Linux `perf` tool is a powerful, integrated performance analysis suite, that taps
@@ -161,6 +164,13 @@ The data includes:
 - **Diagnostic Utility** is particularly useful for system tuning and benchmarking. It helps
   understand how modern Intel® CPUs manage power under varying workloads.
 
+### Resource Director Technology
+
+Edge Microvisor Toolkit provides basic support for Intel Resource Director Technology
+including, Cache Monitoring Technology (CMT), Memory Bandwidth Monitoring
+(MBM), Cache Allocation Technology (CAT), Code and Data Prioritization
+(CDP) and Memory Bandwidth Allocation (MBA). These technologies facilitate pinning workloads
+and isolating specific CPU cores, assigning them to specified tasks.
 
 ### cpupower
 
@@ -204,19 +214,19 @@ for RT tasks. This way, for example, the workloads can be shifted between effici
 and performance cores. The parameter takes lists as values:
 
   - isolcpus=\<cpu core number>,...,\<cpu core number>
-  
+
     ```bash
     isolcpus=1,2,3
     ```
-  
+
   - isolcpus=\<cpu core number>-\<cpu core number>
-  
+
     ```bash
     isolcpus=1-3
     ```
-  
+
   - isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
-  
+
     ```bash
     isolcpus=1,4-5
     ```
@@ -257,6 +267,44 @@ the used image configuration. The artifacts come with associated `sha256` files.
 - Image in VHD format.
 - Signing key.
 
+## K3s Extensions
+
+Deploying of Edge Microvisor Toolkit with Lightweight Kubernetes (K3s)
+requires additional extensions which are downloaded as docker images. Below is
+a list of components essential for scaled deployment of the toolkit.
+
+- [Multus CNI](https://github.com/k8snetworkplumbingwg/multus-cni)
+
+  A Container Network Interface (CNI) plugin for Kubernetes that enables you to
+  attach multiple network interfaces to Kubernetes pods, which usually have only
+  one network interface.
+
+- [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
+  - [GPU Plugin](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md)
+
+    Intel GPU plugin provides access to discrete and integrated Intel GPU devices
+    supported by the host kernel. It enables offloading compute operations of
+    Kubernetes workload to GPU devices. It may be beneficial in such use cases as
+    media transcoding and analytics, cloud gaming, AI training and inference.
+
+- [Calico](https://github.com/projectcalico/calico)
+  - [CNI Plugin](https://github.com/projectcalico/calico/tree/master/cni-plugin)
+  \- as [docker image](https://hub.docker.com/r/calico/cni).
+
+    A plugin that enables you to use Calico for deployments based on Container
+    Network Interface (CNI).
+
+  - [Node](https://github.com/projectcalico/calico/tree/master/node)
+    \- as [docker image](https://hub.docker.com/r/calico/node/).
+
+    A CNI plugin that enables you to create a Layer 3 network for Kubernetes
+    pods and assign a unique IP address for each.
+
+  - [Kube controllers](https://github.com/projectcalico/calico/tree/master/kube-controllers)
+    \- as [docker image](https://hub.docker.com/r/calico/kube-controllers).
+
+    A set of controllers that monitor the resources in the Kubernetes API (network,
+    policies, nodes) and adjust Calico's CNI configuration.
 
 ## Packaging
 
