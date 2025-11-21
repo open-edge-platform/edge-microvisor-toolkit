@@ -434,6 +434,28 @@ PERSISTENT_BIND_PATHS="
   additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`,
   `/var/lib/rancher`.
 
+## Boot Optimization
+
+While EDKII BIOS is used for
+[specific image versions of Edge Microvisor Toolkit](#edge-microvisor-toolkit-image-versions),
+you can try [Slim Bootloader (SBL)](https://github.com/slimbootloader/slimbootloader)
+\- an open-source boot firmware that can optimize and accelerate the boot
+performance of your device.
+
+SBL is designed to run on Intel x86 architecture. It is highly optimized, secure,
+and lightweight at the same time. Slim Bootloader supports modular payload
+architecture and can support UEFI through UEFI-payload. SBL provides a viable
+option for customers who prefer to develop their own boot firmware for their
+platforms.
+
+Switching to SBL and enabling fast boot will result in a noticeable speed-up.
+Refer to the
+[official documentation](https://slimbootloader.github.io/introduction/index.html)
+for more details. Visit the
+[GitHub page](https://github.com/slimbootloader/slimbootloader)
+for deployment instructions and full source code.
+
+
 <!--hide_directive
 :::{toctree}
 :hidden:
