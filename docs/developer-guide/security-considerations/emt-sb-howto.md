@@ -251,3 +251,9 @@ Custom Secure Boot Options → DB Options → Enroll Signature → Enroll Signat
 
 Re-enable secure boot in the firmware menu and reboot. Verify that the system boots successfully with secure boot enabled.
 
+## Boot Firmware
+
+You can try Slim Bootloader for the deployment of Edge Microvisor Toolkit on
+your machine. Refer to the
+[Boot Optimization](../emt-architecture-overview.md#boot-optimization) section
+for more details.
