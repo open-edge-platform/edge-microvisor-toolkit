@@ -73,6 +73,9 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 * Thu Oct 30 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-1
 - Upgate kernel to 6.17.0
 
+* Fri Nov 21 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-1
+- Update kernel to 6.12.55
+
 * Fri Nov 14 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.44-6
 - Update audio support in kernel config
 
