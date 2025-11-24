@@ -1,16 +1,18 @@
 
-%define dist_version 3
-%define distro_release_version_no_time %(echo %{distro_release_version} | cut -d. -f 1-3)
+%define dist_version 25.06
+%define build_number_no_dist_no_time %(echo %{distro_release_version} | cut -d. -f 3)
 
 Summary:        Edge Microvisor Toolkit release files
 Name:           edge-release
-Version:        %{dist_version}.0
-Release:        4%{?dist}
+Version:        %{dist_version}
+Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
 URL:            https://github.com/open-edge-platform/edge-microvisor-toolkit
+
+%define distro_full_version %{dist_version}.%(echo "%{release}" | sed 's/[^0-9].*//' | xargs printf "%02d")
 
 Source1:        90-default.preset
 Source2:        90-default-user.preset
@@ -20,7 +22,7 @@ Source4:        15-default.conf
 Provides:       system-release
 Provides:       system-release(%{version})
 Provides:       azurelinux-release = %{version}-%{release}
-Obsoletes:      azurelinux-release < %{version}-%{release}
+Obsoletes:      azurelinux-release < 3.0
 
 BuildArch:      noarch
 
@@ -37,13 +39,13 @@ install -d %{buildroot}%{_rpmmacrodir}
 
 cat <<-"EOF" > %{buildroot}%{_libdir}/edge-release
 %{distribution} %{version}
-BUILD_NUMBER=%{distro_release_version_no_time}
+BUILD_NUMBER=%{distro_full_version}-%{build_number_no_dist_no_time}
 EOF
 ln -sv ..%{_libdir}/edge-release %{buildroot}%{_sysconfdir}/edge-release
 
 cat <<-"EOF" > %{buildroot}%{_libdir}/lsb-release
 DISTRIB_ID="Edge Microvisor Toolkit"
-DISTRIB_RELEASE="%{distro_release_version_no_time}"
+DISTRIB_RELEASE="%{distro_full_version}"
 DISTRIB_CODENAME=emt
 DISTRIB_DESCRIPTION="%{distribution} %{version}"
 EOF
@@ -51,10 +53,10 @@ ln -sv ..%{_libdir}/lsb-release %{buildroot}%{_sysconfdir}/lsb-release
 
 cat <<-"EOF" > %{buildroot}%{_libdir}/os-release
 NAME="%{distribution}"
-VERSION="%{distro_release_version_no_time}"
+VERSION="%{distro_full_version}"
 ID="Edge Microvisor Toolkit"
 VERSION_ID="%{version}"
-PRETTY_NAME="%{distribution} %{version}"
+PRETTY_NAME="%{distribution} %{distro_full_version}"
 ANSI_COLOR="1;34"
 HOME_URL="%{url}"
 BUG_REPORT_URL="%{url}"
@@ -63,12 +65,12 @@ EOF
 ln -sv ..%{_libdir}/os-release %{buildroot}%{_sysconfdir}/os-release
 
 cat <<-"EOF" > %{buildroot}%{_libdir}/issue
-Welcome to %{distribution} %{version} (%{_arch}) - (\l)
+Welcome to %{distribution} %{distro_full_version} (%{_arch}) - (\l)
 EOF
 ln -sv ..%{_libdir}/issue %{buildroot}%{_sysconfdir}/issue
 
 cat <<-"EOF" > %{buildroot}%{_libdir}/issue.net
-Welcome to %{distribution} %{version} (%{_arch})
+Welcome to %{distribution} %{distro_full_version} (%{_arch})
 EOF
 ln -sv ..%{_libdir}/issue.net %{buildroot}%{_sysconfdir}/issue.net
 
@@ -118,6 +120,9 @@ install -Dm0644 %{SOURCE4} -t %{buildroot}%{_sysctldir}/
 %{_sysctldir}/*.conf
 
 %changelog
+* Mon Nov 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 25.06-1
+- bump version for release, change versioning number for 3.0 series to 25.06.
+
 * Tue Jun 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.0-4
 - bump version for release.
 
