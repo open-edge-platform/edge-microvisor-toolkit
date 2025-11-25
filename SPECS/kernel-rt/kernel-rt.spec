@@ -1,7 +1,7 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
 Version:        6.17.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -432,6 +432,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Tue Nov 25 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-2
+- Bump release version for rebase
+
 * Thu Oct 30 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-1
 - Upgate kernel to 6.17.0
 

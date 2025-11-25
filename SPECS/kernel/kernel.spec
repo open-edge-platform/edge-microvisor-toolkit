@@ -1,7 +1,7 @@
 Summary:        Linux Kernel
 Name:           kernel
 Version:        6.17.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -407,6 +407,9 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Tue Nov 25 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-2
+- Bump release version for rebase
+
 * Thu Oct 30 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-1
 - Upgate kernel to 6.17.0
 
