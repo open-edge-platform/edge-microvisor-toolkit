@@ -13,7 +13,7 @@
 Summary:        Unified Kernel Image
 Name:           kernel-uki
 Version:        6.12.55
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -70,6 +70,9 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Tue Nov 25 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-2
+- Update kernel config to enable VIRTIO_GPU
+
 * Fri Nov 21 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-1
 - Update kernel to 6.12.55
 
