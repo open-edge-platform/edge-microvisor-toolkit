@@ -1,4 +1,4 @@
-
+%define emt_ver 3
 %define dist_version 25.06
 %define build_number_no_dist_no_time %(echo %{distro_release_version} | cut -d. -f 3)
 
@@ -55,7 +55,7 @@ cat <<-"EOF" > %{buildroot}%{_libdir}/os-release
 NAME="%{distribution}"
 VERSION="%{distro_full_version}"
 ID="Edge Microvisor Toolkit"
-VERSION_ID="%{version}"
+VERSION_ID="3.0"
 PRETTY_NAME="%{distribution} %{distro_full_version}"
 ANSI_COLOR="1;34"
 HOME_URL="%{url}"
@@ -80,9 +80,9 @@ cat <<-"EOF" > %{buildroot}%{_rpmmacrodir}/macros.dist
 # dist macros.
 
 %%__bootstrap         ~bootstrap
-%%emt                 %{dist_version}
-%%emt%{dist_version}  1
-%%dist                .emt%{dist_version}%%{?with_bootstrap:%%{__bootstrap}}
+%%emt                 %{emt_ver}
+%%emt%{emt_ver}  1
+%%dist                .emt%{emt_ver}%%{?with_bootstrap:%%{__bootstrap}}
 %%dist_vendor         %{vendor}
 %%dist_name           %{distribution}
 %%dist_home_url       %{url}
