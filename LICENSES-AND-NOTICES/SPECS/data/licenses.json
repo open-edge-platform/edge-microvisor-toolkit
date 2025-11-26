@@ -2083,6 +2083,7 @@
                 "speex",
                 "speexdsp",
                 "spice",
+                "spice-gtk",
                 "spice-protocol",
                 "spice-vdagent",
                 "spirv-headers",
