@@ -183,7 +183,7 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
 8. Build the toolkit image:
 
    ```bash
-   sudo make image -j8 REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n CONFIG_FILE=./imageconfigs/edge-image.json
+   sudo make image REBUILD_PACKAGES=n REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n CONFIG_FILE=./imageconfigs/edge-image.json
    ```
 
 The built image will be located in its separate directory under  `edge-microvisor-toolkit/out/images/`.
