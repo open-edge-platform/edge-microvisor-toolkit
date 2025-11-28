@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "platform-observability-agent-1.10.1.tar.gz": "ef32a213f154c56244980f8a80af5aa5e378b6f1747c12d3c8150aafd9c060ea",
+    "platform-observability-agent-1.10.2.tar.gz": "706bd698134db9d410a45bc303486ff18d3488e420a795f93836edd7b74fc238",
     "platform-observability-collector.service": "11ebad24cbbae4a24b70c11087124aba4e7077390ee4dd4496fdd42e226d4333",
     "platform-observability-health-check.service": "121f3d26944952b45f018ca9b7bbeb7a3d55a89f8d32d4ef6a04b67a5497101e",
     "platform-observability-logging.service": "4b375f9fbdd2ddc1d7b0c1021593d02fd02156e28a1474c156a7b698a07db5e3",

@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "platform-telemetry-agent-1.6.1.tar.gz": "26207aed353eb948cf731c813f8dbe9bfba5e525d57ad6f004739efd9aff1838",
+    "platform-telemetry-agent-1.6.2.tar.gz": "040f456fb0dca9e3a07c2ecd247a13ee2d43f66e104d18de357224bb8cd94066",
     "platform-telemetry-agent.service": "441d64259c0cb4ee1c5a1ca4fff06454abdab66ddbc01c496e2efcc0ceb88aee",
     "env_wrapper.sh": "e3d9c27c8e31f6a2a3e530ce31fb6c3078ea3c9cdd4647d5151d9ea7f58296c7",
     "platform-telemetry-agent.conf": "555a6fcec46c3a27139b4946e3eae30df2fc8a61c83efe2fc616492fee11a925",

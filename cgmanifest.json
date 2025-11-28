@@ -21673,8 +21673,8 @@
         "type": "other",
         "other": {
           "name": "platform-observability-agent",
-          "version": "1.10.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.10.1.tar.gz"
+          "version": "1.10.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.10.2.tar.gz"
         }
       }
     },
@@ -21683,8 +21683,8 @@
         "type": "other",
         "other": {
           "name": "platform-telemetry-agent",
-          "version": "1.6.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.6.1.tar.gz"
+          "version": "1.6.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.6.2.tar.gz"
         }
       }
     },
