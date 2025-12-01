@@ -1,0 +1,74 @@
+From 553b4a442ddfe7e6fc809e51877fcb0e5ef887d5 Mon Sep 17 00:00:00 2001
+From: Fabio Manganiello <fabio@manganiello.tech>
+Date: Tue, 15 Jul 2025 15:41:47 +0200
+Subject: [PATCH] soup-init: Use libdl instead of gmodule in `soup2_is_loaded`
+ check
+
+Calling `g_module_open` in the library constructor can cause deadlocks
+when libsoup is used with other libraries that also contend for GLib
+mutexes. `dlopen` should be used instead.
+
+GLib issue: https://gitlab.gnome.org/GNOME/glib/-/issues/1443
+GLib docs: https://gitlab.gnome.org/GNOME/glib/-/merge_requests/4691
+
+Fixes https://gitlab.gnome.org/GNOME/libsoup/-/issues/463
+
+Co-authored-by: Nirbheek Chauhan <nirbheek@centricular.com>
+---
+ libsoup/soup-init.c | 28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
+
+diff --git a/libsoup/soup-init.c b/libsoup/soup-init.c
+index 8a33c77d0..3392e8ec2 100644
+--- a/libsoup/soup-init.c
++++ b/libsoup/soup-init.c
+@@ -10,7 +10,6 @@
+ #endif
+ 
+ #include <glib/gi18n-lib.h>
+-#include <gmodule.h>
+ #include "gconstructor.h"
+ 
+ #ifdef G_OS_WIN32
+@@ -18,21 +17,28 @@
+ #include <windows.h>
+ 
+ HMODULE soup_dll;
++#else
++#include <dlfcn.h>
+ #endif
+ 
+ static gboolean
+ soup2_is_loaded (void)
+ {
+-    GModule *module = g_module_open (NULL, 0);
+-    gpointer func;
+-    gboolean result = FALSE;
+-
+-    if (g_module_symbol (module, "soup_uri_new", &func))
+-        result = TRUE;
+-
+-    g_module_close (module);
+-
+-    return result;
++	gboolean result = FALSE;
++
++	/* Skip on PE/COFF, as it doesn't have a flat symbol namespace */
++#ifndef G_OS_WIN32
++	gpointer handle;
++	gpointer func;
++
++	handle = dlopen (NULL, RTLD_LAZY | RTLD_GLOBAL);
++	if (handle != NULL) {
++		func = dlsym (handle, "soup_uri_new");
++		result = (func != NULL);
++		dlclose (handle);
++	}
++#endif
++	return result;
+ }
+ 
+ static void
+-- 
+GitLab
+

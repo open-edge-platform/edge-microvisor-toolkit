@@ -1,6 +1,7 @@
 {
   "Signatures": {
-    "LICENSE.PTR": "1e889744219db57d4493688a9dda29d802abc5f830fb0e43fa928f056606d95f",
-    "talloc-2.4.1.tar.gz": "410a547f08557007be0e88194f218868358edc0ab98c98ba8c167930db3d33f9"
+    "talloc-2.4.3.tar.asc": "8e65cf6cdee0378fddae58e2aa10209edc408ea56fafcaa9a869c9e91be1b689",
+    "talloc-2.4.3.tar.gz": "dc46c40b9f46bb34dd97fe41f548b0e8b247b77a918576733c528e83abd854dd",
+    "talloc.keyring": "e88528311b8fc3c0acb520ac6c46f598a44b777239c75078827e02ed388b88e6"
   }
 }

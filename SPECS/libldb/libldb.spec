@@ -21,7 +21,7 @@ URL: http://ldb.samba.org/
 Source0: https://www.samba.org/ftp/ldb/ldb-%{version}.tar.gz
 Source1: https://www.samba.org/ftp/ldb/ldb-%{version}.tar.asc
 # gpg2 --no-default-keyring --keyring ./ldb.keyring --recv-keys 9147A339719518EE9011BCB54793916113084025
-Source2: ldb.keyring
+#Source2: ldb.keyring
 Source3: %{name}-LICENSE.txt
 
 # Patches
@@ -123,7 +123,7 @@ sed -e 's/5000/15000/' -i tests/ldb_kv_ops_test.c
 %endif
 
 %build
-zcat %{SOURCE0} | gpgv2 --quiet --keyring %{SOURCE2} %{SOURCE1} -
+#zcat %{SOURCE0} | gpgv2 --quiet --keyring %{SOURCE2} %{SOURCE1} -
 
 # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1217376
 export python_LDFLAGS=""
