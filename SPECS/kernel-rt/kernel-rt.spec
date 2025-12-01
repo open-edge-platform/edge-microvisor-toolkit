@@ -1,7 +1,7 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
 Version:        6.12.55
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -943,6 +943,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Thu Nov 27 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-2
+- Update audio and virtio gpu kernel config
+
 * Tue Nov 18 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-1
 - Update kernel to 6.12.55
 
