@@ -8,7 +8,7 @@
 %bcond tests 1
 %endif
 
-Name:           python-%{srcname}
+Name:           %{srcname}
 Version:        7.0.0
 Release:        6%{?dist}
 Summary:        Python library for working with RDF

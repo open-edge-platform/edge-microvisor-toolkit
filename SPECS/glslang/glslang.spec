@@ -1,8 +1,8 @@
-%global sdkver 1.3.275.0
+%global sdkver 1.4.321.0
 
 Name:           glslang
-Version:        14.0.0
-Release:        2%{?dist}
+Version:        15.4.0
+Release:        1%{?dist}
 Summary:        OpenGL and OpenGL ES shader front end and validator
 
 License:        BSD and GPLv3+ and Apache-2.0
@@ -39,7 +39,7 @@ interpretation of the specifications for these languages.
 find . -name '*.h' -or -name '*.cpp' -or -name '*.hpp'| xargs chmod a-x
 
 %build
-%cmake3 -DBUILD_SHARED_LIBS=ON
+%cmake3 -DBUILD_SHARED_LIBS=OFF
 %cmake_build
 
 %install
@@ -60,25 +60,24 @@ popd
 %{_bindir}/glslang
 %{_bindir}/glslangValidator
 %{_bindir}/spirv-remap
-%{_libdir}/libglslang-default-resource-limits.so
-%{_libdir}/libglslang-default-resource-limits.so.14
-%{_libdir}/libglslang-default-resource-limits.so.14.0.0
-%{_libdir}/libglslang.so
-%{_libdir}/libglslang.so.14
-%{_libdir}/libglslang.so.14.0.0
-%{_libdir}/libSPIRV.so
-%{_libdir}/libSPIRV.so.14
-%{_libdir}/libSPIRV.so.14.0.0
-%{_libdir}/libSPVRemapper.so
-%{_libdir}/libSPVRemapper.so.14
-%{_libdir}/libSPVRemapper.so.14.0.0
 
 %files devel
 %{_includedir}/glslang/
+%{_libdir}/libOSDependent.a
+%{_libdir}/libSPIRV.a
+%{_libdir}/libSPVRemapper.a
+%{_libdir}/libglslang.a
+%{_libdir}/libGenericCodeGen.a
+%{_libdir}/libMachineIndependent.a
+%{_libdir}/libglslang-default-resource-limits.a
+%{_libdir}/pkgconfig/glslang.pc
 %{_libdir}/pkgconfig/spirv.pc
 %{_libdir}/cmake/*
 
 %changelog
+* Mon Nov 24 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 15.4.0-1
+- Version is upgraded to 15.4.0.
+
 * Tue Sep 03 2024 Neha Agarwal <nehaagarwal@microsoft.com> - 14.0.0-2
 - Add missing Vendor and Distribution tags.
 
