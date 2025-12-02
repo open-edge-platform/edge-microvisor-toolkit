@@ -9,6 +9,9 @@ to set up an Ubuntu 22.04 hypervisor for hosting guest VMs.
 You can [build the kernel](#build-custom-intel-kernel) either on an Ubuntu 22.04 host
 or in an Ubuntu 22.04 docker container on an Ubuntu host.
 
+> **Note:** You can learn more about specific kernel patches related to VM hosting and
+> SR-IOV implementation in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+
 ## Required Host BIOS Settings
 
 | | | |
