@@ -10,7 +10,7 @@
 Summary:        nvidia gpu driver kernel module for data center devices
 Name:           nvidia-data-center-driver
 Version:        580.105.08
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        Public Domain
 Source0:        https://us.download.nvidia.com/tesla/%{version}/NVIDIA-Linux-x86_64-%{version}.run
 Vendor:         Intel Corporation
@@ -51,6 +51,9 @@ make INSTALL_MOD_PATH=%{buildroot} modules_install
 /sbin/depmod -a
 
 %changelog
+* Mon Dec 1 2025 Lishan Liu <lishan.liu@intel.com> - 580.105.08-2
+- Bump release to rebuild
+
 * Mon Nov 10 2025 Junxiao Chang <junxiao.chang@intel.com> - 580.105.08-1
 - Updrade Nvidia data center driver to 580.105.08
 

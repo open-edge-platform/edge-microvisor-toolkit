@@ -1,13 +1,13 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
 Version:        6.17.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/mainline-tracking
-Source0:        https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-tracking-pre-prod-v6.17-linux-251023T022625Z.tar.gz
+Source0:        https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-tracking-pre-prod-v6.17-linux-251118T134731Z.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -160,8 +160,8 @@ manipulation of eBPF programs and maps.
 
 %prep
 %define _default_patch_flags -p1 --fuzz=3 --force
-%setup -q -n mainline-tracking-mainline-tracking-pre-prod-v6.17-linux-251023T022625Z
-%autosetup -p1 -n mainline-tracking-mainline-tracking-pre-prod-v6.17-linux-251023T022625Z
+%setup -q -n mainline-tracking-mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
+%autosetup -p1 -n mainline-tracking-mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
 # %patch 0 -p1
 make mrproper
 
@@ -432,6 +432,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Mon Dec 1 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-3
+- Update kernel to mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
+
 * Tue Nov 25 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-2
 - Bump release version for rebase
 
