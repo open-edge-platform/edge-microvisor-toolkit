@@ -1866,16 +1866,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "cloud-provider-kubevirt",
-          "version": "0.5.1",
-          "downloadUrl": "https://github.com/kubevirt/cloud-provider-kubevirt/archive/refs/tags/v0.5.1.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "cloud-utils-growpart",
           "version": "0.33",
           "downloadUrl": "https://github.com/canonical/cloud-utils/archive/refs/tags/0.33.tar.gz"
@@ -2559,16 +2549,6 @@
           "name": "dconf",
           "version": "0.40.0",
           "downloadUrl": "https://download.gnome.org/sources/dconf/0.40/dconf-0.40.0.tar.xz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "dcos-cli",
-          "version": "1.2.0",
-          "downloadUrl": "https://github.com/dcos/dcos-cli/archive/refs/tags/1.2.0.tar.gz"
         }
       }
     },
@@ -30478,16 +30458,6 @@
           "name": "virtiofsd",
           "version": "1.8.0",
           "downloadUrl": "https://gitlab.com/virtio-fs/virtiofsd/-/archive/v1.8.0/virtiofsd-v1.8.0.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "vitess",
-          "version": "19.0.4",
-          "downloadUrl": "https://github.com/vitessio/vitess/archive/refs/tags/v19.0.4.tar.gz"
         }
       }
     },
