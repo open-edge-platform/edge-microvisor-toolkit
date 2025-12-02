@@ -3,7 +3,7 @@
 
 Summary:        An agent for updating the OS and bare metal agents packages
 Name:           platform-update-agent
-Version:        1.8.3
+Version:        1.8.4
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -134,7 +134,7 @@ rm -rf %{_var}/edge-node/pua
 echo "Successfully purged platform-update-agent"
 
 %changelog
-* Mon Dec 01 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.8.3-1
+* Mon Dec 01 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.8.4-1
 - Update agent version
 
 * Thu Nov 20 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.8.1-1

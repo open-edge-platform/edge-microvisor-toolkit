@@ -21693,8 +21693,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.8.3",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.8.3.tar.gz"
+          "version": "1.8.4",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.8.4.tar.gz"
         }
       }
     },
