@@ -24,6 +24,9 @@ sudo vim /etc/default/grub
 sudo grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
 ```
 
+> **Note:** You can learn more about specific kernel patches related to VM hosting and
+> SR-IOV implementation in the relevant [SPEC file](../../SPECS/kernel/kernel.spec)
+
 ## Hosting Guest VMs under EMT
 
 1. Transfer the prepared Guest VM images to a bootable USB Drive.
