@@ -25,6 +25,9 @@ Through its optimizations for Intel platforms, Edge Microvisor Toolkit showcases
 
 Edge Microvisor Toolkit has undergone extensive validation across the Intel Xeon®, Intel® Core Ultra™, Intel Core™, and Intel® Atom® processor families. The toolkit provides robust support for integrated and Intel discrete GPU cards as well as an integrated NPU. There are pre-tuned drivers and acceleration libraries for Intel® CPUs and GPUs.
 
+> **Note:** You can learn more about specific kernel patches related to GPU and NPU support
+> in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+
 The kernel used in the developer node of Edge Microvisor Toolkit, for example, includes the following: iGPU, dGPU (Intel® Arc™), SR-IOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, and RAS.
 
 Intel® Arc™ B-Series Graphics and other components are discoverable for containerized applications and VMs with pass-through mode to deliver processing power to distributed applications at the edge -- and that processing power can be fine tuned to minimize latency.

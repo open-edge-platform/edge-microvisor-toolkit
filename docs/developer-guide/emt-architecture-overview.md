@@ -74,6 +74,9 @@ monitoring tools, cloud-native software, and other edge software.
 If quick responses to critical events are crucial for
 your use case, you can use the [kernel with real-time extensions](#preempt-rt-kernel).
 
+> **Note:** You can learn more about specific kernel patches and the features they address in the relevant
+> [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+
 ### Standalone Node immutable RAW images
 
 The Standalone Node is an immutable, ready-made solution for deploying and validating Edge AI applications. It uses Secure
@@ -101,6 +104,9 @@ Intel® ready-made solution for using Edge Microvisor Toolkit as a host for Wind
 Ubuntu guest virtual machines. This image includes Kubevirt and Intel IDV (Intelligent
 Desktop Virtualization) services for launching the virtual machines with SR-IOV capabilities.
 This image uses the standard linux kernel.
+
+> **Note:** You can learn more about specific kernel patches related to Kubevirt and Intel IDV
+> in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
 
 ## Edge Microvisor Toolkit Real Time
 
@@ -132,7 +138,10 @@ The patch refines locking mechanisms, reducing the time when critical sections c
 interrupted. This improves the overall responsiveness and guarantees that the system can
 handle real-time workloads with minimal jitter.
 
-> **Note:** You can learn more about preempt Kernel and its features at the [Linux Intel LTS Kernel Github](https://github.com/intel/linux-intel-lts/blob/main/README.md)
+> **Note:** You can learn more about preempt Kernel and its features at the
+> [Linux Intel LTS Kernel Github](https://github.com/intel/linux-intel-lts/blob/main/README.md).
+> You can learn more about specific kernel patches related to preempt RT Kernel in the relevant
+> [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec).
 
 ### perf tool
 
@@ -171,6 +180,9 @@ including, Cache Monitoring Technology (CMT), Memory Bandwidth Monitoring
 (MBM), Cache Allocation Technology (CAT), Code and Data Prioritization
 (CDP) and Memory Bandwidth Allocation (MBA). These technologies facilitate pinning workloads
 and isolating specific CPU cores, assigning them to specified tasks.
+
+> **Note:** You can learn more about specific kernel patches related to Resource Director
+> Technology in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
 
 ### cpupower
 
@@ -455,6 +467,12 @@ for more details. Visit the
 [GitHub page](https://github.com/slimbootloader/slimbootloader)
 for deployment instructions and full source code.
 
+## Time-Sensitive Networking support
+
+EMT supports time-sensitive networking through custom patches and optimizations in
+[linuxptp](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/linuxptp/linuxptp.spec), [ethtool](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/ethtool/ethtool.spec)
+and [xdp-tools](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/xdp-tools/xdp-tools.spec). Click on any of the names to go to
+their SPEC files and learn about specific patches related to TSN optimizations.
 
 <!--hide_directive
 :::{toctree}
