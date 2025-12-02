@@ -7381,8 +7381,8 @@
         "type": "other",
         "other": {
           "name": "in-band-manageability",
-          "version": "1.0.5",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.0.5.tar.gz"
+          "version": "1.0.6",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.0.6.tar.gz"
         }
       }
     },
