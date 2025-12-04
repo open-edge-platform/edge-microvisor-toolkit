@@ -1,21 +1,9 @@
-[edge-next]
-name=Edge Next $releasever $basearch
-baseurl=https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/next/base/
-gpgkey=file:///etc/pki/rpm-gpg/INTEL-RPM-GPG-KEY
-gpgcheck=1
-repo_gpgcheck=0
-enabled=1
-skip_if_unavailable=True
-sslverify=0
-priority=11
-
 [edge-base]
 name=Edge Base $releasever $basearch
-baseurl=https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/3.0/base/
+baseurl=https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/26.06/base/
 gpgkey=file:///etc/pki/rpm-gpg/INTEL-RPM-GPG-KEY
 gpgcheck=1
 repo_gpgcheck=0
 enabled=1
 skip_if_unavailable=True
 sslverify=0
-priority=12
