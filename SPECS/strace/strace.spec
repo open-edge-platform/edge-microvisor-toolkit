@@ -1,7 +1,7 @@
 %global __requires_exclude ^%{_bindir}/perl$
 Summary:        Tracks system calls that are made by a running process
 Name:           strace
-Version:        6.12
+Version:        6.17
 Release:        1%{?dist}
 License:        GPL-2.0-or-later AND LGPL-2.1-or-later
 Vendor:         Intel Corporation
@@ -44,6 +44,9 @@ all the arugments and return values from the system calls. This is useful in deb
 %{_mandir}/man1/*
 
 %changelog
+* Fri Dec 5 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 6.17-1
+- Upgrade to version 6.17
+
 * Fri Feb 28 2025 Anuj Mittal <anuj.mittal@intel.com> - 6.12-2
 - Upgrade to version 6.12
 
