@@ -72,8 +72,8 @@ e2fsprogs-devel-1.47.0-2.emt3.x86_64.rpm
 e2fsprogs-lang-1.47.0-2.emt3.x86_64.rpm
 e2fsprogs-libs-1.47.0-2.emt3.x86_64.rpm
 edge-check-macros-3.0-2.emt3.noarch.rpm
-edge-repos-3.0-7.emt3.noarch.rpm
-edge-repos-shared-3.0-7.emt3.noarch.rpm
+edge-repos-3.0-8.emt3.noarch.rpm
+edge-repos-shared-3.0-8.emt3.noarch.rpm
 edge-rpm-macros-3.0-2.emt3.noarch.rpm
 elfutils-0.189-7.emt3.x86_64.rpm
 elfutils-debuginfo-0.189-7.emt3.x86_64.rpm

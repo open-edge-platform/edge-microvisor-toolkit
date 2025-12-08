@@ -7,7 +7,7 @@ repo_gpgcheck=0
 enabled=1
 skip_if_unavailable=True
 sslverify=0
-priority=1
+priority=11
 
 [edge-base]
 name=Edge Base $releasever $basearch
@@ -18,4 +18,4 @@ repo_gpgcheck=0
 enabled=1
 skip_if_unavailable=True
 sslverify=0
-priority=2
+priority=12
