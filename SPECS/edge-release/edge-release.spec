@@ -1,4 +1,4 @@
-%define dist_version 26
+%define dist_version 26.06
 %define distro_release_version_no_time %(echo %{distro_release_version} | cut -d. -f 1-3)
 
 Summary:        Edge Microvisor Toolkit release files
