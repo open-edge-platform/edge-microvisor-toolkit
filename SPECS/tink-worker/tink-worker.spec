@@ -47,6 +47,10 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/tink-worker.service
 %changelog
 * Tue Dec 2 2025 Andy <andy.peng@intel.com> - 1.1.4-1
 - Update version to fix CVE
+- CVE-2025-47913
+- CVE-2025-47914
+- CVE-2025-52881
+- CVE-2024-25621
 
 * Tue Nov 25 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.1.2-2
 - amend build required golang version
