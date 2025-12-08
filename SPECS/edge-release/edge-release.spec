@@ -117,7 +117,7 @@ install -Dm0644 %{SOURCE4} -t %{buildroot}%{_sysctldir}/
 %{_sysctldir}/*.conf
 
 %changelog
-* Mon Nov 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 26.06~BETA-1
+* Tue Dec 9 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 26.06~BETA-1
 - bump version for 26.06 beta release.
 
 * Mon Nov 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 25.06-1
