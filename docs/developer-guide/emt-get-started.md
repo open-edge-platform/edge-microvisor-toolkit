@@ -10,7 +10,9 @@ technology partners.
 
 ## Usage Scenarios
 
-To validate workloads on Intel silicon, you can deploy Edge Microvisor Toolkit as a
+Choose a [version of a Edge Microvisor Toolkit](./get-started/emt-editions.md) that
+best suits your workflow. You can validate Edge AI workloads on Intel silicon, by
+deploying the toolkit as a
 [standalone edge node](./get-started/emt-build-and-deploy.md) or with Edge Manageability
 Framework, a complete integrated system for edge devices with full lifecycle management,
 including remote deployment and management of applications orchestrated by Kubernetes.

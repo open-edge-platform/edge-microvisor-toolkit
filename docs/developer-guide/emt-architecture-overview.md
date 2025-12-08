@@ -7,7 +7,8 @@ architectural details of the OS itself.
 
 ## Edge Microvisor Toolkit
 
-Edge Microvisor Toolkit is produced and maintained in several editions, in both immutable and
+Edge Microvisor Toolkit is produced and maintained in
+[several editions](./get-started/emt-editions.md), in both immutable and
 mutable images. It enables you to quickly deploy and validate workloads on Intel®
 platforms in order to demonstrate the full capabilities of Intel silicon for various scenarios. There are several options for deploying the toolkit:
 
@@ -278,6 +279,27 @@ the used image configuration. The artifacts come with associated `sha256` files.
 - Signed Image in `raw.gz` format.
 - Image in VHD format.
 - Signing key.
+
+## "Next" Kernel
+
+We are excited to announce the EMT "Next" `v6.19` kernel which will converge
+to the next LTS kernel for EMT by 2026.1 (mid-2026) release. The stable `v6.12` kernel
+continues to be maintained and recommended for most users unless you have newer Intel
+platforms that require an earlier move ot the "Next" kernel.
+
+| Intel Platform | Recommended EMT   | Support  |
+| -------------- | ------------------| -------  |
+| ARL-U/H        | EMT Stable        | Supported|
+| ARL-S          | EMT Stable        | Supported|
+| ASL            | EMT Stable        | Supported|
+| TWL            | EMT Stable        | Supported|
+| MTL-U/H        | EMT Stable        | Supported|
+| MTL-PS         | EMT Stable        | Supported|
+| BTL-S hybrid   | EMT Stable        | Supported|
+| BTL-S 12P      | EMT Stable        | Supported|
+| PTL            | EMT Next          | Preview  |
+| WCL            | EMT Next          | Not yet supported|
+| NVL            | EMT Next          | Not yet supported|
 
 ## K3s Extensions
 
