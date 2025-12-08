@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "platform-update-agent-1.8.1.tar.gz": "99f7bf3eee3f3841eff15932fcca0dc809534c8774074d686f6101251d3fb292",
+    "platform-update-agent-1.8.4.tar.gz": "728aa55e7437810a117c73bbcf34d1206287b637e010ebe50cafaad81ed1cdc9",
     "platform-update-agent.service": "e64c76941527f7a74c8d9c8119adbf202edcf6239fe11f6ef67610b73a152d5e",
     "env_wrapper.sh": "b42ae5895c55e88c34a0bd9c4fac04a26dbf213052aae4dd03d225774188ff1f",
     "platform-update-agent.conf": "5fd67227ac36173bb271d36a48d5c1ac75c6775253c0b3f03f3ccae9981745fa",
