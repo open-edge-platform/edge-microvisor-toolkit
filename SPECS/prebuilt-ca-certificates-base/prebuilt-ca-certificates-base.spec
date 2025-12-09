@@ -1,9 +1,8 @@
 Summary:        Prebuilt version of ca-certificates-base package.
 Name:           prebuilt-ca-certificates-base
 # When updating, "Epoch, "Version", AND "Release" tags must be updated in the "ca-certificates" package as well.
-Epoch:          1
 Version:        %{emt}.0.0
-Release:        11%{?dist}
+Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -11,7 +10,7 @@ Group:          System Environment/Security
 URL:            https://docs.microsoft.com/en-us/security/trusted-root/program-requirements
 BuildArch:      noarch
 
-BuildRequires:  ca-certificates-base = %{epoch}:%{version}-%{release}
+BuildRequires:  ca-certificates-base = %{version}-%{release}
 
 Conflicts:      ca-certificates-shared
 Conflicts:      prebuilt-ca-certificates
@@ -46,6 +45,9 @@ find %{buildroot} -name README -delete
 %{_sysconfdir}/pki/java/cacerts
 
 %changelog
+* Fri Dec 5 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 26.0.0-1
+- bump for 26.06 BETA release.
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1:3.0.0-11
 - merge from Azure Linux 3.0.20250910-3.0
 - Making 'Release' match with 'ca-certificates'
