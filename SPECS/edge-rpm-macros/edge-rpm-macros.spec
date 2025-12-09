@@ -7,7 +7,7 @@
 Summary:        Edge Microvisor Toolkit specific rpm macro files
 Name:           edge-rpm-macros
 Version:        %{emt}.0
-Release:        2%{?dist}
+Release:        1%{?dist}
 License:        GPL+ AND MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -145,6 +145,9 @@ install -p -m 644 -t %{buildroot}%{rcluadir}/srpm python.lua
 %{_rpmconfigdir}/macros.d/macros.check
 
 %changelog
+* Tue Dec 9 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 26.0-1
+- version bump for 26.06 series.
+
 * Tue Dec 24 2024 Naveen Saini <naveen.kumar.saini@intel.com> - 1.0-2
 - Updated initial changelog entry.
 
