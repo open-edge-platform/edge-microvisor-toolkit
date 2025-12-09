@@ -1866,16 +1866,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "cloud-provider-kubevirt",
-          "version": "0.5.1",
-          "downloadUrl": "https://github.com/kubevirt/cloud-provider-kubevirt/archive/refs/tags/v0.5.1.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "cloud-utils-growpart",
           "version": "0.33",
           "downloadUrl": "https://github.com/canonical/cloud-utils/archive/refs/tags/0.33.tar.gz"
@@ -2559,16 +2549,6 @@
           "name": "dconf",
           "version": "0.40.0",
           "downloadUrl": "https://download.gnome.org/sources/dconf/0.40/dconf-0.40.0.tar.xz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "dcos-cli",
-          "version": "1.2.0",
-          "downloadUrl": "https://github.com/dcos/dcos-cli/archive/refs/tags/1.2.0.tar.gz"
         }
       }
     },
@@ -4732,6 +4712,16 @@
           "name": "gobject-introspection",
           "version": "1.78.1",
           "downloadUrl": "https://ftp.gnome.org/pub/GNOME/sources/gobject-introspection/1.78/gobject-introspection-1.78.1.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "golang",
+          "version": "1.22.10",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.22.10-1/go1.22.10-20241203.4.src.tar.gz"
         }
       }
     },
@@ -7381,8 +7371,8 @@
         "type": "other",
         "other": {
           "name": "in-band-manageability",
-          "version": "1.0.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.0.2.tar.gz"
+          "version": "1.0.6",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.0.6.tar.gz"
         }
       }
     },
@@ -21683,8 +21673,8 @@
         "type": "other",
         "other": {
           "name": "platform-observability-agent",
-          "version": "1.10.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.10.1.tar.gz"
+          "version": "1.10.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-observability-agent/1.10.2.tar.gz"
         }
       }
     },
@@ -21693,8 +21683,8 @@
         "type": "other",
         "other": {
           "name": "platform-telemetry-agent",
-          "version": "1.6.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.6.1.tar.gz"
+          "version": "1.6.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.6.2.tar.gz"
         }
       }
     },
@@ -21703,8 +21693,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.8.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.8.1.tar.gz"
+          "version": "1.8.4",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.8.4.tar.gz"
         }
       }
     },
@@ -30508,16 +30498,6 @@
           "name": "virtiofsd",
           "version": "1.8.0",
           "downloadUrl": "https://gitlab.com/virtio-fs/virtiofsd/-/archive/v1.8.0/virtiofsd-v1.8.0.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "vitess",
-          "version": "19.0.4",
-          "downloadUrl": "https://github.com/vitessio/vitess/archive/refs/tags/v19.0.4.tar.gz"
         }
       }
     },
