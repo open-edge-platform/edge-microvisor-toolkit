@@ -30,10 +30,10 @@
             },
             "PostInstallScripts": [
                 {
-                    "Path": [
-						"additionalconfigs/configure-systemd-networkd-client-identifier.sh",
-						"additionalconfigs/configure-ip4save.sh"
-					]
+                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                    "Path": "additionalconfigs/configure-ip4save.sh"
                 }
             ]
         },
@@ -66,10 +66,10 @@
             },
             "PostInstallScripts": [
                 {
-                    "Path": [
-						"additionalconfigs/configure-systemd-networkd-client-identifier.sh",
-						"additionalconfigs/configure-ip4save.sh"
-					]
+                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                    "Path": "additionalconfigs/configure-ip4save.sh"
                 }
             ]
         },
@@ -102,10 +102,10 @@
             },
             "PostInstallScripts": [
                 {
-                    "Path": [
-						"additionalconfigs/configure-systemd-networkd-client-identifier.sh",
-						"additionalconfigs/configure-ip4save.sh"
-					]
+                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                    "Path": "additionalconfigs/configure-ip4save.sh"
                 }
             ]
         },
@@ -137,10 +137,10 @@
             },
             "PostInstallScripts": [
                 {
-                    "Path": [
-						"additionalconfigs/configure-systemd-networkd-client-identifier.sh",
-						"additionalconfigs/configure-ip4save.sh"
-					]
+                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                    "Path": "additionalconfigs/configure-ip4save.sh"
                 }
             ]
         }
