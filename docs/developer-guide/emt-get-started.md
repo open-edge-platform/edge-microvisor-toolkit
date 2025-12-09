@@ -10,7 +10,7 @@ technology partners.
 
 ## Usage Scenarios
 
-Choose a [version of a Edge Microvisor Toolkit](./get-started/emt-editions.md) that
+Choose a [version of a Edge Microvisor Toolkit](./get-started/emt-versions.md) that
 best suits your workflow. You can validate Edge AI workloads on Intel silicon, by
 deploying the toolkit as a
 [standalone edge node](./get-started/emt-build-and-deploy.md) or with Edge Manageability
@@ -34,6 +34,8 @@ including remote deployment and management of applications orchestrated by Kuber
 
 <!--hide_directive
 :::{toctree}
+
+./get-started/emt-versions.md
 ./get-started/emt-building-howto.md
 ./get-started/emt-build-and-deploy.md
 ./get-started/emt-installation-howto.md

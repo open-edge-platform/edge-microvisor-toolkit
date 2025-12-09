@@ -9,7 +9,7 @@ incorporating all the latest patches that have not yet been
 upstreamed. These patches optimize performance and enhance other capabilities for Intel®
 silicon, streamlining integration for operating system vendors and technology partners.
 
-Edge Microvisor Toolkit is [published in several versions](./docs/developer-guide/get-started/emt-editions.md),
+Edge Microvisor Toolkit is [published in several versions](./docs/developer-guide/get-started/emt-versions.md),
 both immutable and mutable.
 It may be used to quickly deploy, validate, and benchmark edge AI workloads, including those
 requiring real-time processing. You can also use the toolkit's flexible build infrastructure

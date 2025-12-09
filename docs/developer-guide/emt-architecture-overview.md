@@ -8,7 +8,7 @@ architectural details of the OS itself.
 ## Edge Microvisor Toolkit
 
 Edge Microvisor Toolkit is produced and maintained in
-[several editions](./get-started/emt-editions.md), in both immutable and
+[several editions](./get-started/emt-versions.md), in both immutable and
 mutable images. It enables you to quickly deploy and validate workloads on Intel®
 platforms in order to demonstrate the full capabilities of Intel silicon for various scenarios. There are several options for deploying the toolkit:
 
