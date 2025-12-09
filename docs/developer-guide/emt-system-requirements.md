@@ -65,4 +65,4 @@ and workloads. It has been validated on the following platforms:
 
 | CPU | RAM | Storage |
 |---|---|---|
-| 13th, 14th Generation Intel® Core™ (Raptor Lake), <br> 4 cores | 32 GB <br> (25 GB free) | 200 GB |
+| 13th, 14th Generation Intel® Core™ (Raptor Lake), <br> 4 cores | 32 GB <br> (25 GB free) | 250 GB (200 GB free) |
