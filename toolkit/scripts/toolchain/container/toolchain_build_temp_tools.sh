@@ -86,9 +86,9 @@ rm -rf gcc-13.2.0
 
 touch $LFS/logs/temptoolchain/status_gcc_pass1_complete
 
-KERNEL_VERSION="6.12.55"
+KERNEL_VERSION="6.12.59"
 echo Linux-${KERNEL_VERSION} API Headers
-tar xf linux-6.12.55.tar.gz
+tar xf linux-6.12.59.tar.gz
 pushd linux-${KERNEL_VERSION}
 make mrproper
 make headers

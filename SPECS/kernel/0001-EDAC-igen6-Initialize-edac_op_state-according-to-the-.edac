@@ -1,0 +1,59 @@
+From 4384532f29b08a758e951581980b6a1428c950f0 Mon Sep 17 00:00:00 2001
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Date: Wed, 6 Nov 2024 11:35:45 +0000
+Subject: [PATCH 1/6] EDAC/igen6: Initialize edac_op_state according to the
+ configuration data
+
+Currently, igen6_edac sets edac_op_state to EDAC_OPSTATE_NMI, while the
+driver also supports memory errors reported from Machine Check. Initialize
+edac_op_state to the correct value according to the configuration data
+that the driver probed.
+
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Signed-off-by: Tony Luck <tony.luck@intel.com>
+Link: https://lore.kernel.org/all/20241106114024.941659-2-orange@aiven.io
+---
+ drivers/edac/igen6_edac.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/edac/igen6_edac.c b/drivers/edac/igen6_edac.c
+index 28a168cc569385..0524b83c8ab335 100644
+--- a/drivers/edac/igen6_edac.c
++++ b/drivers/edac/igen6_edac.c
+@@ -1389,6 +1389,15 @@ static void unregister_err_handler(void)
+ 	unregister_nmi_handler(NMI_SERR, IGEN6_NMI_NAME);
+ }
+ 
++static void opstate_set(struct res_config *cfg)
++{
++	/* Set the mode according to the configuration data. */
++	if (cfg->machine_check)
++		edac_op_state = EDAC_OPSTATE_INT;
++	else
++		edac_op_state = EDAC_OPSTATE_NMI;
++}
++
+ static int igen6_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	u64 mchbar;
+@@ -1406,6 +1415,8 @@ static int igen6_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		goto fail;
+ 
++	opstate_set(res_cfg);
++
+ 	for (i = 0; i < res_cfg->num_imc; i++) {
+ 		rc = igen6_register_mci(i, mchbar, pdev);
+ 		if (rc)
+@@ -1489,8 +1500,6 @@ static int __init igen6_init(void)
+ 	if (owner && strncmp(owner, EDAC_MOD_STR, sizeof(EDAC_MOD_STR)))
+ 		return -EBUSY;
+ 
+-	edac_op_state = EDAC_OPSTATE_NMI;
+-
+ 	rc = pci_register_driver(&igen6_driver);
+ 	if (rc)
+ 		return rc;
+-- 
+2.43.0
+

@@ -1,0 +1,128 @@
+From c9cf3881dd7a5eaa109433910b2c6af77a80ce7e Mon Sep 17 00:00:00 2001
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Date: Fri, 31 Jan 2025 21:27:02 +0100
+Subject: [PATCH 4/6] EDAC/igen6: Constify struct res_config
+
+The res_config structs are not modified in this driver.
+
+Constifying these structures moves some data to a read-only section, so
+increase overall security, especially when the structure holds some function
+pointers.
+
+On a x86_64, with allmodconfig, as an example:
+
+  Before:
+  ======
+     text	   data	    bss	    dec	    hex	filename
+    36777	   2479	   4304	  43560	   aa28	drivers/edac/igen6_edac.o
+
+  After:
+  =====
+     text	   data	    bss	    dec	    hex	filename
+    37297	   1959	   4304	  43560	   aa28	drivers/edac/igen6_edac.o
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Signed-off-by: Borislav Petkov (AMD) <bp@alien8.de>
+Reviewed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Link: https://lore.kernel.org/r/a06153870951a64b438e76adf97d440e02c1a1fc.1738355198.git.christophe.jaillet@wanadoo.fr
+---
+ drivers/edac/igen6_edac.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/edac/igen6_edac.c b/drivers/edac/igen6_edac.c
+index 4c54de702156a4..f1f996894a8fc3 100644
+--- a/drivers/edac/igen6_edac.c
++++ b/drivers/edac/igen6_edac.c
+@@ -126,7 +126,7 @@
+ #define MEM_SLICE_HASH_MASK(v)		(GET_BITFIELD(v, 6, 19) << 6)
+ #define MEM_SLICE_HASH_LSB_MASK_BIT(v)	GET_BITFIELD(v, 24, 26)
+ 
+-static struct res_config {
++static const struct res_config {
+ 	bool machine_check;
+ 	int num_imc;
+ 	u32 imc_base;
+@@ -478,7 +478,7 @@ static u64 rpl_p_err_addr(u64 ecclog)
+ 	return ECC_ERROR_LOG_ADDR45(ecclog);
+ }
+ 
+-static struct res_config ehl_cfg = {
++static const struct res_config ehl_cfg = {
+ 	.num_imc		= 1,
+ 	.imc_base		= 0x5000,
+ 	.ibecc_base		= 0xdc00,
+@@ -488,7 +488,7 @@ static struct res_config ehl_cfg = {
+ 	.err_addr_to_imc_addr	= ehl_err_addr_to_imc_addr,
+ };
+ 
+-static struct res_config icl_cfg = {
++static const struct res_config icl_cfg = {
+ 	.num_imc		= 1,
+ 	.imc_base		= 0x5000,
+ 	.ibecc_base		= 0xd800,
+@@ -498,7 +498,7 @@ static struct res_config icl_cfg = {
+ 	.err_addr_to_imc_addr	= ehl_err_addr_to_imc_addr,
+ };
+ 
+-static struct res_config tgl_cfg = {
++static const struct res_config tgl_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
+ 	.imc_base		= 0x5000,
+@@ -512,7 +512,7 @@ static struct res_config tgl_cfg = {
+ 	.err_addr_to_imc_addr	= tgl_err_addr_to_imc_addr,
+ };
+ 
+-static struct res_config adl_cfg = {
++static const struct res_config adl_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
+ 	.imc_base		= 0xd800,
+@@ -523,7 +523,7 @@ static struct res_config adl_cfg = {
+ 	.err_addr_to_imc_addr	= adl_err_addr_to_imc_addr,
+ };
+ 
+-static struct res_config adl_n_cfg = {
++static const struct res_config adl_n_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 1,
+ 	.imc_base		= 0xd800,
+@@ -534,7 +534,7 @@ static struct res_config adl_n_cfg = {
+ 	.err_addr_to_imc_addr	= adl_err_addr_to_imc_addr,
+ };
+ 
+-static struct res_config rpl_p_cfg = {
++static const struct res_config rpl_p_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
+ 	.imc_base		= 0xd800,
+@@ -546,7 +546,7 @@ static struct res_config rpl_p_cfg = {
+ 	.err_addr_to_imc_addr	= adl_err_addr_to_imc_addr,
+ };
+ 
+-static struct res_config mtl_ps_cfg = {
++static const struct res_config mtl_ps_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
+ 	.imc_base		= 0xd800,
+@@ -557,7 +557,7 @@ static struct res_config mtl_ps_cfg = {
+ 	.err_addr_to_imc_addr	= adl_err_addr_to_imc_addr,
+ };
+ 
+-static struct res_config mtl_p_cfg = {
++static const struct res_config mtl_p_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
+ 	.imc_base		= 0xd800,
+@@ -1414,7 +1414,7 @@ static void unregister_err_handler(void)
+ 	unregister_nmi_handler(NMI_SERR, IGEN6_NMI_NAME);
+ }
+ 
+-static void opstate_set(struct res_config *cfg, const struct pci_device_id *ent)
++static void opstate_set(const struct res_config *cfg, const struct pci_device_id *ent)
+ {
+ 	/*
+ 	 * Quirk: Certain SoCs' error reporting interrupts don't work.
+-- 
+2.43.0
+

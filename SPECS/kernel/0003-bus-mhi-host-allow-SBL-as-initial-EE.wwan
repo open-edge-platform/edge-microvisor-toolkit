@@ -23,11 +23,11 @@ Signed-off-by: Daniele Palmas <dnlplm@gmail.com>
  drivers/bus/mhi/host/pm.c       | 3 ++-
  2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/bus/mhi/host/internal.h b/drivers/bus/mhi/host/internal.h
-index d057e877932e3..304870cb7611e 100644
+Index: b/drivers/bus/mhi/host/internal.h
+===================================================================
 --- a/drivers/bus/mhi/host/internal.h
 +++ b/drivers/bus/mhi/host/internal.h
-@@ -67,7 +67,7 @@ extern const char * const mhi_ee_str[MHI_EE_MAX];
+@@ -67,7 +67,7 @@ extern const char * const mhi_ee_str[MHI
  
  #define MHI_IN_PBL(ee) (ee == MHI_EE_PBL || ee == MHI_EE_PTHRU || \
  			ee == MHI_EE_EDL)
@@ -36,16 +36,16 @@ index d057e877932e3..304870cb7611e 100644
  #define MHI_FW_LOAD_CAPABLE(ee) (ee == MHI_EE_PBL || ee == MHI_EE_EDL)
  #define MHI_IN_MISSION_MODE(ee) (ee == MHI_EE_AMSS || ee == MHI_EE_WFW || \
  				 ee == MHI_EE_FP)
-diff --git a/drivers/bus/mhi/host/pm.c b/drivers/bus/mhi/host/pm.c
-index 11c0e751f2239..a69d21075e98a 100644
+Index: b/drivers/bus/mhi/host/pm.c
+===================================================================
 --- a/drivers/bus/mhi/host/pm.c
 +++ b/drivers/bus/mhi/host/pm.c
-@@ -1263,10 +1263,11 @@ int mhi_sync_power_up(struct mhi_controller *mhi_cntrl)
+@@ -1279,10 +1279,11 @@ int mhi_sync_power_up(struct mhi_control
  		mhi_cntrl->ready_timeout_ms : mhi_cntrl->timeout_ms;
  	wait_event_timeout(mhi_cntrl->state_event,
  			   MHI_IN_MISSION_MODE(mhi_cntrl->ee) ||
 +			   mhi_cntrl->ee == MHI_EE_SBL ||
- 			   MHI_PM_IN_ERROR_STATE(mhi_cntrl->pm_state),
+ 			   MHI_PM_FATAL_ERROR(mhi_cntrl->pm_state),
  			   msecs_to_jiffies(timeout_ms));
  
 -	ret = (MHI_IN_MISSION_MODE(mhi_cntrl->ee)) ? 0 : -ETIMEDOUT;
@@ -53,6 +53,3 @@ index 11c0e751f2239..a69d21075e98a 100644
  	if (ret)
  		mhi_power_down(mhi_cntrl, false);
  
--- 
-2.25.1
-
