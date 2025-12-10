@@ -1,7 +1,7 @@
 Summary:        Linux Kernel
 Name:           kernel
 Version:        6.12.55
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -919,6 +919,9 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Thu Dec 10 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-3
+- Update kernel config for USB and Intel ISH HID support
+
 * Thu Nov 27 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-2
 - Update audio and virtio gpu kernel config
 

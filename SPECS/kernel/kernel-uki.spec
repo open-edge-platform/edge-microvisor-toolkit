@@ -13,7 +13,7 @@
 Summary:        Unified Kernel Image
 Name:           kernel-uki
 Version:        6.12.55
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -70,6 +70,9 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Thu Dec 10 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-3
+- Update kernel config for USB and Intel ISH HID support
+
 * Thu Nov 27 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-2
 - Update audio and virtio gpu kernel config
 

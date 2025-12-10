@@ -10,7 +10,7 @@
 Summary:        nvidia gpu driver kernel module for data center devices
 Name:           nvidia-data-center-driver
 Version:        570.133.20
-Release:        12%{?dist}
+Release:        13%{?dist}
 License:        Public Domain
 Source0:        https://us.download.nvidia.com/tesla/%{version}/NVIDIA-Linux-x86_64-%{version}.run
 Vendor:         Intel Corporation
@@ -51,6 +51,9 @@ make INSTALL_MOD_PATH=%{buildroot} modules_install
 /sbin/depmod -a
 
 %changelog
+* Thu Dec 10 2025 Lishan Liu <lishan.liu@intel.com> - 570.133.20-13
+- Bump release to rebuild
+
 * Thu Nov 27 2025 Lishan Liu <lishan.liu@intel.com> - 570.133.20-12
 - Bump release to rebuild
 

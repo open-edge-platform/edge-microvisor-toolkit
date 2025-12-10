@@ -1,7 +1,7 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
 Version:        6.12.55
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -943,6 +943,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Thu Dec 10 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-3
+- Update kernel config for USB and Intel ISH HID support
+
 * Thu Nov 27 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-2
 - Update audio and virtio gpu kernel config
 
