@@ -2359,6 +2359,7 @@
                 "GSL",
                 "gstreamer1",
                 "gtk-update-icon-cache",
+                "helm",
                 "intel-pf-bb-config",
                 "ivykis",
                 "jsonbuilder",
