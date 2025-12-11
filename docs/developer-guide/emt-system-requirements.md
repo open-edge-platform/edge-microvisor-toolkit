@@ -35,7 +35,6 @@ and workloads. It has been validated on the following platforms:
 | Intel® Arc™ B580      | NVIDIA® Tesla® P100           |
 |                       | GeForce RTX™ 3090             |
 
-
 ## Recommended Hardware Configuration
 
 ### Edge Microvisor Toolkit Developer Node
@@ -54,7 +53,6 @@ and workloads. It has been validated on the following platforms:
 | Storage (SSD/NVMe or eMMC) | 64 GB           | 512 GB            | 1 TB            |
 | Networking (Ethernet)      | 1 GbE or higher | 1 GbE or higher   | 1 GbE or higher |
 
-
 ## Software Requirements
 
 | Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node) |
@@ -62,3 +60,9 @@ and workloads. It has been validated on the following platforms:
 | Kernel Version   | Intel® Kernel 6.12      | Intel® Kernel 6.12      |
 | Bootloader       | GRUB                    | Systemd-boot            |
 | Update Mechanism | RPM-based with TDNF     | Image-based A/B updates |
+
+## Minimum Hardware Configuration for Building OS Image
+
+| CPU | RAM | Storage |
+|---|---|---|
+| 13th, 14th Generation Intel® Core™ (Raptor Lake), <br> 4 cores | 32 GB <br> (25 GB free) | 250 GB (200 GB free) |

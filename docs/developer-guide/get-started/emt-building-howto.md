@@ -44,7 +44,7 @@ git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch
 
    > **Note:**
    >
-   > - Building the **entire toolchain** may take a lot of time. Adding the
+   > - Building the **entire toolchain** may take time. Adding the
    >   `REBUILD_TOOLCHAIN=y` parameter to the `make` command rebuilds
    >   the entire toolchain.
    > - It is recommended to start from a clean build directory and remove
@@ -70,6 +70,13 @@ git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch
    [Customize Your Edge Microvisor Toolkit Image](#customize-your-edge-microvisor-toolkit-image).
 
 3. Rebuild RPM packages.
+
+   **Important**: On a machine with limited resources, meeting
+   [minimum hardware configuration](../emt-system-requirements.md#minimum-hardware-configuration-for-building-os-image),
+   make sure to add `-j2  CONCURRENT_PACKAGE_BUILDS=4` parameters to avoid crashes.
+   You can increase them to `-j4 CONCURRENT_PACKAGE_BUILDS=6`
+   or even not include them at all when rebuilding the packages on a machine
+   that greatly exceeds the minimum requirements.
 
    ```bash
    # Rebuild packages/RPMs
@@ -104,13 +111,20 @@ You can find more information about specific parameters in the [build variables]
 
 **IMPORTANT**: To create an image from an older tag, for example the
 [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718)
-release tag, make sure to build it **without** the `REBUILD_PACKAGES=n` option.
+release tag, make sure to build it **without** the `REBUILD_PACKAGES=n` option
+to perform a full rebuild.
 Otherwise, the build process will download the latest available RPMs,
 which do not match those included in the older tag. It will cause a mismatch
 between versions of installed RPMS in the image and the available SPECs in
 Edge Microvisor Toolkit code.
 
-To build an ISO image, run the following command:
+> **Note**: Keep in mind that performing a full rebuild will take time:
+>
+> - ~18 hours on a machine with a 20+ core CPU,
+> - ~24-36 hours on a machine meeting the
+>   [minimum hardware requirements](../emt-system-requirements.md#minimum-hardware-configuration-for-building-os-image).
+
+To build an ISO image, you can run the following command:
 
 ```bash
 sudo make iso -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/full.json
@@ -128,10 +142,6 @@ To build a RAW image with real-time extensions, use the following command:
 ```bash
 sudo make image -j8 REBUILD_TOOLS=y CONFIG_FILE=./imageconfigs/edge-image-rt.json
 ```
-
-Keep in mind, that building without `REBUILD_PACKAGES=n` will perform a full
-rebuild based on the tag and take time (~18 hours on a machine with
-a 20+ core CPU).
 
 ## Customize Your Edge Microvisor Toolkit Image
 
