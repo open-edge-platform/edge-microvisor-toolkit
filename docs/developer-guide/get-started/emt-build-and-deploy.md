@@ -18,6 +18,11 @@ meet specific edge deployment needs. You can choose between:
 3. [Install the toolkit on an edge device.](#3-install-the-toolkit-on-an-edge-device)
 4. [Deploy AI solution.](#4-deploy-ai-solution)
 
+
+## Requirements
+
+Make sure your machine meets the [minimum hardware configuration](../emt-system-requirements.md#minimum-hardware-configuration-for-building-os-image).
+
 ## 1. Build the microvisor
 
 If you want to create your own custom standalone node, follow the instructions below to build
@@ -109,7 +114,11 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
 > release, make sure to build it **without** the `REBUILD_PACKAGES=n` option to
 > perform a full local rebuild.
 >
-> Keep in mind, that it will take time (~18 hours on a machine with a 20+ core CPU).
+> Keep in mind, that it will take time
+>
+> - ~18 hours on a machine with a 20+ core CPU,
+> - ~24-36 hours on a machine meeting the
+>   [minimum hardware requirements](../emt-system-requirements.md#minimum-hardware-configuration-for-building-os-image).
 
 1. Clone the release branch of edge-microvisor-toolkit repository:
 
@@ -174,6 +183,13 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
    [Customize Your Edge Microvisor Toolkit Image](./emt-building-howto.md#customize-your-edge-microvisor-toolkit-image).
 
 7. Rebuild RPM packages.
+
+   **Important**: On a machine with limited resources, meeting
+   [minimum hardware configuration](../emt-system-requirements.md#minimum-hardware-configuration-for-building-os-image),
+   make sure to add `-j2  CONCURRENT_PACKAGE_BUILDS=4` parameters to avoid crashes.
+   You can increase them to `-j4 CONCURRENT_PACKAGE_BUILDS=6`
+   or even not include them at all when rebuilding the packages on a machine
+   that greatly exceeds the minimum requirements.
 
    ```bash
    # Rebuild packages/RPMs local toolchain

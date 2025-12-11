@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20250509
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -101,6 +101,7 @@ cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 cp iwlwifi-ty-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 cp qat*.bin  %{buildroot}%{_firmwarepath}
+ln -sf intel/ice/ddp/ice-*.pkg %{buildroot}%{_firmwarepath}/intel/ice/ddp/ice.pkg
 
 %post qat
 dracut --force
@@ -192,6 +193,9 @@ dracut --force
 %{_firmwarepath}/qat_c62x_mmp.bin
 
 %changelog
+* Mon Nov 24 2025 Basavarajx unniche <basavarajx.unniche@intel.com> - 20250509-4
+- created sym link for ice, as per README of intel ice DDP package.
+
 * Tue Oct 14 2025 Junxiao Chang <junxiao.chang@intel.com> - 20250509-3
 - Added QAT firmware.
 
