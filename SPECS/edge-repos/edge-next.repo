@@ -1,9 +1,0 @@
-[edge-next]
-name=Edge Next $releasever $basearch
-baseurl=https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/next/base/
-gpgkey=file:///etc/pki/rpm-gpg/INTEL-RPM-GPG-KEY
-gpgcheck=1
-repo_gpgcheck=0
-enabled=1
-skip_if_unavailable=True
-sslverify=0
