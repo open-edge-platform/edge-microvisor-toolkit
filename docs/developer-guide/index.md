@@ -53,6 +53,7 @@ document.
 
 <!--hide_directive
 :::{toctree}
+:hidden:
 
 emt-get-started
 emt-architecture-overview
