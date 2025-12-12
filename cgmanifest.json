@@ -5356,6 +5356,16 @@
       }
     },
     {
+      "component": { 
+        "type": "other", 
+        "other": {
+          "name": "helm",
+          "version": "3.18.3",
+          "downloadUrl": "https://github.com/helm/helm/archive/refs/tags/v3.18.3.tar.gz"
+        }
+      }
+    },
+    {
       "component": {
         "type": "other",
         "other": {
