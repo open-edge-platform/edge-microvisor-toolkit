@@ -1,8 +1,8 @@
 {
  "Signatures": {
   "create-vendor-tarball.sh": "b8875c80081b63d1d9d63d809a44cc001cfacb40eca96d93044c0a3f8f518b8b",
-  "otelcol-contrib-poa-manifest.yaml": "745dd5a9970b2bc11b3439f09a5269adebe5bb0ebd0531490c95e32e76e72442",
-  "otelcol-contrib-0.117.0-vendored.tar.gz": "e3a1e4688387bb32b056d6aec9d88350ca42603c4acfca70a8a3370c3ad60c6d",
+  "otelcol-contrib-poa-manifest.yaml": "20e56d170dfdb7868315eaf5ddf90247e97419ff758286610dfa18779ea34f95",
+  "otelcol-contrib-0.141.0-vendored.tar.gz": "a6f9a4f375edb80a11d4736e4610ac21aff8e6db5b4f2f0f97f6ec8bcf17d682",
   "otelcol_contrib.fc": "a02d63f63d80f6c080faaf3040ecacc8efcec8bb270a51a10872db7ab4173ac7",
   "otelcol_contrib.te": "33cff519aa6415c56c19870e254628f871618e99774f7785d8d61dd46de4489b"
  }
