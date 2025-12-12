@@ -74,7 +74,7 @@
             ]
         },
         {
-		"Name": "RT Kernel",
+            "Name": "RT Kernel",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
