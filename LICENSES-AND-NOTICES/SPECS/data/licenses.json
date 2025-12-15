@@ -103,6 +103,7 @@
                 "byacc",
                 "ca-certificates",
                 "cachefilesd",
+                "caddy",
                 "cairomm",
                 "calamares",
                 "capnproto",
