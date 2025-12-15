@@ -4,27 +4,21 @@
 
 Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full
 capabilities of Intel® platforms for Edge AI workloads. Built on Azure Linux, it features an
-Intel®-maintained Linux Kernel, incorporating all the latest patches that have not yet been
+[Intel®-maintained Linux Kernel](./docs/developer-guide/emt-architecture-overview.md#next-kernel),
+incorporating all the latest patches that have not yet been
 upstreamed. These patches optimize performance and enhance other capabilities for Intel®
 silicon, streamlining integration for operating system vendors and technology partners.
 
-Edge Microvisor Toolkit is published in several versions, both immutable and mutable.
+Edge Microvisor Toolkit is [published in several versions](./docs/developer-guide/get-started/emt-versions.md),
+both immutable and mutable.
 It may be used to quickly deploy, validate, and benchmark edge AI workloads, including those
 requiring real-time processing. You can also use the toolkit's flexible build infrastructure
 to create custom images from a large set of pre-provisioned packages.
-
-Here are the published versions:
-
-* [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
-* [Edge Microvisor Toolkit Developer Node with or without real-time extensions (mutable)](./docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image)
-* [Edge Microvisor Toolkit (mutuable or immutable) for use with Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
-* [Edge Microvisor Bootkit](./docs/developer-guide/emt-bootkit.md)
 
 Edge Microvisor Toolkit has undergone extensive validation across the Intel® Xeon®,
 Intel® Core Ultra™, Intel Core™, and Intel® Atom® processor families. It provides robust
 support for integrated NPU as well as a
 [selection of discrete GPU cards](./docs/developer-guide/emt-system-requirements.md#hardware-requirements).
-
 
 You can either build Edge Microvisor Toolkit by following step-by-step instructions or
 download it directly. Both the build system and Edge Microvisor Toolkit are available as open
@@ -44,13 +38,17 @@ If you're interested in most up-to-date versions, check out the
 and
 [CVE](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions?discussions_q=is%3Aopen+cve+) releases.
 
-
 **Demos on YouTube**
 
 * [Standalone Edge Microvisor Toolkit (EMT-S) integration with Edge Microvisor Bootkit](https://www.youtube.com/watch?v=rmgmWYi6OpE):
   USB Device Preparation, Provisioning Process, System Readiness, and Final Boot with the cluster starting successfully.
 * [Edge Microvisor Toolkit Standalone Node 3.0](https://www.youtube.com/watch?v=j_4EX_wggSI):
   a brief walkthrough of Edge Microvisor Toolkit Standalone Node for the 3.0 release, covering various use cases.
+
+You can also try out the
+[OS Image Composer](http://github.com/open-edge-platform/os-image-composer) -
+a *new* project in the Open Edge platform family that allows you to compose
+custom OS images from popular distributions using pre-built artifacts.
 
 ## Get Help or Contribute
 

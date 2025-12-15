@@ -7,7 +7,8 @@ architectural details of the OS itself.
 
 ## Edge Microvisor Toolkit
 
-Edge Microvisor Toolkit is produced and maintained in several editions, in both immutable and
+Edge Microvisor Toolkit is produced and maintained in
+[several editions](./get-started/emt-versions.md), in both immutable and
 mutable images. It enables you to quickly deploy and validate workloads on Intel®
 platforms in order to demonstrate the full capabilities of Intel silicon for various scenarios. There are several options for deploying the toolkit:
 
@@ -208,62 +209,63 @@ real-time performance.
 To configure kernel command line arguments, add them in the `"ExtraCommandLine"` parameter
 inside the imageconfig file, as shown in [edge-image](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/e22a8f4e72d0edc652f1aacd514d0b5bf5de8b80/toolkit/imageconfigs/edge-image.json#L107).
 
-- **idle=poll**
+#### **idle=poll**
 Forces the CPU to actively poll for work when idle, rather than entering low-power idle
 states. In RT systems, this can reduce latency by ensuring the CPU is always ready to
 handle high-priority tasks immediately, at the cost of higher power consumption.
 
 > **Note:**
-  It is currently not possible to directly modify the kernel command-line parameters once
-  a build has been generated, as it is packaged inside the signed UKI. Modifying the kernel
-  command line would invalidate the signature. The mechanism to enable customization of the
-  kernel command line will be added in future releases.
+> It is currently not possible to directly modify the kernel command-line parameters once
+> a build has been generated, as it is packaged inside the signed UKI. Modifying the kernel
+> command line would invalidate the signature. The mechanism to enable customization of the
+> kernel command line will be added in future releases.
 
-- **isolcpus=<list>**
+##### **isolcpus=\<list>**
+
 Isolates specific CPU cores from the general scheduler, preventing non-RT tasks from
 being scheduled on those cores. This ensures that designated cores are available solely
 for RT tasks. This way, for example, the workloads can be shifted between efficient
 and performance cores. The parameter takes lists as values:
 
-  - isolcpus=\<cpu core number>,...,\<cpu core number>
+- isolcpus=\<cpu core number>,...,\<cpu core number>
 
-    ```bash
-    isolcpus=1,2,3
-    ```
+  ```bash
+  isolcpus=1,2,3
+  ```
 
-  - isolcpus=\<cpu core number>-\<cpu core number>
+- isolcpus=\<cpu core number>-\<cpu core number>
 
-    ```bash
-    isolcpus=1-3
-    ```
+  ```bash
+  isolcpus=1-3
+  ```
 
-  - isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
+- isolcpus=\<cpu core number>,...,\<cpu core number>-\<cpu number>
 
-    ```bash
-    isolcpus=1,4-5
-    ```
+  ```bash
+  isolcpus=1,4-5
+  ```
 
-- **nohz_full=<list>**
+##### **nohz_full=\<list>**
 Enables full tickless (nohz) mode on specified cores, reducing periodic timer interrupts
 that could introduce latency on cores dedicated to RT workloads.
 
-- **rcu_nocbs=<list>**
+##### **rcu_nocbs=\<list>**
 Offloads RCU (Read-Copy-Update) callbacks from the specified CPUs, reducing interference
 on cores that need to be as responsive as possible.
 
-- **threadirqs**
+##### **threadinqs**
 Forces interrupts to be handled by dedicated threads rather than in interrupt context,
 which can improve the predictability and granularity of scheduling RT tasks.
 
-- **nosmt**
+##### **nosmt**
 Disables simultaneous multi-threading (hyperthreading). This can prevent contention between
 sibling threads that share the same physical core, leading to more predictable performance.
 
-- **numa_balancing=0**
+##### **numa_balancing=0**
 Disables automatic NUMA balancing. While NUMA awareness is important, automatic migration
 of processes can introduce latency. Disabling it helps maintain predictable memory locality.
 
-- **intel_idle.max_cstate=0**
+#### **intel_idle.max_cstate=0**
 Limits deep idle states on Intel® CPUs, reducing wake-up latencies that can adversely
 affect RT performance.
 
@@ -279,44 +281,67 @@ the used image configuration. The artifacts come with associated `sha256` files.
 - Image in VHD format.
 - Signing key.
 
+## "Next" Kernel
+
+We are excited to announce the EMT "Next" `v6.19` kernel which will converge
+to the next LTS kernel for EMT by 2026.1 (mid-2026) release. The stable `v6.12` kernel
+continues to be maintained and recommended for most users unless you have newer Intel
+platforms that require an earlier move ot the "Next" kernel.
+
+| Intel Platform | Recommended EMT   | Support  |
+| -------------- | ------------------| -------  |
+| ARL-U/H        | EMT Stable        | Supported|
+| ARL-S          | EMT Stable        | Supported|
+| ASL            | EMT Stable        | Supported|
+| TWL            | EMT Stable        | Supported|
+| MTL-U/H        | EMT Stable        | Supported|
+| MTL-PS         | EMT Stable        | Supported|
+| BTL-S hybrid   | EMT Stable        | Supported|
+| BTL-S 12P      | EMT Stable        | Supported|
+| PTL            | EMT Next          | Preview  |
+| WCL            | EMT Next          | Not yet supported|
+| NVL            | EMT Next          | Not yet supported|
+
 ## K3s Extensions
 
 Deploying of Edge Microvisor Toolkit with Lightweight Kubernetes (K3s)
 requires additional extensions which are downloaded as docker images. Below is
 a list of components essential for scaled deployment of the toolkit.
 
-- [Multus CNI](https://github.com/k8snetworkplumbingwg/multus-cni)
+### [Multus CNI](https://github.com/k8snetworkplumbingwg/multus-cni)
 
-  A Container Network Interface (CNI) plugin for Kubernetes that enables you to
-  attach multiple network interfaces to Kubernetes pods, which usually have only
-  one network interface.
+A Container Network Interface (CNI) plugin for Kubernetes that enables you to
+attach multiple network interfaces to Kubernetes pods, which usually have only
+one network interface.
 
-- [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
-  - [GPU Plugin](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md)
+### [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
 
-    Intel GPU plugin provides access to discrete and integrated Intel GPU devices
-    supported by the host kernel. It enables offloading compute operations of
-    Kubernetes workload to GPU devices. It may be beneficial in such use cases as
-    media transcoding and analytics, cloud gaming, AI training and inference.
+[GPU Plugin](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md)
 
-- [Calico](https://github.com/projectcalico/calico)
-  - [CNI Plugin](https://github.com/projectcalico/calico/tree/master/cni-plugin)
-  \- as [docker image](https://hub.docker.com/r/calico/cni).
+Intel GPU plugin provides access to discrete and integrated Intel GPU devices
+supported by the host kernel. It enables offloading compute operations of
+Kubernetes workload to GPU devices. It may be beneficial in such use cases as
+media transcoding and analytics, cloud gaming, AI training and inference.
 
-    A plugin that enables you to use Calico for deployments based on Container
-    Network Interface (CNI).
+### [Calico](https://github.com/projectcalico/calico)
 
-  - [Node](https://github.com/projectcalico/calico/tree/master/node)
-    \- as [docker image](https://hub.docker.com/r/calico/node/).
+- [CNI Plugin](https://github.com/projectcalico/calico/tree/master/cni-plugin)
+\- as [docker image](https://hub.docker.com/r/calico/cni).
 
-    A CNI plugin that enables you to create a Layer 3 network for Kubernetes
-    pods and assign a unique IP address for each.
+  A plugin that enables you to use Calico for deployments based on Container
+  Network Interface (CNI).
 
-  - [Kube controllers](https://github.com/projectcalico/calico/tree/master/kube-controllers)
-    \- as [docker image](https://hub.docker.com/r/calico/kube-controllers).
+- [Node](https://github.com/projectcalico/calico/tree/master/node)
+  \- as [docker image](https://hub.docker.com/r/calico/node/).
 
-    A set of controllers that monitor the resources in the Kubernetes API (network,
-    policies, nodes) and adjust Calico's CNI configuration.
+  A CNI plugin that enables you to create a Layer 3 network for Kubernetes
+  pods and assign a unique IP address for each.
+
+- [Kube controllers](https://github.com/projectcalico/calico/tree/master/kube-controllers)
+  \- as [docker image](https://hub.docker.com/r/calico/kube-controllers).
+
+  A set of controllers that monitor the resources in the Kubernetes API (network,
+  policies, nodes) and adjust Calico's CNI configuration.
 
 ## Packaging
 
