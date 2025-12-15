@@ -1,9 +1,9 @@
-%global _soversion 1.4.0
+%global _soversion 1.5.0
 Vendor:           Intel Corporation
 Distribution:     Edge Microvisor Toolkit
 Name:             xdp-tools
-Version:          1.4.2
-Release:          3%{?dist}
+Version:          1.5.8
+Release:          1%{?dist}
 Summary:          Utilities and example programs for use with XDP
 License:          GPL-2.0-only
 URL:              https://github.com/xdp-project/%{name}
@@ -13,6 +13,7 @@ BuildRequires:    libbpf-devel
 BuildRequires:    elfutils-libelf-devel
 BuildRequires:    zlib-devel
 BuildRequires:    libpcap-devel
+BuildRequires:    libcap-ng-devel
 BuildRequires:    clang >= 10.0.0
 BuildRequires:    llvm >= 10.0.0
 BuildRequires:    make
@@ -120,6 +121,7 @@ make install V=1
 %{_sbindir}/xdpdump
 %ifnarch i686
 %{_sbindir}/xdp-bench
+%{_sbindir}/xdp-forward
 %{_sbindir}/xdp-monitor
 %{_sbindir}/xdp-trafficgen
 %endif
@@ -146,6 +148,9 @@ make install V=1
 %{_libdir}/pkgconfig/libxdp.pc
 
 %changelog
+* Wed Dec 10 2025 kintalix Jayanth <jayanthx.kintali@intel.com> 1.5.8-1
+- Version upgrade of xdp-tools from 1.4.2 to 1.5.8
+
 * Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> 1.4.2-3
 - Add TSN patches/support
 
