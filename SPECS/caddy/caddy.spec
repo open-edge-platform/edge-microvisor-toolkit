@@ -33,6 +33,7 @@ Patch4:         CVE-2025-22872.patch
 BuildRequires:  go-rpm-macros
 # https://github.com/caddyserver/caddy/commit/2028da4e74cd41f0f7f94222c6599da1a371d4b8
 BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang < 1.25
 # dario.cat/mergo : BSD-3-Clause
 Provides:       bundled(golang(dario.cat/mergo)) = 1.0.1
 # filippo.io/edwards25519 : BSD-3-Clause
@@ -452,6 +453,9 @@ fi
 %{_datadir}/fish/vendor_completions.d/caddy.fish
 
 %changelog
+* Tue DEc 16 2025 Andy <andy.peng@intel.com> - 2.9.1-14
+- Update go version to use below 1.25
+
 * Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 2.9.1-13
 - Update go version to use above 1.24.4
 
