@@ -1416,6 +1416,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "caddy",
+          "version": "2.9.1",
+          "downloadUrl": "https://github.com/caddyserver/caddy/archive/v2.9.1/caddy-2.9.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "cairo",
           "version": "1.18.0",
           "downloadUrl": "https://cairographics.org/releases/cairo-1.18.0.tar.xz"
