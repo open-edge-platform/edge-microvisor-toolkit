@@ -12,8 +12,8 @@
 
 Summary:        Unified Kernel Image
 Name:           kernel-uki
-Version:        6.12.55
-Release:        2%{?dist}
+Version:        6.12.59
+Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -70,6 +70,9 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Thu Dec 11 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.59-1
+- Update kernel to 6.12.59
+
 * Thu Nov 27 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.55-2
 - Update audio and virtio gpu kernel config
 
