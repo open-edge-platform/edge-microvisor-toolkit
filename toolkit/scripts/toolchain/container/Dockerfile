@@ -63,7 +63,7 @@ RUN wget -nv --no-clobber --timeout=30 --continue --input-file=$LFS/tools/toolch
 # Disable downloading from remote sources by default. The 'toolchain-local-wget-list' generated for the above line will download from $(SOURCE_URL)
 # The 'toolchain-remote-wget-list' is still available and can be used as an alternate to $(SOURCE_URL) if desired.
 #RUN wget -nv --no-clobber --timeout=30 --continue --input-file=$LFS/tools/toolchain-remote-wget-list --directory-prefix=$LFS/sources; exit 0
-RUN wget -nv --no-clobber --timeout=30 --continue https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.55-emt-251024T084840Z.tar.gz -O lts-v6.12.55-emt-251024T084840Z.tar.gz --directory-prefix=$LFS/sources; exit 0
+RUN wget -nv --no-clobber --timeout=30 --continue https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.12.59-emt-251202T195146Z -O lts-v6.12.59-emt-251202T195146Z --directory-prefix=$LFS/sources; exit 0
 USER root
 
 RUN mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin} && \

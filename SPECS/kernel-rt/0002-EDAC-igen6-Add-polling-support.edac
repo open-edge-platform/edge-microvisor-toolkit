@@ -1,0 +1,93 @@
+From c008b6393fbc6d5b748162907dc84e260c7b1922 Mon Sep 17 00:00:00 2001
+From: Orange Kao <orange@aiven.io>
+Date: Wed, 6 Nov 2024 11:35:46 +0000
+Subject: [PATCH 2/6] EDAC/igen6: Add polling support
+
+Some PCs with Intel N100 (with PCI device 8086:461c, DID_ADL_N_SKU4)
+experienced issues with error interrupts not working, even with the
+following configuration in the BIOS.
+
+    In-Band ECC Support: Enabled
+    In-Band ECC Operation Mode: 2 (make all requests protected and
+                                   ignore range checks)
+    IBECC Error Injection Control: Inject Correctable Error on insertion
+                                   counter
+    Error Injection Insertion Count: 251658240 (0xf000000)
+
+Add polling mode support for these machines to ensure that memory error
+events are handled.
+
+Signed-off-by: Orange Kao <orange@aiven.io>
+Signed-off-by: Tony Luck <tony.luck@intel.com>
+Reviewed-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Link: https://lore.kernel.org/all/20241106114024.941659-3-orange@aiven.io
+---
+ drivers/edac/igen6_edac.c | 30 ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/edac/igen6_edac.c b/drivers/edac/igen6_edac.c
+index 0524b83c8ab335..da89cb0d4df42c 100644
+--- a/drivers/edac/igen6_edac.c
++++ b/drivers/edac/igen6_edac.c
+@@ -1209,6 +1209,20 @@ static int igen6_pci_setup(struct pci_dev *pdev, u64 *mchbar)
+ 	return -ENODEV;
+ }
+ 
++static void igen6_check(struct mem_ctl_info *mci)
++{
++	struct igen6_imc *imc = mci->pvt_info;
++	u64 ecclog;
++
++	/* errsts_clear() isn't NMI-safe. Delay it in the IRQ context */
++	ecclog = ecclog_read_and_clear(imc);
++	if (!ecclog)
++		return;
++
++	if (!ecclog_gen_pool_add(imc->mc, ecclog))
++		irq_work_queue(&ecclog_irq_work);
++}
++
+ static int igen6_register_mci(int mc, u64 mchbar, struct pci_dev *pdev)
+ {
+ 	struct edac_mc_layer layers[2];
+@@ -1250,6 +1264,8 @@ static int igen6_register_mci(int mc, u64 mchbar, struct pci_dev *pdev)
+ 	mci->edac_cap = EDAC_FLAG_SECDED;
+ 	mci->mod_name = EDAC_MOD_STR;
+ 	mci->dev_name = pci_name(pdev);
++	if (edac_op_state == EDAC_OPSTATE_POLL)
++		mci->edac_check = igen6_check;
+ 	mci->pvt_info = &igen6_pvt->imc[mc];
+ 
+ 	imc = mci->pvt_info;
+@@ -1389,8 +1405,18 @@ static void unregister_err_handler(void)
+ 	unregister_nmi_handler(NMI_SERR, IGEN6_NMI_NAME);
+ }
+ 
+-static void opstate_set(struct res_config *cfg)
++static void opstate_set(struct res_config *cfg, const struct pci_device_id *ent)
+ {
++	/*
++	 * Quirk: Certain SoCs' error reporting interrupts don't work.
++	 *        Force polling mode for them to ensure that memory error
++	 *        events can be handled.
++	 */
++	if (ent->device == DID_ADL_N_SKU4) {
++		edac_op_state = EDAC_OPSTATE_POLL;
++		return;
++	}
++
+ 	/* Set the mode according to the configuration data. */
+ 	if (cfg->machine_check)
+ 		edac_op_state = EDAC_OPSTATE_INT;
+@@ -1415,7 +1441,7 @@ static int igen6_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		goto fail;
+ 
+-	opstate_set(res_cfg);
++	opstate_set(res_cfg, ent);
+ 
+ 	for (i = 0; i < res_cfg->num_imc; i++) {
+ 		rc = igen6_register_mci(i, mchbar, pdev);
+-- 
+2.43.0
+
