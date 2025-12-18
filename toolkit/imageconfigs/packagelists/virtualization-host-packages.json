@@ -1,5 +1,8 @@
 {
     "packages": [
+        "spice-server",
+        "spice-protocol",
+        "qemu",
         "qemu-kvm"
     ]
 }

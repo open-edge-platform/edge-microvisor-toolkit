@@ -1,14 +1,14 @@
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 %global smallversion 0.4
 
 Name:           libvisual
 Version:        0.4.0
-Release:        30%{?dist}
+Release:        31%{?dist}
 Summary:        Abstraction library for audio visualisation plugins
 License:        LGPLv2+
-URL:            http://libvisual.sf.net
-Source0:        http://dl.sf.net/libvisual/libvisual-%{version}.tar.gz
+URL:            https://github.com/Libvisual/libvisual
+Source0:        https://github.com/Libvisual/libvisual/releases/download/libvisual-%{version}/libvisual-%{version}.tar.bz2
 BuildRequires:  gcc-c++
 BuildRequires:  xorg-x11-proto-devel
 # https://bugzilla.redhat.com/show_bug.cgi?id=435771
@@ -73,6 +73,11 @@ find %{buildroot} -type f -name "*.la" -exec rm -f {} ';'
 
 
 %changelog
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 0.4.0-31
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+- Update Source0 url to be downloadable.
+
 * Mon Nov 01 2021 Muhammad Falak <mwani@microsft.com> - 0.4.0-30
 - Remove epoch
 

@@ -1,17 +1,20 @@
 %global debug_package %{nil}
-%bcond cdparanoia %{undefined rhel}
-%bcond libvisual %{undefined rhel}
 %global         majorminor      1.0
 Summary:        GStreamer streaming media framework base plugins
 Name:           gstreamer1-plugins-base
 Version:        1.26.5
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        LGPLv2+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://gstreamer.freedesktop.org/
 Source0:        https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-%{version}.tar.xz
 Patch0:         0001-missing-plugins-Remove-the-mpegaudioversion-field.patch
+
+# Platform patches
+Patch10:        0001-skip-failing-tests.patch
+Patch11:        0001-glimagesink-set-last-sample-disabled-if-input-is-ext.patch
+
 BuildRequires:  meson >= 0.48.0
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
@@ -19,17 +22,12 @@ BuildRequires:  gstreamer1-devel >= %{version}
 BuildRequires:  gobject-introspection-devel >= 1.31.1
 BuildRequires:  iso-codes-devel
 BuildRequires:  alsa-lib-devel
-%if %{with cdparanoia}
 BuildRequires:  cdparanoia-devel
-%endif
 BuildRequires:  libogg-devel >= 1.0
 BuildRequires:  libtheora-devel >= 1.1
-%if %{with libvisual}
 BuildRequires:  libvisual-devel
-%endif
 BuildRequires:  libvorbis-devel >= 1.0
 BuildRequires:  libXv-devel
-BuildRequires:  opus-devel
 BuildRequires:  orc-devel >= 0.4.18
 BuildRequires:  pango-devel
 BuildRequires:  pkgconfig
@@ -44,6 +42,7 @@ BuildRequires:  mesa-libEGL-devel
 BuildRequires:  mesa-libgbm-devel
 BuildRequires:  libgudev-devel
 BuildRequires:  wayland-devel
+BuildRequires:  egl-wayland-devel
 BuildRequires:  graphene-devel
 # pkgconfig-style deps specifically searched-for by autotools/configure
 BuildRequires:  pkgconfig(wayland-client) >= 1.0
@@ -94,16 +93,12 @@ for developing applications that use %{name}.
 
 %build
 %meson \
-  -D package-name='Fedora GStreamer-plugins-base package' \
-  -D package-origin='http://download.fedoraproject.org' \
-  -D gl_winsys=wayland,x11,gbm \
-  %{!?with_cdparanoia:-D cdparanoia=disabled} \
-  %{!?with_libvisual:-D libvisual=disabled} \
   -D doc=disabled \
   -D orc=enabled \
   -D tremor=disabled \
   -D tests=disabled \
   -D examples=disabled \
+  -D opus=disabled
 %meson_build
 
 %install
@@ -172,7 +167,7 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 
 %files -f gst-plugins-base-%{majorminor}.lang
 %license COPYING
-%doc AUTHORS NEWS README.static-linking RELEASE REQUIREMENTS
+%doc AUTHORS NEWS README.md README.static-linking RELEASE REQUIREMENTS
 %{_datadir}/appdata/*.appdata.xml
 %{_libdir}/libgstallocators-%{majorminor}.so.*
 %{_libdir}/libgstaudio-%{majorminor}.so.*
@@ -210,12 +205,12 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiorate.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiotestsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbasedebug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcompositor.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdsd.so
 %{_libdir}/gstreamer-%{majorminor}/libgstencoding.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgio.so
-%{_libdir}/gstreamer-%{majorminor}/libgstbasedebug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoverlaycomposition.so
-%{_libdir}/gstreamer-%{majorminor}/libgstdsd.so
 %{_libdir}/gstreamer-%{majorminor}/libgstplayback.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpbtypes.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
@@ -229,15 +224,10 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 
 # base plugins with dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
-%if %{with cdparanoia}
 %{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
-%endif
 %{_libdir}/gstreamer-%{majorminor}/libgstopengl.so
-%if %{with libvisual}
 %{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
-%endif
 %{_libdir}/gstreamer-%{majorminor}/libgstogg.so
-%{_libdir}/gstreamer-%{majorminor}/libgstopus.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpango.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttheora.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
@@ -257,9 +247,9 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/allocators.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/allocators-prelude.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstdmabuf.h
+%{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstdrmdumb.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstfdmemory.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstphysmemory.h
-%{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstdrmdumb.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstshmallocator.h
 %dir %{_includedir}/gstreamer-%{majorminor}/gst/app
 %{_includedir}/gstreamer-%{majorminor}/gst/app/app.h
@@ -437,8 +427,115 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_libdir}/pkgconfig/*.pc
 
 %changelog
-* Thu Oct 29 2025 kintalix jayanth <jayanthx.kintali@intel.com> - 1.26.5-1
-- update to 1.26.5
+* Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.26.5-1
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
+- License verified.
+- Upgrading to 1.26.5 based on Fedora 44 (license: MIT) for guidance.
+
+* Fri Aug 08 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.5-1
+- 1.26.5
+
+* Thu Jul 24 2025 Fedora Release Engineering <releng@fedoraproject.org> - 1.26.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_43_Mass_Rebuild
+
+* Fri Jun 27 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.3-1
+- 1.26.3
+
+* Fri May 30 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.2-1
+- 1.26.2
+
+* Fri Apr 25 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.1-1
+- 1.26.1
+
+* Wed Mar 12 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.0-1
+- 1.26.0
+
+* Fri Jan 17 2025 Fedora Release Engineering <releng@fedoraproject.org> - 1.24.11-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_42_Mass_Rebuild
+
+* Tue Jan 07 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.24.11-1
+- 1.24.11
+
+* Wed Dec 04 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.10-1
+- 1.24.10
+
+* Thu Oct 31 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.9-1
+- 1.24.9
+
+* Thu Sep 19 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.8-1
+- 1.24.8
+
+* Wed Aug 21 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.7-1
+- 1.24.7
+
+* Fri Aug 02 2024 Yaakov Selkowitz <yselkowi@redhat.com> - 1.24.6-2
+- Remove unused egl-wayland-devel dependency
+
+* Mon Jul 29 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.6-1
+- 1.24.6
+
+* Thu Jul 18 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.24.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
+* Fri Jun 21 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.5-1
+- 1.24.5
+
+* Wed May 29 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.4-1
+- 1.24.4
+
+* Thu May 02 2024 Wim Taymans <wtaymans@redhat.com> - 1.24.3-2
+- Disable libvisual in RHEL builds
+
+* Tue Apr 30 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.3-1
+- 1.24.3
+
+* Tue Mar 05 2024 Wim Taymans <wtaymans@redhat.com> - 1.24.0-1
+- Update to 1.24.0
+
+* Thu Jan 25 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.22.9-1
+- 1.22.9
+
+* Wed Jan 24 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.8-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Sat Jan 20 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.8-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Mon Dec 18 2023 Gwyn Ciesla <gwync@protonmail.com> - 1.22.8-1
+- 1.22.8
+
+* Tue Nov 14 2023 Gwyn Ciesla <gwync@protonmail.com> - 1.22.7-1
+- 1.22.7
+
+* Fri Jul 21 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.5-1
+- Update to 1.22.5
+
+* Thu Jul 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.3-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Thu Jun 08 2023 Yaakov Selkowitz <yselkowi@redhat.com> - 1.22.3-2
+- Disable cdparanoia in RHEL builds
+
+* Thu May 25 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.3-1
+- Update to 1.22.3
+
+* Thu Apr 13 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.2-1
+- Update to 1.22.2
+
+* Mon Mar 13 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.1-1
+- Update to 1.22.1
+
+* Tue Jan 24 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.0-1
+- Update to 1.22.0
+
+* Fri Jan 20 2023 Wim Taymans <wtaymans@redhat.com> - 1.21.90-1
+- Update to 1.21.90
+
+* Thu Jan 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1.20.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Wed Jan 11 2023 Wim Taymans <wtaymans@redhat.com> - 1.20.5-1
+- Update to 1.20.5
 
 * Wed Jan 22 2025 Andrew Phelps <anphel@microsoft.com> - 1.20.4-3
 - Remove dependency on opus
