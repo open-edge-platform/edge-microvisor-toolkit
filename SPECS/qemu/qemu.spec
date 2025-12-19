@@ -2082,7 +2082,6 @@ run_configure \
 %if %{have_spice}
   --enable-spice \
   --enable-spice-protocol \
-  --enable-gstreamer \
 %endif
   --enable-vdi \
   --enable-vhost-crypto \
