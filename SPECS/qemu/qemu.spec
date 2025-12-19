@@ -642,6 +642,8 @@ BuildRequires: ncurses-devel
 # spice graphics support
 BuildRequires: spice-protocol
 BuildRequires: spice-server-devel
+BuildRequires: gstreamer1-devel
+BuildRequires: gstreamer1-plugins-base-devel
 %endif
 # VNC JPEG support
 BuildRequires: libjpeg-devel
@@ -2080,6 +2082,7 @@ run_configure \
 %if %{have_spice}
   --enable-spice \
   --enable-spice-protocol \
+  --enable-gstreamer \
 %endif
   --enable-vdi \
   --enable-vhost-crypto \
