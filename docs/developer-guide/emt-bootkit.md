@@ -54,7 +54,7 @@ root=tmpfs rootflags=mode=0755 rd.skipfsck noresume modules-load=nbd
 
 The generated `initramfs` and `vmlinuz` images can be used for implementing required
 customizations in [Edge Manageability Framework](#orchestrator-build-with-bootkit-new-workflow)
-or [Edge Microvisor Toolkit Standalone Node](#edge-microvisor-build-with-bootkit-new-workflow) builds.
+or [Edge Microvisor Toolkit Standalone Node](#edge-microvisor-toolkit-build-with-bootkit-new-workflow) builds.
 
 ## Integration with Edge Manageability Framework and Edge Microvisor Toolkit Standalone Node
 
@@ -119,7 +119,7 @@ file during the building process:
 
 ## Edge Microvisor Toolkit Standalone Node Specific Builds
 
-### Edge Microvisor Build with HookOS (previous workflow)
+### Edge Microvisor Toolkit Build with HookOS (previous workflow)
 
 In [Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node),
 HookOS sources, separate from the ones in Edge Manageability Framework, were implemented to
@@ -132,7 +132,7 @@ The customized HookOS `initramfs` and `vmlinuz` were then used to generate the r
 ISO for the USB installer of
 [Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node).
 
-### Edge Microvisor Build with Bootkit (new workflow)
+### Edge Microvisor Toolkit Build with Bootkit (new workflow)
 
 When using Edge Microvisor Bootkit in the build workflow, the following
 components are added to run as native systemd services in the `initramfs` image:
