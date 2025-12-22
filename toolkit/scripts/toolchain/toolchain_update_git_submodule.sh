@@ -17,7 +17,14 @@ if [ -d "${REPO_ROOT}/azurelinux" ]; then
     skip_list=("fwctl" "mlx-bootctl" "kernel-mshv" "srp" "mft_kernel" "knem" "xpmem" "iser" "isert" "mlnx-ethtool" "mlnx-iproute2" "mlnx-nfsrdma" "mlnx-ofa_kernel" "mlnx-tools" "azurelinux-release" "azurelinux-repos" "azurelinux-rpm-macros")
     for folder in azurelinux/SPECS/*; do
         fbasename=$(basename "$folder")
-        if [[ " ${skip_list[@]} " == *" ${fbasename} "* ]]; then
+        skip=false
+        for skip_item in "${skip_list[@]}"; do
+            if [ "$fbasename" == "$skip_item" ]; then
+                skip=true
+                break
+            fi
+        done
+        if $skip; then
             # echo "Skipping $fbasename"
             continue
         fi
