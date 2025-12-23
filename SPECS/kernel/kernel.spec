@@ -1,7 +1,7 @@
 Summary:        Linux Kernel
 Name:           kernel
 Version:        6.17.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -407,6 +407,9 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Tue Dec 23 2025 Andy <andy.peng@intel.com> - 6.17.0-4
+- Update Intel ISH HID support in kernel config
+
 * Mon Dec 1 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-3
 - Update kernel to mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
 

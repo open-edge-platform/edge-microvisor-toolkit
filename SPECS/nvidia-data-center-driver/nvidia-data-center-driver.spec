@@ -10,7 +10,7 @@
 Summary:        nvidia gpu driver kernel module for data center devices
 Name:           nvidia-data-center-driver
 Version:        580.105.08
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        Public Domain
 Source0:        https://us.download.nvidia.com/tesla/%{version}/NVIDIA-Linux-x86_64-%{version}.run
 Vendor:         Intel Corporation
@@ -51,6 +51,9 @@ make INSTALL_MOD_PATH=%{buildroot} modules_install
 /sbin/depmod -a
 
 %changelog
+* Tue Dec 23 2025 Andy <andy.peng@intel.com> - 580.105.08-4
+- Update Intel ISH HID support in kernel config
+
 * Mon Dec 1 2025 Lishan Liu <lishan.liu@intel.com> - 580.105.08-2
 - Bump release to rebuild
 
