@@ -14,7 +14,7 @@ if [ -d "${REPO_ROOT}/azurelinux" ]; then
     git reset --hard &> /dev/null
     git submodule update --init &> /dev/null
     cd ${REPO_ROOT}
-    skip_list=("fwctl" "mlx-bootctl" "kernel-mshv" "srp" "mft_kernel" "knem" "xpmem" "iser" "isert" "mlnx-ethtool" "mlnx-iproute2" "mlnx-nfsrdma" "mlnx-ofa_kernel" "mlnx-tools" "azurelinux-release" "azurelinux-repos" "azurelinux-rpm-macros")
+    skip_list=("cloud-provider-kubevirt" "dcos-cli" "vitess" "fwctl" "mlx-bootctl" "kernel-mshv" "srp" "mft_kernel" "knem" "xpmem" "xpmem-lib" "iser" "isert" "mlnx-ethtool" "mlnx-iproute2" "mlnx-nfsrdma" "mlnx-ofa_kernel" "mlnx-tools" "azurelinux-release" "azurelinux-repos" "azurelinux-rpm-macros")
     for folder in azurelinux/SPECS/*; do
         fbasename=$(basename "$folder")
         skip=false
