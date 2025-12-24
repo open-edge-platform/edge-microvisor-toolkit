@@ -9,11 +9,11 @@ meet specific edge deployment needs. You can choose between:
 
 - **Edge Microvisor Toolkit Non-Real-Time image** (default)
 - **Edge Microvisor Toolkit Desktop Virtualization image**
-- **Custom immutable Edge Microvisor Toolkit created using** [Build Instructions](#1-build-the-microvisor)
+- **Custom immutable Edge Microvisor Toolkit created using** [Build Instructions](#1-build-the-edge-microvisor-toolkit)
 
 **Table of contents:**
 
-1. [Build a custom image of Edge Microvisor Toolkit.](#1-build-the-microvisor)
+1. [Build a custom image of Edge Microvisor Toolkit.](#1-build-the-edge-microvisor-toolkit)
 2. [Create a bootable USB installer.](#2-create-a-bootable-usb-installer)
 3. [Install the toolkit on an edge device.](#3-install-the-toolkit-on-an-edge-device)
 4. [Deploy AI solution.](#4-deploy-ai-solution)
@@ -23,11 +23,11 @@ meet specific edge deployment needs. You can choose between:
 
 Make sure your machine meets the [minimum hardware configuration](../emt-system-requirements.md#minimum-hardware-configuration-for-building-os-image).
 
-## 1. Build the microvisor
+## 1. Build the Edge Microvisor Toolkit
 
 If you want to create your own custom standalone node, follow the instructions below to build
-the Edge Microvisor from scratch. If you wish to use the default, non-real-time image of Edge Microvisor
-skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
+the Edge Microvisor Toolkit from scratch. If you wish to use the default, non-real-time image
+of Edge Microvisor Toolkit skip to [Create a bootable USB installer](#2-create-a-bootable-usb-installer).
 
 All available image configurations are stored in JSON files, located in the `imageconfigs` folder.
 If you want to configure any additional kernel command line arguments, follow the instructions in
@@ -363,7 +363,7 @@ Replace `/dev/sdX` with the device name of your USB drive.
    If you want to use the default non-RT image, [proceed with installation](#3-install-the-toolkit-on-an-edge-device),
    as the `usb-bootable-files.tar.gz` file already includes this image.
 
-   To install [custom build image](#1-build-the-microvisor), or the image with desktop
+   To install [custom build image](#1-build-the-edge-microvisor-toolkit), or the image with desktop
    virtualization features (DV) you need to copy it manually to the 5th partition of the USB
    drive, replacing the default non-RT one. Follow the instructions below:
 

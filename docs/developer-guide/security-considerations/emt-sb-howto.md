@@ -7,11 +7,11 @@ it is protected against advanced attacks. Here are the steps required to do so, 
   generating local signing certificates, rebuilding packages, and testing the secure boot
   functionality.
 - [RAW or VHD/X](#raw-and-vhd-image) - configure BIOS with signed production keys of
-a RAW/VHD Edge Microvisor image.
+a RAW/VHD Edge Microvisor Toolkit image.
 
 ## RAW and VHD Image
 
-Production images of Edge Microvisor are signed by Intel. Secure Boot prevents
+Production images of Edge Microvisor Toolkit are signed by Intel. Secure Boot prevents
 unauthorized bootloaders and operating systems from starting, ensuring that only
 code signed with a trusted key is executed. For custom signed OS images, you need
 to enroll your certificate into the firmware’s trusted key database.
