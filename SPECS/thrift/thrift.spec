@@ -66,7 +66,7 @@
 Summary: Software framework for cross-language services development
 Name:    thrift
 Version: 0.15.0
-Release: 6%{?dist}
+Release: 7%{?dist}
 
 # Parts of the source are used under the BSD and zlib licenses, but
 # these are OK for inclusion in an Apache 2.0-licensed whole:
@@ -189,8 +189,9 @@ The d-%{name} package contains D bindings for %{name}.
 %package -n php-%{name}
 Summary: PHP support for %{name}
 Requires: %{name}%{?_isa} = %{version}-%{release}
-Requires: php(zend-abi) = %{php_zend_api}
-Requires: php(api) = %{php_core_api}
+# Supposed to use these macros from SPECS/php/macros.php
+#Requires: php(zend-abi) = %{php_zend_api}
+#Requires: php(api) = %{php_core_api}
 Requires: php(language) >= 5.3.0
 Requires: php-date
 Requires: php-json
@@ -406,6 +407,9 @@ find %{buildroot} -name \*.py -exec grep -q /usr/bin/env {} \; -print | xargs -r
 %endif
  
 %changelog
+* Mon Dec 29 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 0.15.0-7
+- handle php(zend-abi) and php(api) with macros
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 0.15.0-6
 - Bump Release to rebuild
 

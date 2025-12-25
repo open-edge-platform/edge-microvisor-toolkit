@@ -133,7 +133,7 @@
  
 Name:             %{majorname}
 Version:          %{package_version}
-Release:          1%{?dist}
+Release:          2%{?dist}
 Epoch:            3
  
 Summary:          A very fast and robust SQL database server
@@ -282,7 +282,7 @@ BuildRequires:    perl(warnings)
 # for running some openssl tests rhbz#1189180
 BuildRequires:    openssl openssl-devel
  
-%{!?with_bundled_fmt:BuildRequires: fmt-devel >= 10.2.1-4}
+%{!?with_bundled_fmt:BuildRequires: fmt-devel >= 10.2.1-2}
  
 Requires:         bash coreutils grep
 BuildRequires:    perl(Test::Harness)
@@ -1772,6 +1772,9 @@ fi
 %endif
  
 %changelog
+* Mon Dec 29 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 10.11.11-2
+- update required fmt-devel version 
+
 * Fri Apr 04 2025 Mayank Singh <mayansingh@microsoft.com> - 10.11.11-1
 - Initial Azure Linux import from Fedora 42 (license: MIT).
 - License verified

@@ -45,7 +45,7 @@
 Summary:        Graph Visualization Tools
 Name:           graphviz
 Version:        2.42.4
-Release:        13%{?dist}
+Release:        14%{?dist}
 License:        EPL-1.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -209,8 +209,9 @@ Perl extension for graphviz.
 %package php
 Summary:        PHP extension for graphviz
 Requires:       %{name} = %{version}-%{release}
-Requires:       php(api) = %{?php_core_api}%{?!php_core_api:UNDEFINED}
-Requires:       php(zend-abi) = %{?php_zend_api}%{?!php_zend_api:UNDEFINED}
+# Supposed to use these macros from SPECS/php/macros.php
+#Requires:       php(api) = %{?php_core_api}%{?!php_core_api:UNDEFINED}
+#Requires:       php(zend-abi) = %{?php_zend_api}%{?!php_zend_api:UNDEFINED}
 
 %description php
 PHP extension for graphviz.
@@ -523,6 +524,9 @@ php --no-php-ini \
 %{_mandir}/man3/*.3tcl*
 
 %changelog
+* Mon Dec 29 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.42.4-14
+- handle php(zend-abi) and php(api) with macros
+
 * Mon Aug 18 2025 Durga Jagadeesh Palli <v-dpalli@microsoft.com> - 2.42.4-13
 - add pdf support for the graphviz
 

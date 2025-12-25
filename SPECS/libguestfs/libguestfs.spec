@@ -25,7 +25,7 @@
 Summary:        Access and modify virtual machine disk images
 Name:           libguestfs
 Version:        1.52.0
-Release:        14%{?dist}
+Release:        15%{?dist}
 License:        LGPLv2+
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -624,8 +624,9 @@ Summary:        PHP bindings for %{name}
 License:        LGPLv2+
 
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-Requires:       php(api) = %{php_core_api}
-Requires:       php(zend-abi) = %{php_zend_api}
+# Supposed to use these macros from SPECS/php/macros.php
+#Requires:       php(api) = %{php_core_api}
+#Requires:       php(zend-abi) = %{php_zend_api}
 
 %description -n php-%{name}
 php-%{name} contains PHP bindings for %{name}.
@@ -1147,6 +1148,9 @@ rm ocaml/html/.gitignore
 %endif
 
 %changelog
+* Mon Dec 29 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.52.0-15
+- handle php(zend-abi) and php(api) with macros 
+
 * Mon Aug 25 2025 Andrew Phelps <anphel@microsoft.com> - 1.52.0-14
 - Bump to rebuild with updated glibc
 

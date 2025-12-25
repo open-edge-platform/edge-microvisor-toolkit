@@ -15,7 +15,7 @@
 Name:           php-pecl-apcu
 Summary:        APC User Cache
 Version:        5.1.23
-Release:        6%{?dist}
+Release:        7%{?dist}
 Source0:        https://pecl.php.net/get/%{sources}.tgz#/%{name}-%{version}.tgz
 Source1:        %{pecl_name}.ini
 Source2:        %{pecl_name}-panel.conf
@@ -31,8 +31,9 @@ BuildRequires:  gcc
 BuildRequires:  php-devel
 BuildRequires:  php-pear
 
-Requires:       php(zend-abi) = %{php_zend_api}
-Requires:       php(api) = %{php_core_api}
+# Supposed to use these macros from SPECS/php/macros.php
+#Requires:       php(zend-abi) = %{php_zend_api}
+#Requires:       php(api) = %{php_core_api}
 
 Obsoletes:      php-apcu < 4.0.0-1
 Provides:       php-apcu = %{version}
@@ -215,6 +216,9 @@ REPORT_EXIT_STATUS=1 \
 
 
 %changelog
+* Mon Dec 29 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 5.1.23-7
+- handle php(zend-abi) and php(api) with macros
+
 * Tue Aug 27 2024 Neeraj Sallh <v-nsallh@microsoft.com> - 5.1.23-6
 - Initial Azure Linux import from Fedora 42 (license: MIT)
 - License Verified
