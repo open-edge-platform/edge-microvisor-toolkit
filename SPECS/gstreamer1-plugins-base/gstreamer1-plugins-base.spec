@@ -433,3 +433,524 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 
 * Fri Aug 08 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.5-1
 - 1.26.5
+
+* Thu Jul 24 2025 Fedora Release Engineering <releng@fedoraproject.org> - 1.26.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_43_Mass_Rebuild
+
+* Fri Jun 27 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.3-1
+- 1.26.3
+
+* Fri May 30 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.2-1
+- 1.26.2
+
+* Fri Apr 25 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.1-1
+- 1.26.1
+
+* Wed Mar 12 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.26.0-1
+- 1.26.0
+
+* Fri Jan 17 2025 Fedora Release Engineering <releng@fedoraproject.org> - 1.24.11-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_42_Mass_Rebuild
+
+* Tue Jan 07 2025 Gwyn Ciesla <gwync@protonmail.com> - 1.24.11-1
+- 1.24.11
+
+* Wed Dec 04 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.10-1
+- 1.24.10
+
+* Thu Oct 31 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.9-1
+- 1.24.9
+
+* Thu Sep 19 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.8-1
+- 1.24.8
+
+* Wed Aug 21 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.7-1
+- 1.24.7
+
+* Fri Aug 02 2024 Yaakov Selkowitz <yselkowi@redhat.com> - 1.24.6-2
+- Remove unused egl-wayland-devel dependency
+
+* Mon Jul 29 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.6-1
+- 1.24.6
+
+* Thu Jul 18 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.24.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
+* Fri Jun 21 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.5-1
+- 1.24.5
+
+* Wed May 29 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.4-1
+- 1.24.4
+
+* Thu May 02 2024 Wim Taymans <wtaymans@redhat.com> - 1.24.3-2
+- Disable libvisual in RHEL builds
+
+* Tue Apr 30 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.24.3-1
+- 1.24.3
+
+* Tue Mar 05 2024 Wim Taymans <wtaymans@redhat.com> - 1.24.0-1
+- Update to 1.24.0
+
+* Thu Jan 25 2024 Gwyn Ciesla <gwync@protonmail.com> - 1.22.9-1
+- 1.22.9
+
+* Wed Jan 24 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.8-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Sat Jan 20 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.8-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Mon Dec 18 2023 Gwyn Ciesla <gwync@protonmail.com> - 1.22.8-1
+- 1.22.8
+
+* Tue Nov 14 2023 Gwyn Ciesla <gwync@protonmail.com> - 1.22.7-1
+- 1.22.7
+
+* Fri Jul 21 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.5-1
+- Update to 1.22.5
+
+* Thu Jul 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1.22.3-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Thu Jun 08 2023 Yaakov Selkowitz <yselkowi@redhat.com> - 1.22.3-2
+- Disable cdparanoia in RHEL builds
+
+* Thu May 25 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.3-1
+- Update to 1.22.3
+
+* Thu Apr 13 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.2-1
+- Update to 1.22.2
+
+* Mon Mar 13 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.1-1
+- Update to 1.22.1
+
+* Tue Jan 24 2023 Wim Taymans <wtaymans@redhat.com> - 1.22.0-1
+- Update to 1.22.0
+
+* Fri Jan 20 2023 Wim Taymans <wtaymans@redhat.com> - 1.21.90-1
+- Update to 1.21.90
+
+* Thu Jan 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1.20.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Wed Jan 11 2023 Wim Taymans <wtaymans@redhat.com> - 1.20.5-1
+- Update to 1.20.5
+
+* Wed Jan 22 2025 Andrew Phelps <anphel@microsoft.com> - 1.20.4-3
+- Remove dependency on opus
+
+* Wed Nov 23 2022 Sumedh Sharma <sumsharma@microsoft.com> - 1.20.4-2
+- Initial CBL-Mariner import from Fedora 37 (license: MIT)
+- License verified
+
+* Thu Oct 13 2022 Wim Taymans <wtaymans@redhat.com> - 1.20.4-1
+- Update to 1.20.4
+
+* Tue Sep 27 2022 Erico Nunes <ernunes@redhat.com> - 1.20.3-3
+- Enable gbm winsys
+
+* Thu Jul 21 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.20.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Mon Jul 18 2022 Wim Taymans <wtaymans@redhat.com> - 1.20.3-1
+- Update to 1.20.3
+
+* Fri Feb 4 2022 Wim Taymans <wtaymans@redhat.com> - 1.20.0-1
+- Update to 1.20.0
+
+* Wed Jan 26 2022 Wim Taymans <wtaymans@redhat.com> - 1.19.3-3
+- Fix build, gtk_doc does not exist anymore.
+
+* Thu Jan 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.19.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Thu Nov 11 2021 Wim Taymans <wtaymans@redhat.com> - 1.19.3-1
+- Update to 1.19.3
+
+* Thu Sep 23 2021 Wim Taymans <wtaymans@redhat.com> - 1.19.2-1
+- Update to 1.19.2
+
+* Thu Jul 22 2021 Fedora Release Engineering <releng@fedoraproject.org> - 1.19.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Thu Jun 03 2021 Wim Taymans <wtaymans@redhat.com> - 1.19.1-1
+- Update to 1.19.1
+
+* Tue Mar 16 2021 Wim Taymans <wtaymans@redhat.com> - 1.18.4-1
+- Update to 1.18.4
+
+* Tue Jan 26 2021 Fedora Release Engineering <releng@fedoraproject.org> - 1.18.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Thu Dec 10 2020 Wim Taymans <wtaymans@redhat.com> - 1.18.2-1
+- Update to 1.18.2
+
+* Fri Oct 30 2020 Wim Taymans <wtaymans@redhat.com> - 1.18.1-1
+- Update to 1.18.1
+
+* Tue Sep 8 2020 Wim Taymans <wtaymans@redhat.com> - 1.18.0-1
+- Update to 1.18.0
+
+* Fri Aug 21 2020 Wim Taymans <wtaymans@redhat.com> - 1.17.90-1
+- Update to 1.17.90
+- Add new gir and typelib files
+
+* Tue Jul 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1.17.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Mon Jul 6 2020 Wim Taymans <wtaymans@redhat.com> - 1.17.2-1
+- Update to 1.17.2
+
+* Mon Jun 22 2020 Wim Taymans <wtaymans@redhat.com> - 1.17.1-1
+- Update to 1.17.1
+- Use meson
+- disable docs
+
+* Thu Apr 16 2020 Wim Taymans <wtaymans@redhat.com> - 1.16.2-3
+- Add BR graphene-devel to build gltransform
+- Fixes rhbz#1822387
+
+* Wed Jan 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1.16.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
+* Thu Jan 2 2020 Wim Taymans <wtaymans@redhat.com> - 1.16.2-1
+- Update to 1.16.2
+
+* Tue Sep 24 2019 Wim Taymans <wtaymans@redhat.com> - 1.16.1-1
+- Update to 1.16.1
+
+* Thu Jul 25 2019 Fedora Release Engineering <releng@fedoraproject.org> - 1.16.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+* Tue Apr 23 2019 Wim Taymans <wtaymans@redhat.com> - 1.16.0-1
+- Update to 1.16.0
+
+* Thu Mar 07 2019 Rex Dieter <rdieter@fedoraproject.org> - 1.15.2-2
+- update wayland-related build deps, --enable-gtk-doc
+
+* Thu Mar 07 2019 Rex Dieter <rdieter@fedoraproject.org> - 1.15.2-1
+- %%build: --disable-gtk-doc to workaround FTBFS (hopefully temporary)
+
+* Fri Mar 01 2019 Wim Taymans <wtaymans@redhat.com> - 1.15.2-1
+- Update to 1.15.2
+- Add egl-wayland dep
+
+* Fri Feb 01 2019 Fedora Release Engineering <releng@fedoraproject.org> - 1.15.1-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
+* Mon Jan 28 2019 Wim Taymans <wtaymans@redhat.com> - 1.15.2-1
+- rebuild for dependencies
+
+* Fri Jan 25 2019 Wim Taymans <wtaymans@redhat.com> - 1.15.1-1
+- Update to 1.15.1
+
+* Fri Jan 11 2019 Bastien Nocera <bnocera@redhat.com> - 1.14.4-2
++ gstreamer1-plugins-base-1.14.4-2
+- Fix thumbnail colours for 10-bit MPEG-4 files
+
+* Wed Oct 03 2018 Wim Taymans <wtaymans@redhat.com> - 1.14.4-1
+- Update to 1.14.4
+
+* Tue Sep 18 2018 Wim Taymans <wtaymans@redhat.com> - 1.14.3-1
+- Update to 1.14.3
+
+* Mon Jul 23 2018 Wim Taymans <wtaymans@redhat.com> - 1.14.2-1
+- Update to 1.14.2
+
+* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 1.14.1-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Fri May 25 2018 Wim Taymans <wtaymans@redhat.com> - 1.14.1-3
+- rebuild (#1581325)
+
+* Tue May 22 2018 Rex Dieter <rdieter@fedoraproject.org> - 1.14.1-2
+- rebuild (file)
+
+* Mon May 21 2018 Wim Taymans <wtaymans@redhat.com> - 1.14.1-1
+- Update to 1.14.1
+- Remove obsolete patches
+
+* Mon Mar 26 2018 Tomas Popela <tpopela@redhat.com> - 1.14.0-2
+- Enable Wayland support (previously disabled due to missing wayland-devel
+  as a BR - before it was probably brought in by something else).
+
+* Tue Mar 20 2018 Wim Taymans <wtaymans@redhat.com> - 1.14.0-1
+- Update to 1.14.0
+
+* Wed Mar 14 2018 Wim Taymans <wtaymans@redhat.com> - 1.13.91-1
+- Update to 1.13.91
+- Add new prelude .h files
+
+* Mon Mar 05 2018 Wim Taymans <wtaymans@redhat.com> - 1.13.90-1
+- Update to 1.13.90
+
+* Sat Feb 24 2018 Rex Dieter <rdieter@fedoraproject.org> - 1.13.1-2
+- tigten subpkg deps
+- fix rpaths
+- update %%files
+- use %%ldconfig_scriptlets %%make_build %%make_install
+- %%build: --disable-fatal-warnings --disable-silent-rules
+- Conflicts: gstreamer1-plugins-bad-free < 1.13
+
+* Thu Feb 22 2018 Wim Taymans <wtaymans@redhat.com> - 1.13.1-1
+- Update to 1.13.1
+- Add patch to fix aliasing compilation error
+- Add GL buildrequires
+
+* Wed Feb 07 2018 Fedora Release Engineering <releng@fedoraproject.org> - 1.12.4-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Mon Dec 11 2017 Wim Taymans <wtaymans@redhat.com> - 1.12.4-1
+- Update to 1.12.4
+
+* Tue Sep 19 2017 Wim Taymans <wtaymans@redhat.com> - 1.12.3-1
+- Update to 1.12.3
+
+* Wed Aug 02 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.12.2-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
+* Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.12.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
+* Mon Jul 17 2017 Wim Taymans <wtaymans@redhat.com> - 1.12.2-1
+- Update to 1.12.2
+
+* Tue Jun 20 2017 Wim Taymans <wtaymans@redhat.com> - 1.12.1-1
+- Update to 1.12.1
+
+* Wed May 10 2017 Wim Taymans <wtaymans@redhat.com> - 1.12.0-1
+- Update to 1.12.0
+
+* Fri Apr 28 2017 Wim Taymans <wtaymans@redhat.com> - 1.11.91-1
+- Update to 1.11.91
+- Add new headers
+
+* Tue Apr 11 2017 Wim Taymans <wtaymans@redhat.com> - 1.11.90-1
+- Update to 1.11.90
+- Add new plugins
+
+* Fri Feb 24 2017 Wim Taymans <wtaymans@redhat.com> - 1.11.2-1
+- Update to 1.11.2
+
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.11.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Fri Jan 13 2017 Wim Taymans <wtaymans@redhat.com> - 1.11.1-1
+- Update to 1.11.1
+
+* Mon Dec 05 2016 Wim Taymans <wtaymans@redhat.com> - 1.10.2-1
+- Update to 1.10.2
+
+* Mon Nov 28 2016 Wim Taymans <wtaymans@redhat.com> - 1.10.1-1
+- Update to 1.10.1
+
+* Thu Nov 3 2016 Wim Taymans <wtaymans@redhat.com> - 1.10.0-1
+- Update to 1.10.0
+
+* Fri Sep 30 2016 Wim Taymans <wtaymans@redhat.com> - 1.9.90-1
+- Update to 1.9.90
+
+* Thu Sep 01 2016 Wim Taymans <wtaymans@redhat.com> - 1.9.2-1
+- Update to 1.9.2
+- drop upstreamed patch
+- add new files
+
+* Thu Jul 07 2016 Wim Taymans <wtaymans@redhat.com> - 1.9.1-2
+- Fix build on big-endian
+
+* Thu Jul 07 2016 Wim Taymans <wtaymans@redhat.com> - 1.9.1-1
+- Update to 1.9.1
+- add audio-resampler.h
+
+* Thu Jun 09 2016 Wim Taymans <wtaymans@redhat.com> - 1.8.2-1
+- Update to 1.8.2
+
+* Thu Apr 21 2016 Wim Taymans <wtaymans@redhat.com> - 1.8.1-1
+- Update to 1.8.1
+
+* Thu Mar 24 2016 Wim Taymans <wtaymans@redhat.com> - 1.8.0-1
+- Update to 1.8.0
+
+* Wed Mar 16 2016 Wim Taymans <wtaymans@redhat.com> - 1.7.91-1
+- Update to 1.7.91
+
+* Thu Mar 03 2016 Wim Taymans <wtaymans@redhat.com> - 1.7.90-2
+- Add opus that was moved from -bad-free
+
+* Wed Mar 02 2016 Wim Taymans <wtaymans@redhat.com> - 1.7.90-1
+- Update to 1.7.90
+
+* Fri Feb 19 2016 Wim Taymans <wtaymans@redhat.com> - 1.7.2-1
+- Update to 1.7.2
+- fix for renamed header
+
+* Wed Feb 03 2016 Fedora Release Engineering <releng@fedoraproject.org> - 1.7.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Mon Jan 4 2016 Wim Taymans <wtaymans@redhat.com> - 1.7.1-1
+- Update to 1.7.1
+- Add new files
+
+* Tue Dec 15 2015 Wim Taymans <wtaymans@redhat.com> - 1.6.2-1
+- Update to 1.6.2
+
+* Mon Nov 2 2015 Wim Taymans <wtaymans@redhat.com> - 1.6.1-1
+- Update to 1.6.1
+
+* Sat Sep 26 2015 Kalev Lember <klember@redhat.com> - 1.6.0-1
+- Update to 1.6.0
+- Use license macro for COPYING
+
+* Mon Sep 21 2015 Wim Taymans <wtaymans@redhat.com> - 1.5.91-1
+- Update to 1.5.91
+
+* Fri Sep 18 2015 Richard Hughes <rhughes@redhat.com> - 1.5.90-2
+- Add optional data to AppStream metadata.
+
+* Wed Aug 19 2015 Wim Taymans <wtaymans@redhat.com> - 1.5.90-1
+- Update to 1.5.90
+
+* Thu Jun 25 2015 Wim Taymans <wtaymans@redhat.com> - 1.5.2-1
+- Update to 1.5.2
+- Don't produce gir and typlib for GstRiff
+- Add multiview headers
+
+* Wed Jun 17 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.5.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
+* Tue May 5 2015 Wim Taymans <wtaymans@redhat.com> - 1.5.1-1
+- Update to 1.5.1
+- add missing headers
+
+* Wed Mar 25 2015 Richard Hughes <rhughes@redhat.com> - 1.4.5-3
+- Register as an AppStream component.
+
+* Sat Feb 21 2015 Kalev Lember <kalevlember@gmail.com> - 1.4.5-2
+- Backport new missing plugins API
+
+* Wed Jan 28 2015 Bastien Nocera <bnocera@redhat.com> 1.4.5-1
+- Update to 1.4.5
+
+* Fri Nov 14 2014 Kalev Lember <kalevlember@gmail.com> - 1.4.4-1
+- Update to 1.4.4
+
+* Mon Sep 22 2014 Wim Taymans <wtaymans@redhat.com> - 1.4.2-1
+- Update to 1.4.2.
+
+* Fri Aug 29 2014 Wim Taymans <wtaymans@redhat.com> - 1.4.1-1
+- Update to 1.4.1.
+
+* Sat Aug 16 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.4.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
+* Tue Jul 22 2014 Kalev Lember <kalevlember@gmail.com> - 1.4.0-2
+- Rebuilt for gobject-introspection 1.41.4
+
+* Tue Jul 22 2014 Wim Taymans <wtaymans@redhat.com> - 1.4.0-1
+- Update to 1.4.0.
+
+* Fri Jul 11 2014 Wim Taymans <wtaymans@redhat.com> - 1.3.91-1
+- Update to 1.3.91.
+
+* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.2.4-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
+* Fri May 23 2014 Wim Taymans <wtaymans@redhat.com> - 1.2.4-2
+- Improve conditional SSE and SSE2 compilation
+
+* Sun Apr 20 2014 Brian Pepple <bpepple@fedoraproject.org> - 1.2.4-1
+- Update to 1.2.4.
+
+* Mon Feb 10 2014 Brian Pepple <bpepple@fedoraproject.org> - 1.2.3-1
+- Update to 1.2.3.
+- Drop patch to fix build on aarch64. Fixed upstream.
+
+* Mon Jan 13 2014 Peter Robinson <pbrobinson@fedoraproject.org> 1.2.2-2
+- Add upstream patch to fix build on aarch64
+
+* Fri Dec 27 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.2.2-1
+- Update to 1.2.2.
+
+* Wed Dec 04 2013 Nils Philippsen <nils@redhat.com> - 1.2.1-2
+- rebuild for new libvisual
+
+* Mon Nov 11 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.2.1-1
+- Update to 1.2.1.
+- Drop patch to fix potential deadlock on startup. Fixed upstream.
+
+* Thu Oct 03 2013 Bastien Nocera <bnocera@redhat.com> 1.2.0-2
+- Fix potential deadlock on startup when playing audio files
+
+* Tue Sep 24 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.2.0-1
+- Update to 1.2.0.
+
+* Thu Sep 19 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.1.90-1
+- Update to 1.1.90.
+- Bump minimum version of orc needed.
+
+* Wed Aug 28 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.1.4-1
+- Update to 1.1.4.
+
+* Mon Jul 29 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.1.3-1
+- Update to 1.1.3.
+
+* Fri Jul 12 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.1.2-1
+- Update to 1.1.2.
+- Drop contrast/brightness video playback patch. Fixed upstream.
+
+* Wed May 29 2013 Daniel Drake <dsd@laptop.org> - 1.0.7-2
+- Upstream patch to fix contrast/brightness in video playback
+
+* Fri Apr 26 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.0.7-1
+- Update to 1.0.7.
+
+* Wed Apr  3 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.0.6-2
+- Drop gst-visualise mention from description. (#947658)
+
+* Fri Mar 22 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.0.6-1
+- Update to 1.0.6.
+- Drop BR on PyXML.
+- Drop alsa delay patch. Fixed upstream.
+
+* Thu Jan 24 2013 Daniel Drake <dsd@laptop.org> - 1.0.5-3
+- Add upstream fix for excessive alsasink CPU usage
+
+* Fri Jan 18 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.0.5-2
+- Add patch to fix missing mp3 codec discovery. (#680809, #896018)
+
+* Tue Jan  8 2013 Brian Pepple <bpepple@fedoraproject.org> - 1.0.5-1
+- Update to 1.0.5.
+
+* Wed Dec 19 2012 Brian Pepple <bpepple@fedoraproject.org> - 1.0.4-1
+- Update to 1.0.4
+
+* Wed Nov 21 2012 Brian Pepple <bpepple@fedoraproject.org> - 1.0.3-1
+- Update to 1.0.3
+
+* Thu Oct 25 2012 Brian Pepple <bpepple@fedoraproject.org> - 1.0.2-1
+- Update to 1.0.2.
+
+* Sun Oct  7 2012 Brian Pepple <bpepple@fedoraproject.org> - 1.0.1-1
+- Update to 1.0.1
+
+* Mon Oct  1 2012 Peter Robinson <pbrobinson@fedoraproject.org> - 1.0.0-2
+- Enable verbose build
+
+* Mon Sep 24 2012 Brian Pepple <bpepple@fedoraproject.org> - 1.0.0-1
+- Update to 1.0.0.
+
+* Wed Sep 19 2012 Brian Pepple <bpepple@fedoraproject.org> - 0.11.99-1
+- Update to 0.11.99
+
+* Fri Sep 14 2012 Brian Pepple <bpepple@fedoraproject.org> - 0.11.94-1
+- Update to 0.11.94.
+
+* Tue Aug 14 2012 Brian Pepple <bpepple@fedoraproject.org> - 0.11.93-1
+- Update to 0.11.93.
+- Package gst-visualise.
+
+* Tue Aug  7 2012 Brian Pepple <bpepple@fedoraproject.org> - 0.11.92-2
+- Remove rpath.
+
+* Tue Jul 17 2012 Brian Pepple <bpepple@fedoraproject.org> - 0.11.92-1
+- Initial Fedora spec file.
