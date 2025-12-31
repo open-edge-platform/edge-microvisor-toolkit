@@ -2136,16 +2136,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "coredns",
-          "version": "1.11.4",
-          "downloadUrl": "https://github.com/coredns/coredns/archive/v1.11.4.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "coreutils",
           "version": "9.4",
           "downloadUrl": "https://ftp.gnu.org/gnu/coreutils/coreutils-9.4.tar.xz"
