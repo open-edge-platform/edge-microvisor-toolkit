@@ -670,63 +670,63 @@ func (r *RpmRepoCloner) clonePackage(baseArgs []string) (preBuilt bool, err erro
 }
 
 func convertPackageVersionToTdnfArg(pkgVer *pkgjson.PackageVer) (tdnfArg string) {
-        tdnfArg = pkgVer.Name
+	tdnfArg = pkgVer.Name
 
-        // TDNF does not accept versioning information on implicit provides.
-        if pkgVer.IsImplicitPackage() {
-                if pkgVer.Condition != "" || pkgVer.SCondition != "" {
-                        logger.Log.Warnf("Discarding version constraint for implicit package: %v", pkgVer)
-                }
-                return
-        }
+	// TDNF does not accept versioning information on implicit provides.
+	if pkgVer.IsImplicitPackage() {
+		if pkgVer.Condition != "" || pkgVer.SCondition != "" {
+			logger.Log.Warnf("Discarding version constraint for implicit package: %v", pkgVer)
+		}
+		return
+	}
 
-        // Handle first condition
-        var firstConstraint, secondConstraint string
-        
-        switch pkgVer.Condition {
-        case "":
-        case "=":
-                firstConstraint = fmt.Sprintf("%s-%s", pkgVer.Name, pkgVer.Version)
-                tdnfArg = firstConstraint // For exact matches, use this format
-                return // Don't process second condition for exact matches
-        case "<=", "<":
-                firstConstraint = fmt.Sprintf("%s %s %s", pkgVer.Name, pkgVer.Condition, pkgVer.Version)
-        case ">", ">=":
-                logger.Log.Warnf("Discarding '%s' version constraint for performance: %v", pkgVer.Condition, pkgVer)
-                // Don't set firstConstraint, we're discarding this
-        default:
-                if pkgVer.Condition != "" {
-                        logger.Log.Errorf("Unsupported version constraint: %s", pkgVer.Condition)
-                }
-        }
+	// Handle first condition
+	var firstConstraint, secondConstraint string
 
-        // Handle second condition
-        switch pkgVer.SCondition {
-        case "":
-        case "=":
-                secondConstraint = fmt.Sprintf("%s-%s", pkgVer.Name, pkgVer.SVersion)
-        case "<=", "<":
-                secondConstraint = fmt.Sprintf("%s %s %s", pkgVer.Name, pkgVer.SCondition, pkgVer.SVersion)
-        case ">", ">=":
-                logger.Log.Warnf("Discarding '%s' second version constraint for performance: %v", pkgVer.SCondition, pkgVer)
-                // Don't set secondConstraint, we're discarding this
-        default:
-                if pkgVer.SCondition != "" {
-                        logger.Log.Errorf("Unsupported second version constraint: %s", pkgVer.SCondition)
-                }
-        }
+	switch pkgVer.Condition {
+	case "":
+	case "=":
+		firstConstraint = fmt.Sprintf("%s-%s", pkgVer.Name, pkgVer.Version)
+		tdnfArg = firstConstraint // For exact matches, use this format
+		return // Don't process second condition for exact matches
+	case "<=", "<":
+		firstConstraint = fmt.Sprintf("%s %s %s", pkgVer.Name, pkgVer.Condition, pkgVer.Version)
+	case ">", ">=":
+		logger.Log.Warnf("Discarding '%s' version constraint for performance: %v", pkgVer.Condition, pkgVer)
+		// Don't set firstConstraint, we're discarding this
+	default:
+		if pkgVer.Condition != "" {
+			logger.Log.Errorf("Unsupported version constraint: %s", pkgVer.Condition)
+		}
+	}
 
-        // Combine constraints
-        if firstConstraint != "" && secondConstraint != "" {
-                tdnfArg = fmt.Sprintf("%s %s", firstConstraint, secondConstraint)
-        } else if firstConstraint != "" {
-                tdnfArg = firstConstraint
-        } else if secondConstraint != "" {
-                tdnfArg = secondConstraint
-        }
-        // else tdnfArg remains just the package name
+	// Handle second condition
+	switch pkgVer.SCondition {
+	case "":
+	case "=":
+		secondConstraint = fmt.Sprintf("%s-%s", pkgVer.Name, pkgVer.SVersion)
+	case "<=", "<":
+		secondConstraint = fmt.Sprintf("%s %s %s", pkgVer.Name, pkgVer.SCondition, pkgVer.SVersion)
+	case ">", ">=":
+		logger.Log.Warnf("Discarding '%s' second version constraint for performance: %v", pkgVer.SCondition, pkgVer)
+		// Don't set secondConstraint, we're discarding this
+	default:
+		if pkgVer.SCondition != "" {
+			logger.Log.Errorf("Unsupported second version constraint: %s", pkgVer.SCondition)
+		}
+	}
 
-        return
+	// Combine constraints
+	if firstConstraint != "" && secondConstraint != "" {
+		tdnfArg = fmt.Sprintf("%s %s", firstConstraint, secondConstraint)
+	} else if firstConstraint != "" {
+		tdnfArg = firstConstraint
+	} else if secondConstraint != "" {
+		tdnfArg = secondConstraint
+	}
+	// else tdnfArg remains just the package name
+
+	return
 }
 
 func (r *RpmRepoCloner) GetRepoSnapshotTime() string {
