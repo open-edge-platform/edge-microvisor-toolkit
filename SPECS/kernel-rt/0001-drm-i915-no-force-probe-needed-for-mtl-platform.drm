@@ -1,0 +1,29 @@
+From f18bd93ea20bf2a8b7360b245db7a9119a2e54ac Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Sat, 6 Dec 2025 17:11:22 +0800
+Subject: [PATCH] drm/i915: no force probe needed for mtl platform
+
+mtl has been supported in 6.12 kernel. No need to add require force
+probe flag.
+
+Fixes: 9fd5e45e3167 ("Revert "drm/i915: move platform_engine_mask and memory_regions to device info"")
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ drivers/gpu/drm/i915/i915_pci.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_pci.c b/drivers/gpu/drm/i915/i915_pci.c
+index 8aff711aa887b..9eb8216389251 100644
+--- a/drivers/gpu/drm/i915/i915_pci.c
++++ b/drivers/gpu/drm/i915/i915_pci.c
+@@ -795,7 +795,6 @@ static const struct intel_device_info mtl_info = {
+ 	.has_pxp = 1,
+ 	.__runtime.memory_regions = BIT(INTEL_REGION_SMEM) | BIT(INTEL_REGION_STOLEN_LMEM),
+ 	.__runtime.platform_engine_mask = BIT(RCS0) | BIT(BCS0) | BIT(CCS0),
+-	.require_force_probe = 1,
+ 	MTL_CACHELEVEL,
+ };
+ 
+-- 
+2.43.0
+
