@@ -14,7 +14,7 @@
 Summary:        Linux API header files
 Name:           kernel-headers
 Version:        6.17.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -76,6 +76,9 @@ done
 %endif
 
 %changelog
+* Wed Jan 7 2026 Lishan Liu <lishan.liu@intel.com> - 6.17.0-4
+- Bump release version
+
 * Mon Dec 1 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-3
 - Update kernel to mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
 
