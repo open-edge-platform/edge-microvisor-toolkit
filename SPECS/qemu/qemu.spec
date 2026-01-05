@@ -640,6 +640,15 @@ BuildRequires: libnfs-devel
 BuildRequires: ncurses-devel
 %if %{have_spice}
 # spice graphics support
+BuildRequires: cdparanoia
+BuildRequires: graphene
+BuildRequires: iso-codes
+BuildRequires: libogg
+BuildRequires: libtheora
+BuildRequires: libvisual
+BuildRequires: libvorbis
+BuildRequires: opus
+BuildRequires: orc
 BuildRequires: spice-protocol
 BuildRequires: spice-server-devel
 BuildRequires: gstreamer1-devel
