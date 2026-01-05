@@ -106,6 +106,7 @@ compiler-rt
 conda
 conmon
 conntrack-tools
+containerized-data-importer
 coredns
 coreutils
 cpio
