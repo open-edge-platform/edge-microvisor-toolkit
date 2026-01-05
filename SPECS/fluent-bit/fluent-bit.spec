@@ -1,12 +1,13 @@
 Summary:        Fast and Lightweight Log processor and forwarder for Linux, BSD and OSX
 Name:           fluent-bit
-Version:        3.1.9
-Release:        17%{?dist}
+Version:        3.1.10
+Release:        2%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://fluentbit.io
 Source0:        https://github.com/fluent/%{name}/archive/refs/tags/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+# add selinux policies for BMA
 Source1:        fluent_bit.te
 Source2:        fluent_bit.fc
 Patch0:         CVE-2024-34250.patch
@@ -15,9 +16,9 @@ Patch2:         CVE-2024-27532.patch
 Patch3:         CVE-2024-50608.patch
 Patch4:         CVE-2024-50609.patch
 Patch5:         CVE-2025-31498.patch
-Patch6:         CVE-2025-29087.patch
-Patch7:         CVE-2023-53154.patch
-Patch8:         CVE-2025-54126.patch
+Patch6:         CVE-2025-54126.patch
+Patch7:         CVE-2023-58749.patch
+Patch8:         CVE-2025-12970.patch
 BuildRequires:  bison
 BuildRequires:  cmake
 BuildRequires:  cyrus-sasl-devel
@@ -187,6 +188,12 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Mon Jan 5 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 3.1.10-2
+- merge from Azure Linux 3.0.20251206-3.0
+- Upgrade to 3.1.10
+- Patch for CVE-2025-12970
+- Patch for CVE-2025-58749
+
 * Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 3.1.9-17
 - remove inbm selinux
 

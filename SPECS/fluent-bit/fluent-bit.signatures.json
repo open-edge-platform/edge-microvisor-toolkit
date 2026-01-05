@@ -1,6 +1,6 @@
 {
  "Signatures": {
-  "fluent-bit-3.1.9.tar.gz": "ac3a3e235e7f8a92d35f10c99f400f0b0571417a92e3c4caa467073733d42547",
+  "fluent-bit-3.1.10.tar.gz": "9ec909e8ce04bc8f3b09862c781956c40da18f60e8ae92b154114b4e20edc5fa",
   "fluent_bit.fc": "d59e8180da8c7000c56362ace40e628e9caf7c21047df2a41a1b00dd6c96d5ab",
   "fluent_bit.te": "af9350c3885430cc075212b4a1bedc381062c54d187dc58138dc285131283663"
  }
