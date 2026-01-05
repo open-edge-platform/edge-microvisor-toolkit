@@ -2656,7 +2656,7 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %doc %{qemudocdir}
 
 %files common
-# azlinux: no lang files generated yet. -f %{name}.lang
+# azlinux: no lang files generated yet.
 %license COPYING COPYING.LIB LICENSE
 %dir %{_datadir}/%{name}/
 %dir %{_datadir}/%{name}/vhost-user/
