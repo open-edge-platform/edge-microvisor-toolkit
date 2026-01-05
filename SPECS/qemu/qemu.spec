@@ -642,6 +642,7 @@ BuildRequires: ncurses-devel
 # spice graphics support
 BuildRequires: cdparanoia
 BuildRequires: graphene
+BuildRequires: i2c-tools-devel
 BuildRequires: iso-codes
 BuildRequires: libogg
 BuildRequires: libtheora
