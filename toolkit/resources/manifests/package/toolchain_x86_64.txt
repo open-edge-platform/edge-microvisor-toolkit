@@ -331,7 +331,6 @@ perl-DBD-SQLite-1.74-2.emt3.x86_64.rpm
 perl-DBD-SQLite-debuginfo-1.74-2.emt3.x86_64.rpm
 perl-DBI-1.643-3.emt3.x86_64.rpm
 perl-DBI-debuginfo-1.643-3.emt3.x86_64.rpm
-perl-DBIx-Simple-1.37-7.emt3.noarch.rpm
 perl-DBM_Filter-0.06-509.emt3.noarch.rpm
 perl-debugger-1.60-509.emt3.noarch.rpm
 perl-debuginfo-5.38.2-509.emt3.x86_64.rpm
