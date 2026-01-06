@@ -1,7 +1,7 @@
 Summary:        agent for collecting, processing, aggregating, and writing metrics.
 Name:           telegraf
 Version:        1.31.0
-Release:        24%{?dist}
+Release:        25%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -24,6 +24,7 @@ Patch8:         CVE-2025-30204.patch
 Patch9:         CVE-2025-27144.patch
 Patch10:        CVE-2025-30215.patch
 Patch11:        CVE-2025-22872.patch
+Patch12:        CVE-2025-47913.patch
 
 BuildRequires:  golang
 BuildRequires:  systemd-devel
@@ -128,6 +129,10 @@ fi
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-25
+- merge from Azure Linux 3.0.20251206-3.0
+- Patch for CVE-2025-47913
+
 * Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.31.0-24
 - remove inbm selinux
 
