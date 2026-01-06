@@ -12,7 +12,7 @@
 
 Summary:        Unified Kernel Image
 Name:           kernel-uki
-Version:        6.12.59
+Version:        6.12.61
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
@@ -70,6 +70,9 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Fri Jan 2 2026 Lishan Liu <lishan.liu@intel.com> - 6.12.61-1
+- Update kernel to 6.12.61
+
 * Thu Dec 11 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.59-1
 - Update kernel to 6.12.59
 

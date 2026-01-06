@@ -1,13 +1,13 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
-Version:        6.12.59
+Version:        6.12.61
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/pub/linux/kernel
-Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.59.tar.gz
+Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.61.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -16,7 +16,8 @@ Source6:        cpupower.service
 
 
 # Intel not-upstreamed kernel features
-# d5dc97879a97 Linux 6.12.59
+# Series file for v6.12.61 linux kernel
+# dcbeffaf66d03 Linux 6.12.61
 #sriov
 Patch0: 0001-drm-i915-mtl-Add-C10-table-for-HDMI-Clock-25175.sriov
 Patch1: 0002-drm-i915-mtl-Copy-c10-phy-pll-sw-state-from-master-t.sriov
@@ -412,146 +413,210 @@ Patch380: 0016-drm-i915-gt-Refactor-CCS-mode-handling-and-improve-app.drm
 Patch381: 0017-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
 Patch382: 0001-Remove-unneeded-files.patch
 Patch383: 0001-i915-gt-Upgrade-GuC-70.44.1-70.49.4.drm
+Patch384: 0001-drm-i915-no-force-probe-needed-for-mtl-platform.drm
 #rapl
-Patch384: 0001-powercap-intel_rapl-Add-support-for-Bartlett-Lake-pl.rapl
+Patch385: 0001-powercap-intel_rapl-Add-support-for-Bartlett-Lake-pl.rapl
 #misc
-Patch385: 0001-Add-security.md-file.misc
+Patch386: 0001-Add-security.md-file.misc
 #iommu
-Patch386: 0001-driver-core-add-a-faux-bus-for-use-when-a-simple-dev.iommu
-Patch387: 0002-iommu-io-pgtable-arm-dynamically-allocate-selftest-d.iommu
+Patch387: 0001-driver-core-add-a-faux-bus-for-use-when-a-simple-dev.iommu
+Patch388: 0002-iommu-io-pgtable-arm-dynamically-allocate-selftest-d.iommu
 #emt-drm
-Patch388: 0075-drm-xe-gsc-mei-interrupt-top-half-should-be-in-irq-d.patch
+Patch389: 0075-drm-xe-gsc-mei-interrupt-top-half-should-be-in-irq-d.patch
 #CVE-2025-21709
-Patch389: CVE-2025-21709.patch
+Patch390: CVE-2025-21709.patch
+
 #CVE-2025-21817
-Patch390: CVE-2025-21817.patch
+Patch391: CVE-2025-21817.patch
+
 #CVE-2025-22104
-Patch391: CVE-2025-22104.patch
+Patch392: CVE-2025-22104.patch
+
 #CVE-2025-22108
-Patch392: CVE-2025-22108.patch
+Patch393: CVE-2025-22108.patch
+
 #CVE-2025-22111
-Patch393: CVE-2025-22111.patch
+Patch394: CVE-2025-22111.patch
+
 #CVE-2025-22116
-Patch394: CVE-2025-22116.patch
+Patch395: CVE-2025-22116.patch
+
 #CVE-2025-22117
-Patch395: CVE-2025-22117.patch
+Patch396: CVE-2025-22117.patch
+
 #CVE-2025-23131
-Patch396: CVE-2025-23131.patch
+Patch397: CVE-2025-23131.patch
+
 #CVE-2025-37746
-Patch397: CVE-2025-37746.patch
-Patch398: CVE-2025-37746-1.patch
+Patch398: CVE-2025-37746.patch
+Patch399: CVE-2025-37746-1.patch
+
 #CVE-2025-37906
-Patch399: CVE-2025-37906.patch
+Patch400: CVE-2025-37906.patch
+
 #CVE-2025-38041
-Patch400: CVE-2025-38041.patch
-Patch401: CVE-2025-38041-1.patch
-Patch402: CVE-2025-38041-2.patch
+Patch401: CVE-2025-38041.patch
+Patch402: CVE-2025-38041-1.patch
+Patch403: CVE-2025-38041-2.patch
+
 #CVE-2025-38029
-Patch403: CVE-2025-38029.patch
+Patch404: CVE-2025-38029.patch
+
 #CVE-2025-38311
-Patch404: CVE-2025-38311.patch
+Patch405: CVE-2025-38311.patch
+
 #CVE-2025-38248
-Patch405: CVE-2025-38248.patch
+Patch406: CVE-2025-38248.patch
+
 #CVE-2025-38234
-Patch406: CVE-2025-38234.patch
+Patch407: CVE-2025-38234.patch
+
 #CVE-2025-38207
-Patch407: CVE-2025-38207.patch
+Patch408: CVE-2025-38207.patch
+
 #CVE-2025-38137
-Patch408: CVE-2025-38137.patch
+Patch409: CVE-2025-38137.patch
+
 #CVE-2025-40325
-Patch409: CVE-2025-40325.patch
+Patch410: CVE-2025-40325.patch
+
 #CVE-2025-38284
-Patch410: CVE-2025-38284.patch
-Patch411: CVE-2025-38284-1.patch
-Patch412: CVE-2025-38284-2.patch
+Patch411: CVE-2025-38284.patch
+Patch412: CVE-2025-38284-1.patch
+Patch413: CVE-2025-38284-2.patch
+
 #CVE-2025-38199
-Patch413: CVE-2025-38199.patch
+Patch414: CVE-2025-38199.patch
+
 #CVE-2025-38140
-Patch414: CVE-2025-38140.patch
+Patch415: CVE-2025-38140.patch
+
 #CVE-2025-38132
-Patch415: CVE-2025-38132.patch
-Patch416: CVE-2025-38132-1.patch
+Patch416: CVE-2025-38132.patch
+Patch417: CVE-2025-38132-1.patch
+
 #CVE-2025-37743
-Patch417: CVE-2025-37743.patch
+Patch418: CVE-2025-37743.patch
+
 #CVE-2025-23132
-Patch418: CVE-2025-23132.patch
+Patch419: CVE-2025-23132.patch
+
 #CVE-2025-22127
-Patch419: CVE-2025-22127.patch
+Patch420: CVE-2025-22127.patch
+
 #CVE-2025-22109
-Patch420: CVE-2025-22109.patch
+Patch421: CVE-2025-22109.patch
+
 #CVE-2025-21752
-Patch421: CVE-2025-21752.patch
-Patch422: CVE-2025-21752-1.patch
+Patch422: CVE-2025-21752.patch
+Patch423: CVE-2025-21752-1.patch
+
 #CVE-2024-58095
-Patch423: CVE-2024-58095.patch
+Patch424: CVE-2024-58095.patch
+
 #CVE-2024-58094
-Patch424: CVE-2024-58094.patch
+Patch425: CVE-2024-58094.patch
+
 #CVE-2024-52560
-Patch425: CVE-2024-52560.patch
-Patch426: CVE-2024-52560-1.patch
+Patch426: CVE-2024-52560.patch
+Patch427: CVE-2024-52560-1.patch
+
 #CVE-2025-38621
-Patch427: CVE-2025-38621.patch
+Patch428: CVE-2025-38621.patch
+
 #CVE-2025-38627
-Patch428: CVE-2025-38627.patch
+Patch429: CVE-2025-38627.patch
+
 #CVE-2025-39789
-Patch429: CVE-2025-39789.patch
+Patch430: CVE-2025-39789.patch
+
 #CVE-2025-39764
-Patch430: CVE-2025-39764.patch
+Patch431: CVE-2025-39764.patch
+
 #CVE-2025-39745
-Patch431: CVE-2025-39745.patch
+Patch432: CVE-2025-39745.patch
+
 #CVE-2025-39677
-Patch432: CVE-2025-39677.patch
+Patch433: CVE-2025-39677.patch
+
 #CVE-2025-39933
-Patch433: CVE-2025-39933.patch
+Patch434: CVE-2025-39933.patch
+
 #CVE-2025-39833
-Patch434: CVE-2025-39833.patch
+Patch435: CVE-2025-39833.patch
+
 #CVE-2025-39925
-Patch435: CVE-2025-39925.patch
+Patch436: CVE-2025-39925.patch
+
 #CVE-2025-39905
-Patch436: CVE-2025-39905.patch
+Patch437: CVE-2025-39905.patch
+
 #CVE-2025-39859
-Patch437: CVE-2025-39859.patch
+Patch438: CVE-2025-39859.patch
+
 #CVE-2025-39910
-Patch438: CVE-2025-39910.patch
+Patch439: CVE-2025-39910.patch
+
 #CVE-2025-40098
-Patch439: CVE-2025-40098.patch
+Patch440: CVE-2025-40098.patch
+
 #CVE-2025-40075
-Patch440: CVE-2025-40075.patch
-Patch441: CVE-2025-40075-1.patch
+Patch441: CVE-2025-40075.patch
+Patch442: CVE-2025-40075-1.patch
+
 #CVE-2025-40074
-Patch442: CVE-2025-40074.patch
+Patch443: CVE-2025-40074.patch
+
 #CVE-2025-40064
-Patch443: CVE-2025-40064.patch
+Patch444: CVE-2025-40064.patch
+
 #CVE-2025-40086
-Patch444: CVE-2025-40086.patch
-Patch445: CVE-2025-40086-1.patch
+Patch445: CVE-2025-40086.patch
+Patch446: CVE-2025-40086-1.patch
+
 #CVE-2025-40168
-Patch446: CVE-2025-40168.patch
+Patch447: CVE-2025-40168.patch
+
 #CVE-2025-40170
-Patch447: CVE-2025-40170.patch
+Patch448: CVE-2025-40170.patch
+
 #CVE-2025-40164
-Patch448: CVE-2025-40164.patch
+Patch449: CVE-2025-40164.patch
+
 #CVE-2025-40158
-Patch449: CVE-2025-40158.patch
+Patch450: CVE-2025-40158.patch
+
 #CVE-2025-40149
-Patch450: CVE-2025-40149.patch
+Patch451: CVE-2025-40149.patch
+
 #CVE-2025-40147
-Patch451: CVE-2025-40147.patch
+Patch452: CVE-2025-40147.patch
+
 #CVE-2025-40139
-Patch452: CVE-2025-40139.patch
+Patch453: CVE-2025-40139.patch
+
 #CVE-2025-40136
-Patch453: CVE-2025-40136.patch
+Patch454: CVE-2025-40136.patch
+
 #CVE-2025-40135
-Patch454: CVE-2025-40135.patch
+Patch455: CVE-2025-40135.patch
+
 #CVE-2025-40130
-Patch455: CVE-2025-40130.patch
+Patch456: CVE-2025-40130.patch
+
 #CVE-2025-38656
-Patch456: CVE-2025-38656.patch
-Patch457: CVE-2025-38656-2.patch
+Patch457: CVE-2025-38656.patch
+Patch458: CVE-2025-38656-2.patch
+
 #CVE-2025-38591
-Patch458: CVE-2025-38591.patch
+Patch459: CVE-2025-38591.patch
+
 #CVE-2025-38584
-Patch459: CVE-2025-38584.patch
+Patch460: CVE-2025-38584.patch
+
+#CVE-2025-40215
+Patch461: CVE-2025-40215.patch
+
 # CVE Patches
 
 %global security_hardening none
@@ -700,8 +765,8 @@ manipulation of eBPF programs and maps.
 
 %prep
 %define _default_patch_flags -p1 --fuzz=3 --force
-%setup -q -n linux-6.12.59
-%autosetup -p1 -n linux-6.12.59
+%setup -q -n linux-6.12.61
+%autosetup -p1 -n linux-6.12.61
 # %patch 0 -p1
 make mrproper
 
@@ -973,6 +1038,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Fri Jan 2 2026 Lishan Liu <lishan.liu@intel.com> - 6.12.61-1
+- Update kernel to 6.12.61
+
 * Thu Dec 11 2025 Lishan Liu <lishan.liu@intel.com> - 6.12.59-1
 - Update kernel to 6.12.59
 
