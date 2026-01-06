@@ -36,10 +36,13 @@ Patch307:       pam_ssh_agent_auth-0.10.2-dereference.patch
 #This CVE Patches both CVE-2025-26465 and CVE-2025-26466
 Patch400:       CVE-2025-26465.patch
 Patch401:       CVE-2025-32728.patch
+Patch402:       CVE-2025-61984.patch
+Patch403:       CVE-2025-61985.patch
 # sk-dummy.so built with -fvisibility=hidden does not work
 # The tests fail with the following error:
 #   dlsym(sk_api_version) failed: (...)/sk-dummy.so: undefined symbol: sk_api_version
 Patch965: openssh-8.2p1-visibility.patch
+
 BuildRequires:  audit-devel
 BuildRequires:  autoconf
 BuildRequires:  e2fsprogs-devel
@@ -281,6 +284,10 @@ fi
 %{_mandir}/man8/ssh-sk-helper.8.gz
 
 %changelog
+* Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 9.8p1-7
+- merge from Azure Linux 3.0.20251206-3.0
+- Patch CVE-2025-61985, CVE-2025-61984
+
 * Fri May 30 2025 Ranjan Dutta <ranjan.dutta@intel.com> - 9.8p1-7
 - merge from Azure Linux 3.0.20250521-3.0
 - Patch CVE-2025-32728
