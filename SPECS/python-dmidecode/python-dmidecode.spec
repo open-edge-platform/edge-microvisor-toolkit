@@ -1,13 +1,15 @@
-Summary:       Python module to access DMI data
-Name:          python-dmidecode
-Version:       3.12.3
-Release:       2%{?dist}
-License:       GPL-2.0-only
-Vendor:        Intel Corporation
-Distribution:  Edge Microvisor Toolkit
-URL:           https://github.com/nima/python-dmidecode
-Source0:       %{url}/archive/refs/tags/v%{version}/%{name}-%{version}.tar.gz
-Patch0:        python-dmidecode-rhbz2154949.patch
+Name: python-dmidecode
+Summary: Python module to access DMI data
+Version: 3.12.3
+Release: 10%{?dist}
+License: GPL-2.0-only
+Vendor: Microsoft Corporation
+Distribution: Azure Linux
+URL: https://github.com/nima/python-dmidecode
+Source0: https://github.com/nima/%{name}/archive/refs/tags/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
+
+Patch0: python-dmidecode-rhbz2154949.patch
+
 BuildRequires: make
 BuildRequires: gcc
 BuildRequires: libxml2-devel
@@ -26,11 +28,12 @@ as python data structures or as XML data using libxml2.\
 %package -n python3-dmidecode
 Summary: Python 3 module to access DMI data
 Requires: libxml2-python3
+
 %description -n python3-dmidecode %_description
 
+
 %prep
-%autosetup -n %{name}-%{version} -N
-%patch 0 -p1 -b .backup
+%autosetup -p1 -n %{name}-%{version}
 
 %build
 # -std=gnu89 is there to avoid `undefined symbol: dmixml_GetContent`
@@ -45,9 +48,9 @@ export CXX=g++
 %{__python3} src/setup.py install --root %{buildroot} --prefix=%{_prefix}
 
 %check
-export PYTHONPATH=%{buildroot}%{python3_sitearch}
-export PYTHON_BIN=%{__python3}
-make -C unit-tests
+pushd unit-tests
+make
+popd
 
 %files -n python3-dmidecode
 %license doc/LICENSE
@@ -58,15 +61,69 @@ make -C unit-tests
 %{_datadir}/%{name}/
 
 %changelog
-* Fri Feb 14 2025 Naveen Saini <naveen.kumar.saini@intel.com> - 3.12.3-2
-- Fix source url.
+* Wed Apr 23 2025 Akhila Guruju <v-guakhila@microsoft.com> - 3.12.3-10
+- Initial Azure Linux import from Fedora 41 (license: MIT).
+- License verified
 
-* Wed Sep 18 2024 Mun Chun Yep <mun.chun.yep@intel.com> - 3.12.3-1
-- Upgrade version for Edge Microvisor Toolkit.
-- Update version 3.12.3 and patch from Fedora 41 to resolve build error.
+* Fri Jul 19 2024 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.3-9
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
 
-* Fri Oct 15 2021 Pawel Winogrodzki <pawelwi@microsoft.com> - 3.12.2-20
-- Initial CBL-Mariner import from Fedora 32 (license: MIT). License verified.
+* Fri Jun 07 2024 Python Maint <python-maint@redhat.com> - 3.12.3-8
+- Rebuilt for Python 3.13
+
+* Mon Jan 22 2024 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.3-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Thu Aug 10 2023 Lichen Liu <lichliu@redhat.com> - 3.12.3-6
+- Use SPDX identifiers for license
+
+* Fri Jul 21 2023 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.3-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Tue Jun 13 2023 Python Maint <python-maint@redhat.com> - 3.12.3-4
+- Rebuilt for Python 3.12
+
+* Sat May 20 2023 Antonio Trande <sagitter@fedoraproject.org> - 3.12.3-3
+- Fix BuildRequires packages for Python-3.12
+
+* Fri Jan 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Sun Dec 25 2022 Antonio Trande <sagitter@fedoraproject.org> - 3.12.3-1
+- Release 3.12.3
+- Temporary fix for rhbz#2154949
+
+* Fri Jul 22 2022 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.2-29.20210630gitf0a089a1
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Mon Jun 13 2022 Python Maint <python-maint@redhat.com> - 3.12.2-28.20210630gitf0a089a1
+- Rebuilt for Python 3.11
+
+* Sun Apr 24 2022 Antonio Trande <sagitter@fedoraproject.org> - 3.12.2-27.20210630gitf0a089a1
+- Build commit #f0a089a1 (include covscan error fixes)
+
+* Fri Jan 21 2022 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.2-26
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Tue Jul 27 2021 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.2-25
+- Second attempt - Rebuilt for
+  https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Fri Jun 04 2021 Python Maint <python-maint@redhat.com> - 3.12.2-24
+- Rebuilt for Python 3.10
+
+* Wed Jan 27 2021 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.2-23
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Thu Nov 26 2020 Antonio Trande <sagitter@fedoraproject.org> - 3.12.2-22
+- Refresh SPEC file
+- Fixed for Python-3.10 (rhbz#1898981)
+
+* Wed Jul 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.2-21
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Tue May 26 2020 Miro Hrončok <mhroncok@redhat.com> - 3.12.2-20
+- Rebuilt for Python 3.9
 
 * Thu Jan 30 2020 Fedora Release Engineering <releng@fedoraproject.org> - 3.12.2-19
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
