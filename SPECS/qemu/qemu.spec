@@ -651,7 +651,7 @@ BuildRequires: libvorbis
 BuildRequires: opus
 BuildRequires: orc
 BuildRequires: spice-protocol
-BuildRequires: spice-server-devel
+BuildRequires: spice-server-devel = 0.15.1
 BuildRequires: gstreamer1-devel
 BuildRequires: gstreamer1-plugins-base-devel
 %endif
