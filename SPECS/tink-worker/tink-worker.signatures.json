@@ -1,7 +1,7 @@
 {
   "Signatures": {
-    "tink-worker-v1.1.2.tar.gz": "d8068506964758d807c658c1589f44c22359aa8f0f954797e308f358530a275f",
+    "tink-worker-v1.1.5.tar.gz": "6b7315275c1a8a0bec7a3c419996cbd981c5a488473ac9935487d9c8e2cf21f4",
     "tink-worker.service": "0bd4bdf62618966a33567859e78fd7f88269275a1c730f8c472f4a266443e404",
-    "tink-worker-v1.1.2-vendor.tar.gz": "c917e973ab5fc685f4ca9993e1d306236fea6090b780b2bbdf8c1956e9d5e6a3"
+    "tink-worker-v1.1.5-vendor.tar.gz": "eefb654923c16ea1bd9dd8f569708b05e148e0b63b29f85c64cd896e21fa9b79"
   }
 }

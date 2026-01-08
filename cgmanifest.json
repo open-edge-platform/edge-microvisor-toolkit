@@ -29646,8 +29646,8 @@
         "type": "other",
         "other": {
           "name": "tink-worker",
-          "version": "1.1.2",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.2.tar.gz"
+          "version": "1.1.5",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.5.tar.gz"
         }
       }
     },
