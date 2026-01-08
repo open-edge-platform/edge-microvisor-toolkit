@@ -2,7 +2,7 @@
 
 Summary:        In-memory Operating System Installation Environment for Executing Tinkerbell Workflows
 Name:           tink-worker
-Version:        1.1.4
+Version:        1.1.5
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -46,6 +46,10 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/tink-worker.service
 %{_unitdir}/tink-worker.service
 
 %changelog
+* Tue Jan 6 2026 Andy <andy.peng@intel.com> - 1.1.5-1
+- Update version to fix CVE
+- CVE-2025-52881
+
 * Tue Dec 2 2025 Andy <andy.peng@intel.com> - 1.1.4-1
 - Update version to fix CVE
 - CVE-2025-47913
