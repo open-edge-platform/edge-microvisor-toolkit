@@ -305,6 +305,7 @@ Distribution:   Edge Microvisor Toolkit
 %else
 %define requires_char_baum %{nil}
 %endif
+%define requires_device_uefi_vars Requires: %{name}-device-uefi-vars = %{evr}
 %define requires_device_usb_host Requires: %{name}-device-usb-host = %{evr}
 %define requires_device_usb_redirect Requires: %{name}-device-usb-redirect = %{evr}
 %define requires_ui_curses Requires: %{name}-ui-curses = %{evr}
@@ -445,8 +446,8 @@ Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
 
 Summary: QEMU is a FAST! processor emulator
 Name: qemu
-Version: 9.1.0
-Release: 5%{?dist}
+Version: 10.0.4
+Release: 1%{?dist}
 License: Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND FSFAP AND GPL-1.0-or-later AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-2.0-or-later WITH GCC-exception-2.0 AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT AND LicenseRef-Fedora-Public-Domain AND CC-BY-3.0
 URL: http://www.qemu.org/
 
@@ -474,72 +475,13 @@ Source36: README.tests
 
 # Skip failing test in copr
 # https://gitlab.com/qemu-project/qemu/-/issues/2541
-Patch1: 0001-Disable-9p-local-tests-that-fail-on-copr-aarch64.patch
-
-# https://patchwork.kernel.org/project/qemu-devel/patch/20231128143647.847668-1-crobinso@redhat.com/
-# Fix pvh.img ld build failure on fedora rawhide
-Patch2: 0001-pc-bios-optionrom-Fix-pvh.img-ld-build-failure-on-fe.patch
-#Patch3: 0002-Disable-failing-tests-on-azl.patch
-
-# SRIOV patches
-Patch4: 0001-ui-gtk-Attach-fullscreen-toggling-cb-to-all-detached.patch
-Patch5: 0002-ui-egl-helpers-Consolidates-create-sync-and-create-f.patch
-Patch6: 0003-ui-dmabuf-Remove-sync-from-QemuDmaBuf-struct.patch
-Patch7: 0004-hw-display-virtio-gpu-Introducing-render_sync-param.patch
-Patch8: 0005-ui-gtk-Start-rendering-of-guest-blob-scandout-if-ren.patch
-Patch9: 0006-ui-gtk-Factor-out-tab-window-creation-into-a-separat.patch
-Patch10: 0007-ui-gtk-Add-a-new-parameter-to-assign-connectors-moni.patch
-Patch11: 0008-ui-gtk-Page-number-of-1-is-not-a-valid-page-number.patch
-Patch12: 0009-ui-gtk-move-guest-mouse-cursor-after-host-cursor-hit.patch
-Patch13: 0010-ui-gtk-Register-shortcut-key-for-grab_input-to-accel.patch
-Patch14: 0011-audio-Switch-audio-status-with-Guest-VM-switch-from-.patch
-Patch15: 0012-usb-hid-added-new-type-for-touch-stylus.patch
-Patch16: 0013-ui-gtk-Adds-status-bar-and-display-guest-ups-and-dra.patch
-Patch17: 0014-ui-gtk-Refresh-grabbing-status-when-the-window-is-fo.patch
-Patch18: 0015-ui-gtk-untabifying-even-the-primary-window.patch
-Patch19: 0016-ui-gtk-Forcefully-full-screening-window.patch
-Patch20: 0017-ui-spice-Add-an-option-for-users-to-provide-a-prefer.patch
-Patch21: 0018-ui-spice-Enable-gl-on-option-for-non-local-or-remote.patch
-Patch22: 0019-ui-spice-Submit-the-gl_draw-requests-at-60-FPS-for-r.patch
-Patch23: 0020-ui-console-gl-Add-a-helper-to-create-a-texture-with-.patch
-Patch24: 0021-ui-spice-Create-another-texture-with-linear-layout-w.patch
-Patch25: 0022-ui-spice-Blit-the-scanout-texture-if-its-memory-layo.patch
-Patch26: 0023-ui-gtk-Enables-HW-cursor.patch
-Patch27: 0024-ui-gtk-Hardcode-default-size-of-new-tab-window-to-96.patch
-Patch28: 0025-ui-gtk-Added-an-input-mode.patch
-Patch29: 0026-ui-gtk-Scanout-flush-only-if-guest-framebuffer-exist.patch
-Patch30: 0027-virtio-gpu-Replace-the-surface-with-null-surface-onl.patch
-Patch31: 0028-virtio-gpu-Recreate-the-resource-s-dmabuf-if-new-bac.patch
-Patch32: 0029-virtio-gpu-Find-the-host-addr-given-gpa-associated-w.patch
-Patch33: 0030-virtio-gpu-udmabuf-Create-dmabuf-from-mr-associated-.patch
-Patch34: 0031-gtk-Skip-to-configure-the-size-only-in-HPD-case.patch
-Patch35: 0032-ui-spice-unblock-the-console-when-the-scanout-is-bei.patch
-Patch36: 0033-virtio-gpu-Update-cursor-data-only-if-it-is-valid.patch
-Patch37: 0034-virtio-gpu-Freeing-udmabuf-and-make-dmabuf-NULL-when.patch
-Patch38: 0035-Revert-ui-gtk-Fix-mouse-motion-event-scaling-issue-w.patch
-Patch39: 0036-virtio-gpu-udmabuf-gtk-Set-dmabuf_fd-1-to-prevent-fu.patch
-Patch40: 0037-ui-gtk-egl-Skip-refreshing-frame-and-hw-cursor-if-th.patch
-Patch41: 0038-ui-gtk-Refreshing-is-also-counted-when-calculating-F.patch
-Patch42: 0039-ui-gtk-FPS-and-UPS-are-updated-every-1-sec-instead-o.patch
-Patch43: 0040-ui-gtk-fps-param-for-gd_gl_count_frame.patch
-Patch44: 0041-hw-virtio-gpu-udmabuf-g-dmabuf.primary-i-shouldn-t-b.patch
-Patch45: 0042-ui-gtk-Unblock-zero-copy-display-pipeline-before-sav.patch
-Patch46: 0043-ui-gtk-show-fps-works-on-GFX-consoles.patch
-Patch47: 0044-ui-gtk-egl-Skipping-frame-drawing-if-not-necessary.patch
-Patch48: 0045-ui-gtk-HPD-handling-disconnection-immediately.patch
-Patch49: 0046-ui-gtk-egl-Cursor-image-texture-filtering-using-GL_N.patch
-Patch50: 0047-ui-gtk-Covering-render_sync-false-case-when-dealing-.patch
-Patch51: 0048-ui-gtk-egl-Cursor-texture-needs-to-be-re-created-whe.patch
-Patch52: 0049-Adding-default-docs.patch
-Patch53: 0050-gtk-Abort-if-there-is-no-connector-set-for-primary-w.patch
-Patch54: 0051-hw-display-virtio-gpu-Initialize-dmabuf_fd-for-the-b.patch
-Patch55: 0052-gtk-Adding-funcs-for-destroying-textures-in-gtk-egl-.patch
-Patch56: 0053-hw-virtio-gpu-Cursor-size-can-be-changed.patch
-Patch57: 0054-hw-display-virtio-gpu-Redundant-call-of-dpy_gfx_repl.patch
-Patch58: 0055-hw-display-virtio-gpu-Manual-res-flush-to-redraw-sav.patch
-Patch59: 0056-hw-display-virtio-gpu-Properly-free-current_cursor.patch
-Patch60: 0057-ui-gtk-Re-grabbing-PTR-KBD-individually.patch
-Patch61: 0058-hw-usb-host-libusb-Do-not-assert-when-detects-invali.patch
+Patch: 0001-Disable-9p-local-tests-that-fail-on-copr-aarch64.patch
+# https://lists.nongnu.org/archive/html/qemu-block/2025-01/msg00480.html
+Patch: 0002-nfs-Add-support-for-libnfs-v2-api.patch
+Patch: 0008-Revert-meson.build-Disallow-libnfs-v6-to-fix-the-bro.patch
+# Increase test-replication timeout
+# NOT upstream, but see https://gitlab.com/qemu-project/qemu/-/issues/3035
+Patch: 0002-TEMPORARY-increase-test-timeout.patch
 
 BuildRequires: gnupg2
 BuildRequires: meson >= %{meson_version}
@@ -745,7 +687,6 @@ Requires: %{name}-system-aarch64 = %{version}-%{release}
 Requires: %{name}-system-alpha = %{version}-%{release}
 Requires: %{name}-system-arm = %{version}-%{release}
 Requires: %{name}-system-avr = %{version}-%{release}
-Requires: %{name}-system-cris = %{version}-%{release}
 Requires: %{name}-system-loongarch64 = %{version}-%{release}
 Requires: %{name}-system-m68k = %{version}-%{release}
 Requires: %{name}-system-microblaze = %{version}-%{release}
@@ -1144,6 +1085,11 @@ Requires: %{name}-device-display-virtio-vga%{?_isa} = %{version}-%{release}
 This package provides the virtio-vga-rutabaga display device for QEMU.
 %endif
 
+%package device-uefi-vars
+Summary: QEMU UEFI variable service
+Requires: %{name}-common%{?_isa} = %{evr}
+%description device-uefi-vars
+This package provides the UEFI variable service for QEMU.
 
 %package device-usb-host
 Summary: QEMU usb host device
@@ -1314,12 +1260,6 @@ Summary: QEMU user mode emulation of arm qemu targets static build
 This package provides the arm user mode emulation of qemu targets built as
 static binaries
 
-%package user-static-cris
-Summary: QEMU user mode emulation of cris qemu targets static build
-%description user-static-cris
-This package provides the cris user mode emulation of qemu targets built as
-static binaries
-
 %package user-static-hexagon
 Summary: QEMU user mode emulation of hexagon qemu targets static build
 %description user-static-hexagon
@@ -1468,21 +1408,6 @@ Summary: QEMU system emulator for AVR
 Requires: %{name}-common = %{version}-%{release}
 %description system-avr-core
 This package provides the QEMU system emulator for AVR systems.
-
-
-%package system-cris
-Summary: QEMU system emulator for CRIS
-Requires: %{name}-system-cris-core = %{version}-%{release}
-%{requires_all_modules}
-%description system-cris
-This package provides the system emulator for CRIS systems.
-
-%package system-cris-core
-Summary: QEMU system emulator for CRIS
-Requires: %{name}-common = %{version}-%{release}
-%description system-cris-core
-This package provides the system emulator for CRIS boards.
-
 
 %package system-hppa
 Summary: QEMU system emulator for HPPA
@@ -1735,6 +1660,7 @@ mkdir -p %{static_builddir}
   --audio-drv-list=                \\\
   --disable-af-xdp                 \\\
   --disable-alsa                   \\\
+  --disable-asan                   \\\
   --disable-attr                   \\\
   --disable-auth-pam               \\\
   --disable-avx2                   \\\
@@ -1830,7 +1756,6 @@ mkdir -p %{static_builddir}
   --disable-rutabaga-gfx           \\\
   --disable-rng-none               \\\
   --disable-safe-stack             \\\
-  --disable-sanitizers             \\\
   --disable-sdl                    \\\
   --disable-sdl-image              \\\
   --disable-seccomp                \\\
@@ -1851,6 +1776,7 @@ mkdir -p %{static_builddir}
   --disable-tsan                   \\\
   --disable-uadk                   \\\
   --disable-u2f                    \\\
+  --disable-ubsan                  \\\
   --disable-usb-redir              \\\
   --disable-user                   \\\
   --disable-vpc                    \\\
@@ -2091,7 +2017,6 @@ run_configure \
 %endif
   --enable-vhdx \
   --enable-virtfs \
-  --enable-virtfs-proxy-helper \
   --enable-vpc \
   --enable-vnc-jpeg \
   --enable-vte \
@@ -2361,8 +2286,6 @@ ln -sf qemu-system-x86_64 %{buildroot}%{_bindir}/qemu-kvm
 # Needed until CBL-Mariner starts cross-compiling 'ipxe', 'seabios' and 'sgabios' for other architectures.
 rm -rf %{buildroot}%{_bindir}/qemu-system-i386
 rm -rf %{buildroot}%{_bindir}/qemu-system-x86_64
-rm -rf %{buildroot}%{_libdir}/%{name}/accel-tcg-i386.so
-rm -rf %{buildroot}%{_libdir}/%{name}/accel-tcg-x86_64.so
 rm -rf %{buildroot}%{_datadir}/systemtap/tapset/qemu-system-i386*.stp
 rm -rf %{buildroot}%{_datadir}/systemtap/tapset/qemu-system-x86_64*.stp
 %if ! %{emt}
@@ -2489,11 +2412,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %post user-static-arm
 /bin/systemctl --system try-restart systemd-binfmt.service &>/dev/null || :
 %postun user-static-arm
-/bin/systemctl --system try-restart systemd-binfmt.service &>/dev/null || :
-
-%post user-static-cris
-/bin/systemctl --system try-restart systemd-binfmt.service &>/dev/null || :
-%postun user-static-cris
 /bin/systemctl --system try-restart systemd-binfmt.service &>/dev/null || :
 
 %post user-static-hexagon
@@ -2655,6 +2573,7 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_datadir}/icons/*
 %{_datadir}/%{name}/keymaps/
 %{_datadir}/%{name}/linuxboot_dma.bin
+%{_datadir}/%{name}/pnv-pnor.bin
 %attr(4755, -, -) %{_libexecdir}/qemu-bridge-helper
 %dir %{_libdir}/%{name}/
 %if ! %{emt}
@@ -2676,10 +2595,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 # Fedora specific
 %{_datadir}/applications/qemu.desktop
 %exclude %{_datadir}/%{name}/qemu-nsis.bmp
-%{_libexecdir}/virtfs-proxy-helper
-%if ! %{emt}
-%{_mandir}/man1/virtfs-proxy-helper.1*
-%endif
 
 
 %files tests
@@ -2808,6 +2723,8 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %files device-display-virtio-vga-rutabaga
 %{_libdir}/%{name}/hw-display-virtio-vga-rutabaga.so
 %endif
+%files device-uefi-vars
+%{_libdir}/%{name}/hw-uefi-vars.so
 %files device-usb-host
 %{_libdir}/%{name}/hw-usb-host.so
 %files device-usb-redirect
@@ -2855,7 +2772,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_bindir}/qemu-alpha
 %{_bindir}/qemu-arm
 %{_bindir}/qemu-armeb
-%{_bindir}/qemu-cris
 %{_bindir}/qemu-hppa
 %{_bindir}/qemu-hexagon
 %{_bindir}/qemu-loongarch64
@@ -2902,9 +2818,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_datadir}/systemtap/tapset/qemu-arm.stp
 %{_datadir}/systemtap/tapset/qemu-arm-log.stp
 %{_datadir}/systemtap/tapset/qemu-arm-simpletrace.stp
-%{_datadir}/systemtap/tapset/qemu-cris.stp
-%{_datadir}/systemtap/tapset/qemu-cris-log.stp
-%{_datadir}/systemtap/tapset/qemu-cris-simpletrace.stp
 %{_datadir}/systemtap/tapset/qemu-hexagon.stp
 %{_datadir}/systemtap/tapset/qemu-hexagon-log.stp
 %{_datadir}/systemtap/tapset/qemu-hexagon-simpletrace.stp
@@ -3036,12 +2949,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_exec_prefix}/lib/binfmt.d/qemu-arm-static.conf
 %endif
 %{_exec_prefix}/lib/binfmt.d/qemu-armeb-static.conf
-
-%files user-static-cris
-%{_bindir}/qemu-cris-static
-%{_datadir}/systemtap/tapset/qemu-cris-log-static.stp
-%{_datadir}/systemtap/tapset/qemu-cris-simpletrace-static.stp
-%{_datadir}/systemtap/tapset/qemu-cris-static.stp
 
 %files user-static-hexagon
 %{_bindir}/qemu-hexagon-static
@@ -3250,6 +3157,7 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %files system-arm-core
 %{_bindir}/qemu-system-arm
 %{_datadir}/%{name}/npcm7xx_bootrom.bin
+%{_datadir}/%{name}/npcm8xx_bootrom.bin
 %{_datadir}/systemtap/tapset/qemu-system-arm.stp
 %{_datadir}/systemtap/tapset/qemu-system-arm-log.stp
 %{_datadir}/systemtap/tapset/qemu-system-arm-simpletrace.stp
@@ -3267,18 +3175,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %if ! %{emt}
 %{_mandir}/man1/qemu-system-avr.1*
 %endif
-
-
-%files system-cris
-%files system-cris-core
-%{_bindir}/qemu-system-cris
-%{_datadir}/systemtap/tapset/qemu-system-cris.stp
-%{_datadir}/systemtap/tapset/qemu-system-cris-log.stp
-%{_datadir}/systemtap/tapset/qemu-system-cris-simpletrace.stp
-%if ! %{emt}
-%{_mandir}/man1/qemu-system-cris.1*
-%endif
-
 
 %files system-hppa
 %files system-hppa-core
@@ -3430,7 +3326,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %{_mandir}/man1/qemu-system-s390x.1*
 %endif
 %{_datadir}/%{name}/s390-ccw.img
-%{_datadir}/%{name}/s390-netboot.img
 
 
 %files system-sh4
@@ -3483,7 +3378,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %files system-x86
 %files system-x86-core
 %{_bindir}/qemu-system-x86_64
-%{_libdir}/%{name}/accel-tcg-x86_64.so
 %{_datadir}/systemtap/tapset/qemu-system-x86_64.stp
 %{_datadir}/systemtap/tapset/qemu-system-x86_64-log.stp
 %{_datadir}/systemtap/tapset/qemu-system-x86_64-simpletrace.stp
@@ -3509,7 +3403,6 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %endif
 %files system-i386
 %{_bindir}/qemu-system-i386
-%{_libdir}/%{name}/accel-tcg-i386.so
 %{_datadir}/systemtap/tapset/qemu-system-i386.stp
 %{_datadir}/systemtap/tapset/qemu-system-i386-log.stp
 %{_datadir}/systemtap/tapset/qemu-system-i386-simpletrace.stp
@@ -3538,6 +3431,9 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 
 
 %changelog
+* Thu Jan 08 2026 Rajesh Shanmugam <rajesh1x.shanmugam@intel.com> - 10.0.4-1
+- Upgrade to 10.0.4 for CVE-2025-54566 and CVE-2025-54567
+
 * Thu Oct 30 2025 Liang Yang <liang1.yang@intel.com> - 9.1.0-5
 - Added 1 patch from Intel Distribution Qemu Commit 3fbf5c5
 - Fix assert in qemu host-libusb when altsetting invalid
