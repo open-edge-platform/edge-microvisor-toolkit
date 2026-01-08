@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20250509
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -101,7 +101,8 @@ cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 cp iwlwifi-ty-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
 cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
 cp qat*.bin  %{buildroot}%{_firmwarepath}
-ln -sf intel/ice/ddp/ice-*.pkg %{buildroot}%{_firmwarepath}/intel/ice/ddp/ice.pkg
+# While upgrading, check the ice version and update accordingly
+ln -sf ice-1.3.41.0.pkg %{buildroot}%{_firmwarepath}/intel/ice/ddp/ice.pkg
 
 %post qat
 dracut --force
@@ -193,6 +194,9 @@ dracut --force
 %{_firmwarepath}/qat_c62x_mmp.bin
 
 %changelog
+* Mon Jan 05 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 20250509-5
+- modify target value of symlink to point ice package.
+
 * Mon Nov 24 2025 Basavarajx unniche <basavarajx.unniche@intel.com> - 20250509-4
 - created sym link for ice, as per README of intel ice DDP package.
 
