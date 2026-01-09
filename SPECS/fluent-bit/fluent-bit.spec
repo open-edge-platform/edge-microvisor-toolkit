@@ -17,7 +17,7 @@ Patch3:         CVE-2024-50608.patch
 Patch4:         CVE-2024-50609.patch
 Patch5:         CVE-2025-31498.patch
 Patch6:         CVE-2025-54126.patch
-Patch7:         CVE-2023-58749.patch
+Patch7:         CVE-2025-58749.patch
 Patch8:         CVE-2025-12970.patch
 BuildRequires:  bison
 BuildRequires:  cmake
