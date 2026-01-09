@@ -1,0 +1,131 @@
+From 99447393cb7dc00df0689324d0979aa1225e6718 Mon Sep 17 00:00:00 2001
+From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
+Date: Mon, 16 Jun 2025 08:31:04 +0800
+Subject: [PATCH] spice: Introduce hw-bypass to bypass encoding
+
+Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+---
+ include/ui/spice-display.h |  1 +
+ qemu-options.hx            |  3 +++
+ ui/spice-core.c            |  5 +++++
+ ui/spice-display.c         | 14 ++++++++------
+ 4 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/include/ui/spice-display.h b/include/ui/spice-display.h
+index d087d7198a9e..8cdd510c1914 100644
+--- a/include/ui/spice-display.h
++++ b/include/ui/spice-display.h
+@@ -155,6 +155,7 @@ struct SimpleSpiceCursor {
+ 
+ extern bool spice_opengl;
+ extern bool remote_client;
++extern bool hw_bypass;
+ 
+ int qemu_spice_rect_is_empty(const QXLRect* r);
+ void qemu_spice_rect_union(QXLRect *dest, const QXLRect *r);
+diff --git a/qemu-options.hx b/qemu-options.hx
+index dd972180cd7b..aa8e2338265e 100644
+--- a/qemu-options.hx
++++ b/qemu-options.hx
+@@ -2393,6 +2393,9 @@ SRST
+     ``gl=[on|off]``
+         Enable/disable OpenGL context. Default is off.
+ 
++    ``hw-bypass=[on|off]``
++        Enable/disable hw encoding checking bypass. Default is off.
++
+     ``rendernode=<file>``
+         DRM render node for OpenGL rendering. If not specified, it will
+         pick the first available. (Since 2.9)
+diff --git a/ui/spice-core.c b/ui/spice-core.c
+index 39991c1686f3..0c0463f329c1 100644
+--- a/ui/spice-core.c
++++ b/ui/spice-core.c
+@@ -503,6 +503,9 @@ static QemuOptsList qemu_spice_opts = {
+         },{
+             .name = "display",
+             .type = QEMU_OPT_STRING,
++        },{
++            .name = "hw-bypass",
++            .type = QEMU_OPT_BOOL,
+         },{
+             .name = "head",
+             .type = QEMU_OPT_NUMBER,
+@@ -845,6 +848,8 @@ static void qemu_spice_init(void)
+     g_free(x509_cacert_file);
+     g_free(password);
+ 
++   hw_bypass = qemu_opt_get_bool(opts, "hw-bypass", 0);
++
+ #ifdef HAVE_SPICE_GL
+     if (qemu_opt_get_bool(opts, "gl", 0)) {
+         if ((port != 0) || (tls_port != 0)) {
+diff --git a/ui/spice-display.c b/ui/spice-display.c
+index 0d75bb57fede..75ad029a3cc1 100644
+--- a/ui/spice-display.c
++++ b/ui/spice-display.c
+@@ -31,6 +31,8 @@
+ 
+ bool spice_opengl;
+ bool remote_client;
++bool hw_bypass;
++
+ 
+ int qemu_spice_rect_is_empty(const QXLRect* r)
+ {
+@@ -994,7 +996,7 @@ static void spice_gl_switch(DisplayChangeListener *dcl,
+         spice_qxl_gl_scanout(&ssd->qxl, fd,
+                              surface_width(ssd->ds),
+                              surface_height(ssd->ds),
+-                             stride, fourcc, false);
++                             stride, fourcc, false, hw_bypass);
+         ssd->have_surface = true;
+         ssd->have_scanout = false;
+ 
+@@ -1017,7 +1019,7 @@ static void qemu_spice_gl_scanout_disable(DisplayChangeListener *dcl)
+     SimpleSpiceDisplay *ssd = container_of(dcl, SimpleSpiceDisplay, dcl);
+ 
+     trace_qemu_spice_gl_scanout_disable(ssd->qxl.id);
+-    spice_qxl_gl_scanout(&ssd->qxl, -1, 0, 0, 0, 0, false);
++    spice_qxl_gl_scanout(&ssd->qxl, -1, 0, 0, 0, 0, false, false);
+     qemu_spice_gl_monitor_config(ssd, 0, 0, 0, 0);
+     ssd->have_surface = false;
+     ssd->have_scanout = false;
+@@ -1058,7 +1060,7 @@ static void qemu_spice_gl_scanout_texture(DisplayChangeListener *dcl,
+     } else {
+         /* note: spice server will close the fd */
+         spice_qxl_gl_scanout(&ssd->qxl, fd, backing_width, backing_height,
+-                             stride, fourcc, y_0_top);
++                             stride, fourcc, y_0_top, hw_bypass);
+         qemu_spice_gl_monitor_config(ssd, x, y, w, h);
+     }
+ 
+@@ -1154,7 +1156,7 @@ static bool spice_gl_blit_scanout_texture(SimpleSpiceDisplay *ssd)
+     spice_qxl_gl_scanout(&ssd->qxl, fd,
+                          surface_width(ssd->ds),
+                          surface_height(ssd->ds),
+-                         stride, fourcc, ssd->backing_y_0_top);
++                         stride, fourcc, ssd->backing_y_0_top, hw_bypass);
+     qemu_spice_gl_monitor_config(ssd, 0, 0,
+                                  surface_width(ssd->ds),
+                                  surface_height(ssd->ds));
+@@ -1213,7 +1215,7 @@ static void qemu_spice_gl_update(DisplayChangeListener *dcl,
+                 fd = egl_get_fd_for_texture(ssd->blit_fb.texture,
+                                             &stride, &fourcc, NULL);
+                 spice_qxl_gl_scanout(&ssd->qxl, fd, width, height,
+-                                     stride, fourcc, false);
++                                     stride, fourcc, false, hw_bypass);
+             }
+         } else {
+             stride = qemu_dmabuf_get_stride(dmabuf);
+@@ -1224,7 +1226,7 @@ static void qemu_spice_gl_update(DisplayChangeListener *dcl,
+             trace_qemu_spice_gl_forward_dmabuf(ssd->qxl.id, width, height);
+             /* note: spice server will close the fd, so hand over a dup */
+             spice_qxl_gl_scanout(&ssd->qxl, fd, width, height,
+-                                 stride, fourcc, y_0_top);
++                                 stride, fourcc, y_0_top, hw_bypass);
+         }
+         qemu_spice_gl_monitor_config(ssd, 0, 0, width, height);
+         ssd->guest_dmabuf_refresh = false;
+-- 
+2.43.0

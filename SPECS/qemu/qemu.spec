@@ -537,6 +537,7 @@ Patch58: 0055-hw-display-virtio-gpu-Manual-res-flush-to-redraw-sav.patch
 Patch59: 0056-hw-display-virtio-gpu-Properly-free-current_cursor.patch
 Patch60: 0057-ui-gtk-Re-grabbing-PTR-KBD-individually.patch
 Patch61: 0058-hw-usb-host-libusb-Do-not-assert-when-detects-invali.patch
+Patch62: 0001-spice-Introduce-hw-bypass-to-bypass-encoding.patch
 
 BuildRequires: gnupg2
 BuildRequires: meson >= %{meson_version}
@@ -651,7 +652,7 @@ BuildRequires: libvorbis
 BuildRequires: opus
 BuildRequires: orc
 BuildRequires: spice-protocol
-BuildRequires: spice-server-devel = 0.15.1
+BuildRequires: spice-server-devel >= 0.15.2
 BuildRequires: gstreamer1-devel
 BuildRequires: gstreamer1-plugins-base-devel
 %endif
