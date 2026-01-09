@@ -203,12 +203,12 @@ curl-8.11.1-4.emt3.x86_64.rpm
 curl-devel-8.11.1-4.emt3.x86_64.rpm
 curl-libs-8.11.1-4.emt3.x86_64.rpm
 createrepo_c-1.0.3-1.emt3.x86_64.rpm
-libxml2-2.11.5-6.emt3.x86_64.rpm
-libxml2-devel-2.11.5-6.emt3.x86_64.rpm
+libxml2-2.11.5-7.emt3.x86_64.rpm
+libxml2-devel-2.11.5-7.emt3.x86_64.rpm
 docbook-dtd-xml-4.5-11.emt3.noarch.rpm
 docbook-style-xsl-1.79.1-14.emt3.noarch.rpm
 libsepol-3.6-2.emt3.x86_64.rpm
-glib-2.78.6-3.emt3.x86_64.rpm
+glib-2.78.6-5.emt3.x86_64.rpm
 libltdl-2.4.7-1.emt3.x86_64.rpm
 libltdl-devel-2.4.7-1.emt3.x86_64.rpm
 lua-5.4.6-1.emt3.x86_64.rpm
