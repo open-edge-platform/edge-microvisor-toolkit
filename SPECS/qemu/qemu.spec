@@ -88,9 +88,6 @@ Distribution:   Edge Microvisor Toolkit
 %ifnarch %{ix86} x86_64 %{arm} aarch64
 %global have_spice 0
 %endif
-%if 0%{?emt}
-%global have_spice 0
-%endif
 
 # Matches xen ExclusiveArch
 %global have_xen 0
@@ -446,7 +443,7 @@ Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
 Summary: QEMU is a FAST! processor emulator
 Name: qemu
 Version: 9.1.0
-Release: 5%{?dist}
+Release: 6%{?dist}
 License: Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND FSFAP AND GPL-1.0-or-later AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-2.0-or-later WITH GCC-exception-2.0 AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT AND LicenseRef-Fedora-Public-Domain AND CC-BY-3.0
 URL: http://www.qemu.org/
 
@@ -540,6 +537,7 @@ Patch58: 0055-hw-display-virtio-gpu-Manual-res-flush-to-redraw-sav.patch
 Patch59: 0056-hw-display-virtio-gpu-Properly-free-current_cursor.patch
 Patch60: 0057-ui-gtk-Re-grabbing-PTR-KBD-individually.patch
 Patch61: 0058-hw-usb-host-libusb-Do-not-assert-when-detects-invali.patch
+Patch62: 0001-spice-Introduce-hw-bypass-to-bypass-encoding.patch
 
 BuildRequires: gnupg2
 BuildRequires: meson >= %{meson_version}
@@ -643,8 +641,20 @@ BuildRequires: libnfs-devel
 BuildRequires: ncurses-devel
 %if %{have_spice}
 # spice graphics support
+BuildRequires: cdparanoia
+BuildRequires: graphene
+BuildRequires: i2c-tools-devel
+BuildRequires: iso-codes
+BuildRequires: libogg
+BuildRequires: libtheora
+BuildRequires: libvisual
+BuildRequires: libvorbis
+BuildRequires: opus
+BuildRequires: orc
 BuildRequires: spice-protocol
-BuildRequires: spice-server-devel
+BuildRequires: spice-server-devel >= 0.15.2
+BuildRequires: gstreamer1-devel
+BuildRequires: gstreamer1-plugins-base-devel
 %endif
 # VNC JPEG support
 BuildRequires: libjpeg-devel
@@ -2648,7 +2658,7 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 %doc %{qemudocdir}
 
 %files common
-# azlinux: no lang files generated yet. -f %{name}.lang
+# azlinux: no lang files generated yet.
 %license COPYING COPYING.LIB LICENSE
 %dir %{_datadir}/%{name}/
 %dir %{_datadir}/%{name}/vhost-user/
@@ -3538,6 +3548,9 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 
 
 %changelog
+* Thu Dec 18 2025 Andy <andy.peng@intel.com> - 9.1.0-6
+- Enable spice in qemu
+
 * Thu Oct 30 2025 Liang Yang <liang1.yang@intel.com> - 9.1.0-5
 - Added 1 patch from Intel Distribution Qemu Commit 3fbf5c5
 - Fix assert in qemu host-libusb when altsetting invalid
