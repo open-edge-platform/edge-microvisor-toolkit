@@ -1,10 +1,10 @@
 Summary:        Programs for processing and formatting text
 Name:           groff
 Version:        1.23.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv3+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          Applications/Text
 URL:            https://www.gnu.org/software/groff/
 Source0:        https://ftp.gnu.org/gnu/groff/%{name}-%{version}.tar.gz
@@ -12,7 +12,6 @@ Source0:        https://ftp.gnu.org/gnu/groff/%{name}-%{version}.tar.gz
 Patch0:         CVE-2000-0803.nopatch
 Requires:       perl-DBD-SQLite
 Requires:       perl-DBI
-Requires:       perl-DBIx-Simple
 Requires:       perl-File-HomeDir
 Requires:       perl(:MODULE_COMPAT_%(eval "`perl -V:version`"; echo $version))
 Provides:       perl(oop_fh.pl) = %{version}-%{release}
@@ -61,6 +60,10 @@ rm -rf %{buildroot}%{_infodir}
 %{_mandir}/*/*
 
 %changelog
+* Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.23.0-2
+- drop Required on perl-DBIx-Simple
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT).
+
 * Mon Oct 16 2023 CBL-Mariner Servicing Account <cblmargh@microsoft.com> - 1.23.0-1
 - Auto-upgrade to 1.23.0 - Azure Linux 3.0 - package upgrades
 

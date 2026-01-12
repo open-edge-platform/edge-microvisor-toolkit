@@ -446,7 +446,6 @@ build_rpm_in_chroot_no_install bison
 build_rpm_in_chroot_no_install autoconf
 build_rpm_in_chroot_no_install texinfo
 build_rpm_in_chroot_no_install perl-DBD-SQLite
-build_rpm_in_chroot_no_install perl-DBIx-Simple
 build_rpm_in_chroot_no_install elfutils
 build_rpm_in_chroot_no_install automake
 
