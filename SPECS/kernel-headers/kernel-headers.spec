@@ -14,7 +14,7 @@
 Summary:        Linux API header files
 Name:           kernel-headers
 Version:        6.12.61
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -76,6 +76,10 @@ done
 %endif
 
 %changelog
+* Fri Jan 9 2026 Lishan Liu <lishan.liu@intel.com> - 6.12.61-2
+- Update kernel to 6.12.61-2
+- lts-v6.12.61-emt-cve-260106T193826Z
+
 * Fri Jan 2 2026 Lishan Liu <lishan.liu@intel.com> - 6.12.61-1
 - Update kernel to 6.12.61-1
 
