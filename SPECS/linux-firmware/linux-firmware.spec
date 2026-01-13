@@ -1,6 +1,6 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
-Version:        20251021
+Version:        20260110
 Release:        1%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
