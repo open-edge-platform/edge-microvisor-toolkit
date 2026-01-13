@@ -1,10 +1,10 @@
 {
  "Signatures": {
   "emt-ca-20211013.pem": "5ef124b0924cb1047c111a0ecff1ae11e6ad7cac8d1d9b40f98f99334121f0b0",
-  "config": "5bbbd1c7e85f23c634d342e969450ee5b86992a354ae73c0729ce0dcbe75961d",
+  "config": "fcb946bea1bd1c53d2e5a58429bebcff00d6d6f3a8c5deba47f5e7474b71b2b4",
   "cpupower": "d7518767bf2b1110d146a49c7d42e76b803f45eb8bd14d931aa6d0d346fae985",
   "cpupower.service": "b057fe9e5d0e8c36f485818286b80e3eba8ff66ff44797940e99b1fd5361bb98",
   "sha512hmac-openssl.sh": "02ab91329c4be09ee66d759e4d23ac875037c3b56e5a598e32fd1206da06a27f",
-  "linux-6.12.59.tar.gz": "93dfe627d321f016291054449a8e4bf9051de19687fbf1a6f584a2b79f8f5d2c"
+  "linux-6.12.61.tar.gz": "7fb34abab0902a47ce1d47de58442e69e0e79d17f565b41fcb11249ea5b23801"
  }
 }
