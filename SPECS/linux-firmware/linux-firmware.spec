@@ -1,6 +1,6 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
-Version:        20251021
+Version:        20260110
 Release:        1%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
@@ -185,6 +185,9 @@ dracut --force
 %{_firmwarepath}/intel/qat/qat_c62x_mmp.bin
 
 %changelog
+* Tue Jan 13 2026 Andy <andy.peng@intel.com> - 20260110-1
+- Upgrade firmware to 20260110.
+
 * Tue Nov 11 2025 Shalini Singhal <shalinix.singhal@intel.com> - 20251021-1
 - Upgrade firmware to 20251021.
 
