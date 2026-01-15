@@ -1,0 +1,1096 @@
+From 28c125e31e9c3aac24f3d4229282ee03ed5f05a9 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Thu, 17 Apr 2025 12:38:06 +0300
+Subject: [PATCH 1/5] issei: initial driver skeleton
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The ISSEI (Intel Silicon Security Engine Interface)
+subsystem provides a communication channel between the host and the
+Silicon Security Engine.
+
+Prepare basic driver functions and character device
+for user-space communication.
+Add DMA access routines for ISSEI HECI devices.
+Add of DMA-related structures and implementation of routines for
+setting up DMA, as well as reading and writing DMA buffers.
+
+CC: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Co-developed-by: Vitaly Lubart <lubvital@gmail.com>
+Signed-off-by: Vitaly Lubart <lubvital@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ Documentation/driver-api/issei/issei.rst | 138 ++++++++++++++++++
+ drivers/misc/Kconfig                     |   1 +
+ drivers/misc/Makefile                    |   1 +
+ drivers/misc/issei/Kconfig               |  13 ++
+ drivers/misc/issei/Makefile              |   7 +
+ drivers/misc/issei/cdev.c                | 160 +++++++++++++++++++++
+ drivers/misc/issei/cdev.h                |  12 ++
+ drivers/misc/issei/dma.c                 | 172 ++++++++++++++++++++++
+ drivers/misc/issei/dma.h                 |  58 ++++++++
+ drivers/misc/issei/hw_msg.h              | 176 +++++++++++++++++++++++
+ drivers/misc/issei/issei_dev.h           | 153 ++++++++++++++++++++
+ include/uapi/linux/issei.h               |  78 ++++++++++
+ 12 files changed, 969 insertions(+)
+ create mode 100644 Documentation/driver-api/issei/issei.rst
+ create mode 100644 drivers/misc/issei/Kconfig
+ create mode 100644 drivers/misc/issei/Makefile
+ create mode 100644 drivers/misc/issei/cdev.c
+ create mode 100644 drivers/misc/issei/cdev.h
+ create mode 100644 drivers/misc/issei/dma.c
+ create mode 100644 drivers/misc/issei/dma.h
+ create mode 100644 drivers/misc/issei/hw_msg.h
+ create mode 100644 drivers/misc/issei/issei_dev.h
+ create mode 100644 include/uapi/linux/issei.h
+
+diff --git a/Documentation/driver-api/issei/issei.rst b/Documentation/driver-api/issei/issei.rst
+new file mode 100644
+index 000000000000..8bfbe1e0c6b6
+--- /dev/null
++++ b/Documentation/driver-api/issei/issei.rst
+@@ -0,0 +1,138 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++Introduction
++============
++
++The Intel Silicon Security Engine (Intel SSE) is an isolated and
++protected computing resource (Co-processor) residing inside
++certain Intel chipsets.
++The Intel SSE provide security support and platform boot orchestration.
++The actual feature set depends on the Intel chipset SKU.
++
++The Intel Silicon Security Engine Interface (Intel ISSEI)
++is the interface between the Host and Intel SSE. This interface is exposed
++to the host as a PCI device, actually multiple PCI devices might be exposed.
++The Intel SSEI Driver is in charge of the communication channel between
++a host application and the Intel SSE features.
++
++Each Intel SSE feature, or Intel SSE Client is addressed by a unique UUID and
++each client has its own protocol. The protocol is message-based with a
++header and payload up to maximal number of bytes advertised by the client,
++upon connection.
++
++Intel ISSEI Driver
++================
++
++The driver exposes a character device with device nodes /dev/isseiX.
++
++An application maintains communication with an Intel SSE feature while
++/dev/isseiX is open. The binding to a specific feature is performed by calling
++:c:macro:`IOCTL_ISSEI_CONNECT_CLIENT`, which passes the desired UUID.
++The number of instances of an Intel SSE feature that can be opened
++at the same time is limited to single instance.
++
++The driver is transparent to data that are passed between firmware feature
++and host application.
++
++Because some of the Intel SSE features can change the system
++configuration, the driver by default allows only a privileged
++user to access it.
++
++The connection termination is performed by calling
++:c:macro:`IOCTL_ISSEI_DISCONNECT_CLIENT`.
++
++The session is terminated calling :c:expr:`close(fd)`.
++
++A code snippet for an application communicating with test client:
++
++.. code-block:: C
++
++        struct issei_connect_client_data data = {.in_client_uuid =
++                {0xe8, 0x51, 0x49, 0xdf, 0x94, 0x47, 0x4C,
++                 0x9A, 0x83, 0x67, 0xC4, 0xE3, 0x34, 0x64, 0xF1, 0xB4}};
++        __u8 req_data[] = {0x10, 0x84, 0x00, 0x00}; /* SPDM Get Version */
++        size_t req_data_len = sizeof(req_data);
++        __u8 res_data[256];
++        size_t res_data_len = sizeof(res_data);
++        int fd = open("/dev/issei0", O_RDWR);
++
++        ioctl(fd, IOCTL_ISSEI_CONNECT_CLIENT, &data);
++
++        printf("Ver=%d, MaxLen=%u, Flags=0x%08X\n",
++               data.out_client_properties.protocol_version,
++               data.out_client_properties.max_msg_length,
++               data.out_client_properties.flags);
++
++        [...]
++
++        write(fd, req_data, req_data_len);
++
++        [...]
++
++        read(fd, res_data, res_data_len);
++
++        printf("SPDM version count %u, version[0]=%02X%02X\n",
++               res_data[5], res_data[6], res_data[7]);
++
++        [...]
++
++        ioctl(fd, IOCTL_ISSEI_DISCONNECT_CLIENT, &data);
++
++        [...]
++
++        close(fd);
++
++
++User space API
++
++ioctl:
++=======
++
++The Intel ISSEI Driver supports the following ioctl commands:
++
++IOCTL_ISSEI_CONNECT_CLIENT
++-------------------------
++Connect to firmware Feature/Client.
++
++.. code-block:: none
++
++        Usage:
++
++        struct issei_connect_client_data client_data;
++
++        ioctl(fd, IOCTL_ISSEI_CONNECT_CLIENT, &client_data);
++
++        struct issei_connect_client_data - contain the following
++        Inputs:
++                in_client_uuid -        UUID of the FW Feature that needs
++                                        to connect to.
++        Outputs:
++                out_client_properties - Client Properties: MTU, Protocol Version and Flags.
++
++        Error returns:
++                ENOTTY  No such client (i.e. wrong UUID) or connection is not allowed.
++                EINVAL        Wrong IOCTL Number
++                ENODEV        Device or Connection is not initialized or ready.
++                ENOMEM        Unable to allocate memory to client internal data.
++                EFAULT        Fatal Error (e.g. Unable to access user input data)
++                EBUSY        Connection Already Open
++
++:Note:
++        max_msg_length (MTU) in client properties describes the maximum
++        data that can be sent or received. (e.g. with MTU=2K, can send
++        requests up to bytes 2k and received responses up to 2k bytes).
++
++IOCTL_ISSEI_DISCONNECT_CLIENT
++-------------------------
++Disconnect from firmware Feature/Client.
++
++.. code-block:: none
++
++        Usage:
++
++        ioctl(fd, IOCTL_ISSEI_DISCONNECT_CLIENT, NULL);
++
++        Error returns:
++                EINVAL        Wrong IOCTL Number
++                ENODEV        Device or Connection is not initialized or ready.
++                ENOTCONN  Feature/Client is not connected.
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index b9c11f67315f..43ab202e0b22 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -661,4 +661,5 @@ source "drivers/misc/mchp_pci1xxxx/Kconfig"
+ source "drivers/misc/keba/Kconfig"
+ source "drivers/misc/amd-sbi/Kconfig"
+ source "drivers/misc/rp1/Kconfig"
++source "drivers/misc/issei/Kconfig"
+ endmenu
+diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
+index e2e66f5f4fb8..60d004bcde29 100644
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -76,3 +76,4 @@ obj-$(CONFIG_MCHP_LAN966X_PCI)	+= lan966x-pci.o
+ obj-y				+= keba/
+ obj-y				+= amd-sbi/
+ obj-$(CONFIG_MISC_RP1)		+= rp1/
++obj-$(CONFIG_INTEL_SSEI)	+= issei/
+diff --git a/drivers/misc/issei/Kconfig b/drivers/misc/issei/Kconfig
+new file mode 100644
+index 000000000000..ffd027e826df
+--- /dev/null
++++ b/drivers/misc/issei/Kconfig
+@@ -0,0 +1,13 @@
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (C) 2023-2025 Intel Corporation
++config INTEL_SSEI
++	tristate "Intel Silicon Security Engine Interface"
++	help
++	  The ISSEI (Intel Silicon Security Engine Interface)
++	  subsystem provides a communication channel between the host and the
++	  Silicon Security Engine.
++	  This interface available on platforms with Intel Silicon Security Engine
++	  starting from the LunarLake platform.
++
++	  If selected, the /dev/isseiX device will be created.
++	  If in doubt, select N.
+diff --git a/drivers/misc/issei/Makefile b/drivers/misc/issei/Makefile
+new file mode 100644
+index 000000000000..9e3ef22305ac
+--- /dev/null
++++ b/drivers/misc/issei/Makefile
+@@ -0,0 +1,7 @@
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (C) 2023-2025 Intel Corporation
++ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE='"INTEL_SSEI"'
++
++obj-$(CONFIG_INTEL_SSEI) += issei.o
++issei-objs += cdev.o
++issei-objs += dma.o
+diff --git a/drivers/misc/issei/cdev.c b/drivers/misc/issei/cdev.c
+new file mode 100644
+index 000000000000..26ac95e5f818
+--- /dev/null
++++ b/drivers/misc/issei/cdev.c
+@@ -0,0 +1,160 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (C) 2023-2025 Intel Corporation */
++#include <linux/cdev.h>
++#include <linux/device.h>
++#include <linux/idr.h>
++#include <linux/issei.h>
++#include <linux/fs.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++
++#include "issei_dev.h"
++#include "cdev.h"
++
++struct class *issei_class;
++static dev_t issei_devt;
++
++#define ISSEI_MAX_DEVS MINORMASK
++
++static DEFINE_MUTEX(issei_minor_lock);
++static DEFINE_IDR(issei_idr);
++
++static ssize_t fw_ver_show(struct device *device,
++			   struct device_attribute *attr, char *buf)
++{
++	struct issei_device *idev = dev_get_drvdata(device);
++
++	return sysfs_emit(buf, "%u.%u.%u.%u\n", idev->fw_version[0], idev->fw_version[1],
++			  idev->fw_version[2], idev->fw_version[3]);
++}
++static DEVICE_ATTR_RO(fw_ver);
++
++static struct attribute *issei_attrs[] = {
++	&dev_attr_fw_ver.attr,
++	NULL
++};
++ATTRIBUTE_GROUPS(issei);
++
++static const struct file_operations issei_fops = {
++	.owner = THIS_MODULE,
++};
++
++static int issei_minor_get(struct issei_device *idev)
++{
++	int ret;
++
++	guard(mutex)(&issei_minor_lock);
++
++	ret = idr_alloc(&issei_idr, idev, 0, ISSEI_MAX_DEVS, GFP_KERNEL);
++	if (ret >= 0)
++		idev->minor = ret;
++	else if (ret == -ENOSPC)
++		dev_err(idev->dev, "too many issei devices\n");
++
++	return ret;
++}
++
++static void issei_minor_free(struct issei_device *idev)
++{
++	guard(mutex)(&issei_minor_lock);
++
++	idr_remove(&issei_idr, idev->minor);
++}
++
++/**
++ * issei_register: register issei character device
++ * @idev: the device structure
++ * @parent: parent device
++ *
++ * Return: 0 on sucess, <0 on failure
++ */
++int issei_register(struct issei_device *idev, struct device *parent)
++{
++	struct device *clsdev;
++	int ret, devno;
++
++	ret = issei_minor_get(idev);
++	if (ret < 0)
++		return ret;
++
++	devno = MKDEV(MAJOR(issei_devt), idev->minor);
++	cdev_init(&idev->cdev, &issei_fops);
++	if (parent->driver)
++		idev->cdev.owner = parent->driver->owner;
++
++	ret = cdev_add(&idev->cdev, devno, 1);
++	if (ret) {
++		dev_err(parent, "unable to add device %d:%d\n",
++			MAJOR(issei_devt), idev->minor);
++		goto err_dev_add;
++	}
++
++	clsdev = device_create_with_groups(issei_class, parent, devno,
++					   idev, issei_groups,
++					   "issei%d", idev->minor);
++	if (IS_ERR(clsdev)) {
++		dev_err(parent, "unable to create device %d:%d\n",
++			MAJOR(issei_devt), idev->minor);
++		ret = PTR_ERR(clsdev);
++		goto err_dev_create;
++	}
++
++	return 0;
++
++err_dev_create:
++	cdev_del(&idev->cdev);
++err_dev_add:
++	issei_minor_free(idev);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(issei_register);
++
++/**
++ * issei_deregister: remove issei character device
++ * @idev: the device structure
++ */
++void issei_deregister(struct issei_device *idev)
++{
++	int devno;
++
++	devno = idev->cdev.dev;
++	cdev_del(&idev->cdev);
++
++	device_destroy(issei_class, devno);
++
++	issei_minor_free(idev);
++}
++EXPORT_SYMBOL_GPL(issei_deregister);
++
++static int __init issei_cdev_init(void)
++{
++	int ret;
++
++	issei_class = class_create("issei");
++	if (IS_ERR(issei_class)) {
++		pr_err("couldn't create class\n");
++		return PTR_ERR(issei_class);
++	}
++
++	ret = alloc_chrdev_region(&issei_devt, 0, ISSEI_MAX_DEVS, "issei");
++	if (ret < 0) {
++		pr_err("unable to allocate char dev region\n");
++		class_destroy(issei_class);
++		return ret;
++	}
++
++	return 0;
++}
++
++static void __exit issei_cdev_exit(void)
++{
++	unregister_chrdev_region(issei_devt, ISSEI_MAX_DEVS);
++	class_destroy(issei_class);
++}
++
++module_init(issei_cdev_init);
++module_exit(issei_cdev_exit);
++
++MODULE_DESCRIPTION("Intel(R) Silicon Security Engine Interface");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/misc/issei/cdev.h b/drivers/misc/issei/cdev.h
+new file mode 100644
+index 000000000000..dbdb0e868482
+--- /dev/null
++++ b/drivers/misc/issei/cdev.h
+@@ -0,0 +1,12 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (C) 2023-2025 Intel Corporation */
++#ifndef _ISSEI_CDEV_H_
++#define _ISSEI_CDEV_H_
++
++struct device;
++struct issei_device;
++
++int issei_register(struct issei_device *idev, struct device *parent);
++void issei_deregister(struct issei_device *idev);
++
++#endif /* _ISSEI_CDEV_H_ */
+diff --git a/drivers/misc/issei/dma.c b/drivers/misc/issei/dma.c
+new file mode 100644
+index 000000000000..8ad54f4636dc
+--- /dev/null
++++ b/drivers/misc/issei/dma.c
+@@ -0,0 +1,172 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (C) 2023-2025 Intel Corporation */
++#include <linux/dev_printk.h>
++#include <linux/dma-mapping.h>
++#include <linux/slab.h>
++
++#include "issei_dev.h"
++#include "hw_msg.h"
++
++static inline size_t __issei_dma_size(const struct issei_dma *dma)
++{
++	return dma->length.h2f + dma->length.f2h + dma->length.ctl;
++}
++
++/**
++ * issei_dmam_clean - clean DMA buffer
++ * @idev: issei device object
++ */
++void issei_dmam_clean(struct issei_device *idev)
++{
++	struct issei_dma *dma = &idev->dma;
++	size_t size = __issei_dma_size(dma);
++
++	if (dma->vaddr)
++		memset(dma->vaddr, 0, size);
++}
++
++/**
++ * issei_dmam_setup - setup DMA buffer
++ * @idev: issei device object
++ *
++ * Return: 0 on success, <0 on failures
++ */
++int issei_dmam_setup(struct issei_device *idev)
++{
++	struct issei_dma *dma = &idev->dma;
++	size_t size = __issei_dma_size(dma);
++
++	if (!size)
++		return -EINVAL;
++
++	if (dma->vaddr) {
++		memset(dma->vaddr, 0, size);
++		return 0;
++	}
++
++	dma->vaddr = dmam_alloc_coherent(idev->dev, size, &dma->daddr, GFP_KERNEL | __GFP_ZERO);
++	return dma->vaddr ? 0 : -ENOMEM;
++}
++
++static inline struct control_buffer *__dma_get_ctl_buf(struct issei_dma *dma)
++{
++	return dma->vaddr + dma->length.h2f + dma->length.f2h;
++}
++
++static bool __issei_dma_is_read_busy(struct issei_dma *dma)
++{
++	struct control_buffer *ctl = __dma_get_ctl_buf(dma);
++
++	return ctl->f2h_counter_wr != ctl->f2h_counter_rd;
++}
++
++static bool __issei_dma_is_write_busy(struct issei_dma *dma)
++{
++	struct control_buffer *ctl = __dma_get_ctl_buf(dma);
++
++	return ctl->h2f_counter_wr != ctl->h2f_counter_rd;
++}
++
++static void __issei_dma_read_finalize(struct issei_device *idev)
++{
++	struct control_buffer *ctl = __dma_get_ctl_buf(&idev->dma);
++
++	dev_dbg(idev->dev, "ctl->f2h_counter_rd %u\n", ctl->f2h_counter_rd);
++	/* No need to check overflow - the firmware counters overflow the same way */
++	ctl->f2h_counter_rd++;
++}
++
++static void __issei_dma_write_finalize(struct issei_device *idev)
++{
++	struct control_buffer *ctl = __dma_get_ctl_buf(&idev->dma);
++
++	dev_dbg(idev->dev, "ctl->h2f_counter_wr %u\n", ctl->h2f_counter_wr);
++	/* No need to check overflow - the firmware counters overflow the same way */
++	ctl->h2f_counter_wr++;
++}
++
++/**
++ * issei_dma_write - write data package to DMA
++ * @idev: issei device object
++ * @data: data atructure
++ *
++ * Return: 0 on success, <0 on failures
++ */
++int issei_dma_write(struct issei_device *idev, const struct issei_dma_data *data)
++{
++	u8 *write_buf = idev->dma.vaddr;
++	struct ham_message_header *hdr = (struct ham_message_header *)write_buf;
++
++	if (data->length > idev->dma.length.h2f - sizeof(*hdr)) {
++		dev_err(idev->dev, "Message too big\n");
++		return -EMSGSIZE;
++	}
++
++	if (__issei_dma_is_write_busy(&idev->dma)) {
++		if (ktime_ms_delta(ktime_get(), idev->last_write_ts) > ISSEI_WRITE_TIMEOUT_MSEC) {
++			dev_err(idev->dev, "Write stuck in queue\n");
++			return -EIO;
++		}
++		dev_info(idev->dev, "Write is busy\n");
++		return -EBUSY;
++	}
++
++	hdr->length = data->length;
++	hdr->fw_id = data->fw_id;
++	hdr->host_id = data->host_id;
++	hdr->flags = data->flags;
++	hdr->status = data->status;
++	hdr->reserved = 0;
++
++	memcpy(write_buf + sizeof(*hdr), data->buf, data->length);
++
++	__issei_dma_write_finalize(idev);
++	idev->last_write_ts = ktime_get();
++	return 0;
++}
++
++static void __issei_dma_read_hdr(struct issei_device *idev, struct issei_dma_data *data)
++{
++	u8 *read_buf = idev->dma.vaddr + idev->dma.length.h2f;
++	struct ham_message_header *hdr = (struct ham_message_header *)read_buf;
++
++	data->length = hdr->length;
++	data->fw_id = hdr->fw_id;
++	data->host_id = hdr->host_id;
++	data->flags = hdr->flags;
++	data->status = hdr->status;
++}
++
++static void __issei_dma_read_data(struct issei_device *idev, struct issei_dma_data *data)
++{
++	u8 *read_buf = idev->dma.vaddr + idev->dma.length.h2f;
++
++	memcpy(data->buf, read_buf + sizeof(struct ham_message_header), data->length);
++}
++
++/**
++ * issei_dma_read - read data package from DMA
++ * @idev: issei device object
++ * @data: data atructure
++ *
++ * Return: %0 on success, <0 on failures
++ */
++int issei_dma_read(struct issei_device *idev, struct issei_dma_data *data)
++{
++	if (!__issei_dma_is_read_busy(&idev->dma)) {
++		dev_dbg(idev->dev, "Nothing to read\n");
++		return -ENODATA;
++	}
++
++	dev_dbg(idev->dev, "Reading header\n");
++	__issei_dma_read_hdr(idev, data);
++
++	dev_dbg(idev->dev, "Reading data (size %u)\n", data->length);
++	data->buf = kmalloc(data->length, GFP_KERNEL);
++	if (!data->buf)
++		return -ENOMEM;
++
++	__issei_dma_read_data(idev, data);
++	__issei_dma_read_finalize(idev);
++	return 0;
++}
+diff --git a/drivers/misc/issei/dma.h b/drivers/misc/issei/dma.h
+new file mode 100644
+index 000000000000..8d92285f5da7
+--- /dev/null
++++ b/drivers/misc/issei/dma.h
+@@ -0,0 +1,58 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (C) 2023-2025 Intel Corporation */
++#ifndef _ISSEI_DMA_H_
++#define _ISSEI_DMA_H_
++
++#include <linux/types.h>
++
++struct issei_device;
++
++/**
++ * struct issei_dma_length - sizes of DMA memory portions
++ * @h2f: host to firmware buffer size
++ * @f2h: firmware to host buffer size
++ * @ctl: control buffer size
++ */
++struct issei_dma_length {
++	size_t h2f;
++	size_t f2h;
++	size_t ctl;
++};
++
++/**
++ * struct issei_dma - DMA memory structure
++ * @vaddr: virtial address
++ * @daddr: physical address
++ * @length: memory sizes structure
++ */
++struct issei_dma {
++	void *vaddr;
++	dma_addr_t daddr;
++	struct issei_dma_length length;
++};
++
++void issei_dmam_clean(struct issei_device *idev);
++int issei_dmam_setup(struct issei_device *idev);
++
++/**
++ * struct issei_dma_data - data passed through channel
++ * @fw_id: firmware client id
++ * @host_id: host client id
++ * @flags: flags bitmap
++ * @status: operation status
++ * @length: data length
++ * @buf: pointer to data buffer
++ */
++struct issei_dma_data {
++	u16 fw_id;
++	u16 host_id;
++	u32 flags;
++	u32 status;
++	u32 length;
++	void *buf;
++};
++
++int issei_dma_write(struct issei_device *idev, const struct issei_dma_data *data);
++int issei_dma_read(struct issei_device *idev, struct issei_dma_data *data);
++
++#endif /*_ISSEI_DMA_H_*/
+diff --git a/drivers/misc/issei/hw_msg.h b/drivers/misc/issei/hw_msg.h
+new file mode 100644
+index 000000000000..75346d3ff986
+--- /dev/null
++++ b/drivers/misc/issei/hw_msg.h
+@@ -0,0 +1,176 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (C) 2023-2025 Intel Corporation */
++#ifndef _ISSEI_HW_MSG_H_
++#define _ISSEI_HW_MSG_H_
++
++#include <linux/types.h>
++#include <linux/uuid.h>
++
++#define HAM_CB_MESSAGE_ID_REQ	0x8086cafe
++#define HAM_CB_MESSAGE_ID_RES	0xcafe8086
++#define HAM_CB_MESSAGE_VER	0x1
++
++/**
++ * struct ham_setup_shared_memory_req - shared memory setup request
++ * @msg_id: message id, should be %HAM_CB_MESSAGE_ID_REQ
++ * @ver: message version (%HAM_CB_MESSAGE_VER)
++ * @reserved: reserved
++ * @buffer_physical_address: physical address of DMA buffer
++ * @host_to_fw_section_length: memory size for host to fw communication
++ * @fw_to_host_section_length: memory size for fw to host communication
++ * @control_length: memory size for control buffer
++ */
++struct ham_setup_shared_memory_req {
++	u32 msg_id;
++	u16 ver;
++	u16 reserved;
++	u64 buffer_physical_address;
++	u32 host_to_fw_section_length;
++	u32 fw_to_host_section_length;
++	u32 control_length;
++} __packed;
++
++/**
++ * struct ham_setup_shared_memory_res - shared memory setup response
++ * @msg_id: message id, should be %HAM_CB_MESSAGE_ID_RES
++ * @status: operation status
++ */
++struct ham_setup_shared_memory_res {
++	u32 msg_id;
++	u32 status;
++};
++
++/* Operation statuses */
++#define HAMS_SUCCESS                        0x00
++#define HAMS_PROTOCOL_NOT_SUPPORTED         0x01
++#define HAMS_DEPRECATED_BUS_MSG             0x02
++#define HAMS_CLIENT_NOT_EXISTS              0x03
++#define HAMS_MSG_TOO_BIG                    0x04
++#define HAMS_MSG_NOT_CONSUMED               0x05
++#define HAMS_CORRUPTED_BUS_MSG              0x06
++#define HAMS_CORRUPTED_HEADER               0x07
++#define HAMS_INVALID_LENGTH                 0x08
++#define HAMS_SHARED_MEMORY_SIZE_UNSUPPORTED 0x09
++#define HAMS_GENERAL_FATAL_ERROR            0xff
++
++/**
++ * struct control_buffer - control buffer structure
++ * @h2f_counter_wr: writre counter host to fw
++ * @h2f_counter_rd: read copunter host to fw
++ * @f2h_counter_wr: write counter fw to host
++ * @f2h_counter_rd: read counter fw to host
++ */
++struct control_buffer {
++	u32 h2f_counter_wr;
++	u32 h2f_counter_rd;
++	u32 f2h_counter_wr;
++	u32 f2h_counter_rd;
++};
++
++/* HAM messages over DMA */
++
++/**
++ * struct ham_message_header - message header over DMA
++ * @length: message length (payload only, not including header)
++ * @fw_id: firmware client id (0 means Bus Message)
++ * @host_id: host client id (0 means Bus Message)
++ * @flags: message flags
++ * @status: operation status
++ * @reserved: reserved
++ */
++struct ham_message_header {
++	u32 length;
++	u16 fw_id;
++	u16 host_id;
++	u32 flags;
++	u32 status;
++	u32 reserved;
++};
++
++/* Bus Commands */
++#define HAM_BUS_CMD_START_REQ 0x00
++#define HAM_BUS_CMD_START_RSP 0x80
++#define HAM_BUS_CMD_CLIENT_REQ 0x01
++#define HAM_BUS_CMD_CLIENT_RSP 0x81
++
++/**
++ * struct ham_bus_message - bus message header
++ * @cmd: command code
++ */
++struct ham_bus_message {
++	u32 cmd;
++};
++
++#define HAM_SUPPORTED_VERSION 0x01
++
++/**
++ * struct ham_start_message_req - start message
++ * @header: bus message header (%HAM_BUS_CMD_START_REQ)
++ * @supported_version: supported protocol version
++ * @heci_capabilities_length - protocol capabilities length in bytes
++ * @heci_capabilities: protocol capabilities data
++ */
++struct ham_start_message_req {
++	struct ham_bus_message header;
++	u16 supported_version;
++	u8 heci_capabilities_length;
++	u8 heci_capabilities[] __counted_by(heci_capabilities_length);
++} __packed;
++
++/**
++ * struct ham_start_message_res - start message response
++ * @header: bus message header (%HAM_BUS_CMD_START_RSP)
++ * @fw_version: firmware version (four u16 blocks)
++ * @supported_version: supported protocol version
++ * @heci_capabilities_length - protocol capabilities length in bytes
++ * @heci_capabilities: protocol capabilities data
++ */
++struct ham_start_message_res {
++	struct ham_bus_message header;
++	u16 fw_version[4];
++	u16 supported_version;
++	u8 heci_capabilities_length;
++	u8 heci_capabilities[] __counted_by(heci_capabilities_length);
++} __packed;
++
++/**
++ * struct ham_get_clients_req - clients list request
++ * @header: bus message header (%HAM_BUS_CMD_CLIENT_REQ)
++ */
++struct ham_get_clients_req {
++	struct ham_bus_message header;
++};
++
++/**
++ * struct ham_client_properties - single client properties
++ * @client_number: client id in firmware
++ * @protocol_ver: client protocol version
++ * @reserved: reserved
++ * @client_uuid: protocol name (UUID)
++ * @client_mtu: max message length supported by client
++ * @flags: client flags
++ */
++struct ham_client_properties {
++	u16 client_number;
++	u8 protocol_ver;
++	u8 reserved;
++	uuid_t client_uuid;
++	u32 client_mtu;
++	u32 flags;
++};
++
++/**
++ * struct ham_client_properties - client properties response
++ * @header: bus message header (%HAM_BUS_CMD_CLIENT_RSP)
++ * @client_count: number of clients in firmware
++ * @reserved: reserved
++ * @clients_props: list of client properties
++ */
++struct ham_get_clients_res {
++	struct ham_bus_message header;
++	u16 client_count;
++	u16 reserved;
++	struct ham_client_properties clients_props[] __counted_by(client_count);
++};
++
++#endif /* _ISSEI_HW_MSG_H_ */
+diff --git a/drivers/misc/issei/issei_dev.h b/drivers/misc/issei/issei_dev.h
+new file mode 100644
+index 000000000000..4e507ce4d10e
+--- /dev/null
++++ b/drivers/misc/issei/issei_dev.h
+@@ -0,0 +1,153 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (C) 2023-2025 Intel Corporation */
++#ifndef _ISSEI_DEV_H_
++#define _ISSEI_DEV_H_
++
++#include <linux/cdev.h>
++#include <linux/mutex.h>
++#include <linux/sched.h>
++#include <linux/types.h>
++#include <linux/wait.h>
++
++#include "dma.h"
++
++struct device;
++
++struct issei_device;
++struct issei_host_client;
++
++extern struct class *issei_class;
++
++#define ISSEI_HOST_CLIENTS_MAX		255
++
++#define ISSEI_SUPPORTED_PROTOCOL_VER	1
++
++#define ISSEI_MAX_CONSEC_RESET		3
++
++#define ISSEI_RST_HW_READY_TIMEOUT_MSEC	2000
++#define ISSEI_RST_STEP_TIMEOUT_MSEC	2000
++#define ISSEI_STOP_TIMEOUT_MSEC		500
++#define ISSEI_WRITE_TIMEOUT_MSEC	1000
++
++/**
++ * struct issei_write_buf - write buffer object
++ * @list: linked list pointer
++ * @cl: host client that requested this write
++ * @data: data to write
++ * @data_size: data size
++ */
++struct issei_write_buf {
++	struct list_head list;
++	struct issei_host_client *cl;
++	const u8 *data;
++	size_t data_size;
++};
++
++/**
++ * struct issei_hw_ops - callbacks for hardware operations
++ * @irq_clear: clear irq
++ * @irq_enable: enable irq
++ * @irq_disable: disable irq
++ * @irq_sync: sync irq
++ * @hw_reset: initiate hardware reset
++ * @hw_config: initial hardware config
++ * @hw_is_ready: check if hardware is ready
++ * @hw_reset_release: release hardware from reset
++ * @host_set_ready: set host ready indicator
++ * @setup_message_send: send setup message
++ * @setup_message_recv: receive setup message
++ * @irq_write_generate: generate interrupt on write complete
++ */
++struct issei_hw_ops {
++	void (*irq_clear)(struct issei_device *idev);
++	void (*irq_enable)(struct issei_device *idev);
++	void (*irq_disable)(struct issei_device *idev);
++	void (*irq_sync)(struct issei_device *idev);
++	int (*hw_reset)(struct issei_device *idev, bool enable);
++	int (*hw_config)(struct issei_device *idev);
++	bool (*hw_is_ready)(struct issei_device *idev);
++	void (*hw_reset_release)(struct issei_device *idev);
++	void (*host_set_ready)(struct issei_device *idev);
++	int (*setup_message_send)(struct issei_device *idev);
++	int (*setup_message_recv)(struct issei_device *idev);
++	int (*irq_write_generate)(struct issei_device *idev);
++};
++
++/**
++ * enum issei_rst_state: driver reset flow states
++ * @ISSEI_RST_STATE_INIT: initial state
++ * @ISSEI_RST_STATE_HW_READY: waiting for HW to be ready
++ * @ISSEI_RST_STATE_SETUP: waiting for channel setup completion
++ * @ISSEI_RST_STATE_START: waiting for start handshake completion
++ * @ISSEI_RST_STATE_CLIENT_ENUM: waiting for client enumeration
++ * @ISSEI_RST_STATE_DONE: reset flow is done
++ * @ISSEI_RST_STATE_DISABLED: flow is disabled
++ */
++enum issei_rst_state {
++	ISSEI_RST_STATE_INIT,
++	ISSEI_RST_STATE_HW_READY,
++	ISSEI_RST_STATE_SETUP,
++	ISSEI_RST_STATE_START,
++	ISSEI_RST_STATE_CLIENT_ENUM,
++	ISSEI_RST_STATE_DONE,
++	ISSEI_RST_STATE_DISABLED,
++};
++
++/**
++ * struct issei_device - issei device
++ * @dev: associated device object
++ * @cdev: character device
++ * @minor: allocated minor number
++ * @power_down: device is powering down
++ * @wait_rst_irq: wait queue for irq
++ * @rst_irq: irq processing flag
++ * @wait_rst_state: waitqueue for reset state processing
++ * @rst_state: reset state
++ * @fw_protocol_ver: protocol version
++ * @fw_version: firmware version
++ * @reset_thread: worker thread
++ * @reset_count: number of consecutive link reset attempts
++ * @all_reset_count: cumilative number of link reset attempts
++ * @host_client_lock: mutex to protect host clients list
++ * @host_client_list: host clients list
++ * @host_client_last_id: last allocated host client id
++ * @host_client_count: number of active host clients
++ * @fw_client_lock: mutex to protect firmware clients list
++ * @fw_client_list: firmware clients list
++ * @dma: DMA memory configuration
++ * @write_queue: write queue
++ * @last_write_ts: last write timestamp
++ * @ops: hardware opertions
++ * @hw: hw-specific data
++ */
++struct issei_device {
++	struct device *dev;
++	struct cdev cdev;
++	int minor;
++	bool power_down;
++	wait_queue_head_t wait_rst_irq;
++	atomic_t rst_irq;
++	wait_queue_head_t wait_rst_state;
++	enum issei_rst_state rst_state;
++	u16 fw_protocol_ver;
++	u16 fw_version[4];
++	/* reset flow */
++	struct task_struct *reset_thread;
++	u8 reset_count;
++	u8 all_reset_count;
++	/* host clients */
++	struct mutex host_client_lock;
++	struct list_head host_client_list;
++	u16 host_client_last_id;
++	u8 host_client_count;
++	/* fw clients */
++	struct mutex fw_client_lock;
++	struct list_head fw_client_list;
++	struct issei_dma dma;
++	struct list_head write_queue;
++	ktime_t last_write_ts;
++	const struct issei_hw_ops *ops;
++	char hw[] __aligned(sizeof(void *));
++};
++
++#endif /* _ISSEI_DEV_H_ */
+diff --git a/include/uapi/linux/issei.h b/include/uapi/linux/issei.h
+new file mode 100644
+index 000000000000..234fbc0aeaaa
+--- /dev/null
++++ b/include/uapi/linux/issei.h
+@@ -0,0 +1,78 @@
++/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
++/*
++ * Copyright (C) 2023-2025 Intel Corporation
++ * Intel Silicon Security Engine Interface (ISSEI) Linux driver:
++ * ISSEI Interface Header
++ */
++#ifndef _LINUX_ISSEI_H
++#define _LINUX_ISSEI_H
++
++#include <linux/types.h>
++#include <linux/ioctl.h>
++
++/*
++ * This IOCTL is used to associate the current file descriptor with a
++ * FW Client (given by UUID). This opens a communication channel
++ * between a host client and a FW client. From this point every read and write
++ * will communicate with the associated FW client.
++ * The communication between the clients can be terminated by
++ * IOCTL_ISSEI_DISCONNECT_CLIENT IOCTL or by
++ * closing the file descriptor (file_operation release()).
++ *
++ * The IOCTL argument is a struct with a union that contains
++ * the input parameter and the output parameter for this IOCTL.
++ *
++ * The input parameter is UUID of the FW Client.
++ * The output parameter is the properties of the FW client
++ * (FW protocol version, max message size and client flags).
++ */
++#define IOCTL_ISSEI_CONNECT_CLIENT \
++	_IOWR('H', 0x01, struct issei_connect_client_data)
++
++/**
++ * struct issei_client - ISSEI client information structure
++ * @max_msg_length: maximum message length supported by the firmware client (in bytes)
++ * @protocol_version: protocol version reported by the firmware client
++ * @reserved: reserved
++ * @flags: flag bitmask reported by the firmware client
++ */
++struct issei_client {
++	__u32 max_msg_length;
++	__u8 protocol_version;
++	__u8 reserved[3];
++	__u32 flags;
++};
++
++#define ISSEI_IOCTL_UUID_LEN 16
++
++/**
++ * struct issei_connect_client_data - IOCTL Connect Client Data structure
++ * @in_client_uuid: unique id of the firmware client to connect to
++ * @out_client_properties: connected firmware client properties
++ */
++struct issei_connect_client_data {
++	union {
++		__u8 in_client_uuid[ISSEI_IOCTL_UUID_LEN];
++		struct issei_client out_client_properties;
++	};
++};
++
++/*
++ * This IOCTL is used to terminate association between
++ * the host client and the FW client.
++ */
++#define IOCTL_ISSEI_DISCONNECT_CLIENT \
++	_IO('H', 0x02)
++
++/*
++ * This IOCTL is used to obtain driver status
++ *
++ * The 32bit output parameter:
++ * Bit[0] - driver reset status (1 - in reset, 0 - out of reset)
++ * Bit[1-7] - Reserved
++ * Bit[8-15] - Number of resets performed after driver load
++ */
++#define IOCTL_ISSEI_DRIVER_STATUS \
++	_IOR('H', 0x03, __u32)
++
++#endif /* _LINUX_ISSEI_H */
+-- 
+2.43.0
+

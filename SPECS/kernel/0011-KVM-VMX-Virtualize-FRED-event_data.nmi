@@ -1,0 +1,224 @@
+From 2fb61e63bcd7ac26da234d4be9b1474391f68dab Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Thu, 13 Jun 2024 09:07:46 -0700
+Subject: [PATCH 11/44] KVM: VMX: Virtualize FRED event_data
+
+Set injected-event data when injecting a #PF, #DB, or #NM caused
+by extended feature disable using FRED event delivery, and save
+original-event data for being used as injected-event data.
+
+Unlike IDT using some extra CPU register as part of an event
+context, e.g., %cr2 for #PF, FRED saves a complete event context
+in its stack frame, e.g., FRED saves the faulting linear address
+of a #PF into the event data field defined in its stack frame.
+
+Thus a new VMX control field called injected-event data is added
+to provide the event data that will be pushed into a FRED stack
+frame for VM entries that inject an event using FRED event delivery.
+In addition, a new VM exit information field called original-event
+data is added to store the event data that would have saved into a
+FRED stack frame for VM exits that occur during FRED event delivery.
+After such a VM exit is handled to allow the original-event to be
+delivered, the data in the original-event data VMCS field needs to
+be set into the injected-event data VMCS field for the injection of
+the original event.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+[ Sean: reworked event data injection for nested ]
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Change in v5:
+* Add TB from Xuelian Guo.
+
+Change in v3:
+* Rework event data injection for nested (Chao Gao & Sean Christopherson).
+
+Changes in v2:
+* Document event data should be equal to CR2/DR6/IA32_XFD_ERR instead
+  of using WARN_ON() (Chao Gao).
+* Zero event data if a #NM was not caused by extended feature disable
+  (Chao Gao).
+---
+ arch/x86/include/asm/kvm_host.h |  3 ++-
+ arch/x86/include/asm/vmx.h      |  4 ++++
+ arch/x86/kvm/svm/svm.c          |  2 +-
+ arch/x86/kvm/vmx/vmx.c          | 22 ++++++++++++++++++----
+ arch/x86/kvm/x86.c              | 16 +++++++++++++++-
+ 5 files changed, 40 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 3b64414a6730..40d2c5e1b7e7 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -761,6 +761,7 @@ struct kvm_queued_exception {
+ 	u32 error_code;
+ 	unsigned long payload;
+ 	bool has_payload;
++	u64 event_data;
+ };
+ 
+ /*
+@@ -2208,7 +2209,7 @@ void kvm_queue_exception(struct kvm_vcpu *vcpu, unsigned nr);
+ void kvm_queue_exception_e(struct kvm_vcpu *vcpu, unsigned nr, u32 error_code);
+ void kvm_queue_exception_p(struct kvm_vcpu *vcpu, unsigned nr, unsigned long payload);
+ void kvm_requeue_exception(struct kvm_vcpu *vcpu, unsigned int nr,
+-			   bool has_error_code, u32 error_code);
++			   bool has_error_code, u32 error_code, u64 event_data);
+ void kvm_inject_page_fault(struct kvm_vcpu *vcpu, struct x86_exception *fault);
+ void kvm_inject_emulated_page_fault(struct kvm_vcpu *vcpu,
+ 				    struct x86_exception *fault);
+diff --git a/arch/x86/include/asm/vmx.h b/arch/x86/include/asm/vmx.h
+index d222fd1517ce..613deb8cfb78 100644
+--- a/arch/x86/include/asm/vmx.h
++++ b/arch/x86/include/asm/vmx.h
+@@ -270,8 +270,12 @@ enum vmcs_field {
+ 	PID_POINTER_TABLE_HIGH		= 0x00002043,
+ 	SECONDARY_VM_EXIT_CONTROLS	= 0x00002044,
+ 	SECONDARY_VM_EXIT_CONTROLS_HIGH	= 0x00002045,
++	INJECTED_EVENT_DATA		= 0x00002052,
++	INJECTED_EVENT_DATA_HIGH	= 0x00002053,
+ 	GUEST_PHYSICAL_ADDRESS          = 0x00002400,
+ 	GUEST_PHYSICAL_ADDRESS_HIGH     = 0x00002401,
++	ORIGINAL_EVENT_DATA		= 0x00002404,
++	ORIGINAL_EVENT_DATA_HIGH	= 0x00002405,
+ 	VMCS_LINK_POINTER               = 0x00002800,
+ 	VMCS_LINK_POINTER_HIGH          = 0x00002801,
+ 	GUEST_IA32_DEBUGCTL             = 0x00002802,
+diff --git a/arch/x86/kvm/svm/svm.c b/arch/x86/kvm/svm/svm.c
+index 239436ae074b..8ee9f66a34f8 100644
+--- a/arch/x86/kvm/svm/svm.c
++++ b/arch/x86/kvm/svm/svm.c
+@@ -4187,7 +4187,7 @@ static void svm_complete_interrupts(struct kvm_vcpu *vcpu)
+ 
+ 		kvm_requeue_exception(vcpu, vector,
+ 				      exitintinfo & SVM_EXITINTINFO_VALID_ERR,
+-				      error_code);
++				      error_code, 0);
+ 		break;
+ 	}
+ 	case SVM_EXITINTINFO_TYPE_INTR:
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index ba0177a97417..89841d2f3e45 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -1864,6 +1864,9 @@ void vmx_inject_exception(struct kvm_vcpu *vcpu)
+ 
+ 	vmcs_write32(VM_ENTRY_INTR_INFO_FIELD, intr_info);
+ 
++	if (is_fred_enabled(vcpu))
++		vmcs_write64(INJECTED_EVENT_DATA, ex->event_data);
++
+ 	vmx_clear_hlt(vcpu);
+ }
+ 
+@@ -7309,7 +7312,8 @@ static void vmx_recover_nmi_blocking(struct vcpu_vmx *vmx)
+ static void __vmx_complete_interrupts(struct kvm_vcpu *vcpu,
+ 				      u32 idt_vectoring_info,
+ 				      int instr_len_field,
+-				      int error_code_field)
++				      int error_code_field,
++				      int event_data_field)
+ {
+ 	u8 vector;
+ 	int type;
+@@ -7344,13 +7348,17 @@ static void __vmx_complete_interrupts(struct kvm_vcpu *vcpu,
+ 		fallthrough;
+ 	case INTR_TYPE_HARD_EXCEPTION: {
+ 		u32 error_code = 0;
++		u64 event_data = 0;
+ 
+ 		if (idt_vectoring_info & VECTORING_INFO_DELIVER_CODE_MASK)
+ 			error_code = vmcs_read32(error_code_field);
++		if (is_fred_enabled(vcpu))
++			event_data = vmcs_read64(event_data_field);
+ 
+ 		kvm_requeue_exception(vcpu, vector,
+ 				      idt_vectoring_info & VECTORING_INFO_DELIVER_CODE_MASK,
+-				      error_code);
++				      error_code,
++				      event_data);
+ 		break;
+ 	}
+ 	case INTR_TYPE_SOFT_INTR:
+@@ -7368,7 +7376,8 @@ static void vmx_complete_interrupts(struct vcpu_vmx *vmx)
+ {
+ 	__vmx_complete_interrupts(&vmx->vcpu, vmx->idt_vectoring_info,
+ 				  VM_EXIT_INSTRUCTION_LEN,
+-				  IDT_VECTORING_ERROR_CODE);
++				  IDT_VECTORING_ERROR_CODE,
++				  ORIGINAL_EVENT_DATA);
+ }
+ 
+ void vmx_cancel_injection(struct kvm_vcpu *vcpu)
+@@ -7376,7 +7385,8 @@ void vmx_cancel_injection(struct kvm_vcpu *vcpu)
+ 	__vmx_complete_interrupts(vcpu,
+ 				  vmcs_read32(VM_ENTRY_INTR_INFO_FIELD),
+ 				  VM_ENTRY_INSTRUCTION_LEN,
+-				  VM_ENTRY_EXCEPTION_ERROR_CODE);
++				  VM_ENTRY_EXCEPTION_ERROR_CODE,
++				  INJECTED_EVENT_DATA);
+ 
+ 	vmcs_write32(VM_ENTRY_INTR_INFO_FIELD, 0);
+ }
+@@ -7530,6 +7540,10 @@ static noinstr void vmx_vcpu_enter_exit(struct kvm_vcpu *vcpu,
+ 
+ 	vmx_disable_fb_clear(vmx);
+ 
++	/*
++	 * Note, even though FRED delivers the faulting linear address via the
++	 * event data field on the stack, CR2 is still updated.
++	 */
+ 	if (vcpu->arch.cr2 != native_read_cr2())
+ 		native_write_cr2(vcpu->arch.cr2);
+ 
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index bd1c2eb7c538..090f9fc0363f 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -810,9 +810,22 @@ void kvm_deliver_exception_payload(struct kvm_vcpu *vcpu,
+ 		 * breakpoint), it is reserved and must be zero in DR6.
+ 		 */
+ 		vcpu->arch.dr6 &= ~BIT(12);
++
++		/*
++		 * FRED #DB event data matches DR6, but follows the polarity of
++		 * VMX's pending debug exceptions, not DR6.
++		 */
++		ex->event_data = ex->payload & ~BIT(12);
++		break;
++	case NM_VECTOR:
++		ex->event_data = ex->payload;
+ 		break;
+ 	case PF_VECTOR:
+ 		vcpu->arch.cr2 = ex->payload;
++		ex->event_data = ex->payload;
++		break;
++	default:
++		ex->event_data = 0;
+ 		break;
+ 	}
+ 
+@@ -920,7 +933,7 @@ static void kvm_queue_exception_e_p(struct kvm_vcpu *vcpu, unsigned nr,
+ }
+ 
+ void kvm_requeue_exception(struct kvm_vcpu *vcpu, unsigned int nr,
+-			   bool has_error_code, u32 error_code)
++			   bool has_error_code, u32 error_code, u64 event_data)
+ {
+ 
+ 	/*
+@@ -945,6 +958,7 @@ void kvm_requeue_exception(struct kvm_vcpu *vcpu, unsigned int nr,
+ 	vcpu->arch.exception.error_code = error_code;
+ 	vcpu->arch.exception.has_payload = false;
+ 	vcpu->arch.exception.payload = 0;
++	vcpu->arch.exception.event_data = event_data;
+ }
+ EXPORT_SYMBOL_GPL(kvm_requeue_exception);
+ 
+-- 
+2.43.0
+

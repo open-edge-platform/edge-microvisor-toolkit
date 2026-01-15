@@ -1,0 +1,142 @@
+From 64e7e822c4c3535413b83c11732b59a0b6a2fff9 Mon Sep 17 00:00:00 2001
+From: Zeng Guang <guang.zeng@intel.com>
+Date: Thu, 23 Nov 2023 23:53:55 +0800
+Subject: [PATCH 42/44] KVM: VMX: Implement NMI source injection
+
+With NMI source the vector field along with NMI encoding to trigger NMI through
+APIC ICR and LVT register can be repurposed to identify the originator (source)
+of the NMI. NMI source vector is delivered when FRED is enabled and reported as
+an accumulated 16-bit bitmask in the exception event data field pushed on the
+stack for a FRED exception.
+
+Introduce two new elements in struct kvm_vcpu_arch used for NMI source injection.
+"nmi_source_pending" collects multiple NMIs from different sources arriving at
+local APIC simultanously and coalesces into a 16-bit bitmask. "nmi_source_inject"
+indicates the NMI sources that will be delivered in current NMI injection.
+
+KVM injects NMI source into the guest by specifying the NMI source in the injected
+event data field of the VMCS.
+
+Signed-off-by: Zeng Guang <guang.zeng@intel.com>
+---
+ arch/x86/include/asm/kvm_host.h |  2 ++
+ arch/x86/kvm/lapic.c            |  1 +
+ arch/x86/kvm/vmx/vmx.c          | 10 ++++++++++
+ arch/x86/kvm/x86.c              | 21 +++++++++++++++++++--
+ 4 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 2634c16b09c4..d4657bbfe460 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -969,6 +969,8 @@ struct kvm_vcpu_arch {
+ 	u64 tsc_scaling_ratio; /* current scaling ratio */
+ 
+ 	atomic_t nmi_queued;  /* unprocessed asynchronous NMIs */
++	atomic_t nmi_source_pending;  /* unprocessed NMI Source */
++	unsigned int nmi_source_inject;  /* NMI Source to inject */
+ 	/* Number of NMIs pending injection, not including hardware vNMIs. */
+ 	unsigned int nmi_pending;
+ 	bool nmi_injected;    /* Trying to inject an NMI this entry */
+diff --git a/arch/x86/kvm/lapic.c b/arch/x86/kvm/lapic.c
+index e19545b8cc98..08ad0bd5e387 100644
+--- a/arch/x86/kvm/lapic.c
++++ b/arch/x86/kvm/lapic.c
+@@ -1315,6 +1315,7 @@ static int __apic_accept_irq(struct kvm_lapic *apic, int delivery_mode,
+ 
+ 	case APIC_DM_NMI:
+ 		result = 1;
++		atomic_or(1 << vector, &vcpu->arch.nmi_source_pending);
+ 		kvm_inject_nmi(vcpu);
+ 		kvm_vcpu_kick(vcpu);
+ 		break;
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 36afe1dba9f0..8bbba7aa13c3 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -5203,6 +5203,13 @@ void vmx_inject_nmi(struct kvm_vcpu *vcpu)
+ 	vmcs_write32(VM_ENTRY_INTR_INFO_FIELD,
+ 			INTR_TYPE_NMI_INTR | INTR_INFO_VALID_MASK | NMI_VECTOR);
+ 
++	if (is_fred_enabled(vcpu)) {
++		vmcs_write64(INJECTED_EVENT_DATA,
++			     guest_cpu_cap_has(vcpu, X86_FEATURE_NMI_SOURCE) ?
++			     vcpu->arch.nmi_source_inject : 0);
++		vcpu->arch.nmi_source_inject = 0;
++	}
++
+ 	vmx_clear_hlt(vcpu);
+ }
+ 
+@@ -7368,6 +7375,9 @@ static void __vmx_complete_interrupts(struct kvm_vcpu *vcpu,
+ 	switch (type) {
+ 	case INTR_TYPE_NMI_INTR:
+ 		vcpu->arch.nmi_injected = true;
++
++		if (is_fred_enabled(vcpu))
++			vcpu->arch.nmi_source_inject = vmcs_read64(event_data_field);
+ 		/*
+ 		 * SDM 3: 27.7.1.2 (September 2008)
+ 		 * Clear bit "block by NMI" before VM entry if a NMI
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index eb0a1e537a88..c36f22135434 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -10719,6 +10719,11 @@ static int kvm_check_and_inject_events(struct kvm_vcpu *vcpu,
+ 	return r;
+ }
+ 
++static inline bool kvm_is_nmi_source_enabled(struct kvm_vcpu *vcpu)
++{
++	return is_fred_enabled(vcpu) && guest_cpu_cap_has(vcpu, X86_FEATURE_NMI_SOURCE);
++}
++
+ static void process_nmi(struct kvm_vcpu *vcpu)
+ {
+ 	unsigned int limit;
+@@ -10733,7 +10738,8 @@ static void process_nmi(struct kvm_vcpu *vcpu)
+ 	 * blocks NMIs).  KVM will immediately inject one of the two NMIs, and
+ 	 * will request an NMI window to handle the second NMI.
+ 	 */
+-	if (kvm_x86_call(get_nmi_mask)(vcpu) || vcpu->arch.nmi_injected)
++	if (kvm_x86_call(get_nmi_mask)(vcpu) || vcpu->arch.nmi_injected ||
++	    kvm_is_nmi_source_enabled(vcpu))
+ 		limit = 1;
+ 	else
+ 		limit = 2;
+@@ -10747,13 +10753,22 @@ static void process_nmi(struct kvm_vcpu *vcpu)
+ 
+ 	vcpu->arch.nmi_pending += atomic_xchg(&vcpu->arch.nmi_queued, 0);
+ 	vcpu->arch.nmi_pending = min(vcpu->arch.nmi_pending, limit);
++	vcpu->arch.nmi_source_inject |= atomic_xchg(&vcpu->arch.nmi_source_pending, 0);
+ 
+ 	if (vcpu->arch.nmi_pending &&
+ 	    (kvm_x86_call(set_vnmi_pending)(vcpu)))
+ 		vcpu->arch.nmi_pending--;
+ 
+-	if (vcpu->arch.nmi_pending)
++	if (vcpu->arch.nmi_pending) {
+ 		kvm_make_request(KVM_REQ_EVENT, vcpu);
++		/*
++		 * In case nmi source supported, if new NMI arrives when vCPU is
++		 * trying NMI injection, it can be coalesced together and requires
++		 * one elimination of nmi_pending.
++		 */
++		if (vcpu->arch.nmi_injected && kvm_is_nmi_source_enabled(vcpu))
++			vcpu->arch.nmi_pending--;
++	}
+ }
+ 
+ /* Return total number of NMIs pending injection to the VM */
+@@ -12780,6 +12795,8 @@ void kvm_vcpu_reset(struct kvm_vcpu *vcpu, bool init_event)
+ 	vcpu->arch.smi_pending = 0;
+ 	vcpu->arch.smi_count = 0;
+ 	atomic_set(&vcpu->arch.nmi_queued, 0);
++	atomic_set(&vcpu->arch.nmi_source_pending, 0);
++	vcpu->arch.nmi_source_inject = 0;
+ 	vcpu->arch.nmi_pending = 0;
+ 	vcpu->arch.nmi_injected = false;
+ 	kvm_clear_interrupt_queue(vcpu);
+-- 
+2.43.0
+

@@ -1,0 +1,31 @@
+From 0f2007ed423b7f4b46a6e36432b33793ff24a857 Mon Sep 17 00:00:00 2001
+From: Sidharth Seela <sidharthseela@gmail.com>
+Date: Tue, 23 Sep 2025 12:10:16 +0530
+Subject: [PATCH 44/51] ntfs3: Fix uninit buffer allocated by __getname()
+
+Fix uninit errors caused after buffer allocation given to 'de'; by
+initializing the buffer with zeroes. The fix was found by using KMSAN.
+
+Reported-by: syzbot+332bd4e9d148f11a87dc@syzkaller.appspotmail.com
+Fixes: 78ab59fee07f2 ("fs/ntfs3: Rework file operations")
+Signed-off-by: Sidharth Seela <sidharthseela@gmail.com>
+Signed-off-by: Konstantin Komarov <almaz.alexandrovich@paragon-software.com>
+---
+ fs/ntfs3/inode.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fs/ntfs3/inode.c b/fs/ntfs3/inode.c
+index 7a89d31ccc1c..68862da31345 100644
+--- a/fs/ntfs3/inode.c
++++ b/fs/ntfs3/inode.c
+@@ -1717,6 +1717,7 @@ int ntfs_link_inode(struct inode *inode, struct dentry *dentry)
+ 	de = kmem_cache_zalloc(names_cachep, GFP_KERNEL);
+ 	if (!de)
+ 		return -ENOMEM;
++	memset(de, 0, PATH_MAX);
+ 
+ 	/* Mark rw ntfs as dirty. It will be cleared at umount. */
+ 	ntfs_set_state(sbi, NTFS_DIRTY_DIRTY);
+-- 
+2.43.0
+

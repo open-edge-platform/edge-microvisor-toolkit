@@ -1,0 +1,68 @@
+From 165783514c08480544f0318242343073c2feb6b3 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Fri, 17 Nov 2023 21:34:27 -0800
+Subject: [PATCH 04/44] KVM: VMX: Disable FRED if FRED consistency checks fail
+
+Do not virtualize FRED if FRED consistency checks fail.
+
+Either on broken hardware, or when run KVM on top of another hypervisor
+before the underlying hypervisor implements nested FRED correctly.
+
+Suggested-by: Chao Gao <chao.gao@intel.com>
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Reviewed-by: Chao Gao <chao.gao@intel.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Changes in v5:
+* Drop the cpu_feature_enabled() in cpu_has_vmx_fred() (Sean).
+* Add TB from Xuelian Guo.
+
+Change in v4:
+* Call out the reason why not check FRED VM-exit controls in
+  cpu_has_vmx_fred() (Chao Gao).
+---
+ arch/x86/kvm/vmx/capabilities.h | 10 ++++++++++
+ arch/x86/kvm/vmx/vmx.c          |  3 +++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/capabilities.h b/arch/x86/kvm/vmx/capabilities.h
+index 422d2846980c..1100291d42ea 100644
+--- a/arch/x86/kvm/vmx/capabilities.h
++++ b/arch/x86/kvm/vmx/capabilities.h
+@@ -412,6 +412,16 @@ static inline bool vmx_pebs_supported(void)
+ 	       !enable_mediated_pmu;
+ }
+ 
++static inline bool cpu_has_vmx_fred(void)
++{
++	/*
++	 * setup_vmcs_config() guarantees FRED VM-entry/exit controls
++	 * are either all set or none.  So, no need to check FRED VM-exit
++	 * controls.
++	 */
++	return (vmcs_config.vmentry_ctrl & VM_ENTRY_LOAD_IA32_FRED);
++}
++
+ static inline bool cpu_has_notify_vmexit(void)
+ {
+ 	return vmcs_config.cpu_based_2nd_exec_ctrl &
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index aa23ecf18cda..24c447935e9b 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -8041,6 +8041,9 @@ static __init void vmx_set_cpu_caps(void)
+ 		kvm_cpu_cap_check_and_set(X86_FEATURE_DTES64);
+ 	}
+ 
++	if (!cpu_has_vmx_fred())
++		kvm_cpu_cap_clear(X86_FEATURE_FRED);
++
+ 	if (!enable_pmu)
+ 		kvm_cpu_cap_clear(X86_FEATURE_PDCM);
+ 	kvm_caps.supported_perf_cap = vmx_get_perf_capabilities();
+-- 
+2.43.0
+

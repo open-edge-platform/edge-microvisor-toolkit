@@ -12,8 +12,8 @@
 
 Summary:        Unified Kernel Image
 Name:           kernel-uki
-Version:        6.17.0
-Release:        3%{?dist}
+Version:        6.17.11
+Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -70,6 +70,9 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Thu Jan 15 2026 Lishan Liu <lishan.liu@intel.com> - 6.17.11-1
+- Update kernel to mainline-v6.17.11-emt-260108T031458Z
+
 * Mon Dec 1 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-3
 - Update kernel to mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
 

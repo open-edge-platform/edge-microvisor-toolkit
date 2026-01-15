@@ -1,0 +1,83 @@
+From 4f8df081826ebbd3b171763e977e72f4dbfffa02 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Thu, 31 Jul 2025 12:11:20 -0700
+Subject: [PATCH 045/100] KVM: x86: Fold WRMSR fastpath helpers into the main
+ handler
+
+Fold the per-MSR WRMSR fastpath helpers into the main handler now that the
+IPI path in particular is relatively tiny.  In addition to eliminating a
+decent amount of boilerplate, this removes the ugly -errno/1/0 => bool
+conversion (which is "necessitated" by kvm_x2apic_icr_write_fast()).
+
+Opportunistically drop the comment about IPIs, as the purpose of the
+fastpath is hopefully self-evident, and _if_ it needs more documentation,
+the documentation (and rules!) should be placed in a more central location.
+
+No functional change intended.
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/x86.c | 34 +++++-----------------------------
+ 1 file changed, 5 insertions(+), 29 deletions(-)
+
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index e6c221f9b92e..a4441f036929 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -2133,48 +2133,24 @@ static inline bool kvm_vcpu_exit_request(struct kvm_vcpu *vcpu)
+ 	       kvm_request_pending(vcpu) || xfer_to_guest_mode_work_pending();
+ }
+ 
+-/*
+- * The fast path for frequent and performance sensitive wrmsr emulation,
+- * i.e. the sending of IPI, sending IPI early in the VM-Exit flow reduces
+- * the latency of virtual IPI by avoiding the expensive bits of transitioning
+- * from guest to host, e.g. reacquiring KVM's SRCU lock. In contrast to the
+- * other cases which must be called after interrupts are enabled on the host.
+- */
+-static int handle_fastpath_set_x2apic_icr_irqoff(struct kvm_vcpu *vcpu, u64 data)
+-{
+-	if (!lapic_in_kernel(vcpu) || !apic_x2apic_mode(vcpu->arch.apic))
+-		return 1;
+-
+-	return kvm_x2apic_icr_write_fast(vcpu->arch.apic, data);
+-}
+-
+-static int handle_fastpath_set_tscdeadline(struct kvm_vcpu *vcpu, u64 data)
+-{
+-	kvm_set_lapic_tscdeadline_msr(vcpu, data);
+-	return 0;
+-}
+-
+ fastpath_t handle_fastpath_set_msr_irqoff(struct kvm_vcpu *vcpu)
+ {
+ 	u64 data = kvm_read_edx_eax(vcpu);
+ 	u32 msr = kvm_rcx_read(vcpu);
+-	bool handled;
+ 	int r;
+ 
+ 	switch (msr) {
+ 	case APIC_BASE_MSR + (APIC_ICR >> 4):
+-		handled = !handle_fastpath_set_x2apic_icr_irqoff(vcpu, data);
++		if (!lapic_in_kernel(vcpu) || !apic_x2apic_mode(vcpu->arch.apic) ||
++		    kvm_x2apic_icr_write_fast(vcpu->arch.apic, data))
++			return EXIT_FASTPATH_NONE;
+ 		break;
+ 	case MSR_IA32_TSC_DEADLINE:
+-		handled = !handle_fastpath_set_tscdeadline(vcpu, data);
++		kvm_set_lapic_tscdeadline_msr(vcpu, data);
+ 		break;
+ 	default:
+-		handled = false;
+-		break;
+-	}
+-
+-	if (!handled)
+ 		return EXIT_FASTPATH_NONE;
++	}
+ 
+ 	kvm_vcpu_srcu_read_lock(vcpu);
+ 	r = kvm_skip_emulated_instruction(vcpu);
+-- 
+2.43.0
+

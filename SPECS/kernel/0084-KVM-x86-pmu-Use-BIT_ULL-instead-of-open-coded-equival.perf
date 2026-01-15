@@ -1,0 +1,88 @@
+From 009e272d43d7524424506e6939f14963bb4db36b Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Tue, 13 May 2025 13:53:29 -0700
+Subject: [PATCH 084/100] KVM: x86/pmu: Use BIT_ULL() instead of open coded
+ equivalents
+
+Replace a variety of "1ull << N" and "(u64)1 << N" snippets with BIT_ULL()
+in the PMU code.
+
+No functional change intended.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+[sean: split to separate patch, write changelog]
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/svm/pmu.c       |  4 ++--
+ arch/x86/kvm/vmx/pmu_intel.c | 15 ++++++---------
+ 2 files changed, 8 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/kvm/svm/pmu.c b/arch/x86/kvm/svm/pmu.c
+index 96be2c3e0d65..b777c3743304 100644
+--- a/arch/x86/kvm/svm/pmu.c
++++ b/arch/x86/kvm/svm/pmu.c
+@@ -199,11 +199,11 @@ static void amd_pmu_refresh(struct kvm_vcpu *vcpu)
+ 					 kvm_pmu_cap.num_counters_gp);
+ 
+ 	if (pmu->version > 1) {
+-		pmu->global_ctrl_rsvd = ~((1ull << pmu->nr_arch_gp_counters) - 1);
++		pmu->global_ctrl_rsvd = ~(BIT_ULL(pmu->nr_arch_gp_counters) - 1);
+ 		pmu->global_status_rsvd = pmu->global_ctrl_rsvd;
+ 	}
+ 
+-	pmu->counter_bitmask[KVM_PMC_GP] = ((u64)1 << 48) - 1;
++	pmu->counter_bitmask[KVM_PMC_GP] = BIT_ULL(48) - 1;
+ 	pmu->reserved_bits = 0xfffffff000280000ull;
+ 	pmu->raw_event_mask = AMD64_RAW_EVENT_MASK;
+ 	/* not applicable to AMD; but clean them to prevent any fall out */
+diff --git a/arch/x86/kvm/vmx/pmu_intel.c b/arch/x86/kvm/vmx/pmu_intel.c
+index 79aad6355fa3..7592a5fb7675 100644
+--- a/arch/x86/kvm/vmx/pmu_intel.c
++++ b/arch/x86/kvm/vmx/pmu_intel.c
+@@ -536,11 +536,10 @@ static void intel_pmu_refresh(struct kvm_vcpu *vcpu)
+ 					 kvm_pmu_cap.num_counters_gp);
+ 	eax.split.bit_width = min_t(int, eax.split.bit_width,
+ 				    kvm_pmu_cap.bit_width_gp);
+-	pmu->counter_bitmask[KVM_PMC_GP] = ((u64)1 << eax.split.bit_width) - 1;
++	pmu->counter_bitmask[KVM_PMC_GP] = BIT_ULL(eax.split.bit_width) - 1;
+ 	eax.split.mask_length = min_t(int, eax.split.mask_length,
+ 				      kvm_pmu_cap.events_mask_len);
+-	pmu->available_event_types = ~entry->ebx &
+-					((1ull << eax.split.mask_length) - 1);
++	pmu->available_event_types = ~entry->ebx & (BIT_ULL(eax.split.mask_length) - 1);
+ 
+ 	if (pmu->version == 1) {
+ 		pmu->nr_arch_fixed_counters = 0;
+@@ -549,16 +548,15 @@ static void intel_pmu_refresh(struct kvm_vcpu *vcpu)
+ 						    kvm_pmu_cap.num_counters_fixed);
+ 		edx.split.bit_width_fixed = min_t(int, edx.split.bit_width_fixed,
+ 						  kvm_pmu_cap.bit_width_fixed);
+-		pmu->counter_bitmask[KVM_PMC_FIXED] =
+-			((u64)1 << edx.split.bit_width_fixed) - 1;
++		pmu->counter_bitmask[KVM_PMC_FIXED] = BIT_ULL(edx.split.bit_width_fixed) - 1;
+ 	}
+ 
+ 	intel_pmu_enable_fixed_counter_bits(pmu, INTEL_FIXED_0_KERNEL |
+ 						 INTEL_FIXED_0_USER |
+ 						 INTEL_FIXED_0_ENABLE_PMI);
+ 
+-	counter_rsvd = ~(((1ull << pmu->nr_arch_gp_counters) - 1) |
+-		(((1ull << pmu->nr_arch_fixed_counters) - 1) << KVM_FIXED_PMC_BASE_IDX));
++	counter_rsvd = ~((BIT_ULL(pmu->nr_arch_gp_counters) - 1) |
++			 ((BIT_ULL(pmu->nr_arch_fixed_counters) - 1) << KVM_FIXED_PMC_BASE_IDX));
+ 	pmu->global_ctrl_rsvd = counter_rsvd;
+ 
+ 	/*
+@@ -603,8 +601,7 @@ static void intel_pmu_refresh(struct kvm_vcpu *vcpu)
+ 			pmu->pebs_data_cfg_rsvd = ~0xff00000full;
+ 			intel_pmu_enable_fixed_counter_bits(pmu, ICL_FIXED_0_ADAPTIVE);
+ 		} else {
+-			pmu->pebs_enable_rsvd =
+-				~((1ull << pmu->nr_arch_gp_counters) - 1);
++			pmu->pebs_enable_rsvd = ~(BIT_ULL(pmu->nr_arch_gp_counters) - 1);
+ 		}
+ 	}
+ }
+-- 
+2.43.0
+

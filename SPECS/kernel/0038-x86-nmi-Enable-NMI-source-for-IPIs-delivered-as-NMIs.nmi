@@ -1,0 +1,131 @@
+From 7edbfbfc60c698ae0c2daa70329ccc6508d930ec Mon Sep 17 00:00:00 2001
+From: Sohil Mehta <sohil.mehta@intel.com>
+Date: Mon, 28 Apr 2025 20:09:02 +0000
+Subject: [PATCH 38/44] x86/nmi: Enable NMI-source for IPIs delivered as NMIs
+
+With the IPI handling APIs ready to support the new NMI encoding, encode
+the NMI delivery mode directly with the NMI-source vectors to trigger
+NMIs.
+
+Move most of the existing NMI-based IPIs to use the new NMI-source
+vectors, except for the microcode rendezvous NMI and the crash reboot
+NMI. NMI handling for them is special-cased in exc_nmi() and does not
+need NMI-source reporting.
+
+However, in the future, it might be useful to assign a source vector to
+all NMI sources to improve isolation and debuggability.
+
+Originally-by: Jacob Pan <jacob.jun.pan@linux.intel.com>
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Co-developed-by: Xin Li (Intel) <xin@zytor.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Signed-off-by: Sohil Mehta <sohil.mehta@intel.com>
+---
+v7: No change.
+
+v6: Include asm/nmi.h to avoid compile errors. (LKP)
+
+v5: Encode APIC_DM_NMI directly with the NMI-source vector.
+---
+ arch/x86/include/asm/apic.h      | 8 ++++++++
+ arch/x86/kernel/apic/hw_nmi.c    | 2 +-
+ arch/x86/kernel/cpu/mce/inject.c | 2 +-
+ arch/x86/kernel/kgdb.c           | 2 +-
+ arch/x86/kernel/nmi_selftest.c   | 2 +-
+ arch/x86/kernel/smp.c            | 2 +-
+ 6 files changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/include/asm/apic.h b/arch/x86/include/asm/apic.h
+index 7448b349f864..c1f06c6e86a5 100644
+--- a/arch/x86/include/asm/apic.h
++++ b/arch/x86/include/asm/apic.h
+@@ -14,6 +14,7 @@
+ #include <asm/msr.h>
+ #include <asm/hardirq.h>
+ #include <asm/io.h>
++#include <asm/nmi.h>
+ #include <asm/posted_intr.h>
+ 
+ #define ARCH_APICTIMER_STOPS_ON_C3	1
+@@ -23,6 +24,13 @@
+ #define APIC_EXTNMI_ALL		1
+ #define APIC_EXTNMI_NONE	2
+ 
++/* Trigger NMIs with source information */
++#define TEST_NMI		(APIC_DM_NMI | NMIS_VECTOR_TEST)
++#define SMP_STOP_NMI		(APIC_DM_NMI | NMIS_VECTOR_SMP_STOP)
++#define BT_NMI			(APIC_DM_NMI | NMIS_VECTOR_BT)
++#define KGDB_NMI		(APIC_DM_NMI | NMIS_VECTOR_KGDB)
++#define MCE_NMI			(APIC_DM_NMI | NMIS_VECTOR_MCE)
++
+ /*
+  * Debugging macros
+  */
+diff --git a/arch/x86/kernel/apic/hw_nmi.c b/arch/x86/kernel/apic/hw_nmi.c
+index 4e04f13d2de9..586f4b25feae 100644
+--- a/arch/x86/kernel/apic/hw_nmi.c
++++ b/arch/x86/kernel/apic/hw_nmi.c
+@@ -33,7 +33,7 @@ u64 hw_nmi_get_sample_period(int watchdog_thresh)
+ #ifdef arch_trigger_cpumask_backtrace
+ static void nmi_raise_cpu_backtrace(cpumask_t *mask)
+ {
+-	__apic_send_IPI_mask(mask, NMI_VECTOR);
++	__apic_send_IPI_mask(mask, BT_NMI);
+ }
+ 
+ void arch_trigger_cpumask_backtrace(const cpumask_t *mask, int exclude_cpu)
+diff --git a/arch/x86/kernel/cpu/mce/inject.c b/arch/x86/kernel/cpu/mce/inject.c
+index 320068e01c22..81a04836ac74 100644
+--- a/arch/x86/kernel/cpu/mce/inject.c
++++ b/arch/x86/kernel/cpu/mce/inject.c
+@@ -270,7 +270,7 @@ static void __maybe_unused raise_mce(struct mce *m)
+ 					mce_irq_ipi, NULL, 0);
+ 				preempt_enable();
+ 			} else if (m->inject_flags & MCJ_NMI_BROADCAST)
+-				__apic_send_IPI_mask(mce_inject_cpumask, NMI_VECTOR);
++				__apic_send_IPI_mask(mce_inject_cpumask, MCE_NMI);
+ 		}
+ 		start = jiffies;
+ 		while (!cpumask_empty(mce_inject_cpumask)) {
+diff --git a/arch/x86/kernel/kgdb.c b/arch/x86/kernel/kgdb.c
+index 788b83e9404b..8a342df84d8e 100644
+--- a/arch/x86/kernel/kgdb.c
++++ b/arch/x86/kernel/kgdb.c
+@@ -416,7 +416,7 @@ static void kgdb_disable_hw_debug(struct pt_regs *regs)
+  */
+ void kgdb_roundup_cpus(void)
+ {
+-	apic_send_IPI_allbutself(NMI_VECTOR);
++	apic_send_IPI_allbutself(KGDB_NMI);
+ }
+ #endif
+ 
+diff --git a/arch/x86/kernel/nmi_selftest.c b/arch/x86/kernel/nmi_selftest.c
+index f3918888e494..d5578370b47f 100644
+--- a/arch/x86/kernel/nmi_selftest.c
++++ b/arch/x86/kernel/nmi_selftest.c
+@@ -72,7 +72,7 @@ static void __init test_nmi_ipi(struct cpumask *mask)
+ 	/* sync above data before sending NMI */
+ 	wmb();
+ 
+-	__apic_send_IPI_mask(mask, NMI_VECTOR);
++	__apic_send_IPI_mask(mask, TEST_NMI);
+ 
+ 	/* Don't wait longer than a second */
+ 	timeout = USEC_PER_SEC;
+diff --git a/arch/x86/kernel/smp.c b/arch/x86/kernel/smp.c
+index 694e31bf445c..eb49ee5b312f 100644
+--- a/arch/x86/kernel/smp.c
++++ b/arch/x86/kernel/smp.c
+@@ -217,7 +217,7 @@ static void native_stop_other_cpus(int wait)
+ 			pr_emerg("Shutting down cpus with NMI\n");
+ 
+ 			for_each_cpu(cpu, &cpus_stop_mask)
+-				__apic_send_IPI(cpu, NMI_VECTOR);
++				__apic_send_IPI(cpu, SMP_STOP_NMI);
+ 		}
+ 		/*
+ 		 * Don't wait longer than 10 ms if the caller didn't
+-- 
+2.43.0
+

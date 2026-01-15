@@ -1,0 +1,95 @@
+From cde72e614a686e09074d412ac5ebde282d14e944 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Thu, 31 Aug 2023 00:56:30 -0700
+Subject: [PATCH 07/44] KVM: VMX: Set FRED MSR intercepts
+
+On a userspace MSR filter change, set FRED MSR intercepts.
+
+8 FRED MSRs, i.e., MSR_IA32_FRED_RSP[123], MSR_IA32_FRED_STKLVLS,
+MSR_IA32_FRED_SSP[123] and MSR_IA32_FRED_CONFIG, are all safe to
+be passthrough, because they all have a pair of corresponding host
+and guest VMCS fields.
+
+Both MSR_IA32_FRED_RSP0 and MSR_IA32_FRED_SSP0 are dedicated for
+userspace event delivery only, IOW they are NOT used in any kernel
+event delivery and the execution of ERETS.  Thus KVM can run safely
+with guest values in the two MSRs.  As a result, save and restore of
+their guest values are deferred until vCPU context switch and their
+host values are restored upon host returning to userspace.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Changes in v5:
+* Skip execution of vmx_set_intercept_for_fred_msr() if FRED is
+  not available or enabled (Sean).
+* Use 'intercept' as the variable name to indicate whether MSR
+  interception should be enabled (Sean).
+* Add TB from Xuelian Guo.
+---
+ arch/x86/kvm/vmx/vmx.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 4a183ffb2154..2a40dfe9f034 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -4177,6 +4177,43 @@ static void vmx_recalc_pmu_msr_intercepts(struct kvm_vcpu *vcpu)
+ 				  MSR_TYPE_RW, intercept);
+ }
+ 
++static void vmx_set_intercept_for_fred_msr(struct kvm_vcpu *vcpu)
++{
++	bool intercept = !guest_cpu_cap_has(vcpu, X86_FEATURE_FRED);
++
++	if (!kvm_cpu_cap_has(X86_FEATURE_FRED))
++		return;
++
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_RSP1, MSR_TYPE_RW, intercept);
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_RSP2, MSR_TYPE_RW, intercept);
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_RSP3, MSR_TYPE_RW, intercept);
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_STKLVLS, MSR_TYPE_RW, intercept);
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_SSP1, MSR_TYPE_RW, intercept);
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_SSP2, MSR_TYPE_RW, intercept);
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_SSP3, MSR_TYPE_RW, intercept);
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_CONFIG, MSR_TYPE_RW, intercept);
++
++	/*
++	 * MSR_IA32_FRED_RSP0 and MSR_IA32_PL0_SSP (aka MSR_IA32_FRED_SSP0) are
++	 * designated for event delivery while executing in userspace.  Since
++	 * KVM operates exclusively in kernel mode (the CPL is always 0 after
++	 * any VM exit), KVM can safely retain and operate with the guest-defined
++	 * values for MSR_IA32_FRED_RSP0 and MSR_IA32_PL0_SSP.
++	 *
++	 * Therefore, interception of MSR_IA32_FRED_RSP0 and MSR_IA32_PL0_SSP
++	 * is not required.
++	 *
++	 * Note, save and restore of MSR_IA32_PL0_SSP belong to CET supervisor
++	 * context management.  However the FRED SSP MSRs, including
++	 * MSR_IA32_PL0_SSP, are supported by any processor that enumerates FRED.
++	 * If such a processor does not support CET, FRED transitions will not
++	 * use the MSRs, but the MSRs would still be accessible using MSR-access
++	 * instructions (e.g., RDMSR, WRMSR).
++	 */
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_FRED_RSP0, MSR_TYPE_RW, intercept);
++	vmx_set_intercept_for_msr(vcpu, MSR_IA32_PL0_SSP, MSR_TYPE_RW, intercept);
++}
++
+ static void vmx_recalc_msr_intercepts(struct kvm_vcpu *vcpu)
+ {
+ 	bool set;
+@@ -4245,6 +4282,8 @@ static void vmx_recalc_msr_intercepts(struct kvm_vcpu *vcpu)
+ 		vmx_set_intercept_for_msr(vcpu, MSR_IA32_U_CET, MSR_TYPE_RW, set);
+ 		vmx_set_intercept_for_msr(vcpu, MSR_IA32_S_CET, MSR_TYPE_RW, set);
+ 	}
++
++	vmx_set_intercept_for_fred_msr(vcpu);
+ 	/*
+ 	 * x2APIC and LBR MSR intercepts are modified on-demand and cannot be
+ 	 * filtered by userspace.
+-- 
+2.43.0
+

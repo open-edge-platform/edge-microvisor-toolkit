@@ -1,0 +1,48 @@
+From fa14de5297eb00d640f1b87ae2522142a525a60e Mon Sep 17 00:00:00 2001
+From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Date: Tue, 23 Sep 2025 13:56:31 -0700
+Subject: [PATCH 10/11] thermal: intel: int340x: Power Slider: Validate
+ slider_balance range
+
+When the module parameter slider_balance is set to the performance
+slider value of 0, the SoC slider profile switches to the performance
+mode.
+
+This can cause the Linux power-profiles-daemon to change the system
+power mode to performance from balanced mode. This happens when there
+is only one platform profile registered as there will be no conflict
+with other platform profiles.
+
+Same issue occurs when the slider_balance is set to the power-saver
+slider value.
+
+Prevent module parameter slider_balance from overlapping with
+performance and power-saver slider values by adding range validation.
+
+Return an error when an invalid value is provided.
+
+Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Link: https://patch.msgid.link/20250923205631.3056590-1-srinivas.pandruvada@linux.intel.com
+[ rjw: Changelog edits ]
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ .../intel/int340x_thermal/processor_thermal_soc_slider.c       | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/thermal/intel/int340x_thermal/processor_thermal_soc_slider.c b/drivers/thermal/intel/int340x_thermal/processor_thermal_soc_slider.c
+index 20d70cb01542..49ff3bae7271 100644
+--- a/drivers/thermal/intel/int340x_thermal/processor_thermal_soc_slider.c
++++ b/drivers/thermal/intel/int340x_thermal/processor_thermal_soc_slider.c
+@@ -67,7 +67,8 @@ static int slider_def_balance_set(const char *arg, const struct kernel_param *kp
+ 
+ 	ret = kstrtou8(arg, 16, &slider_val);
+ 	if (!ret) {
+-		if (slider_val > SOC_SLIDER_VALUE_MAXIMUM)
++		if (slider_val <= slider_values[SOC_POWER_SLIDER_PERFORMANCE] ||
++		    slider_val >= slider_values[SOC_POWER_SLIDER_POWERSAVE])
+ 			return -EINVAL;
+ 
+ 		slider_balanced_param = slider_val;
+-- 
+2.43.0
+

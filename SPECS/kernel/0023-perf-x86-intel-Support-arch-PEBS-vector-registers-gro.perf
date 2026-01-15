@@ -1,0 +1,368 @@
+From 448cd074e716108e97a5fea5027f7cac653a5ade Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Mon, 25 Nov 2024 09:39:33 +0000
+Subject: [PATCH 023/100] perf/x86/intel: Support arch-PEBS vector registers
+ group capturing
+
+Add x86/intel specific vector register (VECR) group capturing for
+arch-PEBS. Enable corresponding VECR group bits in
+GPx_CFG_C/FX0_CFG_C MSRs if users configures these vector registers
+bitmap in perf_event_attr and parse VECR group in arch-PEBS record.
+
+Currently vector registers capturing is only supported by PEBS based
+sampling, PMU driver would return error if PMI based sampling tries to
+capture these vector registers.
+
+Co-developed-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/core.c            | 90 +++++++++++++++++++++++++++++-
+ arch/x86/events/intel/core.c      | 15 +++++
+ arch/x86/events/intel/ds.c        | 93 ++++++++++++++++++++++++++++---
+ arch/x86/include/asm/msr-index.h  |  6 ++
+ arch/x86/include/asm/perf_event.h | 20 +++++++
+ 5 files changed, 214 insertions(+), 10 deletions(-)
+
+diff --git a/arch/x86/events/core.c b/arch/x86/events/core.c
+index ad919f980389..56d197a56d59 100644
+--- a/arch/x86/events/core.c
++++ b/arch/x86/events/core.c
+@@ -581,6 +581,73 @@ int x86_pmu_max_precise(struct pmu *pmu)
+ 	return precise;
+ }
+ 
++static bool has_vec_regs(struct perf_event *event, bool user,
++			 int start, int end)
++{
++	int idx = (start - PERF_REG_EXTENDED_OFFSET) / 64;
++	int s = start % 64;
++	int e = end % 64;
++	u64 regs_mask;
++
++	if (user)
++		regs_mask = event->attr.sample_regs_user_ext[idx];
++	else
++		regs_mask = event->attr.sample_regs_intr_ext[idx];
++
++	return regs_mask & GENMASK_ULL(e, s);
++}
++
++static inline bool has_ymm_regs(struct perf_event *event, bool user)
++{
++	return has_vec_regs(event, user, PERF_REG_X86_YMM0, PERF_REG_X86_YMM_MAX - 1);
++}
++
++static inline bool has_zmm_regs(struct perf_event *event, bool user)
++{
++	return has_vec_regs(event, user, PERF_REG_X86_ZMM0, PERF_REG_X86_ZMM8 - 1) ||
++	       has_vec_regs(event, user, PERF_REG_X86_ZMM8, PERF_REG_X86_ZMM16 - 1);
++}
++
++static inline bool has_h16zmm_regs(struct perf_event *event, bool user)
++{
++	return has_vec_regs(event, user, PERF_REG_X86_ZMM16, PERF_REG_X86_ZMM24 - 1) ||
++	       has_vec_regs(event, user, PERF_REG_X86_ZMM24, PERF_REG_X86_ZMM_MAX - 1);
++}
++
++static inline bool has_opmask_regs(struct perf_event *event, bool user)
++{
++	return has_vec_regs(event, user, PERF_REG_X86_OPMASK0, PERF_REG_X86_OPMASK7);
++}
++
++static bool ext_vec_regs_supported(struct perf_event *event, bool user)
++{
++	u64 caps = hybrid(event->pmu, arch_pebs_cap).caps;
++
++	if (!(event->pmu->capabilities & PERF_PMU_CAP_MORE_EXT_REGS))
++		return false;
++
++	if (has_opmask_regs(event, user) && !(caps & ARCH_PEBS_VECR_OPMASK))
++		return false;
++
++	if (has_ymm_regs(event, user) && !(caps & ARCH_PEBS_VECR_YMMH))
++		return false;
++
++	if (has_zmm_regs(event, user) && !(caps & ARCH_PEBS_VECR_ZMMH))
++		return false;
++
++	if (has_h16zmm_regs(event, user) && !(caps & ARCH_PEBS_VECR_H16ZMM))
++		return false;
++
++	if (!event->attr.precise_ip)
++		return false;
++
++	/* Only user space sampling is allowed for extended vector registers. */
++	if (user && !event->attr.exclude_kernel)
++		return false;
++
++	return true;
++}
++
+ int x86_pmu_hw_config(struct perf_event *event)
+ {
+ 	if (event->attr.precise_ip) {
+@@ -666,9 +733,12 @@ int x86_pmu_hw_config(struct perf_event *event)
+ 			return -EINVAL;
+ 	}
+ 
+-	/* sample_regs_user never support XMM registers */
+-	if (unlikely(event->attr.sample_regs_user & PERF_REG_EXTENDED_MASK))
+-		return -EINVAL;
++	if (unlikely(event->attr.sample_regs_user & PERF_REG_EXTENDED_MASK)) {
++		/* Only user space sampling is allowed for XMM registers. */
++		if (!event->attr.exclude_kernel)
++			return -EINVAL;
++	}
++
+ 	/*
+ 	 * Besides the general purpose registers, XMM registers may
+ 	 * be collected in PEBS on some platforms, e.g. Icelake
+@@ -681,6 +751,20 @@ int x86_pmu_hw_config(struct perf_event *event)
+ 			return -EINVAL;
+ 	}
+ 
++	/*
++	 * Architectural PEBS supports to capture more vector registers besides
++	 * XMM registers, like YMM, OPMASK and ZMM registers.
++	 */
++	if (unlikely(has_more_extended_user_regs(event))) {
++		if (!ext_vec_regs_supported(event, true))
++			return -EINVAL;
++	}
++
++	if (unlikely(has_more_extended_intr_regs(event))) {
++		if (!ext_vec_regs_supported(event, false))
++			return -EINVAL;
++	}
++
+ 	return x86_setup_perfctr(event);
+ }
+ 
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 007414c37ad1..0ed9cb66b49e 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -3010,6 +3010,18 @@ static void intel_pmu_enable_event_ext(struct perf_event *event)
+ 			if (pebs_data_cfg & PEBS_DATACFG_XMMS)
+ 				ext |= ARCH_PEBS_VECR_XMM & cap.caps;
+ 
++			if (pebs_data_cfg & PEBS_DATACFG_YMMHS)
++				ext |= ARCH_PEBS_VECR_YMMH & cap.caps;
++
++			if (pebs_data_cfg & PEBS_DATACFG_OPMASKS)
++				ext |= ARCH_PEBS_VECR_OPMASK & cap.caps;
++
++			if (pebs_data_cfg & PEBS_DATACFG_ZMMHS)
++				ext |= ARCH_PEBS_VECR_ZMMH & cap.caps;
++
++			if (pebs_data_cfg & PEBS_DATACFG_H16ZMMS)
++				ext |= ARCH_PEBS_VECR_H16ZMM & cap.caps;
++
+ 			if (pebs_data_cfg & PEBS_DATACFG_LBRS)
+ 				ext |= ARCH_PEBS_LBR & cap.caps;
+ 
+@@ -5573,6 +5585,9 @@ static inline void __intel_update_pmu_caps(struct pmu *pmu)
+ 
+ 	if (hybrid(pmu, arch_pebs_cap).caps & ARCH_PEBS_VECR_XMM)
+ 		dest_pmu->capabilities |= PERF_PMU_CAP_EXTENDED_REGS;
++
++	if (hybrid(pmu, arch_pebs_cap).caps & ARCH_PEBS_VECR_EXT)
++		dest_pmu->capabilities |= PERF_PMU_CAP_MORE_EXT_REGS;
+ }
+ 
+ static inline void __intel_update_large_pebs_flags(struct pmu *pmu)
+diff --git a/arch/x86/events/intel/ds.c b/arch/x86/events/intel/ds.c
+index 3a88f62ae127..5c4500d95174 100644
+--- a/arch/x86/events/intel/ds.c
++++ b/arch/x86/events/intel/ds.c
+@@ -1426,6 +1426,34 @@ void intel_pmu_pebs_late_setup(struct cpu_hw_events *cpuc)
+ 				PERF_SAMPLE_TRANSACTION |		     \
+ 				PERF_SAMPLE_DATA_PAGE_SIZE)
+ 
++static u64 pebs_get_ext_reg_data_cfg(unsigned long *ext_reg)
++{
++	u64 pebs_data_cfg = 0;
++	int bit;
++
++	for_each_set_bit(bit, ext_reg, PERF_NUM_EXT_REGS) {
++		switch (bit + PERF_REG_EXTENDED_OFFSET) {
++		case PERF_REG_X86_OPMASK0 ... PERF_REG_X86_OPMASK7:
++			pebs_data_cfg |= PEBS_DATACFG_OPMASKS;
++			break;
++		case PERF_REG_X86_YMM0 ... PERF_REG_X86_YMM_MAX - 1:
++			pebs_data_cfg |= PEBS_DATACFG_YMMHS | PEBS_DATACFG_XMMS;
++			break;
++		case PERF_REG_X86_ZMM0 ... PERF_REG_X86_ZMM16 - 1:
++			pebs_data_cfg |= PEBS_DATACFG_ZMMHS | PEBS_DATACFG_YMMHS |
++					 PEBS_DATACFG_XMMS;
++			break;
++		case PERF_REG_X86_ZMM16 ... PERF_REG_X86_ZMM_MAX - 1:
++			pebs_data_cfg |= PEBS_DATACFG_H16ZMMS;
++			break;
++		default:
++			break;
++		}
++	}
++
++	return pebs_data_cfg;
++}
++
+ static u64 pebs_update_adaptive_cfg(struct perf_event *event)
+ {
+ 	struct perf_event_attr *attr = &event->attr;
+@@ -1460,9 +1488,21 @@ static u64 pebs_update_adaptive_cfg(struct perf_event *event)
+ 	if (gprs || (attr->precise_ip < 2) || tsx_weight)
+ 		pebs_data_cfg |= PEBS_DATACFG_GP;
+ 
+-	if ((sample_type & PERF_SAMPLE_REGS_INTR) &&
+-	    (attr->sample_regs_intr & PERF_REG_EXTENDED_MASK))
+-		pebs_data_cfg |= PEBS_DATACFG_XMMS;
++	if (sample_type & PERF_SAMPLE_REGS_INTR) {
++		if (attr->sample_regs_intr & PERF_REG_EXTENDED_MASK)
++			pebs_data_cfg |= PEBS_DATACFG_XMMS;
++
++		pebs_data_cfg |= pebs_get_ext_reg_data_cfg(
++			(unsigned long *)event->attr.sample_regs_intr_ext);
++	}
++
++	if (sample_type & PERF_SAMPLE_REGS_USER) {
++		if (attr->sample_regs_user & PERF_REG_EXTENDED_MASK)
++			pebs_data_cfg |= PEBS_DATACFG_XMMS;
++
++		pebs_data_cfg |= pebs_get_ext_reg_data_cfg(
++			(unsigned long *)event->attr.sample_regs_user_ext);
++	}
+ 
+ 	if (sample_type & PERF_SAMPLE_BRANCH_STACK) {
+ 		/*
+@@ -2243,6 +2283,10 @@ static void setup_pebs_adaptive_sample_data(struct perf_event *event,
+ 
+ 	perf_regs = container_of(regs, struct x86_perf_regs, regs);
+ 	perf_regs->xmm_regs = NULL;
++	perf_regs->ymmh_regs = NULL;
++	perf_regs->opmask_regs = NULL;
++	perf_regs->zmmh_regs = NULL;
++	perf_regs->h16zmm_regs = NULL;
+ 	perf_regs->ssp = 0;
+ 
+ 	format_group = basic->format_group;
+@@ -2360,6 +2404,10 @@ static void setup_arch_pebs_sample_data(struct perf_event *event,
+ 
+ 	perf_regs = container_of(regs, struct x86_perf_regs, regs);
+ 	perf_regs->xmm_regs = NULL;
++	perf_regs->ymmh_regs = NULL;
++	perf_regs->opmask_regs = NULL;
++	perf_regs->zmmh_regs = NULL;
++	perf_regs->h16zmm_regs = NULL;
+ 	perf_regs->ssp = 0;
+ 
+ 	__setup_perf_sample_data(event, iregs, data);
+@@ -2410,14 +2458,45 @@ static void setup_arch_pebs_sample_data(struct perf_event *event,
+ 					   meminfo->tsx_tuning, ax);
+ 	}
+ 
+-	if (header->xmm) {
++	if (header->xmm || header->ymmh || header->opmask ||
++	    header->zmmh || header->h16zmm) {
+ 		struct arch_pebs_xmm *xmm;
++		struct arch_pebs_ymmh *ymmh;
++		struct arch_pebs_zmmh *zmmh;
++		struct arch_pebs_h16zmm *h16zmm;
++		struct arch_pebs_opmask *opmask;
+ 
+ 		next_record += sizeof(struct arch_pebs_xer_header);
+ 
+-		xmm = next_record;
+-		perf_regs->xmm_regs = xmm->xmm;
+-		next_record = xmm + 1;
++		if (header->xmm) {
++			xmm = next_record;
++			perf_regs->xmm_regs = xmm->xmm;
++			next_record = xmm + 1;
++		}
++
++		if (header->ymmh) {
++			ymmh = next_record;
++			perf_regs->ymmh_regs = ymmh->ymmh;
++			next_record = ymmh + 1;
++		}
++
++		if (header->opmask) {
++			opmask = next_record;
++			perf_regs->opmask_regs = opmask->opmask;
++			next_record = opmask + 1;
++		}
++
++		if (header->zmmh) {
++			zmmh = next_record;
++			perf_regs->zmmh_regs = zmmh->zmmh;
++			next_record = zmmh + 1;
++		}
++
++		if (header->h16zmm) {
++			h16zmm = next_record;
++			perf_regs->h16zmm_regs = h16zmm->h16zmm;
++			next_record = h16zmm + 1;
++		}
+ 	}
+ 
+ 	if (header->lbr) {
+diff --git a/arch/x86/include/asm/msr-index.h b/arch/x86/include/asm/msr-index.h
+index 41852e8690d7..84a1cbe6ab30 100644
+--- a/arch/x86/include/asm/msr-index.h
++++ b/arch/x86/include/asm/msr-index.h
+@@ -338,6 +338,12 @@
+ #define ARCH_PEBS_LBR_SHIFT		40
+ #define ARCH_PEBS_LBR			(0x3ull << ARCH_PEBS_LBR_SHIFT)
+ #define ARCH_PEBS_VECR_XMM		BIT_ULL(49)
++#define ARCH_PEBS_VECR_YMMH		BIT_ULL(50)
++#define ARCH_PEBS_VECR_OPMASK		BIT_ULL(53)
++#define ARCH_PEBS_VECR_ZMMH		BIT_ULL(54)
++#define ARCH_PEBS_VECR_H16ZMM		BIT_ULL(55)
++#define ARCH_PEBS_VECR_EXT_SHIFT	50
++#define ARCH_PEBS_VECR_EXT		(0x3full << ARCH_PEBS_VECR_EXT_SHIFT)
+ #define ARCH_PEBS_GPR			BIT_ULL(61)
+ #define ARCH_PEBS_AUX			BIT_ULL(62)
+ #define ARCH_PEBS_EN			BIT_ULL(63)
+diff --git a/arch/x86/include/asm/perf_event.h b/arch/x86/include/asm/perf_event.h
+index a4f7cfc3fddb..e723666c1de2 100644
+--- a/arch/x86/include/asm/perf_event.h
++++ b/arch/x86/include/asm/perf_event.h
+@@ -146,6 +146,10 @@
+ #define PEBS_DATACFG_LBRS	BIT_ULL(3)
+ #define PEBS_DATACFG_CNTR	BIT_ULL(4)
+ #define PEBS_DATACFG_METRICS	BIT_ULL(5)
++#define PEBS_DATACFG_YMMHS	BIT_ULL(6)
++#define PEBS_DATACFG_OPMASKS	BIT_ULL(7)
++#define PEBS_DATACFG_ZMMHS	BIT_ULL(8)
++#define PEBS_DATACFG_H16ZMMS	BIT_ULL(9)
+ #define PEBS_DATACFG_LBR_SHIFT	24
+ #define PEBS_DATACFG_CNTR_SHIFT	32
+ #define PEBS_DATACFG_CNTR_MASK	GENMASK_ULL(15, 0)
+@@ -593,6 +597,22 @@ struct arch_pebs_xmm {
+ 	u64 xmm[16*2];		/* two entries for each register */
+ };
+ 
++struct arch_pebs_ymmh {
++	u64 ymmh[16*2];		/* two entries for each register */
++};
++
++struct arch_pebs_opmask {
++	u64 opmask[8];
++};
++
++struct arch_pebs_zmmh {
++	u64 zmmh[16*4];		/* four entries for each register */
++};
++
++struct arch_pebs_h16zmm {
++	u64 h16zmm[16*8];	/* eight entries for each register */
++};
++
+ #define ARCH_PEBS_LBR_NAN		0x0
+ #define ARCH_PEBS_LBR_NUM_8		0x1
+ #define ARCH_PEBS_LBR_NUM_16		0x2
+-- 
+2.43.0
+

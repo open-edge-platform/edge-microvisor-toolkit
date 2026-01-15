@@ -1,0 +1,148 @@
+From 67beb7e6e71fcc0220699ead6e277a145fd4c1ed Mon Sep 17 00:00:00 2001
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Date: Fri, 4 Jan 2019 17:30:12 +0300
+Subject: [PATCH 03/16] PCI: Add sysfs attribute for disabling PCIe link to
+ downstream component
+
+PCIe root and downstream ports have link control register that can be
+used disable the link from software. This can be useful for instance
+when performing "software" hotplug on systems that do not support real
+PCIe/ACPI hotplug.
+
+For example when used with FPGA card we can burn a new FPGA image
+without need to reboot the system.
+
+First we remove the FGPA device from Linux PCI stack:
+
+  # echo 1 > /sys/bus/pci/devices/0000:00:01.1/0000:02:00.0/remove
+
+Then we disable the link:
+
+  # echo 1 > /sys/bus/pci/devices/0000:00:01.1/link_disable
+
+By doing this we prevent the kernel from accessing the hardware while we
+burn the new FPGA image. Once the new FPGA is burned we can re-enable
+the link and rescan the new and possibly different device:
+
+  # echo 0 > /sys/bus/pci/devices/0000:00:01.1/link_disable
+  # echo 1 > /sys/bus/pci/devices/0000:00:01.1/rescan
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ Documentation/ABI/testing/sysfs-bus-pci |  8 +++
+ drivers/pci/pci-sysfs.c                 | 65 ++++++++++++++++++++++++-
+ 2 files changed, 72 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+index 69f952fffec7..29ece4a2d5f9 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci
++++ b/Documentation/ABI/testing/sysfs-bus-pci
+@@ -394,6 +394,14 @@ Description:
+ 		This is similar to /sys/bus/pci/drivers_autoprobe, but
+ 		affects only the VFs associated with a specific PF.
+ 
++What:		/sys/bus/pci/devices/.../link_disable
++Date:		September 2019
++Contact:	Mika Westerberg <mika.westerberg@linux.intel.com>
++Description:
++		PCIe root and downstream ports have this attribute. Writing
++		1 causes the link to downstream component be disabled.
++		Re-enabling the link happens by writing 0 instead.
++
+ What:		/sys/bus/pci/devices/.../p2pmem/size
+ Date:		November 2017
+ Contact:	Logan Gunthorpe <logang@deltatee.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 5eea14c1f7f5..da48d0bbfd39 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -239,6 +239,56 @@ static ssize_t current_link_width_show(struct device *dev,
+ }
+ static DEVICE_ATTR_RO(current_link_width);
+ 
++static ssize_t link_disable_show(struct device *dev,
++				 struct device_attribute *attr, char *buf)
++{
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	u16 linkctl;
++	int ret;
++
++	ret = pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &linkctl);
++	if (ret)
++		return -EINVAL;
++
++	return sprintf(buf, "%d\n", !!(linkctl & PCI_EXP_LNKCTL_LD));
++}
++
++static ssize_t link_disable_store(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	u16 linkctl;
++	bool disable;
++	int ret;
++
++	ret = kstrtobool(buf, &disable);
++	if (ret)
++		return ret;
++
++	ret = pcie_capability_read_word(pci_dev, PCI_EXP_LNKCTL, &linkctl);
++	if (ret)
++		return -EINVAL;
++
++	if (disable) {
++		if (linkctl & PCI_EXP_LNKCTL_LD)
++			goto out;
++		linkctl |= PCI_EXP_LNKCTL_LD;
++	} else {
++		if (!(linkctl & PCI_EXP_LNKCTL_LD))
++			goto out;
++		linkctl &= ~PCI_EXP_LNKCTL_LD;
++	}
++
++	ret = pcie_capability_write_word(pci_dev, PCI_EXP_LNKCTL, linkctl);
++	if (ret)
++		return ret;
++
++out:
++	return count;
++}
++static DEVICE_ATTR_RW(link_disable);
++
+ static ssize_t secondary_bus_number_show(struct device *dev,
+ 					 struct device_attribute *attr,
+ 					 char *buf)
+@@ -660,6 +710,7 @@ static struct attribute *pcie_dev_attrs[] = {
+ 	&dev_attr_current_link_width.attr,
+ 	&dev_attr_max_link_width.attr,
+ 	&dev_attr_max_link_speed.attr,
++	&dev_attr_link_disable.attr,
+ 	NULL,
+ };
+ 
+@@ -1749,8 +1800,20 @@ static umode_t pcie_dev_attrs_are_visible(struct kobject *kobj,
+ 	struct device *dev = kobj_to_dev(kobj);
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (pci_is_pcie(pdev))
++	if (pci_is_pcie(pdev)) {
++		if (a == &dev_attr_link_disable.attr) {
++			switch (pci_pcie_type(pdev)) {
++			case PCI_EXP_TYPE_ROOT_PORT:
++			case PCI_EXP_TYPE_DOWNSTREAM:
++				break;
++
++			default:
++				return 0;
++			}
++		}
++
+ 		return a->mode;
++	}
+ 
+ 	return 0;
+ }
+-- 
+2.43.0
+

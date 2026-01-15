@@ -1,0 +1,39 @@
+From e8342617d4c8bd471926a482e2b039461cdc0862 Mon Sep 17 00:00:00 2001
+From: Sandipan Das <sandipan.das@amd.com>
+Date: Mon, 24 Mar 2025 17:31:14 +0000
+Subject: [PATCH 068/100] perf/x86/amd: Support PERF_PMU_CAP_MEDIATED_VPMU for
+ AMD host
+
+Apply the PERF_PMU_CAP_MEDIATED_VPMU flag for version 2 and later
+implementations of the core PMU. Aside from having Global Control and
+Status registers, virtualizing the PMU using the mediated model requires
+an interface to set or clear the overflow bits in the Global Status MSRs
+while restoring or saving the PMU context of a vCPU.
+
+PerfMonV2-capable hardware has additional MSRs for this purpose, namely
+PerfCntrGlobalStatusSet and PerfCntrGlobalStatusClr, thereby making it
+suitable for use with mediated vPMU.
+
+Signed-off-by: Sandipan Das <sandipan.das@amd.com>
+Signed-off-by: Mingwei Zhang <mizhang@google.com>
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/events/amd/core.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/x86/events/amd/core.c b/arch/x86/events/amd/core.c
+index b20661b8621d..8179fb5f1ee3 100644
+--- a/arch/x86/events/amd/core.c
++++ b/arch/x86/events/amd/core.c
+@@ -1433,6 +1433,8 @@ static int __init amd_core_pmu_init(void)
+ 
+ 		amd_pmu_global_cntr_mask = x86_pmu.cntr_mask64;
+ 
++		x86_get_pmu(smp_processor_id())->capabilities |= PERF_PMU_CAP_MEDIATED_VPMU;
++
+ 		/* Update PMC handling functions */
+ 		x86_pmu.enable_all = amd_pmu_v2_enable_all;
+ 		x86_pmu.disable_all = amd_pmu_v2_disable_all;
+-- 
+2.43.0
+

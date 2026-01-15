@@ -1,0 +1,34 @@
+From b8f68b83d57e6128be521f34bc581866cf685623 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Thu, 31 Jul 2025 15:38:11 -0700
+Subject: [PATCH 051/100] KVM: x86/pmu: Drop redundant check on PMC being
+ globally enabled for emulation
+
+When triggering PMC events in response to emulation, drop the redundant
+checks on a PMC being globally and locally enabled, as the passed in bitmap
+contains only PMCs that are locally enabled (and counting the right event),
+and the local copy of the bitmap has already been masked with global_ctrl.
+
+No true functional change intended.
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/pmu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/pmu.c b/arch/x86/kvm/pmu.c
+index a495ab5d0556..bdcd9c6f0ec0 100644
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -969,7 +969,7 @@ static void kvm_pmu_trigger_event(struct kvm_vcpu *vcpu,
+ 		return;
+ 
+ 	kvm_for_each_pmc(pmu, pmc, i, bitmap) {
+-		if (!pmc_is_globally_enabled(pmc) || !pmc_is_locally_enabled(pmc) ||
++		if (!pmc_is_locally_enabled(pmc) ||
+ 		    !check_pmu_event_filter(pmc) || !cpl_is_matched(pmc))
+ 			continue;
+ 
+-- 
+2.43.0
+

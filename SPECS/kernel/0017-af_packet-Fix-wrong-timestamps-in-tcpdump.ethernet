@@ -1,0 +1,85 @@
+From 8483034a48f6b9549b5db703eb01e59b7d08f327 Mon Sep 17 00:00:00 2001
+From: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+Date: Wed, 19 Mar 2025 11:17:06 +0500
+Subject: [PATCH 17/19] af_packet: Fix wrong timestamps in tcpdump
+
+Since commit '97dc7cd ("ptp: Support late timestamp
+determination")', timestamps may need to be retrieved with input from
+the driver (.ndo_get_tstamp()). Support was missing from mmap'ed
+AF_PACKET sockets.
+
+The problem was noticed using the igc driver, that since commit
+'069b142 ("igc: Add support for PTP .getcyclesx64()")' has migrated
+to use .ndo_get_tstamp() that timestamps were wrong on the receiving
+side, when using tcpdump.
+
+Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
+---
+ net/packet/af_packet.c | 29 ++++++++++++++++++++---------
+ 1 file changed, 20 insertions(+), 9 deletions(-)
+
+diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
+index a7017d7f0927..64d5b197f732 100644
+--- a/net/packet/af_packet.c
++++ b/net/packet/af_packet.c
+@@ -451,15 +451,20 @@ static int __packet_get_status(const struct packet_sock *po, void *frame)
+ 	}
+ }
+ 
+-static __u32 tpacket_get_timestamp(struct sk_buff *skb, struct timespec64 *ts,
+-				   unsigned int flags)
++static __u32 tpacket_get_timestamp(struct net_device *dev, struct sk_buff *skb,
++				   struct timespec64 *ts, unsigned int flags,
++				   unsigned int sk_tsflags)
+ {
+ 	struct skb_shared_hwtstamps *shhwtstamps = skb_hwtstamps(skb);
+ 
+-	if (shhwtstamps &&
+-	    (flags & SOF_TIMESTAMPING_RAW_HARDWARE) &&
+-	    ktime_to_timespec64_cond(shhwtstamps->hwtstamp, ts))
+-		return TP_STATUS_TS_RAW_HARDWARE;
++	bool cycles = sk_tsflags & SOF_TIMESTAMPING_BIND_PHC;
++
++	if (shhwtstamps && shhwtstamps->hwtstamp &&
++	    (flags & SOF_TIMESTAMPING_RAW_HARDWARE)) {
++		ktime_t tstamp = netdev_get_tstamp(dev, shhwtstamps, cycles);
++
++		return ktime_to_timespec64_cond(tstamp, ts) ? TP_STATUS_TS_RAW_HARDWARE : 0;
++	}
+ 
+ 	if ((flags & SOF_TIMESTAMPING_SOFTWARE) &&
+ 	    ktime_to_timespec64_cond(skb_tstamp(skb), ts))
+@@ -471,11 +476,16 @@ static __u32 tpacket_get_timestamp(struct sk_buff *skb, struct timespec64 *ts,
+ static __u32 __packet_set_timestamp(struct packet_sock *po, void *frame,
+ 				    struct sk_buff *skb)
+ {
++	struct net_device *dev = skb->dev;
++	unsigned int sk_tsflags;
+ 	union tpacket_uhdr h;
+ 	struct timespec64 ts;
+ 	__u32 ts_status;
+ 
+-	if (!(ts_status = tpacket_get_timestamp(skb, &ts, READ_ONCE(po->tp_tstamp))))
++	sk_tsflags = READ_ONCE(po->sk.sk_tsflags);
++	ts_status = tpacket_get_timestamp(dev, skb, &ts, READ_ONCE(po->tp_tstamp), sk_tsflags);
++
++	if (!(ts_status))
+ 		return 0;
+ 
+ 	h.raw = frame;
+@@ -2446,9 +2456,10 @@ static int tpacket_rcv(struct sk_buff *skb, struct net_device *dev,
+ 	/* Always timestamp; prefer an existing software timestamp taken
+ 	 * closer to the time of capture.
+ 	 */
+-	ts_status = tpacket_get_timestamp(skb, &ts,
++	ts_status = tpacket_get_timestamp(dev, skb, &ts,
+ 					  READ_ONCE(po->tp_tstamp) |
+-					  SOF_TIMESTAMPING_SOFTWARE);
++					  SOF_TIMESTAMPING_SOFTWARE,
++					  READ_ONCE(sk->sk_tsflags));
+ 	if (!ts_status)
+ 		ktime_get_real_ts64(&ts);
+ 
+-- 
+2.43.0
+

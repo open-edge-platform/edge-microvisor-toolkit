@@ -1,0 +1,38 @@
+From 3d690acb7efc7810580da8caa2a8aa0df7321882 Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Thu, 11 Sep 2025 15:24:17 +0800
+Subject: [PATCH 07/11] staging: media: ipu7 remove from the Makefile & Kconfig
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/Kconfig  | 2 +-
+ drivers/staging/media/Makefile | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/media/Kconfig b/drivers/staging/media/Kconfig
+index ab250c89cd4d..6da885037207 100644
+--- a/drivers/staging/media/Kconfig
++++ b/drivers/staging/media/Kconfig
+@@ -28,7 +28,7 @@ source "drivers/staging/media/imx/Kconfig"
+ 
+ source "drivers/staging/media/ipu3/Kconfig"
+ 
+-source "drivers/staging/media/ipu7/Kconfig"
++#source "drivers/staging/media/ipu7/Kconfig"
+ 
+ source "drivers/staging/media/max96712/Kconfig"
+ 
+diff --git a/drivers/staging/media/Makefile b/drivers/staging/media/Makefile
+index 4a073938b2b2..22d19580e91f 100644
+--- a/drivers/staging/media/Makefile
++++ b/drivers/staging/media/Makefile
+@@ -8,5 +8,5 @@ obj-$(CONFIG_VIDEO_STARFIVE_CAMSS)	+= starfive/
+ obj-$(CONFIG_VIDEO_SUNXI)	+= sunxi/
+ obj-$(CONFIG_VIDEO_TEGRA)	+= tegra-video/
+ obj-$(CONFIG_VIDEO_IPU3_IMGU)	+= ipu3/
+-obj-$(CONFIG_VIDEO_INTEL_IPU7)	+= ipu7/
++#obj-$(CONFIG_VIDEO_INTEL_IPU7)	+= ipu7/
+ obj-$(CONFIG_DVB_AV7110)	+= av7110/
+-- 
+2.43.0
+

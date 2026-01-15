@@ -1,0 +1,53 @@
+From ee759f8dcd8fe7bc5720ddfe2a5e55bf6da57a16 Mon Sep 17 00:00:00 2001
+From: hepengpx <pengpengx.he@intel.com>
+Date: Wed, 27 Aug 2025 11:09:54 +0800
+Subject: [PATCH 09/11] max9x: add config in makefile & kconfig
+
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+---
+ drivers/media/i2c/Kconfig  | 15 +++++++++++++++
+ drivers/media/i2c/Makefile |  2 ++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index 7ec788adeec1..f65a2f6118ea 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -278,6 +278,21 @@ config VIDEO_LT6911GXD
+           To compile this driver as a module, choose M here: the
+           module will be called lt6911gxd.
+ 
++config VIDEO_ISX031
++	tristate "ISX031 sensor support"
++	depends on VIDEO_DEV && I2C
++	select VIDEO_V4L2_SUBDEV_API
++	depends on MEDIA_CAMERA_SUPPORT
++	help
++	  This is a Video4Linux2 sensor-level driver for ISX031 camera.
++
++config VIDEO_MAX9X
++	tristate "MAX9X serdes support"
++	depends on VIDEO_DEV && I2C
++	select VIDEO_V4L2_SUBDEV_API
++	depends on MEDIA_CAMERA_SUPPORT
++	help
++	  This is a Video4Linux2 sensor-level driver for MAX9X serdes.
+ 
+ config VIDEO_MAX9271_LIB
+ 	tristate
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index 2fbdd4c181d1..085c0e0e15dd 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -61,6 +61,8 @@ obj-$(CONFIG_VIDEO_IMX412) += imx412.o
+ obj-$(CONFIG_VIDEO_IMX415) += imx415.o
+ obj-$(CONFIG_VIDEO_IR_I2C) += ir-kbd-i2c.o
+ obj-$(CONFIG_VIDEO_ISL7998X) += isl7998x.o
++obj-$(CONFIG_VIDEO_MAX9X) += max9x/
++obj-$(CONFIG_VIDEO_ISX031) += isx031.o
+ obj-$(CONFIG_VIDEO_KS0127) += ks0127.o
+ obj-$(CONFIG_VIDEO_LM3560) += lm3560.o
+ obj-$(CONFIG_VIDEO_LM3646) += lm3646.o
+-- 
+2.43.0
+

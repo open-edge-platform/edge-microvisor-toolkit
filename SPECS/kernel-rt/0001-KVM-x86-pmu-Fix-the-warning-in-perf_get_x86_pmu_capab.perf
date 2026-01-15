@@ -1,0 +1,76 @@
+From aa22513ad69e7f0001a05cdcf34cf3effc5be5bd Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Fri, 10 Oct 2025 08:52:39 +0800
+Subject: [PATCH] KVM: x86/pmu: Fix the warning in
+ perf_get_x86_pmu_capability()
+
+When load KVM module in Intel hybrid platforms, the warning below is
+observed.
+
+<4>[   10.973827] ------------[ cut here ]------------
+<4>[   10.973841] WARNING: arch/x86/events/core.c:3089 at
+perf_get_x86_pmu_capability+0xd/0xc0, CPU#15: (udev-worker)/386
+...
+<4>[   10.974028] Call Trace:
+<4>[   10.974030]  <TASK>
+<4>[   10.974033]  ? kvm_init_pmu_capability+0x2b/0x190 [kvm]
+<4>[   10.974154]  kvm_x86_vendor_init+0x1b0/0x1a40 [kvm]
+<4>[   10.974248]  vmx_init+0xdb/0x260 [kvm_intel]
+<4>[   10.974278]  ? __pfx_vt_init+0x10/0x10 [kvm_intel]
+<4>[   10.974296]  vt_init+0x12/0x9d0 [kvm_intel]
+<4>[   10.974309]  ? __pfx_vt_init+0x10/0x10 [kvm_intel]
+<4>[   10.974322]  do_one_initcall+0x60/0x3f0
+<4>[   10.974335]  do_init_module+0x97/0x2b0
+<4>[   10.974345]  load_module+0x2d08/0x2e30
+<4>[   10.974349]  ? __kernel_read+0x158/0x2f0
+<4>[   10.974370]  ? kernel_read_file+0x2b1/0x320
+<4>[   10.974381]  init_module_from_file+0x96/0xe0
+<4>[   10.974384]  ? init_module_from_file+0x96/0xe0
+<4>[   10.974399]  idempotent_init_module+0x117/0x330
+<4>[   10.974415]  __x64_sys_finit_module+0x73/0xe0
+
+The root cause is the helper perf_get_x86_pmu_capability() is called
+unconditionally but it's supposed to be called only on non-hybrid
+platforms.
+
+This patch fixes this warning by only calling
+perf_get_x86_pmu_capability() on non-hybrid platforms.
+
+Reported-by: Chaitanya Kumar Borah <chaitanya.kumar.borah@intel.com>
+Closes: https://lore.kernel.org/all/70b64347-2aca-4511-af78-a767d5fa8226@intel.com/
+Fixes: 51f34b1e650f ("KVM: x86/pmu: Snapshot host (i.e. perf's) reported PMU capabilities")
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/kvm/pmu.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/kvm/pmu.c b/arch/x86/kvm/pmu.c
+index 0e5048ae86fa..07784b95767d 100644
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -108,16 +108,18 @@ void kvm_init_pmu_capability(struct kvm_pmu_ops *pmu_ops)
+ 	bool is_intel = boot_cpu_data.x86_vendor == X86_VENDOR_INTEL;
+ 	int min_nr_gp_ctrs = pmu_ops->MIN_NR_GP_COUNTERS;
+ 
+-	perf_get_x86_pmu_capability(&kvm_host_pmu);
+-
+ 	/*
+ 	 * Hybrid PMUs don't play nice with virtualization without careful
+ 	 * configuration by userspace, and KVM's APIs for reporting supported
+ 	 * vPMU features do not account for hybrid PMUs.  Disable vPMU support
+ 	 * for hybrid PMUs until KVM gains a way to let userspace opt-in.
+ 	 */
+-	if (cpu_feature_enabled(X86_FEATURE_HYBRID_CPU))
++	if (cpu_feature_enabled(X86_FEATURE_HYBRID_CPU)) {
+ 		enable_pmu = false;
++		memset(&kvm_host_pmu, 0, sizeof(kvm_host_pmu));
++	} else {
++		perf_get_x86_pmu_capability(&kvm_host_pmu);
++	}
+ 
+ 	if (enable_pmu) {
+ 		/*
+-- 
+2.43.0
+

@@ -1,0 +1,106 @@
+From ef2e33eab5f2cfc9e295f0dca5009d67e7f7a642 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Wed, 30 Aug 2023 23:55:54 -0700
+Subject: [PATCH 03/44] KVM: VMX: Initialize VM entry/exit FRED controls in
+ vmcs_config
+
+Setup VM entry/exit FRED controls in the global vmcs_config for proper
+FRED VMCS fields management:
+  1) load guest FRED state upon VM entry.
+  2) save guest FRED state during VM exit.
+  3) load host FRED state during VM exit.
+
+Also add FRED control consistency checks to the existing VM entry/exit
+consistency check framework.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+Reviewed-by: Chao Gao <chao.gao@intel.com>
+---
+
+Change in v5:
+* Remove the pair VM_ENTRY_LOAD_IA32_FRED/VM_EXIT_ACTIVATE_SECONDARY_CONTROLS,
+  since the secondary VM exit controls are unconditionally enabled anyway, and
+  there are features other than FRED needing it (Chao Gao).
+* Add TB from Xuelian Guo.
+
+Change in v4:
+* Do VM exit/entry consistency checks using the new macro from Sean
+  Christopherson.
+
+Changes in v3:
+* Add FRED control consistency checks to the existing VM entry/exit
+  consistency check framework (Sean Christopherson).
+* Just do the unnecessary FRED state load/store on every VM entry/exit
+  (Sean Christopherson).
+---
+ arch/x86/include/asm/vmx.h | 4 ++++
+ arch/x86/kvm/vmx/vmx.c     | 2 ++
+ arch/x86/kvm/vmx/vmx.h     | 7 +++++--
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/include/asm/vmx.h b/arch/x86/include/asm/vmx.h
+index 5b53b8da4ce0..ab70f52798d4 100644
+--- a/arch/x86/include/asm/vmx.h
++++ b/arch/x86/include/asm/vmx.h
+@@ -110,6 +110,9 @@
+ #define VM_EXIT_SAVE_IA32_PERF_GLOBAL_CTRL	0x40000000
+ #define VM_EXIT_ACTIVATE_SECONDARY_CONTROLS	0x80000000
+ 
++#define SECONDARY_VM_EXIT_SAVE_IA32_FRED	BIT_ULL(0)
++#define SECONDARY_VM_EXIT_LOAD_IA32_FRED	BIT_ULL(1)
++
+ #define VM_EXIT_ALWAYSON_WITHOUT_TRUE_MSR	0x00036dff
+ 
+ #define VM_ENTRY_LOAD_DEBUG_CONTROLS            0x00000004
+@@ -123,6 +126,7 @@
+ #define VM_ENTRY_PT_CONCEAL_PIP			0x00020000
+ #define VM_ENTRY_LOAD_IA32_RTIT_CTL		0x00040000
+ #define VM_ENTRY_LOAD_CET_STATE                 0x00100000
++#define VM_ENTRY_LOAD_IA32_FRED			0x00800000
+ 
+ #define VM_ENTRY_ALWAYSON_WITHOUT_TRUE_MSR	0x000011ff
+ 
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index bad778acf9b5..aa23ecf18cda 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -2625,6 +2625,8 @@ static int setup_vmcs_config(struct vmcs_config *vmcs_conf,
+ 		u32 entry_control;
+ 		u64 exit_control;
+ 	} const vmcs_entry_exit2_pairs[] = {
++		{ VM_ENTRY_LOAD_IA32_FRED,
++			SECONDARY_VM_EXIT_SAVE_IA32_FRED | SECONDARY_VM_EXIT_LOAD_IA32_FRED },
+ 	};
+ 
+ 	memset(vmcs_conf, 0, sizeof(*vmcs_conf));
+diff --git a/arch/x86/kvm/vmx/vmx.h b/arch/x86/kvm/vmx/vmx.h
+index 47395cb38d88..50656aa3f57a 100644
+--- a/arch/x86/kvm/vmx/vmx.h
++++ b/arch/x86/kvm/vmx/vmx.h
+@@ -488,7 +488,8 @@ static inline u8 vmx_get_rvi(void)
+ 	 VM_ENTRY_LOAD_BNDCFGS |					\
+ 	 VM_ENTRY_PT_CONCEAL_PIP |					\
+ 	 VM_ENTRY_LOAD_IA32_RTIT_CTL |					\
+-	 VM_ENTRY_LOAD_CET_STATE)
++	 VM_ENTRY_LOAD_CET_STATE |					\
++	 VM_ENTRY_LOAD_IA32_FRED)
+ 
+ #define __KVM_REQUIRED_VMX_VM_EXIT_CONTROLS				\
+ 	(VM_EXIT_SAVE_DEBUG_CONTROLS |					\
+@@ -516,7 +517,9 @@ static inline u8 vmx_get_rvi(void)
+ 	       VM_EXIT_ACTIVATE_SECONDARY_CONTROLS)
+ 
+ #define KVM_REQUIRED_VMX_SECONDARY_VM_EXIT_CONTROLS (0)
+-#define KVM_OPTIONAL_VMX_SECONDARY_VM_EXIT_CONTROLS (0)
++#define KVM_OPTIONAL_VMX_SECONDARY_VM_EXIT_CONTROLS			\
++	     (SECONDARY_VM_EXIT_SAVE_IA32_FRED |			\
++	      SECONDARY_VM_EXIT_LOAD_IA32_FRED)
+ 
+ #define KVM_REQUIRED_VMX_PIN_BASED_VM_EXEC_CONTROL			\
+ 	(PIN_BASED_EXT_INTR_MASK |					\
+-- 
+2.43.0
+

@@ -1,0 +1,125 @@
+From 4cdfd036c183754b28cc9a0e9bdae165ebbfefcb Mon Sep 17 00:00:00 2001
+From: Kan Liang <kan.liang@linux.intel.com>
+Date: Tue, 13 May 2025 10:23:53 -0700
+Subject: [PATCH 062/100] perf: Add APIs to load/put guest mediated PMU context
+
+Add exported APIs to load/put a guest mediated PMU context.  KVM will
+load the guest PMU shortly before VM-Enter, and put the guest PMU shortly
+after VM-Exit.
+
+On the perf side of things, schedule out all exclude_guest events when the
+guest context is loaded, and schedule them back in when the guest context
+is put.  I.e. yield the hardware PMU resources to the guest, by way of KVM.
+
+Note, perf is only responsible for managing host context.  KVM is
+responsible for loading/storing guest state to/from hardware.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Mingwei Zhang <mizhang@google.com>
+[sean: shuffle patches around, write changelog]
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ include/linux/perf_event.h |  2 ++
+ kernel/events/core.c       | 61 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 63 insertions(+)
+
+diff --git a/include/linux/perf_event.h b/include/linux/perf_event.h
+index dfe33bc72180..57341843be12 100644
+--- a/include/linux/perf_event.h
++++ b/include/linux/perf_event.h
+@@ -1929,6 +1929,8 @@ extern u64 perf_event_pause(struct perf_event *event, bool reset);
+ #ifdef CONFIG_PERF_GUEST_MEDIATED_PMU
+ int perf_create_mediated_pmu(void);
+ void perf_release_mediated_pmu(void);
++void perf_load_guest_context(unsigned long data);
++void perf_put_guest_context(void);
+ #endif
+ 
+ #else /* !CONFIG_PERF_EVENTS: */
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index 0b36899f5939..45a8b3f0a6f3 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -469,10 +469,19 @@ static cpumask_var_t perf_online_pkg_mask;
+ static cpumask_var_t perf_online_sys_mask;
+ static struct kmem_cache *perf_event_cache;
+ 
++#ifdef CONFIG_PERF_GUEST_MEDIATED_PMU
++static DEFINE_PER_CPU(bool, guest_ctx_loaded);
++
++static __always_inline bool is_guest_mediated_pmu_loaded(void)
++{
++	return __this_cpu_read(guest_ctx_loaded);
++}
++#else
+ static __always_inline bool is_guest_mediated_pmu_loaded(void)
+ {
+ 	return false;
+ }
++#endif
+ 
+ /*
+  * perf event paranoia level:
+@@ -6385,6 +6394,58 @@ void perf_release_mediated_pmu(void)
+ 	atomic_dec(&nr_mediated_pmu_vms);
+ }
+ EXPORT_SYMBOL_GPL(perf_release_mediated_pmu);
++
++/* When loading a guest's mediated PMU, schedule out all exclude_guest events. */
++void perf_load_guest_context(unsigned long data)
++{
++	struct perf_cpu_context *cpuctx = this_cpu_ptr(&perf_cpu_context);
++
++	lockdep_assert_irqs_disabled();
++
++	guard(perf_ctx_lock)(cpuctx, cpuctx->task_ctx);
++
++	if (WARN_ON_ONCE(__this_cpu_read(guest_ctx_loaded)))
++		return;
++
++	perf_ctx_disable(&cpuctx->ctx, EVENT_GUEST);
++	ctx_sched_out(&cpuctx->ctx, NULL, EVENT_GUEST);
++	if (cpuctx->task_ctx) {
++		perf_ctx_disable(cpuctx->task_ctx, EVENT_GUEST);
++		task_ctx_sched_out(cpuctx->task_ctx, NULL, EVENT_GUEST);
++	}
++
++	perf_ctx_enable(&cpuctx->ctx, EVENT_GUEST);
++	if (cpuctx->task_ctx)
++		perf_ctx_enable(cpuctx->task_ctx, EVENT_GUEST);
++
++	__this_cpu_write(guest_ctx_loaded, true);
++}
++EXPORT_SYMBOL_GPL(perf_load_guest_context);
++
++void perf_put_guest_context(void)
++{
++	struct perf_cpu_context *cpuctx = this_cpu_ptr(&perf_cpu_context);
++
++	lockdep_assert_irqs_disabled();
++
++	guard(perf_ctx_lock)(cpuctx, cpuctx->task_ctx);
++
++	if (WARN_ON_ONCE(!__this_cpu_read(guest_ctx_loaded)))
++		return;
++
++	perf_ctx_disable(&cpuctx->ctx, EVENT_GUEST);
++	if (cpuctx->task_ctx)
++		perf_ctx_disable(cpuctx->task_ctx, EVENT_GUEST);
++
++	perf_event_sched_in(cpuctx, cpuctx->task_ctx, NULL, EVENT_GUEST);
++
++	if (cpuctx->task_ctx)
++		perf_ctx_enable(cpuctx->task_ctx, EVENT_GUEST);
++	perf_ctx_enable(&cpuctx->ctx, EVENT_GUEST);
++
++	__this_cpu_write(guest_ctx_loaded, false);
++}
++EXPORT_SYMBOL_GPL(perf_put_guest_context);
+ #else
+ static int mediated_pmu_account_event(struct perf_event *event) { return 0; }
+ static void mediated_pmu_unaccount_event(struct perf_event *event) {}
+-- 
+2.43.0
+

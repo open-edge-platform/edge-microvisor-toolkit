@@ -1,0 +1,106 @@
+From 45a9614af06267963709a963e2dc0ca2d516b6e1 Mon Sep 17 00:00:00 2001
+From: Yang Weijiang <weijiang.yang@intel.com>
+Date: Fri, 4 Jul 2025 01:49:51 -0700
+Subject: [PATCH 21/24] KVM: nVMX: Virtualize NO_HW_ERROR_CODE_CC for L1 event
+ injection to L2
+
+Per SDM description(Vol.3D, Appendix A.1):
+"If bit 56 is read as 1, software can use VM entry to deliver a hardware
+exception with or without an error code, regardless of vector"
+
+Modify has_error_code check before inject events to nested guest. Only
+enforce the check when guest is in real mode, the exception is not hard
+exception and the platform doesn't enumerate bit56 in VMX_BASIC, in all
+other case ignore the check to make the logic consistent with SDM.
+
+Signed-off-by: Yang Weijiang <weijiang.yang@intel.com>
+Reviewed-by: Maxim Levitsky <mlevitsk@redhat.com>
+Reviewed-by: Chao Gao <chao.gao@intel.com>
+Tested-by: Mathias Krause <minipli@grsecurity.net>
+Tested-by: John Allen <john.allen@amd.com>
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+---
+ arch/x86/kvm/vmx/nested.c | 28 +++++++++++++++++++---------
+ arch/x86/kvm/vmx/nested.h |  5 +++++
+ 2 files changed, 24 insertions(+), 9 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/nested.c b/arch/x86/kvm/vmx/nested.c
+index 36405c80dc15..f40ba4adb5ee 100644
+--- a/arch/x86/kvm/vmx/nested.c
++++ b/arch/x86/kvm/vmx/nested.c
+@@ -1305,9 +1305,10 @@ static int vmx_restore_vmx_basic(struct vcpu_vmx *vmx, u64 data)
+ {
+ 	const u64 feature_bits = VMX_BASIC_DUAL_MONITOR_TREATMENT |
+ 				 VMX_BASIC_INOUT |
+-				 VMX_BASIC_TRUE_CTLS;
++				 VMX_BASIC_TRUE_CTLS |
++				 VMX_BASIC_NO_HW_ERROR_CODE_CC;
+ 
+-	const u64 reserved_bits = GENMASK_ULL(63, 56) |
++	const u64 reserved_bits = GENMASK_ULL(63, 57) |
+ 				  GENMASK_ULL(47, 45) |
+ 				  BIT_ULL(31);
+ 
+@@ -2982,7 +2983,6 @@ static int nested_check_vm_entry_controls(struct kvm_vcpu *vcpu,
+ 		u8 vector = intr_info & INTR_INFO_VECTOR_MASK;
+ 		u32 intr_type = intr_info & INTR_INFO_INTR_TYPE_MASK;
+ 		bool has_error_code = intr_info & INTR_INFO_DELIVER_CODE_MASK;
+-		bool should_have_error_code;
+ 		bool urg = nested_cpu_has2(vmcs12,
+ 					   SECONDARY_EXEC_UNRESTRICTED_GUEST);
+ 		bool prot_mode = !urg || vmcs12->guest_cr0 & X86_CR0_PE;
+@@ -2999,12 +2999,20 @@ static int nested_check_vm_entry_controls(struct kvm_vcpu *vcpu,
+ 		    CC(intr_type == INTR_TYPE_OTHER_EVENT && vector != 0))
+ 			return -EINVAL;
+ 
+-		/* VM-entry interruption-info field: deliver error code */
+-		should_have_error_code =
+-			intr_type == INTR_TYPE_HARD_EXCEPTION && prot_mode &&
+-			x86_exception_has_error_code(vector);
+-		if (CC(has_error_code != should_have_error_code))
+-			return -EINVAL;
++		/*
++		 * Cannot deliver error code in real mode or if the interrupt
++		 * type is not hardware exception. For other cases, do the
++		 * consistency check only if the vCPU doesn't enumerate
++		 * VMX_BASIC_NO_HW_ERROR_CODE_CC.
++		 */
++		if (!prot_mode || intr_type != INTR_TYPE_HARD_EXCEPTION) {
++			if (CC(has_error_code))
++				return -EINVAL;
++		} else if (!nested_cpu_has_no_hw_errcode_cc(vcpu)) {
++			if (CC(has_error_code !=
++			       x86_exception_has_error_code(vector)))
++				return -EINVAL;
++		}
+ 
+ 		/* VM-entry exception error code */
+ 		if (CC(has_error_code &&
+@@ -7238,6 +7246,8 @@ static void nested_vmx_setup_basic(struct nested_vmx_msrs *msrs)
+ 	msrs->basic |= VMX_BASIC_TRUE_CTLS;
+ 	if (cpu_has_vmx_basic_inout())
+ 		msrs->basic |= VMX_BASIC_INOUT;
++	if (cpu_has_vmx_basic_no_hw_errcode())
++		msrs->basic |= VMX_BASIC_NO_HW_ERROR_CODE_CC;
+ }
+ 
+ static void nested_vmx_setup_cr_fixed(struct nested_vmx_msrs *msrs)
+diff --git a/arch/x86/kvm/vmx/nested.h b/arch/x86/kvm/vmx/nested.h
+index 6eedcfc91070..983484d42ebf 100644
+--- a/arch/x86/kvm/vmx/nested.h
++++ b/arch/x86/kvm/vmx/nested.h
+@@ -309,6 +309,11 @@ static inline bool nested_cr4_valid(struct kvm_vcpu *vcpu, unsigned long val)
+ 	       __kvm_is_valid_cr4(vcpu, val);
+ }
+ 
++static inline bool nested_cpu_has_no_hw_errcode_cc(struct kvm_vcpu *vcpu)
++{
++	return to_vmx(vcpu)->nested.msrs.basic & VMX_BASIC_NO_HW_ERROR_CODE_CC;
++}
++
+ /* No difference in the restrictions on guest and host CR4 in VMX operation. */
+ #define nested_guest_cr4_valid	nested_cr4_valid
+ #define nested_host_cr4_valid	nested_cr4_valid
+-- 
+2.43.0
+

@@ -1,0 +1,26 @@
+From cff0a1ac43aa4e4aab73d712a38311789db15a9e Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Sat, 6 Sep 2025 17:14:52 +0800
+Subject: [PATCH 04/11] media: pci: enable lt6911gxd in ipu-bridge
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/media/pci/intel/ipu-bridge.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/media/pci/intel/ipu-bridge.c b/drivers/media/pci/intel/ipu-bridge.c
+index 4e579352ab2c..e58b354ad9e6 100644
+--- a/drivers/media/pci/intel/ipu-bridge.c
++++ b/drivers/media/pci/intel/ipu-bridge.c
+@@ -92,6 +92,8 @@ static const struct ipu_sensor_config ipu_supported_sensors[] = {
+ 	IPU_SENSOR_CONFIG("OVTI8856", 3, 180000000, 360000000, 720000000),
+ 	/* Toshiba T4KA3 */
+ 	IPU_SENSOR_CONFIG("XMCC0003", 1, 321468000),
++	/* Lontium lt6911gxd */
++	IPU_SENSOR_CONFIG("INTC1124", 0),
+ };
+ 
+ static const struct ipu_property_names prop_names = {
+-- 
+2.43.0
+
