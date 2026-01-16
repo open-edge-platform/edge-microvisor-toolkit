@@ -3,6 +3,7 @@
         "kernel-drivers-gpu",
         "linux-firmware-i915",
         "linux-firmware-ice",
+        "intel-npu-driver",
         "intel-npu-firmware"
     ]
 }
