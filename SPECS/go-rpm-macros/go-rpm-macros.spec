@@ -21,7 +21,7 @@ Version:   3.6.0
 ExclusiveArch: %{golang_arches} %{gccgo_arches}
 
 Name:      go-rpm-macros
-Release:   1%{?dist}
+Release:   2%{?dist}
 Summary:   Build-stage rpm automation for Go packages
 
 License:   GPLv3+
@@ -33,7 +33,7 @@ Requires:  go-srpm-macros = %{version}-%{release}
 Requires:  go-filesystem  = %{version}-%{release}
 
 %ifarch %{golang_arches}
-Requires:  golang
+Requires:  golang < 1.25
 Provides:  compiler(golang)
 Provides:  compiler(go-compiler) = 2
 Obsoletes: go-compilers-golang-compiler < %{version}-%{release}
