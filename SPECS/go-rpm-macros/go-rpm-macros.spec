@@ -159,6 +159,10 @@ install -m 0644 -vp   rpm/macros.d/macros.go-compilers-gcc \
 %{_spectemplatedir}/*.spec
 
 %changelog
+* Mon Jan 19 2026 Chia Cherng Xi <cherng.xi.chia@intel.com> - 3.6.0-2
+- Restricted golang to use version older than 1.25
+- Bumped release version to 2
+
 * Wed Nov 20 2024 Durga Jagadeesh Palli <v-dpalli@microsoft.com> - 3.6.0-1
 - Update to 3.6.0.
 - License verified
