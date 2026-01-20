@@ -1,8 +1,8 @@
 %global rcluadir %{_rpmconfigdir}/lua/azl
 %global rpmmacrodir %{_rpmconfigdir}/macros.d
 
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 %global forgeurl  https://pagure.io/go-rpm-macros
 Version:   3.6.0
 %forgemeta
