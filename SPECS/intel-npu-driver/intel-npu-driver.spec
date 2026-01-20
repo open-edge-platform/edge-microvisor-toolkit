@@ -6,7 +6,7 @@ License:	    MIT AND Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:		    https://github.com/intel/linux-npu-driver
-Source0:	    %url/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
+Source0:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
 Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/61e4aeb00afd2a5b6955986269eed3a713c7b562/level-zero-npu-extensions-61e4aeb.tar.gz
 Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/9d91134722e70bf52297adaeb221a0be8e408b14/npu_compiler_elf-9d91134.tar.gz
 
@@ -21,7 +21,6 @@ BuildRequires:	libudev-devel
 BuildRequires:	intel-level-zero-devel
 BuildRequires:	openssl-devel
 BuildRequires:	yaml-cpp-devel
-BuildRequires:	build-essential git git-lfs python3
 
 Requires:	intel-level-zero
 
