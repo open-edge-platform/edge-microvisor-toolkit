@@ -7551,8 +7551,8 @@
         "type": "other",
         "other": {
           "name": "intel-level-zero",
-          "version": "1.21.9",
-          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.21.9.tar.gz"
+          "version": "1.24.2",
+          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.24.2.tar.gz"
         }
       }
     },
@@ -7583,6 +7583,16 @@
           "name": "intel-metee",
           "version": "5.0.0",
           "downloadUrl": "https://github.com/intel/metee/archive/5.0.0/metee-5.0.0.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-npu-driver",
+          "version": "1.28.0",
+          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.28.0/linux-npu-driver-1.28.0.tar.gz"
         }
       }
     },
