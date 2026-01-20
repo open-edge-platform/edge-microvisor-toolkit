@@ -12491,8 +12491,8 @@
         "type": "other",
         "other": {
           "name": "linux-firmware",
-          "version": "20251021",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20251021.tar.xz"
+          "version": "20260110",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20260110.tar.xz"
         }
       }
     },
