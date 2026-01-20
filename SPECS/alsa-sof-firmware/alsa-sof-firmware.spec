@@ -4,7 +4,7 @@
 %global _firmwarepath  /usr/lib/firmware
 %global _xz_opts -9 --check=crc32
 
-%global sof_ver 2025.05
+%global sof_ver 2025.12
 #global sof_ver_pre rc1
 %global sof_ver_rel %{?sof_ver_pre:.%{sof_ver_pre}}
 %global sof_ver_pkg0 %{sof_ver}%{?sof_ver_pre:-%{sof_ver_pre}}
@@ -18,7 +18,7 @@
 Summary:        Firmware and topology files for Sound Open Firmware project
 Name:           alsa-sof-firmware
 Version:        %{sof_ver}
-Release:        3%{?dist}
+Release:        1%{?dist}
 License:        BSD-3-Clause AND Apache-2.0
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -163,6 +163,9 @@ if st and st.type == "directory" then
 end
 
 %changelog
+* Mon Jan 12 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 2025.12-1
+- Update version to 2025.12.
+
 * Tue Aug 26 2025 Rajesh Shanmugam<rajesh1x.shanmugam@intel.com> - 2025.05-3
 - Initial Edge Microvisor Toolkit import from Fedora 43 (license: MIT)
 - License verified.
