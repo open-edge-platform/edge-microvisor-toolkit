@@ -7592,7 +7592,7 @@
         "other": {
           "name": "intel-npu-driver",
           "version": "1.28.0",
-          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.28.0/linux-npu-driver-1.28.0.tar.gz"
+          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.28.0.tar.gz"
         }
       }
     },
