@@ -13,7 +13,7 @@
 Summary:        Unified Kernel Image
 Name:           kernel-uki
 Version:        6.12.61
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -70,6 +70,11 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Fri Jan 9 2026 Lishan Liu <lishan.liu@intel.com> - 6.12.61-2
+- Update kernel to 6.12.61-2
+- lts-v6.12.61-emt-cve-260106T193826Z
+- Kenrel config update to support lontium audio
+
 * Fri Jan 2 2026 Lishan Liu <lishan.liu@intel.com> - 6.12.61-1
 - Update kernel to 6.12.61
 

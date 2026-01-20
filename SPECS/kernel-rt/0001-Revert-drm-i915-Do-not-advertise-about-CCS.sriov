@@ -1,0 +1,36 @@
+From 7190df9cb5fc10c673e960b7144d470fcd373627 Mon Sep 17 00:00:00 2001
+From: "Chew, Tong Liang" <tong.liang.chew@intel.com>
+Date: Sat, 27 Dec 2025 11:51:55 +0800
+Subject: [PATCH] Revert "drm/i915: Do not advertise about CCS"
+
+This reverts commit 1e5d5fbf3f18d0c4b534c431fa71c065ee048a63.
+
+Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
+---
+ drivers/gpu/drm/i915/i915_query.c | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_query.c b/drivers/gpu/drm/i915/i915_query.c
+index 72201c8d9ecd9..7c6669cc4c96f 100644
+--- a/drivers/gpu/drm/i915/i915_query.c
++++ b/drivers/gpu/drm/i915/i915_query.c
+@@ -159,16 +159,6 @@ query_engine_info(struct drm_i915_private *i915,
+ 	info_ptr = &query_ptr->engines[0];
+ 
+ 	for_each_uabi_engine(engine, i915) {
+-		/* Do not advertise CCS is available for selected platforms
+-		 * as CCS is not actually functional on those.
+-		 */
+-		if ((INTEL_INFO(i915)->platform == INTEL_DG1 ||
+-				INTEL_INFO(i915)->platform == INTEL_TIGERLAKE ||
+-				INTEL_INFO(i915)->platform == INTEL_ALDERLAKE_S ||
+-				INTEL_INFO(i915)->platform == INTEL_ALDERLAKE_P) &&
+-				engine->uabi_class == I915_ENGINE_CLASS_COMPUTE)
+-			continue;
+-
+ 		info.engine.engine_class = engine->uabi_class;
+ 		info.engine.engine_instance = engine->uabi_instance;
+ 		info.flags = I915_ENGINE_INFO_HAS_LOGICAL_INSTANCE;
+-- 
+2.34.1
+
