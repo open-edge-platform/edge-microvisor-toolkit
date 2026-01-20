@@ -1,0 +1,202 @@
+From 4bfa94030a3b19925581faf2cfe28c2c016e573b Mon Sep 17 00:00:00 2001
+From: Sohil Mehta <sohil.mehta@intel.com>
+Date: Mon, 28 Apr 2025 15:55:03 +0000
+Subject: [PATCH 37/44] x86/nmi: Prepare for the new NMI-source vector encoding
+
+When using the send_IPI_* APIC calls, callers typically use NMI vector
+0x2 to trigger NMIs. The APIC APIs convert the NMI vector to the NMI
+delivery mode, which is eventually used to program the APIC.
+
+Before FRED, the hardware would ignore the vector used with NMI delivery
+mode. However, with NMI-source reporting, the vector information is
+relayed to the destination CPU, which sets the corresponding bit in the
+NMI-source bitmap. Unfortunately, the kernel now needs to maintain a new
+set of NMI vectors and differentiate them from the IDT vectors.
+
+Instead of creating a parallel set of send_NMI_* APIs to handle
+NMI-source vectors, enhance the existing send_IPI_* APIs with a new
+encoding scheme to handle the NMI delivery mode along with the
+NMI-source vector.
+
+NMI-source vectors would be encoded as:
+    APIC_DM_NMI (0x400) | NMI_SOURCE_VECTOR (0x1-0xF)
+
+Also, introduce a helper to prepare the ICR value with the encoded
+delivery mode and vector. Update the guest paravirtual APIC code to use
+the new helper as well.
+
+While at it, rename APIC_DM_FIXED_MASK to the more appropriate
+APIC_DM_MASK.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Co-developed-by: Xin Li (Intel) <xin@zytor.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Signed-off-by: Sohil Mehta <sohil.mehta@intel.com>
+---
+v7: No change.
+
+v6: Remove a redundant else statement. (PeterZ)
+
+v5: Use a simiplified encoding scheme for NMI-source vectors.
+---
+ arch/x86/include/asm/apic.h         | 30 +++++++++++++++++++++++++++++
+ arch/x86/include/asm/apicdef.h      |  2 +-
+ arch/x86/kernel/apic/ipi.c          |  4 ++--
+ arch/x86/kernel/apic/local.h        | 24 ++++++++++++-----------
+ arch/x86/kernel/kvm.c               |  9 +--------
+ drivers/thermal/intel/therm_throt.c |  2 +-
+ 6 files changed, 48 insertions(+), 23 deletions(-)
+
+diff --git a/arch/x86/include/asm/apic.h b/arch/x86/include/asm/apic.h
+index 07ba4935e873..7448b349f864 100644
+--- a/arch/x86/include/asm/apic.h
++++ b/arch/x86/include/asm/apic.h
+@@ -470,6 +470,36 @@ static __always_inline bool apic_id_valid(u32 apic_id)
+ 	return apic_id <= apic->max_apic_id;
+ }
+ 
++/*
++ * Prepare the delivery mode and vector for the ICR.
++ *
++ * NMI-source vectors have the NMI delivery mode encoded within them to
++ * differentiate them from the IDT vectors. IDT vector 0x2 (NMI_VECTOR)
++ * is treated as an NMI request but without any NMI-source information.
++ */
++static inline u16 __prepare_ICR_DM_vector(u16 dm_vector)
++{
++	u16 vector = dm_vector & APIC_VECTOR_MASK;
++	u16 dm = dm_vector & APIC_DM_MASK;
++
++	if (dm == APIC_DM_NMI) {
++		/*
++		 * Pre-FRED, the actual vector is ignored for NMIs, but
++		 * zero it if NMI-source reporting is not supported to
++		 * avoid breakage on misbehaving hardware or hypervisors.
++		 */
++		if (!cpu_feature_enabled(X86_FEATURE_NMI_SOURCE))
++			vector = 0;
++
++		return dm | vector;
++	}
++
++	if (vector == NMI_VECTOR)
++		return APIC_DM_NMI;
++
++	return APIC_DM_FIXED | vector;
++}
++
+ #else /* CONFIG_X86_LOCAL_APIC */
+ 
+ static inline u32 apic_read(u32 reg) { return 0; }
+diff --git a/arch/x86/include/asm/apicdef.h b/arch/x86/include/asm/apicdef.h
+index 094106b6a538..3fb8fa73f6aa 100644
+--- a/arch/x86/include/asm/apicdef.h
++++ b/arch/x86/include/asm/apicdef.h
+@@ -87,8 +87,8 @@
+ #define		APIC_ICR_BUSY		0x01000
+ #define		APIC_DEST_LOGICAL	0x00800
+ #define		APIC_DEST_PHYSICAL	0x00000
++#define		APIC_DM_MASK		0x00700
+ #define		APIC_DM_FIXED		0x00000
+-#define		APIC_DM_FIXED_MASK	0x00700
+ #define		APIC_DM_LOWEST		0x00100
+ #define		APIC_DM_SMI		0x00200
+ #define		APIC_DM_REMRD		0x00300
+diff --git a/arch/x86/kernel/apic/ipi.c b/arch/x86/kernel/apic/ipi.c
+index 98a57cb4aa86..4e8bc42f3bd5 100644
+--- a/arch/x86/kernel/apic/ipi.c
++++ b/arch/x86/kernel/apic/ipi.c
+@@ -158,7 +158,7 @@ static void __default_send_IPI_shortcut(unsigned int shortcut, int vector)
+ 	 * issues where otherwise the system hangs when the panic CPU tries
+ 	 * to stop the others before launching the kdump kernel.
+ 	 */
+-	if (unlikely(vector == NMI_VECTOR))
++	if (unlikely(is_nmi_vector(vector)))
+ 		apic_mem_wait_icr_idle_timeout();
+ 	else
+ 		apic_mem_wait_icr_idle();
+@@ -175,7 +175,7 @@ void __default_send_IPI_dest_field(unsigned int dest_mask, int vector,
+ 				   unsigned int dest_mode)
+ {
+ 	/* See comment in __default_send_IPI_shortcut() */
+-	if (unlikely(vector == NMI_VECTOR))
++	if (unlikely(is_nmi_vector(vector)))
+ 		apic_mem_wait_icr_idle_timeout();
+ 	else
+ 		apic_mem_wait_icr_idle();
+diff --git a/arch/x86/kernel/apic/local.h b/arch/x86/kernel/apic/local.h
+index bdcf609eb283..9a54c589a4bf 100644
+--- a/arch/x86/kernel/apic/local.h
++++ b/arch/x86/kernel/apic/local.h
+@@ -24,22 +24,24 @@ extern u32 x2apic_max_apicid;
+ 
+ /* IPI */
+ 
++u16 __prepare_ICR_DM_vector(u16 vector);
++
+ DECLARE_STATIC_KEY_FALSE(apic_use_ipi_shorthand);
+ 
++/* NMI-source vectors have the delivery mode encoded within them */
++static inline bool is_nmi_vector(u16 vector)
++{
++	if ((vector & APIC_DM_MASK) == APIC_DM_NMI)
++		return true;
++	if ((vector & APIC_VECTOR_MASK) == NMI_VECTOR)
++		return true;
++	return false;
++}
++
+ static inline unsigned int __prepare_ICR(unsigned int shortcut, int vector,
+ 					 unsigned int dest)
+ {
+-	unsigned int icr = shortcut | dest;
+-
+-	switch (vector) {
+-	default:
+-		icr |= APIC_DM_FIXED | vector;
+-		break;
+-	case NMI_VECTOR:
+-		icr |= APIC_DM_NMI;
+-		break;
+-	}
+-	return icr;
++	return shortcut | dest | __prepare_ICR_DM_vector(vector);
+ }
+ 
+ void default_init_apic_ldr(void);
+diff --git a/arch/x86/kernel/kvm.c b/arch/x86/kernel/kvm.c
+index 8ae750cde0c6..826eb399ac46 100644
+--- a/arch/x86/kernel/kvm.c
++++ b/arch/x86/kernel/kvm.c
+@@ -518,14 +518,7 @@ static void __send_ipi_mask(const struct cpumask *mask, int vector)
+ 
+ 	local_irq_save(flags);
+ 
+-	switch (vector) {
+-	default:
+-		icr = APIC_DM_FIXED | vector;
+-		break;
+-	case NMI_VECTOR:
+-		icr = APIC_DM_NMI;
+-		break;
+-	}
++	icr = __prepare_ICR_DM_vector(vector);
+ 
+ 	for_each_cpu(cpu, mask) {
+ 		apic_id = per_cpu(x86_cpu_to_apicid, cpu);
+diff --git a/drivers/thermal/intel/therm_throt.c b/drivers/thermal/intel/therm_throt.c
+index debc94e2dc16..5c0d2de2986e 100644
+--- a/drivers/thermal/intel/therm_throt.c
++++ b/drivers/thermal/intel/therm_throt.c
+@@ -740,7 +740,7 @@ void intel_init_thermal(struct cpuinfo_x86 *c)
+ 	 * BIOS has programmed on AP based on BSP's info we saved since BIOS
+ 	 * is always setting the same value for all threads/cores.
+ 	 */
+-	if ((h & APIC_DM_FIXED_MASK) != APIC_DM_FIXED)
++	if ((h & APIC_DM_MASK) != APIC_DM_FIXED)
+ 		apic_write(APIC_LVTTHMR, lvtthmr_init);
+ 
+ 
+-- 
+2.43.0
+

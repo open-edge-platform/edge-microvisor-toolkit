@@ -1,0 +1,29 @@
+From 3338e742d86ce8f096e18376a7bbc6ecdf0b85ce Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Wed, 21 Aug 2024 08:28:53 +0000
+Subject: [PATCH 029/100] perf/x86/intel: Add PMU support for WildcatLake
+
+WildcatLake is a variant of PantherLake and shares same PMU features,
+so directly reuse Pantherlake's code to enable PMU features for
+WildcatLake.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/intel/core.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 0ed9cb66b49e..b6ed211695ff 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -7956,6 +7956,7 @@ __init int intel_pmu_init(void)
+ 		break;
+ 
+ 	case INTEL_PANTHERLAKE_L:
++	case INTEL_WILDCATLAKE_L:
+ 		pr_cont("Pantherlake Hybrid events, ");
+ 		name = "pantherlake_hybrid";
+ 		goto lnl_common;
+-- 
+2.43.0
+

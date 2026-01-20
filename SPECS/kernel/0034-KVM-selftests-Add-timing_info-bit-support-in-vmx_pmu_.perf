@@ -1,0 +1,45 @@
+From 3a05d313a273338b2395f31ae2d3f0b6469746f5 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Fri, 18 Jul 2025 08:19:02 +0800
+Subject: [PATCH 034/100] KVM: selftests: Add timing_info bit support in
+ vmx_pmu_caps_test
+
+A new bit PERF_CAPABILITIES[17] called "PEBS_TIMING_INFO" bit is added
+to indicated if PEBS supports to record timing information in a new
+"Retried Latency" field.
+
+Since KVM requires user can only set host consistent PEBS capabilities,
+otherwise the PERF_CAPABILITIES setting would fail, so add
+pebs_timing_info bit into "immutable_caps" to block host inconsistent
+PEBS configuration and cause errors.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Tested-by: Yi Lai <yi1.lai@intel.com>
+---
+ tools/testing/selftests/kvm/x86/vmx_pmu_caps_test.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tools/testing/selftests/kvm/x86/vmx_pmu_caps_test.c b/tools/testing/selftests/kvm/x86/vmx_pmu_caps_test.c
+index a1f5ff45d518..f8deea220156 100644
+--- a/tools/testing/selftests/kvm/x86/vmx_pmu_caps_test.c
++++ b/tools/testing/selftests/kvm/x86/vmx_pmu_caps_test.c
+@@ -29,7 +29,7 @@ static union perf_capabilities {
+ 		u64 pebs_baseline:1;
+ 		u64	perf_metrics:1;
+ 		u64	pebs_output_pt_available:1;
+-		u64	anythread_deprecated:1;
++		u64	pebs_timing_info:1;
+ 	};
+ 	u64	capabilities;
+ } host_cap;
+@@ -44,6 +44,7 @@ static const union perf_capabilities immutable_caps = {
+ 	.pebs_arch_reg = 1,
+ 	.pebs_format = -1,
+ 	.pebs_baseline = 1,
++	.pebs_timing_info = 1,
+ };
+ 
+ static const union perf_capabilities format_caps = {
+-- 
+2.43.0
+

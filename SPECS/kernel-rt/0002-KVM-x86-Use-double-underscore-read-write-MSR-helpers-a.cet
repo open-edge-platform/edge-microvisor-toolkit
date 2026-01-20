@@ -1,0 +1,76 @@
+From 5e1b71248258e5e6a04bb3311d5f9a54afa79882 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Tue, 29 Jul 2025 11:13:48 -0700
+Subject: [PATCH 02/24] KVM: x86: Use double-underscore read/write MSR helpers
+ as appropriate
+
+Use the double-underscore helpers for emulating MSR reads and writes in
+he no-underscore versions to better capture the relationship between the
+two sets of APIs (the double-underscore versions don't honor userspace MSR
+filters).
+
+No functional change intended.
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+---
+ arch/x86/kvm/x86.c | 29 ++++++++++++++++-------------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 00e8501f88c8..9e78753b36a4 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -1936,11 +1936,24 @@ static int kvm_get_msr_ignored_check(struct kvm_vcpu *vcpu,
+ 				 __kvm_get_msr);
+ }
+ 
++int __kvm_emulate_msr_read(struct kvm_vcpu *vcpu, u32 index, u64 *data)
++{
++	return kvm_get_msr_ignored_check(vcpu, index, data, false);
++}
++EXPORT_SYMBOL_GPL(__kvm_emulate_msr_read);
++
++int __kvm_emulate_msr_write(struct kvm_vcpu *vcpu, u32 index, u64 data)
++{
++	return kvm_set_msr_ignored_check(vcpu, index, data, false);
++}
++EXPORT_SYMBOL_GPL(__kvm_emulate_msr_write);
++
+ int kvm_emulate_msr_read(struct kvm_vcpu *vcpu, u32 index, u64 *data)
+ {
+ 	if (!kvm_msr_allowed(vcpu, index, KVM_MSR_FILTER_READ))
+ 		return KVM_MSR_RET_FILTERED;
+-	return kvm_get_msr_ignored_check(vcpu, index, data, false);
++
++	return __kvm_emulate_msr_read(vcpu, index, data);
+ }
+ EXPORT_SYMBOL_GPL(kvm_emulate_msr_read);
+ 
+@@ -1948,21 +1961,11 @@ int kvm_emulate_msr_write(struct kvm_vcpu *vcpu, u32 index, u64 data)
+ {
+ 	if (!kvm_msr_allowed(vcpu, index, KVM_MSR_FILTER_WRITE))
+ 		return KVM_MSR_RET_FILTERED;
+-	return kvm_set_msr_ignored_check(vcpu, index, data, false);
+-}
+-EXPORT_SYMBOL_GPL(kvm_emulate_msr_write);
+ 
+-int __kvm_emulate_msr_read(struct kvm_vcpu *vcpu, u32 index, u64 *data)
+-{
+-	return kvm_get_msr_ignored_check(vcpu, index, data, false);
++	return __kvm_emulate_msr_write(vcpu, index, data);
+ }
+-EXPORT_SYMBOL_GPL(__kvm_emulate_msr_read);
++EXPORT_SYMBOL_GPL(kvm_emulate_msr_write);
+ 
+-int __kvm_emulate_msr_write(struct kvm_vcpu *vcpu, u32 index, u64 data)
+-{
+-	return kvm_set_msr_ignored_check(vcpu, index, data, false);
+-}
+-EXPORT_SYMBOL_GPL(__kvm_emulate_msr_write);
+ 
+ static void complete_userspace_rdmsr(struct kvm_vcpu *vcpu)
+ {
+-- 
+2.43.0
+

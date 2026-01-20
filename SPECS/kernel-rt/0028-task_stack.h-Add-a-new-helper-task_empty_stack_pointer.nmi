@@ -1,0 +1,77 @@
+From a965c8232d9c74ee5c7340c206fc9776ce1a7961 Mon Sep 17 00:00:00 2001
+From: "Xin Li (Intel)" <xin@zytor.com>
+Date: Tue, 8 Jul 2025 04:37:17 -0700
+Subject: [PATCH 28/44] task_stack.h: Add a new helper
+ task_empty_stack_pointer()
+
+Introduce a new helper function, task_empty_stack_pointer(), to replace
+
+    (unsigned long)task_stack_page(current) + THREAD_SIZE
+
+Sugguested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+---
+ arch/x86/include/asm/fred.h      | 2 +-
+ arch/x86/kernel/dumpstack.c      | 2 +-
+ arch/x86/kvm/vmx/vmx.c           | 2 +-
+ include/linux/sched/task_stack.h | 5 +++++
+ 4 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/include/asm/fred.h b/arch/x86/include/asm/fred.h
+index 12b34d5b2953..263fd5267f71 100644
+--- a/arch/x86/include/asm/fred.h
++++ b/arch/x86/include/asm/fred.h
+@@ -98,7 +98,7 @@ static __always_inline void fred_sync_rsp0(unsigned long rsp0)
+ 
+ static __always_inline void fred_update_rsp0(void)
+ {
+-	unsigned long rsp0 = (unsigned long) task_stack_page(current) + THREAD_SIZE;
++	unsigned long rsp0 = (unsigned long)task_empty_stack_pointer(current);
+ 
+ 	if (cpu_feature_enabled(X86_FEATURE_FRED) && (__this_cpu_read(fred_rsp0) != rsp0)) {
+ 		wrmsrns(MSR_IA32_FRED_RSP0, rsp0);
+diff --git a/arch/x86/kernel/dumpstack.c b/arch/x86/kernel/dumpstack.c
+index 71ee20102a8a..18c19e6fd960 100644
+--- a/arch/x86/kernel/dumpstack.c
++++ b/arch/x86/kernel/dumpstack.c
+@@ -31,7 +31,7 @@ bool noinstr in_task_stack(unsigned long *stack, struct task_struct *task,
+ 			   struct stack_info *info)
+ {
+ 	unsigned long *begin = task_stack_page(task);
+-	unsigned long *end   = task_stack_page(task) + THREAD_SIZE;
++	unsigned long *end   = task_empty_stack_pointer(task);
+ 
+ 	if (stack < begin || stack >= end)
+ 		return false;
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index d04085f2d4a2..090b49679925 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -6607,7 +6607,7 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
+ 		       "RSP2=0x%016llx, RSP3=0x%016llx\n",
+ 		       vmcs_read64(HOST_IA32_FRED_CONFIG),
+ 		       vmcs_read64(HOST_IA32_FRED_STKLVLS),
+-		       (unsigned long)task_stack_page(current) + THREAD_SIZE,
++		       (unsigned long)task_empty_stack_pointer(current),
+ 		       vmcs_read64(HOST_IA32_FRED_RSP1),
+ 		       vmcs_read64(HOST_IA32_FRED_RSP2),
+ 		       vmcs_read64(HOST_IA32_FRED_RSP3));
+diff --git a/include/linux/sched/task_stack.h b/include/linux/sched/task_stack.h
+index 1fab7e9043a3..43050ec1012b 100644
+--- a/include/linux/sched/task_stack.h
++++ b/include/linux/sched/task_stack.h
+@@ -23,6 +23,11 @@ static __always_inline void *task_stack_page(const struct task_struct *task)
+ 	return task->stack;
+ }
+ 
++static __always_inline void *task_empty_stack_pointer(const struct task_struct *task)
++{
++	return (void *)((unsigned long)task_stack_page(task) + THREAD_SIZE);
++}
++
+ #define setup_thread_stack(new,old)	do { } while(0)
+ 
+ static __always_inline unsigned long *end_of_stack(const struct task_struct *task)
+-- 
+2.43.0
+

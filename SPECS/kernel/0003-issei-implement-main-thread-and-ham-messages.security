@@ -1,0 +1,562 @@
+From d11bfa704500611a05aca620fe7e58d982bf1aac Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Thu, 31 Oct 2024 10:00:50 +0200
+Subject: [PATCH 3/5] issei: implement main thread and ham messages
+
+Introduce the main thread and HECI Active Management (HAM)
+message handling for the ISSEI (Intel Silicon Security Engine
+Interface) subsystem.
+The main thread is responsible for managing the reset flow and
+processing messages, while the HAM message handling is crucial
+for initializing communication with the firmware and managing
+clients.
+
+With this implementation, the ISSEI driver is capable of performing
+the required initialization and management of communication between
+the host and the firmware.
+
+Co-developed-by: Vitaly Lubart <lubvital@gmail.com>
+Signed-off-by: Vitaly Lubart <lubvital@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/issei/Makefile    |   2 +
+ drivers/misc/issei/ham.c       | 142 +++++++++++++++
+ drivers/misc/issei/ham.h       |  20 +++
+ drivers/misc/issei/issei_dev.h |   9 +
+ drivers/misc/issei/main.c      | 320 +++++++++++++++++++++++++++++++++
+ 5 files changed, 493 insertions(+)
+ create mode 100644 drivers/misc/issei/ham.c
+ create mode 100644 drivers/misc/issei/ham.h
+ create mode 100644 drivers/misc/issei/main.c
+
+diff --git a/drivers/misc/issei/Makefile b/drivers/misc/issei/Makefile
+index 4e8f6a435a31..712d62eb9790 100644
+--- a/drivers/misc/issei/Makefile
++++ b/drivers/misc/issei/Makefile
+@@ -7,3 +7,5 @@ issei-objs += cdev.o
+ issei-objs += dma.o
+ issei-objs += fw_client.o
+ issei-objs += host_client.o
++issei-objs += ham.o
++issei-objs += main.o
+diff --git a/drivers/misc/issei/ham.c b/drivers/misc/issei/ham.c
+new file mode 100644
+index 000000000000..d6a81b68e351
+--- /dev/null
++++ b/drivers/misc/issei/ham.c
+@@ -0,0 +1,142 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (C) 2023-2025 Intel Corporation */
++#include <linux/slab.h>
++
++#include "issei_dev.h"
++#include "dma.h"
++#include "hw_msg.h"
++#include "fw_client.h"
++#include "ham.h"
++
++static int __issei_ham_send_msg(struct issei_device *idev, u32 length, void *buf)
++{
++	struct issei_dma_data data = { 0 };
++	int ret;
++
++	data.length = length;
++	data.buf = buf;
++	ret = issei_dma_write(idev, &data);
++	if (ret)
++		return ret;
++	return idev->ops->irq_write_generate(idev);
++}
++
++int issei_ham_send_start_req(struct issei_device *idev)
++{
++	struct ham_start_message_req req;
++
++	req.header.cmd = HAM_BUS_CMD_START_REQ;
++	req.supported_version = ISSEI_SUPPORTED_PROTOCOL_VER;
++	req.heci_capabilities_length = 0;
++
++	return __issei_ham_send_msg(idev, sizeof(req), &req);
++}
++
++int issei_ham_send_clients_req(struct issei_device *idev)
++{
++	struct ham_get_clients_req req;
++
++	req.header.cmd = HAM_BUS_CMD_CLIENT_REQ;
++
++	return __issei_ham_send_msg(idev, sizeof(req), &req);
++}
++
++static int issei_ham_start_rsp(struct issei_device *idev, const u8 *buf, size_t length)
++{
++	struct ham_start_message_res *res = (struct ham_start_message_res *)buf;
++	int ret;
++
++	if (idev->rst_state != ISSEI_RST_STATE_START) {
++		dev_err(idev->dev, "Wrong state %d != %d\n",
++			idev->rst_state, ISSEI_RST_STATE_START);
++		return -EPROTO;
++	}
++
++	if (length < sizeof(*res)) {
++		dev_err(idev->dev, "Small start response size %zu < %zu\n",
++			length, sizeof(*res));
++		return -EPROTO;
++	}
++
++	if (length - sizeof(*res) != res->heci_capabilities_length) {
++		dev_err(idev->dev, "Wrong start response size %zu != %u\n",
++			length - sizeof(*res), res->heci_capabilities_length);
++		return -EPROTO;
++	}
++
++	memcpy(idev->fw_version, res->fw_version, sizeof(idev->fw_version));
++	idev->fw_protocol_ver = res->supported_version;
++	dev_dbg(idev->dev, "FW protocol: %u FW version %u.%u.%u.%u", idev->fw_protocol_ver,
++		idev->fw_version[0], idev->fw_version[1],
++		idev->fw_version[2], idev->fw_version[3]);
++
++	ret = issei_ham_send_clients_req(idev);
++	if (ret == -EBUSY)
++		ret = 0;
++
++	return ret;
++}
++
++static int issei_ham_client_rsp(struct issei_device *idev, const u8 *buf, size_t length)
++{
++	struct ham_get_clients_res *res = (struct ham_get_clients_res *)buf;
++	struct ham_client_properties *client;
++	size_t i;
++
++	if (idev->rst_state != ISSEI_RST_STATE_CLIENT_ENUM) {
++		dev_err(idev->dev, "Wrong state %d != %d\n",
++			idev->rst_state, ISSEI_RST_STATE_CLIENT_ENUM);
++		return -EPROTO;
++	}
++
++	if (length < sizeof(*res)) {
++		dev_err(idev->dev, "Small response size %zu < %zu\n", length, sizeof(*res));
++		return -EPROTO;
++	}
++
++	if (length - sizeof(*res) != res->client_count * sizeof(struct ham_client_properties)) {
++		dev_err(idev->dev, "Wrong response size %zu < %zu\n",
++			length - sizeof(*res),
++			res->client_count * sizeof(struct ham_client_properties));
++		return -EPROTO;
++	}
++
++	for (i = 0; i < res->client_count; i++) {
++		client = &res->clients_props[i];
++		dev_dbg(idev->dev, "client: id = %u ver = %u uuid = %pUb mtu = %u flags = %u",
++			client->client_number, client->protocol_ver, &client->client_uuid,
++			client->client_mtu, client->flags);
++		issei_fw_cl_create(idev, client->client_number, client->protocol_ver,
++				   &client->client_uuid, client->client_mtu, client->flags);
++	}
++	return 0;
++}
++
++int issei_ham_process_ham_rsp(struct issei_device *idev, u32 status, const u8 *buf, size_t length)
++{
++	struct ham_bus_message *hdr = (struct ham_bus_message *)buf;
++	int ret;
++
++	/* process error */
++	if (status != HAMS_SUCCESS) {
++		dev_err(idev->dev, "HAM command %u failed %u", hdr->cmd, status);
++		return -EIO;
++	}
++
++	switch (hdr->cmd) {
++	case HAM_BUS_CMD_START_RSP:
++		ret = issei_ham_start_rsp(idev, buf, length);
++		break;
++
++	case HAM_BUS_CMD_CLIENT_RSP:
++		ret = issei_ham_client_rsp(idev, buf, length);
++		break;
++
++	default:
++		dev_err(idev->dev, "Unexpected command 0x%x", hdr->cmd);
++		ret = -EPROTO;
++		break;
++	}
++
++	return ret;
++}
+diff --git a/drivers/misc/issei/ham.h b/drivers/misc/issei/ham.h
+new file mode 100644
+index 000000000000..33947d455302
+--- /dev/null
++++ b/drivers/misc/issei/ham.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (C) 2023-2025 Intel Corporation */
++#ifndef _ISSEI_HAM_H_
++#define _ISSEI_HAM_H_
++
++#include <linux/types.h>
++
++struct issei_device;
++
++int issei_ham_send_start_req(struct issei_device *idev);
++int issei_ham_send_clients_req(struct issei_device *idev);
++
++static inline int issei_is_ham_rsp(u16 fw_id, u16 host_id)
++{
++	return fw_id == 0 && host_id == 0;
++}
++
++int issei_ham_process_ham_rsp(struct issei_device *idev, u32 status, const u8 *buf, size_t length);
++
++#endif /* _ISSEI_HAM_H_ */
+diff --git a/drivers/misc/issei/issei_dev.h b/drivers/misc/issei/issei_dev.h
+index 4e507ce4d10e..4de4e48fb8d4 100644
+--- a/drivers/misc/issei/issei_dev.h
++++ b/drivers/misc/issei/issei_dev.h
+@@ -150,4 +150,13 @@ struct issei_device {
+ 	char hw[] __aligned(sizeof(void *));
+ };
+ 
++void issei_device_init(struct issei_device *idev, struct device *device,
++		       const struct issei_dma_length *dma_length,
++		       const struct issei_hw_ops *ops);
++
++int issei_start(struct issei_device *idev);
++void issei_stop(struct issei_device *idev);
++
++bool issei_is_busy(struct issei_device *idev);
++
+ #endif /* _ISSEI_DEV_H_ */
+diff --git a/drivers/misc/issei/main.c b/drivers/misc/issei/main.c
+new file mode 100644
+index 000000000000..84b58730bc23
+--- /dev/null
++++ b/drivers/misc/issei/main.c
+@@ -0,0 +1,320 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright (C) 2023-2025 Intel Corporation */
++#include <linux/dev_printk.h>
++#include <linux/jiffies.h>
++#include <linux/kthread.h>
++#include <linux/slab.h>
++#include <linux/wait.h>
++
++#include "issei_dev.h"
++#include "fw_client.h"
++#include "host_client.h"
++#include "cdev.h"
++#include "ham.h"
++
++static void issei_rst_state_set(struct issei_device *idev, enum issei_rst_state state)
++{
++	idev->rst_state = state;
++	/* wake up the thread */
++	if (waitqueue_active(&idev->wait_rst_state))
++		wake_up(&idev->wait_rst_state);
++}
++
++static int issei_reset(struct issei_device *idev)
++{
++	int ret;
++
++	idev->ops->irq_clear(idev);
++
++	issei_cl_all_disconnect(idev);
++	issei_fw_cl_remove_all(idev);
++	/* No need to check overflow here, the counter is used only for info */
++	idev->all_reset_count++;
++	ret = idev->ops->hw_reset(idev, !idev->power_down);
++	issei_dmam_clean(idev);
++	if (ret) {
++		dev_err(idev->dev, "hw_reset failed ret = %d\n", ret);
++		return ret;
++	}
++
++	if (idev->power_down) {
++		dev_dbg(idev->dev, "powering down: end of reset\n");
++		issei_rst_state_set(idev, ISSEI_RST_STATE_DISABLED);
++		return -ENODEV;
++	}
++	return 0;
++}
++
++static int issei_process_read_msg(struct issei_device *idev)
++{
++	struct issei_dma_data data = {0};
++	int ret;
++
++	ret = issei_dma_read(idev, &data);
++	if (ret)
++		return ret;
++
++	dev_dbg(idev->dev, "Processing response %u %u %u %u\n", data.fw_id, data.host_id,
++		data.status, data.length);
++	if (issei_is_ham_rsp(data.fw_id, data.host_id)) {
++		ret = issei_ham_process_ham_rsp(idev, data.status, data.buf, data.length);
++		kfree(data.buf);
++	} else {
++		dev_dbg(idev->dev, "Client data\n");
++		ret = issei_cl_read_buf(idev, data.host_id, data.buf, data.length);
++		if (ret)
++			kfree(data.buf);
++	}
++
++	idev->ops->irq_write_generate(idev);
++	return ret;
++}
++
++static int issei_process_write_msg(struct issei_device *idev)
++{
++	if (idev->rst_state != ISSEI_RST_STATE_DONE)
++		return 0;
++
++	return issei_cl_write_from_queue(idev);
++}
++
++static int issei_process_messages(struct issei_device *idev)
++{
++	issei_process_read_msg(idev);
++	return issei_process_write_msg(idev);
++}
++
++static int issei_process_thread(void *_dev)
++{
++	long timeout, old_timeout = MAX_SCHEDULE_TIMEOUT;
++	struct issei_device *idev = _dev;
++	int ret;
++
++	while (!kthread_should_stop()) {
++		dev_dbg(idev->dev, "process_work in %d\n", idev->rst_state);
++		if (!idev->ops->hw_is_ready(idev) && idev->rst_state > ISSEI_RST_STATE_HW_READY) {
++			if (!idev->power_down)
++				dev_dbg(idev->dev, "HW not ready, resetting\n");
++			idev->rst_state = ISSEI_RST_STATE_INIT;
++		}
++		if (idev->power_down)
++			idev->rst_state = ISSEI_RST_STATE_INIT;
++		atomic_set(&idev->rst_irq, 0);
++		dev_dbg(idev->dev, "reset_step in %d\n", idev->rst_state);
++		timeout = MAX_SCHEDULE_TIMEOUT;
++		ret = 0;
++		switch (idev->rst_state) {
++		case ISSEI_RST_STATE_DISABLED:
++			if (idev->power_down) {
++				dev_dbg(idev->dev, "Interrupt in power down?\n");
++				break;
++			}
++			idev->rst_state = ISSEI_RST_STATE_INIT;
++			fallthrough;
++
++		case ISSEI_RST_STATE_INIT:
++			idev->ops->irq_clear(idev);
++			idev->ops->irq_sync(idev);
++
++			if (!idev->power_down) {
++				idev->reset_count++;
++				if (idev->reset_count > ISSEI_MAX_CONSEC_RESET) {
++					dev_err(idev->dev, "reset: reached maximal consecutive resets: disabling the device\n");
++					issei_rst_state_set(idev, ISSEI_RST_STATE_DISABLED);
++					break;
++				}
++			}
++
++			ret = issei_reset(idev);
++			if (idev->power_down) {
++				dev_dbg(idev->dev, "Powering down\n");
++				return 0;
++			}
++			if (!ret) {
++				idev->rst_state = ISSEI_RST_STATE_HW_READY;
++				timeout = msecs_to_jiffies(ISSEI_RST_HW_READY_TIMEOUT_MSEC);
++			}
++			break;
++
++		case ISSEI_RST_STATE_HW_READY:
++			if (idev->ops->hw_is_ready(idev)) {
++				dev_dbg(idev->dev, "HW is ready\n");
++				idev->ops->hw_reset_release(idev);
++				idev->ops->host_set_ready(idev);
++				ret = idev->ops->setup_message_send(idev);
++				if (!ret) {
++					idev->rst_state = ISSEI_RST_STATE_SETUP;
++					timeout = msecs_to_jiffies(ISSEI_RST_STEP_TIMEOUT_MSEC);
++				}
++			} else {
++				dev_dbg(idev->dev, "HW is not ready?\n");
++				timeout = old_timeout;
++			}
++			break;
++
++		case ISSEI_RST_STATE_SETUP:
++			ret = idev->ops->setup_message_recv(idev);
++			if (!ret) {
++				timeout = msecs_to_jiffies(ISSEI_RST_STEP_TIMEOUT_MSEC);
++				ret = issei_ham_send_start_req(idev);
++				idev->rst_state = ISSEI_RST_STATE_START;
++			} else if (ret == -ENODATA) {
++				ret = 0;
++				timeout = old_timeout;
++			}
++			break;
++
++		case ISSEI_RST_STATE_START:
++			ret = issei_process_read_msg(idev);
++			if (!ret) {
++				timeout = msecs_to_jiffies(ISSEI_RST_STEP_TIMEOUT_MSEC);
++				idev->rst_state = ISSEI_RST_STATE_CLIENT_ENUM;
++			} else if (ret == -ENODATA) {
++				ret = 0;
++				timeout = old_timeout;
++			}
++			break;
++
++		case ISSEI_RST_STATE_CLIENT_ENUM:
++			ret = issei_process_read_msg(idev);
++			if (!ret) {
++				idev->reset_count = 0;
++				idev->rst_state = ISSEI_RST_STATE_DONE;
++				dev_dbg(idev->dev, "Reset finished successfully\n");
++			} else if (ret == -ENODATA) {
++				ret = 0;
++				timeout = old_timeout;
++			}
++			break;
++
++		case ISSEI_RST_STATE_DONE:
++			ret = issei_process_messages(idev);
++			break;
++		}
++
++		if (ret) {
++			dev_dbg(idev->dev, "Process failed ret = %d\n", ret);
++			idev->rst_state = ISSEI_RST_STATE_INIT;
++			continue;
++		}
++		old_timeout = wait_event_interruptible_timeout(idev->wait_rst_irq,
++							       atomic_read(&idev->rst_irq),
++							       timeout);
++		dev_dbg(idev->dev, "Out of wait %d %d %ld\n", idev->rst_state,
++			atomic_read(&idev->rst_irq), old_timeout);
++
++		if (idev->rst_state == ISSEI_RST_STATE_DISABLED)
++			continue;
++
++		if (!atomic_read(&idev->rst_irq)) {
++			dev_dbg(idev->dev, "Timed out at state %d, resetting\n", idev->rst_state);
++			idev->rst_state = ISSEI_RST_STATE_INIT;
++		}
++	}
++
++	return 0;
++}
++
++/**
++ * issei_device_init - initialize issei device structure.
++ * @idev: the device structure
++ * @dev: parent device structure
++ * @dma_length: structure with DMA sizes
++ * @ops: hardware-related operations
++ */
++void issei_device_init(struct issei_device *idev, struct device *dev,
++		       const struct issei_dma_length *dma_length,
++		       const struct issei_hw_ops *ops)
++{
++	idev->dev = dev;
++	idev->power_down = false;
++	init_waitqueue_head(&idev->wait_rst_irq);
++	atomic_set(&idev->rst_irq, 0);
++	init_waitqueue_head(&idev->wait_rst_state);
++	idev->rst_state = ISSEI_RST_STATE_INIT;
++
++	mutex_init(&idev->host_client_lock);
++	INIT_LIST_HEAD(&idev->host_client_list);
++	idev->host_client_last_id = 0;
++	idev->host_client_count = 0;
++
++	mutex_init(&idev->fw_client_lock);
++	INIT_LIST_HEAD(&idev->fw_client_list);
++
++	idev->dma.length = *dma_length;
++
++	INIT_LIST_HEAD(&idev->write_queue);
++
++	idev->ops = ops;
++}
++EXPORT_SYMBOL_GPL(issei_device_init);
++
++/**
++ * issei_start - configure HW device and start processing thread.
++ * @idev: the device structure
++ *
++ * Return: 0 on success, < 0 on failure
++ */
++int issei_start(struct issei_device *idev)
++{
++	int ret;
++
++	idev->power_down = false;
++
++	ret = issei_dmam_setup(idev);
++	if (ret)
++		return ret;
++
++	idev->ops->irq_clear(idev);
++
++	ret = idev->ops->hw_config(idev);
++	if (ret)
++		return ret;
++
++	idev->reset_thread = kthread_run(issei_process_thread, idev,
++					"kisseiprocess/%s", dev_name(idev->dev));
++	if (IS_ERR(idev->reset_thread)) {
++		dev_err(idev->dev, "unable to create process thread. ret = %d\n", ret);
++		return PTR_ERR(idev->reset_thread);
++	}
++
++	atomic_set(&idev->rst_irq, 1);
++	wake_up_interruptible(&idev->wait_rst_irq);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(issei_start);
++
++/**
++ * issei_stop - stop interrupts and processing thread.
++ * @idev: the device structure
++ */
++void issei_stop(struct issei_device *idev)
++{
++	idev->power_down = true;
++
++	idev->ops->irq_clear(idev);
++	idev->ops->irq_sync(idev);
++
++	atomic_set(&idev->rst_irq, 1);
++	wake_up_interruptible(&idev->wait_rst_irq);
++
++	wait_event_timeout(idev->wait_rst_state,
++			   (idev->rst_state == ISSEI_RST_STATE_DISABLED),
++			   ISSEI_STOP_TIMEOUT_MSEC);
++	kthread_stop(idev->reset_thread);
++}
++EXPORT_SYMBOL_GPL(issei_stop);
++
++/**
++ * issei_is_busy - check if driver is busy with writes or reset flow.
++ * @idev: the device structure
++ *
++ * Return: true if busy, false otherwise
++ */
++bool issei_is_busy(struct issei_device *idev)
++{
++	guard(mutex)(&idev->host_client_lock);
++
++	return (idev->rst_state != ISSEI_RST_STATE_DONE) || !list_empty(&idev->write_queue);
++}
++EXPORT_SYMBOL_GPL(issei_is_busy);
+-- 
+2.43.0
+

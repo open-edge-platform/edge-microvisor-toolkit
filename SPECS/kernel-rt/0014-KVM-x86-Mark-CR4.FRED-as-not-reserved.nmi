@@ -1,0 +1,61 @@
+From b638a94b8dd192801ea2f76e1b7261caf2cbf927 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Thu, 15 Sep 2022 13:26:01 -0700
+Subject: [PATCH 14/44] KVM: x86: Mark CR4.FRED as not reserved
+
+The CR4.FRED bit, i.e., CR4[32], is no longer a reserved bit when
+guest cpu cap has FRED, i.e.,
+  1) All of FRED KVM support is in place.
+  2) Guest enumerates FRED.
+
+Otherwise it is still a reserved bit.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Change in v5:
+* Add TB from Xuelian Guo.
+
+Change in v4:
+* Rebase on top of "guest_cpu_cap".
+
+Change in v3:
+* Don't allow CR4.FRED=1 before all of FRED KVM support is in place
+  (Sean Christopherson).
+---
+ arch/x86/include/asm/kvm_host.h | 2 +-
+ arch/x86/kvm/x86.h              | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 3b38c82b4c1c..2634c16b09c4 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -142,7 +142,7 @@
+ 			  | X86_CR4_OSXSAVE | X86_CR4_SMEP | X86_CR4_FSGSBASE \
+ 			  | X86_CR4_OSXMMEXCPT | X86_CR4_LA57 | X86_CR4_VMXE \
+ 			  | X86_CR4_SMAP | X86_CR4_PKE | X86_CR4_UMIP \
+-			  | X86_CR4_LAM_SUP | X86_CR4_CET))
++			  | X86_CR4_LAM_SUP | X86_CR4_CET | X86_CR4_FRED))
+ 
+ #define CR8_RESERVED_BITS (~(unsigned long)X86_CR8_TPR)
+ 
+diff --git a/arch/x86/kvm/x86.h b/arch/x86/kvm/x86.h
+index 25c2d7173b89..5f2279e11f87 100644
+--- a/arch/x86/kvm/x86.h
++++ b/arch/x86/kvm/x86.h
+@@ -688,6 +688,8 @@ static inline bool __kvm_is_valid_cr4(struct kvm_vcpu *vcpu, unsigned long cr4)
+ 	if (!__cpu_has(__c, X86_FEATURE_SHSTK) &&       \
+ 	    !__cpu_has(__c, X86_FEATURE_IBT))           \
+ 		__reserved_bits |= X86_CR4_CET;         \
++	if (!__cpu_has(__c, X86_FEATURE_FRED))          \
++		__reserved_bits |= X86_CR4_FRED;        \
+ 	__reserved_bits;                                \
+ })
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,161 @@
+From 73d356ce29f00c03cc2008285fbfd6dbc6b0c0bf Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Mon, 6 Nov 2023 23:06:15 -0800
+Subject: [PATCH 25/44] KVM: selftests: Add a new VM guest mode to run user
+ level code
+
+Add a new VM guest mode VM_MODE_PXXV48_4K_USER to set the user bit of
+guest page table entries, thus allow user level code to run in guests.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Change in v5:
+* Add TB from Xuelian Guo.
+---
+ .../testing/selftests/kvm/include/kvm_util.h  |  1 +
+ tools/testing/selftests/kvm/lib/kvm_util.c    |  5 +++-
+ .../testing/selftests/kvm/lib/x86/processor.c | 24 ++++++++++++++-----
+ tools/testing/selftests/kvm/lib/x86/vmx.c     |  4 ++--
+ 4 files changed, 25 insertions(+), 9 deletions(-)
+
+diff --git a/tools/testing/selftests/kvm/include/kvm_util.h b/tools/testing/selftests/kvm/include/kvm_util.h
+index 23a506d7eca3..e5ea563fff94 100644
+--- a/tools/testing/selftests/kvm/include/kvm_util.h
++++ b/tools/testing/selftests/kvm/include/kvm_util.h
+@@ -182,6 +182,7 @@ enum vm_guest_mode {
+ 	VM_MODE_P36V48_64K,
+ 	VM_MODE_P47V47_16K,
+ 	VM_MODE_P36V47_16K,
++	VM_MODE_PXXV48_4K_USER,	/* For 48bits VA but ANY bits PA with USER bit set */
+ 	NUM_VM_MODES,
+ };
+ 
+diff --git a/tools/testing/selftests/kvm/lib/kvm_util.c b/tools/testing/selftests/kvm/lib/kvm_util.c
+index c3f5142b0a54..fc2bdf43ee23 100644
+--- a/tools/testing/selftests/kvm/lib/kvm_util.c
++++ b/tools/testing/selftests/kvm/lib/kvm_util.c
+@@ -239,6 +239,7 @@ const char *vm_guest_mode_string(uint32_t i)
+ 		[VM_MODE_P36V48_64K]	= "PA-bits:36,  VA-bits:48, 64K pages",
+ 		[VM_MODE_P47V47_16K]	= "PA-bits:47,  VA-bits:47, 16K pages",
+ 		[VM_MODE_P36V47_16K]	= "PA-bits:36,  VA-bits:47, 16K pages",
++		[VM_MODE_PXXV48_4K_USER]	= "PA-bits:ANY, VA-bits:48,  4K user pages",
+ 	};
+ 	_Static_assert(sizeof(strings)/sizeof(char *) == NUM_VM_MODES,
+ 		       "Missing new mode strings?");
+@@ -266,6 +267,7 @@ const struct vm_guest_mode_params vm_guest_mode_params[] = {
+ 	[VM_MODE_P36V48_64K]	= { 36, 48, 0x10000, 16 },
+ 	[VM_MODE_P47V47_16K]	= { 47, 47,  0x4000, 14 },
+ 	[VM_MODE_P36V47_16K]	= { 36, 47,  0x4000, 14 },
++	[VM_MODE_PXXV48_4K_USER]	= {  0,  0,  0x1000, 12 },
+ };
+ _Static_assert(sizeof(vm_guest_mode_params)/sizeof(struct vm_guest_mode_params) == NUM_VM_MODES,
+ 	       "Missing new mode params?");
+@@ -341,6 +343,7 @@ struct kvm_vm *____vm_create(struct vm_shape shape)
+ 		vm->pgtable_levels = 3;
+ 		break;
+ 	case VM_MODE_PXXV48_4K:
++	case VM_MODE_PXXV48_4K_USER:
+ #ifdef __x86_64__
+ 		kvm_get_cpu_address_width(&vm->pa_bits, &vm->va_bits);
+ 		kvm_init_vm_address_properties(vm);
+@@ -357,7 +360,7 @@ struct kvm_vm *____vm_create(struct vm_shape shape)
+ 		vm->pgtable_levels = 4;
+ 		vm->va_bits = 48;
+ #else
+-		TEST_FAIL("VM_MODE_PXXV48_4K not supported on non-x86 platforms");
++		TEST_FAIL("VM_MODE_PXXV48_4K(_USER) not supported on non-x86 platforms");
+ #endif
+ 		break;
+ 	case VM_MODE_P47V64_4K:
+diff --git a/tools/testing/selftests/kvm/lib/x86/processor.c b/tools/testing/selftests/kvm/lib/x86/processor.c
+index d4c19ac885a9..3e30732f4c3d 100644
+--- a/tools/testing/selftests/kvm/lib/x86/processor.c
++++ b/tools/testing/selftests/kvm/lib/x86/processor.c
+@@ -124,8 +124,8 @@ bool kvm_is_tdp_enabled(void)
+ 
+ void virt_arch_pgd_alloc(struct kvm_vm *vm)
+ {
+-	TEST_ASSERT(vm->mode == VM_MODE_PXXV48_4K, "Attempt to use "
+-		"unknown or unsupported guest mode, mode: 0x%x", vm->mode);
++	TEST_ASSERT((vm->mode == VM_MODE_PXXV48_4K) || (vm->mode == VM_MODE_PXXV48_4K_USER),
++		"Attempt to use unknown or unsupported guest mode, mode: 0x%x", vm->mode);
+ 
+ 	/* If needed, create page map l4 table. */
+ 	if (!vm->pgd_created) {
+@@ -161,6 +161,8 @@ static uint64_t *virt_create_upper_pte(struct kvm_vm *vm,
+ 
+ 	if (!(*pte & PTE_PRESENT_MASK)) {
+ 		*pte = PTE_PRESENT_MASK | PTE_WRITABLE_MASK;
++		if (vm->mode == VM_MODE_PXXV48_4K_USER)
++			*pte |= PTE_USER_MASK;
+ 		if (current_level == target_level)
+ 			*pte |= PTE_LARGE_MASK | (paddr & PHYSICAL_PAGE_MASK);
+ 		else
+@@ -187,7 +189,7 @@ void __virt_pg_map(struct kvm_vm *vm, uint64_t vaddr, uint64_t paddr, int level)
+ 	uint64_t *pml4e, *pdpe, *pde;
+ 	uint64_t *pte;
+ 
+-	TEST_ASSERT(vm->mode == VM_MODE_PXXV48_4K,
++	TEST_ASSERT((vm->mode == VM_MODE_PXXV48_4K) || (vm->mode == VM_MODE_PXXV48_4K_USER),
+ 		    "Unknown or unsupported guest mode, mode: 0x%x", vm->mode);
+ 
+ 	TEST_ASSERT((vaddr % pg_size) == 0,
+@@ -235,6 +237,9 @@ void __virt_pg_map(struct kvm_vm *vm, uint64_t vaddr, uint64_t paddr, int level)
+ 		*pte |= vm->arch.c_bit;
+ 	else
+ 		*pte |= vm->arch.s_bit;
++
++	if (vm->mode == VM_MODE_PXXV48_4K_USER)
++		*pte |= PTE_USER_MASK;
+ }
+ 
+ void virt_arch_pg_map(struct kvm_vm *vm, uint64_t vaddr, uint64_t paddr)
+@@ -284,8 +289,8 @@ uint64_t *__vm_get_page_table_entry(struct kvm_vm *vm, uint64_t vaddr,
+ 	TEST_ASSERT(*level >= PG_LEVEL_NONE && *level < PG_LEVEL_NUM,
+ 		    "Invalid PG_LEVEL_* '%d'", *level);
+ 
+-	TEST_ASSERT(vm->mode == VM_MODE_PXXV48_4K, "Attempt to use "
+-		"unknown or unsupported guest mode, mode: 0x%x", vm->mode);
++	TEST_ASSERT((vm->mode == VM_MODE_PXXV48_4K) || (vm->mode == VM_MODE_PXXV48_4K_USER),
++		"Attempt to use unknown or unsupported guest mode, mode: 0x%x", vm->mode);
+ 	TEST_ASSERT(sparsebit_is_set(vm->vpages_valid,
+ 		(vaddr >> vm->page_shift)),
+ 		"Invalid virtual address, vaddr: 0x%lx",
+@@ -492,7 +497,14 @@ static void vcpu_init_sregs(struct kvm_vm *vm, struct kvm_vcpu *vcpu)
+ {
+ 	struct kvm_sregs sregs;
+ 
+-	TEST_ASSERT_EQ(vm->mode, VM_MODE_PXXV48_4K);
++	switch (vm->mode) {
++	case VM_MODE_PXXV48_4K:
++	case VM_MODE_PXXV48_4K_USER:
++		break;
++
++	default:
++		TEST_FAIL("Unknown guest mode, mode: 0x%x", vm->mode);
++	}
+ 
+ 	/* Set mode specific system register values. */
+ 	vcpu_sregs_get(vcpu, &sregs);
+diff --git a/tools/testing/selftests/kvm/lib/x86/vmx.c b/tools/testing/selftests/kvm/lib/x86/vmx.c
+index d4d1208dd023..4f7655b0830d 100644
+--- a/tools/testing/selftests/kvm/lib/x86/vmx.c
++++ b/tools/testing/selftests/kvm/lib/x86/vmx.c
+@@ -401,8 +401,8 @@ void __nested_pg_map(struct vmx_pages *vmx, struct kvm_vm *vm,
+ 	struct eptPageTableEntry *pt = vmx->eptp_hva, *pte;
+ 	uint16_t index;
+ 
+-	TEST_ASSERT(vm->mode == VM_MODE_PXXV48_4K, "Attempt to use "
+-		    "unknown or unsupported guest mode, mode: 0x%x", vm->mode);
++	TEST_ASSERT((vm->mode == VM_MODE_PXXV48_4K) || (vm->mode == VM_MODE_PXXV48_4K_USER),
++		    "Attempt to use unknown or unsupported guest mode, mode: 0x%x", vm->mode);
+ 
+ 	TEST_ASSERT((nested_paddr >> 48) == 0,
+ 		    "Nested physical address 0x%lx requires 5-level paging",
+-- 
+2.43.0
+

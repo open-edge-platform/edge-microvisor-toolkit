@@ -1,0 +1,106 @@
+From aa7ec2aa6714a53494483673831ad443cc3eeab6 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Thu, 31 Jul 2025 15:53:51 -0700
+Subject: [PATCH 054/100] KVM: x86: Push acquisition of SRCU in fastpath into
+ kvm_pmu_trigger_event()
+
+Acquire SRCU in the VM-Exit fastpath if and only if KVM needs to check the
+PMU event filter, to further trim the amount of code that is executed with
+SRCU protection in the fastpath.  Counter-intuitively, holding SRCU can do
+more harm than good due to masking potential bugs, and introducing a new
+SRCU-protected asset to code reachable via kvm_skip_emulated_instruction()
+would be quite notable, i.e. definitely worth auditing.
+
+E.g. the primary user of kvm->srcu is KVM's memslots, accessing memslots
+all but guarantees guest memory may be accessed, accessing guest memory
+can fault, and page faults might sleep, which isn't allowed while IRQs are
+disabled.  Not acquiring SRCU means the (hypothetical) illegal sleep would
+be flagged when running with PROVE_RCU=y, even if DEBUG_ATOMIC_SLEEP=n.
+
+Note, performance is NOT a motivating factor, as SRCU lock/unlock only
+adds ~15 cycles of latency to fastpath VM-Exits.  I.e. overhead isn't a
+concern _if_ SRCU protection needs to be extended beyond PMU events, e.g.
+to honor userspace MSR filters.
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/pmu.c |  4 +++-
+ arch/x86/kvm/x86.c | 18 +++++-------------
+ 2 files changed, 8 insertions(+), 14 deletions(-)
+
+diff --git a/arch/x86/kvm/pmu.c b/arch/x86/kvm/pmu.c
+index e75671b6e88c..3206412a35a1 100644
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -955,7 +955,7 @@ static void kvm_pmu_trigger_event(struct kvm_vcpu *vcpu,
+ 	DECLARE_BITMAP(bitmap, X86_PMC_IDX_MAX);
+ 	struct kvm_pmu *pmu = vcpu_to_pmu(vcpu);
+ 	struct kvm_pmc *pmc;
+-	int i;
++	int i, idx;
+ 
+ 	BUILD_BUG_ON(sizeof(pmu->global_ctrl) * BITS_PER_BYTE != X86_PMC_IDX_MAX);
+ 
+@@ -968,12 +968,14 @@ static void kvm_pmu_trigger_event(struct kvm_vcpu *vcpu,
+ 			     (unsigned long *)&pmu->global_ctrl, X86_PMC_IDX_MAX))
+ 		return;
+ 
++	idx = srcu_read_lock(&vcpu->kvm->srcu);
+ 	kvm_for_each_pmc(pmu, pmc, i, bitmap) {
+ 		if (!pmc_is_event_allowed(pmc) || !cpl_is_matched(pmc))
+ 			continue;
+ 
+ 		kvm_pmu_incr_counter(pmc);
+ 	}
++	srcu_read_unlock(&vcpu->kvm->srcu, idx);
+ }
+ 
+ void kvm_pmu_instruction_retired(struct kvm_vcpu *vcpu)
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index f2b2eaaec6f8..a56f83b40a55 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -2137,7 +2137,6 @@ fastpath_t handle_fastpath_set_msr_irqoff(struct kvm_vcpu *vcpu)
+ {
+ 	u64 data = kvm_read_edx_eax(vcpu);
+ 	u32 msr = kvm_rcx_read(vcpu);
+-	int r;
+ 
+ 	switch (msr) {
+ 	case APIC_BASE_MSR + (APIC_ICR >> 4):
+@@ -2152,13 +2151,12 @@ fastpath_t handle_fastpath_set_msr_irqoff(struct kvm_vcpu *vcpu)
+ 		return EXIT_FASTPATH_NONE;
+ 	}
+ 
+-	kvm_vcpu_srcu_read_lock(vcpu);
+-	r = kvm_skip_emulated_instruction(vcpu);
+-	kvm_vcpu_srcu_read_unlock(vcpu);
+-
+ 	trace_kvm_msr_write(msr, data);
+ 
+-	return r ? EXIT_FASTPATH_REENTER_GUEST : EXIT_FASTPATH_EXIT_USERSPACE;
++	if (!kvm_skip_emulated_instruction(vcpu))
++		return EXIT_FASTPATH_EXIT_USERSPACE;
++
++	return EXIT_FASTPATH_REENTER_GUEST;
+ }
+ EXPORT_SYMBOL_GPL(handle_fastpath_set_msr_irqoff);
+ 
+@@ -11251,13 +11249,7 @@ EXPORT_SYMBOL_GPL(kvm_emulate_halt);
+ 
+ fastpath_t handle_fastpath_hlt(struct kvm_vcpu *vcpu)
+ {
+-	int ret;
+-
+-	kvm_vcpu_srcu_read_lock(vcpu);
+-	ret = kvm_emulate_halt(vcpu);
+-	kvm_vcpu_srcu_read_unlock(vcpu);
+-
+-	if (!ret)
++	if (!kvm_emulate_halt(vcpu))
+ 		return EXIT_FASTPATH_EXIT_USERSPACE;
+ 
+ 	if (kvm_vcpu_running(vcpu))
+-- 
+2.43.0
+

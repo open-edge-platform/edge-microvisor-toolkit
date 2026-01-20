@@ -1,0 +1,58 @@
+From 5360d6c11aca43d55397c6080c1a94cb5ff95f6c Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Tue, 9 Aug 2022 10:03:32 -0700
+Subject: [PATCH 21/44] KVM: nVMX: Allow VMX FRED controls
+
+Allow nVMX FRED controls as nested FRED support is in place.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Change in v5:
+* Add TB from Xuelian Guo.
+---
+ arch/x86/kvm/vmx/nested.c | 5 +++--
+ arch/x86/kvm/vmx/vmx.c    | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/nested.c b/arch/x86/kvm/vmx/nested.c
+index 9374560fc91e..9ac36ddf3f05 100644
+--- a/arch/x86/kvm/vmx/nested.c
++++ b/arch/x86/kvm/vmx/nested.c
+@@ -7458,7 +7458,8 @@ static void nested_vmx_setup_exit_ctls(struct vmcs_config *vmcs_conf,
+ 		 * advertise any feature in it to nVMX until its nVMX support
+ 		 * is ready.
+ 		 */
+-		msrs->secondary_exit_ctls &= 0;
++		msrs->secondary_exit_ctls &= SECONDARY_VM_EXIT_SAVE_IA32_FRED |
++					     SECONDARY_VM_EXIT_LOAD_IA32_FRED;
+ 	}
+ }
+ 
+@@ -7474,7 +7475,7 @@ static void nested_vmx_setup_entry_ctls(struct vmcs_config *vmcs_conf,
+ 		VM_ENTRY_IA32E_MODE |
+ #endif
+ 		VM_ENTRY_LOAD_IA32_PAT | VM_ENTRY_LOAD_BNDCFGS |
+-		VM_ENTRY_LOAD_CET_STATE;
++		VM_ENTRY_LOAD_CET_STATE | VM_ENTRY_LOAD_IA32_FRED;
+ 	msrs->entry_ctls_high |=
+ 		(VM_ENTRY_ALWAYSON_WITHOUT_TRUE_MSR | VM_ENTRY_LOAD_IA32_EFER |
+ 		 VM_ENTRY_LOAD_IA32_PERF_GLOBAL_CTRL);
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 96edf88dd924..d04085f2d4a2 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -8007,6 +8007,7 @@ static void nested_vmx_cr_fixed1_bits_update(struct kvm_vcpu *vcpu)
+ 
+ 	entry = kvm_find_cpuid_entry_index(vcpu, 0x7, 1);
+ 	cr4_fixed1_update(X86_CR4_LAM_SUP,    eax, feature_bit(LAM));
++	cr4_fixed1_update(X86_CR4_FRED,       eax, feature_bit(FRED));
+ 
+ #undef cr4_fixed1_update
+ }
+-- 
+2.43.0
+

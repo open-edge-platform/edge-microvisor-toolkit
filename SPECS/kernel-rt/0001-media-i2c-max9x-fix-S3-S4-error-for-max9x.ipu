@@ -1,0 +1,878 @@
+From 34b0b6fcd8a20612950a7a8a7d1b252c43313119 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Tue, 21 Oct 2025 10:35:24 +0800
+Subject: [PATCH 1/2] media: i2c: max9x: fix S3/S4 error for max9x
+
+Tracked-On: #JILCNT-697
+    Tracked-On: #H15018371204
+
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/i2c/isx031.c             |  70 +++++++-----
+ drivers/media/i2c/max9x/Makefile       |   2 +-
+ drivers/media/i2c/max9x/max9295.c      |  39 ++++---
+ drivers/media/i2c/max9x/max9296.h      |   2 +-
+ drivers/media/i2c/max9x/max96724.c     |   7 +-
+ drivers/media/i2c/max9x/regmap-retry.c |  52 +++++++++
+ drivers/media/i2c/max9x/regmap-retry.h |  18 +++
+ drivers/media/i2c/max9x/serdes.c       | 148 ++++++++-----------------
+ 8 files changed, 188 insertions(+), 150 deletions(-)
+ create mode 100644 drivers/media/i2c/max9x/regmap-retry.c
+ create mode 100644 drivers/media/i2c/max9x/regmap-retry.h
+
+diff --git a/drivers/media/i2c/isx031.c b/drivers/media/i2c/isx031.c
+index ddc3e512efa4..e613cdb06b83 100644
+--- a/drivers/media/i2c/isx031.c
++++ b/drivers/media/i2c/isx031.c
+@@ -33,6 +33,8 @@
+ #define ISX031_MODE_4LANES_30FPS	0x17
+ #define ISX031_MODE_2LANES_30FPS	0x18
+ 
++static DEFINE_MUTEX(isx031_mutex);
++
+ struct isx031_reg {
+ 	enum {
+ 		ISX031_REG_LEN_DELAY = 0,
+@@ -95,7 +97,7 @@ struct isx031 {
+ 	u8 lanes;
+ 
+ 	/* To serialize asynchronus callbacks */
+-	struct mutex mutex;
++	struct mutex *mutex;
+ 
+ 	/* i2c client */
+ 	struct i2c_client *client;
+@@ -306,6 +308,21 @@ static int isx031_write_reg(struct isx031 *isx031, u16 reg, u16 len, u32 val)
+ 	return 0;
+ }
+ 
++static int isx031_write_reg_retry(struct isx031 *isx031, u16 reg, u16 len, u32 val)
++{
++	int ret;
++	int retry = 100;
++
++	while (retry--) {
++			ret = isx031_write_reg(isx031, reg, len, val);
++			if (!ret)
++					break;
++			msleep(20);
++	}
++
++	return ret;
++}
++
+ static int isx031_write_reg_list(struct isx031 *isx031,
+ 				 const struct isx031_reg_list *r_list)
+ {
+@@ -318,7 +335,7 @@ static int isx031_write_reg_list(struct isx031 *isx031,
+ 			msleep(r_list->regs[i].val);
+ 			continue;
+ 		}
+-		ret = isx031_write_reg(isx031, r_list->regs[i].address,
++		ret = isx031_write_reg_retry(isx031, r_list->regs[i].address,
+ 				       ISX031_REG_LEN_08BIT,
+ 				       r_list->regs[i].val);
+ 		if (ret) {
+@@ -353,7 +370,7 @@ static int isx031_set_driver_mode(struct isx031 *isx031)
+ 	if (mode < 0)
+ 		return mode;
+ 
+-	ret = isx031_write_reg(isx031, ISX031_REG_MODE_SELECT, 1, mode);
++	ret = isx031_write_reg_retry(isx031, ISX031_REG_MODE_SELECT, 1, mode);
+ 	return ret;
+ }
+ 
+@@ -506,13 +523,12 @@ static int isx031_set_stream(struct v4l2_subdev *sd, int enable)
+ 	if (isx031->streaming == enable)
+ 		return 0;
+ 
+-	mutex_lock(&isx031->mutex);
++	mutex_lock(isx031->mutex);
+ 	if (enable) {
+ 		ret = pm_runtime_get_sync(&client->dev);
+ 		if (ret < 0) {
+ 			pm_runtime_put_noidle(&client->dev);
+-			mutex_unlock(&isx031->mutex);
+-			return ret;
++			goto err_unlock;
+ 		}
+ 
+ 		ret = isx031_start_streaming(isx031);
+@@ -528,7 +544,8 @@ static int isx031_set_stream(struct v4l2_subdev *sd, int enable)
+ 
+ 	isx031->streaming = enable;
+ 
+-	mutex_unlock(&isx031->mutex);
++err_unlock:
++	mutex_unlock(isx031->mutex);
+ 
+ 	return ret;
+ }
+@@ -553,11 +570,11 @@ static int __maybe_unused isx031_suspend(struct device *dev)
+ 	struct v4l2_subdev *sd = i2c_get_clientdata(client);
+ 	struct isx031 *isx031 = to_isx031(sd);
+ 
+-	mutex_lock(&isx031->mutex);
++	mutex_lock(isx031->mutex);
+ 	if (isx031->streaming)
+ 		isx031_stop_streaming(isx031);
+ 
+-	mutex_unlock(&isx031->mutex);
++	mutex_unlock(isx031->mutex);
+ 
+ 	return 0;
+ }
+@@ -568,7 +585,9 @@ static int __maybe_unused isx031_resume(struct device *dev)
+ 	struct v4l2_subdev *sd = i2c_get_clientdata(client);
+ 	struct isx031 *isx031 = to_isx031(sd);
+ 	const struct isx031_reg_list *reg_list;
+-	int ret;
++	int ret = 0;
++
++	mutex_lock(isx031->mutex);
+ 
+ 	if (isx031->reset_gpio != NULL)
+ 		isx031_reset(isx031->reset_gpio);
+@@ -579,27 +598,26 @@ static int __maybe_unused isx031_resume(struct device *dev)
+ 		ret = isx031_write_reg_list(isx031, reg_list);
+ 		if (ret) {
+ 			dev_err(&client->dev, "resume: failed to apply cur mode");
+-			return ret;
++			goto err_unlock;
+ 		}
+ 	} else {
+ 		dev_err(&client->dev, "isx031 resume failed");
+-		return ret;
++		goto err_unlock;
+ 	}
+ 
+-	mutex_lock(&isx031->mutex);
+ 	if (isx031->streaming) {
+ 		ret = isx031_start_streaming(isx031);
+ 		if (ret) {
+ 			isx031->streaming = false;
+ 			isx031_stop_streaming(isx031);
+-			mutex_unlock(&isx031->mutex);
+-			return ret;
++			goto err_unlock;
+ 		}
+ 	}
+ 
+-	mutex_unlock(&isx031->mutex);
++err_unlock:
++	mutex_unlock(isx031->mutex);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static int isx031_get_frame_desc(struct v4l2_subdev *sd, unsigned int pad,
+@@ -638,7 +656,7 @@ static int isx031_set_format(struct v4l2_subdev *sd,
+ 	if (i >= ARRAY_SIZE(supported_modes))
+ 		mode = &supported_modes[0];
+ 
+-	mutex_lock(&isx031->mutex);
++	mutex_lock(isx031->mutex);
+ 
+ 	isx031_update_pad_format(mode, &fmt->format);
+ 	if (fmt->which == V4L2_SUBDEV_FORMAT_TRY) {
+@@ -647,7 +665,7 @@ static int isx031_set_format(struct v4l2_subdev *sd,
+ 		isx031->cur_mode = mode;
+ 	}
+ 
+-	mutex_unlock(&isx031->mutex);
++	mutex_unlock(isx031->mutex);
+ 
+ 	return 0;
+ }
+@@ -658,14 +676,14 @@ static int isx031_get_format(struct v4l2_subdev *sd,
+ {
+ 	struct isx031 *isx031 = to_isx031(sd);
+ 
+-	mutex_lock(&isx031->mutex);
++	mutex_lock(isx031->mutex);
+ 	if (fmt->which == V4L2_SUBDEV_FORMAT_TRY)
+ 		fmt->format = *v4l2_subdev_state_get_format(sd_state,
+ 							  fmt->pad);
+ 	else
+ 		isx031_update_pad_format(isx031->cur_mode, &fmt->format);
+ 
+-	mutex_unlock(&isx031->mutex);
++	mutex_unlock(isx031->mutex);
+ 
+ 	return 0;
+ }
+@@ -674,10 +692,10 @@ static int isx031_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
+ {
+ 	struct isx031 *isx031 = to_isx031(sd);
+ 
+-	mutex_lock(&isx031->mutex);
++	mutex_lock(isx031->mutex);
+ 	isx031_update_pad_format(&supported_modes[0],
+ 				 v4l2_subdev_state_get_format(fh->state, 0));
+-	mutex_unlock(&isx031->mutex);
++	mutex_unlock(isx031->mutex);
+ 
+ 	return 0;
+ }
+@@ -710,12 +728,10 @@ static const struct v4l2_subdev_internal_ops isx031_internal_ops = {
+ static void isx031_remove(struct i2c_client *client)
+ {
+ 	struct v4l2_subdev *sd = i2c_get_clientdata(client);
+-	struct isx031 *isx031 = to_isx031(sd);
+ 
+ 	v4l2_async_unregister_subdev(sd);
+ 	media_entity_cleanup(&sd->entity);
+ 	pm_runtime_disable(&client->dev);
+-	mutex_destroy(&isx031->mutex);
+ 
+ }
+ 
+@@ -776,8 +792,7 @@ static int isx031_probe(struct i2c_client *client)
+ 	if (isx031->platform_data)
+ 		isx031->lanes = isx031->platform_data->lanes;
+ 
+-	mutex_init(&isx031->mutex);
+-
++	isx031->mutex = &isx031_mutex;
+ 	/* 1920x1536 default */
+ 	isx031->cur_mode = NULL;
+ 	isx031->pre_mode = &supported_modes[0];
+@@ -808,7 +823,6 @@ static int isx031_probe(struct i2c_client *client)
+ probe_error_media_entity_cleanup:
+ 	media_entity_cleanup(&isx031->sd.entity);
+ 	pm_runtime_disable(&client->dev);
+-	mutex_destroy(&isx031->mutex);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/media/i2c/max9x/Makefile b/drivers/media/i2c/max9x/Makefile
+index ab533b790f72..ec275fe74e94 100644
+--- a/drivers/media/i2c/max9x/Makefile
++++ b/drivers/media/i2c/max9x/Makefile
+@@ -7,4 +7,4 @@ ccflags-y += -I$(src)/../../pci/intel/ipu6/
+ endif
+ 
+ obj-m 		+= max9x.o
+-max9x-y += serdes.o max9296.o max96724.o max9295.o max96717.o
++max9x-y += regmap-retry.o serdes.o max9296.o max96724.o max9295.o max96717.o
+diff --git a/drivers/media/i2c/max9x/max9295.c b/drivers/media/i2c/max9x/max9295.c
+index cc1ee2f5ff92..a5bacc3684a9 100644
+--- a/drivers/media/i2c/max9x/max9295.c
++++ b/drivers/media/i2c/max9x/max9295.c
+@@ -30,6 +30,7 @@
+ #include <linux/slab.h>
+ 
+ #include "max9295.h"
++#include "regmap-retry.h"
+ 
+ static const char *const max9295_gpio_chip_names[] = {
+ 	"MFP1",
+@@ -261,14 +262,14 @@ static int max9295_set_pipe_data_types_enabled(struct max9x_common *common,
+ 	struct device *dev = common->dev;
+ 	struct regmap *map = common->map;
+ 	int data_type_slot, dt;
+-	int ret;
++	int ret = 0;
+ 
+ 	for (data_type_slot = 0; data_type_slot < common->video_pipe[pipe_id].config.num_data_types; data_type_slot++) {
+ 		dt = common->video_pipe[pipe_id].config.data_type[data_type_slot];
+ 		dev_dbg(dev, "Video-pipe %d, data type %d: (%#.2x: %s)",
+ 			pipe_id, data_type_slot, dt, (enable ? "enable" : "disable"));
+ 
+-		TRY(ret, regmap_update_bits(map, MAX9295_MEM_DT_SEL(pipe_id, data_type_slot),
++		TRY(ret, regmap_update_bits_retry(map, MAX9295_MEM_DT_SEL(pipe_id, data_type_slot),
+ 				MAX9295_MEM_DT_SEL_DT_FIELD | MAX9295_MEM_DT_SEL_EN_FIELD,
+ 				MAX9X_FIELD_PREP(MAX9295_MEM_DT_SEL_DT_FIELD, dt) |
+ 				MAX9X_FIELD_PREP(MAX9295_MEM_DT_SEL_EN_FIELD, enable ? 1U : 0U))
+@@ -510,35 +511,35 @@ static int max9295_enable_rclk(struct max9x_common *common)
+ 	dev_info(dev, "Enable RCLK: 27MHz");
+ 
+ 	// Configure pre-defined 27MHz frequency (0b01 = 27MHz)
+-	TRY(ret, regmap_update_bits(map, MAX9295_REF_VTG0,
++	TRY(ret, regmap_update_bits_retry(map, MAX9295_REF_VTG0,
+ 			MAX9295_REFGEN_PREDEF_FREQ_FIELD,
+ 			MAX9X_FIELD_PREP(MAX9295_REFGEN_PREDEF_FREQ_FIELD, 1U))
+ 	);
+ 
+ 	// Enable reference generation
+-	TRY(ret, regmap_update_bits(map, MAX9295_REF_VTG0,
++	TRY(ret, regmap_update_bits_retry(map, MAX9295_REF_VTG0,
+ 			MAX9295_REFGEN_EN_FIELD,
+ 			MAX9X_FIELD_PREP(MAX9295_REFGEN_EN_FIELD, 1U))
+ 	);
+ 
+ 	// Configure reference generation output on MFP4
+-	TRY(ret, regmap_update_bits(map, MAX9295_REF_VTG1,
++	TRY(ret, regmap_update_bits_retry(map, MAX9295_REF_VTG1,
+ 			MAX9295_PCLK_GPIO_FIELD,
+ 			MAX9X_FIELD_PREP(MAX9295_PCLK_GPIO_FIELD, 4U))
+ 	);
+ 
+ 	// Enable output
+-	TRY(ret, regmap_update_bits(map, MAX9295_REF_VTG1,
++	TRY(ret, regmap_update_bits_retry(map, MAX9295_REF_VTG1,
+ 			MAX9295_PCLK_EN_FIELD,
+ 			MAX9X_FIELD_PREP(MAX9295_PCLK_EN_FIELD, 1U))
+ 	);
+ 
+-	TRY(ret, regmap_update_bits(map, MAX9295_REG3,
++	TRY(ret, regmap_update_bits_retry(map, MAX9295_REG3,
+ 			MAX9295_RCLK_SEL_FIELD,
+ 			MAX9X_FIELD_PREP(MAX9295_RCLK_SEL_FIELD, 3U))
+ 	);
+ 
+-	TRY(ret, regmap_update_bits(map, MAX9295_REG6,
++	TRY(ret, regmap_update_bits_retry(map, MAX9295_REG6,
+ 			MAX9295_RCLK_EN_FIELD,
+ 			MAX9X_FIELD_PREP(MAX9295_RCLK_EN_FIELD, 1U))
+ 	);
+@@ -553,7 +554,7 @@ static int max9295_set_local_control_channel_enabled(struct max9x_common *common
+ 
+ 	dev_dbg(dev, "set rem cc %s", (enabled ? "enable" : "disable"));
+ 
+-	return regmap_update_bits(map, MAX9295_PHY_REM_CTRL, MAX9295_PHY_LOCAL_CTRL_DIS_FIELD,
++	return regmap_update_bits_retry(map, MAX9295_PHY_REM_CTRL, MAX9295_PHY_LOCAL_CTRL_DIS_FIELD,
+ 				  MAX9X_FIELD_PREP(MAX9295_PHY_LOCAL_CTRL_DIS_FIELD,  (enabled ? 0U : 1U)));
+ }
+ 
+@@ -575,8 +576,8 @@ static int max9295_verify_devid(struct max9x_common *common)
+ 	int ret;
+ 
+ 	// Fetch and output chip name + revision
+-	TRY(ret, regmap_read(map, MAX9295_DEV_ID, &dev_id));
+-	TRY(ret, regmap_read(map, MAX9295_DEV_REV, &dev_rev));
++	TRY(ret, regmap_read_retry(map, MAX9295_DEV_ID, &dev_id));
++	TRY(ret, regmap_read_retry(map, MAX9295_DEV_REV, &dev_rev));
+ 
+ 	switch (dev_id) {
+ 	case MAX9295A:
+@@ -617,10 +618,10 @@ static int max9295_enable(struct max9x_common *common)
+ 	TRY(ret, max9295_set_local_control_channel_enabled(common, false));
+ 
+ 	/* Clear the pipe maps */
+-	TRY(ret, regmap_write(map, MAX9295_FRONTTOP_9, 0));
++	TRY(ret, regmap_write_retry(map, MAX9295_FRONTTOP_9, 0));
+ 
+ 	/* Clear the csi port selections */
+-	TRY(ret, regmap_write(map, MAX9295_FRONTTOP_0, MAX9295_FRONTTOP_0_LINE_INFO));
++	TRY(ret, regmap_write_retry(map, MAX9295_FRONTTOP_0, MAX9295_FRONTTOP_0_LINE_INFO));
+ 
+ 	return 0;
+ }
+@@ -685,6 +686,8 @@ static int max9295_remap_addr(struct max9x_common *common)
+ 	TRY_DEV_HERE(ret, regmap_update_bits(common->map, MAX9295_CFGL_IIC_Y, MAX9295_TR3_TX_SRC_ID,
+ 		MAX9X_FIELD_PREP(MAX9295_TR3_TX_SRC_ID, common->client->addr)), dev);
+ 
++	msleep(20);
++
+ 	return 0;
+ }
+ 
+@@ -717,18 +720,18 @@ static int max9295_add_translate_addr(struct max9x_common *common,
+ 	int ret;
+ 
+ 	for (alias = 0; alias < MAX9295_NUM_ALIASES; alias++) {
+-		TRY(ret, regmap_read(map, MAX9295_I2C_SRC(i2c_id, alias), &src));
++		TRY(ret, regmap_read_retry(map, MAX9295_I2C_SRC(i2c_id, alias), &src));
+ 
+ 		src = FIELD_GET(MAX9295_I2C_SRC_FIELD, src);
+ 		if (src == virt_addr || src == 0) {
+ 			dev_dbg(dev, "SRC %02x = %02x, DST %02x = %02x",
+ 				MAX9295_I2C_SRC(i2c_id, alias), virt_addr,
+ 				MAX9295_I2C_DST(i2c_id, alias), phys_addr);
+-			TRY(ret, regmap_write(map, MAX9295_I2C_DST(i2c_id, alias),
++			TRY(ret, regmap_write_retry(map, MAX9295_I2C_DST(i2c_id, alias),
+ 					      MAX9X_FIELD_PREP(MAX9295_I2C_DST_FIELD, phys_addr))
+ 			);
+ 
+-			TRY(ret, regmap_write(map, MAX9295_I2C_SRC(i2c_id, alias),
++			TRY(ret, regmap_write_retry(map, MAX9295_I2C_SRC(i2c_id, alias),
+ 					      MAX9X_FIELD_PREP(MAX9295_I2C_SRC_FIELD, virt_addr))
+ 			);
+ 		}
+@@ -746,10 +749,10 @@ static int max9295_remove_translate_addr(struct max9x_common *common,
+ 	int ret;
+ 
+ 	for (alias = 0; alias < MAX9295_NUM_ALIASES; alias++) {
+-		TRY(ret, regmap_read(map, MAX9295_I2C_SRC(i2c_id, alias), &src));
++		TRY(ret, regmap_read_retry(map, MAX9295_I2C_SRC(i2c_id, alias), &src));
+ 		src = FIELD_GET(MAX9295_I2C_SRC_FIELD, src);
+ 		if (src == virt_addr) {
+-			return regmap_write(map, MAX9295_I2C_DST(i2c_id, alias),
++			return regmap_write_retry(map, MAX9295_I2C_DST(i2c_id, alias),
+ 					    MAX9X_FIELD_PREP(MAX9295_I2C_DST_FIELD, 0));
+ 		}
+ 	}
+diff --git a/drivers/media/i2c/max9x/max9296.h b/drivers/media/i2c/max9x/max9296.h
+index 38c344669df4..acc6bb03405b 100644
+--- a/drivers/media/i2c/max9x/max9296.h
++++ b/drivers/media/i2c/max9x/max9296.h
+@@ -49,7 +49,7 @@ enum max9296_link_mode {
+ #define MAX9296_NUM_CSI_LINKS 4  /* Total Number of PHYs */
+ /* 2 CSI controllers, 2 PHYs per controller, and 2 lanes per PHY */
+ 
+-#define MAX9296_DEFAULT_SERIAL_LINK_TIMEOUT_MS 250
++#define MAX9296_DEFAULT_SERIAL_LINK_TIMEOUT_MS 350
+ 
+ #define MAX9296_DPLL_FREQ_MHZ_MULTIPLE 100
+ 
+diff --git a/drivers/media/i2c/max9x/max96724.c b/drivers/media/i2c/max9x/max96724.c
+index b214e1176963..37a29d2ec046 100644
+--- a/drivers/media/i2c/max9x/max96724.c
++++ b/drivers/media/i2c/max9x/max96724.c
+@@ -30,6 +30,7 @@
+ #include <linux/slab.h>
+ 
+ #include "max96724.h"
++#include "regmap-retry.h"
+ 
+ // Params
+ int max96724_serial_link_timeout_ms = MAX96724_DEFAULT_SERIAL_LINK_TIMEOUT_MS;
+@@ -337,7 +338,7 @@ static int max96724_set_all_reset(struct max9x_common *common, bool enable)
+ 
+ 	dev_dbg(dev, "Reset %s", (enable ? "enable" : "disable"));
+ 
+-	return regmap_update_bits(map, MAX96724_RESET_ALL,
++	return regmap_update_bits_retry(map, MAX96724_RESET_ALL,
+ 		MAX96724_RESET_ALL_FIELD,
+ 		MAX9X_FIELD_PREP(MAX96724_RESET_ALL_FIELD, enable ? 1U : 0U));
+ }
+@@ -354,8 +355,8 @@ static int max96724_soft_reset(struct max9x_common *common)
+ 		return ret;
+ 
+ 	/* Wait for hardware available after soft reset */
+-	/* TODO: Optimize sleep time 45 ms */
+-	msleep(45);
++	/* TODO: Optimize sleep time 20 ms */
++	msleep(20);
+ 
+ 	ret = max96724_set_all_reset(common, 0);
+ 	if (ret)
+diff --git a/drivers/media/i2c/max9x/regmap-retry.c b/drivers/media/i2c/max9x/regmap-retry.c
+new file mode 100644
+index 000000000000..48e5ec4bcb4f
+--- /dev/null
++++ b/drivers/media/i2c/max9x/regmap-retry.c
+@@ -0,0 +1,52 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (C) 2013--2025 Intel Corporation
++ */
++
++#include "regmap-retry.h"
++
++int regmap_read_retry(struct regmap *map, unsigned int reg, unsigned int *val)
++{
++	int ret = 0;
++	int retry = 50;
++
++	while (retry--) {
++		ret = regmap_read(map, reg, val);
++		if (!ret)
++			break;
++		msleep(20);
++	}
++
++	return ret;
++}
++
++int regmap_write_retry(struct regmap *map, unsigned int reg, unsigned int val)
++{
++	int ret = 0;
++	int retry = 50;
++
++	while (retry--) {
++		ret = regmap_write(map, reg, val);
++		if (!ret)
++			break;
++		msleep(20);
++	}
++
++	return ret;
++}
++
++int regmap_update_bits_retry(struct regmap *map, unsigned int reg,
++			     unsigned int mask, unsigned int val)
++{
++	int ret = 0;
++	int retry = 50;
++
++	while (retry--) {
++		ret = regmap_update_bits(map, reg, mask, val);
++		if (!ret)
++			break;
++		msleep(20);
++	}
++
++	return ret;
++}
+diff --git a/drivers/media/i2c/max9x/regmap-retry.h b/drivers/media/i2c/max9x/regmap-retry.h
+new file mode 100644
+index 000000000000..9e9ac63878a0
+--- /dev/null
++++ b/drivers/media/i2c/max9x/regmap-retry.h
+@@ -0,0 +1,18 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (C) 2013--2025 Intel Corporation
++ */
++
++#ifndef _REGMAP_RETRY_H
++#define _REGMAP_RETRY_H
++
++#include <linux/regmap.h>
++
++int regmap_read_retry(struct regmap *map, unsigned int reg, unsigned int *val);
++
++int regmap_write_retry(struct regmap *map, unsigned int reg, unsigned int val);
++
++int regmap_update_bits_retry(struct regmap *map, unsigned int reg,
++			     unsigned int mask, unsigned int val);
++
++#endif
+diff --git a/drivers/media/i2c/max9x/serdes.c b/drivers/media/i2c/max9x/serdes.c
+index 633c55504273..fce930a1fdea 100644
+--- a/drivers/media/i2c/max9x/serdes.c
++++ b/drivers/media/i2c/max9x/serdes.c
+@@ -31,6 +31,7 @@
+ #include <linux/of_gpio.h>
+ 
+ #include "serdes.h"
++#include "regmap-retry.h"
+ 
+ static const s64 max9x_op_sys_clock[] =  {
+ 	MAX9X_LINK_FREQ_MBPS_TO_HZ(2500),
+@@ -397,22 +398,6 @@ static void *parse_serdes_pdata(struct device *dev)
+ 	return des_pdata;
+ }
+ 
+-static int regmap_read_retry(struct regmap *map, unsigned int reg,
+-			   unsigned int *val)
+-{
+-	int ret = 0;
+-	int i = 0;
+-
+-	for (i = 0; i < 50; i++) {
+-		ret = regmap_read(map, reg, val);
+-		if (!ret)
+-			break;
+-		msleep(20);
+-	}
+-
+-	return ret;
+-}
+-
+ static int max9x_enable_resume(struct max9x_common *common)
+ {
+ 	struct device *dev = common->dev;
+@@ -457,6 +442,7 @@ static int max9x_remap_serializers_resume(struct max9x_common *common, unsigned
+ 	unsigned int phys_addr, virt_addr;
+ 	struct i2c_client *phys_client;
+ 	struct regmap *phys_map, *virt_map;
++	struct device *dev = &serial_link->remote.client->dev;
+ 	unsigned int val;
+ 	const struct regmap_config regmap_config = {
+ 		.reg_bits = 16,
+@@ -466,27 +452,23 @@ static int max9x_remap_serializers_resume(struct max9x_common *common, unsigned
+ 	if (!serial_link->remote.pdata)
+ 		return 0;
+ 
+-	ret = max9x_des_isolate_serial_link(common, link_id);
+-	if (ret)
+-		return ret;
+-
+ 	phys_addr = serial_link->remote.pdata->phys_addr;
+ 	virt_addr = serial_link->remote.pdata->board_info.addr;
+ 	if (phys_addr == virt_addr)
+ 		return 0;
+ 
+-	dev_info(common->dev, "Remap serializer from 0x%02x to 0x%02x", phys_addr, virt_addr);
++	dev_info(dev, "Remap serializer from 0x%02x to 0x%02x", phys_addr, virt_addr);
+ 
+ 	phys_client = i2c_new_dummy_device(serial_link->remote.client->adapter, phys_addr);
+ 	if (IS_ERR_OR_NULL(phys_client)) {
+-		dev_err(common->dev, "Failed to create dummy client for phys_addr 0x%x", phys_addr);
++		dev_err(dev, "Failed to create dummy client for phys_addr 0x%x", phys_addr);
+ 		ret = PTR_ERR(phys_client);
+ 		return ret;
+ 	}
+ 
+ 	phys_map = regmap_init_i2c(phys_client, &regmap_config);
+ 	if (IS_ERR_OR_NULL(phys_map)) {
+-		dev_err(common->dev, "Failed to create dummy map for phys_addr 0x%x", phys_addr);
++		dev_err(dev, "Failed to create dummy map for phys_addr 0x%x", phys_addr);
+ 		ret = PTR_ERR(phys_map);
+ 		goto err_client;
+ 	}
+@@ -494,36 +476,36 @@ static int max9x_remap_serializers_resume(struct max9x_common *common, unsigned
+ 	struct max9x_common *ser_common = max9x_client_to_common(serial_link->remote.client);
+ 
+ 	virt_map = ser_common->map;
+-	ret = regmap_read(virt_map, MAX9X_DEV_ID, &val);
++	ret = regmap_read_retry(virt_map, MAX9X_DEV_ID, &val);
+ 	if (!ret) {
+-		dev_info(common->dev, "Remap not necessary");
++		dev_info(dev, "Remap not necessary");
+ 		ret = 0;
+ 		goto err_regmap;
+ 	}
+ 
+ 	ret = regmap_read_retry(phys_map, MAX9X_DEV_ID, &val);
+ 	if (ret) {
+-		dev_err(common->dev, "Device not present at 0x%02x", phys_addr);
++		dev_err(dev, "Device not present at 0x%02x", phys_addr);
+ 		goto err_regmap;
+ 	} else {
+-		dev_info(common->dev, "DEV_ID before: 0x%02x", val);
++		dev_info(dev, "DEV_ID before: 0x%02x", val);
+ 	}
+ 
+-	ret = regmap_write(phys_map, 0x00, (virt_addr & 0x7f) << 1);
++	ret = regmap_write_retry(phys_map, 0x00, (virt_addr & 0x7f) << 1);
+ 	if (ret) {
+-		dev_err(common->dev, "Failed to remap serialzier from 0x%02x to 0x%02x (%d)",
++		dev_err(dev, "Failed to remap serialzier from 0x%02x to 0x%02x (%d)",
+ 				phys_addr, virt_addr, ret);
+ 		goto err_regmap;
+ 	}
+ 
+ 	msleep(100);
+ 
+-	ret = regmap_read(virt_map, MAX9X_DEV_ID, &val);
++	ret = regmap_read_retry(virt_map, MAX9X_DEV_ID, &val);
+ 	if (ret) {
+-		dev_err(common->dev, "Device not present after remap to 0x%02x", virt_addr);
++		dev_err(dev, "Device not present after remap to 0x%02x", virt_addr);
+ 		goto err_regmap;
+ 	} else {
+-		dev_info(common->dev, "DEV_ID after: 0x%02x", val);
++		dev_info(dev, "DEV_ID after: 0x%02x", val);
+ 	}
+ 
+ err_regmap:
+@@ -531,8 +513,6 @@ static int max9x_remap_serializers_resume(struct max9x_common *common, unsigned
+ err_client:
+ 	i2c_unregister_device(phys_client);
+ 
+-	max9x_des_deisolate_serial_link(common, link_id);
+-
+ 	return ret;
+ }
+ 
+@@ -582,42 +562,31 @@ int max9x_common_resume(struct max9x_common *common)
+ 	struct max9x_common *des_common = NULL;
+ 	struct device *dev = common->dev;
+ 	u32 des_link;
+-	u32 phys_addr, virt_addr;
+ 	int ret = 0;
+-	int retry = 50;
+ 
+-	if (dev->platform_data) {
++	if (dev->platform_data && common->type == MAX9X_SERIALIZER) {
+ 		struct max9x_pdata *pdata = dev->platform_data;
+-
+-		virt_addr = common->client->addr;
+-		phys_addr = pdata->phys_addr ? pdata->phys_addr : virt_addr;
+-
+-		if (common->type == MAX9X_SERIALIZER) {
+-			WARN_ON(pdata->num_serial_links < 1);
+-
+-			des_common = max9x_client_to_common(pdata->serial_links[0].des_client);
+-			if (des_common) {
+-				des_link = pdata->serial_links[0].des_link_id;
+-				ret = max9x_remap_serializers_resume(des_common, des_link);
+-				if (ret)
+-					return ret;
+-				ret = max9x_des_isolate_serial_link(des_common, des_link);
+-				if (ret)
+-					goto err_reset_serializer;
+-			}
++		WARN_ON(pdata->num_serial_links < 1);
++
++		des_common = max9x_client_to_common(
++		       pdata->serial_links[0].des_client);
++	       if (des_common) {
++		       des_link = pdata->serial_links[0].des_link_id;
++		       ret = max9x_des_isolate_serial_link(des_common, des_link);
++		       if (ret)
++			       goto err_deisolate;
++		       ret = max9x_remap_serializers_resume(des_common, des_link);
++		       if (ret)
++			       goto err_deisolate;
++	       } else {
++		       return ret;
+ 		}
+ 	}
+ 
+-	while (retry--) {
+-		ret = max9x_verify_devid(common);
+-		if (ret)
+-			msleep(100);
+-		else
+-			break;
+-	}
++	ret = max9x_verify_devid(common);
+ 	if (ret) {
+ 		dev_err(dev, "can't get devid after resume");
+-		goto err_deisolate;
++		goto err_reset_serializer;
+ 	}
+ 
+ 	ret = max9x_enable_resume(common);
+@@ -641,11 +610,6 @@ int max9x_common_resume(struct max9x_common *common)
+ err_disable:
+ 	max9x_disable(common);
+ 
+-err_deisolate:
+-	if (common->type == MAX9X_SERIALIZER && des_common) {
+-		max9x_des_deisolate_serial_link(des_common, des_link);
+-	}
+-
+ err_reset_serializer:
+ 	if (common->type == MAX9X_SERIALIZER) {
+ 		if (common->common_ops && common->common_ops->remap_reset) {
+@@ -655,6 +619,11 @@ int max9x_common_resume(struct max9x_common *common)
+ 		}
+ 	}
+ 
++err_deisolate:
++	if (common->type == MAX9X_SERIALIZER && des_common) {
++			max9x_des_deisolate_serial_link(des_common, des_link);
++	}
++
+ 	return ret;
+ }
+ 
+@@ -664,26 +633,12 @@ int max9x_common_suspend(struct max9x_common *common)
+ 
+ 	dev_dbg(common->dev, "try to suspend");
+ 
+-	max9x_disable_translations(common);
+ 
+ 	for (link_id = 0; link_id < common->num_serial_links; link_id++)
+ 		max9x_disable_serial_link(common, link_id);
+ 
+ 	max9x_disable(common);
+ 
+-	if (common->type == MAX9X_SERIALIZER) {
+-		struct device *dev = common->dev;
+-		int ret;
+-
+-		if (dev->platform_data) {
+-			if (common->common_ops && common->common_ops->remap_reset) {
+-				ret = common->common_ops->remap_reset(common);
+-				if (ret)
+-					return ret;
+-			}
+-		}
+-	}
+-
+ 	return 0;
+ }
+ 
+@@ -1099,7 +1054,7 @@ int max9x_verify_devid(struct max9x_common *common)
+ 	 * Fetch and output chip name + revision
+ 	 * try both virtual address and physical address
+ 	 */
+-	ret = regmap_read(map, MAX9X_DEV_ID, &dev_id);
++	ret = regmap_read_retry(map, MAX9X_DEV_ID, &dev_id);
+ 	if (ret) {
+ 		dev_warn(dev, "Failed to read chip ID from virtual address");
+ 		if (phys_map) {
+@@ -1119,7 +1074,7 @@ int max9x_verify_devid(struct max9x_common *common)
+ 	}
+ 	common->des = &max9x_chips[chip_type];
+ 	common->type = common->des->serdes_type;
+-	TRY(ret, regmap_read(map, common->des->rev_reg, &dev_rev));
++	TRY(ret, regmap_read_retry(map, common->des->rev_reg, &dev_rev));
+ 	dev_rev = FIELD_GET(MAX9X_DEV_REV_FIELD, dev_rev);
+ 
+ 	dev_info(dev, "Detected MAX9x chip ID  0x%x revision 0x%x", dev_id, dev_rev);
+@@ -1176,14 +1131,14 @@ int max9x_remap_serializers(struct max9x_common *common, unsigned int link_id)
+ 	if (IS_ERR_OR_NULL(virt_map))
+ 		goto err_virt_client;
+ 
+-	ret = regmap_read(virt_map, MAX9X_DEV_ID, &val);
++	ret = regmap_read_retry(virt_map, MAX9X_DEV_ID, &val);
+ 	if (!ret) {
+ 		dev_info(common->dev, "Remap not necessary");
+ 		ret = 0;
+ 		goto err_virt_regmap;
+ 	}
+ 
+-	ret = regmap_read(phys_map, MAX9X_DEV_ID, &val);
++	ret = regmap_read_retry(phys_map, MAX9X_DEV_ID, &val);
+ 	if (ret) {
+ 		dev_err(common->dev, "Device not present at 0x%02x", phys_addr);
+ 		goto err_virt_regmap;
+@@ -1191,7 +1146,7 @@ int max9x_remap_serializers(struct max9x_common *common, unsigned int link_id)
+ 		dev_info(common->dev, "DEV_ID before: 0x%02x", val);
+ 	}
+ 
+-	ret = regmap_write(phys_map, 0x00, (virt_addr & 0x7f) << 1);
++	ret = regmap_write_retry(phys_map, 0x00, (virt_addr & 0x7f) << 1);
+ 	if (ret) {
+ 		dev_err(common->dev, "Failed to remap serialzier from 0x%02x to 0x%02x (%d)",
+ 				phys_addr, virt_addr, ret);
+@@ -1200,7 +1155,7 @@ int max9x_remap_serializers(struct max9x_common *common, unsigned int link_id)
+ 
+ 	usleep_range(1000, 1050);
+ 
+-	ret = regmap_read(virt_map, MAX9X_DEV_ID, &val);
++	ret = regmap_read_retry(virt_map, MAX9X_DEV_ID, &val);
+ 	if (ret) {
+ 		dev_err(common->dev, "Device not present after remap to 0x%02x", virt_addr);
+ 		goto err_virt_regmap;
+@@ -1218,10 +1173,6 @@ int max9x_remap_serializers(struct max9x_common *common, unsigned int link_id)
+ err_client:
+ 	i2c_unregister_device(phys_client);
+ 
+-	max9x_deselect_i2c_chan(common->muxc, link_id);
+-
+-	max9x_des_deisolate_serial_link(common, link_id);
+-
+ 	return ret;
+ }
+ 
+@@ -1786,6 +1737,7 @@ static int max9x_registered(struct v4l2_subdev *sd)
+ 			if (subdev_pdata) {
+ 				struct max9x_pdata *ser_pdata =
+ 					subdev_pdata->board_info.platform_data;
++				struct v4l2_subdev *subdev = NULL;
+ 
+ 				WARN_ON(ser_pdata->num_serial_links < 1);
+ 
+@@ -1797,13 +1749,13 @@ static int max9x_registered(struct v4l2_subdev *sd)
+ 				 * physical i2c at the same time
+ 				 */
+ 				ret = max9x_des_isolate_serial_link(common, link_id);
+-				if (ret)
+-					return ret;
+ 
+-				struct v4l2_subdev *subdev =
+-					v4l2_i2c_new_subdev_board(sd->v4l2_dev,
+-								  common->muxc->adapter[link_id],
+-								  &subdev_pdata->board_info, NULL);
++				if (!ret)
++				       subdev = v4l2_i2c_new_subdev_board(
++					       sd->v4l2_dev,
++					       common->muxc->adapter[link_id],
++					       &subdev_pdata->board_info,
++					       NULL);
+ 
+ 				ret = max9x_des_deisolate_serial_link(common, link_id);
+ 				if (ret)
+@@ -2633,8 +2585,6 @@ int max9x_setup_translations(struct max9x_common *common)
+ 		break;
+ 	}
+ 
+-	msleep(10);
+-
+ 	return err;
+ }
+ 
+-- 
+2.43.0
+

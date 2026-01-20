@@ -1,0 +1,75 @@
+From bdba07134ecf40e31f5052fcaabbb9a596bd89d1 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Mon, 24 Mar 2025 17:31:10 +0000
+Subject: [PATCH 094/100] KVM: x86/pmu: Handle emulated instruction for
+ mediated vPMU
+
+Mediated vPMU needs to accumulate the emulated instructions into counter
+and load the counter into HW at vm-entry.
+
+Moreover, if the accumulation leads to counter overflow, KVM needs to
+update GLOBAL_STATUS and inject PMI into guest as well.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Mingwei Zhang <mizhang@google.com>
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/pmu.c | 39 +++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 37 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/kvm/pmu.c b/arch/x86/kvm/pmu.c
+index 77042cad3155..ddab1630a978 100644
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -1018,10 +1018,45 @@ void kvm_pmu_destroy(struct kvm_vcpu *vcpu)
+ 	kvm_pmu_reset(vcpu);
+ }
+ 
++static bool pmc_is_pmi_enabled(struct kvm_pmc *pmc)
++{
++	u8 fixed_ctr_ctrl;
++
++	if (pmc_is_gp(pmc))
++		return pmc->eventsel & ARCH_PERFMON_EVENTSEL_INT;
++
++	fixed_ctr_ctrl = fixed_ctrl_field(pmc_to_pmu(pmc)->fixed_ctr_ctrl,
++					  pmc->idx - KVM_FIXED_PMC_BASE_IDX);
++	return fixed_ctr_ctrl & INTEL_FIXED_0_ENABLE_PMI;
++}
++
+ static void kvm_pmu_incr_counter(struct kvm_pmc *pmc)
+ {
+-	pmc->emulated_counter++;
+-	kvm_pmu_request_counter_reprogram(pmc);
++	struct kvm_vcpu *vcpu = pmc->vcpu;
++
++	/*
++	 * For perf-based PMUs, accumulate software-emulated events separately
++	 * from pmc->counter, as pmc->counter is offset by the count of the
++	 * associated perf event. Request reprogramming, which will consult
++	 * both emulated and hardware-generated events to detect overflow.
++	 */
++	if (!kvm_vcpu_has_mediated_pmu(vcpu)) {
++		pmc->emulated_counter++;
++		kvm_pmu_request_counter_reprogram(pmc);
++		return;
++	}
++
++	/*
++	 * For mediated PMUs, pmc->counter is updated when the vCPU's PMU is
++	 * put, and will be loaded into hardware when the PMU is loaded. Simply
++	 * increment the counter and signal overflow if it wraps to zero.
++	 */
++	pmc->counter = (pmc->counter + 1) & pmc_bitmask(pmc);
++	if (!pmc->counter) {
++		pmc_to_pmu(pmc)->global_status |= BIT_ULL(pmc->idx);
++		if (pmc_is_pmi_enabled(pmc))
++			kvm_make_request(KVM_REQ_PMI, vcpu);
++	}
+ }
+ 
+ static inline bool cpl_is_matched(struct kvm_pmc *pmc)
+-- 
+2.43.0
+

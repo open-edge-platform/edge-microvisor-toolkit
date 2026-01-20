@@ -1,0 +1,69 @@
+From 43a7fefcd23f3e1430fbcb02863ba2f3f0ea026f Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Mon, 24 Mar 2025 17:31:07 +0000
+Subject: [PATCH 090/100] KVM: x86/pmu: Reprogram mediated PMU event selectors
+ on event filter updates
+
+Refresh the event selectors that are programmed into hardware when a PMC
+is "reprogrammed" for a mediated PMU, i.e. if userspace changes the PMU
+event filters
+
+Note, KVM doesn't utilize the reprogramming infrastructure to handle
+counter overflow for mediated PMUs, as there's no need to reprogram a
+non-existent perf event.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Co-developed-by: Mingwei Zhang <mizhang@google.com>
+Signed-off-by: Mingwei Zhang <mizhang@google.com>
+[sean: add a helper to document behavior, split patch and rewrite changelog]
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/pmu.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/arch/x86/kvm/pmu.c b/arch/x86/kvm/pmu.c
+index e39ae37f0280..b4c6a7704a01 100644
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -518,6 +518,25 @@ static bool pmc_is_event_allowed(struct kvm_pmc *pmc)
+ 	return is_fixed_event_allowed(filter, pmc->idx);
+ }
+ 
++static void kvm_mediated_pmu_refresh_event_filter(struct kvm_pmc *pmc)
++{
++	bool allowed = pmc_is_event_allowed(pmc);
++	struct kvm_pmu *pmu = pmc_to_pmu(pmc);
++
++	if (pmc_is_gp(pmc)) {
++		pmc->eventsel_hw &= ~ARCH_PERFMON_EVENTSEL_ENABLE;
++		if (allowed)
++			pmc->eventsel_hw |= pmc->eventsel &
++					    ARCH_PERFMON_EVENTSEL_ENABLE;
++	} else {
++		u64 mask = intel_fixed_bits_by_idx(pmc->idx - KVM_FIXED_PMC_BASE_IDX, 0xf);
++
++		pmu->fixed_ctr_ctrl_hw &= ~mask;
++		if (allowed)
++			pmu->fixed_ctr_ctrl_hw |= pmu->fixed_ctr_ctrl & mask;
++	}
++}
++
+ static int reprogram_counter(struct kvm_pmc *pmc)
+ {
+ 	struct kvm_pmu *pmu = pmc_to_pmu(pmc);
+@@ -526,6 +545,11 @@ static int reprogram_counter(struct kvm_pmc *pmc)
+ 	bool emulate_overflow;
+ 	u8 fixed_ctr_ctrl;
+ 
++	if (kvm_vcpu_has_mediated_pmu(pmu_to_vcpu(pmu))) {
++		kvm_mediated_pmu_refresh_event_filter(pmc);
++		return 0;
++	}
++
+ 	emulate_overflow = pmc_pause_counter(pmc);
+ 
+ 	if (!pmc_is_globally_enabled(pmc) || !pmc_is_locally_enabled(pmc) ||
+-- 
+2.43.0
+

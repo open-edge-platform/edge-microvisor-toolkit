@@ -1,0 +1,48 @@
+From 9faaff36c08f369350f515943ad8ceb47bbfd8c7 Mon Sep 17 00:00:00 2001
+From: Gao Xiang <hsiangkao@linux.alibaba.com>
+Date: Sat, 22 Nov 2025 14:23:32 +0800
+Subject: [PATCH 08/51] erofs: limit the level of fs stacking for file-backed
+ mounts
+
+Otherwise, it could cause potential kernel stack overflow (e.g., EROFS
+mounting itself).
+
+Reviewed-by: Sheng Yong <shengyong1@xiaomi.com>
+Fixes: fb176750266a ("erofs: add file-backed mount support")
+Reviewed-by: Chao Yu <chao@kernel.org>
+Reviewed-by: Hongbo Li <lihongbo22@huawei.com>
+Signed-off-by: Gao Xiang <hsiangkao@linux.alibaba.com>
+---
+ fs/erofs/super.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/fs/erofs/super.c b/fs/erofs/super.c
+index db13b40a78e0..09807699b15c 100644
+--- a/fs/erofs/super.c
++++ b/fs/erofs/super.c
+@@ -632,6 +632,22 @@ static int erofs_fc_fill_super(struct super_block *sb, struct fs_context *fc)
+ 
+ 	sbi->blkszbits = PAGE_SHIFT;
+ 	if (!sb->s_bdev) {
++		/*
++		 * (File-backed mounts) EROFS claims it's safe to nest other
++		 * fs contexts (including its own) due to self-controlled RO
++		 * accesses/contexts and no side-effect changes that need to
++		 * context save & restore so it can reuse the current thread
++		 * context.  However, it still needs to bump `s_stack_depth` to
++		 * avoid kernel stack overflow from nested filesystems.
++		 */
++		if (erofs_is_fileio_mode(sbi)) {
++			sb->s_stack_depth =
++				file_inode(sbi->dif0.file)->i_sb->s_stack_depth + 1;
++			if (sb->s_stack_depth > FILESYSTEM_MAX_STACK_DEPTH) {
++				erofs_err(sb, "maximum fs stacking depth exceeded");
++				return -ENOTBLK;
++			}
++		}
+ 		sb->s_blocksize = PAGE_SIZE;
+ 		sb->s_blocksize_bits = PAGE_SHIFT;
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,85 @@
+From 780fd3c28a580c2657cfa58a430837220abf55e7 Mon Sep 17 00:00:00 2001
+From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Date: Wed, 27 Aug 2025 13:30:05 +0300
+Subject: [PATCH 06/11] i3c: mipi-i3c-hci: Change interrupt status prints to
+ dev_dbg()
+
+Change interrupt status prints from local DBG() macro to dev_dbg() in
+order to make it easier to enable them without needing to recompile code
+with DEBUG defined.
+
+While doing so, spell out the status register names as they are in the
+specification to make it easier to differentiate between different
+interrupt status registers.
+
+Since dynamic debug prints can include the line number remove the "(in)"
+and "(out)" markers from the PIO interrupt status prints.
+
+Prefix the ring interrupt status print using "Ring %d" instead of "rh%d"
+to make it uniform across all other prints showing the ring number.
+
+Signed-off-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+Link: https://lore.kernel.org/r/20250827103009.243771-2-jarkko.nikula@linux.intel.com
+Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+---
+ drivers/i3c/master/mipi-i3c-hci/core.c | 2 +-
+ drivers/i3c/master/mipi-i3c-hci/dma.c  | 3 ++-
+ drivers/i3c/master/mipi-i3c-hci/pio.c  | 7 ++++---
+ 3 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/i3c/master/mipi-i3c-hci/core.c b/drivers/i3c/master/mipi-i3c-hci/core.c
+index 7a467ef65787..d532933ac7ab 100644
+--- a/drivers/i3c/master/mipi-i3c-hci/core.c
++++ b/drivers/i3c/master/mipi-i3c-hci/core.c
+@@ -553,7 +553,7 @@ static irqreturn_t i3c_hci_irq_handler(int irq, void *dev_id)
+ 
+ 	val = reg_read(INTR_STATUS);
+ 	reg_write(INTR_STATUS, val);
+-	DBG("INTR_STATUS = %#x", val);
++	dev_dbg(&hci->master.dev, "INTR_STATUS %#x", val);
+ 
+ 	if (val)
+ 		result = IRQ_HANDLED;
+diff --git a/drivers/i3c/master/mipi-i3c-hci/dma.c b/drivers/i3c/master/mipi-i3c-hci/dma.c
+index 09688ada4912..f5f5ab4db172 100644
+--- a/drivers/i3c/master/mipi-i3c-hci/dma.c
++++ b/drivers/i3c/master/mipi-i3c-hci/dma.c
+@@ -760,7 +760,8 @@ static bool hci_dma_irq_handler(struct i3c_hci *hci)
+ 
+ 		rh = &rings->headers[i];
+ 		status = rh_reg_read(INTR_STATUS);
+-		DBG("rh%d status: %#x", i, status);
++		dev_dbg(&hci->master.dev, "Ring %d: RH_INTR_STATUS %#x",
++			i, status);
+ 		if (!status)
+ 			continue;
+ 		rh_reg_write(INTR_STATUS, status);
+diff --git a/drivers/i3c/master/mipi-i3c-hci/pio.c b/drivers/i3c/master/mipi-i3c-hci/pio.c
+index 2fc71e696911..cde883137bc7 100644
+--- a/drivers/i3c/master/mipi-i3c-hci/pio.c
++++ b/drivers/i3c/master/mipi-i3c-hci/pio.c
+@@ -986,7 +986,8 @@ static bool hci_pio_irq_handler(struct i3c_hci *hci)
+ 
+ 	spin_lock(&pio->lock);
+ 	status = pio_reg_read(INTR_STATUS);
+-	DBG("(in) status: %#x/%#x", status, pio->enabled_irqs);
++	dev_dbg(&hci->master.dev, "PIO_INTR_STATUS %#x/%#x",
++		status, pio->enabled_irqs);
+ 	status &= pio->enabled_irqs | STAT_LATENCY_WARNINGS;
+ 	if (!status) {
+ 		spin_unlock(&pio->lock);
+@@ -1023,8 +1024,8 @@ static bool hci_pio_irq_handler(struct i3c_hci *hci)
+ 			pio->enabled_irqs &= ~STAT_CMD_QUEUE_READY;
+ 
+ 	pio_reg_write(INTR_SIGNAL_ENABLE, pio->enabled_irqs);
+-	DBG("(out) status: %#x/%#x",
+-	    pio_reg_read(INTR_STATUS), pio_reg_read(INTR_SIGNAL_ENABLE));
++	dev_dbg(&hci->master.dev, "PIO_INTR_STATUS %#x/%#x",
++		pio_reg_read(INTR_STATUS), pio_reg_read(INTR_SIGNAL_ENABLE));
+ 	spin_unlock(&pio->lock);
+ 	return true;
+ }
+-- 
+2.43.0
+

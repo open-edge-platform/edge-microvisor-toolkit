@@ -1,0 +1,30 @@
+From 0ff6292174c874dc857eaba8b8b40e0318329a3f Mon Sep 17 00:00:00 2001
+From: "Yu, Tao1" <tao1.yu@intel.com>
+Date: Thu, 10 Jul 2025 16:19:06 +0000
+Subject: [PATCH 44/44] EDAC/ieh: Fix a compile error
+
+NMI add a source vector argument to register_nmi_handler(),
+EDAC sould use the new interface.
+
+Fixes: 17ade7d95513 ("EDAC/ieh: Add I/O device EDAC driver for Intel CPUs with IEH")
+Signed-off-by: Tao Yu <tao1.yu@intel.com>
+---
+ drivers/edac/ieh_edac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/edac/ieh_edac.c b/drivers/edac/ieh_edac.c
+index 46eca4bddea8..d108d8730438 100644
+--- a/drivers/edac/ieh_edac.c
++++ b/drivers/edac/ieh_edac.c
+@@ -708,7 +708,7 @@ static int register_err_handler(void)
+ 	if (has_notification_by(IEH_NMI)) {
+ 		init_irq_work(&ieh_irq_work, ieh_irq_work_cb);
+ 		rc = register_nmi_handler(NMI_SERR, ieh_nmi_handler,
+-					  0, IEH_NMI_NAME);
++					  0, IEH_NMI_NAME, 0);
+ 		if (rc) {
+ 			ieh_printk(KERN_ERR, "Can't register NMI handler\n");
+ 			return rc;
+-- 
+2.43.0
+

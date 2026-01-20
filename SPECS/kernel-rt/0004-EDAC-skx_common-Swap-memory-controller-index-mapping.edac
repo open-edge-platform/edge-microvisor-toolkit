@@ -1,0 +1,95 @@
+From 0d54237ef5bc3d6d48ebe4a737f963130089726d Mon Sep 17 00:00:00 2001
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Date: Wed, 23 Jul 2025 13:44:54 +0800
+Subject: [PATCH 04/13] EDAC/skx_common: Swap memory controller index mapping
+
+The current mapping of memory controller indices is from physical index [1]
+to logical index [2], as show below:
+
+  skx_dev->imc[pmc].mc_mapping = lmc
+
+Since skx_dev->imc[] is an array of present memory controller instances,
+mapping memory controller indices from logical index to physical index,
+as show below, is more reasonable. This is also a preparatory step for
+making skx_dev->imc[] a flexible array.
+
+  skx_dev->imc[lmc].mc_mapping = pmc
+
+Both mappings are equivalent. No functional changes intended.
+
+[1] Indices for memory controllers include both those present to the
+    OS and those disabled by BIOS.
+
+[2] Indices for memory controllers present to the OS.
+
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+---
+ drivers/edac/skx_common.c | 28 ++++++++++++++++++++--------
+ 1 file changed, 20 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/edac/skx_common.c b/drivers/edac/skx_common.c
+index 3f6a074d685c..e03268e9073f 100644
+--- a/drivers/edac/skx_common.c
++++ b/drivers/edac/skx_common.c
+@@ -130,7 +130,7 @@ static void skx_init_mc_mapping(struct skx_dev *d)
+ 	 * the logical indices of the memory controllers enumerated by the
+ 	 * EDAC driver.
+ 	 */
+-	for (int i = 0; i < NUM_IMC; i++)
++	for (int i = 0; i < d->num_imc; i++)
+ 		d->imc[i].mc_mapping = i;
+ }
+ 
+@@ -139,22 +139,28 @@ void skx_set_mc_mapping(struct skx_dev *d, u8 pmc, u8 lmc)
+ 	edac_dbg(0, "Set the mapping of mc phy idx to logical idx: %02d -> %02d\n",
+ 		 pmc, lmc);
+ 
+-	d->imc[pmc].mc_mapping = lmc;
++	d->imc[lmc].mc_mapping = pmc;
+ }
+ EXPORT_SYMBOL_GPL(skx_set_mc_mapping);
+ 
+-static u8 skx_get_mc_mapping(struct skx_dev *d, u8 pmc)
++static int skx_get_mc_mapping(struct skx_dev *d, u8 pmc)
+ {
+-	edac_dbg(0, "Get the mapping of mc phy idx to logical idx: %02d -> %02d\n",
+-		 pmc, d->imc[pmc].mc_mapping);
++	for (int lmc = 0; lmc < d->num_imc; lmc++) {
++		if (d->imc[lmc].mc_mapping == pmc) {
++			edac_dbg(0, "Get the mapping of mc phy idx to logical idx: %02d -> %02d\n",
++				 pmc, lmc);
+ 
+-	return d->imc[pmc].mc_mapping;
++			return lmc;
++		}
++	}
++
++	return -1;
+ }
+ 
+ static bool skx_adxl_decode(struct decoded_addr *res, enum error_source err_src)
+ {
++	int i, lmc, len = 0;
+ 	struct skx_dev *d;
+-	int i, len = 0;
+ 
+ 	if (res->addr >= skx_tohm || (res->addr >= skx_tolm &&
+ 				      res->addr < BIT_ULL(32))) {
+@@ -218,7 +224,13 @@ static bool skx_adxl_decode(struct decoded_addr *res, enum error_source err_src)
+ 		return false;
+ 	}
+ 
+-	res->imc = skx_get_mc_mapping(d, res->imc);
++	lmc = skx_get_mc_mapping(d, res->imc);
++	if (lmc < 0) {
++		skx_printk(KERN_ERR, "No lmc for imc %d\n", res->imc);
++		return false;
++	}
++
++	res->imc = lmc;
+ 
+ 	for (i = 0; i < adxl_component_count; i++) {
+ 		if (adxl_values[i] == ~0x0ull)
+-- 
+2.43.0
+

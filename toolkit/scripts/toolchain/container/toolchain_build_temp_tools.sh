@@ -86,10 +86,10 @@ rm -rf gcc-13.2.0
 
 touch $LFS/logs/temptoolchain/status_gcc_pass1_complete
 
-KERNEL_VERSION="6.17.0"
+KERNEL_VERSION="6.17.11"
 echo Linux-${KERNEL_VERSION} API Headers
-tar xf mainline-tracking-pre-prod-v6.17-linux-251118T134731Z.tar.gz
-pushd mainline-tracking-mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
+tar xf linux-6.17.11.tar.gz
+pushd linux-${KERNEL_VERSION}
 make mrproper
 make headers
 find usr/include -type f ! -name '*.h' -delete

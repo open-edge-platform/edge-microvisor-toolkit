@@ -1,0 +1,31 @@
+From 1f0c8463542c88d50607c5724d7729d6a5c06ecf Mon Sep 17 00:00:00 2001
+From: Tao Yu <tao1.yu@intel.com>
+Date: Mon, 3 Nov 2025 09:13:14 +0000
+Subject: [PATCH] x86/fred: Revert "x86/fred: Enable FRED by default"
+
+This reverts commit 9bb180134e3af: due to Ubuntu VMs
+unable to recover after system wakes up from S3 for
+multiple iterations, this commit will be temporarily
+reverted to avoid blocking release.
+
+Signed-off-by: Tao Yu <tao1.yu@intel.com>
+---
+ arch/x86/kernel/cpu/common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
+index 54c123f3c305..135d3b315b63 100644
+--- a/arch/x86/kernel/cpu/common.c
++++ b/arch/x86/kernel/cpu/common.c
+@@ -1717,7 +1717,7 @@ static void __init cpu_parse_early_param(void)
+ 
+ 	/* Minimize the gap between FRED is available and available but disabled. */
+ 	arglen = cmdline_find_option(boot_command_line, "fred", arg, sizeof(arg));
+-	if (arglen == 3 && !strncmp(arg, "off", 3))
++	if (arglen != 2 || strncmp(arg, "on", 2))
+ 		setup_clear_cpu_cap(X86_FEATURE_FRED);
+ 
+ 	arglen = cmdline_find_option(boot_command_line, "clearcpuid", arg, sizeof(arg));
+-- 
+2.43.0
+

@@ -1,0 +1,29 @@
+From aeb93d23991eff302911cc7331b7acb8d1d734b1 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Fri, 26 Jan 2024 13:47:26 +0800
+Subject: [PATCH 010/100] perf/x86/intel: Fix typo in comments of
+ intel_put_event_constraints()
+
+As title said.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/intel/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 465f740cc187..0b57a9146b82 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -3922,7 +3922,7 @@ static void intel_put_event_constraints(struct cpu_hw_events *cpuc,
+ 	intel_put_shared_regs_event_constraints(cpuc, event);
+ 
+ 	/*
+-	 * is PMU has exclusive counter restrictions, then
++	 * If PMU has exclusive counter restrictions, then
+ 	 * all events are subject to and must call the
+ 	 * put_excl_constraints() routine
+ 	 */
+-- 
+2.43.0
+

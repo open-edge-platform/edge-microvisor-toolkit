@@ -1,0 +1,76 @@
+From 5269e5df9fd7e611d8e30484f5ef9a06ebb4da67 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Wed, 30 Jul 2025 16:26:16 -0700
+Subject: [PATCH 093/100] KVM: x86/pmu: Disallow emulation in the fastpath if
+ mediated PMCs are active
+
+Don't handle exits in the fastpath if emulation is required, i.e. if an
+instruction needs to be skipped, the mediated PMU is enabled, and one or
+more PMCs is counting instructions.  With the mediated PMU, KVM's cache of
+PMU state is inconsistent with respect to hardware until KVM exits the
+inner run loop (when the mediated PMU is "put").
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/pmu.h | 10 ++++++++++
+ arch/x86/kvm/x86.c |  9 +++++++++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/arch/x86/kvm/pmu.h b/arch/x86/kvm/pmu.h
+index 25b583da9ee2..0925246731cb 100644
+--- a/arch/x86/kvm/pmu.h
++++ b/arch/x86/kvm/pmu.h
+@@ -234,6 +234,16 @@ static inline bool pmc_is_globally_enabled(struct kvm_pmc *pmc)
+ 	return test_bit(pmc->idx, (unsigned long *)&pmu->global_ctrl);
+ }
+ 
++static inline bool kvm_pmu_is_fastpath_emulation_allowed(struct kvm_vcpu *vcpu)
++{
++	struct kvm_pmu *pmu = vcpu_to_pmu(vcpu);
++
++	return !kvm_vcpu_has_mediated_pmu(vcpu) ||
++	       !bitmap_intersects(pmu->pmc_counting_instructions,
++				  (unsigned long *)&pmu->global_ctrl,
++				  X86_PMC_IDX_MAX);
++}
++
+ void kvm_pmu_deliver_pmi(struct kvm_vcpu *vcpu);
+ void kvm_pmu_handle_event(struct kvm_vcpu *vcpu);
+ int kvm_pmu_rdpmc(struct kvm_vcpu *vcpu, unsigned pmc, u64 *data);
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 7fb94ef64e18..6bdf7ef0b535 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -2092,6 +2092,9 @@ EXPORT_SYMBOL_GPL(kvm_emulate_invd);
+ 
+ fastpath_t handle_fastpath_invd(struct kvm_vcpu *vcpu)
+ {
++	if (!kvm_pmu_is_fastpath_emulation_allowed(vcpu))
++		return EXIT_FASTPATH_NONE;
++
+ 	if (!kvm_emulate_invd(vcpu))
+ 		return EXIT_FASTPATH_EXIT_USERSPACE;
+ 
+@@ -2151,6 +2154,9 @@ fastpath_t handle_fastpath_set_msr_irqoff(struct kvm_vcpu *vcpu)
+ 	u64 data = kvm_read_edx_eax(vcpu);
+ 	u32 msr = kvm_rcx_read(vcpu);
+ 
++	if (!kvm_pmu_is_fastpath_emulation_allowed(vcpu))
++		return EXIT_FASTPATH_NONE;
++
+ 	switch (msr) {
+ 	case APIC_BASE_MSR + (APIC_ICR >> 4):
+ 		if (!lapic_in_kernel(vcpu) || !apic_x2apic_mode(vcpu->arch.apic) ||
+@@ -11267,6 +11273,9 @@ EXPORT_SYMBOL_GPL(kvm_emulate_halt);
+ 
+ fastpath_t handle_fastpath_hlt(struct kvm_vcpu *vcpu)
+ {
++	if (!kvm_pmu_is_fastpath_emulation_allowed(vcpu))
++		return EXIT_FASTPATH_NONE;
++
+ 	if (!kvm_emulate_halt(vcpu))
+ 		return EXIT_FASTPATH_EXIT_USERSPACE;
+ 
+-- 
+2.43.0
+
