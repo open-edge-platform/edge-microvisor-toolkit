@@ -1,7 +1,7 @@
 Summary:        OneAPI Level Zero Specification Headers and Loader
 Name:           intel-level-zero
-Version:        1.21.9
-Release:        2%{?dist}
+Version:        1.24.2
+Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -79,6 +79,9 @@ chrpath --delete %{buildroot}%{_bindir}/zello_world
 %{_libdir}/pkgconfig/level-zero.pc
 
 %changelog
+* Mon Jan 19 2026 Andy <andy.peng@intel.com> - 1.24.2-1
+- Update version to 1.24.2.
+
 * Wed Aug 08 2025 Polmoorx Shiva Kumar <polmoorx.shiva.kumar@intel.com> - 1.21.9-2
 - Update to use the system installed spdlog
 
