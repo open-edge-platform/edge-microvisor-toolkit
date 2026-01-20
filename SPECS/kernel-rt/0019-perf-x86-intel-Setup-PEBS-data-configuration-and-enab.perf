@@ -1,0 +1,323 @@
+From 6ef22e5aced242e831b90e56ad3aaf15d611b8a7 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Thu, 14 Nov 2024 05:53:23 +0000
+Subject: [PATCH 019/100] perf/x86/intel: Setup PEBS data configuration and
+ enable legacy groups
+
+Different with legacy PEBS, arch-PEBS provides per-counter PEBS data
+configuration by programing MSR IA32_PMC_GPx/FXx_CFG_C MSRs.
+
+This patch obtains PEBS data configuration from event attribute and then
+writes the PEBS data configuration to MSR IA32_PMC_GPx/FXx_CFG_C and
+enable corresponding PEBS groups.
+
+Co-developed-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/intel/core.c     | 127 +++++++++++++++++++++++++++++++
+ arch/x86/events/intel/ds.c       |  17 +++++
+ arch/x86/events/perf_event.h     |  12 +++
+ arch/x86/include/asm/intel_ds.h  |   7 ++
+ arch/x86/include/asm/msr-index.h |   8 ++
+ 5 files changed, 171 insertions(+)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index b91c8f24c8f6..fabe2e750a0b 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -2563,6 +2563,39 @@ static void intel_pmu_disable_fixed(struct perf_event *event)
+ 	cpuc->fixed_ctrl_val &= ~mask;
+ }
+ 
++static inline void __intel_pmu_update_event_ext(int idx, u64 ext)
++{
++	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
++	u32 msr = idx < INTEL_PMC_IDX_FIXED ?
++		  x86_pmu_cfg_c_addr(idx, true) :
++		  x86_pmu_cfg_c_addr(idx - INTEL_PMC_IDX_FIXED, false);
++
++	cpuc->cfg_c_val[idx] = ext;
++	wrmsrq(msr, ext);
++}
++
++static void intel_pmu_disable_event_ext(struct perf_event *event)
++{
++	if (!x86_pmu.arch_pebs)
++		return;
++
++	/*
++	 * Only clear CFG_C MSR for PEBS counter group events,
++	 * it avoids the HW counter's value to be added into
++	 * other PEBS records incorrectly after PEBS counter
++	 * group events are disabled.
++	 *
++	 * For other events, it's unnecessary to clear CFG_C MSRs
++	 * since CFG_C doesn't take effect if counter is in
++	 * disabled state. That helps to reduce the WRMSR overhead
++	 * in context switches.
++	 */
++	if (!is_pebs_counter_event_group(event))
++		return;
++
++	__intel_pmu_update_event_ext(event->hw.idx, 0);
++}
++
+ static void intel_pmu_disable_event(struct perf_event *event)
+ {
+ 	struct hw_perf_event *hwc = &event->hw;
+@@ -2571,9 +2604,12 @@ static void intel_pmu_disable_event(struct perf_event *event)
+ 	switch (idx) {
+ 	case 0 ... INTEL_PMC_IDX_FIXED - 1:
+ 		intel_clear_masks(event, idx);
++		intel_pmu_disable_event_ext(event);
+ 		x86_pmu_disable_event(event);
+ 		break;
+ 	case INTEL_PMC_IDX_FIXED ... INTEL_PMC_IDX_FIXED_BTS - 1:
++		intel_pmu_disable_event_ext(event);
++		fallthrough;
+ 	case INTEL_PMC_IDX_METRIC_BASE ... INTEL_PMC_IDX_METRIC_END:
+ 		intel_pmu_disable_fixed(event);
+ 		break;
+@@ -2944,6 +2980,67 @@ static void intel_pmu_enable_acr(struct perf_event *event)
+ 
+ DEFINE_STATIC_CALL_NULL(intel_pmu_enable_acr_event, intel_pmu_enable_acr);
+ 
++static void intel_pmu_enable_event_ext(struct perf_event *event)
++{
++	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
++	struct hw_perf_event *hwc = &event->hw;
++	union arch_pebs_index cached, index;
++	struct arch_pebs_cap cap;
++	u64 ext = 0;
++
++	if (!x86_pmu.arch_pebs)
++		return;
++
++	cap = hybrid(cpuc->pmu, arch_pebs_cap);
++
++	if (event->attr.precise_ip) {
++		u64 pebs_data_cfg = intel_get_arch_pebs_data_config(event);
++
++		ext |= ARCH_PEBS_EN;
++		if (hwc->flags & PERF_X86_EVENT_AUTO_RELOAD)
++			ext |= (-hwc->sample_period) & ARCH_PEBS_RELOAD;
++
++		if (pebs_data_cfg && cap.caps) {
++			if (pebs_data_cfg & PEBS_DATACFG_MEMINFO)
++				ext |= ARCH_PEBS_AUX & cap.caps;
++
++			if (pebs_data_cfg & PEBS_DATACFG_GP)
++				ext |= ARCH_PEBS_GPR & cap.caps;
++
++			if (pebs_data_cfg & PEBS_DATACFG_XMMS)
++				ext |= ARCH_PEBS_VECR_XMM & cap.caps;
++
++			if (pebs_data_cfg & PEBS_DATACFG_LBRS)
++				ext |= ARCH_PEBS_LBR & cap.caps;
++		}
++
++		if (cpuc->n_pebs == cpuc->n_large_pebs)
++			index.split.thresh = ARCH_PEBS_THRESH_MUL;
++		else
++			index.split.thresh = ARCH_PEBS_THRESH_SINGLE;
++
++		rdmsrq(MSR_IA32_PEBS_INDEX, cached.full);
++		if (index.split.thresh != cached.split.thresh || !cached.split.en) {
++			if (cached.split.thresh == ARCH_PEBS_THRESH_MUL &&
++			    cached.split.wr > 0) {
++				/*
++				 * Large PEBS was enabled.
++				 * Drain PEBS buffer before applying the single PEBS.
++				 */
++				intel_pmu_drain_pebs_buffer();
++			} else {
++				index.split.wr = 0;
++				index.split.full = 0;
++				index.split.en = 1;
++				wrmsrq(MSR_IA32_PEBS_INDEX, index.full);
++			}
++		}
++	}
++
++	if (cpuc->cfg_c_val[hwc->idx] != ext)
++		__intel_pmu_update_event_ext(hwc->idx, ext);
++}
++
+ static void intel_pmu_enable_event(struct perf_event *event)
+ {
+ 	u64 enable_mask = ARCH_PERFMON_EVENTSEL_ENABLE;
+@@ -2959,10 +3056,12 @@ static void intel_pmu_enable_event(struct perf_event *event)
+ 			enable_mask |= ARCH_PERFMON_EVENTSEL_BR_CNTR;
+ 		intel_set_masks(event, idx);
+ 		static_call_cond(intel_pmu_enable_acr_event)(event);
++		intel_pmu_enable_event_ext(event);
+ 		__x86_pmu_enable_event(hwc, enable_mask);
+ 		break;
+ 	case INTEL_PMC_IDX_FIXED ... INTEL_PMC_IDX_FIXED_BTS - 1:
+ 		static_call_cond(intel_pmu_enable_acr_event)(event);
++		intel_pmu_enable_event_ext(event);
+ 		fallthrough;
+ 	case INTEL_PMC_IDX_METRIC_BASE ... INTEL_PMC_IDX_METRIC_END:
+ 		intel_pmu_enable_fixed(event);
+@@ -5440,6 +5539,29 @@ static inline bool intel_pmu_broken_perf_cap(void)
+ 	return false;
+ }
+ 
++static inline void __intel_update_pmu_caps(struct pmu *pmu)
++{
++	struct pmu *dest_pmu = pmu ? pmu : x86_get_pmu(smp_processor_id());
++
++	if (hybrid(pmu, arch_pebs_cap).caps & ARCH_PEBS_VECR_XMM)
++		dest_pmu->capabilities |= PERF_PMU_CAP_EXTENDED_REGS;
++}
++
++static inline void __intel_update_large_pebs_flags(struct pmu *pmu)
++{
++	u64 caps = hybrid(pmu, arch_pebs_cap).caps;
++
++	x86_pmu.large_pebs_flags |= PERF_SAMPLE_TIME;
++	if (caps & ARCH_PEBS_LBR)
++		x86_pmu.large_pebs_flags |= PERF_SAMPLE_BRANCH_STACK;
++
++	if (!(caps & ARCH_PEBS_AUX))
++		x86_pmu.large_pebs_flags &= ~PERF_SAMPLE_DATA_SRC;
++	if (!(caps & ARCH_PEBS_GPR))
++		x86_pmu.large_pebs_flags &=
++			~(PERF_SAMPLE_REGS_INTR | PERF_SAMPLE_REGS_USER);
++}
++
+ static void update_pmu_cap(struct pmu *pmu)
+ {
+ 	unsigned int eax, ebx, ecx, edx;
+@@ -5480,6 +5602,9 @@ static void update_pmu_cap(struct pmu *pmu)
+ 			    &eax, &ebx, &ecx, &edx);
+ 		hybrid(pmu, arch_pebs_cap).counters = ((u64)ecx << 32) | eax;
+ 		hybrid(pmu, arch_pebs_cap).pdists = ((u64)edx << 32) | ebx;
++
++		__intel_update_pmu_caps(pmu);
++		__intel_update_large_pebs_flags(pmu);
+ 	} else {
+ 		WARN_ON(x86_pmu.arch_pebs == 1);
+ 		x86_pmu.arch_pebs = 0;
+@@ -5640,6 +5765,8 @@ static void intel_pmu_cpu_starting(int cpu)
+ 		}
+ 	}
+ 
++	__intel_update_pmu_caps(cpuc->pmu);
++
+ 	if (!cpuc->shared_regs)
+ 		return;
+ 
+diff --git a/arch/x86/events/intel/ds.c b/arch/x86/events/intel/ds.c
+index f8b5275409d6..530f5a8bc9d2 100644
+--- a/arch/x86/events/intel/ds.c
++++ b/arch/x86/events/intel/ds.c
+@@ -1513,6 +1513,18 @@ pebs_update_state(bool needed_cb, struct cpu_hw_events *cpuc,
+ 	}
+ }
+ 
++u64 intel_get_arch_pebs_data_config(struct perf_event *event)
++{
++	u64 pebs_data_cfg = 0;
++
++	if (WARN_ON(event->hw.idx < 0 || event->hw.idx >= X86_PMC_IDX_MAX))
++		return 0;
++
++	pebs_data_cfg |= pebs_update_adaptive_cfg(event);
++
++	return pebs_data_cfg;
++}
++
+ void intel_pmu_pebs_add(struct perf_event *event)
+ {
+ 	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
+@@ -2969,6 +2981,11 @@ static void intel_pmu_drain_arch_pebs(struct pt_regs *iregs,
+ 
+ 	index.split.wr = 0;
+ 	index.split.full = 0;
++	index.split.en = 1;
++	if (cpuc->n_pebs == cpuc->n_large_pebs)
++		index.split.thresh = ARCH_PEBS_THRESH_MUL;
++	else
++		index.split.thresh = ARCH_PEBS_THRESH_SINGLE;
+ 	wrmsrq(MSR_IA32_PEBS_INDEX, index.full);
+ }
+ 
+diff --git a/arch/x86/events/perf_event.h b/arch/x86/events/perf_event.h
+index 82e8c20611b9..db4ec2975de4 100644
+--- a/arch/x86/events/perf_event.h
++++ b/arch/x86/events/perf_event.h
+@@ -304,6 +304,8 @@ struct cpu_hw_events {
+ 	/* Intel ACR configuration */
+ 	u64			acr_cfg_b[X86_PMC_IDX_MAX];
+ 	u64			acr_cfg_c[X86_PMC_IDX_MAX];
++	/* Cached CFG_C values */
++	u64			cfg_c_val[X86_PMC_IDX_MAX];
+ 
+ 	/*
+ 	 * Intel LBR bits
+@@ -1216,6 +1218,14 @@ static inline unsigned int x86_pmu_fixed_ctr_addr(int index)
+ 				   x86_pmu.addr_offset(index, false) : index);
+ }
+ 
++static inline unsigned int x86_pmu_cfg_c_addr(int index, bool gp)
++{
++	u32 base = gp ? MSR_IA32_PMC_V6_GP0_CFG_C : MSR_IA32_PMC_V6_FX0_CFG_C;
++
++	return base + (x86_pmu.addr_offset ? x86_pmu.addr_offset(index, false) :
++					     index * MSR_IA32_PMC_V6_STEP);
++}
++
+ static inline int x86_pmu_rdpmc_index(int index)
+ {
+ 	return x86_pmu.rdpmc_index ? x86_pmu.rdpmc_index(index) : index;
+@@ -1779,6 +1789,8 @@ void intel_pmu_pebs_data_source_cmt(void);
+ 
+ void intel_pmu_pebs_data_source_lnl(void);
+ 
++u64 intel_get_arch_pebs_data_config(struct perf_event *event);
++
+ int intel_pmu_setup_lbr_filter(struct perf_event *event);
+ 
+ void intel_pt_interrupt(void);
+diff --git a/arch/x86/include/asm/intel_ds.h b/arch/x86/include/asm/intel_ds.h
+index 023c2883f9f3..7bb80c993bef 100644
+--- a/arch/x86/include/asm/intel_ds.h
++++ b/arch/x86/include/asm/intel_ds.h
+@@ -7,6 +7,13 @@
+ #define PEBS_BUFFER_SHIFT	4
+ #define PEBS_BUFFER_SIZE	(PAGE_SIZE << PEBS_BUFFER_SHIFT)
+ 
++/*
++ * The largest PEBS record could consume a page, ensure
++ * a record at least can be written after triggering PMI.
++ */
++#define ARCH_PEBS_THRESH_MUL	((PEBS_BUFFER_SIZE - PAGE_SIZE) >> PEBS_BUFFER_SHIFT)
++#define ARCH_PEBS_THRESH_SINGLE	1
++
+ /* The maximal number of PEBS events: */
+ #define MAX_PEBS_EVENTS_FMT4	8
+ #define MAX_PEBS_EVENTS		32
+diff --git a/arch/x86/include/asm/msr-index.h b/arch/x86/include/asm/msr-index.h
+index 7c306dd0713c..737d51629c03 100644
+--- a/arch/x86/include/asm/msr-index.h
++++ b/arch/x86/include/asm/msr-index.h
+@@ -330,6 +330,14 @@
+ #define ARCH_PEBS_OFFSET_MASK		0x7fffff
+ #define ARCH_PEBS_INDEX_WR_SHIFT	4
+ 
++#define ARCH_PEBS_RELOAD		0xffffffff
++#define ARCH_PEBS_LBR_SHIFT		40
++#define ARCH_PEBS_LBR			(0x3ull << ARCH_PEBS_LBR_SHIFT)
++#define ARCH_PEBS_VECR_XMM		BIT_ULL(49)
++#define ARCH_PEBS_GPR			BIT_ULL(61)
++#define ARCH_PEBS_AUX			BIT_ULL(62)
++#define ARCH_PEBS_EN			BIT_ULL(63)
++
+ #define MSR_IA32_RTIT_CTL		0x00000570
+ #define RTIT_CTL_TRACEEN		BIT(0)
+ #define RTIT_CTL_CYCLEACC		BIT(1)
+-- 
+2.43.0
+

@@ -1,0 +1,45 @@
+From 825f0784fbb7768bf0c047882f3cf25b0c532717 Mon Sep 17 00:00:00 2001
+From: Chao Gao <chao.gao@intel.com>
+Date: Fri, 4 Jul 2025 01:49:53 -0700
+Subject: [PATCH 23/24] KVM: nVMX: Add consistency checks for CR0.WP and
+ CR4.CET
+
+Add consistency checks for CR4.CET and CR0.WP in guest-state or host-state
+area in the VMCS12. This ensures that configurations with CR4.CET set and
+CR0.WP not set result in VM-entry failure, aligning with architectural
+behavior.
+
+Tested-by: Mathias Krause <minipli@grsecurity.net>
+Tested-by: John Allen <john.allen@amd.com>
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+---
+ arch/x86/kvm/vmx/nested.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/nested.c b/arch/x86/kvm/vmx/nested.c
+index 0f8dbf3cc6c3..bdaca6ada244 100644
+--- a/arch/x86/kvm/vmx/nested.c
++++ b/arch/x86/kvm/vmx/nested.c
+@@ -3147,6 +3147,9 @@ static int nested_vmx_check_host_state(struct kvm_vcpu *vcpu,
+ 	    CC(!kvm_vcpu_is_legal_cr3(vcpu, vmcs12->host_cr3)))
+ 		return -EINVAL;
+ 
++	if (CC(vmcs12->host_cr4 & X86_CR4_CET && !(vmcs12->host_cr0 & X86_CR0_WP)))
++		return -EINVAL;
++
+ 	if (CC(is_noncanonical_msr_address(vmcs12->host_ia32_sysenter_esp, vcpu)) ||
+ 	    CC(is_noncanonical_msr_address(vmcs12->host_ia32_sysenter_eip, vcpu)))
+ 		return -EINVAL;
+@@ -3261,6 +3264,9 @@ static int nested_vmx_check_guest_state(struct kvm_vcpu *vcpu,
+ 	    CC(!nested_guest_cr4_valid(vcpu, vmcs12->guest_cr4)))
+ 		return -EINVAL;
+ 
++	if (CC(vmcs12->guest_cr4 & X86_CR4_CET && !(vmcs12->guest_cr0 & X86_CR0_WP)))
++		return -EINVAL;
++
+ 	if ((vmcs12->vm_entry_controls & VM_ENTRY_LOAD_DEBUG_CONTROLS) &&
+ 	    (CC(!kvm_dr7_valid(vmcs12->guest_dr7)) ||
+ 	     CC(!vmx_is_valid_debugctl(vcpu, vmcs12->guest_ia32_debugctl, false))))
+-- 
+2.43.0
+

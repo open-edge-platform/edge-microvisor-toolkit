@@ -1,0 +1,106 @@
+From 93a2531574a4a627a5088b29cfb4fee7282b97bf Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Wed, 14 May 2025 07:07:55 -0700
+Subject: [PATCH 31/44] x86/fred: Provide separate IRQ vs. NMI wrappers for
+ entry from KVM
+
+Provide separate wrappers for forwarding IRQs vs NMIs from KVM in
+anticipation of adding support for NMI source reporting, which will add
+an NMI-only parameter, i.e. will further pollute the current API with a
+param that is a hardcoded for one of the two call sites.
+
+Opportunistically tag the non-FRED NMI wrapper __always_inline, as the
+compiler could theoretically generate a function call and trigger and a
+(completely benign) "leaving noinstr" warning.
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Sohil Mehta <sohil.mehta@intel.com>
+---
+v7: New patch
+---
+ arch/x86/include/asm/fred.h | 30 ++++++++++++++++++++++--------
+ arch/x86/kvm/vmx/vmx.c      |  4 ++--
+ 2 files changed, 24 insertions(+), 10 deletions(-)
+
+diff --git a/arch/x86/include/asm/fred.h b/arch/x86/include/asm/fred.h
+index 263fd5267f71..15d1c8e95837 100644
+--- a/arch/x86/include/asm/fred.h
++++ b/arch/x86/include/asm/fred.h
+@@ -9,6 +9,7 @@
+ #include <linux/const.h>
+ 
+ #include <asm/asm.h>
++#include <asm/irq_vectors.h>
+ #include <asm/msr.h>
+ #include <asm/trapnr.h>
+ 
+@@ -71,15 +72,27 @@ __visible void fred_entry_from_user(struct pt_regs *regs);
+ __visible void fred_entry_from_kernel(struct pt_regs *regs);
+ __visible void __fred_entry_from_kvm(struct pt_regs *regs);
+ 
+-/* Can be called from noinstr code, thus __always_inline */
+-static __always_inline void fred_entry_from_kvm(unsigned int type, unsigned int vector)
++/* Must be called from noinstr code, thus __always_inline */
++static __always_inline void fred_nmi_from_kvm(void)
+ {
+ 	struct fred_ss ss = {
+-		.ss     =__KERNEL_DS,
+-		.type   = type,
+-		.vector = vector,
+-		.nmi    = type == EVENT_TYPE_NMI,
+-		.lm     = 1,
++		.ss	= __KERNEL_DS,
++		.type	= EVENT_TYPE_NMI,
++		.vector	= NMI_VECTOR,
++		.nmi	= true,
++		.lm	= 1,
++	};
++
++	asm_fred_entry_from_kvm(ss);
++}
++
++static inline void fred_irq_from_kvm(unsigned int vector)
++{
++	struct fred_ss ss = {
++		.ss	= __KERNEL_DS,
++		.type	= EVENT_TYPE_EXTINT,
++		.vector	= vector,
++		.lm	= 1,
+ 	};
+ 
+ 	asm_fred_entry_from_kvm(ss);
+@@ -110,7 +123,8 @@ static __always_inline unsigned long fred_event_data(struct pt_regs *regs) { ret
+ static inline void cpu_init_fred_exceptions(void) { }
+ static inline void cpu_init_fred_rsps(void) { }
+ static inline void fred_complete_exception_setup(void) { }
+-static inline void fred_entry_from_kvm(unsigned int type, unsigned int vector) { }
++static __always_inline void fred_nmi_from_kvm(void) { }
++static inline void fred_irq_from_kvm(unsigned int vector) { }
+ static inline void fred_sync_rsp0(unsigned long rsp0) { }
+ static inline void fred_update_rsp0(void) { }
+ #endif /* CONFIG_X86_FRED */
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 090b49679925..4338e02c9229 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -7256,7 +7256,7 @@ static void handle_external_interrupt_irqoff(struct kvm_vcpu *vcpu,
+ 
+ 	kvm_before_interrupt(vcpu, KVM_HANDLING_IRQ);
+ 	if (cpu_feature_enabled(X86_FEATURE_FRED))
+-		fred_entry_from_kvm(EVENT_TYPE_EXTINT, vector);
++		fred_irq_from_kvm(vector);
+ 	else
+ 		vmx_do_interrupt_irqoff(gate_offset((gate_desc *)host_idt_base + vector));
+ 	kvm_after_interrupt(vcpu);
+@@ -7542,7 +7542,7 @@ noinstr void vmx_handle_nmi(struct kvm_vcpu *vcpu)
+ 
+ 	kvm_before_interrupt(vcpu, KVM_HANDLING_NMI);
+ 	if (cpu_feature_enabled(X86_FEATURE_FRED))
+-		fred_entry_from_kvm(EVENT_TYPE_NMI, NMI_VECTOR);
++		fred_nmi_from_kvm();
+ 	else
+ 		vmx_do_nmi_irqoff();
+ 	kvm_after_interrupt(vcpu);
+-- 
+2.43.0
+

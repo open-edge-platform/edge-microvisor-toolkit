@@ -1,0 +1,49 @@
+From 4d54ce3cf01e889088b73b3c67f75ce5161061f9 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Wed, 7 Feb 2024 09:26:31 -0800
+Subject: [PATCH 10/44] KVM: x86: Add a helper to detect if FRED is enabled for
+ a vCPU
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+[ Sean: removed the "kvm_" prefix from the function name ]
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Change in v5:
+* Add TB from Xuelian Guo.
+---
+ arch/x86/kvm/kvm_cache_regs.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/x86/kvm/kvm_cache_regs.h b/arch/x86/kvm/kvm_cache_regs.h
+index 36a8786db291..31b446b6cbd7 100644
+--- a/arch/x86/kvm/kvm_cache_regs.h
++++ b/arch/x86/kvm/kvm_cache_regs.h
+@@ -204,6 +204,21 @@ static __always_inline bool kvm_is_cr4_bit_set(struct kvm_vcpu *vcpu,
+ 	return !!kvm_read_cr4_bits(vcpu, cr4_bit);
+ }
+ 
++/*
++ * It's enough to check just CR4.FRED (X86_CR4_FRED) to tell if
++ * a vCPU is running with FRED enabled, because:
++ * 1) CR4.FRED can be set to 1 only _after_ IA32_EFER.LMA = 1.
++ * 2) To leave IA-32e mode, CR4.FRED must be cleared first.
++ */
++static inline bool is_fred_enabled(struct kvm_vcpu *vcpu)
++{
++#ifdef CONFIG_X86_64
++	return kvm_is_cr4_bit_set(vcpu, X86_CR4_FRED);
++#else
++	return false;
++#endif
++}
++
+ static inline ulong kvm_read_cr3(struct kvm_vcpu *vcpu)
+ {
+ 	if (!kvm_register_is_available(vcpu, VCPU_EXREG_CR3))
+-- 
+2.43.0
+

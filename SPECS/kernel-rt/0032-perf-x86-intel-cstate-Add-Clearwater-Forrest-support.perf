@@ -1,0 +1,31 @@
+From 4ca9541349929f0caa8bc00ab966e2b36d835f8f Mon Sep 17 00:00:00 2001
+From: Zhenyu Wang <zhenyuw@linux.intel.com>
+Date: Thu, 30 May 2024 11:19:23 +0000
+Subject: [PATCH 032/100] perf/x86/intel/cstate: Add Clearwater Forrest support
+
+Clearwater Forrest has same c-state residency counters like Sierra Forrest.
+So this simply adds cpu model id for it.
+
+Cc: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
+Cc: Kan Liang <kan.liang@linux.intel.com>
+Reviewed-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Zhenyu Wang <zhenyuw@linux.intel.com>
+---
+ arch/x86/events/intel/cstate.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/events/intel/cstate.c b/arch/x86/events/intel/cstate.c
+index ec753e39b007..a5f2e0be2337 100644
+--- a/arch/x86/events/intel/cstate.c
++++ b/arch/x86/events/intel/cstate.c
+@@ -628,6 +628,7 @@ static const struct x86_cpu_id intel_cstates_match[] __initconst = {
+ 	X86_MATCH_VFM(INTEL_ATOM_GRACEMONT,	&adl_cstates),
+ 	X86_MATCH_VFM(INTEL_ATOM_CRESTMONT_X,	&srf_cstates),
+ 	X86_MATCH_VFM(INTEL_ATOM_CRESTMONT,	&grr_cstates),
++	X86_MATCH_VFM(INTEL_ATOM_DARKMONT_X,	&srf_cstates),
+ 
+ 	X86_MATCH_VFM(INTEL_ICELAKE_L,		&icl_cstates),
+ 	X86_MATCH_VFM(INTEL_ICELAKE,		&icl_cstates),
+-- 
+2.43.0
+

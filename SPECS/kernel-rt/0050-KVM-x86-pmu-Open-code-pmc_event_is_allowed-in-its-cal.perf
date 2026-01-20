@@ -1,0 +1,57 @@
+From c263d7ea7b358d134940a20445c26ee01702af71 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Thu, 31 Jul 2025 15:36:47 -0700
+Subject: [PATCH 050/100] KVM: x86/pmu: Open code pmc_event_is_allowed() in its
+ callers
+
+Open code pmc_event_is_allowed() in its callers, as kvm_pmu_trigger_event()
+only needs to check the event filter (both global and local enables are
+consulted outside of the loop).
+
+No functional change intended.
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/pmu.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/arch/x86/kvm/pmu.c b/arch/x86/kvm/pmu.c
+index e73c2a44028b..a495ab5d0556 100644
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -491,12 +491,6 @@ static bool check_pmu_event_filter(struct kvm_pmc *pmc)
+ 	return is_fixed_event_allowed(filter, pmc->idx);
+ }
+ 
+-static bool pmc_event_is_allowed(struct kvm_pmc *pmc)
+-{
+-	return pmc_is_globally_enabled(pmc) && pmc_is_locally_enabled(pmc) &&
+-	       check_pmu_event_filter(pmc);
+-}
+-
+ static int reprogram_counter(struct kvm_pmc *pmc)
+ {
+ 	struct kvm_pmu *pmu = pmc_to_pmu(pmc);
+@@ -507,7 +501,8 @@ static int reprogram_counter(struct kvm_pmc *pmc)
+ 
+ 	emulate_overflow = pmc_pause_counter(pmc);
+ 
+-	if (!pmc_event_is_allowed(pmc))
++	if (!pmc_is_globally_enabled(pmc) || !pmc_is_locally_enabled(pmc) ||
++	    !check_pmu_event_filter(pmc))
+ 		return 0;
+ 
+ 	if (emulate_overflow)
+@@ -974,7 +969,8 @@ static void kvm_pmu_trigger_event(struct kvm_vcpu *vcpu,
+ 		return;
+ 
+ 	kvm_for_each_pmc(pmu, pmc, i, bitmap) {
+-		if (!pmc_event_is_allowed(pmc) || !cpl_is_matched(pmc))
++		if (!pmc_is_globally_enabled(pmc) || !pmc_is_locally_enabled(pmc) ||
++		    !check_pmu_event_filter(pmc) || !cpl_is_matched(pmc))
+ 			continue;
+ 
+ 		kvm_pmu_incr_counter(pmc);
+-- 
+2.43.0
+

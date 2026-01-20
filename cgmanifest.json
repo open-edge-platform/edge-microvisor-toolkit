@@ -8471,8 +8471,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.17.0",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-tracking-pre-prod-v6.17-linux-251023T022625Z.tar.gz"
+          "version": "6.17.11",
+          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-v6.17.11-emt-260108T031458Z.tar.gz"
         }
       }
     },
@@ -8501,8 +8501,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.17.0",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-tracking-pre-prod-v6.17-linux-251023T022625Z.tar.gz"
+          "version": "6.17.11",
+          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-v6.17.11-emt-260108T031458Z.tar.gz"
         }
       }
     },
@@ -8541,8 +8541,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.17.0",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-tracking-pre-prod-v6.17-linux-251023T022625Z.tar.gz"
+          "version": "6.17.11",
+          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-v6.17.11-emt-260108T031458Z.tar.gz"
         }
       }
     },

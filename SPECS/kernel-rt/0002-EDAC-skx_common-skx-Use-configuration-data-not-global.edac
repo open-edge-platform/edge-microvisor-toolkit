@@ -1,0 +1,188 @@
+From ae4d7c15450606f3121d104cdeffced1efb93122 Mon Sep 17 00:00:00 2001
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Date: Tue, 22 Jul 2025 11:25:20 +0800
+Subject: [PATCH 02/13] EDAC/{skx_common,skx}: Use configuration data, not
+ global macros
+
+Use model-specific configuration data for the number of memory controllers
+per socket, channels per memory controller, and DIMMs per channel as
+intended, instead of relying on global macros for maximum values.
+
+No functional changes intended.
+
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+---
+ drivers/edac/skx_base.c   | 33 ++++++++++++++++++++-------------
+ drivers/edac/skx_common.c | 16 +++++++++-------
+ drivers/edac/skx_common.h |  1 +
+ 3 files changed, 30 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/edac/skx_base.c b/drivers/edac/skx_base.c
+index 29897b21fb8e..078ddf95cc6e 100644
+--- a/drivers/edac/skx_base.c
++++ b/drivers/edac/skx_base.c
+@@ -33,6 +33,15 @@ static unsigned int nvdimm_count;
+ #define	MASK26	0x3FFFFFF		/* Mask for 2^26 */
+ #define MASK29	0x1FFFFFFF		/* Mask for 2^29 */
+ 
++static struct res_config skx_cfg = {
++	.type			= SKX,
++	.decs_did		= 0x2016,
++	.busno_cfg_offset	= 0xcc,
++	.ddr_imc_num		= 2,
++	.ddr_chan_num		= 3,
++	.ddr_dimm_num		= 2,
++};
++
+ static struct skx_dev *get_skx_dev(struct pci_bus *bus, u8 idx)
+ {
+ 	struct skx_dev *d;
+@@ -52,7 +61,7 @@ enum munittype {
+ 
+ struct munit {
+ 	u16	did;
+-	u16	devfn[SKX_NUM_IMC];
++	u16	devfn[2];
+ 	u8	busidx;
+ 	u8	per_socket;
+ 	enum munittype mtype;
+@@ -89,11 +98,11 @@ static int get_all_munits(const struct munit *m)
+ 		if (!pdev)
+ 			break;
+ 		ndev++;
+-		if (m->per_socket == SKX_NUM_IMC) {
+-			for (i = 0; i < SKX_NUM_IMC; i++)
++		if (m->per_socket == skx_cfg.ddr_imc_num) {
++			for (i = 0; i < skx_cfg.ddr_imc_num; i++)
+ 				if (m->devfn[i] == pdev->devfn)
+ 					break;
+-			if (i == SKX_NUM_IMC)
++			if (i == skx_cfg.ddr_imc_num)
+ 				goto fail;
+ 		}
+ 		d = get_skx_dev(pdev->bus, m->busidx);
+@@ -157,12 +166,6 @@ static int get_all_munits(const struct munit *m)
+ 	return -ENODEV;
+ }
+ 
+-static struct res_config skx_cfg = {
+-	.type			= SKX,
+-	.decs_did		= 0x2016,
+-	.busno_cfg_offset	= 0xcc,
+-};
+-
+ static const struct x86_cpu_id skx_cpuids[] = {
+ 	X86_MATCH_VFM(INTEL_SKYLAKE_X, &skx_cfg),
+ 	{ }
+@@ -186,11 +189,11 @@ static int skx_get_dimm_config(struct mem_ctl_info *mci, struct res_config *cfg)
+ 	/* Only the mcmtr on the first channel is effective */
+ 	pci_read_config_dword(imc->chan[0].cdev, 0x87c, &mcmtr);
+ 
+-	for (i = 0; i < SKX_NUM_CHANNELS; i++) {
++	for (i = 0; i < cfg->ddr_chan_num; i++) {
+ 		ndimms = 0;
+ 		pci_read_config_dword(imc->chan[i].cdev, 0x8C, &amap);
+ 		pci_read_config_dword(imc->chan[i].cdev, 0x400, &mcddrtcfg);
+-		for (j = 0; j < SKX_NUM_DIMMS; j++) {
++		for (j = 0; j < cfg->ddr_dimm_num; j++) {
+ 			dimm = edac_get_dimm(mci, i, j, 0);
+ 			pci_read_config_dword(imc->chan[i].cdev,
+ 					      0x80 + 4 * j, &mtr);
+@@ -620,6 +623,7 @@ static int __init skx_init(void)
+ 		return -ENODEV;
+ 
+ 	cfg = (struct res_config *)id->driver_data;
++	skx_set_res_cfg(cfg);
+ 
+ 	rc = skx_get_hi_lo(0x2034, off, &skx_tolm, &skx_tohm);
+ 	if (rc)
+@@ -652,10 +656,13 @@ static int __init skx_init(void)
+ 			goto fail;
+ 
+ 		edac_dbg(2, "src_id = %d\n", src_id);
+-		for (i = 0; i < SKX_NUM_IMC; i++) {
++		for (i = 0; i < cfg->ddr_imc_num; i++) {
+ 			d->imc[i].mc = mc++;
+ 			d->imc[i].lmc = i;
+ 			d->imc[i].src_id = src_id;
++			d->imc[i].num_channels = cfg->ddr_chan_num;
++			d->imc[i].num_dimms    = cfg->ddr_dimm_num;
++
+ 			rc = skx_register_mci(&d->imc[i], d->imc[i].chan[0].cdev,
+ 					      "Skylake Socket", EDAC_MOD_STR,
+ 					      skx_get_dimm_config, cfg);
+diff --git a/drivers/edac/skx_common.c b/drivers/edac/skx_common.c
+index 39c733dbc5b9..cc7d36cf7f3b 100644
+--- a/drivers/edac/skx_common.c
++++ b/drivers/edac/skx_common.c
+@@ -320,10 +320,10 @@ static int get_width(u32 mtr)
+  */
+ int skx_get_all_bus_mappings(struct res_config *cfg, struct list_head **list)
+ {
++	int ndev = 0, imc_num = cfg->ddr_imc_num + cfg->hbm_imc_num;
+ 	struct pci_dev *pdev, *prev;
+ 	struct skx_dev *d;
+ 	u32 reg;
+-	int ndev = 0;
+ 
+ 	prev = NULL;
+ 	for (;;) {
+@@ -354,8 +354,10 @@ int skx_get_all_bus_mappings(struct res_config *cfg, struct list_head **list)
+ 			d->seg = GET_BITFIELD(reg, 16, 23);
+ 		}
+ 
+-		edac_dbg(2, "busses: 0x%x, 0x%x, 0x%x, 0x%x\n",
+-			 d->bus[0], d->bus[1], d->bus[2], d->bus[3]);
++		d->num_imc = imc_num;
++
++		edac_dbg(2, "busses: 0x%x, 0x%x, 0x%x, 0x%x, imcs %d\n",
++			 d->bus[0], d->bus[1], d->bus[2], d->bus[3], imc_num);
+ 		list_add_tail(&d->list, &dev_edac_list);
+ 		prev = pdev;
+ 
+@@ -541,10 +543,10 @@ int skx_register_mci(struct skx_imc *imc, struct pci_dev *pdev,
+ 
+ 	/* Allocate a new MC control structure */
+ 	layers[0].type = EDAC_MC_LAYER_CHANNEL;
+-	layers[0].size = NUM_CHANNELS;
++	layers[0].size = imc->num_channels;
+ 	layers[0].is_virt_csrow = false;
+ 	layers[1].type = EDAC_MC_LAYER_SLOT;
+-	layers[1].size = NUM_DIMMS;
++	layers[1].size = imc->num_dimms;
+ 	layers[1].is_virt_csrow = true;
+ 	mci = edac_mc_alloc(imc->mc, ARRAY_SIZE(layers), layers,
+ 			    sizeof(struct skx_pvt));
+@@ -784,7 +786,7 @@ void skx_remove(void)
+ 
+ 	list_for_each_entry_safe(d, tmp, &dev_edac_list, list) {
+ 		list_del(&d->list);
+-		for (i = 0; i < NUM_IMC; i++) {
++		for (i = 0; i < d->num_imc; i++) {
+ 			if (d->imc[i].mci)
+ 				skx_unregister_mci(&d->imc[i]);
+ 
+@@ -794,7 +796,7 @@ void skx_remove(void)
+ 			if (d->imc[i].mbase)
+ 				iounmap(d->imc[i].mbase);
+ 
+-			for (j = 0; j < NUM_CHANNELS; j++) {
++			for (j = 0; j < d->imc[i].num_channels; j++) {
+ 				if (d->imc[i].chan[j].cdev)
+ 					pci_dev_put(d->imc[i].chan[j].cdev);
+ 			}
+diff --git a/drivers/edac/skx_common.h b/drivers/edac/skx_common.h
+index ec4966f7ea40..3f6007a97267 100644
+--- a/drivers/edac/skx_common.h
++++ b/drivers/edac/skx_common.h
+@@ -134,6 +134,7 @@ struct skx_dev {
+ 	struct pci_dev *uracu; /* for i10nm CPU */
+ 	struct pci_dev *pcu_cr3; /* for HBM memory detection */
+ 	u32 mcroute;
++	int num_imc;
+ 	/*
+ 	 * Some server BIOS may hide certain memory controllers, and the
+ 	 * EDAC driver skips those hidden memory controllers. However, the
+-- 
+2.43.0
+

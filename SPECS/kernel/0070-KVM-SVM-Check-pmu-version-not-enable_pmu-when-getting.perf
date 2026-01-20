@@ -1,0 +1,43 @@
+From 20223d7e37fe68853f3ce86876d015d8ca4b4e27 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Mon, 4 Aug 2025 13:24:23 -0700
+Subject: [PATCH 070/100] KVM: SVM: Check pmu->version, not enable_pmu, when
+ getting PMC MSRs
+
+Gate access to PMC MSRs based on pmu->version, not on kvm->arch.enable_pmu,
+to more accurately reflect KVM's behavior.  This is a glorified nop, as
+pmu->version and pmu->nr_arch_gp_counters can only be non-zero if
+amd_pmu_refresh() is reached, kvm_pmu_refresh() invokes amd_pmu_refresh()
+if and only if kvm->arch.enable_pmu is true, and amd_pmu_refresh() forces
+pmu->version to be 1 or 2.
+
+I.e. the following holds true:
+
+  !pmu->nr_arch_gp_counters || kvm->arch.enable_pmu == (pmu->version > 0)
+
+and so the only way for amd_pmu_get_pmc() to return a non-NULL value is if
+both kvm->arch.enable_pmu and pmu->version evaluate to true.
+
+No real functional change intended.
+
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/svm/pmu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kvm/svm/pmu.c b/arch/x86/kvm/svm/pmu.c
+index 288f7f2a46f2..7b8577f3c57a 100644
+--- a/arch/x86/kvm/svm/pmu.c
++++ b/arch/x86/kvm/svm/pmu.c
+@@ -41,7 +41,7 @@ static inline struct kvm_pmc *get_gp_pmc_amd(struct kvm_pmu *pmu, u32 msr,
+ 	struct kvm_vcpu *vcpu = pmu_to_vcpu(pmu);
+ 	unsigned int idx;
+ 
+-	if (!vcpu->kvm->arch.enable_pmu)
++	if (!pmu->version)
+ 		return NULL;
+ 
+ 	switch (msr) {
+-- 
+2.43.0
+

@@ -1,0 +1,242 @@
+From 42342460efa55247a870c163fbcea60501dfb4a4 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Thu, 15 Sep 2022 13:22:02 -0700
+Subject: [PATCH 09/44] KVM: VMX: Add support for FRED context save/restore
+
+Handle FRED MSR access requests, allowing FRED context to be set/get
+from both host and guest.
+
+During VM save/restore and live migration, FRED context needs to be
+saved/restored, which requires FRED MSRs to be accessed from userspace,
+e.g., Qemu.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Change in v6:
+* Return KVM_MSR_RET_UNSUPPORTED instead of 1 when FRED is not available
+  (Chao Gao)
+* Handle MSR_IA32_PL0_SSP when FRED is enumerated but CET not.
+
+Change in v5:
+* Use the newly added guest MSR read/write helpers (Sean).
+* Check the size of fred_msr_vmcs_fields[] using static_assert() (Sean).
+* Rewrite setting FRED MSRs to make it much easier to read (Sean).
+* Add TB from Xuelian Guo.
+
+Changes since v2:
+* Add a helper to convert FRED MSR index to VMCS field encoding to
+  make the code more compact (Chao Gao).
+* Get rid of the "host_initiated" check because userspace has to set
+  CPUID before MSRs (Chao Gao & Sean Christopherson).
+* Address a few cleanup comments (Sean Christopherson).
+
+Changes since v1:
+* Use kvm_cpu_cap_has() instead of cpu_feature_enabled() (Chao Gao).
+* Fail host requested FRED MSRs access if KVM cannot virtualize FRED
+  (Chao Gao).
+* Handle the case FRED MSRs are valid but KVM cannot virtualize FRED
+  (Chao Gao).
+* Add sanity checks when writing to FRED MSRs.
+---
+ arch/x86/kvm/vmx/vmx.c | 45 +++++++++++++++++++++++++++
+ arch/x86/kvm/x86.c     | 69 ++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 111 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 30322c4897cb..ba0177a97417 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -1390,6 +1390,18 @@ static void vmx_write_guest_kernel_gs_base(struct vcpu_vmx *vmx, u64 data)
+ 	vmx_write_guest_host_msr(vmx, MSR_KERNEL_GS_BASE, data,
+ 				 &vmx->msr_guest_kernel_gs_base);
+ }
++
++static u64 vmx_read_guest_fred_rsp0(struct vcpu_vmx *vmx)
++{
++	return vmx_read_guest_host_msr(vmx, MSR_IA32_FRED_RSP0,
++				       &vmx->msr_guest_fred_rsp0);
++}
++
++static void vmx_write_guest_fred_rsp0(struct vcpu_vmx *vmx, u64 data)
++{
++	vmx_write_guest_host_msr(vmx, MSR_IA32_FRED_RSP0, data,
++				 &vmx->msr_guest_fred_rsp0);
++}
+ #endif
+ 
+ static void grow_ple_window(struct kvm_vcpu *vcpu)
+@@ -1991,6 +2003,27 @@ int vmx_get_feature_msr(u32 msr, u64 *data)
+ 	}
+ }
+ 
++#ifdef CONFIG_X86_64
++static const u32 fred_msr_vmcs_fields[] = {
++	GUEST_IA32_FRED_RSP1,
++	GUEST_IA32_FRED_RSP2,
++	GUEST_IA32_FRED_RSP3,
++	GUEST_IA32_FRED_STKLVLS,
++	GUEST_IA32_FRED_SSP1,
++	GUEST_IA32_FRED_SSP2,
++	GUEST_IA32_FRED_SSP3,
++	GUEST_IA32_FRED_CONFIG,
++};
++
++static_assert(MSR_IA32_FRED_CONFIG - MSR_IA32_FRED_RSP1 ==
++	      ARRAY_SIZE(fred_msr_vmcs_fields) - 1);
++
++static u32 fred_msr_to_vmcs(u32 msr)
++{
++	return fred_msr_vmcs_fields[msr - MSR_IA32_FRED_RSP1];
++}
++#endif
++
+ /*
+  * Reads an msr value (of 'msr_info->index') into 'msr_info->data'.
+  * Returns 0 on success, non-0 otherwise.
+@@ -2013,6 +2046,12 @@ int vmx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 	case MSR_KERNEL_GS_BASE:
+ 		msr_info->data = vmx_read_guest_kernel_gs_base(vmx);
+ 		break;
++	case MSR_IA32_FRED_RSP0:
++		msr_info->data = vmx_read_guest_fred_rsp0(vmx);
++		break;
++	case MSR_IA32_FRED_RSP1 ... MSR_IA32_FRED_CONFIG:
++		msr_info->data = vmcs_read64(fred_msr_to_vmcs(msr_info->index));
++		break;
+ #endif
+ 	case MSR_EFER:
+ 		return kvm_get_msr_common(vcpu, msr_info);
+@@ -2245,6 +2284,12 @@ int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 			vmx_update_exception_bitmap(vcpu);
+ 		}
+ 		break;
++	case MSR_IA32_FRED_RSP0:
++		vmx_write_guest_fred_rsp0(vmx, data);
++		break;
++	case MSR_IA32_FRED_RSP1 ... MSR_IA32_FRED_CONFIG:
++		vmcs_write64(fred_msr_to_vmcs(msr_index), data);
++		break;
+ #endif
+ 	case MSR_IA32_SYSENTER_CS:
+ 		if (is_guest_mode(vcpu))
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index da04331a4200..bd1c2eb7c538 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -333,6 +333,9 @@ static const u32 msrs_to_save_base[] = {
+ 	MSR_STAR,
+ #ifdef CONFIG_X86_64
+ 	MSR_CSTAR, MSR_KERNEL_GS_BASE, MSR_SYSCALL_MASK, MSR_LSTAR,
++	MSR_IA32_FRED_RSP0, MSR_IA32_FRED_RSP1, MSR_IA32_FRED_RSP2,
++	MSR_IA32_FRED_RSP3, MSR_IA32_FRED_STKLVLS, MSR_IA32_FRED_SSP1,
++	MSR_IA32_FRED_SSP2, MSR_IA32_FRED_SSP3, MSR_IA32_FRED_CONFIG,
+ #endif
+ 	MSR_IA32_TSC, MSR_IA32_CR_PAT, MSR_VM_HSAVE_PA,
+ 	MSR_IA32_FEAT_CTL, MSR_IA32_BNDCFGS, MSR_TSC_AUX,
+@@ -1902,7 +1905,7 @@ static int __kvm_set_msr(struct kvm_vcpu *vcpu, u32 index, u64 data,
+ 		if (!host_initiated)
+ 			return 1;
+ 		fallthrough;
+-	case MSR_IA32_PL0_SSP ... MSR_IA32_INT_SSP_TAB:
++	case MSR_IA32_PL1_SSP ... MSR_IA32_INT_SSP_TAB:
+ 		if (!guest_cpu_cap_has(vcpu, X86_FEATURE_SHSTK))
+ 			return KVM_MSR_RET_UNSUPPORTED;
+ 		if (is_noncanonical_msr_address(data, vcpu))
+@@ -1911,6 +1914,48 @@ static int __kvm_set_msr(struct kvm_vcpu *vcpu, u32 index, u64 data,
+ 		if (index != MSR_IA32_INT_SSP_TAB && !IS_ALIGNED(data, 4))
+ 			return 1;
+ 		break;
++	case MSR_IA32_FRED_STKLVLS:
++		if (!guest_cpu_cap_has(vcpu, X86_FEATURE_FRED))
++			return KVM_MSR_RET_UNSUPPORTED;
++		break;
++	case MSR_IA32_FRED_RSP0 ... MSR_IA32_FRED_RSP3:
++	case MSR_IA32_FRED_SSP1 ... MSR_IA32_FRED_CONFIG:
++		u64 reserved_bits = 0;
++
++		if (!guest_cpu_cap_has(vcpu, X86_FEATURE_FRED))
++			return KVM_MSR_RET_UNSUPPORTED;
++
++		if (is_noncanonical_msr_address(data, vcpu))
++			return 1;
++
++		switch (index) {
++		case MSR_IA32_FRED_CONFIG:
++			reserved_bits = BIT_ULL(11) | GENMASK_ULL(5, 4) | BIT_ULL(2);
++			break;
++		case MSR_IA32_FRED_RSP0 ... MSR_IA32_FRED_RSP3:
++			reserved_bits = GENMASK_ULL(5, 0);
++			break;
++		case MSR_IA32_FRED_SSP1 ... MSR_IA32_FRED_SSP3:
++			reserved_bits = GENMASK_ULL(2, 0);
++			break;
++		default:
++			WARN_ON_ONCE(1);
++			return 1;
++		}
++		if (data & reserved_bits)
++			return 1;
++		break;
++	case MSR_IA32_PL0_SSP: /* I.e., MSR_IA32_FRED_SSP0 */
++		if (!guest_cpu_cap_has(vcpu, X86_FEATURE_SHSTK) &&
++		    !guest_cpu_cap_has(vcpu, X86_FEATURE_FRED))
++			return KVM_MSR_RET_UNSUPPORTED;
++
++		if (is_noncanonical_msr_address(data, vcpu))
++			return 1;
++
++		if (!IS_ALIGNED(data, 4))
++			return 1;
++		break;
+ 	}
+ 
+ 	msr.data = data;
+@@ -1965,10 +2010,19 @@ static int __kvm_get_msr(struct kvm_vcpu *vcpu, u32 index, u64 *data,
+ 		if (!host_initiated)
+ 			return 1;
+ 		fallthrough;
+-	case MSR_IA32_PL0_SSP ... MSR_IA32_INT_SSP_TAB:
++	case MSR_IA32_PL1_SSP ... MSR_IA32_INT_SSP_TAB:
+ 		if (!guest_cpu_cap_has(vcpu, X86_FEATURE_SHSTK))
+ 			return KVM_MSR_RET_UNSUPPORTED;
+ 		break;
++	case MSR_IA32_FRED_RSP0 ... MSR_IA32_FRED_CONFIG:
++		if (!guest_cpu_cap_has(vcpu, X86_FEATURE_FRED))
++			return KVM_MSR_RET_UNSUPPORTED;
++		break;
++	case MSR_IA32_PL0_SSP: /* I.e., MSR_IA32_FRED_SSP0 */
++		if (!guest_cpu_cap_has(vcpu, X86_FEATURE_SHSTK) &&
++		    !guest_cpu_cap_has(vcpu, X86_FEATURE_FRED))
++			return KVM_MSR_RET_UNSUPPORTED;
++		break;
+ 	}
+ 
+ 	msr.index = index;
+@@ -7538,10 +7592,19 @@ static void kvm_probe_msr_to_save(u32 msr_index)
+ 		if (!kvm_cpu_cap_has(X86_FEATURE_LM))
+ 			return;
+ 		fallthrough;
+-	case MSR_IA32_PL0_SSP ... MSR_IA32_PL3_SSP:
++	case MSR_IA32_PL1_SSP ... MSR_IA32_PL3_SSP:
+ 		if (!kvm_cpu_cap_has(X86_FEATURE_SHSTK))
+ 			return;
+ 		break;
++	case MSR_IA32_FRED_RSP0 ... MSR_IA32_FRED_CONFIG:
++		if (!kvm_cpu_cap_has(X86_FEATURE_FRED))
++			return;
++		break;
++	case MSR_IA32_PL0_SSP: /* I.e., MSR_IA32_FRED_SSP0 */
++		if (!kvm_cpu_cap_has(X86_FEATURE_SHSTK) &&
++		    !kvm_cpu_cap_has(X86_FEATURE_FRED))
++			return;
++		break;
+ 	default:
+ 		break;
+ 	}
+-- 
+2.43.0
+

@@ -1,0 +1,66 @@
+From 1ab8bf60a090e5bbdf64d8b3b7762aef308db022 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Thu, 26 Jun 2025 10:16:01 -0700
+Subject: [PATCH 01/44] KVM: VMX: Add host MSR read/write helpers to
+ consolidate preemption handling
+
+Add host MSR read/write helpers to consolidate preemption handling to
+prepare for adding FRED RSP0 access functions without duplicating the
+preemption handling code.
+
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Link: https://lore.kernel.org/r/20250626171601.2293914-1-xin@zytor.com
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/vmx/vmx.c | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 779f73d09e68..bec76fbd0b09 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -1346,22 +1346,35 @@ static void vmx_prepare_switch_to_host(struct vcpu_vmx *vmx)
+ }
+ 
+ #ifdef CONFIG_X86_64
+-static u64 vmx_read_guest_kernel_gs_base(struct vcpu_vmx *vmx)
++static u64 vmx_read_guest_host_msr(struct vcpu_vmx *vmx, u32 msr, u64 *cache)
+ {
+ 	preempt_disable();
+ 	if (vmx->vt.guest_state_loaded)
+-		rdmsrq(MSR_KERNEL_GS_BASE, vmx->msr_guest_kernel_gs_base);
++		*cache = read_msr(msr);
+ 	preempt_enable();
+-	return vmx->msr_guest_kernel_gs_base;
++	return *cache;
+ }
+ 
+-static void vmx_write_guest_kernel_gs_base(struct vcpu_vmx *vmx, u64 data)
++static void vmx_write_guest_host_msr(struct vcpu_vmx *vmx, u32 msr, u64 data,
++				     u64 *cache)
+ {
+ 	preempt_disable();
+ 	if (vmx->vt.guest_state_loaded)
+-		wrmsrq(MSR_KERNEL_GS_BASE, data);
++		wrmsrns(msr, data);
+ 	preempt_enable();
+-	vmx->msr_guest_kernel_gs_base = data;
++	*cache = data;
++}
++
++static u64 vmx_read_guest_kernel_gs_base(struct vcpu_vmx *vmx)
++{
++	return vmx_read_guest_host_msr(vmx, MSR_KERNEL_GS_BASE,
++				       &vmx->msr_guest_kernel_gs_base);
++}
++
++static void vmx_write_guest_kernel_gs_base(struct vcpu_vmx *vmx, u64 data)
++{
++	vmx_write_guest_host_msr(vmx, MSR_KERNEL_GS_BASE, data,
++				 &vmx->msr_guest_kernel_gs_base);
+ }
+ #endif
+ 
+-- 
+2.43.0
+

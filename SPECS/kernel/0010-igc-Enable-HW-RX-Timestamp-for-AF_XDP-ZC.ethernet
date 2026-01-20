@@ -1,0 +1,43 @@
+From c2697c3fa88d42d534846cfe97afc44ef236f4a8 Mon Sep 17 00:00:00 2001
+From: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Date: Wed, 9 Jun 2021 01:56:30 +0800
+Subject: [PATCH 10/19] igc: Enable HW RX Timestamp for AF_XDP ZC
+
+Enable the RX HW Timestamp using meta data to userspace.
+
+Signed-off-by: Muhammad Husaini Zulkifli <muhammad.husaini.zulkifli@intel.com>
+Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc_main.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
+index b581e96d0735..8df729810af5 100644
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -2815,6 +2815,7 @@ static int igc_clean_rx_irq_zc(struct igc_q_vector *q_vector, const int budget)
+ 	u16 cleaned_count = igc_desc_unused(ring);
+ 	int total_bytes = 0, total_packets = 0;
+ 	u16 ntc = ring->next_to_clean;
++	struct igc_md_desc *md;
+ 	struct bpf_prog *prog;
+ 	bool failure = false;
+ 	int xdp_status = 0;
+@@ -2863,6 +2864,14 @@ static int igc_clean_rx_irq_zc(struct igc_q_vector *q_vector, const int budget)
+ 		bi->xdp->data_end = bi->xdp->data + size;
+ 		xsk_buff_dma_sync_for_cpu(bi->xdp);
+ 
++		if (adapter->btf_enabled) {
++			md = bi->xdp->data - sizeof(*md);
++			md->timestamp = igc_ptp_rx_pktstamp(adapter, ctx->rx_ts->timer0);
++			bi->xdp->data_meta = md;
++		} else {
++			xdp_set_data_meta_invalid(bi->xdp);
++		}
++
+ 		res = __igc_xdp_run_prog(adapter, prog, bi->xdp);
+ 		switch (res) {
+ 		case IGC_XDP_PASS:
+-- 
+2.43.0
+

@@ -1,0 +1,30 @@
+From 1f44f78a75b6651770fcfbaca9b3e8f3f8b781bc Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Mon, 13 Oct 2025 10:54:32 +0800
+Subject: [PATCH] IPU7: media: pci: Add platform data config.
+
+Adding missing platform data config in IPU Kconfig.
+
+Signed-off-by: Shahidan, Muhammad Shahmil<muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/pci/intel/Kconfig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/media/pci/intel/Kconfig b/drivers/media/pci/intel/Kconfig
+index a92a7fabeac9..f6b1d7915f83 100644
+--- a/drivers/media/pci/intel/Kconfig
++++ b/drivers/media/pci/intel/Kconfig
+@@ -19,3 +19,9 @@ config IPU_BRIDGE
+ 	  - Microsoft Surface models (except Surface Pro 3)
+ 	  - The Lenovo Miix line (for example the 510, 520, 710 and 720)
+ 	  - Dell 7285
++
++config VIDEO_INTEL_IPU_USE_PLATFORMDATA
++        bool "Enable platform data"
++        default y
++        help
++          Enable platform data in IPU.
+\ No newline at end of file
+-- 
+2.43.0
+

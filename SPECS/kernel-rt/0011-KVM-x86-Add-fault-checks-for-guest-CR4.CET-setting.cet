@@ -1,0 +1,48 @@
+From 19e43999ba3d8d5a8f08ce836ea23f306adce236 Mon Sep 17 00:00:00 2001
+From: Yang Weijiang <weijiang.yang@intel.com>
+Date: Fri, 4 Jul 2025 01:49:41 -0700
+Subject: [PATCH 11/24] KVM: x86: Add fault checks for guest CR4.CET setting
+
+Check potential faults for CR4.CET setting per Intel SDM requirements.
+CET can be enabled if and only if CR0.WP == 1, i.e. setting CR4.CET ==
+1 faults if CR0.WP == 0 and setting CR0.WP == 0 fails if CR4.CET == 1.
+
+Co-developed-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Yang Weijiang <weijiang.yang@intel.com>
+Reviewed-by: Chao Gao <chao.gao@intel.com>
+Reviewed-by: Maxim Levitsky <mlevitsk@redhat.com>
+Tested-by: Mathias Krause <minipli@grsecurity.net>
+Tested-by: John Allen <john.allen@amd.com>
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+---
+ arch/x86/kvm/x86.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 0b0468348ee0..fbe3d1bea657 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -1176,6 +1176,9 @@ int kvm_set_cr0(struct kvm_vcpu *vcpu, unsigned long cr0)
+ 	    (is_64_bit_mode(vcpu) || kvm_is_cr4_bit_set(vcpu, X86_CR4_PCIDE)))
+ 		return 1;
+ 
++	if (!(cr0 & X86_CR0_WP) && kvm_is_cr4_bit_set(vcpu, X86_CR4_CET))
++		return 1;
++
+ 	kvm_x86_call(set_cr0)(vcpu, cr0);
+ 
+ 	kvm_post_set_cr0(vcpu, old_cr0, cr0);
+@@ -1375,6 +1378,9 @@ int kvm_set_cr4(struct kvm_vcpu *vcpu, unsigned long cr4)
+ 			return 1;
+ 	}
+ 
++	if ((cr4 & X86_CR4_CET) && !kvm_is_cr0_bit_set(vcpu, X86_CR0_WP))
++		return 1;
++
+ 	kvm_x86_call(set_cr4)(vcpu, cr4);
+ 
+ 	kvm_post_set_cr4(vcpu, old_cr4, cr4);
+-- 
+2.43.0
+

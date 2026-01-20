@@ -1,0 +1,139 @@
+From 0c532d8388151e10330a0c9b3390f205ac6a3283 Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Tue, 13 May 2025 17:34:40 -0700
+Subject: [PATCH 046/100] KVM: x86/pmu: Move kvm_init_pmu_capability() to pmu.c
+
+Move kvm_init_pmu_capability() to pmu.c so that future changes can access
+variables that have no business being visible outside of pmu.c.
+kvm_init_pmu_capability() is called once per module load, there's is zero
+reason it needs to be inlined.
+
+No functional change intended.
+
+Cc: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Cc: Sandipan Das <sandipan.das@amd.com>
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/pmu.c | 47 ++++++++++++++++++++++++++++++++++++++++++++++
+ arch/x86/kvm/pmu.h | 47 +---------------------------------------------
+ 2 files changed, 48 insertions(+), 46 deletions(-)
+
+diff --git a/arch/x86/kvm/pmu.c b/arch/x86/kvm/pmu.c
+index 75e9cfc689f8..eb17d90916ea 100644
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -96,6 +96,53 @@ void kvm_pmu_ops_update(const struct kvm_pmu_ops *pmu_ops)
+ #undef __KVM_X86_PMU_OP
+ }
+ 
++void kvm_init_pmu_capability(const struct kvm_pmu_ops *pmu_ops)
++{
++	bool is_intel = boot_cpu_data.x86_vendor == X86_VENDOR_INTEL;
++	int min_nr_gp_ctrs = pmu_ops->MIN_NR_GP_COUNTERS;
++
++	/*
++	 * Hybrid PMUs don't play nice with virtualization without careful
++	 * configuration by userspace, and KVM's APIs for reporting supported
++	 * vPMU features do not account for hybrid PMUs.  Disable vPMU support
++	 * for hybrid PMUs until KVM gains a way to let userspace opt-in.
++	 */
++	if (cpu_feature_enabled(X86_FEATURE_HYBRID_CPU))
++		enable_pmu = false;
++
++	if (enable_pmu) {
++		perf_get_x86_pmu_capability(&kvm_pmu_cap);
++
++		/*
++		 * WARN if perf did NOT disable hardware PMU if the number of
++		 * architecturally required GP counters aren't present, i.e. if
++		 * there are a non-zero number of counters, but fewer than what
++		 * is architecturally required.
++		 */
++		if (!kvm_pmu_cap.num_counters_gp ||
++		    WARN_ON_ONCE(kvm_pmu_cap.num_counters_gp < min_nr_gp_ctrs))
++			enable_pmu = false;
++		else if (is_intel && !kvm_pmu_cap.version)
++			enable_pmu = false;
++	}
++
++	if (!enable_pmu) {
++		memset(&kvm_pmu_cap, 0, sizeof(kvm_pmu_cap));
++		return;
++	}
++
++	kvm_pmu_cap.version = min(kvm_pmu_cap.version, 2);
++	kvm_pmu_cap.num_counters_gp = min(kvm_pmu_cap.num_counters_gp,
++					  pmu_ops->MAX_NR_GP_COUNTERS);
++	kvm_pmu_cap.num_counters_fixed = min(kvm_pmu_cap.num_counters_fixed,
++					     KVM_MAX_NR_FIXED_COUNTERS);
++
++	kvm_pmu_eventsel.INSTRUCTIONS_RETIRED =
++		perf_get_hw_event_config(PERF_COUNT_HW_INSTRUCTIONS);
++	kvm_pmu_eventsel.BRANCH_INSTRUCTIONS_RETIRED =
++		perf_get_hw_event_config(PERF_COUNT_HW_BRANCH_INSTRUCTIONS);
++}
++
+ static inline void __kvm_perf_overflow(struct kvm_pmc *pmc, bool in_pmi)
+ {
+ 	struct kvm_pmu *pmu = pmc_to_pmu(pmc);
+diff --git a/arch/x86/kvm/pmu.h b/arch/x86/kvm/pmu.h
+index 103604c4b33b..71796270918f 100644
+--- a/arch/x86/kvm/pmu.h
++++ b/arch/x86/kvm/pmu.h
+@@ -180,52 +180,7 @@ static inline bool pmc_speculative_in_use(struct kvm_pmc *pmc)
+ extern struct x86_pmu_capability kvm_pmu_cap;
+ extern struct kvm_pmu_emulated_event_selectors kvm_pmu_eventsel;
+ 
+-static inline void kvm_init_pmu_capability(const struct kvm_pmu_ops *pmu_ops)
+-{
+-	bool is_intel = boot_cpu_data.x86_vendor == X86_VENDOR_INTEL;
+-	int min_nr_gp_ctrs = pmu_ops->MIN_NR_GP_COUNTERS;
+-
+-	/*
+-	 * Hybrid PMUs don't play nice with virtualization without careful
+-	 * configuration by userspace, and KVM's APIs for reporting supported
+-	 * vPMU features do not account for hybrid PMUs.  Disable vPMU support
+-	 * for hybrid PMUs until KVM gains a way to let userspace opt-in.
+-	 */
+-	if (cpu_feature_enabled(X86_FEATURE_HYBRID_CPU))
+-		enable_pmu = false;
+-
+-	if (enable_pmu) {
+-		perf_get_x86_pmu_capability(&kvm_pmu_cap);
+-
+-		/*
+-		 * WARN if perf did NOT disable hardware PMU if the number of
+-		 * architecturally required GP counters aren't present, i.e. if
+-		 * there are a non-zero number of counters, but fewer than what
+-		 * is architecturally required.
+-		 */
+-		if (!kvm_pmu_cap.num_counters_gp ||
+-		    WARN_ON_ONCE(kvm_pmu_cap.num_counters_gp < min_nr_gp_ctrs))
+-			enable_pmu = false;
+-		else if (is_intel && !kvm_pmu_cap.version)
+-			enable_pmu = false;
+-	}
+-
+-	if (!enable_pmu) {
+-		memset(&kvm_pmu_cap, 0, sizeof(kvm_pmu_cap));
+-		return;
+-	}
+-
+-	kvm_pmu_cap.version = min(kvm_pmu_cap.version, 2);
+-	kvm_pmu_cap.num_counters_gp = min(kvm_pmu_cap.num_counters_gp,
+-					  pmu_ops->MAX_NR_GP_COUNTERS);
+-	kvm_pmu_cap.num_counters_fixed = min(kvm_pmu_cap.num_counters_fixed,
+-					     KVM_MAX_NR_FIXED_COUNTERS);
+-
+-	kvm_pmu_eventsel.INSTRUCTIONS_RETIRED =
+-		perf_get_hw_event_config(PERF_COUNT_HW_INSTRUCTIONS);
+-	kvm_pmu_eventsel.BRANCH_INSTRUCTIONS_RETIRED =
+-		perf_get_hw_event_config(PERF_COUNT_HW_BRANCH_INSTRUCTIONS);
+-}
++void kvm_init_pmu_capability(const struct kvm_pmu_ops *pmu_ops);
+ 
+ static inline void kvm_pmu_request_counter_reprogram(struct kvm_pmc *pmc)
+ {
+-- 
+2.43.0
+

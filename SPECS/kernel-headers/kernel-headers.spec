@@ -13,14 +13,14 @@
 
 Summary:        Linux API header files
 Name:           kernel-headers
-Version:        6.17.0
-Release:        3%{?dist}
+Version:        6.17.11
+Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
-URL:            https://github.com/intel/mainline-tracking
-Source0:        https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-tracking-pre-prod-v6.17-linux-251118T134731Z.tar.gz
+URL:            https://www.kernel.org/pub/linux/kernel
+Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.17.11.tar.gz
 # Historical name shipped by other distros
 Provides:       glibc-kernheaders = %{version}-%{release}
 BuildArch:      noarch
@@ -41,7 +41,7 @@ cross-glibc package.
 %endif
 
 %prep
-%setup -q -n mainline-tracking-mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
+%setup -q -n linux-6.17.11
 
 %build
 make mrproper
@@ -76,6 +76,9 @@ done
 %endif
 
 %changelog
+* Thu Jan 15 2026 Lishan Liu <lishan.liu@intel.com> - 6.17.11-1
+- Update kernel to mainline-v6.17.11-emt-260108T031458Z
+
 * Mon Dec 1 2025 Lishan Liu <lishan.liu@intel.com> - 6.17.0-3
 - Update kernel to mainline-tracking-pre-prod-v6.17-linux-251118T134731Z
 

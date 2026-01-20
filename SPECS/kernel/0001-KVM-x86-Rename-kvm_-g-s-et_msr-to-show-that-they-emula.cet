@@ -1,0 +1,223 @@
+From bbc92ecd075fa66a2f3488e8b52d1e23c11d987e Mon Sep 17 00:00:00 2001
+From: Yang Weijiang <weijiang.yang@intel.com>
+Date: Fri, 4 Jul 2025 01:49:32 -0700
+Subject: [PATCH] KVM: x86: Rename kvm_{g,s}et_msr()* to show that they emulate
+ guest accesses
+
+Rename
+	kvm_{g,s}et_msr_with_filter()
+	kvm_{g,s}et_msr()
+to
+	kvm_emulate_msr_{read,write}
+	__kvm_emulate_msr_{read,write}
+
+to make it more obvious that KVM uses these helpers to emulate guest
+behaviors, i.e., host_initiated == false in these helpers.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Suggested-by: Chao Gao <chao.gao@intel.com>
+Signed-off-by: Yang Weijiang <weijiang.yang@intel.com>
+Reviewed-by: Maxim Levitsky <mlevitsk@redhat.com>
+Reviewed-by: Chao Gao <chao.gao@intel.com>
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Tested-by: Mathias Krause <minipli@grsecurity.net>
+Tested-by: John Allen <john.allen@amd.com>
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+---
+ arch/x86/include/asm/kvm_host.h |  8 ++++----
+ arch/x86/kvm/smm.c              |  4 ++--
+ arch/x86/kvm/vmx/nested.c       | 14 +++++++-------
+ arch/x86/kvm/x86.c              | 28 +++++++++++++++-------------
+ 4 files changed, 28 insertions(+), 26 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 9215d5cda609..b3fff43e0510 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -2156,11 +2156,11 @@ void kvm_prepare_event_vectoring_exit(struct kvm_vcpu *vcpu, gpa_t gpa);
+ 
+ void kvm_enable_efer_bits(u64);
+ bool kvm_valid_efer(struct kvm_vcpu *vcpu, u64 efer);
+-int kvm_get_msr_with_filter(struct kvm_vcpu *vcpu, u32 index, u64 *data);
+-int kvm_set_msr_with_filter(struct kvm_vcpu *vcpu, u32 index, u64 data);
++int kvm_emulate_msr_read(struct kvm_vcpu *vcpu, u32 index, u64 *data);
++int kvm_emulate_msr_write(struct kvm_vcpu *vcpu, u32 index, u64 data);
+ int __kvm_get_msr(struct kvm_vcpu *vcpu, u32 index, u64 *data, bool host_initiated);
+-int kvm_get_msr(struct kvm_vcpu *vcpu, u32 index, u64 *data);
+-int kvm_set_msr(struct kvm_vcpu *vcpu, u32 index, u64 data);
++int __kvm_emulate_msr_read(struct kvm_vcpu *vcpu, u32 index, u64 *data);
++int __kvm_emulate_msr_write(struct kvm_vcpu *vcpu, u32 index, u64 data);
+ int kvm_emulate_rdmsr(struct kvm_vcpu *vcpu);
+ int kvm_emulate_rdmsr_imm(struct kvm_vcpu *vcpu, u32 msr, int reg);
+ int kvm_emulate_wrmsr(struct kvm_vcpu *vcpu);
+diff --git a/arch/x86/kvm/smm.c b/arch/x86/kvm/smm.c
+index 9864c057187d..5dd8a1646800 100644
+--- a/arch/x86/kvm/smm.c
++++ b/arch/x86/kvm/smm.c
+@@ -529,7 +529,7 @@ static int rsm_load_state_64(struct x86_emulate_ctxt *ctxt,
+ 
+ 	vcpu->arch.smbase =         smstate->smbase;
+ 
+-	if (kvm_set_msr(vcpu, MSR_EFER, smstate->efer & ~EFER_LMA))
++	if (__kvm_emulate_msr_write(vcpu, MSR_EFER, smstate->efer & ~EFER_LMA))
+ 		return X86EMUL_UNHANDLEABLE;
+ 
+ 	rsm_load_seg_64(vcpu, &smstate->tr, VCPU_SREG_TR);
+@@ -620,7 +620,7 @@ int emulator_leave_smm(struct x86_emulate_ctxt *ctxt)
+ 
+ 		/* And finally go back to 32-bit mode.  */
+ 		efer = 0;
+-		kvm_set_msr(vcpu, MSR_EFER, efer);
++		__kvm_emulate_msr_write(vcpu, MSR_EFER, efer);
+ 	}
+ #endif
+ 
+diff --git a/arch/x86/kvm/vmx/nested.c b/arch/x86/kvm/vmx/nested.c
+index 1c8319916255..33e54402908e 100644
+--- a/arch/x86/kvm/vmx/nested.c
++++ b/arch/x86/kvm/vmx/nested.c
+@@ -1030,7 +1030,7 @@ static u32 nested_vmx_load_msr(struct kvm_vcpu *vcpu, u64 gpa, u32 count)
+ 				__func__, i, e.index, e.reserved);
+ 			goto fail;
+ 		}
+-		if (kvm_set_msr_with_filter(vcpu, e.index, e.value)) {
++		if (kvm_emulate_msr_write(vcpu, e.index, e.value)) {
+ 			pr_debug_ratelimited(
+ 				"%s cannot write MSR (%u, 0x%x, 0x%llx)\n",
+ 				__func__, i, e.index, e.value);
+@@ -1066,7 +1066,7 @@ static bool nested_vmx_get_vmexit_msr_value(struct kvm_vcpu *vcpu,
+ 		}
+ 	}
+ 
+-	if (kvm_get_msr_with_filter(vcpu, msr_index, data)) {
++	if (kvm_emulate_msr_read(vcpu, msr_index, data)) {
+ 		pr_debug_ratelimited("%s cannot read MSR (0x%x)\n", __func__,
+ 			msr_index);
+ 		return false;
+@@ -2803,8 +2803,8 @@ static int prepare_vmcs02(struct kvm_vcpu *vcpu, struct vmcs12 *vmcs12,
+ 
+ 	if ((vmcs12->vm_entry_controls & VM_ENTRY_LOAD_IA32_PERF_GLOBAL_CTRL) &&
+ 	    kvm_pmu_has_perf_global_ctrl(vcpu_to_pmu(vcpu)) &&
+-	    WARN_ON_ONCE(kvm_set_msr(vcpu, MSR_CORE_PERF_GLOBAL_CTRL,
+-				     vmcs12->guest_ia32_perf_global_ctrl))) {
++	    WARN_ON_ONCE(__kvm_emulate_msr_write(vcpu, MSR_CORE_PERF_GLOBAL_CTRL,
++						 vmcs12->guest_ia32_perf_global_ctrl))) {
+ 		*entry_failure_code = ENTRY_FAIL_DEFAULT;
+ 		return -EINVAL;
+ 	}
+@@ -4791,8 +4791,8 @@ static void load_vmcs12_host_state(struct kvm_vcpu *vcpu,
+ 	}
+ 	if ((vmcs12->vm_exit_controls & VM_EXIT_LOAD_IA32_PERF_GLOBAL_CTRL) &&
+ 	    kvm_pmu_has_perf_global_ctrl(vcpu_to_pmu(vcpu)))
+-		WARN_ON_ONCE(kvm_set_msr(vcpu, MSR_CORE_PERF_GLOBAL_CTRL,
+-					 vmcs12->host_ia32_perf_global_ctrl));
++		WARN_ON_ONCE(__kvm_emulate_msr_write(vcpu, MSR_CORE_PERF_GLOBAL_CTRL,
++						     vmcs12->host_ia32_perf_global_ctrl));
+ 
+ 	/* Set L1 segment info according to Intel SDM
+ 	    27.5.2 Loading Host Segment and Descriptor-Table Registers */
+@@ -4970,7 +4970,7 @@ static void nested_vmx_restore_host_state(struct kvm_vcpu *vcpu)
+ 				goto vmabort;
+ 			}
+ 
+-			if (kvm_set_msr_with_filter(vcpu, h.index, h.value)) {
++			if (kvm_emulate_msr_write(vcpu, h.index, h.value)) {
+ 				pr_debug_ratelimited(
+ 					"%s WRMSR failed (%u, 0x%x, 0x%llx)\n",
+ 					__func__, j, h.index, h.value);
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 2bcfdcd45b59..dbf9685db5b3 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -1943,33 +1943,33 @@ static int kvm_get_msr_ignored_check(struct kvm_vcpu *vcpu,
+ 				 __kvm_get_msr);
+ }
+ 
+-int kvm_get_msr_with_filter(struct kvm_vcpu *vcpu, u32 index, u64 *data)
++int kvm_emulate_msr_read(struct kvm_vcpu *vcpu, u32 index, u64 *data)
+ {
+ 	if (!kvm_msr_allowed(vcpu, index, KVM_MSR_FILTER_READ))
+ 		return KVM_MSR_RET_FILTERED;
+ 	return kvm_get_msr_ignored_check(vcpu, index, data, false);
+ }
+-EXPORT_SYMBOL_GPL(kvm_get_msr_with_filter);
++EXPORT_SYMBOL_GPL(kvm_emulate_msr_read);
+ 
+-int kvm_set_msr_with_filter(struct kvm_vcpu *vcpu, u32 index, u64 data)
++int kvm_emulate_msr_write(struct kvm_vcpu *vcpu, u32 index, u64 data)
+ {
+ 	if (!kvm_msr_allowed(vcpu, index, KVM_MSR_FILTER_WRITE))
+ 		return KVM_MSR_RET_FILTERED;
+ 	return kvm_set_msr_ignored_check(vcpu, index, data, false);
+ }
+-EXPORT_SYMBOL_GPL(kvm_set_msr_with_filter);
++EXPORT_SYMBOL_GPL(kvm_emulate_msr_write);
+ 
+-int kvm_get_msr(struct kvm_vcpu *vcpu, u32 index, u64 *data)
++int __kvm_emulate_msr_read(struct kvm_vcpu *vcpu, u32 index, u64 *data)
+ {
+ 	return kvm_get_msr_ignored_check(vcpu, index, data, false);
+ }
+-EXPORT_SYMBOL_GPL(kvm_get_msr);
++EXPORT_SYMBOL_GPL(__kvm_emulate_msr_read);
+ 
+-int kvm_set_msr(struct kvm_vcpu *vcpu, u32 index, u64 data)
++int __kvm_emulate_msr_write(struct kvm_vcpu *vcpu, u32 index, u64 data)
+ {
+ 	return kvm_set_msr_ignored_check(vcpu, index, data, false);
+ }
+-EXPORT_SYMBOL_GPL(kvm_set_msr);
++EXPORT_SYMBOL_GPL(__kvm_emulate_msr_write);
+ 
+ static void complete_userspace_rdmsr(struct kvm_vcpu *vcpu)
+ {
+@@ -2050,7 +2050,8 @@ static int __kvm_emulate_rdmsr(struct kvm_vcpu *vcpu, u32 msr, int reg,
+ 	u64 data;
+ 	int r;
+ 
+-	r = kvm_get_msr_with_filter(vcpu, msr, &data);
++	r = kvm_emulate_msr_read(vcpu, msr, &data);
++
+ 	if (!r) {
+ 		trace_kvm_msr_read(msr, data);
+ 
+@@ -2090,7 +2091,8 @@ static int __kvm_emulate_wrmsr(struct kvm_vcpu *vcpu, u32 msr, u64 data)
+ {
+ 	int r;
+ 
+-	r = kvm_set_msr_with_filter(vcpu, msr, data);
++	r = kvm_emulate_msr_write(vcpu, msr, data);
++
+ 	if (!r) {
+ 		trace_kvm_msr_write(msr, data);
+ 	} else {
+@@ -8378,7 +8380,7 @@ static int emulator_get_msr_with_filter(struct x86_emulate_ctxt *ctxt,
+ 	struct kvm_vcpu *vcpu = emul_to_vcpu(ctxt);
+ 	int r;
+ 
+-	r = kvm_get_msr_with_filter(vcpu, msr_index, pdata);
++	r = kvm_emulate_msr_read(vcpu, msr_index, pdata);
+ 	if (r < 0)
+ 		return X86EMUL_UNHANDLEABLE;
+ 
+@@ -8401,7 +8403,7 @@ static int emulator_set_msr_with_filter(struct x86_emulate_ctxt *ctxt,
+ 	struct kvm_vcpu *vcpu = emul_to_vcpu(ctxt);
+ 	int r;
+ 
+-	r = kvm_set_msr_with_filter(vcpu, msr_index, data);
++	r = kvm_emulate_msr_write(vcpu, msr_index, data);
+ 	if (r < 0)
+ 		return X86EMUL_UNHANDLEABLE;
+ 
+@@ -8421,7 +8423,7 @@ static int emulator_set_msr_with_filter(struct x86_emulate_ctxt *ctxt,
+ static int emulator_get_msr(struct x86_emulate_ctxt *ctxt,
+ 			    u32 msr_index, u64 *pdata)
+ {
+-	return kvm_get_msr(emul_to_vcpu(ctxt), msr_index, pdata);
++	return __kvm_emulate_msr_read(emul_to_vcpu(ctxt), msr_index, pdata);
+ }
+ 
+ static int emulator_check_rdpmc_early(struct x86_emulate_ctxt *ctxt, u32 pmc)
+-- 
+2.43.0
+

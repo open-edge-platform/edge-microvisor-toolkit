@@ -1,0 +1,159 @@
+From 3ed66f373b3c90405254ff19a9a0393d9f07ae73 Mon Sep 17 00:00:00 2001
+From: dongsheng <dongsheng.x.zhang@intel.com>
+Date: Fri, 18 Jul 2025 08:19:04 +0800
+Subject: [PATCH 036/100] KVM: selftests: Relax precise event count validation
+ as overcount issue
+
+For Intel Atom CPUs, the PMU events "Instruction Retired" or
+"Branch Instruction Retired" may be overcounted for some certain
+instructions, like FAR CALL/JMP, RETF, IRET, VMENTRY/VMEXIT/VMPTRLD
+and complex SGX/SMX/CSTATE instructions/flows.
+
+The detailed information can be found in the errata (section SRF7):
+https://edc.intel.com/content/www/us/en/design/products-and-solutions/processors-and-chipsets/sierra-forest/xeon-6700-series-processor-with-e-cores-specification-update/errata-details/
+
+For the Atom platforms before Sierra Forest (including Sierra Forest),
+Both 2 events "Instruction Retired" and "Branch Instruction Retired" would
+be overcounted on these certain instructions, but for Clearwater Forest
+only "Instruction Retired" event is overcounted on these instructions.
+
+As the overcount issue on VM-Exit/VM-Entry, it has no way to validate
+the precise count for these 2 events on these affected Atom platforms,
+so just relax the precise event count check for these 2 events on these
+Atom platforms.
+
+Signed-off-by: dongsheng <dongsheng.x.zhang@intel.com>
+Co-developed-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Tested-by: Yi Lai <yi1.lai@intel.com>
+---
+ tools/testing/selftests/kvm/include/x86/pmu.h |  9 +++++
+ tools/testing/selftests/kvm/lib/x86/pmu.c     | 38 +++++++++++++++++++
+ .../selftests/kvm/x86/pmu_counters_test.c     | 17 ++++++++-
+ 3 files changed, 62 insertions(+), 2 deletions(-)
+
+diff --git a/tools/testing/selftests/kvm/include/x86/pmu.h b/tools/testing/selftests/kvm/include/x86/pmu.h
+index 2aabda2da002..db14c08abc59 100644
+--- a/tools/testing/selftests/kvm/include/x86/pmu.h
++++ b/tools/testing/selftests/kvm/include/x86/pmu.h
+@@ -104,4 +104,13 @@ enum amd_pmu_zen_events {
+ extern const uint64_t intel_pmu_arch_events[];
+ extern const uint64_t amd_pmu_zen_events[];
+ 
++/*
++ * Flags for "Instruction Retired" and "Branch Instruction Retired"
++ * overcount flaws.
++ */
++#define INST_RETIRED_OVERCOUNT BIT(0)
++#define BR_RETIRED_OVERCOUNT   BIT(1)
++
++extern uint32_t detect_inst_overcount_flags(void);
++
+ #endif /* SELFTEST_KVM_PMU_H */
+diff --git a/tools/testing/selftests/kvm/lib/x86/pmu.c b/tools/testing/selftests/kvm/lib/x86/pmu.c
+index 5ab44bf54773..fd4ed577c88f 100644
+--- a/tools/testing/selftests/kvm/lib/x86/pmu.c
++++ b/tools/testing/selftests/kvm/lib/x86/pmu.c
+@@ -8,6 +8,7 @@
+ #include <linux/kernel.h>
+ 
+ #include "kvm_util.h"
++#include "processor.h"
+ #include "pmu.h"
+ 
+ const uint64_t intel_pmu_arch_events[] = {
+@@ -34,3 +35,40 @@ const uint64_t amd_pmu_zen_events[] = {
+ 	AMD_ZEN_BRANCHES_MISPREDICTED,
+ };
+ kvm_static_assert(ARRAY_SIZE(amd_pmu_zen_events) == NR_AMD_ZEN_EVENTS);
++
++/*
++ * For Intel Atom CPUs, the PMU events "Instruction Retired" or
++ * "Branch Instruction Retired" may be overcounted for some certain
++ * instructions, like FAR CALL/JMP, RETF, IRET, VMENTRY/VMEXIT/VMPTRLD
++ * and complex SGX/SMX/CSTATE instructions/flows.
++ *
++ * The detailed information can be found in the errata (section SRF7):
++ * https://edc.intel.com/content/www/us/en/design/products-and-solutions/processors-and-chipsets/sierra-forest/xeon-6700-series-processor-with-e-cores-specification-update/errata-details/
++ *
++ * For the Atom platforms before Sierra Forest (including Sierra Forest),
++ * Both 2 events "Instruction Retired" and "Branch Instruction Retired" would
++ * be overcounted on these certain instructions, but for Clearwater Forest
++ * only "Instruction Retired" event is overcounted on these instructions.
++ */
++uint32_t detect_inst_overcount_flags(void)
++{
++	uint32_t eax, ebx, ecx, edx;
++	uint32_t flags = 0;
++
++	cpuid(1, &eax, &ebx, &ecx, &edx);
++	if (x86_family(eax) == 0x6) {
++		switch (x86_model(eax)) {
++		case 0xDD: /* Clearwater Forest */
++			flags = INST_RETIRED_OVERCOUNT;
++			break;
++		case 0xAF: /* Sierra Forest */
++		case 0x4D: /* Avaton, Rangely */
++		case 0x5F: /* Denverton */
++		case 0x86: /* Jacobsville */
++			flags = INST_RETIRED_OVERCOUNT | BR_RETIRED_OVERCOUNT;
++			break;
++		}
++	}
++
++	return flags;
++}
+diff --git a/tools/testing/selftests/kvm/x86/pmu_counters_test.c b/tools/testing/selftests/kvm/x86/pmu_counters_test.c
+index 342a72420177..074cdf323406 100644
+--- a/tools/testing/selftests/kvm/x86/pmu_counters_test.c
++++ b/tools/testing/selftests/kvm/x86/pmu_counters_test.c
+@@ -52,6 +52,9 @@ struct kvm_intel_pmu_event {
+ 	struct kvm_x86_pmu_feature fixed_event;
+ };
+ 
++
++static uint8_t inst_overcount_flags;
++
+ /*
+  * Wrap the array to appease the compiler, as the macros used to construct each
+  * kvm_x86_pmu_feature use syntax that's only valid in function scope, and the
+@@ -163,10 +166,18 @@ static void guest_assert_event_count(uint8_t idx, uint32_t pmc, uint32_t pmc_msr
+ 
+ 	switch (idx) {
+ 	case INTEL_ARCH_INSTRUCTIONS_RETIRED_INDEX:
+-		GUEST_ASSERT_EQ(count, NUM_INSNS_RETIRED);
++		/* Relax precise count check due to VM-EXIT/VM-ENTRY overcount issue */
++		if (inst_overcount_flags & INST_RETIRED_OVERCOUNT)
++			GUEST_ASSERT(count >= NUM_INSNS_RETIRED);
++		else
++			GUEST_ASSERT_EQ(count, NUM_INSNS_RETIRED);
+ 		break;
+ 	case INTEL_ARCH_BRANCHES_RETIRED_INDEX:
+-		GUEST_ASSERT_EQ(count, NUM_BRANCH_INSNS_RETIRED);
++		/* Relax precise count check due to VM-EXIT/VM-ENTRY overcount issue */
++		if (inst_overcount_flags & BR_RETIRED_OVERCOUNT)
++			GUEST_ASSERT(count >= NUM_BRANCH_INSNS_RETIRED);
++		else
++			GUEST_ASSERT_EQ(count, NUM_BRANCH_INSNS_RETIRED);
+ 		break;
+ 	case INTEL_ARCH_LLC_REFERENCES_INDEX:
+ 	case INTEL_ARCH_LLC_MISSES_INDEX:
+@@ -335,6 +346,7 @@ static void test_arch_events(uint8_t pmu_version, uint64_t perf_capabilities,
+ 				length);
+ 	vcpu_set_cpuid_property(vcpu, X86_PROPERTY_PMU_EVENTS_MASK,
+ 				unavailable_mask);
++	sync_global_to_guest(vm, inst_overcount_flags);
+ 
+ 	run_vcpu(vcpu);
+ 
+@@ -673,6 +685,7 @@ int main(int argc, char *argv[])
+ 
+ 	kvm_pmu_version = kvm_cpu_property(X86_PROPERTY_PMU_VERSION);
+ 	kvm_has_perf_caps = kvm_cpu_has(X86_FEATURE_PDCM);
++	inst_overcount_flags = detect_inst_overcount_flags();
+ 
+ 	test_intel_counters();
+ 
+-- 
+2.43.0
+

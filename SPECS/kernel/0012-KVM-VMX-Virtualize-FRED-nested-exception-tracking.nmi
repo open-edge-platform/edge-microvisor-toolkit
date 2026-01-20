@@ -1,0 +1,206 @@
+From 45ca6a4965644bb66e47eaad8c677d32d69aec6e Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Thu, 13 Jun 2024 09:48:43 -0700
+Subject: [PATCH 12/44] KVM: VMX: Virtualize FRED nested exception tracking
+
+Set the VMX nested exception bit in VM-entry interruption information
+field when injecting a nested exception using FRED event delivery to
+ensure:
+  1) A nested exception is injected on a correct stack level.
+  2) The nested bit defined in FRED stack frame is set.
+
+The event stack level used by FRED event delivery depends on whether
+the event was a nested exception encountered during delivery of an
+earlier event, because a nested exception is "regarded" as happening
+on ring 0.  E.g., when #PF is configured to use stack level 1 in
+IA32_FRED_STKLVLS MSR:
+  - nested #PF will be delivered on the stack pointed by IA32_FRED_RSP1
+    MSR when encountered in ring 3 and ring 0.
+  - normal #PF will be delivered on the stack pointed by IA32_FRED_RSP0
+    MSR when encountered in ring 3.
+
+The VMX nested-exception support ensures a correct event stack level is
+chosen when a VM entry injects a nested exception.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+[ Sean: reworked kvm_requeue_exception() to simply the code changes ]
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Change in v5:
+* Add TB from Xuelian Guo.
+
+Change in v4:
+* Move the check is_fred_enable() from kvm_multiple_exception() to
+  vmx_inject_exception() thus avoid bleeding FRED details into
+  kvm_multiple_exception() (Chao Gao).
+
+Change in v3:
+* Rework kvm_requeue_exception() to simply the code changes (Sean
+  Christopherson).
+
+Change in v2:
+* Set the nested flag when there is an original interrupt (Chao Gao).
+---
+ arch/x86/include/asm/kvm_host.h |  4 +++-
+ arch/x86/include/asm/vmx.h      |  5 ++++-
+ arch/x86/kvm/svm/svm.c          |  2 +-
+ arch/x86/kvm/vmx/vmx.c          |  6 +++++-
+ arch/x86/kvm/x86.c              | 13 ++++++++++++-
+ arch/x86/kvm/x86.h              |  1 +
+ 6 files changed, 26 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 40d2c5e1b7e7..0d4cdb704f97 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -761,6 +761,7 @@ struct kvm_queued_exception {
+ 	u32 error_code;
+ 	unsigned long payload;
+ 	bool has_payload;
++	bool nested;
+ 	u64 event_data;
+ };
+ 
+@@ -2209,7 +2210,8 @@ void kvm_queue_exception(struct kvm_vcpu *vcpu, unsigned nr);
+ void kvm_queue_exception_e(struct kvm_vcpu *vcpu, unsigned nr, u32 error_code);
+ void kvm_queue_exception_p(struct kvm_vcpu *vcpu, unsigned nr, unsigned long payload);
+ void kvm_requeue_exception(struct kvm_vcpu *vcpu, unsigned int nr,
+-			   bool has_error_code, u32 error_code, u64 event_data);
++			   bool has_error_code, u32 error_code, bool nested,
++			   u64 event_data);
+ void kvm_inject_page_fault(struct kvm_vcpu *vcpu, struct x86_exception *fault);
+ void kvm_inject_emulated_page_fault(struct kvm_vcpu *vcpu,
+ 				    struct x86_exception *fault);
+diff --git a/arch/x86/include/asm/vmx.h b/arch/x86/include/asm/vmx.h
+index 613deb8cfb78..f766791367d2 100644
+--- a/arch/x86/include/asm/vmx.h
++++ b/arch/x86/include/asm/vmx.h
+@@ -141,6 +141,7 @@
+ #define VMX_BASIC_INOUT				BIT_ULL(54)
+ #define VMX_BASIC_TRUE_CTLS			BIT_ULL(55)
+ #define VMX_BASIC_NO_HW_ERROR_CODE_CC		BIT_ULL(56)
++#define VMX_BASIC_NESTED_EXCEPTION		BIT_ULL(58)
+ 
+ static inline u32 vmx_basic_vmcs_revision_id(u64 vmx_basic)
+ {
+@@ -443,13 +444,15 @@ enum vmcs_field {
+ #define INTR_INFO_INTR_TYPE_MASK        0x700           /* 10:8 */
+ #define INTR_INFO_DELIVER_CODE_MASK     0x800           /* 11 */
+ #define INTR_INFO_UNBLOCK_NMI		0x1000		/* 12 */
++#define INTR_INFO_NESTED_EXCEPTION_MASK	0x2000		/* 13 */
+ #define INTR_INFO_VALID_MASK            0x80000000      /* 31 */
+-#define INTR_INFO_RESVD_BITS_MASK       0x7ffff000
++#define INTR_INFO_RESVD_BITS_MASK       0x7fffd000
+ 
+ #define VECTORING_INFO_VECTOR_MASK           	INTR_INFO_VECTOR_MASK
+ #define VECTORING_INFO_TYPE_MASK        	INTR_INFO_INTR_TYPE_MASK
+ #define VECTORING_INFO_DELIVER_CODE_MASK    	INTR_INFO_DELIVER_CODE_MASK
+ #define VECTORING_INFO_VALID_MASK       	INTR_INFO_VALID_MASK
++#define VECTORING_INFO_NESTED_EXCEPTION_MASK	INTR_INFO_NESTED_EXCEPTION_MASK
+ 
+ #define INTR_TYPE_EXT_INTR		(EVENT_TYPE_EXTINT << 8)	/* external interrupt */
+ #define INTR_TYPE_RESERVED		(EVENT_TYPE_RESERVED << 8)	/* reserved */
+diff --git a/arch/x86/kvm/svm/svm.c b/arch/x86/kvm/svm/svm.c
+index 8ee9f66a34f8..5408f84fa263 100644
+--- a/arch/x86/kvm/svm/svm.c
++++ b/arch/x86/kvm/svm/svm.c
+@@ -4187,7 +4187,7 @@ static void svm_complete_interrupts(struct kvm_vcpu *vcpu)
+ 
+ 		kvm_requeue_exception(vcpu, vector,
+ 				      exitintinfo & SVM_EXITINTINFO_VALID_ERR,
+-				      error_code, 0);
++				      error_code, false, 0);
+ 		break;
+ 	}
+ 	case SVM_EXITINTINFO_TYPE_INTR:
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 89841d2f3e45..f225778115dc 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -1859,8 +1859,11 @@ void vmx_inject_exception(struct kvm_vcpu *vcpu)
+ 		vmcs_write32(VM_ENTRY_INSTRUCTION_LEN,
+ 			     vmx->vcpu.arch.event_exit_inst_len);
+ 		intr_info |= INTR_TYPE_SOFT_EXCEPTION;
+-	} else
++	} else {
+ 		intr_info |= INTR_TYPE_HARD_EXCEPTION;
++		if (ex->nested && is_fred_enabled(vcpu))
++			intr_info |= INTR_INFO_NESTED_EXCEPTION_MASK;
++	}
+ 
+ 	vmcs_write32(VM_ENTRY_INTR_INFO_FIELD, intr_info);
+ 
+@@ -7358,6 +7361,7 @@ static void __vmx_complete_interrupts(struct kvm_vcpu *vcpu,
+ 		kvm_requeue_exception(vcpu, vector,
+ 				      idt_vectoring_info & VECTORING_INFO_DELIVER_CODE_MASK,
+ 				      error_code,
++				      idt_vectoring_info & VECTORING_INFO_NESTED_EXCEPTION_MASK,
+ 				      event_data);
+ 		break;
+ 	}
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 090f9fc0363f..6029125a518d 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -874,6 +874,10 @@ static void kvm_multiple_exception(struct kvm_vcpu *vcpu, unsigned int nr,
+ 		vcpu->arch.exception.pending = true;
+ 		vcpu->arch.exception.injected = false;
+ 
++		vcpu->arch.exception.nested = vcpu->arch.exception.nested ||
++					      vcpu->arch.nmi_injected ||
++					      vcpu->arch.interrupt.injected;
++
+ 		vcpu->arch.exception.has_error_code = has_error;
+ 		vcpu->arch.exception.vector = nr;
+ 		vcpu->arch.exception.error_code = error_code;
+@@ -903,8 +907,13 @@ static void kvm_multiple_exception(struct kvm_vcpu *vcpu, unsigned int nr,
+ 		vcpu->arch.exception.injected = false;
+ 		vcpu->arch.exception.pending = false;
+ 
++		/* #DF is NOT a nested event, per its definition. */
++		vcpu->arch.exception.nested = false;
++
+ 		kvm_queue_exception_e(vcpu, DF_VECTOR, 0);
+ 	} else {
++		vcpu->arch.exception.nested = true;
++
+ 		/* replace previous exception with a new one in a hope
+ 		   that instruction re-execution will regenerate lost
+ 		   exception */
+@@ -933,7 +942,8 @@ static void kvm_queue_exception_e_p(struct kvm_vcpu *vcpu, unsigned nr,
+ }
+ 
+ void kvm_requeue_exception(struct kvm_vcpu *vcpu, unsigned int nr,
+-			   bool has_error_code, u32 error_code, u64 event_data)
++			   bool has_error_code, u32 error_code, bool nested,
++			   u64 event_data)
+ {
+ 
+ 	/*
+@@ -958,6 +968,7 @@ void kvm_requeue_exception(struct kvm_vcpu *vcpu, unsigned int nr,
+ 	vcpu->arch.exception.error_code = error_code;
+ 	vcpu->arch.exception.has_payload = false;
+ 	vcpu->arch.exception.payload = 0;
++	vcpu->arch.exception.nested = nested;
+ 	vcpu->arch.exception.event_data = event_data;
+ }
+ EXPORT_SYMBOL_GPL(kvm_requeue_exception);
+diff --git a/arch/x86/kvm/x86.h b/arch/x86/kvm/x86.h
+index b12749a2a67c..25c2d7173b89 100644
+--- a/arch/x86/kvm/x86.h
++++ b/arch/x86/kvm/x86.h
+@@ -198,6 +198,7 @@ static inline void kvm_clear_exception_queue(struct kvm_vcpu *vcpu)
+ {
+ 	vcpu->arch.exception.pending = false;
+ 	vcpu->arch.exception.injected = false;
++	vcpu->arch.exception.nested = false;
+ 	vcpu->arch.exception_vmexit.pending = false;
+ }
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,35 @@
+From 7bfac7617b764daf36532e6a4575b4341507ef00 Mon Sep 17 00:00:00 2001
+From: "Kooran Paul, Princy" <princy.kooran.paul@intel.com>
+Date: Fri, 8 Aug 2025 16:04:16 +0800
+Subject: [PATCH] drm/xe/xe_vm: bypass vm_bind failure as wa to enable hwspice
+
+Xe driver fails during vm_bind as the HW spice encode pipeline is using
+an imported dmabuf. That's why same failure is not seen in other h264
+encoding tests on BMG/PTL.
+
+While validating bo during vm_bind, update the return status to 0
+instead of error as WA to allow the HW spice encode pipeline continue
+work.
+
+Signed-off-by: Kasireddy, Vivek <vivek.kasireddy@intel.com>
+Signed-off-by: Goh, Wei Khang1 <wei.khang1.goh@intel.com>
+---
+ drivers/gpu/drm/xe/xe_vm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_vm.c b/drivers/gpu/drm/xe/xe_vm.c
+index ec04bef8ae40..3e3b9a5c3056 100644
+--- a/drivers/gpu/drm/xe/xe_vm.c
++++ b/drivers/gpu/drm/xe/xe_vm.c
+@@ -3501,7 +3501,7 @@ static int xe_vm_bind_ioctl_validate_bo(struct xe_device *xe, struct xe_bo *bo,
+ 		 * how it was mapped on the CPU. Just assume is it
+ 		 * potentially cached on CPU side.
+ 		 */
+-		return -EINVAL;
++		return 0;
+ 	}
+ 
+ 	/* If a BO is protected it can only be mapped if the key is still valid */
+-- 
+2.43.0
+

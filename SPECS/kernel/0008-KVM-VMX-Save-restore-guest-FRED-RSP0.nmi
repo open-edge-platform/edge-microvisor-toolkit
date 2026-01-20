@@ -1,0 +1,86 @@
+From f2415943450c73de269f65d31e4fb685167447e5 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Thu, 31 Aug 2023 01:23:00 -0700
+Subject: [PATCH 08/44] KVM: VMX: Save/restore guest FRED RSP0
+
+Save guest FRED RSP0 in vmx_prepare_switch_to_host() and restore it
+in vmx_prepare_switch_to_guest() because MSR_IA32_FRED_RSP0 is passed
+through to the guest, thus is volatile/unknown.
+
+Note, host FRED RSP0 is restored in arch_exit_to_user_mode_prepare(),
+regardless of whether it is modified in KVM.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Changes in v5:
+* Remove the cpu_feature_enabled() check when set/get guest
+  MSR_IA32_FRED_RSP0, as guest_cpu_cap_has() should suffice (Sean).
+* Add a comment when synchronizing current MSR_IA32_FRED_RSP0 MSR to
+  the kernel's local cache, because its handling is different from
+  the MSR_KERNEL_GS_BASE handling (Sean).
+* Add TB from Xuelian Guo.
+
+Changes in v3:
+* KVM only needs to save/restore guest FRED RSP0 now as host FRED RSP0
+  is restored in arch_exit_to_user_mode_prepare() (Sean Christopherson).
+
+Changes in v2:
+* Don't use guest_cpuid_has() in vmx_prepare_switch_to_{host,guest}(),
+  which are called from IRQ-disabled context (Chao Gao).
+* Reset msr_guest_fred_rsp0 in __vmx_vcpu_reset() (Chao Gao).
+---
+ arch/x86/kvm/vmx/vmx.c | 14 ++++++++++++++
+ arch/x86/kvm/vmx/vmx.h |  1 +
+ 2 files changed, 15 insertions(+)
+
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 2a40dfe9f034..30322c4897cb 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -1295,6 +1295,10 @@ void vmx_prepare_switch_to_guest(struct kvm_vcpu *vcpu)
+ 	}
+ 
+ 	wrmsrq(MSR_KERNEL_GS_BASE, vmx->msr_guest_kernel_gs_base);
++
++	if (guest_cpu_cap_has(vcpu, X86_FEATURE_FRED))
++		wrmsrns(MSR_IA32_FRED_RSP0, vmx->msr_guest_fred_rsp0);
++
+ #else
+ 	savesegment(fs, fs_sel);
+ 	savesegment(gs, gs_sel);
+@@ -1339,6 +1343,16 @@ static void vmx_prepare_switch_to_host(struct vcpu_vmx *vmx)
+ 	invalidate_tss_limit();
+ #ifdef CONFIG_X86_64
+ 	wrmsrq(MSR_KERNEL_GS_BASE, vmx->vt.msr_host_kernel_gs_base);
++
++	if (guest_cpu_cap_has(&vmx->vcpu, X86_FEATURE_FRED)) {
++		vmx->msr_guest_fred_rsp0 = read_msr(MSR_IA32_FRED_RSP0);
++		/*
++		 * Synchronize the current value in hardware to the kernel's
++		 * local cache.  The desired host RSP0 will be set when the
++		 * CPU exits to userspace (RSP0 is a per-task value).
++		 */
++		fred_sync_rsp0(vmx->msr_guest_fred_rsp0);
++	}
+ #endif
+ 	load_fixmap_gdt(raw_smp_processor_id());
+ 	vmx->vt.guest_state_loaded = false;
+diff --git a/arch/x86/kvm/vmx/vmx.h b/arch/x86/kvm/vmx/vmx.h
+index 50656aa3f57a..05fa52a7581c 100644
+--- a/arch/x86/kvm/vmx/vmx.h
++++ b/arch/x86/kvm/vmx/vmx.h
+@@ -227,6 +227,7 @@ struct vcpu_vmx {
+ 	bool                  guest_uret_msrs_loaded;
+ #ifdef CONFIG_X86_64
+ 	u64		      msr_guest_kernel_gs_base;
++	u64		      msr_guest_fred_rsp0;
+ #endif
+ 
+ 	u64		      spec_ctrl;
+-- 
+2.43.0
+

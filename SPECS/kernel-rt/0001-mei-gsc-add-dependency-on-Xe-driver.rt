@@ -1,0 +1,33 @@
+From 381ca3ef54389d673887c371b0bd7bf277106ba6 Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Sun, 9 Nov 2025 17:35:33 +0200
+Subject: [PATCH 1/2] mei: gsc: add dependency on Xe driver
+
+INTEL_MEI_GSC depends on either i915 or Xe
+and can be present when either of above is present.
+
+Cc: <stable@vger.kernel.org>
+Fixes: 87a4c85d3a3e ("drm/xe/gsc: add gsc device support")
+Tested-by: Baoli Zhang <baoli.zhang@intel.com>
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/misc/mei/Kconfig b/drivers/misc/mei/Kconfig
+index 7575fee96cc6..59025f0a0f57 100644
+--- a/drivers/misc/mei/Kconfig
++++ b/drivers/misc/mei/Kconfig
+@@ -49,7 +49,7 @@ config INTEL_MEI_TXE
+ config INTEL_MEI_GSC
+ 	tristate "Intel MEI GSC embedded device"
+ 	depends on INTEL_MEI_ME
+-	depends on DRM_I915
++	depends on DRM_I915 || DRM_XE
+ 	help
+ 	  Intel auxiliary driver for GSC devices embedded in Intel graphics devices.
+ 
+-- 
+2.43.0
+

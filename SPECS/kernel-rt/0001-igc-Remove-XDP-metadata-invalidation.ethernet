@@ -1,0 +1,32 @@
+From 4485c4753d8ab46da9c1cee8e4f946b5d8c48a98 Mon Sep 17 00:00:00 2001
+From: KhaiWenTan <khai.wen.tan@intel.com>
+Date: Wed, 24 Dec 2025 15:13:12 +0800
+Subject: [PATCH] igc: Remove XDP metadata invalidation
+
+Delete the else branch that invalidates XDP metadata when RX
+timestamping is off. Only set metadata when hardware RX timestamping
+is enabled, simplifying the receive path logic.
+
+Fixes: c2697c3fa88d ("igc: Enable HW RX Timestamp for AF_XDP ZC")
+Signed-off-by: KhaiWenTan <khai.wen.tan@intel.com>
+Signed-off-by: Song Yoong Siang <yoong.siang.song@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc_main.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
+index 68fd90e2839e..2a3f4cf2c4ca 100644
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -2868,8 +2868,6 @@ static int igc_clean_rx_irq_zc(struct igc_q_vector *q_vector, const int budget)
+ 			md = bi->xdp->data - sizeof(*md);
+ 			md->timestamp = igc_ptp_rx_pktstamp(adapter, ctx->rx_ts->timer0);
+ 			bi->xdp->data_meta = md;
+-		} else {
+-			xdp_set_data_meta_invalid(bi->xdp);
+ 		}
+ 
+ 		res = __igc_xdp_run_prog(adapter, prog, bi->xdp);
+-- 
+2.43.0
+

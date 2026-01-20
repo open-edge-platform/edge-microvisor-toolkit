@@ -1,0 +1,62 @@
+From 935fa17478d9e4794e9052128c8d933224d68fab Mon Sep 17 00:00:00 2001
+From: Sohil Mehta <sohil.mehta@intel.com>
+Date: Tue, 25 Mar 2025 18:17:06 +0000
+Subject: [PATCH 33/44] x86/cpufeatures: Add the CPUID feature bit for
+ NMI-source reporting
+
+NMI-source reporting is introduced to report the sources of NMIs with
+FRED event delivery based on vectors in NMI interrupt messages or the
+local APIC. This enables the kernel to avoid the latency incurred by
+going over the entire NMI handler list and reduces ambiguity about the
+source of an NMI.
+
+Enumerate NMI-source reporting in cpufeatures.h. Also, since NMI-source
+reporting uses the FRED event dispatch framework, make it dependent on
+FRED in the CPUID dependency table. This ensures that NMI-source
+reporting gets disabled when FRED is disabled.
+
+NMI-source reporting is intended as a kernel feature and does not need
+userspace enumeration or configuration. There is no need to expose it to
+userspace through /proc/cpuinfo.
+
+Originally-by: Jacob Pan <jacob.jun.pan@linux.intel.com>
+Signed-off-by: Sohil Mehta <sohil.mehta@intel.com>
+---
+v7: No change.
+
+v6: No change.
+
+v5: Add NMI-source to the CPUID dependency table.
+    Do not expose NMI-source feature through /proc/cpuinfo.
+---
+ arch/x86/include/asm/cpufeatures.h | 1 +
+ arch/x86/kernel/cpu/cpuid-deps.c   | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/arch/x86/include/asm/cpufeatures.h b/arch/x86/include/asm/cpufeatures.h
+index 06fc0479a23f..6b20b92dcf2f 100644
+--- a/arch/x86/include/asm/cpufeatures.h
++++ b/arch/x86/include/asm/cpufeatures.h
+@@ -322,6 +322,7 @@
+ #define X86_FEATURE_FRED		(12*32+17) /* "fred" Flexible Return and Event Delivery */
+ #define X86_FEATURE_LKGS		(12*32+18) /* Load "kernel" (userspace) GS */
+ #define X86_FEATURE_WRMSRNS		(12*32+19) /* Non-serializing WRMSR */
++#define X86_FEATURE_NMI_SOURCE		(12*32+20) /* NMI-Source reporting with FRED */
+ #define X86_FEATURE_AMX_FP16		(12*32+21) /* AMX fp16 Support */
+ #define X86_FEATURE_AVX_IFMA            (12*32+23) /* Support for VPMADD52[H,L]UQ */
+ #define X86_FEATURE_LAM			(12*32+26) /* "lam" Linear Address Masking */
+diff --git a/arch/x86/kernel/cpu/cpuid-deps.c b/arch/x86/kernel/cpu/cpuid-deps.c
+index 46efcbd6afa4..87a334f639d5 100644
+--- a/arch/x86/kernel/cpu/cpuid-deps.c
++++ b/arch/x86/kernel/cpu/cpuid-deps.c
+@@ -88,6 +88,7 @@ static const struct cpuid_dep cpuid_deps[] = {
+ 	{ X86_FEATURE_AMX_INT8,			X86_FEATURE_AMX_TILE  },
+ 	{ X86_FEATURE_SHSTK,			X86_FEATURE_XSAVES    },
+ 	{ X86_FEATURE_FRED,			X86_FEATURE_LKGS      },
++	{ X86_FEATURE_NMI_SOURCE,		X86_FEATURE_FRED      },
+ 	{ X86_FEATURE_SPEC_CTRL_SSBD,		X86_FEATURE_SPEC_CTRL },
+ 	{}
+ };
+-- 
+2.43.0
+

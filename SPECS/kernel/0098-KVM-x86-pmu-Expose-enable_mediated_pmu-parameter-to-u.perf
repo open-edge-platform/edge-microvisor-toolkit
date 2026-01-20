@@ -1,0 +1,119 @@
+From 73ca5e5868cb9cdd409a333e60deca6fd1f08ccc Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Mon, 24 Mar 2025 17:31:15 +0000
+Subject: [PATCH 098/100] KVM: x86/pmu: Expose enable_mediated_pmu parameter to
+ user space
+
+Expose enable_mediated_pmu parameter to user space, i.e. allow userspace
+to enable/disable mediated vPMU support.
+
+Document the mediated versus perf-based behavior as part of the
+kernel-parameters.txt entry, and opportunistically add an entry for the
+core enable_pmu param as well.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Mingwei Zhang <mizhang@google.com>
+Co-developed-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ .../admin-guide/kernel-parameters.txt         | 49 +++++++++++++++++++
+ arch/x86/kvm/svm/svm.c                        |  2 +
+ arch/x86/kvm/vmx/vmx.c                        |  2 +
+ 3 files changed, 53 insertions(+)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 747a55abf494..b28b2daa8a4e 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -2903,6 +2903,26 @@
+ 
+ 			Default is Y (on).
+ 
++	kvm.enable_pmu=[KVM,X86]
++			If enabled, KVM will virtualize PMU functionality based
++			on the virtual CPU model defined by userspace.  This
++			can be overridden on a per-VM basis via
++			KVM_CAP_PMU_CAPABILITY.
++
++			If disabled, KVM will not virtualize PMU functionality,
++			e.g. MSRs, PMCs, PMIs, etc., even if userspace defines
++			a virtual CPU model that contains PMU assets.
++
++			Note, KVM's vPMU support implicitly requires running
++			with an in-kernel local APIC, e.g. to deliver PMIs to
++			the guest.  Running without an in-kernel local APIC is
++			not supported, though KVM will allow such a combination
++			(with severely degraded functionality).
++
++			See also enable_mediated_pmu.
++
++			Default is Y (on).
++
+ 	kvm.enable_virt_at_load=[KVM,ARM64,LOONGARCH,MIPS,RISCV,X86]
+ 			If enabled, KVM will enable virtualization in hardware
+ 			when KVM is loaded, and disable virtualization when KVM
+@@ -2949,6 +2969,35 @@
+ 			If the value is 0 (the default), KVM will pick a period based
+ 			on the ratio, such that a page is zapped after 1 hour on average.
+ 
++	kvm-{amd,intel}.enable_mediated_pmu=[KVM,AMD,INTEL]
++			If enabled, KVM will provide a mediated virtual PMU,
++			instead of the default perf-based virtual PMU (if
++			kvm.enable_pmu is true and PMU is enumerated via the
++			virtual CPU model).
++
++			With a perf-based vPMU, KVM operates as a user of perf,
++			i.e. emulates guest PMU counters using perf events.
++			KVM-created perf events are managed by perf as regular
++			(guest-only) events, e.g. are scheduled in/out, contend
++			for hardware resources, etc.  Using a perf-based vPMU
++			allows guest and host usage of the PMU to co-exist, but
++			incurs non-trivial overhead and can result in silently
++			dropped guest events (due to resource contention).
++
++			With a mediated vPMU, hardware PMU state is context
++			switched around the world switch to/from the guest.
++			KVM mediates which events the guest can utilize, but
++			gives the guest direct access to all other PMU assets
++			when possible (KVM may intercept some accesses if the
++			virtual CPU model provides a subset of hardware PMU
++			functionality).  Using a mediated vPMU significantly
++			reduces PMU virtualization overhead and eliminates lost
++			guest events, but is mutually exclusive with using perf
++			to profile KVM guests and adds latency to most VM-Exits
++			(to context switch PMU state).
++
++			Default is N (off).
++
+ 	kvm-amd.nested=	[KVM,AMD] Control nested virtualization feature in
+ 			KVM/SVM. Default is 1 (enabled).
+ 
+diff --git a/arch/x86/kvm/svm/svm.c b/arch/x86/kvm/svm/svm.c
+index ca6f453cc160..2797c3ab7854 100644
+--- a/arch/x86/kvm/svm/svm.c
++++ b/arch/x86/kvm/svm/svm.c
+@@ -178,6 +178,8 @@ module_param(intercept_smi, bool, 0444);
+ bool vnmi = true;
+ module_param(vnmi, bool, 0444);
+ 
++module_param(enable_mediated_pmu, bool, 0444);
++
+ static bool svm_gp_erratum_intercept = true;
+ 
+ static u8 rsm_ins_bytes[] = "\x0f\xaa";
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 85bd82d41f94..4a4691beba55 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -151,6 +151,8 @@ module_param_named(preemption_timer, enable_preemption_timer, bool, S_IRUGO);
+ extern bool __read_mostly allow_smaller_maxphyaddr;
+ module_param(allow_smaller_maxphyaddr, bool, S_IRUGO);
+ 
++module_param(enable_mediated_pmu, bool, 0444);
++
+ #define KVM_VM_CR0_ALWAYS_OFF (X86_CR0_NW | X86_CR0_CD)
+ #define KVM_VM_CR0_ALWAYS_ON_UNRESTRICTED_GUEST X86_CR0_NE
+ #define KVM_VM_CR0_ALWAYS_ON				\
+-- 
+2.43.0
+

@@ -1,0 +1,85 @@
+From a77961bfab3a3364a7a63fb67d1ee0be53392b47 Mon Sep 17 00:00:00 2001
+From: Yang Weijiang <weijiang.yang@intel.com>
+Date: Fri, 4 Jul 2025 01:49:44 -0700
+Subject: [PATCH 14/24] KVM: x86: Enable guest SSP read/write interface with
+ new uAPIs
+
+Enable guest shadow stack pointer(SSP) access interface with new uAPIs.
+CET guest SSP is HW register which has corresponding VMCS field to save
+/restore guest values when VM-{Exit,Entry} happens. KVM handles SSP as
+a synthetic MSR for userspace access.
+
+Use a translation helper to set up mapping for SSP synthetic index and
+KVM-internal MSR index so that userspace doesn't need to take care of
+KVM's management for synthetic MSRs and avoid conflicts.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Yang Weijiang <weijiang.yang@intel.com>
+Tested-by: Mathias Krause <minipli@grsecurity.net>
+Tested-by: John Allen <john.allen@amd.com>
+Signed-off-by: Chao Gao <chao.gao@intel.com>
+---
+ arch/x86/include/uapi/asm/kvm.h |  3 +++
+ arch/x86/kvm/x86.c              | 10 +++++++++-
+ arch/x86/kvm/x86.h              | 10 ++++++++++
+ 3 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/uapi/asm/kvm.h b/arch/x86/include/uapi/asm/kvm.h
+index e72d9e6c1739..a4870d9c9279 100644
+--- a/arch/x86/include/uapi/asm/kvm.h
++++ b/arch/x86/include/uapi/asm/kvm.h
+@@ -421,6 +421,9 @@ struct kvm_x86_reg_id {
+ 	__u16 rsvd16;
+ };
+ 
++/* KVM synthetic MSR index staring from 0 */
++#define KVM_SYNTHETIC_GUEST_SSP 0
++
+ #define KVM_SYNC_X86_REGS      (1UL << 0)
+ #define KVM_SYNC_X86_SREGS     (1UL << 1)
+ #define KVM_SYNC_X86_EVENTS    (1UL << 2)
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index cbefc0228ba5..1a437aad26f9 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -5953,7 +5953,15 @@ static int kvm_vcpu_ioctl_enable_cap(struct kvm_vcpu *vcpu,
+ 
+ static int kvm_translate_synthetic_msr(struct kvm_x86_reg_id *reg)
+ {
+-	return -EINVAL;
++	switch (reg->index) {
++	case KVM_SYNTHETIC_GUEST_SSP:
++		reg->type = KVM_X86_REG_MSR;
++		reg->index = MSR_KVM_INTERNAL_GUEST_SSP;
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
+ }
+ 
+ long kvm_arch_vcpu_ioctl(struct file *filp,
+diff --git a/arch/x86/kvm/x86.h b/arch/x86/kvm/x86.h
+index 97e258a3e88e..cf74d877737a 100644
+--- a/arch/x86/kvm/x86.h
++++ b/arch/x86/kvm/x86.h
+@@ -101,6 +101,16 @@ do {											\
+ #define KVM_SVM_DEFAULT_PLE_WINDOW_MAX	USHRT_MAX
+ #define KVM_SVM_DEFAULT_PLE_WINDOW	3000
+ 
++/*
++ * KVM's internal, non-ABI indices for synthetic MSRs. The values themselves
++ * are arbitrary and have no meaning, the only requirement is that they don't
++ * conflict with "real" MSRs that KVM supports. Use values at the upper end
++ * of KVM's reserved paravirtual MSR range to minimize churn, i.e. these values
++ * will be usable until KVM exhausts its supply of paravirtual MSR indices.
++ */
++
++#define MSR_KVM_INTERNAL_GUEST_SSP	0x4b564dff
++
+ static inline unsigned int __grow_ple_window(unsigned int val,
+ 		unsigned int base, unsigned int modifier, unsigned int max)
+ {
+-- 
+2.43.0
+

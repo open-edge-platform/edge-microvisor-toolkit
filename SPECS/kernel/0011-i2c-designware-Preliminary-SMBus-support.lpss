@@ -1,0 +1,258 @@
+From 3830284c347eb6ba17227cc9dcd2a769fe962247 Mon Sep 17 00:00:00 2001
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Date: Tue, 17 Dec 2024 16:15:44 +0200
+Subject: [PATCH 11/16] i2c: designware: Preliminary SMBus support
+
+This adds only the bare minimum handling for SMBus Alert
+Signal, and only in host mode.
+
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ drivers/i2c/busses/Kconfig                  |  1 +
+ drivers/i2c/busses/Makefile                 |  1 +
+ drivers/i2c/busses/i2c-designware-core.h    | 25 ++++++
+ drivers/i2c/busses/i2c-designware-master.c  |  5 ++
+ drivers/i2c/busses/i2c-designware-pcidrv.c  |  1 +
+ drivers/i2c/busses/i2c-designware-platdrv.c |  4 +-
+ drivers/i2c/busses/i2c-designware-smbus.c   | 84 +++++++++++++++++++++
+ 7 files changed, 120 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/i2c/busses/i2c-designware-smbus.c
+
+diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+index 0c77b1d4c260..bafb2794d06b 100644
+--- a/drivers/i2c/busses/Kconfig
++++ b/drivers/i2c/busses/Kconfig
+@@ -564,6 +564,7 @@ config I2C_DAVINCI
+ config I2C_DESIGNWARE_CORE
+ 	tristate "Synopsys DesignWare I2C adapter"
+ 	select REGMAP
++	select I2C_SMBUS
+ 	help
+ 	  This option enables support for the Synopsys DesignWare I2C adapter.
+ 	  This driver includes support for the I2C host on the Synopsys
+diff --git a/drivers/i2c/busses/Makefile b/drivers/i2c/busses/Makefile
+index 04db855fdfd6..b362e7250ae7 100644
+--- a/drivers/i2c/busses/Makefile
++++ b/drivers/i2c/busses/Makefile
+@@ -53,6 +53,7 @@ obj-$(CONFIG_I2C_DAVINCI)	+= i2c-davinci.o
+ obj-$(CONFIG_I2C_DESIGNWARE_CORE)			+= i2c-designware-core.o
+ i2c-designware-core-y					:= i2c-designware-common.o
+ i2c-designware-core-y					+= i2c-designware-master.o
++i2c-designware-core-y					+= i2c-designware-smbus.o
+ i2c-designware-core-$(CONFIG_I2C_DESIGNWARE_SLAVE) 	+= i2c-designware-slave.o
+ obj-$(CONFIG_I2C_DESIGNWARE_PLATFORM)			+= i2c-designware-platform.o
+ i2c-designware-platform-y 				:= i2c-designware-platdrv.o
+diff --git a/drivers/i2c/busses/i2c-designware-core.h b/drivers/i2c/busses/i2c-designware-core.h
+index 347843b4f5dd..5cfc909713d9 100644
+--- a/drivers/i2c/busses/i2c-designware-core.h
++++ b/drivers/i2c/busses/i2c-designware-core.h
+@@ -78,9 +78,14 @@
+ #define DW_IC_TX_ABRT_SOURCE			0x80
+ #define DW_IC_ENABLE_STATUS			0x9c
+ #define DW_IC_CLR_RESTART_DET			0xa8
++#define DW_IC_SMBUS_INTR_STAT			0xc8
++#define DW_IC_SMBUS_INTR_MASK			0xcc
++#define DW_IC_SMBUS_RAW_INTR_STAT		0xd0
++#define DW_IC_CLR_SMBUS_INTR			0xd4
+ #define DW_IC_COMP_PARAM_1			0xf4
+ #define DW_IC_COMP_VERSION			0xf8
+ #define DW_IC_SDA_HOLD_MIN_VERS			0x3131312A /* "111*" == v1.11* */
++#define DW_IC_SMBUS_MIN_VER			0x3230302a /* "200*" == v2.00* */
+ #define DW_IC_COMP_TYPE				0xfc
+ #define DW_IC_COMP_TYPE_VALUE			0x44570140 /* "DW" + 0x0140 */
+ 
+@@ -118,6 +123,8 @@
+ #define DW_IC_STATUS_SLAVE_ACTIVITY		BIT(6)
+ #define DW_IC_STATUS_MASTER_HOLD_TX_FIFO_EMPTY	BIT(7)
+ 
++#define DW_IC_SMBUS_INTR_ALERT			BIT(10)
++
+ #define DW_IC_SDA_HOLD_RX_SHIFT			16
+ #define DW_IC_SDA_HOLD_RX_MASK			GENMASK(23, 16)
+ 
+@@ -262,6 +269,7 @@ struct dw_i2c_dev {
+ 	struct clk		*pclk;
+ 	struct reset_control	*rst;
+ 	struct i2c_client	*slave;
++	struct i2c_client	*smbus_alert;
+ 	u32			(*get_clk_rate_khz) (struct dw_i2c_dev *dev);
+ 	int			cmd_err;
+ 	struct i2c_msg		*msgs;
+@@ -311,6 +319,7 @@ struct dw_i2c_dev {
+ #define ACCESS_NO_IRQ_SUSPEND			BIT(1)
+ #define ARBITRATION_SEMAPHORE			BIT(2)
+ #define ACCESS_POLLING				BIT(3)
++#define IS_SMBUS				BIT(4)
+ 
+ #define MODEL_MSCC_OCELOT			BIT(8)
+ #define MODEL_BAIKAL_BT1			BIT(9)
+@@ -413,3 +422,19 @@ int i2c_dw_amdpsp_probe_lock_support(struct dw_i2c_dev *dev);
+ #endif
+ 
+ int i2c_dw_fw_parse_and_configure(struct dw_i2c_dev *dev);
++
++irqreturn_t i2c_dw_smbus_isr(struct dw_i2c_dev *dev);
++int i2c_dw_smbus_host_register(struct dw_i2c_dev *dev);
++
++/**
++ * i2c_dw_smbus_unregister - Helper to remove SMBus resources
++ * @dev: handle to the controller
++ *
++ * This function removes the SMBus alert device if it exists.
++ */
++static inline void i2c_dw_smbus_unregister(struct dw_i2c_dev *dev)
++{
++	regmap_set_bits(dev->map, DW_IC_SMBUS_INTR_MASK, DW_IC_SMBUS_INTR_ALERT);
++	i2c_unregister_device(dev->smbus_alert);
++	dev->smbus_alert = NULL;
++}
+diff --git a/drivers/i2c/busses/i2c-designware-master.c b/drivers/i2c/busses/i2c-designware-master.c
+index cbd88ffa5610..ffe41e1c9855 100644
+--- a/drivers/i2c/busses/i2c-designware-master.c
++++ b/drivers/i2c/busses/i2c-designware-master.c
+@@ -747,6 +747,9 @@ static irqreturn_t i2c_dw_isr(int this_irq, void *dev_id)
+ 	struct dw_i2c_dev *dev = dev_id;
+ 	unsigned int stat, enabled;
+ 
++	if (i2c_dw_smbus_isr(dev))
++		return IRQ_HANDLED;
++
+ 	regmap_read(dev->map, DW_IC_ENABLE, &enabled);
+ 	regmap_read(dev->map, DW_IC_RAW_INTR_STAT, &stat);
+ 	if (!enabled || !(stat & ~DW_IC_INTR_ACTIVITY))
+@@ -1089,6 +1092,8 @@ int i2c_dw_probe_master(struct dw_i2c_dev *dev)
+ 	ret = i2c_add_numbered_adapter(adap);
+ 	if (ret)
+ 		dev_err(dev->dev, "failure adding adapter: %d\n", ret);
++	else if (dev->flags & IS_SMBUS)
++		ret = i2c_dw_smbus_host_register(dev);
+ 	pm_runtime_put_noidle(dev->dev);
+ 
+ 	return ret;
+diff --git a/drivers/i2c/busses/i2c-designware-pcidrv.c b/drivers/i2c/busses/i2c-designware-pcidrv.c
+index f21f9877c040..1e7b4bd20964 100644
+--- a/drivers/i2c/busses/i2c-designware-pcidrv.c
++++ b/drivers/i2c/busses/i2c-designware-pcidrv.c
+@@ -303,6 +303,7 @@ static void i2c_dw_pci_remove(struct pci_dev *pdev)
+ 	pm_runtime_forbid(device);
+ 	pm_runtime_get_noresume(device);
+ 
++	i2c_dw_smbus_unregister(dev);
+ 	i2c_del_adapter(&dev->adapter);
+ }
+ 
+diff --git a/drivers/i2c/busses/i2c-designware-platdrv.c b/drivers/i2c/busses/i2c-designware-platdrv.c
+index a35e4c64a1d4..dc9fd89e9f32 100644
+--- a/drivers/i2c/busses/i2c-designware-platdrv.c
++++ b/drivers/i2c/busses/i2c-designware-platdrv.c
+@@ -326,6 +326,8 @@ static void dw_i2c_plat_remove(struct platform_device *pdev)
+ 
+ 	pm_runtime_get_sync(device);
+ 
++	i2c_dw_smbus_unregister(dev);
++
+ 	i2c_del_adapter(&dev->adapter);
+ 
+ 	i2c_dw_disable(dev);
+@@ -365,7 +367,7 @@ static const struct acpi_device_id dw_i2c_acpi_match[] = {
+ 	{ "INT33C3", 0 },
+ 	{ "INT3432", 0 },
+ 	{ "INT3433", 0 },
+-	{ "INTC10EF", 0 },
++	{ "INTC10EF", IS_SMBUS },
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(acpi, dw_i2c_acpi_match);
+diff --git a/drivers/i2c/busses/i2c-designware-smbus.c b/drivers/i2c/busses/i2c-designware-smbus.c
+new file mode 100644
+index 000000000000..2e01d070a913
+--- /dev/null
++++ b/drivers/i2c/busses/i2c-designware-smbus.c
+@@ -0,0 +1,84 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Synopsys DesignWare SMBus driver.
++ *
++ * Copyright (C) 2024 Intel Corporation.
++ */
++
++#include <linux/err.h>
++#include <linux/i2c.h>
++#include <linux/i2c-smbus.h>
++#include <linux/irqreturn.h>
++#include <linux/regmap.h>
++#include <linux/types.h>
++
++#include "i2c-designware-core.h"
++
++static struct i2c_smbus_alert_setup i2c_dw_smbus_setup;
++
++/**
++ * i2c_dw_smbus_isr - Interrupt service routine for SMBus interrupts
++ * @dev: handle to the controller
++ *
++ * This function currently only handles the SMBus Alert signal.
++ *
++ * Return: IRQ_HANDLED if the interrupt was caused by the SMBUS Alert,
++ * otherwise IRQ_NONE.
++ */
++irqreturn_t i2c_dw_smbus_isr(struct dw_i2c_dev *dev)
++{
++	u32 stat;
++
++	if (!dev->smbus_alert)
++		return IRQ_NONE;
++
++	regmap_read(dev->map, DW_IC_SMBUS_INTR_STAT, &stat);
++	if (!stat)
++		return IRQ_NONE;
++
++	regmap_write(dev->map, DW_IC_CLR_SMBUS_INTR, stat);
++
++	if (stat & DW_IC_SMBUS_INTR_ALERT)
++		i2c_handle_smbus_alert(dev->smbus_alert);
++
++	return IRQ_HANDLED;
++}
++
++/**
++ * i2c_dw_smbus_host_register - Register the SMBus alert device for the host
++ * @dev: handle to the controller
++ *
++ * This function checks is the SMBus feature available, and then registers the
++ * alert device if it is. If the SMBus feature is not available the function
++ * returns silently with a success.
++ *
++ * The SMBus alert device needs to be unregistered by calling
++ * i2c_dw_smbus_unregister().
++ *
++ * Return: 0 on success, errno on error.
++ */
++int i2c_dw_smbus_host_register(struct dw_i2c_dev *dev)
++{
++	struct i2c_client *alert;
++	u32 ic_version;
++	int ret;
++
++	ret = regmap_read(dev->map, DW_IC_COMP_VERSION, &ic_version);
++	if (ret)
++		return ret;
++
++	if (ic_version < DW_IC_SMBUS_MIN_VER)
++		return 0;
++
++	alert = i2c_new_smbus_alert_device(&dev->adapter, &i2c_dw_smbus_setup);
++	if (IS_ERR(alert))
++		return PTR_ERR(alert);
++
++	dev->smbus_alert = alert;
++
++	ret = regmap_clear_bits(dev->map, DW_IC_SMBUS_INTR_MASK, DW_IC_SMBUS_INTR_ALERT);
++	if (ret)
++		i2c_dw_smbus_unregister(dev);
++
++	return ret;
++}
+-- 
+2.43.0
+

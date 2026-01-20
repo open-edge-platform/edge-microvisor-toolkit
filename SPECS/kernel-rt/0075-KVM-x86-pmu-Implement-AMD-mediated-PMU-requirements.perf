@@ -1,0 +1,46 @@
+From b6dad8e5f2fe290dfc3c85b62b78d8b95e06fdeb Mon Sep 17 00:00:00 2001
+From: Sean Christopherson <seanjc@google.com>
+Date: Wed, 14 May 2025 10:59:09 -0700
+Subject: [PATCH 075/100] KVM: x86/pmu: Implement AMD mediated PMU requirements
+
+Require host PMU version 2+ for AMD mediated PMU support, as
+PERF_GLOBAL_CTRL and friends are hard requirements for the mediated PMU.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Co-developed-by: Mingwei Zhang <mizhang@google.com>
+Signed-off-by: Mingwei Zhang <mizhang@google.com>
+[sean: extract to separate patch, write changelog]
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+ arch/x86/kvm/svm/pmu.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/x86/kvm/svm/pmu.c b/arch/x86/kvm/svm/pmu.c
+index 7b8577f3c57a..96be2c3e0d65 100644
+--- a/arch/x86/kvm/svm/pmu.c
++++ b/arch/x86/kvm/svm/pmu.c
+@@ -227,6 +227,11 @@ static void amd_pmu_init(struct kvm_vcpu *vcpu)
+ 	}
+ }
+ 
++static bool amd_pmu_is_mediated_pmu_supported(struct x86_pmu_capability *host_pmu)
++{
++	return host_pmu->version >= 2;
++}
++
+ struct kvm_pmu_ops amd_pmu_ops __initdata = {
+ 	.rdpmc_ecx_to_pmc = amd_rdpmc_ecx_to_pmc,
+ 	.msr_idx_to_pmc = amd_msr_idx_to_pmc,
+@@ -236,6 +241,9 @@ struct kvm_pmu_ops amd_pmu_ops __initdata = {
+ 	.set_msr = amd_pmu_set_msr,
+ 	.refresh = amd_pmu_refresh,
+ 	.init = amd_pmu_init,
++
++	.is_mediated_pmu_supported = amd_pmu_is_mediated_pmu_supported,
++
+ 	.EVENTSEL_EVENT = AMD64_EVENTSEL_EVENT,
+ 	.MAX_NR_GP_COUNTERS = KVM_MAX_NR_AMD_GP_COUNTERS,
+ 	.MIN_NR_GP_COUNTERS = AMD64_NUM_COUNTERS,
+-- 
+2.43.0
+

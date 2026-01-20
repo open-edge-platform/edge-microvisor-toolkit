@@ -1,0 +1,59 @@
+From 5deabf6f8b12692ad9f18b425c2290e2f0d9c107 Mon Sep 17 00:00:00 2001
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Date: Wed, 23 Jul 2025 20:31:05 +0800
+Subject: [PATCH 05/13] EDAC/skx_common: Make skx_dev->imc[] a flexible array
+
+The current skx->imc[NUM_IMC] array of memory controller instances is
+sized using the macro NUM_IMC. Each time EDAC support is added for a
+new CPU, NUM_IMC needs to be updated to ensure it is greater than or
+equal to the number of memory controllers for the new CPU. This approach
+is inconvenient and results in memory waste for older CPUs with fewer
+memory controllers.
+
+To address this, make skx->imc[] a flexible array and determine its size
+from configuration data or at runtime.
+
+Suggested-by: Tony Luck <tony.luck@intel.com>
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+---
+ drivers/edac/skx_common.c | 3 ++-
+ drivers/edac/skx_common.h | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/edac/skx_common.c b/drivers/edac/skx_common.c
+index e03268e9073f..09187043c045 100644
+--- a/drivers/edac/skx_common.c
++++ b/drivers/edac/skx_common.c
+@@ -17,6 +17,7 @@
+ #include <linux/acpi.h>
+ #include <linux/dmi.h>
+ #include <linux/adxl.h>
++#include <linux/overflow.h>
+ #include <acpi/nfit.h>
+ #include <asm/mce.h>
+ #include <asm/uv/uv.h>
+@@ -343,7 +344,7 @@ int skx_get_all_bus_mappings(struct res_config *cfg, struct list_head **list)
+ 		if (!pdev)
+ 			break;
+ 		ndev++;
+-		d = kzalloc(sizeof(*d), GFP_KERNEL);
++		d = kzalloc(struct_size(d, imc, imc_num), GFP_KERNEL);
+ 		if (!d) {
+ 			pci_dev_put(pdev);
+ 			return -ENOMEM;
+diff --git a/drivers/edac/skx_common.h b/drivers/edac/skx_common.h
+index 95d61d23f89e..e7038fd45d06 100644
+--- a/drivers/edac/skx_common.h
++++ b/drivers/edac/skx_common.h
+@@ -172,7 +172,7 @@ struct skx_dev {
+ 				u8 colbits;
+ 			} dimms[NUM_DIMMS];
+ 		} chan[NUM_CHANNELS];
+-	} imc[NUM_IMC];
++	} imc[];
+ };
+ 
+ struct skx_pvt {
+-- 
+2.43.0
+
