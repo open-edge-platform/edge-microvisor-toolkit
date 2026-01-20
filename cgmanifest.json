@@ -185,8 +185,8 @@
         "type": "other",
         "other": {
           "name": "alsa-sof-firmware",
-          "version": "2025.05",
-          "downloadUrl": "https://github.com/thesofproject/sof-bin/releases/download/v2025.05/sof-bin-2025.05.tar.gz"
+          "version": "2025.12",
+          "downloadUrl": "https://github.com/thesofproject/sof-bin/releases/download/v2025.12/sof-bin-2025.12.tar.gz"
         }
       }
     },
