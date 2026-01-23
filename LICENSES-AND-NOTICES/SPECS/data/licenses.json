@@ -535,6 +535,7 @@
                 "intel-level-zero",
                 "intel-media-driver",
                 "intel-metee",
+                "intel-npu-driver",
                 "intel-opencl-clang",
                 "intel-vpl-gpu-rt",
                 "ioping",

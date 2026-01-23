@@ -20,6 +20,7 @@
         "tar",
         "texinfo",
         "usbutils",
-        "wget"
+        "wget",
+        "alsa-sof-firmware"
     ]
 }

@@ -185,8 +185,8 @@
         "type": "other",
         "other": {
           "name": "alsa-sof-firmware",
-          "version": "2025.05",
-          "downloadUrl": "https://github.com/thesofproject/sof-bin/releases/download/v2025.05/sof-bin-2025.05.tar.gz"
+          "version": "2025.12",
+          "downloadUrl": "https://github.com/thesofproject/sof-bin/releases/download/v2025.12/sof-bin-2025.12.tar.gz"
         }
       }
     },
@@ -7551,8 +7551,8 @@
         "type": "other",
         "other": {
           "name": "intel-level-zero",
-          "version": "1.21.9",
-          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.21.9.tar.gz"
+          "version": "1.24.2",
+          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.24.2.tar.gz"
         }
       }
     },
@@ -7583,6 +7583,16 @@
           "name": "intel-metee",
           "version": "4.2.1",
           "downloadUrl": "https://github.com/intel/metee/archive/refs/tags/4.2.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-npu-driver",
+          "version": "1.28.0",
+          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.28.0.tar.gz"
         }
       }
     },
