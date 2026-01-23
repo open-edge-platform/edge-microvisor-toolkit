@@ -31,6 +31,9 @@
             "PostInstallScripts": [
                 {
                     "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                    "Path": "additionalconfigs/configure-ip4save.sh"
                 }
             ]
         },
@@ -64,11 +67,14 @@
             "PostInstallScripts": [
                 {
                     "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                    "Path": "additionalconfigs/configure-ip4save.sh"
                 }
             ]
         },
         {
-		"Name": "RT Kernel",
+            "Name": "RT Kernel",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
@@ -97,6 +103,9 @@
             "PostInstallScripts": [
                 {
                     "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                    "Path": "additionalconfigs/configure-ip4save.sh"
                 }
             ]
         },
@@ -129,6 +138,9 @@
             "PostInstallScripts": [
                 {
                     "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                    "Path": "additionalconfigs/configure-ip4save.sh"
                 }
             ]
         }

@@ -1,12 +1,13 @@
 Summary:        Remote Provisioning Client for Intel AMT
 Name:           rpc
-Version:        2.45.1
-Release:        3%{?dist}
+Version:        2.48.9
+Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/device-management-toolkit/rpc-go
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-go-%{version}.tar.gz
+Source1:        %{name}-%{version}-vendor.tar.gz
 BuildRequires:  golang >= 1.24.4
 BuildRequires:  golang < 1.25.0
 %global modulename      rpc
@@ -20,6 +21,7 @@ connectivity between the edge node and ITEP.
 
 %prep
 %setup -q -n rpc-go-%{version}
+tar -xzf %{SOURCE1} -C .
 
 %build
 export CGO_ENABLED=0
@@ -27,13 +29,14 @@ export GOOS=linux
 export GOARCH=amd64
 
 go build \
+    -mod=vendor \
     -ldflags "-X 'rpc/pkg/utils.ProjectVersion=%{version}'" \
     -trimpath \
     -o %{name} \
-    ./cmd/main.go
+    ./cmd/rpc/main.go
 
 %install
-install -D -m0755 %{name} %{buildroot}%{_bindir}/%{name}
+install -D -m 0755 %{name} %{buildroot}%{_bindir}/%{name}
 install -D -m 0644 internal/certs/trustedstore/OnDie_CA_RootCA_Certificate.cer %{buildroot}%{_datadir}/OnDie_CA_RootCA_Certificate.cer
 
 mkdir -p %{buildroot}%{_defaultlicensedir}/%{name}
@@ -46,6 +49,10 @@ cp LICENSE %{buildroot}%{_defaultlicensedir}/%{name}
 %license %{_defaultlicensedir}/%{name}/LICENSE
 
 %changelog
+* Wed Dec 3 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 2.48.9-1
+- Upgraded the RPC version from 2.45.1 to 2.48.9
+- fixes CVE-2025-47913, CVE-2025-47914 and CVE-2025-58181
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.45.1-3
 - build with golang < 1.25
 

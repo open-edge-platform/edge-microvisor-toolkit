@@ -1,20 +1,20 @@
 dist:
   name: poa-otelcol
   description: Platform Observability Agent OpenTelemetry Collector
-  version: 0.117.0
+  version: 0.141.0
   output_path: ./_build
 
 extensions:
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/bearertokenauthextension v0.117.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/bearertokenauthextension v0.141.0
 
 exporters:
-  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.117.0
+  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v0.141.0
 
 processors:
-  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.117.0
-  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.117.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.117.0
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.141.0
+  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.141.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v0.141.0
 
 receivers:
-  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.117.0
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/fluentforwardreceiver v0.117.0
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.141.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/fluentforwardreceiver v0.141.0
