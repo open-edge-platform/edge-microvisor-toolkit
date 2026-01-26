@@ -1,15 +1,15 @@
 
-# Build Requirements for Azure Linux Toolkit on Ubuntu
+# Build Requirements for Edge Microvisor Toolkit on Ubuntu
 
-This page outlines the requirements for building with the Azure Linux toolkit on Ubuntu.
+This page outlines the requirements for building with the Edge Microvisor toolkit on Ubuntu.
 
 ## System-Specific Requirements
 
 ### Golang Package Requirements
 
-The Azure Linux toolkit on Ubuntu has been validated with the following:
+The Edge Microvsor toolkit on Ubuntu has been validated with the following:
 
-- **Ubuntu 22.04**: Validated with `golang-1.23.1` (available as `golang-1.23-go` package)
+- **Ubuntu 22.04**: Validated with `golang-1.24.11` from https://go.dev/
 
 ## Installation Methods
 
@@ -22,9 +22,14 @@ The make targets automatically install the appropriate packages:
 # Installs prerequisites but doesn't modify system configuration
 sudo make -C toolkit install-prereqs
 
+# Manually install and configure for Go
+wget https://go.dev/dl/go1.24.11.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf go1.24.11.linux-amd64.tar.gz
+
 # Manually create Go symlinks for proper PATH integration
-sudo ln -sf /usr/lib/go-1.23/bin/go /usr/bin/go
-sudo ln -sf /usr/lib/go-1.23/bin/gofmt /usr/bin/gofmt
+sudo ln -sf /usr/local/go/bin/go /usr/bin/go
+sudo ln -sf /usr/local/go/bin/gofmt /usr/bin/gofmt
 
 # Manually configure Docker if needed
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -53,6 +58,11 @@ If you prefer running the script directly, you have several options:
 ```bash
 # Basic installation with Go
 sudo ./toolkit/docs/building/prerequisites-ubuntu.sh
+
+# Manually install and configure for Go
+wget https://go.dev/dl/go1.24.11.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf go1.24.11.linux-amd64.tar.gz
 
 # Manually create Go symlinks for proper PATH integration
 sudo ln -sf /usr/lib/go-1.23/bin/go /usr/bin/go

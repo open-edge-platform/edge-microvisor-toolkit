@@ -59,7 +59,6 @@ if [ "$INSTALL_PREREQS" = true ]; then
     gawk \
     genisoimage \
     git \
-    golang-1.23-go \
     jq \
     make \
     openssl \
@@ -78,9 +77,13 @@ fi
 
 # Fix go 1.23 links if requested
 if [ "$FIX_GO_LINKS" = true ]; then
+    echo "Download Go Binaries from https://go.dev/ ..."
+    wget https://go.dev/dl/go1.24.11.linux-amd64.tar.gz
+    rm -rf /usr/local/go/
+    tar -C /usr/local -xzf go1.24.11.linux-amd64.tar.gz
     echo "Creating Go symlinks..."
-    ln -vsf /usr/lib/go-1.23/bin/go /usr/bin/go
-    ln -vsf /usr/lib/go-1.23/bin/gofmt /usr/bin/gofmt
+    ln -vsf /usr/local/go/bin/go /usr/bin/go
+    ln -vsf /usr/local/go/bin/gofmt /usr/bin/gofmt
 fi
 
 # Install and configure Docker if requested
