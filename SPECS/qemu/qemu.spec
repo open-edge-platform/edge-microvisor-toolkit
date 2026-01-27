@@ -446,7 +446,7 @@ Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
 Summary: QEMU is a FAST! processor emulator
 Name: qemu
 Version: 9.1.0
-Release: 5%{?dist}
+Release: 6%{?dist}
 License: Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND FSFAP AND GPL-1.0-or-later AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-2.0-or-later WITH GCC-exception-2.0 AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT AND LicenseRef-Fedora-Public-Domain AND CC-BY-3.0
 URL: http://www.qemu.org/
 
@@ -540,6 +540,7 @@ Patch58: 0055-hw-display-virtio-gpu-Manual-res-flush-to-redraw-sav.patch
 Patch59: 0056-hw-display-virtio-gpu-Properly-free-current_cursor.patch
 Patch60: 0057-ui-gtk-Re-grabbing-PTR-KBD-individually.patch
 Patch61: 0058-hw-usb-host-libusb-Do-not-assert-when-detects-invali.patch
+Patch62: pcie_sriov_CVE-2025-54567_CVE-2025-54566.patch
 
 BuildRequires: gnupg2
 BuildRequires: meson >= %{meson_version}
@@ -3538,6 +3539,10 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 
 
 %changelog
+* Tue Jan 27 2025 Rajesh Shanmugam <rajesh1x.shanmugam@intel.com> - 9.1.0-6
+- Added 1 patch from Intel Distribution Qemu Commit 8e06d09
+- Add patch for CVE-2025-54566 CVE-2025-54567
+
 * Thu Oct 30 2025 Liang Yang <liang1.yang@intel.com> - 9.1.0-5
 - Added 1 patch from Intel Distribution Qemu Commit 3fbf5c5
 - Fix assert in qemu host-libusb when altsetting invalid
