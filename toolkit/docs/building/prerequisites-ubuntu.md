@@ -23,9 +23,9 @@ The make targets automatically install the appropriate packages:
 sudo make -C toolkit install-prereqs
 
 # Manually install and configure for Go
-wget https://go.dev/dl/go1.24.11.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.24.12.linux-amd64.tar.gz && echo "bddf8e653c82429aea7aec2520774e79925d4bb929fe20e67ecc00dd5af44c50 go1.24.12.linux-amd64.tar.gz" | sha256sum -c
 sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go1.24.11.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.12.linux-amd64.tar.gz
 
 # Manually create Go symlinks for proper PATH integration
 sudo ln -sf /usr/local/go/bin/go /usr/bin/go
@@ -60,13 +60,13 @@ If you prefer running the script directly, you have several options:
 sudo ./toolkit/docs/building/prerequisites-ubuntu.sh
 
 # Manually install and configure for Go
-wget https://go.dev/dl/go1.24.11.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.24.12.linux-amd64.tar.gz && echo "bddf8e653c82429aea7aec2520774e79925d4bb929fe20e67ecc00dd5af44c50 go1.24.12.linux-amd64.tar.gz" | sha256sum -c
 sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go1.24.11.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.12.linux-amd64.tar.gz
 
 # Manually create Go symlinks for proper PATH integration
-sudo ln -sf /usr/lib/go-1.23/bin/go /usr/bin/go
-sudo ln -sf /usr/lib/go-1.23/bin/gofmt /usr/bin/gofmt
+sudo ln -sf /usr/local/go/bin/go /usr/bin/go
+sudo ln -sf /usr/local/go/bin/gofmt /usr/bin/gofmt
 
 # Manually configure Docker if needed
 curl -fsSL https://get.docker.com -o get-docker.sh
