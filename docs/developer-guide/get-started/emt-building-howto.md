@@ -20,8 +20,22 @@ of the resulting image, such as:
 
 ## Build the Toolchain
 
-Before you can build OS images you need to build the toolchain and make sure to
-[**install pre-requisites (Ubuntu)**](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md).
+### Prerequisites
+
+Before you can build OS images you need to build the toolchain.
+
+1. Install Git on Ubuntu with the package manager:
+
+```bash
+sudo apt-add-repository ppa:git-core/ppa
+sudo apt update
+sudo apt install git
+```
+
+2. Install required dependencies, using one of the methods:
+
+   - [Make Targets (recommended)](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md#method-1-using-make-targets-recommended)
+   - [Bash script](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md#method-2-direct-script-execution)
 
 ### Clone the Edge Microvisor Toolkit repository
 
