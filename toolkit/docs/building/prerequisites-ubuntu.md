@@ -5,6 +5,16 @@ This page outlines the requirements for building with the Azure Linux toolkit on
 
 ## System-Specific Requirements
 
+## Git
+
+Install Git on Ubuntu with the package manager:
+
+```bash
+sudo apt-add-repository ppa:git-core/ppa
+sudo apt update
+sudo apt install git
+```
+
 ### Golang Package Requirements
 
 The Azure Linux toolkit on Ubuntu has been validated with the following:
@@ -42,7 +52,7 @@ sudo usermod -aG docker $USER
 sudo make -C toolkit install-prereqs-and-configure
 ```
 
-**Recommendation**: 
+**Recommendation**:
 - Use `install-prereqs` on your local development machine
 - Use `install-prereqs-and-configure` in CI/CD pipelines or when you need a complete environment setup
 
