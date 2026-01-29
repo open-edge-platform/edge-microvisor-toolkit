@@ -8,8 +8,8 @@
 name: Package build checks
 
 env:
-  REGULAR_PKG: kernel
-  REGULAR_PKG_SPEC_PATH: SPECS/kernel/kernel.spec
+  REGULAR_PKG: words
+  REGULAR_PKG_SPEC_PATH: SPECS/words/words.spec
   TOOLCHAIN_PKG: xz
 
 on:
@@ -127,6 +127,7 @@ jobs:
       - name: Prepare the build environment
         if: ${{ matrix.build-prep != '' }}
         run: |
+          toolkit/scripts/toolchain/toolchain_update_git_submodule.sh
           set -euo pipefail
 
           ${{ matrix.build-prep }}
