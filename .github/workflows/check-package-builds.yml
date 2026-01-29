@@ -8,8 +8,8 @@
 name: Package build checks
 
 env:
-  REGULAR_PKG: words
-  REGULAR_PKG_SPEC_PATH: SPECS/words/words.spec
+  REGULAR_PKG: kernel
+  REGULAR_PKG_SPEC_PATH: SPECS/kernel/kernel.spec
   TOOLCHAIN_PKG: xz
 
 on:
