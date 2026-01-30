@@ -13,7 +13,7 @@ fi
 
 temp_dir="$1"
 
-LKG_FILENAME="lkg-3.0-dev.json"
+LKG_FILENAME="lkg-next-dev.json"
 LKG_TEMP_FILENAME="$(mktemp -p "$temp_dir" "${LKG_FILENAME}.XXXXXX" )"
 
 # shellcheck disable=SC2317
