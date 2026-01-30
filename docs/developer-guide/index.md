@@ -8,7 +8,7 @@
 </div>
 hide_directive-->
 
-Edge Microvisor Toolkit is a Linux operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. The Linux patches optimize performance and other capabilities for Intel silicon -- a result that streamlines integration for operating system vendors and other technology partners.
+Edge Microvisor Toolkit is a Linux-based operating system that demonstrates the full potential of Intel hardware for Edge AI workloads with the most recent updates that may not yet be available in other distributions. The Linux patches optimize both performance and capabilities of Intel silicon, streamlining integration for operating system vendors and other technology partners.
 
 Edge Microvisor Toolkit is published in several pre-configured versions to target
 various use cases. The toolkit is available as immutable and mutable versions -- including a standalone node prepared for partner evaluation and a real-time developer node designed with the Preempt RT Linux Kernel for predictable performance -- results in a

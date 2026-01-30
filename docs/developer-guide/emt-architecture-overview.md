@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Edge Microvisor Toolkit is a Linux operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. With an OS build pipeline based on
+Edge Microvisor Toolkit is a Linux-based operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads with the most recent patches from Intel. With an OS build pipeline based on
 Azure Linux, which uses the RPM Package Manager system, Edge Microvisor Toolkit is designed to produce Linux images optimized for Intel®
 platforms. This article provides an overview of the build infrastructure as well as
 architectural details of the OS itself.
