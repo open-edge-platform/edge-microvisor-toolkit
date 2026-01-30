@@ -6,7 +6,7 @@ patches that have not yet been upstreamed. These patches optimize performance an
 capabilities for Intel silicon, streamlining integration for operating system vendors and
 technology partners.
 
-[Hardware and Software Requirements](./emt-system-requirements.md)
+Before you start, make sure your system meets the [minimum requirements](./emt-system-requirements.md)
 
 ## Usage Scenarios
 
