@@ -7,9 +7,6 @@ suits your needs. To do so, check out:
 
 ## How to select the right EMT
 
-The diagram
-below will help you select the toolkit version right for your workflow.
-
 ![emt-version-deployment](../assets/emt-version-deployment.drawio.svg)
 
 ## How EMT differs between versions
