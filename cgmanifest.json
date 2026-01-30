@@ -26794,8 +26794,8 @@
         "type": "other",
         "other": {
           "name": "rpc",
-          "version": "2.48.9",
-          "downloadUrl": "https://github.com/device-management-toolkit/rpc-go/archive/refs/tags/v2.48.9.tar.gz"
+          "version": "2.48.14",
+          "downloadUrl": "https://github.com/device-management-toolkit/rpc-go/archive/refs/tags/v2.48.14.tar.gz"
         }
       }
     },
