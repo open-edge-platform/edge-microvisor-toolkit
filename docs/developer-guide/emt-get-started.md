@@ -1,6 +1,6 @@
 # Get Started
 
-Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full
+Edge Microvisor Toolkit is a Linux operating system that demonstrates the full
 capabilities of Intel platforms for Edge AI workloads. It incorporates Intel-developed Linux
 patches that have not yet been upstreamed. These patches optimize performance and enhance other
 capabilities for Intel silicon, streamlining integration for operating system vendors and
@@ -34,6 +34,7 @@ including remote deployment and management of applications orchestrated by Kuber
 
 <!--hide_directive
 :::{toctree}
+:hidden:
 
 ./get-started/emt-versions.md
 ./get-started/emt-building-howto.md
