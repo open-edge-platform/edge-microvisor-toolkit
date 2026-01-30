@@ -7,7 +7,7 @@ Summary:        Installer from a live CD/DVD/USB to disk
 # https://github.com/calamares/calamares/issues/1051
 Name:           calamares
 Version:        3.3.1
-Release:        15%{?dist}
+Release:        16%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -241,6 +241,9 @@ install -p -m 644 %{SOURCE21} %{buildroot}%{_sysconfdir}/calamares/settings.conf
 %{_libdir}/libcalamaresui.so
 
 %changelog
+* Fri Jan 30 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 3.3.1-16
+- update welcome message to match release version from os-release.
+
 * Tue Nov 18 2025 kintalix jayanth <kintalix.jayanth@intel.com> - 3.3.1-15
 - Prevent installer from listing installation media devices like bootable USB sticks
 - formatted with FAT as valid target disks, thus avoiding accidental overwriting using rufus method
