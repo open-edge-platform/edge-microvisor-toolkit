@@ -1,0 +1,272 @@
+From fa11e4f711b6ccb10163eeee10d01be41041e9c5 Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Mon, 20 Oct 2025 12:36:12 +0800
+Subject: [PATCH 04/21] patch: staging add enable CONFIG_DEBUG_FS
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys.c | 84 ++++++++++++++++++++++++++
+ drivers/staging/media/ipu7/ipu7-isys.h |  7 +++
+ drivers/staging/media/ipu7/ipu7.c      | 62 ++++++++++++++++++-
+ drivers/staging/media/ipu7/ipu7.h      |  3 +
+ 4 files changed, 155 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
+index cfb3989fe719..44ea4eef1976 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-isys.c
+@@ -9,6 +9,9 @@
+ #include <linux/bug.h>
+ #include <linux/completion.h>
+ #include <linux/container_of.h>
++#ifdef CONFIG_DEBUG_FS
++#include <linux/debugfs.h>
++#endif
+ #include <linux/delay.h>
+ #include <linux/device.h>
+ #include <linux/dma-mapping.h>
+@@ -582,6 +585,10 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ 	struct isys_fw_msgs *fwmsg, *safe;
+ 	struct ipu7_bus_device *adev = auxdev_to_adev(auxdev);
+ 
++#ifdef CONFIG_DEBUG_FS
++	if (adev->isp->ipu7_dir)
++		debugfs_remove_recursive(isys->debugfsdir);
++#endif
+ 	for (int i = 0; i < IPU_ISYS_MAX_STREAMS; i++)
+ 		mutex_destroy(&isys->streams[i].mutex);
+ 
+@@ -605,6 +612,78 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ #endif
+ }
+ 
++#ifdef CONFIG_DEBUG_FS
++static ssize_t fwlog_read(struct file *file, char __user *userbuf, size_t size,
++			  loff_t *pos)
++{
++	struct ipu7_isys *isys = file->private_data;
++	struct isys_fw_log *fw_log = isys->fw_log;
++	struct device *dev = &isys->adev->auxdev.dev;
++	u32 log_size;
++	int ret = 0;
++	void *buf;
++
++	if (!fw_log)
++		return 0;
++
++	buf = kvzalloc(FW_LOG_BUF_SIZE, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	mutex_lock(&fw_log->mutex);
++	if (!fw_log->size) {
++		dev_warn(dev, "no available fw log\n");
++		mutex_unlock(&fw_log->mutex);
++		goto free_and_return;
++	}
++
++	if (fw_log->size > FW_LOG_BUF_SIZE)
++		log_size = FW_LOG_BUF_SIZE;
++	else
++		log_size = fw_log->size;
++
++	memcpy(buf, fw_log->addr, log_size);
++	dev_info(dev, "copy %d bytes fw log to user...\n", log_size);
++	mutex_unlock(&fw_log->mutex);
++
++	ret = simple_read_from_buffer(userbuf, size, pos, buf,
++				      log_size);
++free_and_return:
++	kvfree(buf);
++
++	return ret;
++}
++
++static const struct file_operations isys_fw_log_fops = {
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.read = fwlog_read,
++	.llseek = default_llseek,
++};
++
++static int ipu7_isys_init_debugfs(struct ipu7_isys *isys)
++{
++	struct dentry *file;
++	struct dentry *dir;
++
++	dir = debugfs_create_dir("isys", isys->adev->isp->ipu7_dir);
++	if (IS_ERR(dir))
++		return -ENOMEM;
++
++	file = debugfs_create_file("fwlog", 0400,
++				   dir, isys, &isys_fw_log_fops);
++	if (IS_ERR(file))
++		goto err;
++
++	isys->debugfsdir = dir;
++
++	return 0;
++err:
++	debugfs_remove_recursive(dir);
++	return -ENOMEM;
++}
++#endif
++
+ static int alloc_fw_msg_bufs(struct ipu7_isys *isys, int amount)
+ {
+ 	struct ipu7_bus_device *adev = isys->adev;
+@@ -763,6 +842,11 @@ static int isys_probe(struct auxiliary_device *auxdev,
+ 
+ 	isys_stream_init(isys);
+ 
++#ifdef CONFIG_DEBUG_FS
++	/* Debug fs failure is not fatal. */
++	ipu7_isys_init_debugfs(isys);
++#endif
++
+ 	cpu_latency_qos_add_request(&isys->pm_qos, PM_QOS_DEFAULT_VALUE);
+ 	ret = alloc_fw_msg_bufs(isys, 20);
+ 	if (ret < 0)
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
+index 17d4d5630169..cd7375417452 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.h
++++ b/drivers/staging/media/ipu7/ipu7-isys.h
+@@ -25,6 +25,10 @@
+ #include "ipu7-isys-csi2.h"
+ #include "ipu7-isys-video.h"
+ 
++#ifdef CONFIG_DEBUG_FS
++struct dentry;
++
++#endif
+ #define IPU_ISYS_ENTITY_PREFIX		"Intel IPU7"
+ 
+ /* FW support max 16 streams */
+@@ -103,6 +107,9 @@ struct ipu7_isys {
+ 	unsigned int ref_count;
+ 	unsigned int stream_opened;
+ 
++#ifdef CONFIG_DEBUG_FS
++	struct dentry *debugfsdir;
++#endif
+ 	struct mutex mutex;	/* Serialise isys video open/release related */
+ 	struct mutex stream_mutex;	/* Stream start, stop, queueing reqs */
+ 
+diff --git a/drivers/staging/media/ipu7/ipu7.c b/drivers/staging/media/ipu7/ipu7.c
+index ee6b63717ed3..5649d8e1c352 100644
+--- a/drivers/staging/media/ipu7/ipu7.c
++++ b/drivers/staging/media/ipu7/ipu7.c
+@@ -7,6 +7,9 @@
+ #include <linux/bitfield.h>
+ #include <linux/bits.h>
+ #include <linux/bug.h>
++#ifdef CONFIG_DEBUG_FS
++#include <linux/debugfs.h>
++#endif
+ #include <linux/dma-mapping.h>
+ #include <linux/err.h>
+ #include <linux/firmware.h>
+@@ -2248,7 +2251,50 @@ void ipu7_dump_fw_error_log(const struct ipu7_bus_device *adev)
+ }
+ EXPORT_SYMBOL_NS_GPL(ipu7_dump_fw_error_log, "INTEL_IPU7");
+ 
+-static void ipu7_pci_config_setup(struct pci_dev *dev)
++#ifdef CONFIG_DEBUG_FS
++static struct debugfs_blob_wrapper isys_fw_error;
++static struct debugfs_blob_wrapper psys_fw_error;
++
++static int ipu7_init_debugfs(struct ipu7_device *isp)
++{
++	struct dentry *file;
++	struct dentry *dir;
++
++	dir = debugfs_create_dir(pci_name(isp->pdev), NULL);
++	if (!dir)
++		return -ENOMEM;
++
++	isys_fw_error.data = &fw_error_log[IPU_IS];
++	isys_fw_error.size = sizeof(fw_error_log[IPU_IS]);
++	file = debugfs_create_blob("is_fw_error", 0400, dir, &isys_fw_error);
++	if (!file)
++		goto err;
++	psys_fw_error.data = &fw_error_log[IPU_PS];
++	psys_fw_error.size = sizeof(fw_error_log[IPU_PS]);
++	file = debugfs_create_blob("ps_fw_error", 0400, dir, &psys_fw_error);
++	if (!file)
++		goto err;
++
++	isp->ipu7_dir = dir;
++
++	return 0;
++err:
++	debugfs_remove_recursive(dir);
++	return -ENOMEM;
++}
++
++static void ipu7_remove_debugfs(struct ipu7_device *isp)
++{
++	/*
++	 * Since isys and psys debugfs dir will be created under ipu root dir,
++	 * mark its dentry to NULL to avoid duplicate removal.
++	 */
++	debugfs_remove_recursive(isp->ipu7_dir);
++	isp->ipu7_dir = NULL;
++}
++#endif /* CONFIG_DEBUG_FS */
++
++static int ipu7_pci_config_setup(struct pci_dev *dev)
+ {
+ 	u16 pci_command;
+ 
+@@ -2604,6 +2650,13 @@ static int ipu7_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		pm_runtime_put(&isp->psys->auxdev.dev);
+ 	}
+ 
++#ifdef CONFIG_DEBUG_FS
++	ret = ipu7_init_debugfs(isp);
++	if (ret) {
++		dev_err_probe(dev, ret, "Failed to initialize debugfs\n");
++		goto out_ipu_bus_del_devices;
++	}
++#endif
+ 	pm_runtime_put_noidle(dev);
+ 	pm_runtime_allow(dev);
+ 
+@@ -2616,6 +2669,10 @@ static int ipu7_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ipu7_unmap_fw_code_region(isp->isys);
+ 	if (!IS_ERR_OR_NULL(isp->psys) && isp->psys->fw_sgt.nents)
+ 		ipu7_unmap_fw_code_region(isp->psys);
++#ifdef CONFIG_DEBUG_FS
++	if (!IS_ERR_OR_NULL(isp->fw_code_region))
++		vfree(isp->fw_code_region);
++#endif
+ 	if (!IS_ERR_OR_NULL(isp->psys) && !IS_ERR_OR_NULL(isp->psys->mmu))
+ 		ipu7_mmu_cleanup(isp->psys->mmu);
+ 	if (!IS_ERR_OR_NULL(isp->isys) && !IS_ERR_OR_NULL(isp->isys->mmu))
+@@ -2636,6 +2693,9 @@ static void ipu7_pci_remove(struct pci_dev *pdev)
+ {
+ 	struct ipu7_device *isp = pci_get_drvdata(pdev);
+ 
++#ifdef CONFIG_DEBUG_FS
++	ipu7_remove_debugfs(isp);
++#endif
+ 	if (!IS_ERR_OR_NULL(isp->isys) && isp->isys->fw_sgt.nents)
+ 		ipu7_unmap_fw_code_region(isp->isys);
+ 	if (!IS_ERR_OR_NULL(isp->psys) && isp->psys->fw_sgt.nents)
+diff --git a/drivers/staging/media/ipu7/ipu7.h b/drivers/staging/media/ipu7/ipu7.h
+index ac8ac0689468..3b3ea5fb613f 100644
+--- a/drivers/staging/media/ipu7/ipu7.h
++++ b/drivers/staging/media/ipu7/ipu7.h
+@@ -81,6 +81,9 @@ struct ipu7_device {
+ 
+ 	void __iomem *base;
+ 	void __iomem *pb_base;
++#ifdef CONFIG_DEBUG_FS
++	struct dentry *ipu7_dir;
++#endif
+ 	u8 hw_ver;
+ 	bool ipc_reinit;
+ 	bool secure_mode;
+-- 
+2.43.0
+

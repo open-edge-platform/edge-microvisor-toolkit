@@ -1,7 +1,7 @@
-From b9f7a2c076583aac45b4eb2c56f5e1ab70295024 Mon Sep 17 00:00:00 2001
+From 643f25a3e375b8e907fc17630159b06ee9ad4fc9 Mon Sep 17 00:00:00 2001
 From: hepengpx <pengpengx.he@intel.com>
 Date: Thu, 4 Dec 2025 11:19:32 +0800
-Subject: [PATCH 2/4] media: ipu: invalidate MMU TLB in dma buffers creation
+Subject: [PATCH 08/21] media: ipu: invalidate MMU TLB in dma buffers creation
 
 This patch ensures that the MMU TLB is properly invalidated during
 the creation and mapping of DMA buffers for IPU devices. Without

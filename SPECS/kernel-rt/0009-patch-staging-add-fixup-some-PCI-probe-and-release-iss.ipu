@@ -1,0 +1,30 @@
+From ed2fcce3d2b80e56411b1b7216885402fadac835 Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Fri, 24 Oct 2025 14:58:47 +0800
+Subject: [PATCH 09/21] patch: staging add fixup some PCI probe and release
+ issues
+
+Update IPU7 on pci functions on IPU7 driver.
+
+Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7.c b/drivers/staging/media/ipu7/ipu7.c
+index 06e5f08bed4d..3a6c129015e7 100644
+--- a/drivers/staging/media/ipu7/ipu7.c
++++ b/drivers/staging/media/ipu7/ipu7.c
+@@ -2300,7 +2300,7 @@ static void ipu7_remove_debugfs(struct ipu7_device *isp)
+ }
+ #endif /* CONFIG_DEBUG_FS */
+ 
+-static int ipu7_pci_config_setup(struct pci_dev *dev)
++static void ipu7_pci_config_setup(struct pci_dev *dev)
+ {
+ 	u16 pci_command;
+ 
+-- 
+2.43.0
+

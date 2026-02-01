@@ -1,7 +1,7 @@
 Summary:        Linux Kernel
 Name:           kernel
 Version:        6.17.11
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -14,6 +14,7 @@ Source4:        emt-ca-20211013.pem
 Source5:        cpupower
 Source6:        cpupower.service
 
+# Intel not-upstreamed kernel features
 # v6.17.11
 #5439375ca698 Linux 6.17.11
 # security
@@ -241,10 +242,33 @@ Patch09013: 0001-media-i2c-max9x-fix-S3-S4-error-for-max9x.ipu
 Patch09014: 0002-media-i2c-max9x-uniform-serdes-driver-compilation.ipu
 Patch09015: 0001-Revert-media-i2c-max9x-uniform-serdes-driver-compilati.ipu
 Patch09016: 0002-Revert-media-i2c-max9x-fix-S3-S4-error-for-max9x.ipu
-Patch09017: 0001-patch-staging-add-ipu7-isys-reset-code.ipu
-Patch09018: 0002-media-ipu-invalidate-MMU-TLB-in-dma-buffers-creation.ipu
-Patch09019: 0003-media-ipu-Update-firmware-ABI-version-to-1.2.1.2025121.ipu
-Patch09020: 0004-media-ipu7-update-CDPHY-register-settings.ipu
+Patch09017: 0001-Remove-IPU7-drivers-from-pci-directory.ipu
+Patch09018: 0002-patch-staging-add-ipu7-isys-reset-code.ipu
+Patch09019: 0003-patch-staging-add-enbaled-IPU8_INSYS_NEW_ABI.ipu
+Patch09020: 0004-patch-staging-add-enable-CONFIG_DEBUG_FS.ipu
+Patch09021: 0005-patch-staging-add-enable-CONFIG_INTEL_IPU_ACPI.ipu
+Patch09022: 0006-patch-staging-add-enable-ENABLE_FW_OFFLINE_LOGGER.ipu
+Patch09023: 0007-patch-staging-add-patch-for-use-DPHY-as-the-default-ph.ipu
+Patch09024: 0008-media-ipu-invalidate-MMU-TLB-in-dma-buffers-creation.ipu
+Patch09025: 0009-patch-staging-add-fixup-some-PCI-probe-and-release-iss.ipu
+Patch09026: 0010-patch-staging-add-IPU8_PCI_ID-support.ipu
+Patch09027: 0011-patch-staging-add-patch-for-ipu7-Kconfig-Makefile.ipu
+Patch09028: 0012-media-ipu-Update-firmware-ABI-version-to-1.2.1.2025121.ipu
+Patch09029: 0013-patch-staging-add-ipu7-isys-tpg-and-MGC-config.ipu
+Patch09030: 0014-media-ipu-Dma-sync-at-buffer_prepare-callback-as-DMA-i.ipu
+Patch09031: 0015-media-ipu7-update-CDPHY-register-settings.ipu
+Patch09032: 0016-Port-over-IPU-ACPI-drivers-changes-from-VTG-github-rep.ipu
+Patch09033: 0017-Copy-ACPI-header-files-from-VTG-IPU7-IPU6-repo.ipu
+Patch09034: 0018-IPU7-PSYS-driver-addition.ipu
+Patch09035: 0019-porting-gmsl-isx031-code-between-PTL-IPU7-beta-release.ipu
+Patch09036: 0020-Update-lt6911gxd-sensor-driver-to-fix-timeout-issue-af.ipu
+Patch09037: 0021-Update-compilation-path-for-IPU7-drivers.ipu
+Patch09038: 0001-i2c-add-identifier-for-ATR-and-MUX-adapters.ipu
+Patch09039: 0002-i2c-i2c-core-acpi-clear-dependency-for-MUX-or-ATR-adap.ipu
+Patch09040: 0003-i2c-atr-Add-fwnode-handling.ipu
+Patch09041: 0004-media-v4l2-async-Fix-error-handling-on-steps-after-fin.ipu
+Patch09042: 0005-media-mc-Add-INTERNAL-pad-flag.ipu
+Patch09043: 0006-i2c-atr-Remove-COMPILE_TEST-check.ipu
 # tbt
 Patch10001: 0002-thunderbolt-Make-XDomain-lane-bonding-comply-with-the-.tbt
 Patch10002: 0003-net-thunderbolt-Allow-changing-MTU-of-the-device.tbt
@@ -311,146 +335,240 @@ Patch16011: 0011-platform-x86-intel-hid-Add-Nova-Lake-support.thermal
 # uncore-frequency
 Patch17001: 0001-platform-x86-intel-uncore-freq-Add-additi.uncore-frequency
 #CVE-2025-68265
-Patch18001: 0001-nvme-fix-admin-request_queue-lifetime.patch
+Patch18001: CVE-2025-68265.patch
 
 #CVE-2025-68263
-Patch18002: 0002-ksmbd-ipc-fix-use-after-free-in-ipc_msg_send_request.patch
+Patch18002: CVE-2025-68263.patch
 
 #CVE-2025-68255
-Patch18003: 0003-staging-rtl8723bs-fix-stack-buffer-overflow-in-OnAss.patch
+Patch18003: CVE-2025-68255.patch
 
 #CVE-2025-68256
-Patch18004: 0004-staging-rtl8723bs-fix-out-of-bounds-read-in-rtw_get_.patch
+Patch18004: CVE-2025-68256.patch
 
 #CVE-2025-68281
-Patch18005: 0007-ASoC-SDCA-bug-fix-while-parsing-mipi-sdca-control-cn.patch
+Patch18005: CVE-2025-68281.patch
 
 #CVE-2025-68262
-Patch18006: 0008-crypto-zstd-fix-double-free-in-per-CPU-stream-cleanu.patch
+Patch18006: CVE-2025-68262.patch
 
 #CVE-2025-68261
-Patch18007: 0009-ext4-add-i_data_sem-protection-in-ext4_destroy_inlin.patch
+Patch18007: CVE-2025-68261.patch
 
 #CVE-2025-68259
-Patch18008: 0010-KVM-SVM-Don-t-skip-unrelated-instruction-if-INT3-INT.patch
+Patch18008: CVE-2025-68259.patch
 
 #CVE-2025-68254
-Patch18009: 0011-staging-rtl8723bs-fix-out-of-bounds-read-in-OnBeacon.patch
+Patch18009: CVE-2025-68254.patch
 
 #CVE-2025-68264
-Patch18010: 0013-ext4-refresh-inline-data-size-before-write-operation.patch
+Patch18010: CVE-2025-68264.patch
 
 #CVE-2025-68325
-Patch18011: 0014-net-sched-sch_cake-Fix-incorrect-qlen-reduction-in-c.patch
+Patch18011: CVE-2025-68325.patch
 
 #CVE-2025-68323
-Patch18012: 0016-usb-typec-ucsi-fix-use-after-free-caused-by-uec-work.patch
+Patch18012: CVE-2025-68323.patch
 
 #CVE-2025-68749
-Patch18013: 0001-accel-ivpu-Fix-race-condition-when-unbinding-BOs.patch
+Patch18013: CVE-2025-68749.patch
 
 #CVE-2025-68745
-Patch18014: 0003-scsi-qla2xxx-Clear-cmds-after-chip-reset.patch
+Patch18014: CVE-2025-68745.patch
 
 #CVE-2025-68349
-Patch18015: 0004-NFSv4-pNFS-Clear-NFS_INO_LAYOUTCOMMIT-in-pnfs_mark_l.patch
+Patch18015: CVE-2025-68349.patch
 
 #CVE-2025-68366
-Patch18016: 0005-nbd-defer-config-unlock-in-nbd_genl_connect.patch
+Patch18016: CVE-2025-68366.patch
 
 #CVE-2025-68744
-Patch18017: 0006-bpf-Free-special-fields-when-update-lru_-percpu_hash.patch
+Patch18017: CVE-2025-68744.patch
 
 #CVE-2025-68363
-Patch18018: 0009-bpf-Check-skb-transport_header-is-set-in-bpf_skb_che.patch
+Patch18018: CVE-2025-68363.patch
 
 #CVE-2025-68379
-Patch18019: 0010-RDMA-rxe-Fix-null-deref-on-srq-rq.queue-after-resize.patch
+Patch18019: CVE-2025-68379.patch
 
 #CVE-2025-68375
-Patch18020: 0011-perf-x86-Fix-NULL-event-access-and-potential-PEBS-re.patch
+Patch18020: CVE-2025-68375.patch
 
 #CVE-2025-68736
-Patch18021: 0012-landlock-Fix-handling-of-disconnected-directories.patch
+Patch18021: CVE-2025-68736.patch
 
 #CVE-2025-68732
-Patch18022: 0013-gpu-host1x-Fix-race-in-syncpt-alloc-free.patch
+Patch18022: CVE-2025-68732.patch
 
 #CVE-2025-68730
-Patch18023: 0014-accel-ivpu-Fix-page-fault-in-ivpu_bo_unbind_all_bos_.patch
+Patch18023: CVE-2025-68730.patch
 
 #CVE-2025-68733
-Patch18024: 0016-smack-fix-bug-unprivileged-task-can-create-labels.patch
+Patch18024: CVE-2025-68733.patch
 
 #CVE-2025-68333
-Patch18025: 0017-sched_ext-Fix-possible-deadlock-in-the-deferred_irq_.patch
+Patch18025: CVE-2025-68333.patch
 
 #CVE-2025-68336
-Patch18026: 0018-locking-spinlock-debug-Fix-data-race-in-do_raw_write.patch
+Patch18026: CVE-2025-68336.patch
 
 #CVE-2025-68345
-Patch18027: 0019-ALSA-hda-cs35l41-Fix-NULL-pointer-dereference-in-cs3.patch
+Patch18027: CVE-2025-68345.patch
 
 #CVE-2025-68346
-Patch18028: 0020-ALSA-dice-fix-buffer-overflow-in-detect_stream_forma.patch
+Patch18028: CVE-2025-68346.patch
 
 #CVE-2025-68347
-Patch18029: 0021-ALSA-firewire-motu-fix-buffer-overflow-in-hwdep-read.patch
+Patch18029: CVE-2025-68347.patch
 
 #CVE-2025-68348
-Patch18030: 0022-block-fix-memory-leak-in-__blkdev_issue_zero_pages.patch
+Patch18030: CVE-2025-68348.patch
 
 #CVE-2025-68353
-Patch18031: 0023-net-vxlan-prevent-NULL-deref-in-vxlan_xmit_one.patch
+Patch18031: CVE-2025-68353.patch
 
 #CVE-2025-68358
-Patch18032: 0025-btrfs-fix-racy-bitfield-write-in-btrfs_clear_space_i.patch
+Patch18032: CVE-2025-68358.patch
 
 #CVE-2025-68337
-Patch18033: 0027-jbd2-avoid-bug_on-in-jbd2_journal_get_create_access-.patch
+Patch18033: CVE-2025-68337.patch
 
 #CVE-2025-68354
-Patch18034: 0028-regulator-core-Protect-regulator_supply_alias_list-w.patch
+Patch18034: CVE-2025-68354.patch
 
 #CVE-2025-68359
-Patch18035: 0030-btrfs-fix-double-free-of-qgroup-record-after-failure.patch
+Patch18035: CVE-2025-68359.patch
 
 #CVE-2025-68741
-Patch18036: 0031-scsi-qla2xxx-Fix-improper-freeing-of-purex-item.patch
+Patch18036: CVE-2025-68741.patch
 
 #CVE-2025-68368
-Patch18037: 0032-md-init-bioset-in-mddev_init.patch
+Patch18037: CVE-2025-68368.patch
 
 #CVE-2025-68371
-Patch18038: 0033-scsi-smartpqi-Fix-device-resources-accessed-after-de.patch
+Patch18038: CVE-2025-68371.patch
 
 #CVE-2025-68373
-Patch18039: 0036-md-delete-mddev-kobj-before-deleting-gendisk-kobj.patch
-Patch18040: 0037-md-avoid-repeated-calls-to-del_gendisk.patch
+Patch18039: CVE-2025-68373.patch
+Patch18040: CVE-2025-68373-2.patch
 
 #CVE-2025-68740
-Patch18041: 0038-ima-Handle-error-code-returned-by-ima_filter_rule_ma.patch
+Patch18041: CVE-2025-68740.patch
 
 #CVE-2025-68374
-Patch18042: 0039-md-fix-rcu-protection-in-md_wakeup_thread.patch
+Patch18042: CVE-2025-68374.patch
 
 #CVE-2025-68742
-Patch18043: 0040-bpf-Fix-invalid-prog-stats-access-when-update_effect.patch
+Patch18043: CVE-2025-68742.patch
 
 #CVE-2025-68743
-Patch18044: 0045-mshv-Fix-create-memory-region-overlap-check.patch
+Patch18044: CVE-2025-68743.patch
 
 #CVE-2025-68724
-Patch18045: 0046-crypto-asymmetric_keys-prevent-overflow-in-asymmetri.patch
+Patch18045: CVE-2025-68724.patch
 
 #CVE-2025-68378
-Patch18046: 0049-bpf-Fix-stackmap-overflow-check-in-__bpf_get_stackid.patch
+Patch18046: CVE-2025-68378.patch
 
 #CVE-2025-68725
-Patch18047: 0050-bpf-Do-not-let-BPF-test-infra-emit-invalid-GSO-types.patch
+Patch18047: CVE-2025-68725.patch
 
 #CVE-2025-68372
-Patch18048: 0051-nbd-defer-config-put-in-recv_work.patch
+Patch18048: CVE-2025-68372.patch
+
+#CVE-2026-23007
+Patch18049: CVE-2026-23007.patch
+
+#CVE-2026-23008
+Patch18050: CVE-2026-23008.patch
+
+#CVE-2026-23009
+Patch18051: CVE-2026-23009.patch
+
+#CVE-2026-23012
+Patch18052: CVE-2026-23012.patch
+
+#CVE-2026-22993
+Patch18053: CVE-2026-22993.patch
+
+#CVE-2026-22987
+Patch18054: CVE-2026-22987.patch
+
+#CVE-2026-22981
+Patch18055: CVE-2026-22981.patch
+
+#CVE-2025-71161
+Patch18056: CVE-2025-71161.patch
+
+#CVE-2025-71117
+Patch18057: CVE-2025-71117.patch
+
+#CVE-2025-71128
+Patch18058: CVE-2025-71128.patch
+
+#CVE-2025-71139
+Patch18059: CVE-2025-71139-1.patch
+Patch18060: CVE-2025-71139-2.patch
+
+#CVE-2025-71142
+Patch18061: CVE-2025-71142.patch
+
+#CVE-2025-71115
+Patch18062: CVE-2025-71115.patch
+
+#CVE-2025-71090
+Patch18063: CVE-2025-71090.patch
+
+#CVE-2025-71070
+Patch18064: CVE-2025-71070-1.patch
+Patch18065: CVE-2025-71070-2.patch
+
+#CVE-2025-71074
+Patch18066: CVE-2025-71074.patch
+
+#CVE-2025-68823
+Patch18067: CVE-2025-68823.patch
+
+#CVE-2025-68807
+Patch18068: CVE-2025-68807.patch
+
+#CVE-2025-68805
+Patch18069: CVE-2025-68805.patch
+
+#CVE-2025-68791
+Patch18070: CVE-2025-68791.patch
+
+#CVE-2025-68768
+Patch18071: CVE-2025-68768-1.patch
+Patch18072: CVE-2025-68768-2.patch
+Patch18073: CVE-2025-68768-3.patch
+
+#CVE-2025-68764
+Patch18074: CVE-2025-68764.patch
+
+#CVE-2025-68762
+Patch18075: CVE-2025-68762.patch
+
+#CVE-2025-68759
+Patch18076: CVE-2025-68759.patch
+
+#CVE-2025-68756
+Patch18077: CVE-2025-68756.patch
+
+#CVE-2025-68753
+Patch18078: CVE-2025-68753.patch
+
+#CVE-2025-68752
+Patch18079: CVE-2025-68752.patch
+
+#CVE-2026-23004
+Patch18080: CVE-2026-23004.patch
+
+#CVE-2026-22985
+Patch18081: CVE-2026-22985-1.patch
+Patch18082: CVE-2026-22985-2.patch
+
+# End of Patch section
 
 %global security_hardening none
 %global sha512hmac bash %{_sourcedir}/sha512hmac-openssl.sh
@@ -845,6 +963,10 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Sun Feb 01 2026 Lishan Liu <lishan.liu@intel.com> - 6.17.11-2
+- Update kernel to 6.17.11-2
+- mainline-v6.17.11-emt-overlay-cve-260128T080735Z
+
 * Thu Jan 15 2026 Lishan Liu <lishan.liu@intel.com> - 6.17.11-1
 - Update kernel to mainline-v6.17.11-emt-260108T031458Z
 

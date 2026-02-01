@@ -1,0 +1,62 @@
+From 34c4e824b277073582084f12dcb4f85f955932d2 Mon Sep 17 00:00:00 2001
+From: Khai Wen Ng <khai.wen.ng@intel.com>
+Date: Thu, 11 Sep 2025 07:49:24 +0800
+Subject: [PATCH 1/6] i2c: add identifier for ATR and MUX adapters
+
+In ACPI, ATR and MUX adapter are created dynamically
+by drivers, there are no pre-allocated resource in ACPI namespace.
+Adding identifier so that acpi driver can handle devices that
+resides on ATR and MUX adapter.
+
+Signed-off-by: Khai Wen Ng <khai.wen.ng@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/i2c/i2c-atr.c | 2 ++
+ drivers/i2c/i2c-mux.c | 2 ++
+ include/linux/i2c.h   | 4 ++++
+ 3 files changed, 8 insertions(+)
+
+diff --git a/drivers/i2c/i2c-atr.c b/drivers/i2c/i2c-atr.c
+index dd194476b118..f998e5f43fc0 100644
+--- a/drivers/i2c/i2c-atr.c
++++ b/drivers/i2c/i2c-atr.c
+@@ -825,6 +825,8 @@ int i2c_atr_add_adapter(struct i2c_atr *atr, struct i2c_atr_adap_desc *desc)
+ 	chan->adap.timeout = parent->timeout;
+ 	chan->adap.quirks = parent->quirks;
+ 	chan->adap.lock_ops = &i2c_atr_lock_ops;
++	chan->adap.is_atr = true;
++	chan->adap.chan_id = chan_id;
+ 
+ 	if (bus_handle) {
+ 		device_set_node(&chan->adap.dev, fwnode_handle_get(bus_handle));
+diff --git a/drivers/i2c/i2c-mux.c b/drivers/i2c/i2c-mux.c
+index 4d8690981a55..ace64e0b0491 100644
+--- a/drivers/i2c/i2c-mux.c
++++ b/drivers/i2c/i2c-mux.c
+@@ -321,6 +321,8 @@ int i2c_mux_add_adapter(struct i2c_mux_core *muxc,
+ 	priv->adap.retries = parent->retries;
+ 	priv->adap.timeout = parent->timeout;
+ 	priv->adap.quirks = parent->quirks;
++	priv->adap.is_mux = true;
++	priv->adap.chan_id = chan_id;
+ 	if (muxc->mux_locked)
+ 		priv->adap.lock_ops = &i2c_mux_lock_ops;
+ 	else
+diff --git a/include/linux/i2c.h b/include/linux/i2c.h
+index 20fd41b51d5c..83288fe9bcb2 100644
+--- a/include/linux/i2c.h
++++ b/include/linux/i2c.h
+@@ -765,6 +765,10 @@ struct i2c_adapter {
+ 
+ 	/* 7bit address space */
+ 	DECLARE_BITMAP(addrs_in_instantiation, 1 << 7);
++
++	bool is_atr;
++	bool is_mux;
++	int chan_id;
+ };
+ #define to_i2c_adapter(d) container_of(d, struct i2c_adapter, dev)
+ 
+-- 
+2.43.0
+

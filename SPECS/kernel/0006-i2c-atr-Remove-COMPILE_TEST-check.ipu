@@ -1,0 +1,34 @@
+From 01ef232671beb365ed72d760c4f5aac0f1249cf8 Mon Sep 17 00:00:00 2001
+From: "Yew, Chang Ching" <chang.ching.yew@intel.com>
+Date: Wed, 21 Jan 2026 02:59:04 +0800
+Subject: [PATCH 6/6] i2c: atr: Remove COMPILE_TEST check
+
+The I2C Address Translator (ATR) driver was previously only visible when
+COMPILE_TEST was enabled. Since the driver is functional and can be built
+normally, drop the `if COMPILE_TEST` condition so that the ATR option is
+always available in Kconfig.
+
+This allows platforms and drivers that actually use ATR hardware to enable
+I2C ATR without relying on COMPILE_TEST.
+
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/i2c/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/Kconfig b/drivers/i2c/Kconfig
+index c232054fddd6..a7450ea9de41 100644
+--- a/drivers/i2c/Kconfig
++++ b/drivers/i2c/Kconfig
+@@ -64,7 +64,7 @@ config I2C_MUX
+ source "drivers/i2c/muxes/Kconfig"
+ 
+ config I2C_ATR
+-	tristate "I2C Address Translator (ATR) support" if COMPILE_TEST
++	tristate "I2C Address Translator (ATR) support"
+ 	help
+ 	  Enable support for I2C Address Translator (ATR) chips.
+ 
+-- 
+2.43.0
+

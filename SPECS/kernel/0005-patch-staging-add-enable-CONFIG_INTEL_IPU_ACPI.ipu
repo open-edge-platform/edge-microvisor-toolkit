@@ -1,0 +1,404 @@
+From abb1539a9573373c7d63922be8fcb4c34dd45a34 Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Fri, 24 Oct 2025 12:16:13 +0800
+Subject: [PATCH 05/21] patch: staging add enable CONFIG_INTEL_IPU_ACPI
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys.c | 231 ++++++++++++++++++++++++-
+ drivers/staging/media/ipu7/ipu7-isys.h |  15 ++
+ drivers/staging/media/ipu7/ipu7.c      |  10 ++
+ drivers/staging/media/ipu7/ipu7.h      |   3 +
+ 4 files changed, 257 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
+index 44ea4eef1976..547d5fd6a036 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-isys.c
+@@ -96,6 +96,126 @@ isys_complete_ext_device_registration(struct ipu7_isys *isys,
+ 	return ret;
+ }
+ 
++struct isys_i2c_test {
++	u8 bus_nr;
++	u16 addr;
++	struct i2c_client *client;
++};
++
++static int isys_i2c_test(struct device *dev, void *priv)
++{
++	struct i2c_client *client = i2c_verify_client(dev);
++	struct isys_i2c_test *test = priv;
++
++	if (!client)
++		return 0;
++
++	if (i2c_adapter_id(client->adapter) != test->bus_nr ||
++	    client->addr != test->addr)
++		return 0;
++
++	test->client = client;
++
++	return 0;
++}
++
++static
++struct i2c_client *isys_find_i2c_subdev(struct i2c_adapter *adapter,
++					struct ipu7_isys_subdev_info *sd_info)
++{
++	struct i2c_board_info *info = &sd_info->i2c.board_info;
++	struct isys_i2c_test test = {
++		.bus_nr = i2c_adapter_id(adapter),
++		.addr = info->addr,
++	};
++	int ret;
++
++	ret = i2c_for_each_dev(&test, isys_i2c_test);
++	if (ret || !test.client)
++		return NULL;
++	return test.client;
++}
++
++static int isys_register_ext_subdev(struct ipu7_isys *isys,
++				    struct ipu7_isys_subdev_info *sd_info)
++{
++	struct device *dev = &isys->adev->auxdev.dev;
++	struct i2c_adapter *adapter;
++	struct v4l2_subdev *sd;
++	struct i2c_client *client;
++	int ret;
++	int bus;
++
++	bus = sd_info->i2c.i2c_adapter_id;
++	adapter = i2c_get_adapter(bus);
++	if (!adapter) {
++		dev_warn(dev, "can't find adapter\n");
++		return -ENOENT;
++	}
++
++	dev_info(dev, "creating i2c subdev for %s (address %2.2x, bus %d)\n",
++		 sd_info->i2c.board_info.type, sd_info->i2c.board_info.addr,
++		 bus);
++
++	if (sd_info->csi2) {
++		dev_info(dev, "sensor device on CSI port: %d\n",
++			 sd_info->csi2->port);
++		if (sd_info->csi2->port >= isys->pdata->ipdata->csi2.nports ||
++		    !isys->csi2[sd_info->csi2->port].isys) {
++			dev_warn(dev, "invalid csi2 port %u\n",
++				 sd_info->csi2->port);
++			ret = -EINVAL;
++			goto skip_put_adapter;
++		}
++	} else {
++		dev_info(dev, "No camera subdevice\n");
++	}
++
++	client = isys_find_i2c_subdev(adapter, sd_info);
++	if (client) {
++		dev_warn(dev, "Device exists\n");
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++		/* TODO: remove i2c_unregister_device() */
++		i2c_unregister_device(client);
++#else
++		ret = 0;
++		goto skip_put_adapter;
++#endif
++	}
++
++	sd = v4l2_i2c_new_subdev_board(&isys->v4l2_dev, adapter,
++				       &sd_info->i2c.board_info, NULL);
++	if (!sd) {
++		dev_warn(dev, "can't create new i2c subdev\n");
++		ret = -EINVAL;
++		goto skip_put_adapter;
++	}
++
++	if (!sd_info->csi2)
++		return 0;
++
++	return isys_complete_ext_device_registration(isys, sd, sd_info->csi2);
++
++skip_put_adapter:
++	i2c_put_adapter(adapter);
++
++	return ret;
++}
++
++static void isys_register_ext_subdevs(struct ipu7_isys *isys)
++{
++	struct ipu7_isys_subdev_pdata *spdata = isys->pdata->spdata;
++	struct ipu7_isys_subdev_info **sd_info;
++
++	if (!spdata) {
++		dev_info(&isys->adev->auxdev.dev,
++			 "no subdevice info provided\n");
++		return;
++	}
++	for (sd_info = spdata->subdevs; *sd_info; sd_info++)
++		isys_register_ext_subdev(isys, *sd_info);
++}
++
+ static void isys_stream_init(struct ipu7_isys *isys)
+ {
+ 	unsigned int i;
+@@ -142,6 +262,7 @@ static int isys_fw_log_init(struct ipu7_isys *isys)
+ 	return 0;
+ }
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
+ /* The .bound() notifier callback when a match is found */
+ static int isys_notifier_bound(struct v4l2_async_notifier *notifier,
+ 			       struct v4l2_subdev *sd,
+@@ -260,6 +381,7 @@ static void isys_notifier_cleanup(struct ipu7_isys *isys)
+ 	v4l2_async_nf_unregister(&isys->notifier);
+ 	v4l2_async_nf_cleanup(&isys->notifier);
+ }
++#endif
+ 
+ static void isys_unregister_video_devices(struct ipu7_isys *isys)
+ {
+@@ -374,6 +496,73 @@ static int isys_csi2_create_media_links(struct ipu7_isys *isys)
+ 	return 0;
+ }
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++static int isys_register_devices(struct ipu7_isys *isys)
++{
++	struct device *dev = &isys->adev->auxdev.dev;
++	struct pci_dev *pdev = isys->adev->isp->pdev;
++	int ret;
++
++	media_device_pci_init(&isys->media_dev,
++			      pdev, IPU_MEDIA_DEV_MODEL_NAME);
++
++	strscpy(isys->v4l2_dev.name, isys->media_dev.model,
++		sizeof(isys->v4l2_dev.name));
++
++	ret = media_device_register(&isys->media_dev);
++	if (ret < 0)
++		goto out_media_device_unregister;
++
++	isys->v4l2_dev.mdev = &isys->media_dev;
++	isys->v4l2_dev.ctrl_handler = NULL;
++
++	ret = v4l2_device_register(dev, &isys->v4l2_dev);
++	if (ret < 0)
++		goto out_media_device_unregister;
++
++	ret = isys_register_video_devices(isys);
++	if (ret)
++		goto out_v4l2_device_unregister;
++
++	ret = isys_csi2_register_subdevices(isys);
++	if (ret)
++		goto out_video_unregister_device;
++
++	ret = isys_csi2_create_media_links(isys);
++	if (ret)
++		goto out_csi2_unregister_subdevices;
++
++	if (!isys->pdata->spdata) {
++		ret = isys_notifier_init(isys);
++		if (ret)
++			goto out_csi2_unregister_subdevices;
++	} else {
++		isys_register_ext_subdevs(isys);
++		ret = v4l2_device_register_subdev_nodes(&isys->v4l2_dev);
++		if (ret)
++			goto out_csi2_unregister_subdevices;
++	}
++
++	return 0;
++
++out_csi2_unregister_subdevices:
++	isys_csi2_unregister_subdevices(isys);
++
++out_video_unregister_device:
++	isys_unregister_video_devices(isys);
++
++out_v4l2_device_unregister:
++	v4l2_device_unregister(&isys->v4l2_dev);
++
++out_media_device_unregister:
++	media_device_unregister(&isys->media_dev);
++	media_device_cleanup(&isys->media_dev);
++
++	dev_err(dev, "failed to register isys devices\n");
++
++	return ret;
++}
++#else
+ static int isys_register_devices(struct ipu7_isys *isys)
+ {
+ 	struct device *dev = &isys->adev->auxdev.dev;
+@@ -409,7 +598,8 @@ static int isys_register_devices(struct ipu7_isys *isys)
+ 	if (ret)
+ 		goto out_csi2_unregister_subdevices;
+ 
+-	ret = isys_notifier_init(isys);
++	isys_register_ext_subdevs(isys);
++	ret = v4l2_device_register_subdev_nodes(&isys->v4l2_dev);
+ 	if (ret)
+ 		goto out_csi2_unregister_subdevices;
+ 
+@@ -432,6 +622,7 @@ static int isys_register_devices(struct ipu7_isys *isys)
+ 
+ 	return ret;
+ }
++#endif
+ 
+ static void isys_unregister_devices(struct ipu7_isys *isys)
+ {
+@@ -579,6 +770,7 @@ static const struct dev_pm_ops isys_pm_ops = {
+ 	.resume = isys_resume,
+ };
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
+ static void isys_remove(struct auxiliary_device *auxdev)
+ {
+ 	struct ipu7_isys *isys = dev_get_drvdata(&auxdev->dev);
+@@ -600,7 +792,9 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ 		ipu7_dma_free(adev, sizeof(struct isys_fw_msgs),
+ 			      fwmsg, fwmsg->dma_addr, 0);
+ 
+-	isys_notifier_cleanup(isys);
++	if (!isys->pdata->spdata)
++		isys_notifier_cleanup(isys);
++
+ 	isys_unregister_devices(isys);
+ 
+ 	cpu_latency_qos_remove_request(&isys->pm_qos);
+@@ -611,6 +805,39 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ 	mutex_destroy(&isys->reset_mutex);
+ #endif
+ }
++#else
++static void isys_remove(struct auxiliary_device *auxdev)
++{
++	struct ipu7_isys *isys = dev_get_drvdata(&auxdev->dev);
++	struct isys_fw_msgs *fwmsg, *safe;
++	struct ipu7_bus_device *adev = auxdev_to_adev(auxdev);
++
++#ifdef CONFIG_DEBUG_FS
++	if (adev->isp->ipu7_dir)
++		debugfs_remove_recursive(isys->debugfsdir);
++#endif
++	for (int i = 0; i < IPU_ISYS_MAX_STREAMS; i++)
++		mutex_destroy(&isys->streams[i].mutex);
++
++	list_for_each_entry_safe(fwmsg, safe, &isys->framebuflist, head)
++		ipu7_dma_free(adev, sizeof(struct isys_fw_msgs),
++			      fwmsg, fwmsg->dma_addr, 0);
++
++	list_for_each_entry_safe(fwmsg, safe, &isys->framebuflist_fw, head)
++		ipu7_dma_free(adev, sizeof(struct isys_fw_msgs),
++			      fwmsg, fwmsg->dma_addr, 0);
++
++	isys_unregister_devices(isys);
++
++	cpu_latency_qos_remove_request(&isys->pm_qos);
++
++	mutex_destroy(&isys->stream_mutex);
++	mutex_destroy(&isys->mutex);
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	mutex_destroy(&isys->reset_mutex);
++#endif
++}
++#endif
+ 
+ #ifdef CONFIG_DEBUG_FS
+ static ssize_t fwlog_read(struct file *file, char __user *userbuf, size_t size,
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
+index cd7375417452..2e45258bb6ab 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.h
++++ b/drivers/staging/media/ipu7/ipu7-isys.h
+@@ -150,6 +150,21 @@ struct ipu7_isys_csi2_config {
+ 	enum v4l2_mbus_type bus_type;
+ };
+ 
++struct ipu7_isys_subdev_i2c_info {
++	struct i2c_board_info board_info;
++	int i2c_adapter_id;
++	char i2c_adapter_bdf[32];
++};
++
++struct ipu7_isys_subdev_info {
++	struct ipu7_isys_csi2_config *csi2;
++	struct ipu7_isys_subdev_i2c_info i2c;
++};
++
++struct ipu7_isys_subdev_pdata {
++	struct ipu7_isys_subdev_info **subdevs;
++};
++
+ struct sensor_async_sd {
+ 	struct v4l2_async_connection asc;
+ 	struct ipu7_isys_csi2_config csi2;
+diff --git a/drivers/staging/media/ipu7/ipu7.c b/drivers/staging/media/ipu7/ipu7.c
+index 5649d8e1c352..06e5f08bed4d 100644
+--- a/drivers/staging/media/ipu7/ipu7.c
++++ b/drivers/staging/media/ipu7/ipu7.c
+@@ -40,6 +40,10 @@
+ #include "ipu7-mmu.h"
+ #include "ipu7-platform-regs.h"
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++#include <media/ipu-get-acpi.h>
++
++#endif
+ #define IPU_PCI_BAR		0
+ #define IPU_PCI_PBBAR		4
+ 
+@@ -2130,6 +2134,7 @@ static int ipu7_isys_check_fwnode_graph(struct fwnode_handle *fwnode)
+ static struct ipu7_bus_device *
+ ipu7_isys_init(struct pci_dev *pdev, struct device *parent,
+ 	       const struct ipu_buttress_ctrl *ctrl, void __iomem *base,
++	       struct ipu7_isys_subdev_pdata *spdata,
+ 	       const struct ipu_isys_internal_pdata *ipdata,
+ 	       unsigned int nr)
+ {
+@@ -2160,6 +2165,7 @@ ipu7_isys_init(struct pci_dev *pdev, struct device *parent,
+ 
+ 	pdata->base = base;
+ 	pdata->ipdata = ipdata;
++	pdata->spdata = spdata;
+ 
+ 	isys_adev = ipu7_bus_initialize_device(pdev, parent, pdata, ctrl,
+ 					       IPU_ISYS_NAME);
+@@ -2582,7 +2588,11 @@ static int ipu7_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_ipu_bus_del_devices;
+ 	}
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++	ipu_get_acpi_devices_new(&dev->platform_data);
++#endif
+ 	isp->isys = ipu7_isys_init(pdev, dev, isys_ctrl, isys_base,
++				   dev->platform_data,
+ 				   isys_ipdata, 0);
+ 	if (IS_ERR(isp->isys)) {
+ 		ret = PTR_ERR(isp->isys);
+diff --git a/drivers/staging/media/ipu7/ipu7.h b/drivers/staging/media/ipu7/ipu7.h
+index 3b3ea5fb613f..21988ce41acf 100644
+--- a/drivers/staging/media/ipu7/ipu7.h
++++ b/drivers/staging/media/ipu7/ipu7.h
+@@ -144,6 +144,8 @@ struct ipu7_device {
+ /* Currently chosen arbitration mechanism for VC1 */
+ #define IPU_BTRS_ARB_STALL_MODE_VC1	IPU_BTRS_ARB_MODE_TYPE_REARB
+ 
++struct ipu7_isys_subdev_pdata;
++
+ /* One L2 entry maps 1024 L1 entries and one L1 entry per page */
+ #define IPU_MMUV2_L2_RANGE		(1024 * PAGE_SIZE)
+ /* Max L2 blocks per stream */
+@@ -226,6 +228,7 @@ struct ipu_isys_internal_pdata {
+ struct ipu7_isys_pdata {
+ 	void __iomem *base;
+ 	const struct ipu_isys_internal_pdata *ipdata;
++	struct ipu7_isys_subdev_pdata *spdata;
+ };
+ 
+ struct ipu_psys_internal_pdata {
+-- 
+2.43.0
+

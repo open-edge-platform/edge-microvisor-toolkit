@@ -1,21 +1,24 @@
-From 0e111b52c397a9f948e0942c78728ee7aa92e59b Mon Sep 17 00:00:00 2001
+From 5b41ef3bcf3d8c0c5e027f84f97e1122c1f4ce2c Mon Sep 17 00:00:00 2001
 From: linya14x <linx.yang@intel.com>
 Date: Fri, 24 Oct 2025 11:46:21 +0800
-Subject: [PATCH 1/4] patch: staging add ipu7 isys reset code
+Subject: [PATCH 02/21] patch: staging add ipu7 isys reset code
+
+Adding IPU7 isys reset code macro when
+CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET is enabled.
 
 Signed-off-by: linya14x <linx.yang@intel.com>
 ---
  drivers/staging/media/ipu7/Kconfig           |  10 +
- drivers/staging/media/ipu7/ipu7-isys-queue.c | 376 ++++++++++++++++++-
+ drivers/staging/media/ipu7/ipu7-isys-queue.c | 379 ++++++++++++++++++-
  drivers/staging/media/ipu7/ipu7-isys-queue.h |   3 +
- drivers/staging/media/ipu7/ipu7-isys-video.c | 102 ++++-
+ drivers/staging/media/ipu7/ipu7-isys-video.c | 101 +++++
  drivers/staging/media/ipu7/ipu7-isys-video.h |   8 +
  drivers/staging/media/ipu7/ipu7-isys.c       |  16 +
  drivers/staging/media/ipu7/ipu7-isys.h       |  16 +
- 7 files changed, 528 insertions(+), 3 deletions(-)
+ 7 files changed, 532 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/staging/media/ipu7/Kconfig b/drivers/staging/media/ipu7/Kconfig
-index 7d831ba7501d..1778ac8a468b 100644
+index 7d831ba7501d..c4eee7c3e6d7 100644
 --- a/drivers/staging/media/ipu7/Kconfig
 +++ b/drivers/staging/media/ipu7/Kconfig
 @@ -17,3 +17,13 @@ config VIDEO_INTEL_IPU7
@@ -31,29 +34,38 @@ index 7d831ba7501d..1778ac8a468b 100644
 +	  This option enables IPU7 ISYS reset feature to support
 +	  HDMI-MIPI converter hot-plugging.
 +
-+	  If doubt, say N here
++	  If doubt, say N here.
 diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
-index 7046c29141f8..13ed1d608573 100644
+index 7046c29141f8..1f5fb7d20d81 100644
 --- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
 +++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
-@@ -11,7 +11,9 @@
+@@ -11,6 +11,9 @@
  #include <linux/mutex.h>
  #include <linux/spinlock.h>
  #include <linux/types.h>
--
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++#include <linux/delay.h>
++#endif
+ 
+ #include <media/media-entity.h>
+ #include <media/v4l2-subdev.h>
+@@ -26,6 +29,9 @@
+ #include "ipu7-isys-csi2-regs.h"
+ #include "ipu7-isys-video.h"
+ #include "ipu7-platform-regs.h"
 +#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
 +#include "ipu7-cpd.h"
 +#endif
- #include <media/media-entity.h>
- #include <media/v4l2-subdev.h>
- #include <media/videobuf2-dma-sg.h>
-@@ -224,7 +226,16 @@ static int buffer_list_get(struct ipu7_isys_stream *stream,
  
+ #define IPU_MAX_FRAME_COUNTER	(U8_MAX + 1)
+ 
+@@ -225,6 +231,16 @@ static int buffer_list_get(struct ipu7_isys_stream *stream,
  		ib = list_last_entry(&aq->incoming,
  				     struct ipu7_isys_buffer, head);
+ 
 +#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
 +		struct ipu7_isys_video *av = ipu7_isys_queue_to_video(aq);
- 
++
 +		if (av->skipframe) {
 +			atomic_set(&ib->skipframe_flag, 1);
 +			av->skipframe--;
@@ -64,10 +76,10 @@ index 7046c29141f8..13ed1d608573 100644
  		dev_dbg(dev, "buffer: %s: buffer %u\n",
  			ipu7_isys_queue_to_video(aq)->vdev.name,
  			ipu7_isys_buffer_to_vb2_buffer(ib)->index);
-@@ -378,7 +389,18 @@ static void buf_queue(struct vb2_buffer *vb)
- 			av->vdev.name);
+@@ -379,6 +395,18 @@ static void buf_queue(struct vb2_buffer *vb)
  		return;
  	}
+ 
 +#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
 +	mutex_lock(&av->isys->reset_mutex);
 +	if (av->isys->state & RESET_STATE_IN_RESET) {
@@ -76,14 +88,14 @@ index 7046c29141f8..13ed1d608573 100644
 +		return;
 +	}
 +	mutex_unlock(&av->isys->reset_mutex);
- 
++
 +	/* ip may be cleared in ipu reset */
 +	stream = av->stream;
 +#endif
  	mutex_lock(&stream->mutex);
  
  	if (stream->nr_streaming != stream->nr_queues) {
-@@ -480,6 +502,10 @@ static int ipu7_isys_link_fmt_validate(struct ipu7_isys_queue *aq)
+@@ -480,6 +508,10 @@ static int ipu7_isys_link_fmt_validate(struct ipu7_isys_queue *aq)
  static void return_buffers(struct ipu7_isys_queue *aq,
  			   enum vb2_buffer_state state)
  {
@@ -94,7 +106,7 @@ index 7046c29141f8..13ed1d608573 100644
  	struct ipu7_isys_buffer *ib;
  	struct vb2_buffer *vb;
  	unsigned long flags;
-@@ -501,6 +527,9 @@ static void return_buffers(struct ipu7_isys_queue *aq,
+@@ -501,6 +533,9 @@ static void return_buffers(struct ipu7_isys_queue *aq,
  		vb2_buffer_done(vb, state);
  
  		spin_lock_irqsave(&aq->lock, flags);
@@ -104,7 +116,7 @@ index 7046c29141f8..13ed1d608573 100644
  	}
  
  	while (!list_empty(&aq->incoming)) {
-@@ -516,6 +545,14 @@ static void return_buffers(struct ipu7_isys_queue *aq,
+@@ -516,6 +551,14 @@ static void return_buffers(struct ipu7_isys_queue *aq,
  	}
  
  	spin_unlock_irqrestore(&aq->lock, flags);
@@ -119,7 +131,7 @@ index 7046c29141f8..13ed1d608573 100644
  }
  
  static void ipu7_isys_stream_cleanup(struct ipu7_isys_video *av)
-@@ -594,6 +631,9 @@ static int start_streaming(struct vb2_queue *q, unsigned int count)
+@@ -594,6 +637,9 @@ static int start_streaming(struct vb2_queue *q, unsigned int count)
  
  out:
  	mutex_unlock(&stream->mutex);
@@ -129,10 +141,10 @@ index 7046c29141f8..13ed1d608573 100644
  
  	return 0;
  
-@@ -613,6 +653,236 @@ static int start_streaming(struct vb2_queue *q, unsigned int count)
- 
+@@ -614,17 +660,292 @@ static int start_streaming(struct vb2_queue *q, unsigned int count)
  	return ret;
  }
+ 
 +#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
 +static void reset_stop_streaming(struct ipu7_isys_video *av)
 +{
@@ -363,13 +375,12 @@ index 7046c29141f8..13ed1d608573 100644
 +
 +	return 0;
 +}
- 
++
  static void stop_streaming(struct vb2_queue *q)
  {
-@@ -620,11 +890,56 @@ static void stop_streaming(struct vb2_queue *q)
+ 	struct ipu7_isys_queue *aq = vb2_queue_to_isys_queue(q);
  	struct ipu7_isys_video *av = ipu7_isys_queue_to_video(aq);
  	struct ipu7_isys_stream *stream = av->stream;
- 
 +	int ret = 0;
 +	int times = 5;
 +
@@ -409,7 +420,7 @@ index 7046c29141f8..13ed1d608573 100644
 +		mutex_unlock(&av->isys->reset_mutex);
 +		return;
 +	}
-+
+ 
  	mutex_lock(&stream->mutex);
  	mutex_lock(&av->isys->stream_mutex);
  	if (stream->nr_streaming == stream->nr_queues && stream->streaming)
@@ -424,7 +435,7 @@ index 7046c29141f8..13ed1d608573 100644
  
  	stream->nr_streaming--;
  	list_del(&aq->node);
-@@ -637,6 +952,58 @@ static void stop_streaming(struct vb2_queue *q)
+@@ -637,7 +958,58 @@ static void stop_streaming(struct vb2_queue *q)
  	return_buffers(aq, VB2_BUF_STATE_ERROR);
  
  	ipu7_isys_fw_close(av->isys);
@@ -446,7 +457,7 @@ index 7046c29141f8..13ed1d608573 100644
 +	}
 +
 +	dev_dbg(dev, "stop: %s: exit\n", av->vdev.name);
-+ }
+ }
 +#else
 +static void stop_streaming(struct vb2_queue *q)
 +{
@@ -480,10 +491,10 @@ index 7046c29141f8..13ed1d608573 100644
 +	ipu7_isys_fw_close(av->isys);
 +}
 +#endif
- }
  
  static unsigned int
-@@ -719,6 +1086,11 @@ static void ipu7_isys_queue_buf_done(struct ipu7_isys_buffer *ib)
+ get_sof_sequence_by_timestamp(struct ipu7_isys_stream *stream, u64 time)
+@@ -719,6 +1091,11 @@ static void ipu7_isys_queue_buf_done(struct ipu7_isys_buffer *ib)
  		 * to the userspace when it is de-queued
  		 */
  		atomic_set(&ib->str2mmio_flag, 0);
@@ -510,7 +521,7 @@ index 0cb08a38f756..5a909c3a78d2 100644
  
  struct ipu7_isys_video_buffer {
 diff --git a/drivers/staging/media/ipu7/ipu7-isys-video.c b/drivers/staging/media/ipu7/ipu7-isys-video.c
-index 173afd405d9b..bfcabeff69cb 100644
+index 173afd405d9b..b3d337fe786b 100644
 --- a/drivers/staging/media/ipu7/ipu7-isys-video.c
 +++ b/drivers/staging/media/ipu7/ipu7-isys-video.c
 @@ -18,6 +18,9 @@
@@ -567,14 +578,12 @@ index 173afd405d9b..bfcabeff69cb 100644
  const struct ipu7_isys_pixelformat *ipu7_isys_get_isys_format(u32 pixelformat)
  {
  	unsigned int i;
-@@ -588,8 +625,12 @@ static void stop_streaming_firmware(struct ipu7_isys_video *av)
- 		return;
+@@ -589,7 +626,11 @@ static void stop_streaming_firmware(struct ipu7_isys_video *av)
  	}
  
--	tout = wait_for_completion_timeout(&stream->stream_stop_completion,
-+	tout = wait_for_completion_timeout(&stream->stream_stocompletion,
+ 	tout = wait_for_completion_timeout(&stream->stream_stop_completion,
 +#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
-+						FW_CALL_TIMEOUT_JIFFIES_RESET);
++				       FW_CALL_TIMEOUT_JIFFIES_RESET);
 +#else
  					   FW_CALL_TIMEOUT_JIFFIES);
 +#endif
@@ -637,15 +646,15 @@ index 173afd405d9b..bfcabeff69cb 100644
  };
  
  int ipu7_isys_fw_open(struct ipu7_isys *isys)
-@@ -935,7 +1001,35 @@ int ipu7_isys_fw_open(struct ipu7_isys *isys)
- 
+@@ -936,6 +1002,35 @@ int ipu7_isys_fw_open(struct ipu7_isys *isys)
  	return ret;
  }
+ 
 +#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
 +void ipu7_isys_fw_close(struct ipu7_isys *isys)
 +{
 +	int ret = 0;
- 
++
 +	mutex_lock(&isys->mutex);
 +	isys->ref_count--;
 +	if (!isys->ref_count) {
@@ -673,7 +682,7 @@ index 173afd405d9b..bfcabeff69cb 100644
  void ipu7_isys_fw_close(struct ipu7_isys *isys)
  {
  	mutex_lock(&isys->mutex);
-@@ -948,6 +1042,7 @@ void ipu7_isys_fw_close(struct ipu7_isys *isys)
+@@ -948,6 +1043,7 @@ void ipu7_isys_fw_close(struct ipu7_isys *isys)
  	mutex_unlock(&isys->mutex);
  	pm_runtime_put(&isys->adev->auxdev.dev);
  }
@@ -681,7 +690,7 @@ index 173afd405d9b..bfcabeff69cb 100644
  
  int ipu7_isys_setup_video(struct ipu7_isys_video *av,
  			  struct media_entity **source_entity, int *nr_queues)
-@@ -1082,6 +1177,11 @@ int ipu7_isys_video_init(struct ipu7_isys_video *av)
+@@ -1082,6 +1178,11 @@ int ipu7_isys_video_init(struct ipu7_isys_video *av)
  
  	__ipu_isys_vidioc_try_fmt_vid_cap(av, &format);
  	av->pix_fmt = format.fmt.pix;
@@ -720,14 +729,14 @@ index 1ac1787fabef..e6d1da2b7b47 100644
  
  #define ipu7_isys_queue_to_video(__aq)			\
 diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
-index cb2f49f3e0fa..2bd8968a78cd 100644
+index cb2f49f3e0fa..cfb3989fe719 100644
 --- a/drivers/staging/media/ipu7/ipu7-isys.c
 +++ b/drivers/staging/media/ipu7/ipu7-isys.c
 @@ -540,6 +540,12 @@ static int isys_runtime_pm_suspend(struct device *dev)
  	isys->power = 0;
  	spin_unlock_irqrestore(&isys->power_lock, flags);
  
-+	#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
 +	mutex_lock(&isys->reset_mutex);
 +	isys->need_reset = false;
 +	mutex_unlock(&isys->reset_mutex);
