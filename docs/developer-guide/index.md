@@ -10,10 +10,14 @@ hide_directive-->
 
 Edge Microvisor Toolkit is a Linux-based operating system that demonstrates the full potential of Intel hardware for Edge AI workloads with the most recent updates that may not yet be available in other distributions. The Linux patches optimize both performance and capabilities of Intel silicon, streamlining integration for operating system vendors and other technology partners.
 
-Edge Microvisor Toolkit is published in several pre-configured versions to target
-various use cases. The toolkit is available as immutable and mutable versions -- including a standalone node prepared for partner evaluation and a real-time developer node designed with the Preempt RT Linux Kernel for predictable performance -- results in a
-Linux operating system primed to demonstrate how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads.
-To learn more, refer to [Edge Microvisor Toolkit Versions](./get-started/emt-versions.md).
+Edge Microvisor Toolkit is developed in several pre-configured versions, targeting
+different use cases demonstrating how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads.
+To select the right version for you, follow the article on
+[Edge Microvisor Toolkit Versions](./get-started/emt-versions.md).
+
+For an immediate hands-on experience with no limitations, download the 
+[Developer Node ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso) and
+[install on a virtual machine](https://docs.openedgeplatform.intel.com/2025.2/edge-microvisor-toolkit/get-started/deployment/emt-vm-guest.html).
 
 ## Demonstrating the Capabilities of Intel Technology
 
