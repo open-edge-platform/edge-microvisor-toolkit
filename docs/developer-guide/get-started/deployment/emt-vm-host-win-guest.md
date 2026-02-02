@@ -1,4 +1,4 @@
-# Creting Windows 11 Guest VM under Ubuntu Host
+# Create Windows 11 Guest VM under Ubuntu Host
 
 ## Install and Setup Windows 11 VM
 

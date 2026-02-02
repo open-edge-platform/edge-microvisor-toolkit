@@ -1,4 +1,4 @@
-# Hosting Ubuntu Guest VM under EMT Host
+# Create Ubuntu Guest VM under Edge Microvisor Toolkit Host
 
 ## Install and Setup Ubuntu VM
 

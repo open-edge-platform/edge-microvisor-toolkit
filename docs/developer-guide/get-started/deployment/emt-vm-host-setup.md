@@ -1,4 +1,4 @@
-# Setting up Kernel and Host User Space
+# Set up Kernel and Host User Space
 
 Follow the steps below to generate the necessary kernel and userspace files
 to set up an Ubuntu 22.04 hypervisor for hosting guest VMs.
