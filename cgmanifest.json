@@ -2648,8 +2648,8 @@
         "type": "other",
         "other": {
           "name": "device-discovery",
-          "version": "0.0.3",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/device-discovery/0.0.3.tar.gz"
+          "version": "0.0.4",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/device-discovery/0.0.4.tar.gz"
         }
       }
     },
@@ -29626,8 +29626,8 @@
         "type": "other",
         "other": {
           "name": "tink-worker",
-          "version": "1.1.5",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.1.5.tar.gz"
+          "version": "1.2.0",
+          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/tink-worker/v1.2.0.tar.gz"
         }
       }
     },
