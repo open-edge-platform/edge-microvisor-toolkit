@@ -8,30 +8,31 @@
 </div>
 hide_directive-->
 
-Edge Microvisor Toolkit is a reference Linux operating system that demonstrates the full capabilities of Intel processors for Edge AI workloads through Linux patches from Intel that are yet to be upstreamed. The Linux patches optimize performance and other capabilities for Intel silicon -- a result that streamlines integration for operating system vendors and other technology partners.
+Edge Microvisor Toolkit is a Linux-based operating system that demonstrates the full potential of Intel hardware for Edge AI workloads with the most recent updates that may not yet be available in other distributions. The Linux patches optimize both performance and capabilities of Intel silicon, streamlining integration for operating system vendors and other technology partners.
 
-The toolkit's immutable and mutable versions -- including a standalone node prepared for partner evaluation and a real-time developer node designed with the Preempt RT Linux Kernel for predictable performance -- results in a
-reference Linux operating system primed to demonstrate how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads.
+Edge Microvisor Toolkit is developed in several pre-configured versions, targeting
+different use cases demonstrating how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads.
+To select the right version for you, follow the article on
+[Edge Microvisor Toolkit Versions](./get-started/emt-versions.md).
 
-Here are the published versions of the toolkit:
-
-* [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
-* [Edge Microvisor Toolkit Developer Node with or without real-time extensions (mutable)](./emt-architecture-overview.md)
-* [Edge Microvisor Toolkit (immutable or mutable) for deploying with Edge Manageability Framework](./emt-deployment-edge-orchestrator.md)
-* [Edge Microvisor Bootkit](./emt-bootkit.md)
+For an immediate hands-on experience with no limitations, download the 
+[Developer Node ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso) and
+[install on a virtual machine](https://docs.openedgeplatform.intel.com/2025.2/edge-microvisor-toolkit/get-started/deployment/emt-vm-guest.html).
 
 ## Demonstrating the Capabilities of Intel Technology
 
 Through its optimizations for Intel platforms, Edge Microvisor Toolkit showcases distinctive capabilities for operating system vendors and other partners, who can typically obtain early access to next-generation Intel platform innovations, features, and optimizations. Here are some of the toolkit's capabilities that help highlight the power of Intel technology:
 
-**Support for multiple scenarios:** Use industry-specific sample applications with benchmarks, as well as edge AI libraries with OpenVINO™ inferencing runtime software development kits, to rapidly build, validate, and optimize edge AI
-solutions on Intel silicon across scenarios and industries.
+**Support for [multiple scenarios](./get-started/emt-versions.md#how-usage-scenarios-affect-emt-setup):**
+Use industry-specific sample applications with benchmarks, as well as edge AI libraries with OpenVINO™ inferencing runtime software development kits, to rapidly build, validate, and optimize edge AI solutions on Intel silicon across scenarios and industries.
 
-**Built-in security:** Protect computers, hypervisors, apps, and data with such capabilities as trusted compute, single-root I/O virtualization (SR-IOV), secure boot, full-disk encryption, dm-verity, and Trusted Platform Module (TPM).
+**[Built-in security](./emt-security-considerations.md):**
+Protect computers, hypervisors, apps, and data with such capabilities as trusted compute, single-root I/O virtualization (SR-IOV), secure boot, full-disk encryption, dm-verity, and Trusted Platform Module (TPM).
 The microvisor uses a Unified Kernel Image (UKI), which is a single EFI binary that packages together the Intel® kernel, `initramfs`, and associated kernel command-line parameters, a design that simplifies the boot process on UEFI
 systems and improves security, especially when combined with Secure Boot.
 
-**Flexibility and modularity with foundational extensions:** Rapidly evaluate a diversity of deployments and applications, including cloud native, bare metal, and virtual machines. Image formats include ISO, VHD, VHDX, and RAW. The flexible build infrastructure of Edge Microvisor Toolkit enables you to create custom images from a large set of pre-provisioned packages by using .spec files.
+**[Flexibility and modularity](./get-started/emt-installation-howto.md) with foundational extensions:**
+Rapidly evaluate a diversity of deployments and applications, including cloud native, bare metal, and virtual machines. Image formats include ISO, VHD, VHDX, and RAW. The flexible build infrastructure of Edge Microvisor Toolkit enables you to create custom images from a large set of pre-provisioned packages by using .spec files.
 
 ## Showcasing Intel Processors and GPUs with Kernel Optimizations
 
