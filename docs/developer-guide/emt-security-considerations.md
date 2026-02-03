@@ -17,6 +17,8 @@ Please report any security vulnerabilities in this project [utilizing the guidel
 
 <!--hide_directive
 :::{toctree}
+:hidden:
+
 ./security-considerations/emt-sb-howto.md
 ./security-considerations/emt-security-overview.md
 :::

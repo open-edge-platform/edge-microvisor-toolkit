@@ -1,7 +1,9 @@
 # Install Edge Microvisor Toolkit
 
-Edge Microvisor Toolkit can be installed on bare metal, or as a virtual machine. This section
-describes in detail how to quickly install and try out Edge Microvisor Toolkit on your system.
+Edge Microvisor Toolkit is flexible in how it can be installed. It can be deployed
+on bare metal, or on a virtual machine, as a guest or host for virtualization of other operating systems.
+This section describes in detail how to try out Edge Microvisor Toolkit in different
+deployment environment.
 
 - [Deploying Edge Microvisor Toolkit on Bare Metal](./deployment/emt-bare-metal.md)
 - [Deploying Edge Microvisor Toolkit on Virtual Machines](./deployment/emt-vm-guest.md)
@@ -14,6 +16,8 @@ describes in detail how to quickly install and try out Edge Microvisor Toolkit o
 
 <!--hide_directive
 :::{toctree}
+:hidden:
+
 ./deployment/emt-bare-metal.md
 ./deployment/emt-vm-guest.md
 ./deployment/emt-vm-host.md
