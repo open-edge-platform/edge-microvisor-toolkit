@@ -108,7 +108,7 @@
                 }
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "quiet splash idle=poll sysctl.vm.overcommit_memory=1 sysctl.kernel.panic=10 sysctl.kernel.panic_on_oops=1 sysctl.fs.inotify.max_user_instances=8192 rd.shell=0 rd.timeout=200 rd.emergency=reboot i915.force_probe=*",
+                "ExtraCommandLine": "quiet splash idle=poll sysctl.vm.overcommit_memory=1 sysctl.kernel.panic=10 sysctl.kernel.panic_on_oops=1 sysctl.fs.inotify.max_user_instances=8192 rd.shell=0 rd.timeout=200 rd.emergency=reboot",
                 "SELinux": "permissive"
             },
             "Hostname": "EdgeMicrovisorToolkit",
