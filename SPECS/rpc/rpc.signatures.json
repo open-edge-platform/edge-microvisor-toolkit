@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "rpc-go-2.48.9.tar.gz": "bb9cb58d04aca82730c74ae801ce25eb48f18665824d0d351e3e00f68a267584",
-    "rpc-2.48.9-vendor.tar.gz": "4e3c2d407de386317aff1f841c1ca99ce123dfd6d1abc277f12047036418189a"
+    "rpc-go-2.48.14.tar.gz": "78c78b7c8a4827991b2dfd407d8bc0fe32d131ced9962028a2330609b461024e",
+    "rpc-2.48.14-vendor.tar.gz": "dbc47432cb483eafc9f02f894b825a86dadd4f87db327a35c6e12ffa50411016"
   }
 }
