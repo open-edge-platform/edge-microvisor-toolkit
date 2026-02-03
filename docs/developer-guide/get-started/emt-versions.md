@@ -21,7 +21,7 @@ suits your needs. To do so, check out:
 ## How usage scenarios affect EMT setup
 
 <!--hide_directive::::{tab-set}
-:::{tab-item}hide_directive--> Real-time & deterministic workloads
+:::{tab-item}hide_directive--> Real Time & Deterministic
 <!--hide_directive:sync: tab1hide_directive-->
 \
 Run latency-sensitive workloads with guaranteed bounded jitter and repeatable
@@ -51,7 +51,7 @@ and failure-recovery conditions.
 - [Time-Sensitive Networking](../architecture/emt-extensions-and-patches.md#time-sensitive-networking-tsn)
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> VM-based workloads on Kubernetes with shared GPUs
+:::{tab-item}hide_directive--> Virtual Machines (Kubernetes, shared GPUs)
 <!--hide_directive:sync: tab2hide_directive-->
 \
 Run multiple virtual machines on Kubernetes that concurrently share one or more
@@ -81,7 +81,7 @@ a KubeVirt stack extended for GPU sharing.
 
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> AI & Vision workloads
+:::{tab-item}hide_directive--> AI & Vision Systems
 <!--hide_directive:sync: tab3hide_directive-->
 \
 Enable AI inference and computer-vision workloads on edge nodes using Intel GPU
