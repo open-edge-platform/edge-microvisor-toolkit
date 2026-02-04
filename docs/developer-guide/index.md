@@ -15,7 +15,7 @@ different use cases demonstrating how Intel processors can cost-effectively mini
 To select the right version for you, follow the article on
 [Edge Microvisor Toolkit Versions](./get-started/emt-versions.md).
 
-For an immediate hands-on experience with no limitations, download the 
+For an immediate hands-on experience with no limitations, download the
 [Developer Node ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso) and
 [install on a virtual machine](https://docs.openedgeplatform.intel.com/2025.2/edge-microvisor-toolkit/get-started/deployment/emt-vm-guest.html).
 
@@ -70,12 +70,11 @@ document.
 
 emt-get-started
 emt-architecture-overview
-emt-deployment-edge-orchestrator
-emt-bootkit
+emt-tutorials
 emt-security-considerations
 emt-contribution
 emt-troubleshooting
 emt-system-requirements
-emt-tutorials
+
 :::
 hide_directive-->

@@ -1,4 +1,4 @@
-# Production Deployment with Edge Orchestrator
+# Deploy with Edge Orchestrator
 
 Edge Microvisor Toolkit integrates with Edge Manageability Framework for
 scalable, secure, reliable, and automated management of edge infrastructure. It
@@ -36,5 +36,5 @@ process include:
 
 ## Learn More
 
-- [Edge Microvisor Toolkit Architecture](emt-architecture-overview.md)
+- [Edge Microvisor Toolkit Architecture](../emt-architecture-overview.md)
 - [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)

@@ -15,7 +15,7 @@ suits your needs. To do so, check out:
 |--------|---------|-------------|------|
 | [**Standalone (Immutable)**](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) | Available for opt-in | ✓ | ✓ |
 | [**Developer Node (Mutable)**](../emt-architecture-overview.md#developer-node-mutable-iso-image) | Optional | ✓ | ✓ |
-| [**EMT for EMF**](../emt-deployment-edge-orchestrator.md) | Available for opt-in | ✓ | ✓ |
+| [**EMT for EMF**](../tutorials/emt-deployment-edge-orchestrator.md) | Available for opt-in | ✓ | ✓ |
 | [**Bootkit**](../emt-bootkit.md) | - | ✓ | – |
 
 ## How usage scenarios affect EMT setup

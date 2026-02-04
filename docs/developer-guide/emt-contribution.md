@@ -1,4 +1,4 @@
-# Edge Microvisor Toolkit Contribution Guide
+# Contribution Guide
 
 Edge Microvisor Toolkit is open source and always welcomes an active
 community to support adding new features, optimizing, and improving security.
