@@ -43,10 +43,10 @@ cleanup() {
 
 [[ "$1" == "--help" || "$1" == "help" ]] && usage
 
-BUILD_ID="${1:-lkg-3.0-dev}"
+BUILD_ID="${1:-lkg-next-dev}"
 #BUILD_FILENAME="${BUILD_ID}.json"
 # we will only have 1 set of last known goodhence hardcode the LKG file now 
-BUILD_FILENAME="lkg-3.0-dev.json"
+BUILD_FILENAME="lkg-next-dev.json"
 
 get_lkg
 
