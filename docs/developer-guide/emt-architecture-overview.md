@@ -455,10 +455,10 @@ for deployment instructions and full source code.
 
 ## Time-Sensitive Networking support
 
-EMT supports time-sensitive networking through custom patches and optimizations in
+Edge Microvisor Toolkit supports time-sensitive networking through custom patches and optimizations in
+[the kernel](./architecture/emt-extensions-and-patches.md#time-sensitive-networking-tsn), the
 [linuxptp](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/linuxptp/linuxptp.spec), [ethtool](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/ethtool/ethtool.spec)
-and [xdp-tools](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/xdp-tools/xdp-tools.spec). Click on any of the names to go to
-their SPEC files and learn about specific patches related to TSN optimizations.
+and [xdp-tools](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/xdp-tools/xdp-tools.spec) packages.
 
 <!--hide_directive
 :::{toctree}

@@ -37,8 +37,9 @@ including remote deployment and management of applications orchestrated by Kuber
 :hidden:
 
 ./get-started/emt-versions.md
+./get-started/emt-installation-howto.md
 ./get-started/emt-building-howto.md
 ./get-started/emt-build-and-deploy.md
-./get-started/emt-installation-howto.md
+
 :::
 hide_directive-->
