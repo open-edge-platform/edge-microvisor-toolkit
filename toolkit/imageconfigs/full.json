@@ -19,7 +19,7 @@
                 "packagelists/kernel-rt-drivers.json"
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0 i915.force_probe=*",
+                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
@@ -55,7 +55,7 @@
                 "packagelists/kernel-drivers.json"
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0 i915.force_probe=*",
+                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
@@ -91,7 +91,7 @@
                 "packagelists/kernel-rt-drivers.json"
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0 i915.force_probe=*",
+                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
@@ -126,7 +126,7 @@
                 "packagelists/kernel-drivers.json"
             ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0 i915.force_probe=*",
+                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
