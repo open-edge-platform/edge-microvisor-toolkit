@@ -1,5 +1,5 @@
 %define emt_ver 3
-%define dist_version 25.06
+%define dist_version 26.06~preview
 %define build_number_no_dist_no_time %(echo %{distro_release_version} | cut -d. -f 3)
 
 Summary:        Edge Microvisor Toolkit release files
@@ -12,7 +12,8 @@ Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
 URL:            https://github.com/open-edge-platform/edge-microvisor-toolkit
 
-%define distro_full_version %{dist_version}.%(echo "%{release}" | sed 's/[^0-9].*//' | xargs printf "%02d")
+#%define distro_full_version %{dist_version}.%(echo "%{release}" | sed 's/[^0-9].*//' | xargs printf "%02d")~preview
+%define distro_full_version %{dist_version}
 
 Source1:        90-default.preset
 Source2:        90-default-user.preset
@@ -120,6 +121,9 @@ install -Dm0644 %{SOURCE4} -t %{buildroot}%{_sysctldir}/
 %{_sysctldir}/*.conf
 
 %changelog
+* Thu Jan 29 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 26.06~preview-1
+- bump version for 26.06 preview release.
+
 * Mon Nov 24 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 25.06-1
 - bump version for release, change versioning number for 3.0 series to 25.06.
 

@@ -7,9 +7,9 @@ strings:
     productName:         "Edge Microvisor Toolkit"
     shortProductName:    "Edge Microvisor Toolkit"
     version:             "${VERSION}"
-    shortVersion:        "${VERSION_ID}"
-    versionedName:       "Edge Microvisor Toolkit ${VERSION_ID}"
-    shortVersionedName:  "Edge Microvisor Toolkit ${VERSION_ID}"
+    shortVersion:        "${VERSION}"
+    versionedName:       "Edge Microvisor Toolkit ${VERSION}"
+    shortVersionedName:  "Edge Microvisor Toolkit ${VERSION}"
     bootloaderEntryName: "Edge Microvisor Toolkit"
 
 welcomeExpandingLogo:   false
