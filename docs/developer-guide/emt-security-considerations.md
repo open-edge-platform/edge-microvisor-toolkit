@@ -1,4 +1,4 @@
-# Edge Microvisor Toolkit Security Considerations
+# Security Considerations
 
 ## EMT Security Overview
 
