@@ -1,4 +1,4 @@
-# Extensions And Patches
+# Extensions and Patches
 
 Edge Microvisor Toolkit leverages a collection of extensions and patches
 to provide more versatile deployment options and optimizations for Intel® silicon based AI
@@ -11,46 +11,56 @@ Deploying of Edge Microvisor Toolkit with Lightweight Kubernetes (K3s)
 requires additional extensions which are downloaded as docker images. Below is
 a list of components essential for scaled deployment of the toolkit.
 
-### [Multus CNI](https://github.com/k8snetworkplumbingwg/multus-cni)
+### Multus CNI
 
 A Container Network Interface (CNI) plugin for Kubernetes that enables you to
 attach multiple network interfaces to Kubernetes pods, which usually have only
-one network interface.
+one network interface. For more details, refer to the
+[GitHub page](https://github.com/k8snetworkplumbingwg/multus-cni).
 
-### [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
-
-[GPU Plugin](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md)
+### Intel Device Plugins for Kubernetes
 
 Intel GPU plugin provides access to discrete and integrated Intel GPU devices
 supported by the host kernel. It enables offloading compute operations of
 Kubernetes workload to GPU devices. It may be beneficial in such use cases as
 media transcoding and analytics, cloud gaming, AI training and inference.
+For more details, refer to the
+[GitHub page](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md).
 
-### [Calico](https://github.com/projectcalico/calico)
+### Calico
 
-- [CNI Plugin](https://github.com/projectcalico/calico/tree/master/cni-plugin)
-\- as [docker image](https://hub.docker.com/r/calico/cni).
+- **CNI Plugin**
 
-  A plugin that enables you to use Calico for deployments based on Container
-  Network Interface (CNI).
+  [A plugin](https://github.com/projectcalico/calico/tree/master/cni-plugin)
+  that enables you to use Calico for deployments based on Container
+  Network Interface (CNI). It is available as a
+  [docker image](https://hub.docker.com/r/calico/cni).
 
-- [Node](https://github.com/projectcalico/calico/tree/master/node)
-  \- as [docker image](https://hub.docker.com/r/calico/node/).
+- **Node**
 
-  A CNI plugin that enables you to create a Layer 3 network for Kubernetes
-  pods and assign a unique IP address for each.
+  [A CNI plugin](https://github.com/projectcalico/calico/tree/master/node)
+  that enables you to create a Layer 3 network for Kubernetes
+  pods and assign a unique IP address for each. Node is available as a
+  [docker image](https://hub.docker.com/r/calico/node/)
 
-- [Kube controllers](https://github.com/projectcalico/calico/tree/master/kube-controllers)
-  \- as [docker image](https://hub.docker.com/r/calico/kube-controllers).
+- **Kube controllers**
 
-  A set of controllers that monitor the resources in the Kubernetes API (network,
-  policies, nodes) and adjust Calico's CNI configuration.
+  [A set of controllers](https://github.com/projectcalico/calico/tree/master/kube-controllers)
+  that monitor the resources in the Kubernetes API (network,
+  policies, nodes) and adjust Calico's CNI configuration. Kube controllers are
+  available as a [docker image](https://hub.docker.com/r/calico/kube-controllers).
 
 
 ## Patches
 
-Below are listed quilt patchsets that include
-[Intel not-upstreamed kernel features](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec).
+Below is a list of
+[Intel not-upstreamed kernel features](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec).\
+Check the following quilt patchsets:
+
+- [PREEMPT_RT](#preempt_rt)
+- [Time-Sensitive Networking (TSN)](#time-sensitive-networking-tsn)
+- [SR-IOV](#sr-iov)
+- [DRM](#drm)
 
 ### PREEMPT_RT
 

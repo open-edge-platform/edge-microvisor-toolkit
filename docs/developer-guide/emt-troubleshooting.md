@@ -1,4 +1,4 @@
-# Edge Microvisor Toolkit Troubleshooting
+# Troubleshooting
 
 This section provides additional tips and suggestions for common questions
 and issues users may run into.
