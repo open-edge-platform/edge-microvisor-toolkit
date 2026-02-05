@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
-Version:        20250509
-Release:        5%{?dist}
+Version:        20260110
+Release:        1%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -89,20 +89,8 @@ cp -r ath10k %{buildroot}%{_firmwarepath}
 cp -r i915 %{buildroot}%{_firmwarepath}
 cp -r xe %{buildroot}%{_firmwarepath}
 cp -r intel %{buildroot}%{_firmwarepath}
-cp iwlwifi-8000C-*.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-9000-*.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-9260-*.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-so-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-so-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
-cp iwlwifi-ma-b0-gf-a0-83.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-ma-b0-gf-a0-86.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-ma-b0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-ma-b0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
-cp iwlwifi-ty-a0-gf-a0-89.ucode %{buildroot}%{_firmwarepath}
-cp iwlwifi-ty-a0-gf-a0.pnvm %{buildroot}%{_firmwarepath}
-cp qat*.bin  %{buildroot}%{_firmwarepath}
 # While upgrading, check the ice version and update accordingly
-ln -sf ice-1.3.41.0.pkg %{buildroot}%{_firmwarepath}/intel/ice/ddp/ice.pkg
+ln -sf ice-1.3.43.0.pkg %{buildroot}%{_firmwarepath}/intel/ice/ddp/ice.pkg
 
 %post qat
 dracut --force
@@ -113,7 +101,7 @@ dracut --force
 %license WHENCE LICENCE.iwlwifi_firmware
 %{_firmwarepath}/rsi
 %{_firmwarepath}/rsi_91x.fw
-%{_firmwarepath}/iwlwifi-8000C-*.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-8000C-*.ucode
 
 %files broadcom
 %defattr(-,root,root)
@@ -155,22 +143,27 @@ dracut --force
 %{_firmwarepath}/i915/adls_dmc_ver2_01.bin
 %{_firmwarepath}/i915/dg2_dmc_ver2_08.bin
 %{_firmwarepath}/i915/mtl_gsc_1.bin
+%{_firmwarepath}/i915/xe3lpd_dmc.bin
 %{_firmwarepath}/xe/bmg_guc_70.bin
 %{_firmwarepath}/xe/bmg_huc.bin
+%{_firmwarepath}/xe/ptl_guc_70.bin
+%{_firmwarepath}/xe/ptl_huc.bin
 
 %files iwlwifi
 %defattr(-,root,root)
 %license WHENCE LICENCE.iwlwifi_firmware
-%{_firmwarepath}/iwlwifi-so-a0-gf-a0-89.ucode
-%{_firmwarepath}/iwlwifi-so-a0-gf-a0.pnvm
-%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-83.ucode
-%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-86.ucode
-%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-89.ucode
-%{_firmwarepath}/iwlwifi-ma-b0-gf-a0.pnvm
-%{_firmwarepath}/iwlwifi-ty-a0-gf-a0-89.ucode
-%{_firmwarepath}/iwlwifi-ty-a0-gf-a0.pnvm
-%{_firmwarepath}/iwlwifi-9000-*.ucode
-%{_firmwarepath}/iwlwifi-9260-*.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-so-a0-gf-a0-89.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-so-a0-gf-a0.pnvm
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-83.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-86.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-89.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0.pnvm
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ty-a0-gf-a0-89.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-ty-a0-gf-a0.pnvm
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-9000-*.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-9260-*.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-bz-b0-gf-a0-100.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-gl-c0-fm-c0-100.ucode
 
 %files ice
 %defattr(-,root,root)
@@ -180,20 +173,26 @@ dracut --force
 %files qat
 %defattr(-,root,root)
 %license WHENCE LICENCE.qat_firmware
-%{_firmwarepath}/qat_402xx.bin
-%{_firmwarepath}/qat_402xx_mmp.bin
-%{_firmwarepath}/qat_420xx.bin
-%{_firmwarepath}/qat_420xx_mmp.bin
-%{_firmwarepath}/qat_4xxx.bin
-%{_firmwarepath}/qat_4xxx_mmp.bin
-%{_firmwarepath}/qat_895xcc.bin
-%{_firmwarepath}/qat_895xcc_mmp.bin
-%{_firmwarepath}/qat_c3xxx.bin
-%{_firmwarepath}/qat_c3xxx_mmp.bin
-%{_firmwarepath}/qat_c62x.bin
-%{_firmwarepath}/qat_c62x_mmp.bin
+%{_firmwarepath}/intel/qat/qat_402xx.bin
+%{_firmwarepath}/intel/qat/qat_402xx_mmp.bin
+%{_firmwarepath}/intel/qat/qat_420xx.bin
+%{_firmwarepath}/intel/qat/qat_420xx_mmp.bin
+%{_firmwarepath}/intel/qat/qat_4xxx.bin
+%{_firmwarepath}/intel/qat/qat_4xxx_mmp.bin
+%{_firmwarepath}/intel/qat/qat_895xcc.bin
+%{_firmwarepath}/intel/qat/qat_895xcc_mmp.bin
+%{_firmwarepath}/intel/qat/qat_c3xxx.bin
+%{_firmwarepath}/intel/qat/qat_c3xxx_mmp.bin
+%{_firmwarepath}/intel/qat/qat_c62x.bin
+%{_firmwarepath}/intel/qat/qat_c62x_mmp.bin
 
 %changelog
+* Tue Jan 13 2026 Andy <andy.peng@intel.com> - 20260110-1
+- Upgrade firmware to 20260110.
+
+* Tue Nov 11 2025 Shalini Singhal <shalinix.singhal@intel.com> - 20251021-1
+- Upgrade firmware to 20251021.
+
 * Mon Jan 05 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 20250509-5
 - modify target value of symlink to point ice package.
 
