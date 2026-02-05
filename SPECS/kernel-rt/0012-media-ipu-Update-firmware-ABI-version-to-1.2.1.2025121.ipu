@@ -1,7 +1,7 @@
-From b4b6c52f7fef9a62cef66ab7035b93d9d227a8d5 Mon Sep 17 00:00:00 2001
+From e2baf64f19d5e0b8d76986e1647ff0c894f570ee Mon Sep 17 00:00:00 2001
 From: linya14x <linx.yang@intel.com>
 Date: Fri, 14 Nov 2025 18:41:08 +0800
-Subject: [PATCH 3/4] media: ipu: Update firmware ABI version to
+Subject: [PATCH 12/21] media: ipu: Update firmware ABI version to
  1.2.1.20251215_224531
 
 Signed-off-by: Hao Yao <hao.yao@intel.com>
@@ -25,7 +25,7 @@ index a1519c4fe661..4ce304f54e4b 100644
  	IA_GOFO_FW_BOOT_STATE_SHUTDOWN_START = 0x57a7e200U,
  	IA_GOFO_FW_BOOT_STATE_INACTIVE = 0x57a7e300U,
 diff --git a/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h b/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
-index c42d0b7a2627..7f622bfe9af6 100644
+index 45db85eb13ec..dc63449e3bc1 100644
 --- a/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
 +++ b/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
 @@ -47,7 +47,6 @@ enum ipu7_insys_resp_type {
@@ -60,7 +60,7 @@ index c42d0b7a2627..7f622bfe9af6 100644
  #pragma pack(push, 1)
  struct ipu7_insys_resolution {
  	u32 width;
-@@ -312,7 +315,7 @@ struct ipu7_insys_resp {
+@@ -359,7 +362,7 @@ struct ipu7_insys_resp {
  	u8 pin_id;
  	u8 frame_id;
  	u8 skip_frame;

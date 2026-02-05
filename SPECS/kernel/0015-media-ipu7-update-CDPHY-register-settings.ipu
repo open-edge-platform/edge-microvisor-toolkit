@@ -1,7 +1,7 @@
-From 3662a04316e602817dbe0f93368e777d3b38bae8 Mon Sep 17 00:00:00 2001
+From 7612f6deb2488e07a6c38a73655a83b45762cb6c Mon Sep 17 00:00:00 2001
 From: hepengpx <pengpengx.he@intel.com>
 Date: Fri, 19 Dec 2025 15:29:00 +0800
-Subject: [PATCH 4/4] media: ipu7: update CDPHY register settings
+Subject: [PATCH 15/21] media: ipu7: update CDPHY register settings
 
 Some CPHY settings are copied from Wins code, but some of
 them aren't correct and need to be fixed.
@@ -13,8 +13,8 @@ Test Platform:
 PTLRVP
 LNLRVP
 
-Signed-off-by: hepengpx <pengpengx.he@intel.com>
 Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
 ---
  drivers/staging/media/ipu7/ipu7-isys-csi-phy.c | 15 +++++++++++----
  1 file changed, 11 insertions(+), 4 deletions(-)

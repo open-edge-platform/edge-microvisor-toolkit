@@ -1,0 +1,112 @@
+From ff009ddd8692d77eae757b9d5b593b3fdabdf524 Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Fri, 24 Oct 2025 12:38:44 +0800
+Subject: [PATCH 06/21] patch: staging add enable ENABLE_FW_OFFLINE_LOGGER
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-fw-isys.c | 59 +++++++++++++++++++++++
+ drivers/staging/media/ipu7/ipu7-fw-isys.h |  3 ++
+ drivers/staging/media/ipu7/ipu7-isys.c    |  4 ++
+ 3 files changed, 66 insertions(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-fw-isys.c b/drivers/staging/media/ipu7/ipu7-fw-isys.c
+index c98326bd9fee..2958e39a359e 100644
+--- a/drivers/staging/media/ipu7/ipu7-fw-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-fw-isys.c
+@@ -205,6 +205,65 @@ void ipu7_fw_isys_put_resp(struct ipu7_isys *isys)
+ 	ipu7_syscom_put_token(isys->adev->syscom, IPU_INSYS_OUTPUT_MSG_QUEUE);
+ }
+ 
++#ifdef ENABLE_FW_OFFLINE_LOGGER
++int ipu7_fw_isys_get_log(struct ipu7_isys *isys)
++{
++	u32 log_size = sizeof(struct ia_gofo_msg_log_info_ts);
++	struct device *dev = &isys->adev->auxdev.dev;
++	struct isys_fw_log *fw_log = isys->fw_log;
++	struct ia_gofo_msg_log *log_msg;
++	u8 msg_type, msg_len;
++	u32 count, fmt_id;
++	void *token;
++
++	token = ipu7_syscom_get_token(isys->adev->syscom,
++				      IPU_INSYS_OUTPUT_LOG_QUEUE);
++	if (!token)
++		return -ENODATA;
++
++	while (token) {
++		log_msg = (struct ia_gofo_msg_log *)token;
++
++		msg_type = log_msg->header.tlv_header.tlv_type;
++		msg_len = log_msg->header.tlv_header.tlv_len32;
++		if (msg_type != IPU_MSG_TYPE_DEV_LOG || !msg_len)
++			dev_warn(dev, "Invalid msg data from Log queue!\n");
++
++		count = log_msg->log_info_ts.log_info.log_counter;
++		fmt_id = log_msg->log_info_ts.log_info.fmt_id;
++		if (count > fw_log->count + 1)
++			dev_warn(dev, "log msg lost, count %u+1 != %u!\n",
++				 count, fw_log->count);
++
++		if (fmt_id == IA_GOFO_MSG_LOG_FMT_ID_INVALID) {
++			dev_err(dev, "invalid log msg fmt_id 0x%x!\n", fmt_id);
++			ipu7_syscom_put_token(isys->adev->syscom,
++					      IPU_INSYS_OUTPUT_LOG_QUEUE);
++			return -EIO;
++		}
++
++		if (log_size + fw_log->head - fw_log->addr >
++		    FW_LOG_BUF_SIZE)
++			fw_log->head = fw_log->addr;
++
++		memcpy(fw_log->head, (void *)&log_msg->log_info_ts,
++		       sizeof(struct ia_gofo_msg_log_info_ts));
++
++		fw_log->count = count;
++		fw_log->head += log_size;
++		fw_log->size += log_size;
++
++		ipu7_syscom_put_token(isys->adev->syscom,
++				      IPU_INSYS_OUTPUT_LOG_QUEUE);
++
++		token = ipu7_syscom_get_token(isys->adev->syscom,
++					      IPU_INSYS_OUTPUT_LOG_QUEUE);
++	};
++
++	return 0;
++}
++
++#endif
+ void ipu7_fw_isys_dump_stream_cfg(struct device *dev,
+ 				  struct ipu7_insys_stream_cfg *cfg)
+ {
+diff --git a/drivers/staging/media/ipu7/ipu7-fw-isys.h b/drivers/staging/media/ipu7/ipu7-fw-isys.h
+index b556feda6b08..1235adc9694e 100644
+--- a/drivers/staging/media/ipu7/ipu7-fw-isys.h
++++ b/drivers/staging/media/ipu7/ipu7-fw-isys.h
+@@ -36,4 +36,7 @@ int ipu7_fw_isys_complex_cmd(struct ipu7_isys *isys,
+ 			     size_t size, u16 send_type);
+ struct ipu7_insys_resp *ipu7_fw_isys_get_resp(struct ipu7_isys *isys);
+ void ipu7_fw_isys_put_resp(struct ipu7_isys *isys);
++#ifdef ENABLE_FW_OFFLINE_LOGGER
++int ipu7_fw_isys_get_log(struct ipu7_isys *isys);
++#endif
+ #endif
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
+index 547d5fd6a036..dae8700dd7f5 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-isys.c
+@@ -1224,6 +1224,10 @@ int isys_isr_one(struct ipu7_bus_device *adev)
+ 	if (!isys->adev->syscom)
+ 		return 1;
+ 
++#ifdef ENABLE_FW_OFFLINE_LOGGER
++	ipu7_fw_isys_get_log(isys);
++#endif
++
+ 	resp = ipu7_fw_isys_get_resp(isys);
+ 	if (!resp)
+ 		return 1;
+-- 
+2.43.0
+

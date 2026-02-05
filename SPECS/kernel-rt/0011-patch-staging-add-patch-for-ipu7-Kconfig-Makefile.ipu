@@ -1,0 +1,78 @@
+From d18ecf4f258ad566e3e85b194e61047c12bdb56b Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Fri, 24 Oct 2025 15:39:28 +0800
+Subject: [PATCH 11/21] patch: staging add patch for ipu7 Kconfig Makefile
+
+Support kernel v6.10
+
+Due to change "kbuild: use $(src) instead of $(srctree)/$(src) for
+source directory" at https://lore.kernel.org/lkml/20240416121838.
+95427-5-masahiroy@kernel.org/, the old include paths in Makefile
+can't work on kernel v6.10. To keep compatible with < v6.10 kernel,
+add another check in Makefile.
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+Signed-off-by: Hao Yao <hao.yao@intel.com>
+---
+ drivers/staging/media/ipu7/Kconfig  | 11 ++++++++---
+ drivers/staging/media/ipu7/Makefile | 11 +++++++++++
+ 2 files changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/Kconfig b/drivers/staging/media/ipu7/Kconfig
+index c4eee7c3e6d7..0a6e68c7632d 100644
+--- a/drivers/staging/media/ipu7/Kconfig
++++ b/drivers/staging/media/ipu7/Kconfig
+@@ -4,7 +4,12 @@ config VIDEO_INTEL_IPU7
+ 	depends on VIDEO_DEV
+ 	depends on X86 && HAS_DMA
+ 	depends on IPU_BRIDGE || !IPU_BRIDGE
+-	depends on PCI
++        #
++        # This driver incorrectly tries to override the dma_ops.  It should
++        # never have done that, but for now keep it working on architectures
++        # that use dma ops
++        #
++        depends on ARCH_HAS_DMA_OPS
+ 	select AUXILIARY_BUS
+ 	select IOMMU_IOVA
+ 	select VIDEO_V4L2_SUBDEV_API
+@@ -15,8 +20,8 @@ config VIDEO_INTEL_IPU7
+ 	  This is the 7th Gen Intel Image Processing Unit, found in Intel SoCs
+ 	  and used for capturing images and video from camera sensors.
+ 
+-	  To compile this driver, say Y here! It contains 2 modules -
+-	  intel_ipu7 and intel_ipu7_isys.
++	  To compile this driver, say Y here! It contains 3 modules -
++	  intel_ipu7, intel_ipu7_isys and intel_ipu7_psys.
+ 
+ config VIDEO_INTEL_IPU7_ISYS_RESET
+ 	bool "IPU7 ISYS RESET"
+diff --git a/drivers/staging/media/ipu7/Makefile b/drivers/staging/media/ipu7/Makefile
+index 6d2aec219e65..3c35ca566473 100644
+--- a/drivers/staging/media/ipu7/Makefile
++++ b/drivers/staging/media/ipu7/Makefile
+@@ -1,6 +1,13 @@
+ # SPDX-License-Identifier: GPL-2.0
+ # Copyright (c) 2017 - 2025 Intel Corporation.
+ 
++is_kernel_lt_6_10 = $(shell if [ $$(printf "6.10\n$(KERNELVERSION)" | sort -V | head -n1) != "6.10" ]; then echo 1; fi)
++ifeq ($(is_kernel_lt_6_10), 1)
++ifneq ($(EXTERNAL_BUILD), 1)
++src := $(srctree)/$(src)
++endif
++endif
++
+ intel-ipu7-objs				+= ipu7.o \
+ 					   ipu7-bus.o \
+ 					   ipu7-dma.o \
+@@ -21,3 +28,7 @@ intel-ipu7-isys-objs			+= ipu7-isys.o \
+ 					   ipu7-isys-subdev.o
+ 
+ obj-$(CONFIG_VIDEO_INTEL_IPU7)		+= intel-ipu7-isys.o
++
++obj-$(CONFIG_VIDEO_INTEL_IPU7)		+= psys/
++
++ccflags-y += -I$(src)/
+-- 
+2.43.0
+

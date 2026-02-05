@@ -1,0 +1,101 @@
+From 61375d91c986cd67a1f859b931820e109a662b73 Mon Sep 17 00:00:00 2001
+From: Caleb Sander Mateos <csander@purestorage.com>
+Date: Wed, 17 Sep 2025 19:49:40 -0600
+Subject: [PATCH 17/38] ublk: add helpers to check ublk_device flags
+
+Introduce ublk_device analogues of the ublk_queue flag helpers:
+- ublk_support_zero_copy() -> ublk_dev_support_user_copy()
+- ublk_support_auto_buf_reg() -> ublk_dev_support_auto_buf_reg()
+- ublk_support_user_copy() -> ublk_dev_support_user_copy()
+- ublk_need_map_io() -> ublk_dev_need_map_io()
+- ublk_need_req_ref() -> ublk_dev_need_req_ref()
+- ublk_need_get_data() -> ublk_dev_need_get_data()
+
+These will be used in subsequent changes to avoid accessing the
+ublk_queue just for the flags, and instead use the ublk_device.
+
+Signed-off-by: Caleb Sander Mateos <csander@purestorage.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+---
+ drivers/block/ublk_drv.c | 34 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
+
+diff --git a/drivers/block/ublk_drv.c b/drivers/block/ublk_drv.c
+index 67d4a867aec4..9a770d91e840 100644
+--- a/drivers/block/ublk_drv.c
++++ b/drivers/block/ublk_drv.c
+@@ -664,22 +664,44 @@ static inline bool ublk_support_zero_copy(const struct ublk_queue *ubq)
+ 	return ubq->flags & UBLK_F_SUPPORT_ZERO_COPY;
+ }
+ 
++static inline bool ublk_dev_support_zero_copy(const struct ublk_device *ub)
++{
++	return ub->dev_info.flags & UBLK_F_SUPPORT_ZERO_COPY;
++}
++
+ static inline bool ublk_support_auto_buf_reg(const struct ublk_queue *ubq)
+ {
+ 	return ubq->flags & UBLK_F_AUTO_BUF_REG;
+ }
+ 
++static inline bool ublk_dev_support_auto_buf_reg(const struct ublk_device *ub)
++{
++	return ub->dev_info.flags & UBLK_F_AUTO_BUF_REG;
++}
++
+ static inline bool ublk_support_user_copy(const struct ublk_queue *ubq)
+ {
+ 	return ubq->flags & UBLK_F_USER_COPY;
+ }
+ 
++static inline bool ublk_dev_support_user_copy(const struct ublk_device *ub)
++{
++	return ub->dev_info.flags & UBLK_F_USER_COPY;
++}
++
+ static inline bool ublk_need_map_io(const struct ublk_queue *ubq)
+ {
+ 	return !ublk_support_user_copy(ubq) && !ublk_support_zero_copy(ubq) &&
+ 		!ublk_support_auto_buf_reg(ubq);
+ }
+ 
++static inline bool ublk_dev_need_map_io(const struct ublk_device *ub)
++{
++	return !ublk_dev_support_user_copy(ub) &&
++	       !ublk_dev_support_zero_copy(ub) &&
++	       !ublk_dev_support_auto_buf_reg(ub);
++}
++
+ static inline bool ublk_need_req_ref(const struct ublk_queue *ubq)
+ {
+ 	/*
+@@ -697,6 +719,13 @@ static inline bool ublk_need_req_ref(const struct ublk_queue *ubq)
+ 		ublk_support_auto_buf_reg(ubq);
+ }
+ 
++static inline bool ublk_dev_need_req_ref(const struct ublk_device *ub)
++{
++	return ublk_dev_support_user_copy(ub) ||
++	       ublk_dev_support_zero_copy(ub) ||
++	       ublk_dev_support_auto_buf_reg(ub);
++}
++
+ static inline void ublk_init_req_ref(const struct ublk_queue *ubq,
+ 		struct ublk_io *io)
+ {
+@@ -728,6 +757,11 @@ static inline bool ublk_need_get_data(const struct ublk_queue *ubq)
+ 	return ubq->flags & UBLK_F_NEED_GET_DATA;
+ }
+ 
++static inline bool ublk_dev_need_get_data(const struct ublk_device *ub)
++{
++	return ub->dev_info.flags & UBLK_F_NEED_GET_DATA;
++}
++
+ /* Called in slow path only, keep it noinline for trace purpose */
+ static noinline struct ublk_device *ublk_get_device(struct ublk_device *ub)
+ {
+-- 
+2.43.0
+

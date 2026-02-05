@@ -1,0 +1,295 @@
+From 58cb4ba66d58380ce189e67303d6b908e11e1567 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Thu, 15 Jan 2026 15:22:42 +0800
+Subject: [PATCH 17/21] Copy ACPI header files from VTG IPU7 & IPU6 repo
+
+These are the header files copied over from ipu6-drivers:
+- include/media/ipu-acpi-pdata.h
+- include/media/ipu-acpi.h
+- include/media/ipu-get-acpi.h
+- include/media/serdes-pdata.h
+
+Linux kernel macro need to be removed in ipu-acpi.h
+to meet innersource kernel standards.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ include/media/ipu-acpi-pdata.h | 38 +++---------------
+ include/media/ipu-acpi.h       | 73 +++++++++++++++++++++++++++++-----
+ include/media/ipu-get-acpi.h   | 30 ++++++++++++++
+ include/media/serdes-pdata.h   | 37 +++++++++++++++++
+ 4 files changed, 137 insertions(+), 41 deletions(-)
+ create mode 100644 include/media/ipu-get-acpi.h
+ create mode 100644 include/media/serdes-pdata.h
+
+diff --git a/include/media/ipu-acpi-pdata.h b/include/media/ipu-acpi-pdata.h
+index e2074419dd88..4c754e98ded6 100644
+--- a/include/media/ipu-acpi-pdata.h
++++ b/include/media/ipu-acpi-pdata.h
+@@ -3,12 +3,12 @@
+ #include <linux/interrupt.h>
+ #include <media/ipu-acpi.h>
+ #include <media/v4l2-mediabus.h>
+-#if IS_ENABLED(CONFIG_VIDEO_ISX031)
+-#include <media/i2c/isx031.h>
+-#endif
++#include <media/serdes-pdata.h>
+ 
+ #define CL_EMPTY 0
+ #define CL_DISCRETE 1
++#define CL_LT 5
++#define SERDES_MAX_PORT 4
+ #define SERDES_MAX_GPIO_POWERUP_SEQ 4
+ #define LOOP_SIZE 10
+ 
+@@ -26,7 +26,7 @@ int get_sensor_pdata(struct device *dev,
+ 			int sensor_physical_addr,
+ 			int link_freq);
+ 
+-struct ipu7_isys_subdev_pdata *get_acpi_subdev_pdata(void);
++struct ipu_isys_subdev_pdata *get_acpi_subdev_pdata(void);
+ 
+ struct sensor_platform_data {
+ 	unsigned int port;
+@@ -34,37 +34,11 @@ struct sensor_platform_data {
+ 	uint32_t i2c_slave_address;
+ 	int irq_pin;
+ 	unsigned int irq_pin_flags;
+-	char irq_pin_name[IPU7_SPDATA_IRQ_PIN_NAME_LEN];
++	char irq_pin_name[IPU_SPDATA_IRQ_PIN_NAME_LEN];
+ 	int reset_pin;
+ 	int detect_pin;
+ 	char suffix;
+-	int gpios[IPU7_SPDATA_GPIO_NUM];
+-};
+-
+-struct serdes_platform_data {
+-	unsigned int subdev_num;
+-	struct serdes_subdev_info *subdev_info;
+-	unsigned int reset_gpio;
+-	unsigned int FPD_gpio;
+-	char suffix;
+-	unsigned int link_freq_mbps;
+-	enum v4l2_mbus_type bus_type;
+-	unsigned int deser_nlanes;
+-	unsigned int ser_nlanes;
+-	unsigned int des_port;
+-	char ser_name[I2C_NAME_SIZE];
+-	struct i2c_board_info *deser_board_info;
+-};
+-
+-struct serdes_subdev_info {
+-	struct i2c_board_info board_info;
+-	int i2c_adapter_id;
+-	unsigned short rx_port;
+-	unsigned short phy_i2c_addr;
+-	unsigned short ser_alias;
+-	char suffix[5]; /* suffix for subdevs */
+-	unsigned short ser_phys_addr;
+-	unsigned int sensor_dt;
++	int gpios[IPU_SPDATA_GPIO_NUM];
+ };
+ 
+ struct serdes_module_pdata {
+diff --git a/include/media/ipu-acpi.h b/include/media/ipu-acpi.h
+index bc63240d7c24..f06b6861eb24 100644
+--- a/include/media/ipu-acpi.h
++++ b/include/media/ipu-acpi.h
+@@ -16,16 +16,56 @@
+ #ifndef MEDIA_INTEL_IPU_ACPI_H
+ #define MEDIA_INTEL_IPU_ACPI_H
+ 
+-#include "ipu7-isys.h"
++#include <linux/version.h>
++
++#include <linux/clkdev.h>
++#include <linux/i2c.h>
++
++#include <media/v4l2-mediabus.h>
++
++struct ipu_isys_csi2_config {
++	unsigned int nlanes;
++	unsigned int port;
++	enum v4l2_mbus_type bus_type;
++};
++
++struct ipu_isys_subdev_i2c_info {
++	struct i2c_board_info board_info;
++	int i2c_adapter_id;
++	char i2c_adapter_bdf[32];
++};
++
++struct ipu_isys_subdev_info {
++	struct ipu_isys_csi2_config *csi2;
++	struct ipu_isys_subdev_i2c_info i2c;
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++	char *acpi_hid;
++#endif
++};
++
++struct ipu_isys_clk_mapping {
++	struct clk_lookup clkdev_data;
++	char *platform_clock_name;
++};
++
++struct ipu_isys_subdev_pdata {
++	struct ipu_isys_subdev_info **subdevs;
++	struct ipu_isys_clk_mapping *clk_map;
++};
+ 
+ #define MAX_ACPI_SENSOR_NUM	4
+ #define MAX_ACPI_I2C_NUM	12
+ #define MAX_ACPI_GPIO_NUM	12
+ 
+ #define GPIO_RESET		0x0
++#define GPIO_POWER_EN		0xb
++#define GPIO_READY_STAT		0x13
++#define GPIO_HDMI_DETECT	0x14
++
++#define IPU_SPDATA_GPIO_NUM	4
++#define IPU_SPDATA_IRQ_PIN_NAME_LEN 16
+ 
+-#define IPU7_SPDATA_GPIO_NUM 	4
+-#define IPU7_SPDATA_IRQ_PIN_NAME_LEN 16
++void set_built_in_pdata(struct ipu_isys_subdev_pdata *pdata);
+ 
+ enum connection_type {
+ 	TYPE_DIRECT,
+@@ -122,6 +162,11 @@ struct ipu_gpio_info {
+ 	bool valid;
+ };
+ 
++struct ipu_irq_info {
++	int irq_pin;
++	char irq_pin_name[IPU_SPDATA_IRQ_PIN_NAME_LEN];
++};
++
+ /* Each I2C client linked to 1 set of CTL Logic */
+ struct control_logic_data {
+ 	struct device *dev;
+@@ -133,9 +178,7 @@ struct control_logic_data {
+ 	bool completed;
+ };
+ 
+-int ipu_get_acpi_devices(void **spdata);
+-
+-struct ipu7_isys_subdev_pdata *get_built_in_pdata(void);
++struct ipu_isys_subdev_pdata *get_built_in_pdata(void);
+ 
+ int ipu_acpi_get_cam_data(struct device *dev,
+ 				struct sensor_bios_data *sensor);
+@@ -146,17 +189,29 @@ int ipu_acpi_get_dep_data(struct device *dev,
+ int ipu_acpi_get_control_logic_data(struct device *dev,
+ 				struct control_logic_data **ctl_data);
+ 
++struct intel_ipu6_regulator {
++	char *src_dev_name;
++	char *src_rail;
++	char *dest_rail;
++};
++
+ struct ipu_i2c_helper {
+ 	int (*fn)(struct device *dev, void *priv,
+-		struct ipu7_isys_csi2_config *csi2,
++		struct ipu_isys_csi2_config *csi2,
+ 		bool reprobe);
+ 	void *driver_data;
+ };
+ 
++struct ipu_i2c_new_dev {
++	struct list_head list;
++	struct i2c_board_info info;
++	unsigned short int bus;
++};
++
+ struct ipu_camera_module_data {
+ 	struct list_head list;
+-	struct ipu7_isys_subdev_info sd;
+-	struct ipu7_isys_csi2_config csi2;
++	struct ipu_isys_subdev_info sd;
++	struct ipu_isys_csi2_config csi2;
+ 	unsigned int ext_clk;
+ 	void *pdata; /* Ptr to generated platform data*/
+ 	void *priv; /* Private for specific subdevice */
+diff --git a/include/media/ipu-get-acpi.h b/include/media/ipu-get-acpi.h
+new file mode 100644
+index 000000000000..da2ed5117c53
+--- /dev/null
++++ b/include/media/ipu-get-acpi.h
+@@ -0,0 +1,30 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (c) 2016-2025 Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version
++ * 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#ifndef MEDIA_INTEL_IPU_GET_ACPI_H
++#define MEDIA_INTEL_IPU_GET_ACPI_H
++
++int ipu_get_acpi_devices(void *driver_data,
++				struct device *dev,
++				void **spdata,
++				void **built_in_pdata,
++				int (*fn)
++				(struct device *, void *,
++				 void *csi2,
++				 bool reprobe));
++
++int ipu_get_acpi_devices_new(void **spdata);
++
++#endif /* MEDIA_INTEL_IPU_GET_ACPI_H */
+diff --git a/include/media/serdes-pdata.h b/include/media/serdes-pdata.h
+new file mode 100644
+index 000000000000..829f730140b1
+--- /dev/null
++++ b/include/media/serdes-pdata.h
+@@ -0,0 +1,37 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (C) 2023-2025 Intel Corporation */
++
++#ifndef MEDIA_SERDES_PDATA_H
++#define MEDIA_SERDES_PDATA_H
++
++#if IS_ENABLED(CONFIG_VIDEO_ISX031)
++#include <media/i2c/isx031.h>
++#endif
++
++struct serdes_subdev_info {
++	struct i2c_board_info board_info;
++	int i2c_adapter_id;
++	unsigned short rx_port;
++	unsigned short phy_i2c_addr;
++	unsigned short ser_alias;
++	char suffix[5]; /* suffix for subdevs */
++	unsigned short ser_phys_addr;
++	unsigned int sensor_dt;
++};
++
++struct serdes_platform_data {
++	unsigned int subdev_num;
++	struct serdes_subdev_info *subdev_info;
++	unsigned int reset_gpio;
++	unsigned int FPD_gpio;
++	char suffix;
++	unsigned int link_freq_mbps;
++	enum v4l2_mbus_type bus_type;
++	unsigned int deser_nlanes;
++	unsigned int ser_nlanes;
++	unsigned int des_port;
++	char ser_name[I2C_NAME_SIZE];
++	struct i2c_board_info *deser_board_info;
++};
++
++#endif
+-- 
+2.43.0
+

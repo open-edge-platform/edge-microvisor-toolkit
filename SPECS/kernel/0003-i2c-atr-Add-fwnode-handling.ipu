@@ -1,0 +1,52 @@
+From bbe1d540eb9feae0b2a06aa9d8854048f161ab21 Mon Sep 17 00:00:00 2001
+From: Khai Wen Ng <khai.wen.ng@intel.com>
+Date: Thu, 28 Aug 2025 14:46:45 +0800
+Subject: [PATCH 3/6] i2c: atr: Add fwnode handling
+
+fwnode does not support i2c-atr nodes structure.
+points to parent fwnode instead.
+
+Signed-off-by: Khai Wen Ng <khai.wen.ng@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/i2c/i2c-atr.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/i2c/i2c-atr.c b/drivers/i2c/i2c-atr.c
+index f998e5f43fc0..e1285a48841a 100644
+--- a/drivers/i2c/i2c-atr.c
++++ b/drivers/i2c/i2c-atr.c
+@@ -836,17 +836,20 @@ int i2c_atr_add_adapter(struct i2c_atr *atr, struct i2c_atr_adap_desc *desc)
+ 		u32 reg;
+ 
+ 		atr_node = device_get_named_child_node(dev, "i2c-atr");
+-
+-		fwnode_for_each_child_node(atr_node, child) {
+-			ret = fwnode_property_read_u32(child, "reg", &reg);
+-			if (ret)
+-				continue;
+-			if (chan_id == reg)
+-				break;
++		if (atr_node) {
++			fwnode_for_each_child_node(atr_node, child) {
++				ret = fwnode_property_read_u32(child, "reg", &reg);
++				if (ret)
++					continue;
++				if (chan_id == reg)
++					break;
++			}
++
++			device_set_node(&chan->adap.dev, child);
++			fwnode_handle_put(atr_node);
++		} else if (dev_fwnode(dev)) {
++			device_set_node(&chan->adap.dev, fwnode_handle_get(dev_fwnode(dev)));
+ 		}
+-
+-		device_set_node(&chan->adap.dev, child);
+-		fwnode_handle_put(atr_node);
+ 	}
+ 
+ 	if (desc->num_aliases > 0) {
+-- 
+2.43.0
+

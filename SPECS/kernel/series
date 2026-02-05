@@ -225,10 +225,33 @@
 0002-media-i2c-max9x-uniform-serdes-driver-compilation.ipu
 0001-Revert-media-i2c-max9x-uniform-serdes-driver-compilati.ipu
 0002-Revert-media-i2c-max9x-fix-S3-S4-error-for-max9x.ipu
-0001-patch-staging-add-ipu7-isys-reset-code.ipu
-0002-media-ipu-invalidate-MMU-TLB-in-dma-buffers-creation.ipu
-0003-media-ipu-Update-firmware-ABI-version-to-1.2.1.2025121.ipu
-0004-media-ipu7-update-CDPHY-register-settings.ipu
+0001-Remove-IPU7-drivers-from-pci-directory.ipu
+0002-patch-staging-add-ipu7-isys-reset-code.ipu
+0003-patch-staging-add-enbaled-IPU8_INSYS_NEW_ABI.ipu
+0004-patch-staging-add-enable-CONFIG_DEBUG_FS.ipu
+0005-patch-staging-add-enable-CONFIG_INTEL_IPU_ACPI.ipu
+0006-patch-staging-add-enable-ENABLE_FW_OFFLINE_LOGGER.ipu
+0007-patch-staging-add-patch-for-use-DPHY-as-the-default-ph.ipu
+0008-media-ipu-invalidate-MMU-TLB-in-dma-buffers-creation.ipu
+0009-patch-staging-add-fixup-some-PCI-probe-and-release-iss.ipu
+0010-patch-staging-add-IPU8_PCI_ID-support.ipu
+0011-patch-staging-add-patch-for-ipu7-Kconfig-Makefile.ipu
+0012-media-ipu-Update-firmware-ABI-version-to-1.2.1.2025121.ipu
+0013-patch-staging-add-ipu7-isys-tpg-and-MGC-config.ipu
+0014-media-ipu-Dma-sync-at-buffer_prepare-callback-as-DMA-i.ipu
+0015-media-ipu7-update-CDPHY-register-settings.ipu
+0016-Port-over-IPU-ACPI-drivers-changes-from-VTG-github-rep.ipu
+0017-Copy-ACPI-header-files-from-VTG-IPU7-IPU6-repo.ipu
+0018-IPU7-PSYS-driver-addition.ipu
+0019-porting-gmsl-isx031-code-between-PTL-IPU7-beta-release.ipu
+0020-Update-lt6911gxd-sensor-driver-to-fix-timeout-issue-af.ipu
+0021-Update-compilation-path-for-IPU7-drivers.ipu
+0001-i2c-add-identifier-for-ATR-and-MUX-adapters.ipu
+0002-i2c-i2c-core-acpi-clear-dependency-for-MUX-or-ATR-adap.ipu
+0003-i2c-atr-Add-fwnode-handling.ipu
+0004-media-v4l2-async-Fix-error-handling-on-steps-after-fin.ipu
+0005-media-mc-Add-INTERNAL-pad-flag.ipu
+0006-i2c-atr-Remove-COMPILE_TEST-check.ipu
 # tbt
 0002-thunderbolt-Make-XDomain-lane-bonding-comply-with-the-.tbt
 0003-net-thunderbolt-Allow-changing-MTU-of-the-device.tbt
@@ -295,144 +318,236 @@
 # uncore-frequency
 0001-platform-x86-intel-uncore-freq-Add-additi.uncore-frequency
 #CVE-2025-68265
-0001-nvme-fix-admin-request_queue-lifetime.patch
+CVE-2025-68265.patch
 
 #CVE-2025-68263
-0002-ksmbd-ipc-fix-use-after-free-in-ipc_msg_send_request.patch
+CVE-2025-68263.patch
 
 #CVE-2025-68255
-0003-staging-rtl8723bs-fix-stack-buffer-overflow-in-OnAss.patch
+CVE-2025-68255.patch
 
 #CVE-2025-68256
-0004-staging-rtl8723bs-fix-out-of-bounds-read-in-rtw_get_.patch
+CVE-2025-68256.patch
 
 #CVE-2025-68281
-0007-ASoC-SDCA-bug-fix-while-parsing-mipi-sdca-control-cn.patch
+CVE-2025-68281.patch
 
 #CVE-2025-68262
-0008-crypto-zstd-fix-double-free-in-per-CPU-stream-cleanu.patch
+CVE-2025-68262.patch
 
 #CVE-2025-68261
-0009-ext4-add-i_data_sem-protection-in-ext4_destroy_inlin.patch
+CVE-2025-68261.patch
 
 #CVE-2025-68259
-0010-KVM-SVM-Don-t-skip-unrelated-instruction-if-INT3-INT.patch
+CVE-2025-68259.patch
 
 #CVE-2025-68254
-0011-staging-rtl8723bs-fix-out-of-bounds-read-in-OnBeacon.patch
+CVE-2025-68254.patch
 
 #CVE-2025-68264
-0013-ext4-refresh-inline-data-size-before-write-operation.patch
+CVE-2025-68264.patch
 
 #CVE-2025-68325
-0014-net-sched-sch_cake-Fix-incorrect-qlen-reduction-in-c.patch
+CVE-2025-68325.patch
 
 #CVE-2025-68323
-0016-usb-typec-ucsi-fix-use-after-free-caused-by-uec-work.patch
+CVE-2025-68323.patch
 
 #CVE-2025-68749
-0001-accel-ivpu-Fix-race-condition-when-unbinding-BOs.patch
+CVE-2025-68749.patch
 
 #CVE-2025-68745
-0003-scsi-qla2xxx-Clear-cmds-after-chip-reset.patch
+CVE-2025-68745.patch
 
 #CVE-2025-68349
-0004-NFSv4-pNFS-Clear-NFS_INO_LAYOUTCOMMIT-in-pnfs_mark_l.patch
+CVE-2025-68349.patch
 
 #CVE-2025-68366
-0005-nbd-defer-config-unlock-in-nbd_genl_connect.patch
+CVE-2025-68366.patch
 
 #CVE-2025-68744
-0006-bpf-Free-special-fields-when-update-lru_-percpu_hash.patch
+CVE-2025-68744.patch
 
 #CVE-2025-68363
-0009-bpf-Check-skb-transport_header-is-set-in-bpf_skb_che.patch
+CVE-2025-68363.patch
 
 #CVE-2025-68379
-0010-RDMA-rxe-Fix-null-deref-on-srq-rq.queue-after-resize.patch
+CVE-2025-68379.patch
 
 #CVE-2025-68375
-0011-perf-x86-Fix-NULL-event-access-and-potential-PEBS-re.patch
+CVE-2025-68375.patch
 
 #CVE-2025-68736
-0012-landlock-Fix-handling-of-disconnected-directories.patch
+CVE-2025-68736.patch
 
 #CVE-2025-68732
-0013-gpu-host1x-Fix-race-in-syncpt-alloc-free.patch
+CVE-2025-68732.patch
 
 #CVE-2025-68730
-0014-accel-ivpu-Fix-page-fault-in-ivpu_bo_unbind_all_bos_.patch
+CVE-2025-68730.patch
 
 #CVE-2025-68733
-0016-smack-fix-bug-unprivileged-task-can-create-labels.patch
+CVE-2025-68733.patch
 
 #CVE-2025-68333
-0017-sched_ext-Fix-possible-deadlock-in-the-deferred_irq_.patch
+CVE-2025-68333.patch
 
 #CVE-2025-68336
-0018-locking-spinlock-debug-Fix-data-race-in-do_raw_write.patch
+CVE-2025-68336.patch
 
 #CVE-2025-68345
-0019-ALSA-hda-cs35l41-Fix-NULL-pointer-dereference-in-cs3.patch
+CVE-2025-68345.patch
 
 #CVE-2025-68346
-0020-ALSA-dice-fix-buffer-overflow-in-detect_stream_forma.patch
+CVE-2025-68346.patch
 
 #CVE-2025-68347
-0021-ALSA-firewire-motu-fix-buffer-overflow-in-hwdep-read.patch
+CVE-2025-68347.patch
 
 #CVE-2025-68348
-0022-block-fix-memory-leak-in-__blkdev_issue_zero_pages.patch
+CVE-2025-68348.patch
 
 #CVE-2025-68353
-0023-net-vxlan-prevent-NULL-deref-in-vxlan_xmit_one.patch
+CVE-2025-68353.patch
 
 #CVE-2025-68358
-0025-btrfs-fix-racy-bitfield-write-in-btrfs_clear_space_i.patch
+CVE-2025-68358.patch
 
 #CVE-2025-68337
-0027-jbd2-avoid-bug_on-in-jbd2_journal_get_create_access-.patch
+CVE-2025-68337.patch
 
 #CVE-2025-68354
-0028-regulator-core-Protect-regulator_supply_alias_list-w.patch
+CVE-2025-68354.patch
 
 #CVE-2025-68359
-0030-btrfs-fix-double-free-of-qgroup-record-after-failure.patch
+CVE-2025-68359.patch
 
 #CVE-2025-68741
-0031-scsi-qla2xxx-Fix-improper-freeing-of-purex-item.patch
+CVE-2025-68741.patch
 
 #CVE-2025-68368
-0032-md-init-bioset-in-mddev_init.patch
+CVE-2025-68368.patch
 
 #CVE-2025-68371
-0033-scsi-smartpqi-Fix-device-resources-accessed-after-de.patch
+CVE-2025-68371.patch
 
 #CVE-2025-68373
-0036-md-delete-mddev-kobj-before-deleting-gendisk-kobj.patch
-0037-md-avoid-repeated-calls-to-del_gendisk.patch
+CVE-2025-68373.patch
+CVE-2025-68373-2.patch
 
 #CVE-2025-68740
-0038-ima-Handle-error-code-returned-by-ima_filter_rule_ma.patch
+CVE-2025-68740.patch
 
 #CVE-2025-68374
-0039-md-fix-rcu-protection-in-md_wakeup_thread.patch
+CVE-2025-68374.patch
 
 #CVE-2025-68742
-0040-bpf-Fix-invalid-prog-stats-access-when-update_effect.patch
+CVE-2025-68742.patch
 
 #CVE-2025-68743
-0045-mshv-Fix-create-memory-region-overlap-check.patch
+CVE-2025-68743.patch
 
 #CVE-2025-68724
-0046-crypto-asymmetric_keys-prevent-overflow-in-asymmetri.patch
+CVE-2025-68724.patch
 
 #CVE-2025-68378
-0049-bpf-Fix-stackmap-overflow-check-in-__bpf_get_stackid.patch
+CVE-2025-68378.patch
 
 #CVE-2025-68725
-0050-bpf-Do-not-let-BPF-test-infra-emit-invalid-GSO-types.patch
+CVE-2025-68725.patch
 
 #CVE-2025-68372
-0051-nbd-defer-config-put-in-recv_work.patch
+CVE-2025-68372.patch
+
+#CVE-2026-23007
+CVE-2026-23007.patch
+
+#CVE-2026-23008
+CVE-2026-23008.patch
+
+#CVE-2026-23009
+CVE-2026-23009.patch
+
+#CVE-2026-23012
+CVE-2026-23012.patch
+
+#CVE-2026-22993
+CVE-2026-22993.patch
+
+#CVE-2026-22987
+CVE-2026-22987.patch
+
+#CVE-2026-22981
+CVE-2026-22981.patch
+
+#CVE-2025-71161
+CVE-2025-71161.patch
+
+#CVE-2025-71117
+CVE-2025-71117.patch
+
+#CVE-2025-71128
+CVE-2025-71128.patch
+
+#CVE-2025-71139
+CVE-2025-71139-1.patch
+CVE-2025-71139-2.patch
+
+#CVE-2025-71142
+CVE-2025-71142.patch
+
+#CVE-2025-71115
+CVE-2025-71115.patch
+
+#CVE-2025-71090
+CVE-2025-71090.patch
+
+#CVE-2025-71070
+CVE-2025-71070-1.patch
+CVE-2025-71070-2.patch
+
+#CVE-2025-71074
+CVE-2025-71074.patch
+
+#CVE-2025-68823
+CVE-2025-68823.patch
+
+#CVE-2025-68807
+CVE-2025-68807.patch
+
+#CVE-2025-68805
+CVE-2025-68805.patch
+
+#CVE-2025-68791
+CVE-2025-68791.patch
+
+#CVE-2025-68768
+CVE-2025-68768-1.patch
+CVE-2025-68768-2.patch
+CVE-2025-68768-3.patch
+
+#CVE-2025-68764
+CVE-2025-68764.patch
+
+#CVE-2025-68762
+CVE-2025-68762.patch
+
+#CVE-2025-68759
+CVE-2025-68759.patch
+
+#CVE-2025-68756
+CVE-2025-68756.patch
+
+#CVE-2025-68753
+CVE-2025-68753.patch
+
+#CVE-2025-68752
+CVE-2025-68752.patch
+
+#CVE-2026-23004
+CVE-2026-23004.patch
+
+#CVE-2026-22985
+CVE-2026-22985-1.patch
+CVE-2026-22985-2.patch
 

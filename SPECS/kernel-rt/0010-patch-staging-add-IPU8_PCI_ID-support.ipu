@@ -1,0 +1,26 @@
+From 9d9778e7b94ab66297f5d87aa7028520654c39be Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Fri, 24 Oct 2025 15:01:40 +0800
+Subject: [PATCH 10/21] patch: staging add IPU8_PCI_ID support
+
+Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7.c b/drivers/staging/media/ipu7/ipu7.c
+index 3a6c129015e7..8448c5e2161b 100644
+--- a/drivers/staging/media/ipu7/ipu7.c
++++ b/drivers/staging/media/ipu7/ipu7.c
+@@ -2818,6 +2818,7 @@ static const struct dev_pm_ops ipu7_pm_ops = {
+ static const struct pci_device_id ipu7_pci_tbl[] = {
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, IPU7_PCI_ID)},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, IPU7P5_PCI_ID)},
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, IPU8_PCI_ID)},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, ipu7_pci_tbl);
+-- 
+2.43.0
+
