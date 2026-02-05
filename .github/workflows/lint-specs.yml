@@ -9,7 +9,7 @@ on:
     paths:
       - .github/workflows/lint-specs.yml
       - '**.spec'
-    branches: [main, 3.0, 3.0-dev]
+    branches: [3.0*,next,26.06*]
 
 permissions: read-all
 

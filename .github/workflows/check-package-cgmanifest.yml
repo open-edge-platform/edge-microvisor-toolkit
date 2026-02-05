@@ -5,7 +5,7 @@ name: Check Package CGManifests
 
 on:
   pull_request:
-    branches: [3.0*]
+    branches: [3.0*,next,26.06*]
     types: [opened, synchronize, reopened]
     paths:
       - .github/workflows/check-package-cgmanifest.yml
