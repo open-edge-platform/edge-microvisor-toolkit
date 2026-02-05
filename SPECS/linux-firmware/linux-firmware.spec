@@ -89,6 +89,8 @@ cp -r ath10k %{buildroot}%{_firmwarepath}
 cp -r i915 %{buildroot}%{_firmwarepath}
 cp -r xe %{buildroot}%{_firmwarepath}
 cp -r intel %{buildroot}%{_firmwarepath}
+# While upgrading, check the ice version and update accordingly
+ln -sf ice-1.3.43.0.pkg %{buildroot}%{_firmwarepath}/intel/ice/ddp/ice.pkg
 
 %post qat
 dracut --force
@@ -190,6 +192,12 @@ dracut --force
 
 * Tue Nov 11 2025 Shalini Singhal <shalinix.singhal@intel.com> - 20251021-1
 - Upgrade firmware to 20251021.
+
+* Mon Jan 05 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 20250509-5
+- modify target value of symlink to point ice package.
+
+* Mon Nov 24 2025 Basavarajx unniche <basavarajx.unniche@intel.com> - 20250509-4
+- created sym link for ice, as per README of intel ice DDP package.
 
 * Tue Oct 14 2025 Junxiao Chang <junxiao.chang@intel.com> - 20250509-3
 - Added QAT firmware.
