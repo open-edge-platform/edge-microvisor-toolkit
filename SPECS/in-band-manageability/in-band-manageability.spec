@@ -4,7 +4,7 @@
 
 Summary:        An agent to manage systems via in-band connection
 Name:           in-band-manageability
-Version:        1.0.6
+Version:        1.1.0
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -15,8 +15,8 @@ Source1:        intel_manageability.conf
 Source2:        inbm-configuration-replace-FQDN.sh
 Source3:        inbm.te
 Source4:        inbm.fc
-BuildRequires:  golang < 1.25.0
-BuildRequires:  golang >= 1.24.7
+BuildRequires:  golang < 1.26
+BuildRequires:  golang >= 1.25.5
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 BuildRequires:  make
@@ -52,7 +52,7 @@ make -f %{_datadir}/selinux/devel/Makefile inbm.pp
 # Note: We're already in the in-band-manageability-1.0.0 directory
 
 # Configure Go toolchain to avoid proxy DNS issues during the RPM build
-export CGO_ENABLED=0
+export GOEXPERIMENT=nosystemcrypto
 export GOARCH=amd64
 export GOOS=linux
 export GOSUMDB=off
@@ -208,6 +208,9 @@ fi
 %systemd_postun inbd.service
 
 %changelog
+* Fri Feb 06 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.1.0-1
+- Update to golang 1.25.5
+
 * Tue Dec 02 2025 Christopher Nolan <christopher.nolan@intel.com> - 1.0.6-1
 - Update to latest version
 
