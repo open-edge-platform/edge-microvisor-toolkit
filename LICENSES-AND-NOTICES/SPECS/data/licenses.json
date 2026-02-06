@@ -2249,7 +2249,6 @@
                 "yp-tools",
                 "ypbind",
                 "ypserv",
-                "yq",
                 "z3",
                 "zenity",
                 "zerofree",
@@ -3211,8 +3210,7 @@
         "Source project": {
             "license": "Same as the source project.",
             "specs": [
-                "python-nocaselist",
-                "yq"
+                "python-nocaselist"
             ]
         },
         "Sysbench source": {

@@ -14,7 +14,6 @@
         "rng-tools",
         "tar",
         "tink-worker",
-        "veritysetup",
-        "yq"
+        "veritysetup"
     ]
 }
