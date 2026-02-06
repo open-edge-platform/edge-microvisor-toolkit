@@ -6,7 +6,7 @@ name: Circular dependency check
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [3.0*]
+    branches: [3.0*,next,26.06*]
     paths:
       - .github/workflows/check-circular-deps.yml
       - '**.spec'
