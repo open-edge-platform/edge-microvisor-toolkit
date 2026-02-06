@@ -1,6 +1,6 @@
 Summary:        Edge node hardware information reporting
 Name:           hardware-discovery-agent
-Version:        1.8.1
+Version:        1.9.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -12,8 +12,8 @@ Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        hd_agent.te
 Source5:        hd_agent.fc
-BuildRequires:  golang < 1.25
-BuildRequires:  golang >= 1.24.9
+BuildRequires:  golang < 1.26
+BuildRequires:  golang >= 1.25.5
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       dmidecode
@@ -52,6 +52,7 @@ SELinux policy for %{name}.
 %setup -q
 
 %build
+export GOEXPERIMENT=nosystemcrypto
 make hdabuild GO_MOD=vendor 
 
 mkdir selinux
@@ -115,11 +116,14 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Fri Feb 06 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.9.1-1
+- Update to golang 1.25.5
+
 * Thu Nov 20 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.8.1-1
 - Update to golang 1.24.9
 - Fix CVE-2025-47913
 
-* Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.1-3
+* Wed Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.1-3
 - build with golang <= 1.24.7
 - remove inbm selinux
 

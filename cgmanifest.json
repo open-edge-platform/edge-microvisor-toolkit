@@ -1897,8 +1897,8 @@
         "type": "other",
         "other": {
           "name": "cluster-agent",
-          "version": "1.8.3",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.8.3.tar.gz"
+          "version": "1.9.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.9.0.tar.gz"
         }
       }
     },
@@ -5290,8 +5290,8 @@
         "type": "other",
         "other": {
           "name": "hardware-discovery-agent",
-          "version": "1.8.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.8.1.tar.gz"
+          "version": "1.9.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.9.1.tar.gz"
         }
       }
     },
@@ -7381,8 +7381,8 @@
         "type": "other",
         "other": {
           "name": "in-band-manageability",
-          "version": "1.0.6",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.0.6.tar.gz"
+          "version": "1.1.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.1.0.tar.gz"
         }
       }
     },
@@ -12501,8 +12501,8 @@
         "type": "other",
         "other": {
           "name": "linux-firmware",
-          "version": "20250509",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20250509.tar.xz"
+          "version": "20260110",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20260110.tar.xz"
         }
       }
     },
@@ -14712,8 +14712,8 @@
         "type": "other",
         "other": {
           "name": "node-agent",
-          "version": "1.9.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.9.1.tar.gz"
+          "version": "1.10.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.10.1.tar.gz"
         }
       }
     },
@@ -21663,8 +21663,8 @@
         "type": "other",
         "other": {
           "name": "platform-manageability-agent",
-          "version": "0.3.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.3.1.tar.gz"
+          "version": "0.4.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.4.1.tar.gz"
         }
       }
     },
@@ -21683,8 +21683,8 @@
         "type": "other",
         "other": {
           "name": "platform-telemetry-agent",
-          "version": "1.6.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.6.2.tar.gz"
+          "version": "1.7.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.7.0.tar.gz"
         }
       }
     },
@@ -21693,8 +21693,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.8.4",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.8.4.tar.gz"
+          "version": "1.9.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.9.0.tar.gz"
         }
       }
     },
@@ -31801,16 +31801,6 @@
           "name": "ypserv",
           "version": "4.2",
           "downloadUrl": "https://github.com/thkukuk/ypserv/archive/refs/tags/v4.2.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "yq",
-          "version": "4.45.1",
-          "downloadUrl": "https://github.com/mikefarah/yq/archive/refs/tags/v4.45.1.tar.gz"
         }
       }
     },

@@ -7,9 +7,9 @@ name: SRPMs duplicates check
 
 on:
   push:
-    branches: [main, 2.0*, 3.0*, fasttrack/*]
+    branches: [3.0*,next,26.06*]
   pull_request:
-    branches: [main, 2.0*, 3.0*, fasttrack/*]
+    branches: [3.0*,next,26.06*]
 
 permissions:
   contents: read
