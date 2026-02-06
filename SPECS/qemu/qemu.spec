@@ -538,7 +538,7 @@ Patch59: 0056-hw-display-virtio-gpu-Properly-free-current_cursor.patch
 Patch60: 0057-ui-gtk-Re-grabbing-PTR-KBD-individually.patch
 Patch61: 0058-hw-usb-host-libusb-Do-not-assert-when-detects-invali.patch
 Patch62: 0001-spice-Introduce-hw-bypass-to-bypass-encoding.patch
-Patch63: pcie_sriov_CVE-2025-54567_CVE-2025-54566.patch
+Patch63: CVE-2025-54567.patch
 
 BuildRequires: gnupg2
 BuildRequires: meson >= %{meson_version}
