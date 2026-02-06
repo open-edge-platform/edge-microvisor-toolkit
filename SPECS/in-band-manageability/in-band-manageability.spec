@@ -52,8 +52,7 @@ make -f %{_datadir}/selinux/devel/Makefile inbm.pp
 # Note: We're already in the in-band-manageability-1.0.0 directory
 
 # Configure Go toolchain to avoid proxy DNS issues during the RPM build
-# CGO_ENABLED=1 is required for Microsoft Go's FIPS crypto support
-export CGO_ENABLED=1
+export GOEXPERIMENT=nosystemcrypto
 export GOARCH=amd64
 export GOOS=linux
 export GOSUMDB=off

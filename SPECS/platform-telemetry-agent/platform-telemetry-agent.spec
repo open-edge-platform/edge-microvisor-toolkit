@@ -46,10 +46,9 @@ SELinux security policy for platform-telemetry-agent.
 
 %prep
 %setup -q
-# Patch Makefile to use CGO_ENABLED=1 for Microsoft Go's FIPS crypto support
-sed -i 's/CGO_ENABLED=0/CGO_ENABLED=1/g' Makefile
 
 %build
+export GOEXPERIMENT=nosystemcrypto
 make ptabuild GO_MOD=vendor
 
 mkdir selinux
