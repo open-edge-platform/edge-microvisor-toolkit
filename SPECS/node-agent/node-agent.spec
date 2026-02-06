@@ -44,6 +44,8 @@ SELinux policy for %{name}.
 
 %prep
 %setup -q
+# Patch Makefile to use CGO_ENABLED=1 for Microsoft Go's FIPS crypto support
+sed -i 's/CGO_ENABLED=0/CGO_ENABLED=1/g' Makefile
 
 %build
 make nabuild GO_MOD=vendor

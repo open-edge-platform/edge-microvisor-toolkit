@@ -50,6 +50,8 @@ SELinux policy for %{name}.
 
 %prep
 %setup -q
+# Patch Makefile to use CGO_ENABLED=1 for Microsoft Go's FIPS crypto support
+sed -i 's/CGO_ENABLED=0/CGO_ENABLED=1/g' Makefile
 
 %build
 make cabuild GO_MOD=vendor 
@@ -135,7 +137,7 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 - Update to golang 1.24.9
 - Fix CVE-2025-47913
 
-* Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.3-4
+* Wed Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.3-4
 - build with golang <= 1.24.7
 - remove inbm selinux
 

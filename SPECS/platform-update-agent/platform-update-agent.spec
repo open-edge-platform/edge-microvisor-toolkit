@@ -42,6 +42,8 @@ SELinux security policy for platform-update-agent.
 
 %prep
 %setup -q
+# Patch Makefile to use CGO_ENABLED=1 for Microsoft Go's FIPS crypto support
+sed -i 's/CGO_ENABLED=0/CGO_ENABLED=1/g' Makefile
 
 %build
 GOSUMDB=off GO_MOD_MODE=vendor BUILD_DIR=$(pwd)/build/artifacts make puabuild
