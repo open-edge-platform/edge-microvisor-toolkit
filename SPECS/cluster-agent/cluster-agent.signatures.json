@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "cluster-agent-1.8.3.tar.gz": "3ee848188260dcabf5ab1023aef923c3fc2d4a9327d2ca90244147e185d63e91",
+    "cluster-agent-1.9.0.tar.gz": "efff8a4d8ca59eb5591bbead2b7f2d8006e32aa44c87f11db09f57d739bb3a05",
     "cluster-agent.service": "e484c560bf881ebd12024404afc68f80493692280f6c5045990fe575ffb746bb",
     "env_wrapper.sh": "9b1dff883e0d38e5968e7e86363919303da0b3d0213888e7b2ed3c7659c8319c",
     "cluster-agent.conf": "4324f15acaa9d78738c231867f504c53d753a184a59538e6ccf679d4b8642f36",
