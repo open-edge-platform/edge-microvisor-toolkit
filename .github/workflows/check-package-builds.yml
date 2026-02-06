@@ -14,14 +14,14 @@ env:
 
 on:
   push:
-    branches: [3.0*, fasttrack/3.0]
+    branches: [3.0*,next,26.06*]
     paths:
       - ".github/workflows/check-package-builds.yml"
       - "toolkit/Makefile"
       - "toolkit/scripts/*"
       - "toolkit/tools/*"
   pull_request:
-    branches: [3.0*, fasttrack/3.0]
+    branches: [3.0*,next,26.06*]
     paths:
       - ".github/workflows/check-package-builds.yml"
       - "toolkit/Makefile"
