@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20260110
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -89,6 +89,8 @@ cp -r ath10k %{buildroot}%{_firmwarepath}
 cp -r i915 %{buildroot}%{_firmwarepath}
 cp -r xe %{buildroot}%{_firmwarepath}
 cp -r intel %{buildroot}%{_firmwarepath}
+# While upgrading, check the ice version and update accordingly
+ln -sf ice-1.3.43.0.pkg %{buildroot}%{_firmwarepath}/intel/ice/ddp/ice.pkg
 
 %post qat
 dracut --force
@@ -185,6 +187,9 @@ dracut --force
 %{_firmwarepath}/intel/qat/qat_c62x_mmp.bin
 
 %changelog
+* Thu Feb 5 2026 Andy <andy.peng@intel.com> - 20260110-2
+- modify target value of symlink to point ice package.
+
 * Tue Jan 13 2026 Andy <andy.peng@intel.com> - 20260110-1
 - Upgrade firmware to 20260110.
 
