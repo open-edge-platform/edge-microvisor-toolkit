@@ -47,7 +47,7 @@ done
 
 # Install prerequisites if not disabled
 # golang version pinned for stability to avoid breaking changes. As of 11-Jun-2025 we are using golang-1.23.1 on Ubuntu 22.04 since it is the most recent release available.
-# When making a breaking change to the toolkit which requires a newer golang version, update this version if needed. 
+# When making a breaking change to the toolkit which requires a newer golang version, update this version if needed.
 # If no newer version is available, suggest moving to a newer Ubuntu LTS version
 if [ "$INSTALL_PREREQS" = true ]; then
     echo "Installing required packages..."
@@ -58,7 +58,6 @@ if [ "$INSTALL_PREREQS" = true ]; then
     diffutils \
     gawk \
     genisoimage \
-    git \
     jq \
     make \
     openssl \
@@ -92,10 +91,10 @@ if [ "$INSTALL_DOCKER" = true ]; then
     echo "Installing Docker..."
     curl -fsSL https://get.docker.com -o get-docker.sh
     sh get-docker.sh
-    
+
     echo "Adding current user to 'docker' group..."
     usermod -aG docker $USER
-    
+
     echo "*** NOTE: You will need to log out and log back in for user changes to take effect. ***"
 fi
 
