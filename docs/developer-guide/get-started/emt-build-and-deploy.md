@@ -21,7 +21,15 @@ meet specific edge deployment needs. You can choose between:
 
 ## Requirements
 
-Make sure your machine meets the [minimum hardware configuration](../emt-system-requirements.md#minimum-hardware-configuration-for-building-os-image).
+1. Make sure your machine meets the [minimum hardware configuration](../emt-system-requirements.md#minimum-hardware-configuration-for-building-os-image).
+
+2. Install Git on Ubuntu with the package manager:
+
+   ```bash
+   sudo apt-add-repository ppa:git-core/ppa
+   sudo apt update
+   sudo apt install git
+   ```
 
 ## 1. Build the Edge Microvisor Toolkit
 
@@ -48,7 +56,7 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
    cd edge-microvisor-toolkit
    ```
 
-3. Install prerequisites:
+3. Install required dependencies, using one of the methods:
 
    > **Note:**
    >
@@ -60,22 +68,8 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
    >   sudo make -C clean
    >   ```
 
-   ```bash
-   # Install required dependencies.
-   sudo ./toolkit/docs/building/prerequisites-ubuntu.sh
-
-   # Also supported:
-   #    make -C toolkit install-prereqs
-
-   # Fix go 1.23 link
-   sudo ln -vsf /usr/lib/go-1.23/bin/go /usr/bin/go
-   sudo ln -vsf /usr/lib/go-1.23/bin/gofmt /usr/bin/gofmt
-
-   # Install and configure Docker.
-   curl -fsSL https://get.docker.com -o get-docker.sh
-   sudo sh get-docker.sh
-   sudo usermod -aG docker $USER
-   ```
+   - [Make Targets (recommended)](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md#method-1-using-make-targets-recommended)
+   - [Bash script](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md#method-2-direct-script-execution)
 
    **You will need to log out and log back in** for user changes to take effect.
 
