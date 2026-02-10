@@ -1,6 +1,6 @@
 Summary:        Installs/uninstalls orchestration software on an edge node using command obtained from Cluster Orchestrator.
 Name:           cluster-agent
-Version:        1.8.3
+Version:        1.9.0
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -14,8 +14,8 @@ Source4:        rke2-path.conf
 Source5:        cluster-agent.sudoers
 Source6:        cluster_agent.te
 Source7:        cluster_agent.fc
-BuildRequires:  golang < 1.25
-BuildRequires:  golang >= 1.24.9
+BuildRequires:  golang < 1.26
+BuildRequires:  golang >= 1.25.5
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       curl
@@ -52,6 +52,7 @@ SELinux policy for %{name}.
 %setup -q
 
 %build
+export GOEXPERIMENT=nosystemcrypto
 make cabuild GO_MOD=vendor 
 
 mkdir selinux
@@ -128,11 +129,14 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Fri Feb 06 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.9.0-1
+- Update to golang 1.25.5
+
 * Thu Nov 20 2025 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.8.3-1
 - Update to golang 1.24.9
 - Fix CVE-2025-47913
 
-* Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.3-4
+* Wed Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.7.3-4
 - build with golang <= 1.24.7
 - remove inbm selinux
 
