@@ -1,6 +1,6 @@
 {
     "Signatures": {
-        "reporting-agent-0.1.0.tar.gz": "154d9592a0ba0d5bf6b42173815fed931e3fd1f6ad6b5533a7aa11b4a49c83fa",
+        "reporting-agent-0.1.0.tar.gz": "9edfe08ee353a5ada2a131d64c9c899d1fdc6f306cba9d1dd9b4b799ca64b629",
         "edge-node-metrics.cron": "95a1155723b4e87e016681d292663f79a3d331bfa911f24b91a0782b2684b334",
         "reporting-agent.conf": "0edc6515cdde3e0ddfc7fcf74796c3571e2ace1d0a5acfa102fb3d50bba7fc3d"
     }
