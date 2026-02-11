@@ -1,49 +1,29 @@
-name: Bug report
-description: Create an issue to help us improve
-title: "[Bug]: "
-labels: ["bug"]
-type: "Bug"
+name: Feature Request
+description: File a feature request. 
+title: '[FEATURE]: '
+labels: ['feature']
+type: "Feature"
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Please provide all the necessary information to expedite the response.
   - type: textarea
     attributes:
-      label: Bug Description
-      description: A clear and concise description of what the bug is.
+      label: Feature Description
+      description: A clear and concise description of the problem or missing capability. 
     validations:
       required: true
   - type: input
     attributes:
-      label: Software Version 
-      description: Software version, branch, or tag in the Open Edge Platform Repository
-      placeholder: v1.2.0 / Master Branch / tag v2025.2.0-rc3
+      label: Current Software Version
+      description: |
+        What version are you currently using? This helps us understand your context and avoid suggesting features that may already exist in newer versions.
+      placeholder: v1.2.0 / main branch / tag v2025.2.0-rc3
     validations:
-      required: true
-  - type: dropdown
+      required: false
+  - type: textarea
     attributes:
-      label: Operating System
-      description: What OS are you using?
-      options:
-        - Ubuntu 20.04 (LTS)
-        - Ubuntu 22.04 (LTS)
-        - Ubuntu 24.04 (LTS)
-        - Windows System
-        - Other (Please specify in description)
-    validations:
-      required: true
+      label: Solution Description
+      description: If you have a solution in mind, please describe it.
 
   - type: textarea
     attributes:
-      label: System Setup
-      description: Describe your system and software setup. Include any critical video, audio, and model files.
-    validations:
-      required: true
-
-  - type: textarea
-    attributes:
-      label: Reproducible Steps
-      description: Describe how we can reproduce your issue.
-    validations:
-      required: true
+      label: Alternative Description
+      description: Have you considered any alternative solutions or workarounds?
