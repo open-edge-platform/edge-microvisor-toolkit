@@ -30,7 +30,7 @@ including remote deployment and management of applications orchestrated by Kuber
 
 ## Host Guest VMs under Edge Microvisor Toolkit
 
-[Deploying Other OS as Guest Virtual Machines under EMT Host](./get-started/deployment/emt-vm-host.md)
+[Deploying Other Operating Systems as Guest Virtual Machines under an EMT Host](./get-started/deployment/emt-vm-host.md)
 
 <!--hide_directive
 :::{toctree}
