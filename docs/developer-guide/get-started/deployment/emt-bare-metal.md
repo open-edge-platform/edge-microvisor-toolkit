@@ -20,7 +20,7 @@ RAW images.
 
 ## Create Bootable USB
 
-### Flashing ISO
+### Flash the ISO
 
 Download the
 [ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
@@ -57,7 +57,7 @@ Download and install ISO writer software such as [Rufus](https://rufus.ie/en) or
 [Balena Etcher](https://etcher.balena.io/). The latter simplifies the process
 to just selecting ISO image and target USB drive.
 
-##### Rufus workflow
+##### Rufus Workflow
 
 If you decide to use Rufus, follow
 the instructions below:
@@ -76,7 +76,7 @@ the instructions below:
 Next, set up the target machine to [boot from the USB drive](#boot-from-usb) to
 [install Edge Microvisor Toolkit Developer Node](#install-edge-microvisor-toolkit-developer-node).
 
-### Flash RAW
+### Flash the RAW Image
 
 You can [Build](../emt-building-howto.md#build-the-edge-microvisor-toolkit-image) a custom
 immutable RAW image from a chosen version of Edge Microvisor Toolkit.
