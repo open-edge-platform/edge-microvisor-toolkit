@@ -339,6 +339,7 @@ mkdir -p src/$(dirname %{goipath})
 ln -s $PWD src/%{goipath}
 
 %build
+export GOEXPERIMENT=nosystemcrypto
 export GO111MODULE=off
 export GOPATH=$PWD
 CGO_ENABLED=0 go build -trimpath -gcflags=-l -ldflags="-X %{goipath}.CustomVersion=v%{version}" -o bin/caddy %{goipath}/cmd/caddy
