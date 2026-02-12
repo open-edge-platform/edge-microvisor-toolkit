@@ -26,34 +26,41 @@ Before you can build OS images you need to build the toolchain.
 
 1. Install Git on Ubuntu with the package manager:
 
-```bash
-sudo apt-add-repository ppa:git-core/ppa
-sudo apt update
-sudo apt install git
-```
+   ```bash
+   sudo apt-add-repository ppa:git-core/ppa
+   sudo apt update
+   sudo apt install git
+   ```
 
-2. Install required dependencies, using one of the methods:
+2. Clone the Edge Microvisor Toolkit repository.
+
+   Checkout the release tag of the repository. See the
+   [tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
+   `<release_tag_name>`. For example,
+   [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718).
+
+   ```bash
+   git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=3.0.20250718
+   ```
+
+   Change directory to the cloned repo:
+
+   ```bash
+   cd  edge-microvisor-toolkit
+   ```
+
+3. Install required dependencies, using one of the methods:
 
    - [Make Targets (recommended)](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md#method-1-using-make-targets-recommended)
    - [Bash script](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md#method-2-direct-script-execution)
 
-### Clone the Edge Microvisor Toolkit repository
-
-Checkout the release tag of the repository. See the
-[tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
-`<release_tag_name>`. For example,
-[3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718).
-
-```bash
-git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=3.0.20250718
-```
 
 ### Build the tools
 
 1. Navigate to the `toolkit` directory and build the toolchain.
 
    ```bash
-   cd edge-microvisor-toolkit/toolkit
+   cd ./toolkit
    ```
 
    > **Note:**
