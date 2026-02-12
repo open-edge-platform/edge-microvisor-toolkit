@@ -163,9 +163,6 @@ fi
 * Thu Feb 05 2026 andy <andy.peng@intel.com> - 1.25.7-1
 - Bump version to 1.25.7-1
 
-* Tue Jan 20 2026 bot-for-go[bot] <199222863+bot-for-go[bot]@users.noreply.github.com> - 1.25.6-1
-- Bump version to 1.25.6-1
-
 * Tue Dec 02 2025 bot-for-go[bot] <199222863+bot-for-go[bot]@users.noreply.github.com> - 1.25.5-1
 - Bump version to 1.25.5-1
 
