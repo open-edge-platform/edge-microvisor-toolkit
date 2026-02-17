@@ -59,24 +59,24 @@
 
 2. Select **Install Windows 11** and click **Next**:
 
-   ![Choose Setup Option](./assets/emt-vm-host-win/win11-setup-option.png)
+   ![Choose Setup Option](../assets/emt-vm-host-win/win11-setup-option.png)
 
 3. Select **Windows 11 IoT Enterprise**":
 
-   ![Select Windows Image](./assets/emt-vm-host-win/win11-select-image.png)
+   ![Select Windows Image](../assets/emt-vm-host-win/win11-select-image.png)
 
 4. Select **Drive 0 Unallocated Space** and click **Next**:
 
-   ![Select Install Location](./assets/emt-vm-host-win/win11-select-install-location.png)
+   ![Select Install Location](../assets/emt-vm-host-win/win11-select-install-location.png)
 
 5. Select **Ready to install**:
 
-   ![Ready to Install](./assets/emt-vm-host-win/win11-ready-to-install.png)
+   ![Ready to Install](../assets/emt-vm-host-win/win11-ready-to-install.png)
 
 6. Follow the Windows installation steps as usual, rebooting as necessary.
    When the installer asks for a network connection, select **I don't have internet**.
 
-   ![Network](./assets/emt-vm-host-win/win11-install-connect.png)
+   ![Network](../assets/emt-vm-host-win/win11-install-connect.png)
 
    Windows will be installed to `win.qcow2`.
 
@@ -130,9 +130,9 @@ sudo ./start_windows.sh
 2. Double click on the **KB5050094** *.msu file to start the installation.
    After successful installation reboot the Windows Guest VM.
 
-   ![patch1](./assets/emt-vm-host-win/win11-install-patch1.png)
+   ![patch1](../assets/emt-vm-host-win/win11-install-patch1.png)
 
-   ![patch2](./assets/emt-vm-host-win/win11-install-patch2.png)
+   ![patch2](../assets/emt-vm-host-win/win11-install-patch2.png)
 
 <!--3. Start Command Prompt in administrator mode and enter “winver” to check the
 version. It should show 21H2 OS Builds 19044.4412.-->
@@ -146,12 +146,12 @@ version. It should show 21H2 OS Builds 19044.4412.-->
 3. Wait for the **Dell Update Package** window to open, then click
    **INSTALL** and follow the prompts.
 
-   ![Windows 11 Dell Update Package](./assets/emt-vm-host-win/win11-dell-update-package.png)
+   ![Windows 11 Dell Update Package](../assets/emt-vm-host-win/win11-dell-update-package.png)
 
 4. After intel GFX Driver installation windows opens, click the
    **Begin Installation** button:
 
-   ![Windows 11 Intel Graphics Installer](./assets/emt-vm-host-win/win11-intel-graphics-installer.PNG)
+   ![Windows 11 Intel Graphics Installer](../assets/emt-vm-host-win/win11-intel-graphics-installer.PNG)
 
 <!--2. Use File Explorer to extract the zip file.
 
@@ -161,7 +161,7 @@ version. It should show 21H2 OS Builds 19044.4412.-->
 
 5. After the installation is completed, reboot the Windows guest VM:
 
-   ![Intel Graphics Reboot Prompt](./assets/emt-vm-host-win/win11-intel-graphics-reboot.PNG)
+   ![Intel Graphics Reboot Prompt](../assets/emt-vm-host-win/win11-intel-graphics-reboot.PNG)
 
 6. Launch Device Manager to verify the installation.
 
@@ -190,15 +190,15 @@ option to point to the main installation directory.-->
 
 1. Go to the directory containing **ZeroCopyInstaller**.
 
-   ![Zero Copy Installer in Windows Explorer](./assets/emt-vm-host-win/win11-zc-explorer.png)
+   ![Zero Copy Installer in Windows Explorer](../assets/emt-vm-host-win/win11-zc-explorer.png)
 
 2. Double-click the **ZeroCopyInstaller** to run it.
 
-   ![Zero Copy UAC Prompt](./assets/emt-vm-host-win/win11-zc-sandbox.png)
+   ![Zero Copy UAC Prompt](../assets/emt-vm-host-win/win11-zc-sandbox.png)
 
 3. Click on the Install button when prompted.
 
-   ![Zero Copy Installer UI](./assets/emt-vm-host-win/win11-zc-installer.png)
+   ![Zero Copy Installer UI](../assets/emt-vm-host-win/win11-zc-installer.png)
 
 4. Once the installation is completed, click the **Finish**
    button to restart Windows.
@@ -228,7 +228,7 @@ option to point to the main installation directory.-->
 
 2. Expand the **Display adapters** item in the device list, as shown below:
 
-   ![Display Adapters](./assets/emt-vm-host-win/win11-display-adapters.png)
+   ![Display Adapters](../assets/emt-vm-host-win/win11-display-adapters.png)
 
 3. Verify that **DVServerUMD Device** and  **VServerKMD driver** are loaded properly.
 
@@ -242,14 +242,14 @@ option to point to the main installation directory.-->
 
 2. Expand the **Display adapters** item in the device list:
 
-   ![Display Adapters Expanded](./assets/emt-vm-host-win/win11-display-adapters-expanded.png)
+   ![Display Adapters Expanded](../assets/emt-vm-host-win/win11-display-adapters-expanded.png)
 
 3. Right click on the graphics device and select **Properties**.
 
 4. Switch to the **Details** tab and select **Hardware IDs** from the
    **Property** drop down list.
 
-   ![Graphics Properties](./assets/emt-vm-host-win/win11-graphics-properties.png)
+   ![Graphics Properties](../assets/emt-vm-host-win/win11-graphics-properties.png)
 
 5. Right click on the second ID in the list and select **Copy** from the context menu.
 
@@ -261,21 +261,21 @@ option to point to the main installation directory.-->
    -> **Administrative Templates** -> **System** -> **Device Installation**
    -> **Device Installation Restrictions**
 
-   ![Device Installation Restrictions](./assets/emt-vm-host-win/win11-device-installation-restrictions.png)
+   ![Device Installation Restrictions](../assets/emt-vm-host-win/win11-device-installation-restrictions.png)
 
 3. On the right pane, double click **Prevent installation of devices that match**
    **any of these device IDs** to display additional configuration options.
 
-   ![Prevent Device Installation](./assets/emt-vm-host-win/win11-prevent-device-installation.png)
+   ![Prevent Device Installation](../assets/emt-vm-host-win/win11-prevent-device-installation.png)
 
 4. In the new pop-up window, click the **Enabled** radio button.
 
-   ![Prevent Device Installation - Enabled](./assets/emt-vm-host-win/win11-prevent-device-installation-enabled.png)
+   ![Prevent Device Installation - Enabled](../assets/emt-vm-host-win/win11-prevent-device-installation-enabled.png)
 
 5. Clicking **Show…** will bring up a new window. Enter the device hardware
    ID copied earlier:
 
-   ![Prevent Device Installation - Show](./assets/emt-vm-host-win/win11-prevent-device-installation-show.png)
+   ![Prevent Device Installation - Show](../assets/emt-vm-host-win/win11-prevent-device-installation-show.png)
 
 6. Click **OK** in all the dialog windows to disable graphics driver updates.
 

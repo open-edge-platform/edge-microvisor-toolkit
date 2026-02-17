@@ -1,4 +1,4 @@
-# Enable X11 Desktop UI in ISO Image for Edge Microvisor Toolkit Developer Node
+# Enable X11 Desktop UI in Edge Microvisor Toolkit Developer Node
 
 ## X11 Desktop UI Pre-Requisite
 

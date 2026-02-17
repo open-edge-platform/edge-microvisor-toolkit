@@ -1,6 +1,6 @@
-# Create Other OS Guest VM under EMT Host
+# Create VMs under Edge Microvisor Toolkit Host
 
-Edge Microvisor Toolit supports SR-IOV (Single Root Input/Output Virtualization), which allows it to serve as a host OS for virtualization of other operating systems, running as a guest OS in a virtual machine.
+Edge Microvisor Toolkit supports SR-IOV (Single Root Input/Output Virtualization), which allows it to serve as a host OS for virtualization of other operating systems, running as a guest OS in a virtual machine.
 
 > **NOTE:** Contact Your Intel representative for more details on required resources.
 
@@ -8,11 +8,9 @@ Edge Microvisor Toolit supports SR-IOV (Single Root Input/Output Virtualization)
 
 1. Prepare Ubuntu Host for creating Guest VM images, as well as Guest VM images, according to the guides below:
 
-[Kernel and Host User Space Setup](./emt-vm-host-setup.md)
-
-[Windows Guest VM](./emt-vm-host-win-guest.md)
-
-[Ubuntu Guest VM](./emt-vm-host-ubuntu-guest.md)
+   - [Kernel and Host User Space Setup](./vm-host/emt-vm-host-setup.md)
+   - [Windows Guest VM](./vm-host/emt-vm-host-win-guest.md)
+   - [Ubuntu Guest VM](./vm-host/emt-vm-host-ubuntu-guest.md)
 
 2. Adjust EMT kernel parameters
 
@@ -75,3 +73,15 @@ sudo grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
 2. Display Port Configuration.
 
    The reference display port sidecar configuration yaml files are provided in the zipped file to choose the right one for the system configuration.
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./vm-host/emt-vm-host-setup
+./vm-host/emt-vm-host-win-guest
+./vm-host/emt-vm-host-ubuntu-guest
+
+:::
+hide_directive-->

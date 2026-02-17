@@ -49,7 +49,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
 
 3. In the **Software & Updates** GUI, make sure to download from **Main server**, as shown below:
 
-   ![Software and Updates](./assets/emt-vm-host-setup/ubuntu-softwareupdates.png)
+   ![Software and Updates](../assets/emt-vm-host-setup/ubuntu-softwareupdates.png)
 
 4. Upgrade the Ubuntu host software to the latest version:
 
@@ -230,3 +230,8 @@ sudo ./sriov_install_projects.sh
 cp -r packages <target path>
 cp -r sriov_install <target path>
 ```
+
+## Next
+
+- Create a [Windows 11 Guest VM image](./emt-vm-host-win-guest.md)
+- Create a [Ubuntu Guest VM image](./emt-vm-host-ubuntu-guest.md)

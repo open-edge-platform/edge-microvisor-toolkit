@@ -1,6 +1,6 @@
 %global goroot          %{_libdir}/golang
 %global gopath          %{_datadir}/gocode
-%global ms_go_filename  go1.25.5-20251202.2.src.tar.gz
+%global ms_go_filename  go1.25.7-20260204.4.src.tar.gz
 %global ms_go_revision  1
 %ifarch aarch64
 %global gohostarch      arm64
@@ -14,11 +14,11 @@
 %define __find_requires %{nil}
 Summary:        Go
 Name:           golang
-Version:        1.25.5
+Version:        1.25.7
 Release:        1%{?dist}
 License:        BSD-3-Clause
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Distribution:   Edge Microvisor Toolkit
+Vendor:         Intel Corporation
 Group:          System Environment/Security
 URL:            https://github.com/microsoft/go
 Source0:        https://github.com/microsoft/go/releases/download/v%{version}-%{ms_go_revision}/%{ms_go_filename}
@@ -160,6 +160,9 @@ fi
 %{_bindir}/*
 
 %changelog
+* Thu Feb 05 2026 andy <andy.peng@intel.com> - 1.25.7-1
+- Bump version to 1.25.7-1
+
 * Tue Dec 02 2025 bot-for-go[bot] <199222863+bot-for-go[bot]@users.noreply.github.com> - 1.25.5-1
 - Bump version to 1.25.5-1
 
