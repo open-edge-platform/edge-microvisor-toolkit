@@ -140,10 +140,13 @@ The patch refines locking mechanisms, reducing the time when critical sections c
 interrupted. This improves the overall responsiveness and guarantees that the system can
 handle real-time workloads with minimal jitter.
 
-> **Note:** You can learn more about preempt Kernel and its features at the
-> [Linux Intel LTS Kernel Github](https://github.com/intel/linux-intel-lts/blob/main/README.md).
-> You can learn more about specific kernel patches related to preempt RT Kernel in the relevant
-> [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec).
+> **Note:**
+> - Learn more about preempt Kernel and its features at the
+>   [Linux Intel LTS Kernel Github](https://github.com/intel/linux-intel-lts/blob/main/README.md).
+> - Learn more about specific kernel patches related to preempt RT Kernel in the relevant
+>   [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec).
+> - The use of RT Kernel with Intel® Core™ Ultra Processors has some limitations. Refer to
+    the [Known Limitations](./emt-troubleshooting.md#known-limitations) section for more details.
 
 ### perf tool
 
