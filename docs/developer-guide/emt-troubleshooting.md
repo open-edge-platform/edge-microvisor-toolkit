@@ -247,3 +247,21 @@ instability for real-time workloads using RAW/ISO toolkit images with 6.12 RT ke
 | Asus NUC 14 Mini PC Pro          | Intel® Core™ Ultra Series 1 (Meteor Lake U/H) | Ubuntu 24.04     |
 | Asus NUC 15 PRO                  | Intel® Core™ Ultra Series 2 (Arrow Lake)      | Ubuntu 24.04     |
 
+
+### High boot time
+
+High boot time has been observed on Intel Atom® based ASL platforms. The problem may be due
+to the Intel Integrated Sensor Hub (ISH) not being supported. You can search for
+the details on the ISH timeout error by using the `dmesg` command:
+
+```sh
+sudo dmesg | grep ish
+```
+
+To measure the boot time and analyze system boot-up performance, use:
+
+```sh
+systemd-analyze
+systemd-analyze critical-chain
+```
+
