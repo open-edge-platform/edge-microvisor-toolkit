@@ -4740,8 +4740,8 @@
         "type": "other",
         "other": {
           "name": "golang",
-          "version": "1.25.5",
-          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.25.5-1/go1.25.5-20251202.2.src.tar.gz"
+          "version": "1.25.7",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.25.7-1/go1.25.7-20260204.4.src.tar.gz"
         }
       }
     },
@@ -4750,8 +4750,8 @@
         "type": "other",
         "other": {
           "name": "golang",
-          "version": "1.24.9",
-          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.24.9-1/go1.24.9-20251013.3.src.tar.gz"
+          "version": "1.24.13",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.24.13-1/go1.24.13-20260204.5.src.tar.gz"
         }
       }
     },
@@ -7511,8 +7511,8 @@
         "type": "other",
         "other": {
           "name": "intel-idv-services",
-          "version": "1.0.0~rc4",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc4/intel-idv-services-1.0.0-rc4.tar.gz"
+          "version": "1.0.0~rc6",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc6/intel-idv-services-1.0.0-rc6.tar.gz"
         }
       }
     },
@@ -26663,8 +26663,8 @@
         "type": "other",
         "other": {
           "name": "reporting-agent",
-          "version": "0.1.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.1.0.tar.gz"
+          "version": "0.1.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.1.1.tar.gz"
         }
       }
     },
