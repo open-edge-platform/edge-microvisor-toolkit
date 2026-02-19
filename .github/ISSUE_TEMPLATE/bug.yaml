@@ -1,3 +1,4 @@
+---
 name: Bug report
 description: Create an issue to help us improve
 title: "[Bug]: "
@@ -16,7 +17,7 @@ body:
       required: true
   - type: input
     attributes:
-      label: Software Version 
+      label: Software Version
       description: Software version, branch, or tag in the Open Edge Platform Repository
       placeholder: v1.2.0 / Master Branch / tag v2025.2.0-rc3
     validations:
