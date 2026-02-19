@@ -1,7 +1,7 @@
 Summary:        Linux Kernel
 Name:           kernel
 Version:        6.17.11
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -963,6 +963,9 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Thu Feb 19 2026 Lishan Liu <lishan.liu@intel.com> - 6.17.11-3
+- Kernel config update for TCP plus TCSS ports
+
 * Sun Feb 01 2026 Lishan Liu <lishan.liu@intel.com> - 6.17.11-2
 - Update kernel to 6.17.11-2
 - mainline-v6.17.11-emt-overlay-cve-260128T080735Z
