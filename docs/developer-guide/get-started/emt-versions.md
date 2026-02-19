@@ -88,7 +88,7 @@ Enable AI inference and computer-vision workloads on edge nodes using Intel GPU
 and NPU acceleration, exposing unified hardware-assisted pipelines through
 standard APIs and user-space libraries.
 
-**Primary outcomes:**
+*Primary outcomes:*
 
 - Efficient execution of deep-learning and vision inference on-device without
   cloud dependency
@@ -101,7 +101,7 @@ standard APIs and user-space libraries.
 - Stable ABI/API interface across [OS updates](../architecture/emt-updates.md)
   and driver versions
 
-**Technology areas:**
+*Technology areas:*
 
 - [Edge AI packages](https://eci.intel.com/docs/3.3/packages_list.html)
 - [OpenVino](https://docs.openvino.ai)
