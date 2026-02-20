@@ -1,6 +1,6 @@
 Summary:        Edge node registration and trust management
 Name:           node-agent
-Version:        1.10.1
+Version:        1.10.2
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -13,7 +13,7 @@ Source3:        %{name}.conf
 Source4:        node_agent.te
 Source5:        node_agent.fc
 BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang >= 1.25.7
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       (%{name}-selinux if selinux-policy-targeted)
@@ -161,6 +161,9 @@ sed -i '/client-proxy/{N;d;}' %{_sysconfdir}/edge-node/node/confs/%{name}.yaml
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Fri Feb 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.10.2-1
+- Update to golang 1.25.7
+
 * Fri Feb 06 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.10.1-1
 - Update to golang 1.25.5
 

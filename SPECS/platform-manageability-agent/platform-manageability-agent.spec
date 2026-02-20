@@ -1,6 +1,6 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
-Version:        0.4.1
+Version:        0.4.3
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -12,7 +12,7 @@ Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        %{name}.sudoers
 BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang >= 1.25.7
 BuildRequires:  systemd-rpm-macros
 Requires:       rpc
 
@@ -77,6 +77,9 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
+* Fri Feb 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.4.3-1
+- Update to golang 1.25.7
+
 * Fri Feb 06 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.4.1-1
 - Update to golang 1.25.5
 
