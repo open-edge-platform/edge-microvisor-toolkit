@@ -10,7 +10,7 @@ Source0:        %{url}/archive/refs/tags/%{name}/v%{version}.tar.gz#/%{name}-%{v
 Source1:        %{name}.conf
 Source2:        edge-node-metrics.cron
 BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.7
+BuildRequires:  golang >= 1.25.5
 BuildRequires:  systemd-rpm-macros
 
 Requires(pre):  %{_bindir}/systemd-sysusers

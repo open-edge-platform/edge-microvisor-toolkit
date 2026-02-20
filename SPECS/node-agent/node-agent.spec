@@ -13,7 +13,7 @@ Source3:        %{name}.conf
 Source4:        node_agent.te
 Source5:        node_agent.fc
 BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.7
+BuildRequires:  golang >= 1.25.5
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       (%{name}-selinux if selinux-policy-targeted)

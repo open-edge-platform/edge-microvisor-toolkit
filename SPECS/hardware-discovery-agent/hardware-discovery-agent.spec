@@ -13,7 +13,7 @@ Source3:        env_wrapper.sh
 Source4:        hd_agent.te
 Source5:        hd_agent.fc
 BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.7
+BuildRequires:  golang >= 1.25.5
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       dmidecode
