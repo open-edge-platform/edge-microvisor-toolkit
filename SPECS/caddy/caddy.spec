@@ -3,7 +3,7 @@
 Summary:        Web server with automatic HTTPS
 Name:           caddy
 Version:        2.9.1
-Release:        18%{?dist}
+Release:        20%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 # main source code is Apache-2.0
@@ -35,9 +35,10 @@ Patch6:         CVE-2025-61727.patch
 Patch7:         CVE-2025-61729.patch
 Patch8:         CVE-2025-47913.patch
 Patch9:         CVE-2025-47914.patch
+Patch10:        CVE-2025-58190.patch
+Patch11:        CVE-2025-47911.patch
 # https://github.com/caddyserver/caddy/commit/2028da4e74cd41f0f7f94222c6599da1a371d4b8
-BuildRequires:  golang >= 1.24.4
-BuildRequires:  golang < 1.25
+BuildRequires:  golang >= 1.25.5
 # dario.cat/mergo : BSD-3-Clause
 Provides:       bundled(golang(dario.cat/mergo)) = 1.0.1
 # filippo.io/edwards25519 : BSD-3-Clause
@@ -340,6 +341,7 @@ mkdir -p src/$(dirname %{goipath})
 ln -s $PWD src/%{goipath}
 
 %build
+export GOEXPERIMENT=nosystemcrypto
 export GO111MODULE=off
 export GOPATH=$PWD
 CGO_ENABLED=0 go build -trimpath -gcflags=-l -ldflags="-X %{goipath}.CustomVersion=v%{version}" -o bin/caddy %{goipath}/cmd/caddy
@@ -457,6 +459,12 @@ fi
 %{_datadir}/fish/vendor_completions.d/caddy.fish
 
 %changelog
+* Fri Feb 13 2026 Rajesh Shanmugam <rajesh1x.shanmugam@intel.com> - 2.9.1-20
+- Add patch for CVE-2025-47911 and CVE-2025-58190
+
+* Fri Feb 13 2026 Andy <andy.peng@intel.com> - 2.9.1-19
+- Update BuildRequires for golang
+
 * Fri Jan 23 2026 Shalini Singhal <shalinix.singhal@intel.com> - 2.9.1-18
 - Include patch for CVE-2025-47913, CVE-2025-41914
 

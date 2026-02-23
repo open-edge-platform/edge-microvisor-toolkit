@@ -361,7 +361,7 @@ sudo apt-get install rpm
 
 1. Create the `helloworld` folder in the `edge-microvisor-toolkit/SPECS` directory.
 
-   Make sure you use the [stable branch](#clone-the-edge-microvisor-toolkit-repository)
+   Make sure you use the [stable branch](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags)
    of the Edge Microvisor Toolkit repository.
 
    ```bash
