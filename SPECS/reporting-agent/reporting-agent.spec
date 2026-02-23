@@ -1,6 +1,6 @@
 Summary:        An agent gathering statistics from Open Edge Platform installations
 Name:           reporting-agent
-Version:        0.1.1
+Version:        0.1.2
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -75,6 +75,9 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %sysusers_create_package %{name} %{SOURCE1}
 
 %changelog
+* Fri Feb 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.1.2-1
+- Update to golang 1.25.7
+
 * Wed Feb 11 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.1.1-1
 - Update to golang 1.25.5
 
