@@ -4,7 +4,7 @@
 
 Summary:        An agent for managing and updating metric and log configurations
 Name:           platform-telemetry-agent
-Version:        1.7.0
+Version:        1.7.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -149,6 +149,9 @@ echo "Assigning KUBECONFIG End"
 %systemd_postun platform-telemetry-agent.service
 
 %changelog
+* Fri Feb 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.7.1-1
+- Update to golang 1.25.7
+
 * Fri Feb 06 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.7.0-1
 - Update to golang 1.25.5
 
