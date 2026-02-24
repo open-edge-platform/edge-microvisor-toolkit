@@ -26683,8 +26683,8 @@
         "type": "other",
         "other": {
           "name": "reporting-agent",
-          "version": "0.1.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.1.0.tar.gz"
+          "version": "0.1.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.1.1.tar.gz"
         }
       }
     },
