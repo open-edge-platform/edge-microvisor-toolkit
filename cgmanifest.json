@@ -7521,8 +7521,8 @@
         "type": "other",
         "other": {
           "name": "intel-idv-services",
-          "version": "1.0.0~rc4",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc4/intel-idv-services-1.0.0-rc4.tar.gz"
+          "version": "1.0.0~rc6",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-desktop-virtualization/releases/download/1.0.0-rc6/intel-idv-services-1.0.0-rc6.tar.gz"
         }
       }
     },
