@@ -58,7 +58,7 @@ and workloads. It has been validated on the following platforms:
 ## Software Requirements
 
 | Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node) |
-|------------------|-------------------------|-------------------------|
-| Kernel Version   | Intel® Kernel 6.12      | Intel® Kernel 6.12      |
-| Bootloader       | GRUB                    | Systemd-boot            |
-| Update Mechanism | RPM-based with TDNF     | Image-based A/B updates |
+|------------------|----------------------------------------|---------------------------------------------------------------------------|
+| Kernel Version   | Intel® “Next” Kernel 6.17              | Intel® “Next” Kernel 6.17                                                 |
+| Bootloader       | GRUB                                   | Systemd-boot                                                              |
+| Update Mechanism | RPM-based with TDNF                    | Image-based A/B updates                                                   |

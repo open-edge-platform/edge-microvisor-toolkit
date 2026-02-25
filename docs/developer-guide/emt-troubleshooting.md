@@ -233,3 +233,16 @@ USB boot option and make sure USB boot has highest precedence in the
 boot order list. You also need to configure BIOS with the Platform Keys (PK) to enable
 [secure boot](./security-considerations/emt-sb-howto.md) for Edge Microvisor Toolkit.
 ::::
+
+## Known Limitations
+
+### Real-time jitter and CPU spikes
+
+High variance real-time jitter and CPU spikes have been observed under specific
+configurations, listed below. The issues may result in a significant performance
+instability for real-time workloads using RAW/ISO toolkit images with RT kernel.
+
+ Platform | Processor family | Operating System | RT kernel
+--- | --- | --- | ---
+ Asus NUC 15 Pro | Intel(R) Core(TM) Ultra X7 358H (Panther Lake) | Ubuntu 24.04 | 6.17 Next
+
