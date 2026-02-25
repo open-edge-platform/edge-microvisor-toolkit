@@ -4,7 +4,7 @@ Summary:        Device Discovery Agent for Edge Node
 Name:           device-discovery
 Epoch:          1
 Version:        0.0.4
-Release:        1%{?dist}
+Release:        2%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
