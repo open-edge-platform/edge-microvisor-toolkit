@@ -6,6 +6,7 @@
         "espeakup",
         "kernel-drivers-accessibility",
         "kernel-drivers-sound",
+        "kernel-rt-drivers-sound",
         "pcaudiolib"
     ]
 }

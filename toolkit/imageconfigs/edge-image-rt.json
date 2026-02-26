@@ -76,7 +76,6 @@
                 "packagelists/intel-wireless.json",
                 "packagelists/os-ab-update.json",
                 "packagelists/vpro-amt-packages.json",
-                "packagelists/kernel-rt-drivers.json",
                 "packagelists/helm.json",
                 "packagelists/docker.json"
             ],
