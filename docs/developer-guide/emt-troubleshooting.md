@@ -244,5 +244,5 @@ instability for real-time workloads using RAW/ISO toolkit images with RT kernel.
 
  Platform | Processor family | Operating System | RT kernel
 --- | --- | --- | ---
- Asus NUC 15 Pro | Intel(R) Core(TM) Ultra X7 358H (Panther Lake) | Ubuntu 24.04 | 6.17 Next
+ Intel Corporation Panther Lake Client Platform | Intel(R) Core(TM) Ultra X7 358H | Edge Microvisor Toolkit | 6.17 Next
 
