@@ -629,6 +629,15 @@ func PopulateInstallRoot(installChroot *safechroot.Chroot, packagesToInstall []s
 		}
 	}
 
+	// Create default 20GB swap file ONLY for ISO installations
+	if !config.IsRootFS() && config.IsIsoInstall {
+		err = createDefaultSwapFile(installChroot)
+		if err != nil {
+			err = fmt.Errorf("failed to create default swap file:\n%w", err)
+			return
+		}
+	}
+
 	// Configure machine-id and other systemd state files
 	err = clearSystemdState(installChroot, config.EnableSystemdFirstboot)
 	if err != nil {
@@ -3144,4 +3153,64 @@ func CreateResolvCfgSymlink(installChrootRootDir string) (err error) {
 	}
 
 	return
+}
+
+// createDefaultSwapFile creates a default 20GB swap file in the installed system
+func createDefaultSwapFile(installChroot *safechroot.Chroot) error {
+	const (
+		swapFileSize = "20G"
+		swapFilePath = "/swapfile"
+	)
+
+	logger.Log.Infof("Creating default %s swap file", swapFileSize)
+
+	// Create 20GB swap file inside the chroot
+	err := installChroot.UnsafeRun(func() error {
+		// Create swap file using fallocate for better performance
+		_, stderr, err := shell.Execute("fallocate", "-l", swapFileSize, swapFilePath)
+		if err != nil {
+			// Fall back to dd if fallocate fails
+			logger.Log.Warnf("fallocate failed (%v), falling back to dd", stderr)
+			_, stderr, err = shell.Execute("dd", "if=/dev/zero", "of="+swapFilePath,
+				"bs=1M", "count=20480", "status=progress")
+			if err != nil {
+				return fmt.Errorf("failed to create swap file:\n%v\n%w", stderr, err)
+			}
+		}
+
+		// Set proper permissions (600 for security)
+		err = os.Chmod(swapFilePath, 0600)
+		if err != nil {
+			return fmt.Errorf("failed to set swap file permissions:\n%w", err)
+		}
+
+		// Format as swap
+		_, stderr, err = shell.Execute("mkswap", swapFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to format swap file:\n%v\n%w", stderr, err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Add swap file to fstab
+	fstabPath := filepath.Join(installChroot.RootDir(), "etc/fstab")
+	swapEntry := fmt.Sprintf("%s none swap defaults 0 0\n", swapFilePath)
+
+	fstabFile, err := os.OpenFile(fstabPath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open fstab file:\n%w", err)
+	}
+	defer fstabFile.Close()
+
+	_, err = fstabFile.WriteString(swapEntry)
+	if err != nil {
+		return fmt.Errorf("failed to add swap entry to fstab:\n%w", err)
+	}
+
+	logger.Log.Infof("Successfully created and configured %s swap file", swapFileSize)
+	return nil
 }
