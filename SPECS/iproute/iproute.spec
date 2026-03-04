@@ -5,7 +5,6 @@ Release:        1%{?dist}
 URL:            https://www.kernel.org/pub/linux/utils/net/%{name}2/
 Source0:        https://www.kernel.org/pub/linux/utils/net/%{name}2/%{name}2-%{version}.tar.xz
 License:        GPLv2
-URL:            https://www.kernel.org/pub/linux/utils/net/iproute2
 Group:          Applications/System
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
