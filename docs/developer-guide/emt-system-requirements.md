@@ -22,18 +22,35 @@ and workloads. It has been validated on the following platforms:
 
 ### CPU
 
-|      Atom             |               Core™           |      Xeon®              |
-| ----------------------| ----------------------------- | ----------------------- |
-| Intel® Atom® X Series | 12th Gen Intel® Core™         | 5th Gen Intel® Xeon® SP |
-|                       | 13th Gen Intel® Core™         | 4th Gen Intel® Xeon® SP |
-|                       | Intel® Core™ Ultra (Series 1) | 3rd Gen Intel® Xeon® SP |
+Intel® Atom® processor:
+-  Intel® Atom® X series processor
+-  Intel Atom® x7000RE, x7000C, and x7000FE processor series (code-named Amston Lake)
+
+Intel® Core™  processor:
+- 12th Gen Intel® Core™ processor
+- 13th Gen Intel® Core™ processor
+- Intel® Core™ Ultra (Series 1) processor
+- Intel® processor N150 and N250
+- Intel® Core™ 3 processor N355 (code-named Twin Lake)
+- Intel® Core™ Ultra processor series 2 (code-named Arrow Lake-S)
+- Intel® Core™ Ultra 200U and 200H series processors (code-named Arrow Lake U/H)
+- Intel® Core™ processor 200 series
+- Intel® Core™ Ultra processor
+- Intel® Core™ Ultra processor for the Edge (PS Series)
+
+ Intel® Xeon® processor:
+- 5th Gen Intel® Xeon® SP
+- 4th Gen Intel® Xeon® SP
+- 3rd Gen Intel® Xeon® SP
 
 ### Discrete GPU
 
-|        Intel®         |           NVIDIA®             |
-|-----------------------|-------------------------------|
-| Intel® Arc™ B580      | NVIDIA® Tesla® P100           |
-|                       | GeForce RTX™ 3090             |
+Intel® GPU:
+- Intel® Arc™ B580 GPU
+
+NVIDIA GPU:
+- NVIDIA® Tesla® P100 GPU
+- GeForce RTX™ 3090 GPU
 
 ## Recommended Hardware Configuration
 
