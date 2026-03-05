@@ -2,8 +2,6 @@
     "packages": [
         "dnf",
         "vim",
-        "runc",
-        "libseccomp",
         "wget"
     ]
 }
