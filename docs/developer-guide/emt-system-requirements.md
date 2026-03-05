@@ -30,8 +30,7 @@ Intel® Core™  processor:
 - 12th Gen Intel® Core™ processor
 - 13th Gen Intel® Core™ processor
 - Intel® Core™ Ultra (Series 1) processor
-- Intel® processor N150 and N250
-- Intel® Core™ 3 processor N355 (code-named Twin Lake)
+- Intel® processor N150 and N250, and Intel® Core™ 3 processor N355 (code-named Twin Lake)
 - Intel® Core™ Ultra processor series 2 (code-named Arrow Lake-S)
 - Intel® Core™ Ultra 200U and 200H series processors (code-named Arrow Lake U/H)
 - Intel® Core™ processor 200 series
@@ -48,7 +47,7 @@ Intel® Core™  processor:
 Intel® GPU:
 - Intel® Arc™ B580 GPU
 
-NVIDIA GPU:
+NVIDIA® GPU:
 - NVIDIA® Tesla® P100 GPU
 - GeForce RTX™ 3090 GPU
 
