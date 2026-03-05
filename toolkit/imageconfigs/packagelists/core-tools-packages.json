@@ -2,6 +2,7 @@
     "packages": [
         "dnf",
         "vim",
+        "iproute",
         "wget"
     ]
 }
