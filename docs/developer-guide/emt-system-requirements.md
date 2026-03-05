@@ -37,7 +37,7 @@ Intel® Core™  processor:
 - Intel® Core™ Ultra processor
 - Intel® Core™ Ultra processor for the Edge (PS Series)
 
- Intel® Xeon® processor:
+Intel® Xeon® processor:
 - 5th Gen Intel® Xeon® SP
 - 4th Gen Intel® Xeon® SP
 - 3rd Gen Intel® Xeon® SP
