@@ -23,8 +23,8 @@ and workloads. It has been validated on the following platforms:
 ### CPU
 
 Intel® Atom® processor:
--  Intel® Atom® X series processor
--  Intel Atom® x7000RE, x7000C, and x7000FE processor series (code-named Amston Lake)
+- Intel® Atom® X series processor
+- Intel Atom® x7000RE, x7000C, and x7000FE processor series (code-named Amston Lake)
 
 Intel® Core™  processor:
 - 12th Gen Intel® Core™ processor
