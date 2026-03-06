@@ -28,24 +28,24 @@ jobs:
             build-mode: none
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           persist-credentials: false
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@ae9ef3a1d2e3413523c3741725c30064970cc0d4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@ae9ef3a1d2e3413523c3741725c30064970cc0d4
         with:
           category: "/language:${{matrix.language}}"
 
       - name: Generate Security Report
-        uses: rsdmike/github-security-report-action@v3.0.4
+        uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d
         with:
           template: report
           token: ${{ secrets.SECURITY_TOKEN }}
@@ -55,7 +55,7 @@ jobs:
           mv ./report.pdf ./report-${{ matrix.language }}.pdf
 
       - name: GitHub Upload Release Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: report-${{ matrix.language }}
           path: |
