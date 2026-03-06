@@ -23,7 +23,6 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }}
       run: |
         git fetch origin ${ORIGIN_BASE_REF}
-
         echo "base_sha=$(git rev-parse origin/${ORIGIN_BASE_REF})" >> $GITHUB_ENV
         echo "Merging ${{ github.sha }} into ${ORIGIN_BASE_REF}"
       env:
