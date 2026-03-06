@@ -22,9 +22,12 @@ jobs:
     - name: Get base commit for PRs
       if: ${{ github.event_name == 'pull_request' }}
       run: |
-        git fetch origin ${{ github.base_ref }}
-        echo "base_sha=$(git rev-parse origin/${{ github.base_ref }})" >> $GITHUB_ENV
-        echo "Merging ${{ github.sha }} into ${{ github.base_ref }}"
+        git fetch origin ${ORIGIN_BASE_REF}
+
+        echo "base_sha=$(git rev-parse origin/${ORIGIN_BASE_REF})" >> $GITHUB_ENV
+        echo "Merging ${{ github.sha }} into ${ORIGIN_BASE_REF}"
+      env:
+        ORIGIN_BASE_REF: ${{ github.base_ref }}
 
     - name: Get base commit for Pushes
       if: ${{ github.event_name == 'push' }}
