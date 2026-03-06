@@ -1,6 +1,6 @@
 Summary:        RDMA core userspace libraries and daemons
 Name:           rdma-core
-Version:        55.0
+Version:        59.0
 Release:        1%{?dist}
 URL:            https://github.com/linux-rdma/rdma-core
 Vendor:         Microsoft Corporation
@@ -25,7 +25,7 @@ BuildRequires: gcc
 BuildRequires: pkg-config
 BuildRequires: pkgconfig(libnl-3.0)
 BuildRequires: pkgconfig(libnl-route-3.0)
-# Disable pyverbs for emt, as pyverbs cannot build with cython > 3
+# Disable pyverbs for azl, as pyverbs cannot build with cython > 3
 # pyverbs/device.c: error: redefinition of '__Pyx_Enum_ibv_event_type_to_py'
 # and non-matching exception definitions
 %if 0%{emt}
@@ -625,6 +625,9 @@ fi
 %endif
 
 %changelog
+* Tue Nov 04 2025 Suresh Babu Chalamalasetty <schalam@microsoft.com> - 59.0-1
+- Upgrade version to 59.0.
+
 * Tue Jan 07 2025 Elaheh Dehghani <edehghani@microsoft.com> - 55.0-1
 - Upgrade to version 55.0
 - Add rdma-core to PMC extended repo
