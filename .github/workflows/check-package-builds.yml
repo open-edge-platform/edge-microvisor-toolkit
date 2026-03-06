@@ -119,7 +119,7 @@ jobs:
               sed -i "/^%license/a %doc $license_file_name" "$REGULAR_PKG_SPEC_PATH"
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5    #v4
 
       - name: Checkout a stable version of the specs
         uses: ./.github/actions/checkout-with-stable-pkgs
