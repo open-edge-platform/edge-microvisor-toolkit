@@ -157,6 +157,7 @@ Patch0900:      do-not-test-openssl-sm3.patch
 Patch0901:      networkd-default-use-domains.patch
 Patch0902:      CVE-2023-7008.patch
 Patch0903:      CVE-2025-4598.patch
+Patch0904:      fix-stackoverflow-when-dropping-tclass-or-qdisc.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global want_bootloader 1
@@ -1257,8 +1258,9 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
-* Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 255-33
-- merge from Azure Linux 3.0.20251206-3.0
+* Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-33
+- merge from Azure Linux 3.0.20260107-3.0
+- Add fix-stackoverflow-when-dropping-tclass-or-qdisc.patch
 - Patch CVE-2025-4598
 
 * Mon Nov 10 2025 Lishan Liu <lishan.liu@intel.com> - 255-32
