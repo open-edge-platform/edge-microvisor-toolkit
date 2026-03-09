@@ -3,6 +3,7 @@
         "dnf",
         "vim",
         "iproute",
+        "iproute-tc",
         "wget"
     ]
 }
