@@ -683,7 +683,6 @@ func convertPackageVersionToTdnfArg(pkgVer *pkgjson.PackageVer) (tdnfArg string)
 	// Handle first condition
 	var firstConstraint, secondConstraint string
 
-
 	// To avoid significant overhead we only download the latest version of a package
 	// for ">" and ">=" constraints (ie remove constraints).
 
@@ -692,7 +691,7 @@ func convertPackageVersionToTdnfArg(pkgVer *pkgjson.PackageVer) (tdnfArg string)
 	case "=":
 		firstConstraint = fmt.Sprintf("%s-%s", pkgVer.Name, pkgVer.Version)
 		tdnfArg = firstConstraint // For exact matches, use this format
-		return // Don't process second condition for exact matches
+		return                    // Don't process second condition for exact matches
 	case "<=", "<":
 		firstConstraint = fmt.Sprintf("%s %s %s", pkgVer.Name, pkgVer.Condition, pkgVer.Version)
 	case ">", ">=":
