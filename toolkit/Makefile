@@ -10,6 +10,89 @@
 
 # Ubuntu has actual /bin/sh vs Azure Linux having a sym link to /bin/bash. Force the Make scripts to use /bin/bash
 SHELL=/bin/bash
+.SHELLFLAGS = -eo pipefail -c
+
+# ------------------------------------------------------------------------------
+# This wraps the top-level make invocation inside a systemd --user scope.
+# When the MemoryMax is exceeded, systemd OOM-kills the entire process tree.
+# ------------------------------------------------------------------------------
+MEM_GUARD ?=
+NOMEMGUARD ?=
+SYSTEMD_RUN := $(shell command -v systemd-run 2>/dev/null || true)
+# Only run the guard once
+ifeq ($(SYSTEMD_MEMGUARD),1)
+GUARD_ACTIVE := 1
+else
+GUARD_ACTIVE :=
+endif
+
+# Re-execute make inside memory-limited scope.
+define RUN_UNDER_MEMGUARD
+@{ \
+echo $(SYSTEMD_RUN); \
+if [ -z "$(SYSTEMD_RUN)" ]; then \
+	echo "==> [memguard] WARNING: systemd-run not found; proceeding WITHOUT memory limit."; \
+	exit 0; \
+fi; \
+USER_ID="$$(id -u)"; \
+SCOPE_ARGS="--user --scope"; \
+if [ "$$USER_ID" -eq 0 ]; then \
+	SCOPE_ARGS="--scope"; \
+else \
+	if ! systemctl --user show-environment >/dev/null 2>&1; then \
+		echo "==> [memguard] No user systemd session found (no DBus)."; \
+		if ! $(SYSTEMD_RUN) --user --scope /bin/true >/dev/null 2>&1; then \
+			echo "==> [memguard] Skipping memory guard (no user systemd bus)."; \
+			exit 0; \
+		fi; \
+	fi; \
+fi; \
+if [ -n "$(MEM_GUARD)" ]; then \
+        LIMIT_STR="$(MEM_GUARD)"; \
+        echo "==> [memguard] Using user-specified MemoryMax=$(MEM_GUARD)"; \
+else \
+        AVAIL_BYTES="$$(awk '/MemAvailable:/ {print $$2*1024}' /proc/meminfo 2>/dev/null || echo 0)"; \
+        TWO_GB="$$((2*1024*1024*1024))"; \
+        FLOOR="$$((3*1024*1024*1024))"; \
+        LIMIT_BYTES="$$((AVAIL_BYTES - TWO_GB))"; \
+        if [ "$$LIMIT_BYTES" -lt "$$FLOOR" ]; then LIMIT_BYTES="$$FLOOR"; fi; \
+        LIMIT_STR="$$LIMIT_BYTES"; \
+        echo "==> [memguard] Computed MemoryMax=$$LIMIT_STR bytes (MemAvailable=$$AVAIL_BYTES bytes - 2GiB, floor 3GiB)"; \
+fi; \
+if echo "$$LIMIT_STR" | grep -Eq '^[0-9]+$$'; then \
+        MH_DELTA="$$((256*1024*1024))"; \
+        MH_VAL="$$((LIMIT_STR > MH_DELTA ? LIMIT_STR - MH_DELTA : LIMIT_STR))"; \
+        MEMORY_HIGH_ARG="-p MemoryHigh=$$MH_VAL"; \
+else \
+        MEMORY_HIGH_ARG="-p MemoryHigh=$$LIMIT_STR"; \
+fi; \
+echo "==> [memguard] Using scope: $${SCOPE_ARGS} (MemoryMax=$$LIMIT_STR)"; \
+exec $(SYSTEMD_RUN) $$SCOPE_ARGS \
+        -p MemoryAccounting=yes \
+        -p TasksAccounting=yes \
+        -p KillMode=control-group \
+        -p MemoryMax=$$LIMIT_STR \
+        $$MEMORY_HIGH_ARG \
+        -p MemorySwapMax=0 \
+        --working-directory="$(CURDIR)" \
+        /bin/bash -lc "SYSTEMD_MEMGUARD=1 $(MAKE) $(MAKECMDGOALS)"; \
+}
+endef
+.PHONY: __memguard_enter
+
+$(MAKECMDGOALS): | __memguard_enter
+ifeq ($(strip $(MAKECMDGOALS)),)
+$(.DEFAULT_GOAL): | __memguard_enter
+endif
+
+__memguard_enter:
+
+ifneq ($(GUARD_ACTIVE),1)
+	@echo "==> [memguard] Launching under systemd-run (MemoryMax=$(MEM_GUARD))"
+	@$(call RUN_UNDER_MEMGUARD)
+	@exit $$?
+endif
+
 
 toolkit_root := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 SCRIPTS_DIR  ?= $(toolkit_root)/scripts
