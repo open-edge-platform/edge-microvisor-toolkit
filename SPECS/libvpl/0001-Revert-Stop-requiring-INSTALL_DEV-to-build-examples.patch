@@ -1,0 +1,163 @@
+From d2952649449eda873305bf05b0e0f99088647a1f Mon Sep 17 00:00:00 2001
+From: "Mustaffa, Mustamin B" <mustamin.b.mustaffa@intel.com>
+Date: Fri, 29 Aug 2025 17:35:42 +0800
+Subject: [PATCH] Revert "Stop requiring INSTALL_DEV to build examples"
+
+This reverts commit 7c803c85383b011c1552d06585588ab7a8fcc4d3.
+
+Reverting this commit because we need the binaries to be installed
+ECG use cases.
+---
+ CMakeLists.txt                                           | 2 +-
+ examples/api2x/hello-decode/CMakeLists.txt               | 3 +++
+ examples/api2x/hello-encode-jpeg/CMakeLists.txt          | 3 +++
+ examples/api2x/hello-encode/CMakeLists.txt               | 3 +++
+ examples/api2x/hello-sharing-dx11/CMakeLists.txt         | 2 ++
+ examples/api2x/hello-sharing-ocl/CMakeLists.txt          | 2 ++
+ examples/api2x/hello-sharing-vaapi/CMakeLists.txt        | 2 ++
+ examples/api2x/hello-vpp/CMakeLists.txt                  | 3 +++
+ examples/tutorials/01_transition/MediaSDK/CMakeLists.txt | 3 +++
+ examples/tutorials/01_transition/VPL/CMakeLists.txt      | 3 +++
+ 10 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 34504bc..3912ac5 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -99,9 +99,9 @@ endif()
+ 
+ add_subdirectory(api)
+ add_subdirectory(libvpl)
+-add_subdirectory(examples)
+ if(INSTALL_DEV)
+   add_subdirectory(env)
++  add_subdirectory(examples)
+ endif()
+ 
+ install(
+diff --git a/examples/api2x/hello-decode/CMakeLists.txt b/examples/api2x/hello-decode/CMakeLists.txt
+index 5f72f34..f70d8fc 100644
+--- a/examples/api2x/hello-decode/CMakeLists.txt
++++ b/examples/api2x/hello-decode/CMakeLists.txt
+@@ -76,6 +76,9 @@ if(UNIX)
+   endif()
+ endif()
+ 
++install(TARGETS ${TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                  COMPONENT ${VPL_COMPONENT_DEV})
++
+ # copy dependent dlls to target location
+ if(WIN32)
+   if(${CMAKE_VERSION} VERSION_LESS "3.26")
+diff --git a/examples/api2x/hello-encode-jpeg/CMakeLists.txt b/examples/api2x/hello-encode-jpeg/CMakeLists.txt
+index ce06d08..fafb068 100644
+--- a/examples/api2x/hello-encode-jpeg/CMakeLists.txt
++++ b/examples/api2x/hello-encode-jpeg/CMakeLists.txt
+@@ -75,6 +75,9 @@ if(UNIX)
+   endif()
+ endif()
+ 
++install(TARGETS ${TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                  COMPONENT ${VPL_COMPONENT_DEV})
++
+ # copy dependent dlls to target location
+ if(WIN32)
+   if(${CMAKE_VERSION} VERSION_LESS "3.26")
+diff --git a/examples/api2x/hello-encode/CMakeLists.txt b/examples/api2x/hello-encode/CMakeLists.txt
+index 0b8423c..8948de5 100644
+--- a/examples/api2x/hello-encode/CMakeLists.txt
++++ b/examples/api2x/hello-encode/CMakeLists.txt
+@@ -75,6 +75,9 @@ if(UNIX)
+   endif()
+ endif()
+ 
++install(TARGETS ${TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                  COMPONENT ${VPL_COMPONENT_DEV})
++
+ # copy dependent dlls to target location
+ if(WIN32)
+   if(${CMAKE_VERSION} VERSION_LESS "3.26")
+diff --git a/examples/api2x/hello-sharing-dx11/CMakeLists.txt b/examples/api2x/hello-sharing-dx11/CMakeLists.txt
+index 30377a5..af2a989 100644
+--- a/examples/api2x/hello-sharing-dx11/CMakeLists.txt
++++ b/examples/api2x/hello-sharing-dx11/CMakeLists.txt
+@@ -86,6 +86,8 @@ foreach(target IN LISTS DX11_TARGETS)
+     endif()
+   endif()
+ 
++  install(TARGETS ${target} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                    COMPONENT ${VPL_COMPONENT_DEV})
+   # copy dependent dlls to target location
+   if(WIN32)
+     if(${CMAKE_VERSION} VERSION_LESS "3.26")
+diff --git a/examples/api2x/hello-sharing-ocl/CMakeLists.txt b/examples/api2x/hello-sharing-ocl/CMakeLists.txt
+index b50c023..156db35 100644
+--- a/examples/api2x/hello-sharing-ocl/CMakeLists.txt
++++ b/examples/api2x/hello-sharing-ocl/CMakeLists.txt
+@@ -90,6 +90,8 @@ foreach(target IN LISTS OCL_TARGETS)
+     endif()
+   endif()
+ 
++  install(TARGETS ${target} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                    COMPONENT ${VPL_COMPONENT_DEV})
+   # copy dependent dlls to target location
+   if(WIN32)
+     if(${CMAKE_VERSION} VERSION_LESS "3.26")
+diff --git a/examples/api2x/hello-sharing-vaapi/CMakeLists.txt b/examples/api2x/hello-sharing-vaapi/CMakeLists.txt
+index 8ade96e..0eaeb92 100644
+--- a/examples/api2x/hello-sharing-vaapi/CMakeLists.txt
++++ b/examples/api2x/hello-sharing-vaapi/CMakeLists.txt
+@@ -79,6 +79,8 @@ foreach(target IN LISTS VAAPI_TARGETS)
+     endif()
+   endif()
+ 
++  install(TARGETS ${target} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                    COMPONENT ${VPL_COMPONENT_DEV})
+ endforeach()
+ 
+ include(CTest)
+diff --git a/examples/api2x/hello-vpp/CMakeLists.txt b/examples/api2x/hello-vpp/CMakeLists.txt
+index eeee7c6..9d82fca 100644
+--- a/examples/api2x/hello-vpp/CMakeLists.txt
++++ b/examples/api2x/hello-vpp/CMakeLists.txt
+@@ -89,6 +89,9 @@ get_directory_property(has_parent PARENT_DIRECTORY)
+ if(NOT has_parent)
+   # only make run target available for stand-alone build
+   add_custom_target(run ${TARGET} ${RUNARGS})
++else()
++  install(TARGETS ${TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                    COMPONENT ${VPL_COMPONENT_DEV})
+ endif()
+ 
+ # copy dependent dlls to target location
+diff --git a/examples/tutorials/01_transition/MediaSDK/CMakeLists.txt b/examples/tutorials/01_transition/MediaSDK/CMakeLists.txt
+index a9634cb..ffe8b32 100644
+--- a/examples/tutorials/01_transition/MediaSDK/CMakeLists.txt
++++ b/examples/tutorials/01_transition/MediaSDK/CMakeLists.txt
+@@ -51,6 +51,9 @@ else()
+   target_include_directories(${TARGET} PUBLIC ${PKG_MFX_INCLUDE_DIRS})
+ endif()
+ 
++install(TARGETS ${TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                  COMPONENT ${VPL_COMPONENT_DEV})
++
+ # copy dependent dlls to target location
+ if(WIN32)
+   if(${CMAKE_VERSION} VERSION_LESS "3.26")
+diff --git a/examples/tutorials/01_transition/VPL/CMakeLists.txt b/examples/tutorials/01_transition/VPL/CMakeLists.txt
+index 5c84a54..b97cbcc 100644
+--- a/examples/tutorials/01_transition/VPL/CMakeLists.txt
++++ b/examples/tutorials/01_transition/VPL/CMakeLists.txt
+@@ -52,6 +52,9 @@ else()
+   target_compile_definitions(${TARGET} PUBLIC -DMFX_DEPRECATED_OFF)
+ endif()
+ 
++install(TARGETS ${TARGET} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++                                  COMPONENT ${VPL_COMPONENT_DEV})
++
+ # copy dependent dlls to target location
+ if(WIN32)
+   if(${CMAKE_VERSION} VERSION_LESS "3.26")
+-- 
+2.43.0
+
