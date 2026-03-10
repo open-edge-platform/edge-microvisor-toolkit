@@ -1,14 +1,15 @@
-%global _soversion 1.5.0
+%global _soversion 1.6.0
 Vendor:           Intel Corporation
 Distribution:     Edge Microvisor Toolkit
 Name:             xdp-tools
-Version:          1.5.8
+Version:          1.6.1
 Release:          1%{?dist}
 Summary:          Utilities and example programs for use with XDP
 License:          GPL-2.0-only
 URL:              https://github.com/xdp-project/%{name}
 Source0:          https://github.com/xdp-project/%{name}/releases/download/v%{version}/%{name}-%{version}.tar.gz
 
+BuildRequires:    kernel-headers
 BuildRequires:    libbpf-devel
 BuildRequires:    elfutils-libelf-devel
 BuildRequires:    zlib-devel
@@ -35,9 +36,6 @@ BuildRequires:    bpftool
 
 # Always keep xdp-tools and libxdp packages in sync
 Requires:         libxdp = %{version}-%{release}
-
-# TSN patches
-Patch0:           0001-if_xdp.h-add-txtime-field-in-xdp_desc-struct.patch
 
 # find-debuginfo produces empty debugsourcefiles.list
 # disable the debug package to avoid rpmbuild error'ing out because of this
@@ -148,6 +146,9 @@ make install V=1
 %{_libdir}/pkgconfig/libxdp.pc
 
 %changelog
+* Wed Mar 11 2026 Andy <andy.peng@intel.com> 1.6.1-1
+- Version upgrade of xdp-tools from 1.5.8 to 1.6.1
+
 * Wed Dec 10 2025 kintalix Jayanth <jayanthx.kintali@intel.com> 1.5.8-1
 - Version upgrade of xdp-tools from 1.4.2 to 1.5.8
 
