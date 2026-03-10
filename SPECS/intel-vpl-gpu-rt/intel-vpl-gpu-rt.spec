@@ -2,7 +2,7 @@
 %global mfx_ver_minor 15
 
 Name:           intel-vpl-gpu-rt
-Version:        25.2.3
+Version:        25.3.4
 Release:        1%{?dist}
 Summary:        Intel Video Processing Library (Intel VPL) GPU Runtime
 License:        MIT
@@ -12,6 +12,11 @@ URL:            https://www.intel.com/content/www/us/en/developer/tools/oneapi/o
 ExclusiveArch:  x86_64
 
 Source0:        https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-%{version}/intel-onevpl-%{version}.tar.gz
+
+Patch0001: 0001-avce-Use-VDEnc-for-YUY2-AYUV-RGB-formats.patch
+Patch0002: 0002-Add-AVC-10bit-Dec-for-PTL.patch
+Patch0003: 0003-Enable-HEVC-VDENC-422-for-MTL-ARL.patch
+Patch0004: 0004-Correct-luma-and-chroma-offsets-linux.patch
 
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
@@ -61,6 +66,9 @@ developing applications that use %{name}.
 %{_libdir}/pkgconfig/libmfx-gen.pc
 
 %changelog
+* Wed Mar 11 2026 Lishan Liu <lishan.liu@intel.com> - 25.3.4-1
+- Upgraded to version 25.3.4
+
 * Thu Jul 10 2025 Swee Yee Fonn<swee.yee.fonn@intel.com> - 25.2.3-1
 - Upgraded to version 25.2.3
 

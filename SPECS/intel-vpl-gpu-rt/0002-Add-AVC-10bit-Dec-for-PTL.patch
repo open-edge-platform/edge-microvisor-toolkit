@@ -1,0 +1,256 @@
+From f55582b251773a6f18919d9dd926384048b1f4c6 Mon Sep 17 00:00:00 2001
+From: "Cheah, Vincent Beng Keat" <vincent.beng.keat.cheah@intel.com>
+Date: Thu, 12 Jun 2025 21:22:35 +0800
+Subject: [PATCH 2/4] Add AVC 10bit Dec for PTL
+
+Upstream-Status: Inappropriate [IGMDPT-869]
+
+Signed-off-by: Cheah, Vincent Beng Keat vincent.beng.keat.cheah@intel.com>
+---
+ .../decode/h264/src/mfx_h264_dec_decode.cpp   | 48 +++++++++++++++++--
+ _studio/mfx_lib/shared/src/mfx_common_int.cpp |  3 +-
+ _studio/shared/src/libmfx_core_hw.cpp         |  6 +++
+ .../h264_dec/src/umc_h264_mfx_supplier.cpp    | 37 +++++++++++---
+ .../shared/umc/io/umc_va/src/umc_va_linux.cpp |  8 ++++
+ 5 files changed, 91 insertions(+), 11 deletions(-)
+
+diff --git a/_studio/mfx_lib/decode/h264/src/mfx_h264_dec_decode.cpp b/_studio/mfx_lib/decode/h264/src/mfx_h264_dec_decode.cpp
+index 02aa5be5..ea157c57 100644
+--- a/_studio/mfx_lib/decode/h264/src/mfx_h264_dec_decode.cpp
++++ b/_studio/mfx_lib/decode/h264/src/mfx_h264_dec_decode.cpp
+@@ -222,6 +222,11 @@ mfxStatus VideoDECODEH264::Init(mfxVideoParam *par)
+ 
+     eMFXHWType type = m_core->GetHWType();
+ 
++    if (par->mfx.FrameInfo.FourCC == MFX_FOURCC_P010 ||
++        par->mfx.FrameInfo.FourCC == MFX_FOURCC_P210 ||
++        par->mfx.FrameInfo.FourCC == MFX_FOURCC_Y210)
++        par->mfx.FrameInfo.Shift = 1;
++
+     mfxStatus mfxSts = CheckVideoParamDecoders(par, type);
+     MFX_CHECK(mfxSts >= MFX_ERR_NONE, MFX_ERR_INVALID_VIDEO_PARAM);
+ 
+@@ -406,16 +411,44 @@ mfxStatus VideoDECODEH264::QueryImplsDescription(
+ #endif
+         , MFX_PROFILE_AVC_MULTIVIEW_HIGH
+         , MFX_PROFILE_AVC_STEREO_HIGH
++        , MFX_PROFILE_AVC_HIGH10
+     };
+     const mfxResourceType SupportedMemTypes[] =
+     {
+         MFX_RESOURCE_SYSTEM_SURFACE
+         , MFX_RESOURCE_VA_SURFACE
+     };
+-    const mfxU32 SupportedFourCC[] =
++
++    std::vector<mfxU32> SupportedFourCC = {MFX_FOURCC_NV12};
++    VADisplay vaDisplay;
++    mfxI32 numProfiles = 0, numEntrypoints = 0;
++
++    mfxStatus mfxSts = core.GetHandle(MFX_HANDLE_VA_DISPLAY, &vaDisplay);
++    MFX_CHECK(MFX_ERR_NONE == mfxSts, MFX_ERR_INCOMPATIBLE_VIDEO_PARAM);
++
++    std::vector <VAProfile> profileList(vaMaxNumProfiles(vaDisplay)-1);
++    std::vector <VAEntrypoint> entrypointList(vaMaxNumEntrypoints(vaDisplay)-1);
++
++    VAStatus status = vaQueryConfigProfiles(vaDisplay, profileList.data(), &numProfiles);
++    MFX_CHECK(VA_STATUS_SUCCESS == status, MFX_ERR_INCOMPATIBLE_VIDEO_PARAM);
++
++    for (auto profile : profileList)
+     {
+-        MFX_FOURCC_NV12
+-    };
++        status = vaQueryConfigEntrypoints (vaDisplay, profile, entrypointList.data(), &numEntrypoints);
++        MFX_CHECK(VA_STATUS_SUCCESS == status, MFX_ERR_INCOMPATIBLE_VIDEO_PARAM);
++        for (mfxI32 i = 0; i < numEntrypoints; i++)
++        {
++	    if (VAEntrypointVLD == entrypointList[i])
++            {
++                switch(profile)
++                {
++                    case VAProfileH264High10: SupportedFourCC.push_back(MFX_FOURCC_P010); break;
++                    case VAProfileH264High422: SupportedFourCC.push_back(MFX_FOURCC_Y210); break;
++                    default: break;
++                };
++            }
++        }
++    }
+ 
+     caps.CodecID = MFX_CODEC_AVC;
+     caps.MaxcodecLevel = MFX_LEVEL_AVC_62;
+@@ -807,6 +840,15 @@ mfxStatus VideoDECODEH264::GetVideoParam(mfxVideoParam *par)
+         }
+     }
+ 
++    switch (par->mfx.FrameInfo.FourCC)
++    {
++    case MFX_FOURCC_P010:
++    case MFX_FOURCC_P210:
++    case MFX_FOURCC_Y210:
++        par->mfx.FrameInfo.Shift = 1;
++    default:
++        break;
++    }
+ 
+     TRACE_EVENT(MFX_TRACE_API_DECODE_GETVIDEOPARAM_TASK, EVENT_TYPE_END, TR_KEY_MFX_API, make_event_data(MFX_ERR_NONE));
+ 
+diff --git a/_studio/mfx_lib/shared/src/mfx_common_int.cpp b/_studio/mfx_lib/shared/src/mfx_common_int.cpp
+index a3bb1b2b..1b0a2ba7 100644
+--- a/_studio/mfx_lib/shared/src/mfx_common_int.cpp
++++ b/_studio/mfx_lib/shared/src/mfx_common_int.cpp
+@@ -273,7 +273,8 @@ mfxStatus CheckFrameInfoCodecs(mfxFrameInfo  *info, mfxU32 codecId)
+         if (info->FourCC != MFX_FOURCC_NV12 &&
+             info->FourCC != MFX_FOURCC_P010 &&
+             info->FourCC != MFX_FOURCC_NV16 &&
+-            info->FourCC != MFX_FOURCC_P210)
++            info->FourCC != MFX_FOURCC_P210 &&
++            info->FourCC != MFX_FOURCC_Y210)
+             MFX_RETURN(MFX_ERR_INVALID_VIDEO_PARAM);
+         break;
+     case MFX_CODEC_HEVC:
+diff --git a/_studio/shared/src/libmfx_core_hw.cpp b/_studio/shared/src/libmfx_core_hw.cpp
+index 8e94c480..6713f7d5 100644
+--- a/_studio/shared/src/libmfx_core_hw.cpp
++++ b/_studio/shared/src/libmfx_core_hw.cpp
+@@ -58,6 +58,12 @@ mfxU32 ChooseProfile(mfxVideoParam const* param, eMFXHWType)
+         }
+ #endif
+         }
++
++        if (param->mfx.CodecProfile == MFX_PROFILE_AVC_HIGH10 ||
++            param->mfx.CodecProfile == MFX_PROFILE_AVC_HIGH_422)
++        {
++            profile |= VA_PROFILE_REXT | VA_PROFILE_10;
++        }
+         break;
+ 
+     case MFX_CODEC_JPEG:
+diff --git a/_studio/shared/umc/codec/h264_dec/src/umc_h264_mfx_supplier.cpp b/_studio/shared/umc/codec/h264_dec/src/umc_h264_mfx_supplier.cpp
+index e21964ce..b3460d6d 100644
+--- a/_studio/shared/umc/codec/h264_dec/src/umc_h264_mfx_supplier.cpp
++++ b/_studio/shared/umc/codec/h264_dec/src/umc_h264_mfx_supplier.cpp
+@@ -515,10 +515,13 @@ bool MFX_Utility::IsNeedPartialAcceleration(mfxVideoParam * par, eMFXHWType )
+     if (par->mfx.SliceGroupsPresent) // Is FMO
+         return true;
+ 
+-    if (par->mfx.FrameInfo.FourCC != MFX_FOURCC_NV12) // yuv422 in SW only
++    if (par->mfx.FrameInfo.FourCC != MFX_FOURCC_NV12
++        && par->mfx.FrameInfo.FourCC != MFX_FOURCC_P210
++        && par->mfx.FrameInfo.FourCC != MFX_FOURCC_P010
++        && par->mfx.FrameInfo.FourCC != MFX_FOURCC_Y210)
+         return true;
+ 
+-    if (par->mfx.FrameInfo.BitDepthLuma > 8 || par->mfx.FrameInfo.BitDepthChroma > 8) // yuv422 in SW only
++    if (par->mfx.FrameInfo.BitDepthLuma > 10 || par->mfx.FrameInfo.BitDepthChroma > 10)
+         return true;
+ 
+     mfxExtMVCSeqDesc * points = (mfxExtMVCSeqDesc*)GetExtendedBuffer(par->ExtParam, par->NumExtParam, MFX_EXTBUFF_MVC_SEQ_DESC);
+@@ -568,6 +571,17 @@ UMC::Status MFX_Utility::FillVideoParam(UMC::TaskSupplier * supplier, mfxVideoPa
+     if (pps)
+         par->mfx.SliceGroupsPresent = pps->num_slice_groups > 1;
+ 
++    if (par->mfx.FrameInfo.FourCC == MFX_FOURCC_P010
++        || par->mfx.FrameInfo.FourCC == MFX_FOURCC_P210
++        || par->mfx.FrameInfo.FourCC == MFX_FOURCC_Y210)
++    {
++        par->mfx.FrameInfo.Shift = 1;
++    }
++    else
++    {
++        par->mfx.FrameInfo.Shift = 0;
++    }
++
+     return UMC::UMC_OK;
+ }
+ 
+@@ -1174,7 +1188,9 @@ mfxStatus MFX_Utility::Query(VideoCORE *core, mfxVideoParam *in, mfxVideoParam *
+             (MFX_PROFILE_AVC_SCALABLE_HIGH == in->mfx.CodecProfile) ||
+ #endif
+             (MFX_PROFILE_AVC_MULTIVIEW_HIGH == in->mfx.CodecProfile) ||
+-            (MFX_PROFILE_AVC_STEREO_HIGH == in->mfx.CodecProfile)
++            (MFX_PROFILE_AVC_STEREO_HIGH == in->mfx.CodecProfile) ||
++            (MFX_PROFILE_AVC_HIGH_422 == in->mfx.CodecProfile) ||
++            (MFX_PROFILE_AVC_HIGH10 == in->mfx.CodecProfile)
+             )
+             out->mfx.CodecProfile = in->mfx.CodecProfile;
+         else
+@@ -1283,7 +1299,10 @@ mfxStatus MFX_Utility::Query(VideoCORE *core, mfxVideoParam *in, mfxVideoParam *
+ 
+         if (in->mfx.FrameInfo.FourCC)
+         {
+-            if (in->mfx.FrameInfo.FourCC == MFX_FOURCC_NV12)
++            if (in->mfx.FrameInfo.FourCC == MFX_FOURCC_NV12 ||
++                in->mfx.FrameInfo.FourCC == MFX_FOURCC_P210 ||
++                in->mfx.FrameInfo.FourCC == MFX_FOURCC_P010 ||
++                in->mfx.FrameInfo.FourCC == MFX_FOURCC_Y210)
+                 out->mfx.FrameInfo.FourCC = in->mfx.FrameInfo.FourCC;
+             else
+                 sts = MFX_ERR_UNSUPPORTED;
+@@ -1318,6 +1337,9 @@ mfxStatus MFX_Utility::Query(VideoCORE *core, mfxVideoParam *in, mfxVideoParam *
+             sts = MFX_ERR_UNSUPPORTED;
+         }
+ 
++        out->mfx.FrameInfo.BitDepthLuma = in->mfx.FrameInfo.BitDepthLuma;
++        out->mfx.FrameInfo.BitDepthChroma = in->mfx.FrameInfo.BitDepthChroma;
++
+         out->mfx.FrameInfo.Shift = in->mfx.FrameInfo.Shift;
+         switch (in->mfx.FrameInfo.PicStruct)
+         {
+@@ -1750,6 +1772,8 @@ bool MFX_Utility::CheckVideoParam(mfxVideoParam *in, eMFXHWType type)
+     case MFX_PROFILE_AVC_MAIN:
+     case MFX_PROFILE_AVC_EXTENDED:
+     case MFX_PROFILE_AVC_HIGH:
++    case MFX_PROFILE_AVC_HIGH10:
++    case MFX_PROFILE_AVC_HIGH_422:
+     case MFX_PROFILE_AVC_STEREO_HIGH:
+     case MFX_PROFILE_AVC_MULTIVIEW_HIGH:
+ #ifdef MFX_ENABLE_SVC_VIDEO_DECODE
+@@ -1792,9 +1816,8 @@ bool MFX_Utility::CheckVideoParam(mfxVideoParam *in, eMFXHWType type)
+     if (in->mfx.FrameInfo.Height > 16384 || (in->mfx.FrameInfo.Height % 16))
+         return false;
+ 
+-
+     if (in->mfx.FrameInfo.FourCC != MFX_FOURCC_NV12 && in->mfx.FrameInfo.FourCC != MFX_FOURCC_NV16 &&
+-        in->mfx.FrameInfo.FourCC != MFX_FOURCC_P010 && in->mfx.FrameInfo.FourCC != MFX_FOURCC_P210)
++        in->mfx.FrameInfo.FourCC != MFX_FOURCC_P010 && in->mfx.FrameInfo.FourCC != MFX_FOURCC_P210 && in->mfx.FrameInfo.FourCC != MFX_FOURCC_Y210)
+         return false;
+ 
+     // both zero or not zero
+@@ -1820,7 +1843,7 @@ bool MFX_Utility::CheckVideoParam(mfxVideoParam *in, eMFXHWType type)
+ 
+     if (in->mfx.FrameInfo.ChromaFormat == MFX_CHROMAFORMAT_YUV422)
+     {
+-        if (in->mfx.FrameInfo.FourCC != MFX_FOURCC_P210 && in->mfx.FrameInfo.FourCC != MFX_FOURCC_NV16)
++        if (in->mfx.FrameInfo.FourCC != MFX_FOURCC_P210 && in->mfx.FrameInfo.FourCC != MFX_FOURCC_Y210 && in->mfx.FrameInfo.FourCC != MFX_FOURCC_NV16)
+             return false;
+     }
+ 
+diff --git a/_studio/shared/umc/io/umc_va/src/umc_va_linux.cpp b/_studio/shared/umc/io/umc_va/src/umc_va_linux.cpp
+index f59f785c..db2af200 100644
+--- a/_studio/shared/umc/io/umc_va/src/umc_va_linux.cpp
++++ b/_studio/shared/umc/io/umc_va/src/umc_va_linux.cpp
+@@ -141,6 +141,11 @@ VAProfile g_H264Profiles[] =
+     VAProfileH264High, VAProfileH264Main, VAProfileH264ConstrainedBaseline
+ };
+ 
++VAProfile g_H26410BitProfiles[] =
++{
++    VAProfileH264High10, VAProfileH264High422
++};
++
+ VAProfile g_H265Profiles[] =
+ {
+     VAProfileHEVCMain
+@@ -211,6 +216,9 @@ VAProfile get_next_va_profile(uint32_t umc_codec, uint32_t profile)
+     case UMC::VA_H264:
+         if (profile < UMC_ARRAY_SIZE(g_H264Profiles)) va_profile = g_H264Profiles[profile];
+         break;
++    case UMC::VA_H264 | UMC::VA_PROFILE_REXT | UMC::VA_PROFILE_10:
++	if (profile < UMC_ARRAY_SIZE(g_H26410BitProfiles)) va_profile = g_H26410BitProfiles[profile];
++        break;
+     case UMC::VA_H265:
+         if (profile < UMC_ARRAY_SIZE(g_H265Profiles)) va_profile = g_H265Profiles[profile];
+         break;
+-- 
+2.48.1
+

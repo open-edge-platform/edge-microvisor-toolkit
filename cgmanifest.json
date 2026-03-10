@@ -7581,8 +7581,8 @@
         "type": "other",
         "other": {
           "name": "intel-media-driver",
-          "version": "25.2.3",
-          "downloadUrl": "https://github.com/intel/media-driver/archive/refs/tags/intel-media-25.2.3.tar.gz"
+          "version": "25.3.4",
+          "downloadUrl": "https://github.com/intel/media-driver/archive/refs/tags/intel-media-25.3.4.tar.gz"
         }
       }
     },

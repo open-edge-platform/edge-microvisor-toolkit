@@ -1,0 +1,57 @@
+From 6f042ee649dc4397e0a55316eb91d2c1f0cb611d Mon Sep 17 00:00:00 2001
+From: "Cheah, Vincent Beng Keat" <vincent.beng.keat.cheah@intel.com>
+Date: Wed, 16 Apr 2025 10:34:17 +0800
+Subject: [PATCH 2/2] va: add VAProfileH264High422
+
+Add new AVC High422P profile definition
+
+Upstream-Status: Backport [https://github.com/intel/libva/commit/0d1d3510c0a88dcc78f88981d60b525ed4dbb6ba]
+
+Signed-off-by: Cheah, Vincent Beng Keat vincent.beng.keat.cheah@intel.com>
+---
+ va/va.h       | 3 ++-
+ va/va_str.c   | 1 +
+ va/va_trace.c | 1 +
+ 3 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/va/va.h b/va/va.h
+index 75749c6..38dd9df 100644
+--- a/va/va.h
++++ b/va/va.h
+@@ -542,7 +542,8 @@ typedef enum {
+     VAProfileH264High10                 = 36,
+     VAProfileVVCMain10                  = 37,
+     VAProfileVVCMultilayerMain10        = 38,
+-    VAProfileAV1Profile2                = 39
++    VAProfileAV1Profile2                = 39,
++    VAProfileH264High422                = 40
+ } VAProfile;
+ 
+ /**
+diff --git a/va/va_str.c b/va/va_str.c
+index 0f9c1c1..3f39886 100644
+--- a/va/va_str.c
++++ b/va/va_str.c
+@@ -38,6 +38,7 @@ const char *vaProfileStr(VAProfile profile)
+         TOSTR(VAProfileH264Main);
+         TOSTR(VAProfileH264High);
+         TOSTR(VAProfileH264High10);
++        TOSTR(VAProfileH264High422);
+         TOSTR(VAProfileVC1Simple);
+         TOSTR(VAProfileVC1Main);
+         TOSTR(VAProfileVC1Advanced);
+diff --git a/va/va_trace.c b/va/va_trace.c
+index 6145f81..9375539 100644
+--- a/va/va_trace.c
++++ b/va/va_trace.c
+@@ -6688,6 +6688,7 @@ void va_TraceRenderPicture(
+             }
+             break;
+         case VAProfileH264High10:
++        case VAProfileH264High422:
+         case VAProfileH264Main:
+         case VAProfileH264High:
+         case VAProfileH264ConstrainedBaseline:
+-- 
+2.43.0
+

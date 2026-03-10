@@ -1,0 +1,86 @@
+From 2f4ce691e037bff108370de9346856a76014bb3e Mon Sep 17 00:00:00 2001
+From: Lim Siew Hoon <siew.hoon.lim@intel.com>
+Date: Fri, 2 Aug 2024 13:25:13 +0800
+Subject: [PATCH 04/12] Fix failed 4k videowalll test case and color corruption
+ of video composition in Gen12 platform
+
+Fix failed 4k video wall test case from 16CH video only show
+1CH output and corruption observed on certain number of video
+composition when doing sample_multi_transcode in legacy path.
+
+platform: TGL/ADL/RPL
+
+upstream-status: submiited
+https://github.com/intel/media-driver/pull/1839
+
+Signed-off-by: xupianch <xu.pian.chan@intel.com>
+Signed-off-by: Lim Siew Hoon <siew.hoon.lim@intel.com>
+---
+ .../common/vp/hal/vphal_render_composite.cpp   |  9 ++++++++-
+ .../linux/common/vp/ddi/media_libva_vp.c       | 18 +++++-------------
+ 2 files changed, 13 insertions(+), 14 deletions(-)
+
+diff --git a/media_driver/agnostic/common/vp/hal/vphal_render_composite.cpp b/media_driver/agnostic/common/vp/hal/vphal_render_composite.cpp
+index c8e238472..57e7a8334 100644
+--- a/media_driver/agnostic/common/vp/hal/vphal_render_composite.cpp
++++ b/media_driver/agnostic/common/vp/hal/vphal_render_composite.cpp
+@@ -6784,6 +6784,13 @@ bool CompositeState::BuildFilter(
+ 
+     for (i = 0; (i < (int)pCompParams->uSourceCount) && (iMaxFilterSize > 0); i++)
+     {
++        if (i > 0)
++        {
++            if (!RECT1_CONTAINS_RECT2(pCompParams->pSource[0]->rcDst, pCompParams->pSource[i]->rcDst))
++            {
++                pFilter->forceToTargetColorSpace = true;
++            }
++        }
+         pSrc = pCompParams->pSource[i];
+ 
+         //--------------------------------
+@@ -8154,4 +8161,4 @@ bool CompositeState::IsSamplerIDForY(
+          return true;
+      }
+      return false;
+- }
+\ No newline at end of file
++ }
+diff --git a/media_driver/linux/common/vp/ddi/media_libva_vp.c b/media_driver/linux/common/vp/ddi/media_libva_vp.c
+index 48a452315..4f0fc2c48 100644
+--- a/media_driver/linux/common/vp/ddi/media_libva_vp.c
++++ b/media_driver/linux/common/vp/ddi/media_libva_vp.c
+@@ -1148,7 +1148,7 @@ DdiVp_SetProcPipelineParams(
+ 
+     // Background Colorfill
+     // According to libva  definition, if alpha in output background color is zero, then colorfill is not needed
+-    if ((pPipelineParam->output_background_color >> 24) != 0 || pVpHalTgtSurf->ColorSpace == CSpace_sRGB)
++    if ((pPipelineParam->output_background_color >> 24) != 0)
+     {
+         if (pVpHalRenderParams->pColorFillParams == nullptr)
+         {
+@@ -1157,18 +1157,10 @@ DdiVp_SetProcPipelineParams(
+ 
+         DDI_CHK_NULL(pVpHalRenderParams->pColorFillParams, "Null pColorFillParams.", VA_STATUS_ERROR_UNKNOWN);
+ 
+-        if (pVpHalTgtSurf->ColorSpace == CSpace_sRGB && (pPipelineParam->output_background_color >> 24) == 0)
+-        {
+-            // set color space for sRGB output
+-            pVpHalRenderParams->pColorFillParams->CSpace    = CSpace_sRGB;
+-        }
+-        else
+-        {
+-            // set background colorfill option
+-            pVpHalRenderParams->pColorFillParams->Color     = pPipelineParam->output_background_color;
+-            pVpHalRenderParams->pColorFillParams->bYCbCr    = false;
+-            pVpHalRenderParams->pColorFillParams->CSpace    = CSpace_sRGB;
+-        }
++        // set background colorfill option
++        pVpHalRenderParams->pColorFillParams->Color     = pPipelineParam->output_background_color;
++        pVpHalRenderParams->pColorFillParams->bYCbCr    = false;
++        pVpHalRenderParams->pColorFillParams->CSpace    = CSpace_sRGB;
+     }else
+     {
+         MOS_FreeMemAndSetNull(pVpHalRenderParams->pColorFillParams);
+-- 
+2.48.1
+

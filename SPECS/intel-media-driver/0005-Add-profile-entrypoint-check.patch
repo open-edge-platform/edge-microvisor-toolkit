@@ -1,0 +1,105 @@
+From 79606e7d9e0aa5290a24991116a9331004196756 Mon Sep 17 00:00:00 2001
+From: Hazim Razak <muhammad.azizul.hazim.abd.razak@intel.com>
+Date: Thu, 8 May 2025 14:24:46 +0800
+Subject: [PATCH 05/12] Add profile & entrypoint check
+
+Signed-off-by: Hazim Razak <muhammad.azizul.hazim.abd.razak@intel.com>
+---
+ .../common/ddi/media_capstable_specific.cpp   | 15 +++++++++-
+ .../common/ddi/media_capstable_specific.h     | 28 +++++++++++++++++++
+ .../common/ddi/media_libva_caps_next.cpp      |  9 ++++++
+ 3 files changed, 51 insertions(+), 1 deletion(-)
+
+diff --git a/media_softlet/linux/common/ddi/media_capstable_specific.cpp b/media_softlet/linux/common/ddi/media_capstable_specific.cpp
+index 59ea4cafa..5883d82d4 100644
+--- a/media_softlet/linux/common/ddi/media_capstable_specific.cpp
++++ b/media_softlet/linux/common/ddi/media_capstable_specific.cpp
+@@ -246,6 +246,19 @@ VAStatus MediaCapsTableSpecific::CreateConfig(
+     return ret;
+ }
+ 
++bool MediaCapsTableSpecific::IsProfileSupported(
++    VAProfile     profile)
++{
++    return !(m_profileMap->find(profile) == m_profileMap->end());
++}
++
++bool MediaCapsTableSpecific::IsEntrypointSupported(
++    VAProfile     profile,
++    VAEntrypoint  entrypoint)
++{
++    return !(m_profileMap->at(profile)->find(entrypoint) == m_profileMap->at(profile)->end());
++}
++
+ bool MediaCapsTableSpecific::IsDecConfigId(VAConfigID configId)
+ {
+     VAConfigID curConfigId = REMOVE_CONFIG_ID_OFFSET(configId);
+@@ -359,4 +372,4 @@ ProfileSurfaceAttribInfo* MediaCapsTableSpecific::QuerySurfaceAttributesFromConf
+     }
+ 
+     return const_cast<ProfileSurfaceAttribInfo*>(m_profileMap->at(profile)->at(entrypoint)->surfaceAttrib);
+-}
+\ No newline at end of file
++}
+diff --git a/media_softlet/linux/common/ddi/media_capstable_specific.h b/media_softlet/linux/common/ddi/media_capstable_specific.h
+index d3dd691c2..377a357f2 100644
+--- a/media_softlet/linux/common/ddi/media_capstable_specific.h
++++ b/media_softlet/linux/common/ddi/media_capstable_specific.h
+@@ -205,6 +205,34 @@ public:
+     //!
+     //! \return   True if the configID is a valid decode config, otherwise false
+     //!
++    bool IsProfileSupported(
++        VAProfile      profile);
++
++    //!
++    //! \brief    Check if profile is supported
++    //!
++    //! \param    [in] profile
++    //!           VA profile
++    //!
++    //! \return   bool
++    //!           true if supported
++    //!
++    bool IsEntrypointSupported(
++        VAProfile      profile,
++        VAEntrypoint   entrypoint);
++
++    //!
++    //! \brief    Check if entrypoint is supported
++    //!
++    //! \param    [in] profile
++    //!           VA profile
++    //!
++    //! \param    [in] entrypoint
++    //!           VA entrypoint
++    //!
++    //! \return   bool
++    //!           true if supported
++    //!
+     bool IsDecConfigId(VAConfigID configId);
+ 
+     //!
+diff --git a/media_softlet/linux/common/ddi/media_libva_caps_next.cpp b/media_softlet/linux/common/ddi/media_libva_caps_next.cpp
+index bf6c7cdc8..d70df6973 100644
+--- a/media_softlet/linux/common/ddi/media_libva_caps_next.cpp
++++ b/media_softlet/linux/common/ddi/media_libva_caps_next.cpp
+@@ -355,6 +355,15 @@ VAStatus MediaLibvaCapsNext::GetConfigAttributes(
+     DDI_CHK_NULL(m_capsTable,  "Caps table is null", VA_STATUS_ERROR_INVALID_PARAMETER);
+     DDI_CHK_NULL(attribList,   "Null pointer",       VA_STATUS_ERROR_INVALID_PARAMETER);
+ 
++    if (!(m_capsTable->IsProfileSupported(profile)))
++    {
++        return VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
++    }
++    else if (!(m_capsTable->IsEntrypointSupported(profile, entrypoint)))
++    {
++        return VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT;
++    }
++
+     AttribList  *supportedAttribList = nullptr;
+     supportedAttribList = m_capsTable->QuerySupportedAttrib(profile, entrypoint);
+     DDI_CHK_NULL(supportedAttribList, "AttribList in null, not supported attribute", VA_STATUS_ERROR_INVALID_PARAMETER);
+-- 
+2.48.1
+

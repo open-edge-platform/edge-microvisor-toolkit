@@ -1,0 +1,224 @@
+From 0f453cc06b158db70071740d7e855b36c454755c Mon Sep 17 00:00:00 2001
+From: "Cheah, Vincent Beng Keat" <vincent.beng.keat.cheah@intel.com>
+Date: Fri, 16 May 2025 09:51:11 +0800
+Subject: [PATCH 06/12] Disable Xe3_Lpm VD-SFC
+
+upstream-status: submitted
+https://github.com/intel/media-driver/pull/1933
+
+Signed-off-by: Cheah, Vincent Beng Keat <vincent.beng.keat.cheah@intel.com>
+---
+ ...able_data_avc_decode_xe3_lpm_r0_specific.h |  8 +++----
+ ...ble_data_hevc_decode_xe3_lpm_r0_specific.h | 24 +++++++++----------
+ ...ble_data_jpeg_decode_xe3_lpm_r0_specific.h |  2 +-
+ ...able_data_vp9_decode_xe3_lpm_r0_specific.h |  8 +++----
+ 4 files changed, 21 insertions(+), 21 deletions(-)
+
+diff --git a/media_softlet/linux/xe3_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3_lpm_r0_specific.h b/media_softlet/linux/xe3_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3_lpm_r0_specific.h
+index 5e84b5bba..9135b892a 100644
+--- a/media_softlet/linux/xe3_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3_lpm_r0_specific.h
+@@ -75,7 +75,7 @@ static const AttribList attribList_VAProfileH264Main_VAEntrypointVLD_Xe3_Lpm_r0
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_RGB32},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_4K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_4K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -87,7 +87,7 @@ static const AttribList attribList_VAProfileH264High_VAEntrypointVLD_Xe3_Lpm_r0
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_RGB32},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_4K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_4K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -99,7 +99,7 @@ static const AttribList attribList_VAProfileH264High10_VAEntrypointVLD_Xe3_Lpm_r
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420_10 | VA_RT_FORMAT_YUV422_10 | VA_RT_FORMAT_YUV420_10BPP},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_4K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_4K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -111,7 +111,7 @@ static const AttribList attribList_VAProfileH264ConstrainedBaseline_VAEntrypoint
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_RGB32},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_4K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_4K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+diff --git a/media_softlet/linux/xe3_lpm_r0/decode/hevc/ddi/capstable_data_hevc_decode_xe3_lpm_r0_specific.h b/media_softlet/linux/xe3_lpm_r0/decode/hevc/ddi/capstable_data_hevc_decode_xe3_lpm_r0_specific.h
+index 9bd0a8f69..34c207611 100644
+--- a/media_softlet/linux/xe3_lpm_r0/decode/hevc/ddi/capstable_data_hevc_decode_xe3_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3_lpm_r0/decode/hevc/ddi/capstable_data_hevc_decode_xe3_lpm_r0_specific.h
+@@ -139,7 +139,7 @@ static const AttribList attribList_VAProfileHEVCMain_VAEntrypointVLD_Xe3_Lpm_r0
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -151,7 +151,7 @@ static const AttribList attribList_VAProfileHEVCMain10_VAEntrypointVLD_Xe3_Lpm_r
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV420_10BPP},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -163,7 +163,7 @@ static const AttribList attribList_VAProfileHEVCMain12_VAEntrypointVLD_Xe3_Lpm_r
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV420_10BPP | VA_RT_FORMAT_YUV420_12 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -175,7 +175,7 @@ static const AttribList attribList_VAProfileHEVCMain422_10_VAEntrypointVLD_Xe3_L
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV420_10BPP | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV422_10 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -187,7 +187,7 @@ static const AttribList attribList_VAProfileHEVCMain422_12_VAEntrypointVLD_Xe3_L
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV420_10BPP | VA_RT_FORMAT_YUV420_12 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV422_10 | VA_RT_FORMAT_YUV422_12 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -199,7 +199,7 @@ static const AttribList attribList_VAProfileHEVCMain444_VAEntrypointVLD_Xe3_Lpm_
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV444 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -211,7 +211,7 @@ static const AttribList attribList_VAProfileHEVCSccMain444_VAEntrypointVLD_Xe3_L
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV444 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -223,7 +223,7 @@ static const AttribList attribList_VAProfileHEVCMain444_10_VAEntrypointVLD_Xe3_L
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV420_10BPP | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV422_10 | VA_RT_FORMAT_YUV444 | VA_RT_FORMAT_YUV444_10 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -235,7 +235,7 @@ static const AttribList attribList_VAProfileHEVCSccMain444_10_VAEntrypointVLD_Xe
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV420_10BPP | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV422_10 | VA_RT_FORMAT_YUV444 | VA_RT_FORMAT_YUV444_10 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -247,7 +247,7 @@ static const AttribList attribList_VAProfileHEVCMain444_12_VAEntrypointVLD_Xe3_L
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV420_10BPP | VA_RT_FORMAT_YUV420_12 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV422_10 | VA_RT_FORMAT_YUV422_12 | VA_RT_FORMAT_YUV444 | VA_RT_FORMAT_YUV444_10 | VA_RT_FORMAT_YUV444_12 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -259,7 +259,7 @@ static const AttribList attribList_VAProfileHEVCSccMain_VAEntrypointVLD_Xe3_Lpm_
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+@@ -271,7 +271,7 @@ static const AttribList attribList_VAProfileHEVCSccMain10_VAEntrypointVLD_Xe3_Lp
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV420_10BPP | VA_RT_FORMAT_YUV400},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+diff --git a/media_softlet/linux/xe3_lpm_r0/decode/jpeg/ddi/capstable_data_jpeg_decode_xe3_lpm_r0_specific.h b/media_softlet/linux/xe3_lpm_r0/decode/jpeg/ddi/capstable_data_jpeg_decode_xe3_lpm_r0_specific.h
+index 6dddbc399..2073b0d03 100644
+--- a/media_softlet/linux/xe3_lpm_r0/decode/jpeg/ddi/capstable_data_jpeg_decode_xe3_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3_lpm_r0/decode/jpeg/ddi/capstable_data_jpeg_decode_xe3_lpm_r0_specific.h
+@@ -48,7 +48,7 @@ static const AttribList attribList_VAProfileJPEGBaseline_VAEntrypointVLD_Xe3_Lpm
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV444 | VA_RT_FORMAT_YUV400 | VA_RT_FORMAT_YUV411 | VA_RT_FORMAT_RGB16 | VA_RT_FORMAT_RGB32},
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+diff --git a/media_softlet/linux/xe3_lpm_r0/decode/vp9/ddi/capstable_data_vp9_decode_xe3_lpm_r0_specific.h b/media_softlet/linux/xe3_lpm_r0/decode/vp9/ddi/capstable_data_vp9_decode_xe3_lpm_r0_specific.h
+index a68925376..8b224439a 100644
+--- a/media_softlet/linux/xe3_lpm_r0/decode/vp9/ddi/capstable_data_vp9_decode_xe3_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3_lpm_r0/decode/vp9/ddi/capstable_data_vp9_decode_xe3_lpm_r0_specific.h
+@@ -77,7 +77,7 @@ static const AttribList attribList_VAProfileVP9Profile0_VAEntrypointVLD_Xe3_Lpm_
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+    {VAConfigAttribProcessingRate, VA_PROCESSING_RATE_DECODE},
+    {VAConfigAttribCustomRoundingControl, 1},
+@@ -89,7 +89,7 @@ static const AttribList attribList_VAProfileVP9Profile1_VAEntrypointVLD_Xe3_Lpm_
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+    {VAConfigAttribProcessingRate, VA_PROCESSING_RATE_DECODE},
+    {VAConfigAttribCustomRoundingControl, 1},
+@@ -101,7 +101,7 @@ static const AttribList attribList_VAProfileVP9Profile2_VAEntrypointVLD_Xe3_Lpm_
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+    {VAConfigAttribProcessingRate, VA_PROCESSING_RATE_DECODE},
+    {VAConfigAttribCustomRoundingControl, 1},
+@@ -113,7 +113,7 @@ static const AttribList attribList_VAProfileVP9Profile3_VAEntrypointVLD_Xe3_Lpm_
+    {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
+    {VAConfigAttribMaxPictureWidth, CODEC_16K_MAX_PIC_WIDTH},
+    {VAConfigAttribMaxPictureHeight, CODEC_16K_MAX_PIC_HEIGHT},
+-   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING_NONE},
+    {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
+    {VAConfigAttribProcessingRate, VA_PROCESSING_RATE_DECODE},
+    {VAConfigAttribCustomRoundingControl, 1},
+-- 
+2.48.1
+

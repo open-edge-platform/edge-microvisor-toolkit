@@ -1,0 +1,196 @@
+From 2e59a2180abda8f9edf5dc191b5c03602adcd8a6 Mon Sep 17 00:00:00 2001
+From: "Cheah, Vincent Beng Keat" <vincent.beng.keat.cheah@intel.com>
+Date: Tue, 17 Jun 2025 20:07:17 +0800
+Subject: [PATCH 08/12] Fix MHW interface for AVC 10 decode
+
+Upstream-Status: Inappropriate [IGMDPT-869]
+
+Signed-off-by: Cheah, Vincent Beng Keat <vincent.beng.keat.cheah@intel.com>
+---
+ .../cmake/linux/media_gen_flags_linux.cmake   |  5 +
+ .../agnostic/common/hw/vdbox/media_srcs.cmake |  4 +-
+ .../hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h       | 92 +++++++++++++++++++
+ .../common/hw/vdbox/mhw_vdbox_mfx_hwcmd_ext.h | 35 +++++++
+ 4 files changed, 135 insertions(+), 1 deletion(-)
+ create mode 100644 media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h
+ create mode 100644 media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_hwcmd_ext.h
+
+diff --git a/media_driver/cmake/linux/media_gen_flags_linux.cmake b/media_driver/cmake/linux/media_gen_flags_linux.cmake
+index 92a94a383..cded158db 100644
+--- a/media_driver/cmake/linux/media_gen_flags_linux.cmake
++++ b/media_driver/cmake/linux/media_gen_flags_linux.cmake
+@@ -140,6 +140,11 @@ if(PTL)
+     add_definitions(-DIGFX_PTL_SUPPORTED)
+ endif()
+ 
++option(MFX_INTERFACE_EXT_SUPPORT "Enable MFX Interface Ext Support" ON)
++if(MFX_INTERFACE_EXT_SUPPORT)
++    add_definitions(-DIGFX_MFX_INTERFACE_EXT_SUPPORT)
++endif()
++
+ if(GEN8)
+     add_definitions(-DIGFX_GEN8_SUPPORTED)
+ endif()
+diff --git a/media_softlet/agnostic/common/hw/vdbox/media_srcs.cmake b/media_softlet/agnostic/common/hw/vdbox/media_srcs.cmake
+index 7a020ea97..53802ac1d 100644
+--- a/media_softlet/agnostic/common/hw/vdbox/media_srcs.cmake
++++ b/media_softlet/agnostic/common/hw/vdbox/media_srcs.cmake
+@@ -47,6 +47,8 @@ set(TMP_SOFTLET_MHW_VDBOX_AVP_HEADERS_
+ )
+ 
+ set(TMP_SOFTLET_MHW_VDBOX_MFX_HEADERS_
++    ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_mfx_cmdpar_ext.h
++    ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_mfx_hwcmd_ext.h
+     ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_mfx_cmdpar.h
+     ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_mfx_impl.h
+     ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_mfx_itf.h
+@@ -118,4 +120,4 @@ set(TMP_SOFTLET_MHW_VDBOX_AQM_HEADERS_ "")
+ set(SOFTLET_MHW_VDBOX_PRIVATE_INCLUDE_DIRS_
+     ${SOFTLET_MHW_VDBOX_PRIVATE_INCLUDE_DIRS_}
+     ${CMAKE_CURRENT_LIST_DIR}
+-)
+\ No newline at end of file
++)
+diff --git a/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h
+new file mode 100644
+index 000000000..2b77a1455
+--- /dev/null
++++ b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h
+@@ -0,0 +1,92 @@
++/*
++* Copyright (c) 2021-2023, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file     mhw_vdbox_mfx_cmdpar_ext.h
++//! \brief    MHW command parameters
++//! \details
++//!
++
++#ifndef __MHW_VDBOX_MFX_CMDPAR_EXT_H__
++#define __MHW_VDBOX_MFX_CMDPAR_EXT_H__
++
++namespace mhw
++{
++namespace vdbox
++{
++namespace mfx
++{
++
++enum SURFACE_FORMAT_EXT
++{
++    SURFACE_FORMAT_P010             = 13,  //!< P010 for 420 10 bits
++    SURFACE_FORMAT_Y216             = 14,  //!< Y216 for 422 10 bit (upto 16 bit)
++    SURFACE_FORMAT_Y210V            = 14,  //!< Y210 Variant
++};
++
++#define mfxMpeg2PicStatePar0 OldbpquantEncoderThisFieldShouldBeSetToZero
++
++#define MFX_AVC_IMG_STATE_EXT        \
++    uint8_t minFrameWSize = 0;       \
++    uint8_t loadSlicePointerFlag = 0;\
++    uint8_t tqchromadisable = 1;     \
++    uint8_t pakQpShift = 0;          \
++    uint8_t nonfirstpassflag = 0;    \
++    uint8_t minframewsizeunits = 0;  \
++    uint8_t granularCrcPoison = 0; \
++    uint8_t poisonNthGranularCrc = 0; \
++    uint8_t granularCrcStreamoutEnable = 0; \
++    uint8_t granularCrcStreaminEnable  = 0
++
++#define MFX_AVC_SLICE_STATE_EXT                \
++    uint8_t rateControlCounterEnable = 0;      \
++    uint8_t rcTriggleMode = 0;                 \
++    uint8_t rcStableTolerance = 0;             \
++    uint8_t rcPanicEnable = 0;                 \
++    uint8_t mbTypeDirectConversionDis = 0;     \
++    uint8_t mbTypeSkipConversionDis = 0;       \
++    uint8_t compressBitstreamOutputDisFlag = 0;\
++    uint8_t streamID10 = 0;                    \
++    uint8_t magnitudeQpMaxNegativeModifier = 0;\
++    uint8_t magnitudeQpMaxPositiveModifier = 0;\
++    uint8_t shrinkParamShrinkResistance = 0;   \
++    uint8_t shrinkParamShrinkInit = 0;         \
++    uint8_t growParamGrowResistance = 0;       \
++    uint8_t correct6 = 0;                      \
++    uint8_t correct5 = 0;                      \
++    uint8_t correct4 = 0;                      \
++    uint8_t correct3 = 0;                      \
++    uint8_t correct2 = 0;                      \
++    uint8_t correct1 = 0
++
++#define MFX_SURFACE_STATE_EXT              \
++    uint8_t variantSurfaceFormatEnable = 0;\
++
++#define MFX_PIPE_BUF_ADDR_STATE_EXT        \
++    PMOS_RESOURCE granularCRCStreaminBuffer; \
++    PMOS_RESOURCE granularCRCStreamoutBuffer;
++
++
++    }  // namespace mfx
++}  // namespace vdbox
++}  // namespace mhw
++
++#endif  // __MHW_VDBOX_MFX_CMDPAR_EXT_H__
+\ No newline at end of file
+diff --git a/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_hwcmd_ext.h b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_hwcmd_ext.h
+new file mode 100644
+index 000000000..fd6a98160
+--- /dev/null
++++ b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_hwcmd_ext.h
+@@ -0,0 +1,35 @@
++/*===================== begin_copyright_notice ==================================
++
++INTEL CONFIDENTIAL
++Copyright 2019-2022
++Intel Corporation All Rights Reserved.
++
++The source code contained or described herein and all documents related to the
++source code ("Material") are owned by Intel Corporation or its suppliers or
++licensors. Title to the Material remains with Intel Corporation or its suppliers
++and licensors. The Material contains trade secrets and proprietary and confidential
++information of Intel or its suppliers and licensors. The Material is protected by
++worldwide copyright and trade secret laws and treaty provisions. No part of the
++Material may be used, copied, reproduced, modified, published, uploaded, posted,
++transmitted, distributed, or disclosed in any way without Intel's prior express
++written permission.
++
++No license under any patent, copyright, trade secret or other intellectual
++property right is granted to or conferred upon you by disclosure or delivery
++of the Materials, either expressly, by implication, inducement, estoppel
++or otherwise. Any license under such intellectual property rights must be
++express and approved by Intel in writing.
++
++======================= end_copyright_notice ==================================*/
++//!
++//! \file     mhw_vdbox_mfx_hwcmd_ext.h
++//! \brief    constructors for MHW and states.
++//! \details  This file may not be included outside as other components
++//!           should use MHW interface to interact with MHW commands and states.
++//!
++#ifndef __MHW_VDBOX_MFX_HWCMD_EXT_H__
++#define __MHW_VDBOX_MFX_HWCMD_EXT_H__
++
++#define MFX_MPEG2_PIC_STATE_CMD_DW3_BIT24_28 OldbpquantEncoderThisFieldShouldBeSetToZero
++
++#endif  // __MHW_VDBOX_MFX_HWCMD_EXT_H__
+-- 
+2.48.1
+

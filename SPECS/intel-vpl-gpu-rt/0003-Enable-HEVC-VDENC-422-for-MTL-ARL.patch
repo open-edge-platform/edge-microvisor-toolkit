@@ -1,0 +1,64 @@
+From e3d7b4efa26a6c6d58ad9aa69443f82fc3043b5d Mon Sep 17 00:00:00 2001
+From: "Hoe, Sheng Yang" <sheng.yang.hoe@intel.com>
+Date: Thu, 15 May 2025 07:29:20 +0000
+Subject: [PATCH 3/4] Enable HEVC VDENC 422 for MTL/ARL
+
+Upstream-Status: Inappropriate [IGMDPT-887]
+
+Signed-off-by: Hoe, Sheng Yang <sheng.yang.hoe@intel.com>
+---
+ .../hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.cpp     | 7 ++++++-
+ .../hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.h       | 5 +++++
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/_studio/mfx_lib/encode_hw/hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.cpp b/_studio/mfx_lib/encode_hw/hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.cpp
+index a894d6a3..910fc547 100644
+--- a/_studio/mfx_lib/encode_hw/hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.cpp
++++ b/_studio/mfx_lib/encode_hw/hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.cpp
+@@ -34,7 +34,7 @@
+ #include "hevcehw_base_parser.h"
+ #include "hevcehw_base_recon_info_lin.h"
+ #include "hevcehw_base_extddi.h"
+-
++#include "hevcehw_base_recon422_ext.h"
+ 
+ namespace HEVCEHW
+ {
+@@ -59,6 +59,7 @@ MFXVideoENCODEH265_HW::MFXVideoENCODEH265_HW(
+     newFeatures.emplace_back(new SAO(FEATURE_SAO));
+     newFeatures.emplace_back(new QpModulation(FEATURE_QP_MODULATION));
+     newFeatures.emplace_back(new ExtDDI(FEATURE_EXTDDI));
++    newFeatures.emplace_back(new HEVCEHW::Base::Recon422EXT(FEATURE_RECON422EXT));
+ 
+     InternalInitFeatures(status, mode, newFeatures);
+ }
+@@ -107,6 +108,10 @@ void MFXVideoENCODEH265_HW::InternalInitFeatures(
+             qwc
+             , { FEATURE_REXT, RExt::BLK_HardcodeCaps }
+             , { HEVCEHW::Base::FEATURE_DDI_PACKER, HEVCEHW::Base::IDDIPacker::BLK_HardcodeCaps });
++        Reorder(
++            qnc
++            , { HEVCEHW::Base::FEATURE_DDI, HEVCEHW::Base::IDDI::BLK_SetDDIID }
++            , { FEATURE_RECON422EXT, HEVCEHW::Base::Recon422EXT::BLK_SetRecon422Caps });
+     }
+ 
+     if (mode & INIT)
+diff --git a/_studio/mfx_lib/encode_hw/hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.h b/_studio/mfx_lib/encode_hw/hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.h
+index b71bd8fb..e6cb0fee 100644
+--- a/_studio/mfx_lib/encode_hw/hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.h
++++ b/_studio/mfx_lib/encode_hw/hevc/linux/xe_lpm_plus/hevcehw_xe_lpm_plus_lin.h
+@@ -32,6 +32,11 @@ namespace Linux
+ {
+ namespace Xe_LPM_Plus
+ {
++    enum eFeatureId
++    {
++        FEATURE_RECON422EXT = HEVCEHW::Base::eFeatureId::NUM_FEATURES
++        , NUM_FEATURES
++    };
+     class MFXVideoENCODEH265_HW
+         : public Linux::Base::MFXVideoENCODEH265_HW
+     {
+-- 
+2.48.1
+

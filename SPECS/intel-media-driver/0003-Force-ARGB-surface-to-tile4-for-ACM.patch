@@ -1,0 +1,45 @@
+From 419869346507ff7f2c17271bd33da4e8e0e22a97 Mon Sep 17 00:00:00 2001
+From: Lim Siew Hoon <siew.hoon.lim@intel.com>
+Date: Wed, 11 Oct 2023 15:36:21 +0800
+Subject: [PATCH 03/12] Force ARGB surface to tile4 for ACM
+
+upstream-status: submitted
+https://github.com/intel/media-driver/pull/1728
+
+Signed-off-by: Soon, Thean Siew <thean.siew.soon@intel.com>
+Signed-off-by: Lim Siew Hoon <siew.hoon.lim@intel.com>
+---
+ media_driver/linux/common/ddi/media_libva_util.cpp | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/media_driver/linux/common/ddi/media_libva_util.cpp b/media_driver/linux/common/ddi/media_libva_util.cpp
+index d3b94d51f..53b2e258c 100755
+--- a/media_driver/linux/common/ddi/media_libva_util.cpp
++++ b/media_driver/linux/common/ddi/media_libva_util.cpp
+@@ -519,6 +519,7 @@ VAStatus DdiMediaUtil_AllocateSurface(
+                         gmmCustomParams.Flags.Gpu.UnifiedAuxSurface = 0;
+                     }
+                 }
++
+                 break;
+             case TILING_X:
+                 gmmCustomParams.Flags.Info.TiledX = true;
+@@ -700,6 +701,15 @@ VAStatus DdiMediaUtil_AllocateSurface(
+                         }
+                     }
+                 }
++                // There's no VAAPI interface for modifier query yet. As a workaround, always allocate
++                // RGB surface as tile4.
++                if ((format == Media_Format_A8R8G8B8 ||
++                     format == Media_Format_B10G10R10A2 |
++                     format == Media_Format_A8B8G8R8 ||
++                     format == Media_Format_X8R8G8B8) && !MEDIA_IS_SKU(&mediaDrvCtx->SkuTable, FtrTileY))
++                {
++                    gmmParams.Flags.Info.Tile4 = true;
++                }
+                 break;
+             case TILING_X:
+                 gmmParams.Flags.Info.TiledX    = true;
+-- 
+2.48.1
+

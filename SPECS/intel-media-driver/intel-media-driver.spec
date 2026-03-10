@@ -1,5 +1,5 @@
 Name:           intel-media-driver
-Version:        25.2.3
+Version:        25.3.4
 Release:        1%{?dist}
 Summary:        The Intel Media Driver for VAAPI
 License:        MIT and BSD-3-Clause
@@ -12,6 +12,19 @@ URL:        https://github.com/intel/media-driver
 # ref. https://github.com/intel/media-driver/wiki/Media-Driver-Shaders-(EU-Kernels)#build-with-open-source-shaders
 
 Source0:    https://github.com/intel/media-driver/archive/refs/tags/intel-media-%{version}.tar.gz
+
+Patch0001: 0003-Force-ARGB-surface-to-tile4-for-ACM.patch
+Patch0002: 0004-Fix-failed-4k-videowalll-test-case-and-color-corrupt.patch
+Patch0003: 0005-Add-profile-entrypoint-check.patch
+Patch0004: 0006-Disable-Xe3_Lpm-VD-SFC.patch
+Patch0005: 0007-Add-AVC-10-Bit-decode.patch
+Patch0006: 0008-Fix-MHW-interface-for-AVC-10-decode.patch
+Patch0007: 0009-Add-YUY2-and-Y210-caps-for-MTL-ARL-HEVC-encode.patch
+Patch0008: 0010-Fix-ACM-HEVC-VDENC-422-CBR-VBR.patch
+Patch0009: 0011-Mark-the-imported-dmabuf-as-cacheable-in-Media-Libva.patch
+Patch00010: 0012-Decode-Add-AVC-10-Bit-decode-for-WCL.patch
+Patch00011: 0012-Remove-PTL-AV1-444-Caps.patch
+Patch00012: 0001-Media-Common-disable-pat-index-for-MTL-ARL-on-i915.patch
 
 # This is an Intel only vaapi backend
 ExclusiveArch:  x86_64
@@ -96,6 +109,9 @@ fn=%{buildroot}%{_metainfodir}/intel-media-driver.metainfo.xml
 %{_libdir}/pkgconfig/igfxcmrt.pc
 
 %changelog
+* Tue Mar 10 2026 Lishan Liu <lishan.liu@intel.com> - 25.3.4-1
+- Upgraded to version 25.3.4.
+
 * Fri Jul 11 2025 Liang Yang <liang1.yang@intel.com> - 25.2.3-1
 - Upgraded to version 25.2.3.
 

@@ -24,7 +24,7 @@
 Name:           libva
 %define _name   libva
 Version:        2.22.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Video Acceleration (VA) API
 License:        MIT
 Group:          Development/Libraries/C and C++
@@ -34,6 +34,9 @@ Distribution:   Edge Microvisor Toolkit
 Source0:        https://github.com/intel/libva/archive/%{version}.tar.gz#/libva-%{version}.tar.gz
 Source2:        baselibs.conf
 Patch0:         propagate-dpy.patch
+Patch1:         0001-va-add-av1-profile2.patch
+Patch2:         0002-va-add-VAProfileH264High422.patch
+
 BuildRequires:  gcc-c++
 BuildRequires:  libtool
 BuildRequires:  meson
@@ -205,6 +208,9 @@ rm -rf `find %{buildroot}%{_libdir}/pkgconfig/libva*.pc | grep -v "glx"`
 %endif
 
 %changelog
+* Tue Mar 10 2026 Lishan Liu <lishan.liu@intel.com> - 2.22.0-2
+- Added two backport patches
+
 * Fri Jul 11 2025 Liang Yang <liang1.yang@intel.com> - 2.22.0-1
 - Upgraded to version 2.22.0
 - Updated Vendor and Distribution info.

@@ -1,0 +1,50 @@
+From 0bd84e10f7f043afd6f874fb9c507f31dd515a6f Mon Sep 17 00:00:00 2001
+From: Zhang_Xinfeng <carl.zhang@intel.com>
+Date: Thu, 27 Nov 2025 17:59:57 +0800
+Subject: [PATCH] [Media Common] disable pat index for MTL/ARL on i915
+
+fix performance gap production build and upstream build
+upstream build has pat index
+production build just set all to default 3 (WB + way)
+suspect default value has better performance for some cases.
+if this assumption is correct. it means we need tune cache setting for each buffer.
+
+Upstream-status: Backport
+Link: https://github.com/intel/media-driver/commit/29ff2b055e218fbf51cc3e599eca8b2a3b7b999f
+
+Signed-off-by: Hoe, Sheng Yang <sheng.yang.hoe@intel.com>
+---
+ media_softlet/linux/common/os/i915/mos_bufmgr.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/media_softlet/linux/common/os/i915/mos_bufmgr.c b/media_softlet/linux/common/os/i915/mos_bufmgr.c
+index bca411be7..c625adf90 100644
+--- a/media_softlet/linux/common/os/i915/mos_bufmgr.c
++++ b/media_softlet/linux/common/os/i915/mos_bufmgr.c
+@@ -1020,7 +1020,7 @@ mos_gem_bo_alloc_internal(struct mos_bufmgr *bufmgr,
+     struct mos_bufmgr_gem *bufmgr_gem = (struct mos_bufmgr_gem *) bufmgr;
+     struct mos_bo_gem *bo_gem;
+     unsigned int page_size = getpagesize();
+-    static bool support_pat_index = true;
++    static bool support_pat_index = false;
+     int ret;
+     struct mos_gem_bo_bucket *bucket;
+     bool alloc_from_cache;
+@@ -1945,12 +1945,13 @@ drm_export int mos_gem_bo_map(struct mos_linux_bo *bo, int write_enable)
+ #endif
+         return 0;
+     }
++#if 0    
+     /* If cpu cacheable is false, it means bo is Non-Coherent. */
+     if (!bo_gem->cpu_cacheable)
+     {
+         return mos_gem_bo_map_wc(bo);
+     }
+-
++#endif
+     pthread_mutex_lock(&bufmgr_gem->lock);
+ 
+     if (bufmgr_gem->has_mmap_offset) {
+-- 
+2.34.1
+

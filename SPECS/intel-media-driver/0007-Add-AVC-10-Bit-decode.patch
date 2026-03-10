@@ -1,0 +1,225 @@
+From dcf7548fede336cd4547c86136ca7cb41329b84a Mon Sep 17 00:00:00 2001
+From: "Cheah, Vincent Beng Keat" <vincent.beng.keat.cheah@intel.com>
+Date: Wed, 11 Jun 2025 20:30:52 +0800
+Subject: [PATCH 07/12] Add AVC 10 Bit decode
+
+Upstream-Status: Inappropriate [IGMDPT-869]
+
+Signed-off-by: Cheah, Vincent Beng Keat <vincent.beng.keat.cheah@intel.com>
+---
+ .../codec/ddi/dec/ddi_decode_avc_specific.cpp | 44 +++++++++++++++++++
+ .../codec/ddi/dec/ddi_decode_avc_specific.h   |  2 +
+ .../ddi/ddi_register_components_specific.h    |  6 +++
+ .../ddi/capstable_data_xe3_lpm_r0_specific.h  | 19 ++++++++
+ ...able_data_avc_decode_xe3_lpm_r0_specific.h | 34 +++++++++++++-
+ .../capstable_data_vp_xe3_lpm_r0_specific.h   |  2 +-
+ 6 files changed, 105 insertions(+), 2 deletions(-)
+
+diff --git a/media_softlet/linux/common/codec/ddi/dec/ddi_decode_avc_specific.cpp b/media_softlet/linux/common/codec/ddi/dec/ddi_decode_avc_specific.cpp
+index 6d16c694f..c5c5e8bf8 100644
+--- a/media_softlet/linux/common/codec/ddi/dec/ddi_decode_avc_specific.cpp
++++ b/media_softlet/linux/common/codec/ddi/dec/ddi_decode_avc_specific.cpp
+@@ -488,6 +488,44 @@ VAStatus DdiDecodeAvc::RenderPicture(
+     return va;
+ }
+ 
++MOS_FORMAT DdiDecodeAvc::GetFormat()
++{
++    DDI_CODEC_FUNC_ENTER;
++
++    MOS_FORMAT Format = Format_NV12;
++    DDI_CODEC_RENDER_TARGET_TABLE *rtTbl = &(m_decodeCtx->RTtbl);
++    CodechalDecodeParams  *decodeParams  = &m_decodeCtx->DecodeParams;
++    CODEC_AVC_PIC_PARAMS *picParams      = (CODEC_AVC_PIC_PARAMS *)decodeParams->m_picParams;
++
++    uint8_t chromaType             = picParams->seq_fields.chroma_format_idc;
++    uint8_t ucBitDepthLumaMinus8   = picParams->bit_depth_luma_minus8;
++    uint8_t ucBitDepthChromaMinus8 = picParams->bit_depth_luma_minus8;
++
++    if ((chromaType == avcChromaFormatMono || chromaType == avcChromaFormat420) && rtTbl->pCurrentRT->format == Media_Format_NV12)
++    {
++        if (ucBitDepthLumaMinus8 == 0 && ucBitDepthChromaMinus8 == 0)
++        {
++            Format = Format_NV12; //420 8 bit
++        }
++    }
++    else if (chromaType == avcChromaFormat420 && rtTbl->pCurrentRT->format == Media_Format_P010)
++    {
++        if (ucBitDepthLumaMinus8 == 2 && ucBitDepthChromaMinus8 == 2)
++        {
++            Format = Format_P010; //420 10 bit
++        }
++    }
++    else if (chromaType == avcChromaFormat422 && rtTbl->pCurrentRT->format == Media_Format_Y210)
++    {
++         if (ucBitDepthLumaMinus8 == 2 && ucBitDepthChromaMinus8 == 2)
++         {
++             Format = Format_Y210; // 422 10 bit
++         }
++    }
++
++    return Format;
++}
++
+ VAStatus DdiDecodeAvc::SetDecodeParams()
+ {
+     DDI_CODEC_FUNC_ENTER;
+@@ -631,6 +669,12 @@ VAStatus DdiDecodeAvc::CodecHalInit(
+ 
+     m_codechalSettings->lumaChromaDepth = CODECHAL_LUMA_CHROMA_DEPTH_8_BITS;
+ 
++    if (m_ddiDecodeAttr->profile == VAProfileH264High10     ||
++        m_ddiDecodeAttr->profile == VAProfileH264High422)
++    {
++        m_codechalSettings->lumaChromaDepth |= CODECHAL_LUMA_CHROMA_DEPTH_10_BITS;
++    }
++
+     m_codechalSettings->mode     = CODECHAL_DECODE_MODE_AVCVLD;
+     m_codechalSettings->standard = CODECHAL_AVC;
+ 
+diff --git a/media_softlet/linux/common/codec/ddi/dec/ddi_decode_avc_specific.h b/media_softlet/linux/common/codec/ddi/dec/ddi_decode_avc_specific.h
+index 6cec42fcc..52e10d9a2 100644
+--- a/media_softlet/linux/common/codec/ddi/dec/ddi_decode_avc_specific.h
++++ b/media_softlet/linux/common/codec/ddi/dec/ddi_decode_avc_specific.h
+@@ -59,6 +59,8 @@ public:
+         VABufferID       *buffers,
+         int32_t          numBuffers) override;
+ 
++    virtual MOS_FORMAT GetFormat() override;
++
+     virtual VAStatus SetDecodeParams() override;
+ 
+     virtual void ContextInit(
+diff --git a/media_softlet/linux/common/ddi/ddi_register_components_specific.h b/media_softlet/linux/common/ddi/ddi_register_components_specific.h
+index b6c124675..2d5832c72 100644
+--- a/media_softlet/linux/common/ddi/ddi_register_components_specific.h
++++ b/media_softlet/linux/common/ddi/ddi_register_components_specific.h
+@@ -166,6 +166,12 @@ static bool RegisteredH264HighVLD =
+ static bool RegisteredH264ConstrainedBaselineVLD =
+     DdiDecodeFactory::
+         Register<decode::DdiDecodeAvc>(ComponentInfo{VAProfileH264ConstrainedBaseline, VAEntrypointVLD});
++static bool RegisteredH264High10VLD =
++    DdiDecodeFactory::
++        Register<decode::DdiDecodeAvc>(ComponentInfo{VAProfileH264High10, VAEntrypointVLD});
++static bool RegisteredH264High422VLD =
++    DdiDecodeFactory::
++        Register<decode::DdiDecodeAvc>(ComponentInfo{VAProfileH264High422, VAEntrypointVLD});
+ #endif // _AVC_DECODE_SUPPORTED
+ 
+ #if defined (_AV1_DECODE_SUPPORTED)
+diff --git a/media_softlet/linux/xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h b/media_softlet/linux/xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h
+index 5b41f2c8a..99d4760a8 100644
+--- a/media_softlet/linux/xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h
+@@ -253,6 +253,20 @@ static const EntrypointMap entrypointMap_VAProfileH264High_Xe3_Lpm_r0
+ #endif
+ };
+ 
++static const EntrypointMap entrypointMap_VAProfileH264High10_Xe3_Lpm_r0
++{
++#if defined(_AVC_DECODE_SUPPORTED)
++    {VAEntrypointVLD, &entrypointMap_VAProfileH264High10Dec_Data_Xe3_Lpm_r0},
++#endif
++};
++
++static const EntrypointMap entrypointMap_VAProfileH264High422_Xe3_Lpm_r0
++{
++#if defined(_AVC_DECODE_SUPPORTED)
++    {VAEntrypointVLD, &entrypointMap_VAProfileH264High422Dec_Data_Xe3_Lpm_r0},
++#endif
++};
++
+ static const EntrypointMap entrypointMap_VAProfileH264ConstrainedBaseline_Xe3_Lpm_r0
+ {
+ #if defined(_AVC_ENCODE_VDENC_SUPPORTED) 
+@@ -398,6 +412,11 @@ static const ProfileMap profileMap_Xe3_Lpm_r0
+     {VAProfileH264ConstrainedBaseline, &entrypointMap_VAProfileH264ConstrainedBaseline_Xe3_Lpm_r0},
+ #endif
+ 
++#if defined(_AVC_DECODE_SUPPORTED)
++    {VAProfileH264High10, &entrypointMap_VAProfileH264High10_Xe3_Lpm_r0},
++    {VAProfileH264High422, &entrypointMap_VAProfileH264High422_Xe3_Lpm_r0},
++#endif
++
+ #if defined(_JPEG_ENCODE_SUPPORTED) || defined(_JPEG_DECODE_SUPPORTED)
+     {VAProfileJPEGBaseline, &entrypointMap_VAProfileJPEGBaseline_Xe3_Lpm_r0},
+ #endif
+diff --git a/media_softlet/linux/xe3_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3_lpm_r0_specific.h b/media_softlet/linux/xe3_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3_lpm_r0_specific.h
+index 9135b892a..eec52cd69 100644
+--- a/media_softlet/linux/xe3_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3_lpm_r0_specific.h
+@@ -68,6 +68,14 @@ static ConfigDataList configDataList_VAProfileH264High10_VAEntrypointVLD_Xe3_Lpm
+   {VA_DEC_SLICE_MODE_BASE,   VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING}
+ };
+ 
++static ConfigDataList configDataList_VAProfileH264High422_VAEntrypointVLD_Xe3_Lpm_r0 =
++{
++  {VA_DEC_SLICE_MODE_NORMAL, VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING_NONE},
++  {VA_DEC_SLICE_MODE_NORMAL, VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING},
++  {VA_DEC_SLICE_MODE_BASE,   VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING_NONE},
++  {VA_DEC_SLICE_MODE_BASE,   VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING}
++};
++
+ //!
+ //! \brief  Definition for AttribList
+ //!
+@@ -107,6 +115,18 @@ static const AttribList attribList_VAProfileH264High10_VAEntrypointVLD_Xe3_Lpm_r
+    {VAConfigAttribCustomRoundingControl, 1},
+ };
+ 
++static const AttribList attribList_VAProfileH264High422_VAEntrypointVLD_Xe3_Lpm_r0
++{
++   {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420_10 | VA_RT_FORMAT_YUV422_10 | VA_RT_FORMAT_YUV420_10BPP},
++   {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribMaxPictureWidth, CODEC_4K_MAX_PIC_WIDTH},
++   {VAConfigAttribMaxPictureHeight, CODEC_4K_MAX_PIC_HEIGHT},
++   {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
++   {VAConfigAttribProcessingRate, VA_PROCESSING_RATE_DECODE},
++   {VAConfigAttribCustomRoundingControl, 1},
++};
++
+ static const AttribList attribList_VAProfileH264ConstrainedBaseline_VAEntrypointVLD_Xe3_Lpm_r0
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_RGB32},
+@@ -141,8 +161,14 @@ static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileH264High_VAEntrypoint
+ static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileH264High10_VAEntrypointVLD_Xe3_Lpm_r0 =
+ {
+   {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_P010}}},
++  {VASurfaceAttribMaxWidth,    VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_4K_MAX_PIC_WIDTH}}},
++  {VASurfaceAttribMaxHeight,   VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_4K_MAX_PIC_HEIGHT}}},
++  {VASurfaceAttribMemoryType,  VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_SURFACE_ATTRIB_MEM_TYPE_VA| VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2}}}
++};
++
++static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileH264High422_VAEntrypointVLD_Xe3_Lpm_r0 =
++{
+   {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_Y210}}},
+-  {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_Y216}}},
+   {VASurfaceAttribMaxWidth,    VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_4K_MAX_PIC_WIDTH}}},
+   {VASurfaceAttribMaxHeight,   VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_4K_MAX_PIC_HEIGHT}}},
+   {VASurfaceAttribMemoryType,  VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_SURFACE_ATTRIB_MEM_TYPE_VA| VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2}}}
+@@ -187,4 +213,10 @@ static const EntrypointData entrypointMap_VAProfileH264High10Dec_Data_Xe3_Lpm_r0
+     &surfaceAttribInfo_VAProfileH264High10_VAEntrypointVLD_Xe3_Lpm_r0
+ };
+ 
++static const EntrypointData entrypointMap_VAProfileH264High422Dec_Data_Xe3_Lpm_r0
++{
++    &attribList_VAProfileH264High422_VAEntrypointVLD_Xe3_Lpm_r0,
++    &configDataList_VAProfileH264High422_VAEntrypointVLD_Xe3_Lpm_r0,
++    &surfaceAttribInfo_VAProfileH264High422_VAEntrypointVLD_Xe3_Lpm_r0
++};
+ #endif
+diff --git a/media_softlet/linux/xe3_lpm_r0/vp/capstable_data_vp_xe3_lpm_r0_specific.h b/media_softlet/linux/xe3_lpm_r0/vp/capstable_data_vp_xe3_lpm_r0_specific.h
+index d470cf7e1..6c777850f 100644
+--- a/media_softlet/linux/xe3_lpm_r0/vp/capstable_data_vp_xe3_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3_lpm_r0/vp/capstable_data_vp_xe3_lpm_r0_specific.h
+@@ -96,4 +96,4 @@ static EntrypointMap entrypointMap_VAProfileNone_Xe3_lpm_r0
+     {VAEntrypointVideoProc, &entrypointMap_VAProfileNone_Data_Xe3_lpm_r0},
+ };
+ 
+-#endif
+\ No newline at end of file
++#endif
+-- 
+2.48.1
+
