@@ -1,19 +1,13 @@
 Summary:        Standard Linux utility for controlling network drivers and hardware
 Name:           ethtool
 Version:        6.7
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 URL:            https://www.kernel.org/pub/software/network/ethtool/
 Group:          Productivity/Networking/Diagnostic
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Source0:        https://www.kernel.org/pub/software/network/%{name}/%{name}-%{version}.tar.xz
-
-# Time Sensitive Networking (TSN) Patches
-Patch0:         0001-include-uapi-Update-the-local-headers-with-Frame-Pre.patch
-Patch1:         0002-ethtool-Add-support-for-configuring-frame-preemption.patch
-Patch2:         0003-igc-Add-support-for-dumping-frame-preemption-stats-r.patch
-Patch3:         0004-preempt-Add-support-for-verifying-frame-preemption.patch
 
 BuildRequires: libmnl-devel
 
