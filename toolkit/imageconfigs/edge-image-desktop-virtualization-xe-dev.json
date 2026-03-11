@@ -1,0 +1,140 @@
+{
+    "Disks": [
+        {
+            "PartitionTableType": "gpt",
+            "MaxSize": 13312,
+            "Artifacts": [
+                {
+                    "Name": "edge-readonly-dv-xe-dev",
+                    "Type": "raw"
+                },
+                {
+                    "Name": "edge-readonly-dv-xe-dev",
+                    "Type": "vhd"
+                }
+            ],
+            "Partitions": [
+                {
+                    "Name": "esp",
+                    "ID": "boot",
+                    "Flags": [
+                        "esp",
+                        "boot"
+                    ],
+                    "Start": 1,
+                    "End": 300,
+                    "FsType": "fat32",
+                    "Type": "esp"
+                },
+                {
+                    "Name": "rootfs",
+                    "ID": "rootfs",
+                    "Start": 300,
+                    "End": 4048,
+                    "FsType": "ext4",
+                    "Type": "linux-root-amd64"
+                },
+                {
+                    "Name": "edge_persistent",
+                    "ID": "opt",
+                    "Start": 4048,
+                    "End": 0,
+                    "FsType": "ext4"
+                }
+            ]
+        }
+    ],
+    "SystemConfigs": [
+        {
+            "Name": "Standard",
+            "BootType": "efi",
+            "PartitionSettings": [
+                {
+                    "ID": "boot",
+                    "MountPoint": "/boot/efi",
+                    "MountOptions" : "umask=0077"
+                },
+                {
+                    "ID": "rootfs",
+                    "MountPoint": "/"
+                },
+                {
+                    "ID": "opt",
+                    "MountPoint": "/opt"
+                }
+            ],
+            "PackageLists": [
+                "packagelists/docker.json",
+                "packagelists/core-packages-image-systemd-boot.json",
+                "packagelists/core-tools-packages.json",
+                "packagelists/ssh-server.json",
+                "packagelists/virtualization-host-full-packages.json",
+                "packagelists/qemu-guest-packages.json",
+                "packagelists/xorg-x11-packages.json",
+                "packagelists/agents-packages.json",
+                "packagelists/tools-tinker.json",
+                "packagelists/persistent-mount-package.json",
+                "packagelists/selinux-full.json",
+                "packagelists/intel-gpu-base.json",
+                "packagelists/intel-wireless.json",
+                "packagelists/os-ab-update.json",
+                "packagelists/fs-tools.json",
+                "packagelists/helm.json",
+                "packagelists/intel-idv-services.json"
+            ],
+            "Packages": [
+                "igt-gpu-tools"
+            ],
+            "AdditionalFiles": {
+                "additionalconfigs/layout.env": "/etc/layout.env",
+                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network",
+                "additionalconfigs/systemd-networkd-wait-online-override.conf": "/etc/systemd/system/systemd-networkd-wait-online.service.d/override.conf",
+                "additionalconfigs/emt-cloud-init.cfg": "/etc/cloud/cloud.cfg"
+            },
+            "PostInstallScripts": [
+                {
+                        "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
+                },
+                {
+                        "Path": "additionalconfigs/add-sudoer.sh"
+                },
+                {
+                        "Path": "additionalconfigs/add-docker-group.sh"
+                }
+            ],
+            "KernelOptions": {
+                "default": "kernel"
+            },
+            "FinalizeImageScripts": [
+                {
+                    "Path": "scripts/setup_emt_image.sh"
+                },
+                {
+                    "Path": "scripts/cleanup.sh"
+                }
+            ],
+            "KernelCommandLine": {
+                "ExtraCommandLine": "quiet splash sysctl.vm.overcommit_memory=1 sysctl.kernel.panic=10 sysctl.kernel.panic_on_oops=1 sysctl.fs.inotify.max_user_instances=8192 rd.shell=0 rd.timeout=200 rd.emergency=reboot udmabuf.list_limit=8192 xe.force_probe=* xe.max_vfs=7",
+            "SELinux": "permissive"
+            },
+            "Hostname": "EdgeMicrovisorToolkit",
+            "DisableRpmDocs": true,
+            "OverrideRpmLocales": "NONE",
+            "EfiProvider": "systemd-boot",
+            "ImmutabilityEnabled": false,
+            "Users": [
+                {
+                    "Name": "root",
+                    "Password": "$6$h06k1YSGP1nz$TVrHZZQS/rf2xo3.gb80GJKkkUzaylHPz/Ofvl/L5seczLeM98man/0zZoY4m.OEuvE2znG2jo909xvIv3FrL1",
+                    "PasswordHashed": true
+                },
+                {
+                    "Name": "guest",
+                    "Password": "$6$6HeEWrlUMlCT$c.NyEBGjE/iVx91gK0Rj83L9K5/HIn.d8MC3c781GRVPd/ZvDFVkIuP8aGZWxyvNDmqdEHjGuUhBC/zZOyAgI0",
+                    "PasswordHashed": true
+                }
+            ]
+
+        }
+    ]
+}
