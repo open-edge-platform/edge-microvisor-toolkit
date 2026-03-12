@@ -1857,8 +1857,8 @@
         "type": "other",
         "other": {
           "name": "cloud-hypervisor",
-          "version": "41.0.139",
-          "downloadUrl": "https://github.com/microsoft/cloud-hypervisor/archive/refs/tags/msft/v41.0.139.tar.gz"
+          "version": "48.0.246",
+          "downloadUrl": "https://github.com/microsoft/cloud-hypervisor/archive/refs/tags/msft/v48.0.246.tar.gz"
         }
       }
     },
@@ -8871,8 +8871,8 @@
         "type": "other",
         "other": {
           "name": "lasso",
-          "version": "2.8.0",
-          "downloadUrl": "http://dev.entrouvert.org/lasso/lasso-2.8.0.tar.gz"
+          "version": "2.9.0",
+          "downloadUrl": "https://git.entrouvert.org/entrouvert/lasso/archive/v2.9.0.tar.gz"
         }
       }
     },
@@ -11221,8 +11221,8 @@
         "type": "other",
         "other": {
           "name": "libreport",
-          "version": "2.13.1",
-          "downloadUrl": "https://github.com/abrt/libreport/archive/2.13.1/libreport-2.13.1.tar.gz"
+          "version": "2.17.15",
+          "downloadUrl": "https://github.com/abrt/libreport/archive/2.17.15/libreport-2.17.15.tar.gz"
         }
       }
     },
@@ -11452,7 +11452,7 @@
         "other": {
           "name": "libsodium",
           "version": "1.0.19",
-          "downloadUrl": "https://download.libsodium.org/libsodium/releases/libsodium-1.0.19.tar.gz"
+          "downloadUrl": "https://github.com/jedisct1/libsodium/archive/refs/tags/1.0.19-FINAL.tar.gz"
         }
       }
     },
@@ -14481,6 +14481,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "nodejs24",
+          "version": "24.13.0",
+          "downloadUrl": "https://nodejs.org/download/release/v24.13.0/node-v24.13.0.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "ncurses",
           "version": "6.4",
           "downloadUrl": "https://invisible-mirror.net/archives/ncurses/current/ncurses-6.4-20231125.tgz"
@@ -14692,8 +14702,8 @@
         "type": "other",
         "other": {
           "name": "nginx",
-          "version": "1.25.4",
-          "downloadUrl": "https://nginx.org/download/nginx-1.25.4.tar.gz"
+          "version": "1.28.1",
+          "downloadUrl": "https://nginx.org/download/nginx-1.28.1.tar.gz"
         }
       }
     },
@@ -23083,8 +23093,8 @@
         "type": "other",
         "other": {
           "name": "python-debtcollector",
-          "version": "1.22.0",
-          "downloadUrl": "https://tarballs.openstack.org/debtcollector/debtcollector-1.22.0.tar.gz"
+          "version": "3.0.0",
+          "downloadUrl": "https://tarballs.openstack.org/debtcollector/debtcollector-3.0.0.tar.gz"
         }
       }
     },
@@ -23323,8 +23333,8 @@
         "type": "other",
         "other": {
           "name": "python-filelock",
-          "version": "3.20.1",
-          "downloadUrl": "https://files.pythonhosted.org/packages/source/f/filelock/filelock-3.20.1.tar.gz"
+          "version": "3.20.3",
+          "downloadUrl": "https://files.pythonhosted.org/packages/source/f/filelock/filelock-3.20.3.tar.gz"
         }
       }
     },
@@ -24413,8 +24423,8 @@
         "type": "other",
         "other": {
           "name": "python-oslo-i18n",
-          "version": "5.1.0",
-          "downloadUrl": "https://tarballs.openstack.org/oslo.i18n/oslo.i18n-5.1.0.tar.gz"
+          "version": "6.7.1",
+          "downloadUrl": "https://files.pythonhosted.org/packages/source/o/oslo_i18n/oslo_i18n-6.7.1.tar.gz"
         }
       }
     },
@@ -28104,8 +28114,8 @@
         "type": "other",
         "other": {
           "name": "rust",
-          "version": "1.86.0",
-          "downloadUrl": "https://static.rust-lang.org/dist/rustc-1.86.0-src.tar.xz"
+          "version": "1.90.0",
+          "downloadUrl": "https://static.rust-lang.org/dist/rustc-1.90.0-src.tar.xz"
         }
       }
     },
@@ -29276,8 +29286,8 @@
         "type": "other",
         "other": {
           "name": "suitesparse",
-          "version": "5.4.0",
-          "downloadUrl": "https://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.4.0.tar.gz"
+          "version": "7.11.0",
+          "downloadUrl": "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v7.11.0/suitesparse-7.11.0.tar.gz"
         }
       }
     },
