@@ -185,7 +185,7 @@
 Summary:        Library providing a simple virtualization API
 Name:           libvirt
 Version:        10.0.0
-Release:        6%{?dist}
+Release:        7%{?dist}
 License:        GPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND OFL-1.1
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -200,6 +200,7 @@ Patch1:         CVE-2024-1441.patch
 Patch2:         CVE-2024-2494.patch
 Patch3:         CVE-2024-4418.patch
 Patch4:         CVE-2025-13193.patch
+Patch5:         CVE-2025-12748.patch
 
 # emt specific patches
 Patch99:         0001-PATCH-After-iptables.service.patch
@@ -2193,9 +2194,10 @@ exit 0
 %endif
 
 %changelog
-* Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 10.0.0-6
-- merge from Azure Linux 3.0.20251206-3.0
+* Thu Mar 12 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 10.0.0-7
+- merge from Azure Linux 3.0.20260204-3.0
 - Patch for CVE-2025-13193
+- Patch CVE-2025-12748
 
 * Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 10.0.0-5
 - merge from Azure Linux 3.0.20250822-3.0.
