@@ -32,7 +32,7 @@ The toolkit comes pre-configured to produce different images; the following tabl
 | Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with a toolkit to build an image with opt-in data integrity and security features.</li></ul> | <ul><li>Designed for [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework) and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare metal or as a guest OS.</li><li>Fast atomic updates and rollback support with a small image footprint and short boot time.|
 | Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
 | Update Mechanism | RPM package updates with TDNF | Image based A/B updates + Rollback       |
-| Linux Kernel     | Intel® Kernel 6.12   | Intel® Kernel 6.12                                |
+| Linux Kernel     | Intel® “Next” Kernel 6.17   | Intel® “Next” Kernel 6.17                                |
 | Real time        | Available for opt-in | Image variants with standard and RT kernel provided |
 | Desktop Virtualization | Available      | Dedicated non-RT image variant provided                                    |
 | Add-on packages  | Available for opt-in: Docker + K3s | Downloaded during installation: K3s and extensions    |
@@ -115,7 +115,7 @@ The RT version of Edge Microvisor Toolkit includes several features over the sta
 
 ### Preempt RT Kernel
 
-The Preempt RT Linux Kernel 6.12 is designed to offer enhanced real-time performance compared
+The Preempt RT Linux Kernel 6.17 is designed to offer enhanced real-time performance compared
 to the standard kernel:
 
 - **Reduced Latency**
@@ -138,10 +138,13 @@ The patch refines locking mechanisms, reducing the time when critical sections c
 interrupted. This improves the overall responsiveness and guarantees that the system can
 handle real-time workloads with minimal jitter.
 
-> **Note:** You can learn more about preempt Kernel and its features at the
-> [Linux Intel LTS Kernel Github](https://github.com/intel/linux-intel-lts/blob/main/README.md).
-> You can learn more about specific kernel patches related to preempt RT Kernel in the relevant
-> [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec).
+> **Note:**
+> - Learn more about preempt Kernel and its features at the
+>   [Linux Intel LTS Kernel Github](https://github.com/intel/linux-intel-lts/blob/main/README.md).
+> - Learn more about specific kernel patches related to preempt RT Kernel in the relevant
+>   [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/next/SPECS/kernel/kernel.spec).
+> - The use of RT Kernel with Intel® Core™ Ultra Processors has some limitations. Refer to
+    the [Known Limitations](./emt-troubleshooting.md#known-limitations) section for more details.
 
 ### perf tool
 
