@@ -1,6 +1,6 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
-Version:        0.4.3
+Version:        0.4.4
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -77,6 +77,10 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
+* Mon Mar 02 2026 Jagrat Acharya <jagrat.acharya@intel.com> - 0.4.4-1
+- Updated PMA Version.
+- Introduced ACM mode for Vpro.
+
 * Fri Feb 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.4.3-1
 - Update to golang 1.25.7
 
