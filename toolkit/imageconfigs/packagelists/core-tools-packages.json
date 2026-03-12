@@ -2,9 +2,6 @@
     "packages": [
         "dnf",
         "vim",
-        "ethtool",
-        "iproute",
-        "iproute-tc",
         "wget"
     ]
 }

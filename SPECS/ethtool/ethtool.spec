@@ -39,6 +39,9 @@ make %{?_smp_mflags} check
 %{_datadir}/bash-completion/completions/ethtool
 
 %changelog
+* Wed Mar 11 2026 Andy <andy.peng@intel.com> - 6.7-2
+- Drop legacy TSN PREEMPT patchset to keep ethtool netlink UAPI compatible with kernel
+
 * Thu Jul 10 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 6.7-1
 - Update version to 6.7
 
