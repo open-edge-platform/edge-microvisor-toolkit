@@ -143,7 +143,7 @@
    sudo reboot
    ```
 
-9. Reboot into the guest:
+9. Reboot into the guest OS:
 
    ```bash
    # after reboot check the kernel version
