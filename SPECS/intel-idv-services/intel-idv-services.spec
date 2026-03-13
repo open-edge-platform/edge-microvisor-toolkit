@@ -1,6 +1,6 @@
 Name:           intel-idv-services
-Version:        1.0.0~rc4
-Release:        2%{?dist}
+Version:        1.0.0~rc6
+Release:        1%{?dist}
 Summary:        A package to install scripts and systemd services for Intelligent Desktop Virtualization(IDV)
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -50,6 +50,10 @@ install -m 644 idv-launcher.service %{buildroot}%{_userunitdir}/idv-launcher.ser
 %preun
 
 %changelog
+* Tue Feb 24 2026 Dhanya A <dhanya.a@intel.com> - 1.0.0~rc6-1
+- Add GPU readiness check before VF enumeration
+- Change VF enumeration verification logic
+
 * Wed Aug 06 2025 Smitesh Sutaria <smitesh.sutaria@intel.com> - 1.0.0~rc4-2
 - Removing autologin.conf from the spec
 - autologin for a specific user can be enabled via cloud-init

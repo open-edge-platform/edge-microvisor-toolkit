@@ -79,7 +79,7 @@ or in an Ubuntu 22.04 docker container on an Ubuntu host.
    cd <work directory>
    ```
 
-2. Extract files
+2. Extract files:
 
    ```bash
    # Extract files
