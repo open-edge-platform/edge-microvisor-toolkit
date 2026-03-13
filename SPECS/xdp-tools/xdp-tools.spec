@@ -37,6 +37,9 @@ BuildRequires:    bpftool
 # Always keep xdp-tools and libxdp packages in sync
 Requires:         libxdp = %{version}-%{release}
 
+# TSN patches
+Patch0:           0001-if_xdp.h-add-txtime-field-in-xdp_desc-struct.patch
+
 # find-debuginfo produces empty debugsourcefiles.list
 # disable the debug package to avoid rpmbuild error'ing out because of this
 %global debug_package %{nil}

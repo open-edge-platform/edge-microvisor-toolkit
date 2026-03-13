@@ -28967,7 +28967,7 @@
         "other": {
           "name": "spirv-headers",
           "version": "1.6.1",
-          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Headers//archive/refs/tags/vulkan-sdk-1.4.304.0.tar.gz"
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Headers//archive/refs/tags/vulkan-sdk-1.4.309.0.tar.gz"
         }
       }
     },

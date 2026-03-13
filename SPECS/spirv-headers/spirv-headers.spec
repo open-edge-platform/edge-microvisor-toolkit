@@ -1,4 +1,4 @@
-%global sdkver 1.4.304.0
+%global sdkver 1.4.309.0
 
 
 Name:           spirv-headers
@@ -62,8 +62,8 @@ chmod a-x include/spirv/1.2/spirv.py
 %{_datadir}/pkgconfig/SPIRV-Headers.pc
 
 %changelog
-* Tue Mar 10 2026 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.6.1-1
-- Updating to version 1.6.1 + 1.4.304.0.
+* Tue Mar 10 2026 Andy Peng <andy.peng@intel.com> - 1.6.1-1
+- Updating Spec to version 1.6.1.
 
 * Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.5.5-3
 - Promote and upgrade to 2025.1 based on Fedora 41.
