@@ -35,6 +35,7 @@ skip_list=(
     "mlnx-ofa_kernel-hwe"
     "mlnx-tools"
     "mlx-bootctl"
+    "mlx-steering-dump"
     "patterns-ceph-containers"
     "srp"
     "srp-hwe"
