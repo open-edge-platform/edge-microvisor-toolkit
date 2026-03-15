@@ -340,7 +340,6 @@ kernel-hwe
 kernel-hwe-headers
 kernel-srpm-macros
 kernel-uvm
-kexec-tools
 keyutils
 kf
 kf-kconfig
