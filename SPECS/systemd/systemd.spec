@@ -158,6 +158,10 @@ Patch0901:      networkd-default-use-domains.patch
 Patch0902:      CVE-2023-7008.patch
 Patch0903:      CVE-2025-4598.patch
 Patch0904:      fix-stackoverflow-when-dropping-tclass-or-qdisc.patch
+Patch0905:      ipc-call-0001-path-util-add-flavour-of-path_startswith-that-leaves.patch
+Patch0906:      ipc-call-0003-core-cgroup-avoid-one-unnecessary-strjoina.patch
+Patch0907:      ipc-call-0002-path-util-invert-PATH_STARTSWITH_ACCEPT_DOT_DOT-flag.patch
+Patch0908:      ipc-call-0004-core-validate-input-cgroup-path-more-prudently.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global want_bootloader 1
@@ -1258,10 +1262,11 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
-* Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-33
-- merge from Azure Linux 3.0.20260107-3.0
+* Tue Mar 17 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-33
+- merge from Azure Linux 3.0.20260304-3.0
 - Add fix-stackoverflow-when-dropping-tclass-or-qdisc.patch
 - Patch CVE-2025-4598
+- Apply patches for ipc issue.
 
 * Mon Nov 10 2025 Lishan Liu <lishan.liu@intel.com> - 255-32
 - Define empty macro to resolve GCC compatibility issue for kernel 6.17
