@@ -25,6 +25,14 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Copy Azure Linux rpm
+        run: |
+          echo ##########
+          echo "Copy Azure Linux rpm"
+          echo ##########
+          toolkit/scripts/toolchain/toolchain_update_git_submodule.sh
+        shell: bash
+
       # This PR runner uses an older Ubuntu with rpm version 4.17, which doesn't understand some newer macros like %bcond
       - name: Define missing rpm macros
         run: |
