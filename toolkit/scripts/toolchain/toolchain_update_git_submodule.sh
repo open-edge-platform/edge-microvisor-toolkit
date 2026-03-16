@@ -15,6 +15,7 @@ skip_list=(
     "azurelinux-rpm-macros"
     "cloud-provider-kubevirt"
     "ceph"
+    "coredns"
     "dcos-cli"
     "fwctl"
     "fwctl-hwe"
