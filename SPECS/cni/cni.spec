@@ -50,8 +50,9 @@ Source2:        build.sh
 Source3:        %{name}-%{version}-vendor.tar.gz
 Patch0:         CVE-2021-38561.patch
 Patch1:         CVE-2022-32149.patch
-Patch2:		CVE-2024-45338.patch
-Patch3:		CVE-2022-29526.patch
+Patch2:         CVE-2024-45338.patch
+Patch3:         CVE-2022-29526.patch
+Patch4:         CVE-2025-47911.patch
 BuildRequires:  golang
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  xz
@@ -117,8 +118,8 @@ install -m 755 -d "%{buildroot}%{cni_doc_dir}"
 %{_sbindir}/cnitool
 
 %changelog
-* Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.1.2-5
-- Bump Release to rebuild
+* Wed Feb 18 2026 Azure Linux Security Servicing Account <azurelinux-security@microsoft.com> - 1.1.2-5
+- Patch for CVE-2025-47911
 
 * Thu Jan 23 2025 Kavya Sree Kaitepalli <kkaitepalli@microsoft.com> - 1.1.2-4
 - Patch CVE-2024-45338 and CVE-2022-29526
@@ -244,7 +245,7 @@ install -m 755 -d "%{buildroot}%{cni_doc_dir}"
     + Update cnitool documentation for spec v0.4.0
     + Add cni-route-override to CNI plugin list
   * Build and test changes:
-    + Release: 5%{?dist}
+    + Release: 4%{?dist}
 
 * Fri May 17 2019 John Paul Adrian Glaubitz <adrian.glaubitz@suse.com>
 - Update to version 0.7.0:
