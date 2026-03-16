@@ -1,4 +1,4 @@
-From 85467ee02ac6e068c96101ee3fbe7292a743ca83 Mon Sep 17 00:00:00 2001
+From cfb6ba1919984dd554322c67c8684f9d824cf7d3 Mon Sep 17 00:00:00 2001
 From: Mike Galbraith <umgwanakikbuti@gmail.com>
 Date: Sat, 27 Feb 2016 09:01:42 +0100
 Subject: [PATCH 2/9] drm/i915: Don't disable interrupts on PREEMPT_RT during
@@ -38,7 +38,7 @@ Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
  3 files changed, 16 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/display/intel_crtc.c b/drivers/gpu/drm/i915/display/intel_crtc.c
-index a187db6df2d3..dbdc4d9b2a33 100644
+index a187db6df2d36..dbdc4d9b2a33c 100644
 --- a/drivers/gpu/drm/i915/display/intel_crtc.c
 +++ b/drivers/gpu/drm/i915/display/intel_crtc.c
 @@ -562,7 +562,8 @@ void intel_pipe_update_start(struct intel_atomic_state *state,
@@ -72,10 +72,10 @@ index a187db6df2d3..dbdc4d9b2a33 100644
  	if (intel_vgpu_active(dev_priv))
  		goto out;
 diff --git a/drivers/gpu/drm/i915/display/intel_cursor.c b/drivers/gpu/drm/i915/display/intel_cursor.c
-index 198e69efe9ac..2d86b2c3f863 100644
+index d4d181f9dca5f..58f2f074aff20 100644
 --- a/drivers/gpu/drm/i915/display/intel_cursor.c
 +++ b/drivers/gpu/drm/i915/display/intel_cursor.c
-@@ -929,13 +929,15 @@ intel_legacy_cursor_update(struct drm_plane *_plane,
+@@ -919,13 +919,15 @@ intel_legacy_cursor_update(struct drm_plane *_plane,
  		 */
  		intel_psr_wait_for_idle_locked(crtc_state);
  
@@ -93,7 +93,7 @@ index 198e69efe9ac..2d86b2c3f863 100644
  	}
  
  	if (new_plane_state->uapi.visible) {
-@@ -945,7 +947,8 @@ intel_legacy_cursor_update(struct drm_plane *_plane,
+@@ -935,7 +937,8 @@ intel_legacy_cursor_update(struct drm_plane *_plane,
  		intel_plane_disable_arm(NULL, plane, crtc_state);
  	}
  
@@ -104,10 +104,10 @@ index 198e69efe9ac..2d86b2c3f863 100644
  	intel_psr_unlock(crtc_state);
  
 diff --git a/drivers/gpu/drm/i915/display/intel_vblank.c b/drivers/gpu/drm/i915/display/intel_vblank.c
-index b82e9fc51af0..d0197fd96d6c 100644
+index d0d9e2c7d5476..590a079f926b2 100644
 --- a/drivers/gpu/drm/i915/display/intel_vblank.c
 +++ b/drivers/gpu/drm/i915/display/intel_vblank.c
-@@ -753,11 +753,13 @@ int intel_vblank_evade(struct intel_vblank_evade_ctx *evade)
+@@ -761,11 +761,13 @@ int intel_vblank_evade(struct intel_vblank_evade_ctx *evade)
  			break;
  		}
  

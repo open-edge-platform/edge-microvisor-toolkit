@@ -8491,8 +8491,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.17.11",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-v6.17.11-emt-260108T031458Z.tar.gz"
+          "version": "6.18.15",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.15-emt-260310T050801Z.tar.gz"
         }
       }
     },
@@ -8521,8 +8521,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.17.11",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-v6.17.11-emt-260108T031458Z.tar.gz"
+          "version": "6.18.15",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.15-emt-260310T050801Z.tar.gz"
         }
       }
     },
@@ -8561,8 +8561,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.17.11",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-v6.17.11-emt-260108T031458Z.tar.gz"
+          "version": "6.18.15",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.15-emt-260310T050801Z.tar.gz"
         }
       }
     },

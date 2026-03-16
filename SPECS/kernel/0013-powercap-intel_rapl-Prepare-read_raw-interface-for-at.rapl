@@ -1,0 +1,222 @@
+From 89288056b82c56b3e09188f93a98d52319fda6bf Mon Sep 17 00:00:00 2001
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Date: Thu, 20 Nov 2025 16:05:38 -0800
+Subject: [PATCH 13/17] powercap: intel_rapl: Prepare read_raw() interface for
+ atomic-context callers
+
+The current read_raw() implementation of the TPMI, MMIO and MSR
+interfaces does not distinguish between atomic and non-atomic callers.
+
+rapl_msr_read_raw() uses rdmsrq_safe_on_cpu(), which can sleep and
+issue cross CPU calls. When MSR-based RAPL PMU support is enabled, PMU
+event handlers can invoke this function from atomic context where
+sleeping or rescheduling is not allowed. In atomic context, the caller
+is already executing on the target CPU, so a direct rdmsrq() is
+sufficient.
+
+To support such usage, introduce an atomic flag to the read_raw()
+interface to allow callers pass the context information. Modify the
+common RAPL code to propagate this flag, and set the flag to reflect
+the calling contexts.
+
+Utilize the atomic flag in rapl_msr_read_raw() to perform direct MSR
+read with rdmsrq() when running in atomic context, and a sanity check
+to ensure target CPU matches the current CPU for such use cases.
+
+The TPMI and MMIO implementations do not require special atomic
+handling, so the flag is ignored in those paths.
+
+This is a preparatory patch for adding MSR-based RAPL PMU support.
+
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Reviewed-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+[ rjw: Subject tweak ]
+Link: https://patch.msgid.link/20251121000539.386069-2-sathyanarayanan.kuppuswamy@linux.intel.com
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/powercap/intel_rapl_common.c          | 24 ++++++++++---------
+ drivers/powercap/intel_rapl_msr.c             | 16 ++++++++++++-
+ drivers/powercap/intel_rapl_tpmi.c            |  2 +-
+ .../int340x_thermal/processor_thermal_rapl.c  |  2 +-
+ include/linux/intel_rapl.h                    |  2 +-
+ 5 files changed, 31 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/powercap/intel_rapl_common.c b/drivers/powercap/intel_rapl_common.c
+index 57bebd07c7d0d..47ec34d4c0997 100644
+--- a/drivers/powercap/intel_rapl_common.c
++++ b/drivers/powercap/intel_rapl_common.c
+@@ -253,7 +253,8 @@ struct rapl_primitive_info {
+ static void rapl_init_domains(struct rapl_package *rp);
+ static int rapl_read_data_raw(struct rapl_domain *rd,
+ 			      enum rapl_primitives prim,
+-			      bool xlate, u64 *data);
++			      bool xlate, u64 *data,
++			      bool atomic);
+ static int rapl_write_data_raw(struct rapl_domain *rd,
+ 			       enum rapl_primitives prim,
+ 			       unsigned long long value);
+@@ -289,7 +290,7 @@ static int get_energy_counter(struct powercap_zone *power_zone,
+ 	cpus_read_lock();
+ 	rd = power_zone_to_rapl_domain(power_zone);
+ 
+-	if (!rapl_read_data_raw(rd, ENERGY_COUNTER, true, &energy_now)) {
++	if (!rapl_read_data_raw(rd, ENERGY_COUNTER, true, &energy_now, false)) {
+ 		*energy_raw = energy_now;
+ 		cpus_read_unlock();
+ 
+@@ -830,7 +831,8 @@ prim_fixups(struct rapl_domain *rd, enum rapl_primitives prim)
+  * 63-------------------------- 31--------------------------- 0
+  */
+ static int rapl_read_data_raw(struct rapl_domain *rd,
+-			      enum rapl_primitives prim, bool xlate, u64 *data)
++			      enum rapl_primitives prim, bool xlate, u64 *data,
++			      bool atomic)
+ {
+ 	u64 value;
+ 	enum rapl_primitives prim_fixed = prim_fixups(rd, prim);
+@@ -852,7 +854,7 @@ static int rapl_read_data_raw(struct rapl_domain *rd,
+ 
+ 	ra.mask = rpi->mask;
+ 
+-	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra)) {
++	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra, atomic)) {
+ 		pr_debug("failed to read reg 0x%llx for %s:%s\n", ra.reg.val, rd->rp->name, rd->name);
+ 		return -EIO;
+ 	}
+@@ -904,7 +906,7 @@ static int rapl_read_pl_data(struct rapl_domain *rd, int pl,
+ 	if (!is_pl_valid(rd, pl))
+ 		return -EINVAL;
+ 
+-	return rapl_read_data_raw(rd, prim, xlate, data);
++	return rapl_read_data_raw(rd, prim, xlate, data, false);
+ }
+ 
+ static int rapl_write_pl_data(struct rapl_domain *rd, int pl,
+@@ -941,7 +943,7 @@ static int rapl_check_unit_core(struct rapl_domain *rd)
+ 
+ 	ra.reg = rd->regs[RAPL_DOMAIN_REG_UNIT];
+ 	ra.mask = ~0;
+-	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra)) {
++	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra, false)) {
+ 		pr_err("Failed to read power unit REG 0x%llx on %s:%s, exit.\n",
+ 			ra.reg.val, rd->rp->name, rd->name);
+ 		return -ENODEV;
+@@ -969,7 +971,7 @@ static int rapl_check_unit_atom(struct rapl_domain *rd)
+ 
+ 	ra.reg = rd->regs[RAPL_DOMAIN_REG_UNIT];
+ 	ra.mask = ~0;
+-	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra)) {
++	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra, false)) {
+ 		pr_err("Failed to read power unit REG 0x%llx on %s:%s, exit.\n",
+ 			ra.reg.val, rd->rp->name, rd->name);
+ 		return -ENODEV;
+@@ -1156,7 +1158,7 @@ static int rapl_check_unit_tpmi(struct rapl_domain *rd)
+ 
+ 	ra.reg = rd->regs[RAPL_DOMAIN_REG_UNIT];
+ 	ra.mask = ~0;
+-	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra)) {
++	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra, false)) {
+ 		pr_err("Failed to read power unit REG 0x%llx on %s:%s, exit.\n",
+ 			ra.reg.val, rd->rp->name, rd->name);
+ 		return -ENODEV;
+@@ -1328,7 +1330,7 @@ static void rapl_update_domain_data(struct rapl_package *rp)
+ 			struct rapl_primitive_info *rpi = get_rpi(rp, prim);
+ 
+ 			if (!rapl_read_data_raw(&rp->domains[dmn], prim,
+-						rpi->unit, &val))
++						rpi->unit, &val, false))
+ 				rp->domains[dmn].rdd.primitives[prim] = val;
+ 		}
+ 	}
+@@ -1428,7 +1430,7 @@ static int rapl_check_domain(int domain, struct rapl_package *rp)
+ 	 */
+ 
+ 	ra.mask = ENERGY_STATUS_MASK;
+-	if (rp->priv->read_raw(get_rid(rp), &ra) || !ra.value)
++	if (rp->priv->read_raw(get_rid(rp), &ra, false) || !ra.value)
+ 		return -ENODEV;
+ 
+ 	return 0;
+@@ -1639,7 +1641,7 @@ static u64 event_read_counter(struct perf_event *event)
+ 	if (event->hw.idx < 0)
+ 		return 0;
+ 
+-	ret = rapl_read_data_raw(&rp->domains[event->hw.idx], ENERGY_COUNTER, false, &val);
++	ret = rapl_read_data_raw(&rp->domains[event->hw.idx], ENERGY_COUNTER, false, &val, true);
+ 
+ 	/* Return 0 for failed read */
+ 	if (ret)
+diff --git a/drivers/powercap/intel_rapl_msr.c b/drivers/powercap/intel_rapl_msr.c
+index c6b9a7debc354..6e3c50af09128 100644
+--- a/drivers/powercap/intel_rapl_msr.c
++++ b/drivers/powercap/intel_rapl_msr.c
+@@ -102,12 +102,26 @@ static int rapl_cpu_down_prep(unsigned int cpu)
+ 	return 0;
+ }
+ 
+-static int rapl_msr_read_raw(int cpu, struct reg_action *ra)
++static int rapl_msr_read_raw(int cpu, struct reg_action *ra, bool atomic)
+ {
++	/*
++	 * When called from atomic-context (eg PMU event handler)
++	 * perform MSR read directly using rdmsrq().
++	 */
++	if (atomic) {
++		if (unlikely(smp_processor_id() != cpu))
++			return -EIO;
++
++		rdmsrq(ra->reg.msr, ra->value);
++		goto out;
++	}
++
+ 	if (rdmsrq_safe_on_cpu(cpu, ra->reg.msr, &ra->value)) {
+ 		pr_debug("failed to read msr 0x%x on cpu %d\n", ra->reg.msr, cpu);
+ 		return -EIO;
+ 	}
++
++out:
+ 	ra->value &= ra->mask;
+ 	return 0;
+ }
+diff --git a/drivers/powercap/intel_rapl_tpmi.c b/drivers/powercap/intel_rapl_tpmi.c
+index 82201bf4685d4..0a0b85f4528b1 100644
+--- a/drivers/powercap/intel_rapl_tpmi.c
++++ b/drivers/powercap/intel_rapl_tpmi.c
+@@ -60,7 +60,7 @@ static DEFINE_MUTEX(tpmi_rapl_lock);
+ 
+ static struct powercap_control_type *tpmi_control_type;
+ 
+-static int tpmi_rapl_read_raw(int id, struct reg_action *ra)
++static int tpmi_rapl_read_raw(int id, struct reg_action *ra, bool atomic)
+ {
+ 	if (!ra->reg.mmio)
+ 		return -EINVAL;
+diff --git a/drivers/thermal/intel/int340x_thermal/processor_thermal_rapl.c b/drivers/thermal/intel/int340x_thermal/processor_thermal_rapl.c
+index bde2cc386afdd..bf51a17c5be61 100644
+--- a/drivers/thermal/intel/int340x_thermal/processor_thermal_rapl.c
++++ b/drivers/thermal/intel/int340x_thermal/processor_thermal_rapl.c
+@@ -19,7 +19,7 @@ static const struct rapl_mmio_regs rapl_mmio_default = {
+ 	.limits[RAPL_DOMAIN_DRAM] = BIT(POWER_LIMIT2),
+ };
+ 
+-static int rapl_mmio_read_raw(int cpu, struct reg_action *ra)
++static int rapl_mmio_read_raw(int cpu, struct reg_action *ra, bool atomic)
+ {
+ 	if (!ra->reg.mmio)
+ 		return -EINVAL;
+diff --git a/include/linux/intel_rapl.h b/include/linux/intel_rapl.h
+index c0397423d3a89..e9ade2ff4af66 100644
+--- a/include/linux/intel_rapl.h
++++ b/include/linux/intel_rapl.h
+@@ -152,7 +152,7 @@ struct rapl_if_priv {
+ 	union rapl_reg reg_unit;
+ 	union rapl_reg regs[RAPL_DOMAIN_MAX][RAPL_DOMAIN_REG_MAX];
+ 	int limits[RAPL_DOMAIN_MAX];
+-	int (*read_raw)(int id, struct reg_action *ra);
++	int (*read_raw)(int id, struct reg_action *ra, bool atomic);
+ 	int (*write_raw)(int id, struct reg_action *ra);
+ 	void *defaults;
+ 	void *rpi;
+-- 
+2.43.0
+

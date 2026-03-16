@@ -1,0 +1,386 @@
+From ecfca416c07938af73aa64b8a1d1f79c57a32659 Mon Sep 17 00:00:00 2001
+From: "Abliyev, Reuven" <reuven.abliyev@intel.com>
+Date: Sun, 9 Mar 2025 23:53:00 +0200
+Subject: [PATCH 3/8] mei: expose device kind for ioe device
+
+Detect IO extender device and set appropriate kind.
+Rewrite device kind to store index instead of string internally.
+
+Signed-off-by: Abliyev, Reuven <reuven.abliyev@intel.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/hw-me-regs.h   |  4 ++
+ drivers/misc/mei/hw-me.c        | 80 ++++++++++++++++++++++++++++-----
+ drivers/misc/mei/hw-me.h        |  4 +-
+ drivers/misc/mei/main.c         | 20 ++++++---
+ drivers/misc/mei/mei_dev.h      | 17 ++++---
+ drivers/misc/mei/platform-vsc.c |  2 +-
+ 6 files changed, 104 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/misc/mei/hw-me-regs.h b/drivers/misc/mei/hw-me-regs.h
+index a4f75dc369292..8bc61ffa123fc 100644
+--- a/drivers/misc/mei/hw-me-regs.h
++++ b/drivers/misc/mei/hw-me-regs.h
+@@ -6,6 +6,8 @@
+ #ifndef _MEI_HW_MEI_REGS_H_
+ #define _MEI_HW_MEI_REGS_H_
+ 
++#include <linux/bitfield.h>
++
+ /*
+  * MEI device IDs
+  */
+@@ -139,6 +141,8 @@
+ #  define PCI_CFG_HFS_3_FW_SKU_MSK   0x00000070
+ #  define PCI_CFG_HFS_3_FW_SKU_IGN   0x00000000
+ #  define PCI_CFG_HFS_3_FW_SKU_SPS   0x00000060
++#  define PCI_CFG_HFS_3_EXT_SKU_MSK  GENMASK(3, 0) /* IOE detection bits */
++#  define PCI_CFG_HFS_3_EXT_SKU_IOE  0x00000001
+ #define PCI_CFG_HFS_4         0x64
+ #define PCI_CFG_HFS_5         0x68
+ #  define GSC_CFG_HFS_5_BOOT_TYPE_MSK      0x00000003
+diff --git a/drivers/misc/mei/hw-me.c b/drivers/misc/mei/hw-me.c
+index d4612c6597844..c92a0e27787bb 100644
+--- a/drivers/misc/mei/hw-me.c
++++ b/drivers/misc/mei/hw-me.c
+@@ -11,6 +11,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/sizes.h>
+ #include <linux/delay.h>
++#include <linux/bitfield.h>
+ 
+ #include "mei_dev.h"
+ #include "hbm.h"
+@@ -1573,14 +1574,50 @@ static bool mei_me_fw_type_sps_ign(const struct pci_dev *pdev)
+ 	       fw_type == PCI_CFG_HFS_3_FW_SKU_SPS;
+ }
+ 
+-#define MEI_CFG_KIND_ITOUCH                     \
+-	.kind = "itouch"
++static enum mei_dev_kind mei_cfg_kind_mei(const struct pci_dev *pdev)
++{
++	return MEI_DEV_KIND_MEI;
++}
++
++static enum mei_dev_kind mei_cfg_kind_itouch(const struct pci_dev *pdev)
++{
++	return MEI_DEV_KIND_ITOUCH;
++}
++
++static enum mei_dev_kind mei_cfg_kind_gsc(const struct pci_dev *pdev)
++{
++	return MEI_DEV_KIND_GSC;
++}
++
++static enum mei_dev_kind mei_cfg_kind_gscfi(const struct pci_dev *pdev)
++{
++	return MEI_DEV_KIND_GSCFI;
++}
++
++static enum mei_dev_kind mei_cfg_kind_ioe(const struct pci_dev *pdev)
++{
++	u32 reg;
+ 
+-#define MEI_CFG_TYPE_GSC                        \
+-	.kind = "gsc"
++	pci_bus_read_config_dword(pdev->bus, 0, PCI_CFG_HFS_3, &reg);
++	trace_mei_pci_cfg_read(&pdev->dev, "PCI_CFG_HFS_3", PCI_CFG_HFS_3, reg);
++	return FIELD_GET(PCI_CFG_HFS_3_EXT_SKU_MSK, reg) == PCI_CFG_HFS_3_EXT_SKU_IOE ?
++		MEI_DEV_KIND_IOE : MEI_DEV_KIND_MEI;
++}
++
++#define MEI_CFG_KIND_MEI                     \
++	.get_kind = mei_cfg_kind_mei
++
++#define MEI_CFG_KIND_ITOUCH                  \
++	.get_kind = mei_cfg_kind_itouch
+ 
+-#define MEI_CFG_TYPE_GSCFI                      \
+-	.kind = "gscfi"
++#define MEI_CFG_KIND_GSC                     \
++	.get_kind = mei_cfg_kind_gsc
++
++#define MEI_CFG_KIND_GSCFI                   \
++	.get_kind = mei_cfg_kind_gscfi
++
++#define MEI_CFG_KIND_IOE                     \
++	.get_kind = mei_cfg_kind_ioe
+ 
+ #define MEI_CFG_FW_SPS_IGN                      \
+ 	.quirk_probe = mei_me_fw_type_sps_ign
+@@ -1619,27 +1656,32 @@ static bool mei_me_fw_type_sps_ign(const struct pci_dev *pdev)
+ 
+ /* ICH Legacy devices */
+ static const struct mei_cfg mei_me_ich_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_ICH_HFS,
+ };
+ 
+ /* ICH devices */
+ static const struct mei_cfg mei_me_ich10_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_ICH10_HFS,
+ };
+ 
+ /* PCH6 devices */
+ static const struct mei_cfg mei_me_pch6_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH_HFS,
+ };
+ 
+ /* PCH7 devices */
+ static const struct mei_cfg mei_me_pch7_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ };
+ 
+ /* PCH Cougar Point and Patsburg with quirk for Node Manager exclusion */
+ static const struct mei_cfg mei_me_pch_cpt_pbg_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ 	MEI_CFG_FW_NM,
+@@ -1647,6 +1689,7 @@ static const struct mei_cfg mei_me_pch_cpt_pbg_cfg = {
+ 
+ /* PCH8 Lynx Point and newer devices */
+ static const struct mei_cfg mei_me_pch8_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ };
+@@ -1660,6 +1703,7 @@ static const struct mei_cfg mei_me_pch8_itouch_cfg = {
+ 
+ /* PCH8 Lynx Point with quirk for SPS Firmware exclusion */
+ static const struct mei_cfg mei_me_pch8_sps_4_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ 	MEI_CFG_FW_SPS_4,
+@@ -1667,6 +1711,7 @@ static const struct mei_cfg mei_me_pch8_sps_4_cfg = {
+ 
+ /* LBG with quirk for SPS (4.0) Firmware exclusion */
+ static const struct mei_cfg mei_me_pch12_sps_4_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ 	MEI_CFG_FW_SPS_4,
+@@ -1674,6 +1719,7 @@ static const struct mei_cfg mei_me_pch12_sps_4_cfg = {
+ 
+ /* Cannon Lake and newer devices */
+ static const struct mei_cfg mei_me_pch12_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ 	MEI_CFG_DMA_128,
+@@ -1681,6 +1727,7 @@ static const struct mei_cfg mei_me_pch12_cfg = {
+ 
+ /* Cannon Lake with quirk for SPS 5.0 and newer Firmware exclusion */
+ static const struct mei_cfg mei_me_pch12_sps_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ 	MEI_CFG_DMA_128,
+@@ -1699,14 +1746,26 @@ static const struct mei_cfg mei_me_pch12_itouch_sps_cfg = {
+ 
+ /* Tiger Lake and newer devices */
+ static const struct mei_cfg mei_me_pch15_cfg = {
++	MEI_CFG_KIND_MEI,
++	MEI_CFG_PCH8_HFS,
++	MEI_CFG_FW_VER_SUPP,
++	MEI_CFG_DMA_128,
++	MEI_CFG_TRC,
++};
++
++/* NVL-H devices */
++static const struct mei_cfg mei_me_pch22_cfg = {
++	MEI_CFG_KIND_IOE,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ 	MEI_CFG_DMA_128,
+ 	MEI_CFG_TRC,
+ };
+ 
++
+ /* Tiger Lake with quirk for SPS 5.0 and newer Firmware exclusion */
+ static const struct mei_cfg mei_me_pch15_sps_cfg = {
++	MEI_CFG_KIND_MEI,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ 	MEI_CFG_DMA_128,
+@@ -1716,14 +1775,14 @@ static const struct mei_cfg mei_me_pch15_sps_cfg = {
+ 
+ /* Graphics System Controller */
+ static const struct mei_cfg mei_me_gsc_cfg = {
+-	MEI_CFG_TYPE_GSC,
++	MEI_CFG_KIND_GSC,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ };
+ 
+ /* Graphics System Controller Firmware Interface */
+ static const struct mei_cfg mei_me_gscfi_cfg = {
+-	MEI_CFG_TYPE_GSCFI,
++	MEI_CFG_KIND_GSCFI,
+ 	MEI_CFG_PCH8_HFS,
+ 	MEI_CFG_FW_VER_SUPP,
+ };
+@@ -1750,6 +1809,7 @@ static const struct mei_cfg *const mei_cfg_list[] = {
+ 	[MEI_ME_PCH15_SPS_CFG] = &mei_me_pch15_sps_cfg,
+ 	[MEI_ME_GSC_CFG] = &mei_me_gsc_cfg,
+ 	[MEI_ME_GSCFI_CFG] = &mei_me_gscfi_cfg,
++	[MEI_ME_PCH22_CFG] = &mei_me_pch22_cfg,
+ };
+ 
+ const struct mei_cfg *mei_me_get_cfg(kernel_ulong_t idx)
+@@ -1777,6 +1837,7 @@ struct mei_device *mei_me_dev_init(struct device *parent,
+ {
+ 	struct mei_device *dev;
+ 	struct mei_me_hw *hw;
++	struct pci_dev *pdev = to_pci_dev(parent);
+ 	int i;
+ 
+ 	dev = kzalloc(sizeof(*dev) + sizeof(*hw), GFP_KERNEL);
+@@ -1792,8 +1853,7 @@ struct mei_device *mei_me_dev_init(struct device *parent,
+ 	hw->cfg = cfg;
+ 
+ 	dev->fw_f_fw_ver_supported = cfg->fw_ver_supported;
+-
+-	dev->kind = cfg->kind;
++	dev->kind = cfg->get_kind(pdev);
+ 
+ 	return dev;
+ }
+diff --git a/drivers/misc/mei/hw-me.h b/drivers/misc/mei/hw-me.h
+index 204b92af6c478..520f2b7bd301a 100644
+--- a/drivers/misc/mei/hw-me.h
++++ b/drivers/misc/mei/hw-me.h
+@@ -27,7 +27,7 @@
+ struct mei_cfg {
+ 	const struct mei_fw_status fw_status;
+ 	bool (*quirk_probe)(const struct pci_dev *pdev);
+-	const char *kind;
++	enum mei_dev_kind (*get_kind)(const struct pci_dev *pdev);
+ 	size_t dma_size[DMA_DSCR_NUM];
+ 	u32 fw_ver_supported:1;
+ 	u32 hw_trc_supported:1;
+@@ -110,6 +110,7 @@ static inline bool mei_me_hw_use_polling(const struct mei_me_hw *hw)
+  *                         SPS firmware exclusion.
+  * @MEI_ME_GSC_CFG:        Graphics System Controller
+  * @MEI_ME_GSCFI_CFG:      Graphics System Controller Firmware Interface
++ * @MEI_ME_PCH22_CFG:      Platform Controller Hub Gen22 and newer
+  * @MEI_ME_NUM_CFG:        Upper Sentinel.
+  */
+ enum mei_cfg_idx {
+@@ -130,6 +131,7 @@ enum mei_cfg_idx {
+ 	MEI_ME_PCH15_SPS_CFG,
+ 	MEI_ME_GSC_CFG,
+ 	MEI_ME_GSCFI_CFG,
++	MEI_ME_PCH22_CFG,
+ 	MEI_ME_NUM_CFG,
+ };
+ 
+diff --git a/drivers/misc/mei/main.c b/drivers/misc/mei/main.c
+index 86a73684a3732..00b0781fc2933 100644
+--- a/drivers/misc/mei/main.c
++++ b/drivers/misc/mei/main.c
+@@ -1155,6 +1155,15 @@ void mei_set_devstate(struct mei_device *dev, enum mei_dev_state state)
+ 	}
+ }
+ 
++static const char *mei_kind_names[] = {
++	"mei",
++	"itouch",
++	"gsc",
++	"gscfi",
++	"ioe",
++	"ivsc",
++};
++
+ /**
+  * kind_show - display device kind
+  *
+@@ -1168,14 +1177,13 @@ static ssize_t kind_show(struct device *device,
+ 			 struct device_attribute *attr, char *buf)
+ {
+ 	struct mei_device *dev = dev_get_drvdata(device);
+-	ssize_t ret;
+ 
+-	if (dev->kind)
+-		ret = sprintf(buf, "%s\n", dev->kind);
+-	else
+-		ret = sprintf(buf, "%s\n", "mei");
++	BUILD_BUG_ON(ARRAY_SIZE(mei_kind_names) != MEI_DEV_KIND_MAX);
+ 
+-	return ret;
++	if (dev->kind < MEI_DEV_KIND_MEI || dev->kind >= MEI_DEV_KIND_MAX)
++		return -EINVAL;
++
++	return sysfs_emit(buf, "%s\n", mei_kind_names[dev->kind]);
+ }
+ static DEVICE_ATTR_RO(kind);
+ 
+diff --git a/drivers/misc/mei/mei_dev.h b/drivers/misc/mei/mei_dev.h
+index 0bf8d552c3eab..1db718d5c93f6 100644
+--- a/drivers/misc/mei/mei_dev.h
++++ b/drivers/misc/mei/mei_dev.h
+@@ -469,6 +469,15 @@ struct mei_dev_timeouts {
+ 	unsigned long link_reset_wait; /* link reset wait timeout, in jiffies */
+ };
+ 
++enum mei_dev_kind {
++	MEI_DEV_KIND_MEI,
++	MEI_DEV_KIND_ITOUCH,
++	MEI_DEV_KIND_GSC,
++	MEI_DEV_KIND_GSCFI,
++	MEI_DEV_KIND_IOE,
++	MEI_DEV_KIND_IVSC,
++	MEI_DEV_KIND_MAX,
++};
+ /**
+  * struct mei_device -  MEI private device struct
+  *
+@@ -645,7 +654,7 @@ struct mei_device {
+ 	struct list_head device_list;
+ 	struct mutex cl_bus_lock;
+ 
+-	const char *kind;
++	enum mei_dev_kind kind;
+ 
+ #if IS_ENABLED(CONFIG_DEBUG_FS)
+ 	struct dentry *dbgfs_dir;
+@@ -906,8 +915,7 @@ static inline ssize_t mei_fw_status_str(struct mei_device *dev,
+  */
+ static inline bool kind_is_gsc(struct mei_device *dev)
+ {
+-	/* check kind for NULL because it may be not set, like at the fist call to hw_start */
+-	return dev->kind && (strcmp(dev->kind, "gsc") == 0);
++	return dev->kind == MEI_DEV_KIND_GSC;
+ }
+ 
+ /**
+@@ -919,7 +927,6 @@ static inline bool kind_is_gsc(struct mei_device *dev)
+  */
+ static inline bool kind_is_gscfi(struct mei_device *dev)
+ {
+-	/* check kind for NULL because it may be not set, like at the fist call to hw_start */
+-	return dev->kind && (strcmp(dev->kind, "gscfi") == 0);
++	return dev->kind == MEI_DEV_KIND_GSCFI;
+ }
+ #endif
+diff --git a/drivers/misc/mei/platform-vsc.c b/drivers/misc/mei/platform-vsc.c
+index 9787b9cee71ca..5100234ba5b69 100644
+--- a/drivers/misc/mei/platform-vsc.c
++++ b/drivers/misc/mei/platform-vsc.c
+@@ -350,7 +350,7 @@ static int mei_vsc_probe(struct platform_device *pdev)
+ 	mei_device_init(mei_dev, dev, false, &mei_vsc_hw_ops);
+ 
+ 	mei_dev->fw_f_fw_ver_supported = 0;
+-	mei_dev->kind = "ivsc";
++	mei_dev->kind = MEI_DEV_KIND_IVSC;
+ 
+ 	hw = mei_dev_to_vsc_hw(mei_dev);
+ 	atomic_set(&hw->write_lock_cnt, 0);
+-- 
+2.43.0
+

@@ -1,0 +1,35 @@
+From 18949ad92e8c5aef6f621b1ffe77d1fbc619685c Mon Sep 17 00:00:00 2001
+From: Malaya Kumar Rout <mrout@redhat.com>
+Date: Sat, 22 Nov 2025 19:14:54 +0530
+Subject: [PATCH 13/21] tools/power x86_energy_perf_policy: Fix format string
+ in error message
+
+The error message in validate_cpu_selected_set() uses an incomplete
+format specifier "cpu%" instead of "cpu%d", resulting in the error
+message printing "Requested cpu% is not present" rather than
+showing the actual CPU number.
+
+Fix the format string to properly display the CPU number.
+
+Signed-off-by: Malaya Kumar Rout <mrout@redhat.com>
+Signed-off-by: Len Brown <len.brown@intel.com>
+---
+ tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c b/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
+index e68eaa9f7cd4d..b2125275c69e0 100644
+--- a/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
++++ b/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
+@@ -372,7 +372,7 @@ void validate_cpu_selected_set(void)
+ 	for (cpu = 0; cpu <= max_cpu_num; ++cpu) {
+ 		if (CPU_ISSET_S(cpu, cpu_setsize, cpu_selected_set))
+ 			if (!CPU_ISSET_S(cpu, cpu_setsize, cpu_present_set))
+-				errx(1, "Requested cpu% is not present", cpu);
++				errx(1, "Requested cpu%d is not present", cpu);
+ 	}
+ }
+ 
+-- 
+2.43.0
+

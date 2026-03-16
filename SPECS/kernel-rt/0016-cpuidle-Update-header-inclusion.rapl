@@ -1,0 +1,40 @@
+From 135d26f20b612def7d998378fce999adfa9df715 Mon Sep 17 00:00:00 2001
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Mon, 24 Nov 2025 21:57:52 +0100
+Subject: [PATCH 16/17] cpuidle: Update header inclusion
+
+While cleaning up some headers, I got a build error on this file:
+
+drivers/cpuidle/poll_state.c:52:2: error: call to undeclared library function 'snprintf' with type 'int (char *restrict, unsigned long, const char *restrict, ...)'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+
+Update header inclusions to follow IWYU (Include What You Use)
+principle.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Link: https://patch.msgid.link/20251124205752.1328701-1-andriy.shevchenko@linux.intel.com
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/cpuidle/poll_state.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/cpuidle/poll_state.c b/drivers/cpuidle/poll_state.c
+index 9b6d90a726019..c7524e4c522a2 100644
+--- a/drivers/cpuidle/poll_state.c
++++ b/drivers/cpuidle/poll_state.c
+@@ -4,9 +4,13 @@
+  */
+ 
+ #include <linux/cpuidle.h>
++#include <linux/export.h>
++#include <linux/irqflags.h>
+ #include <linux/sched.h>
+ #include <linux/sched/clock.h>
+ #include <linux/sched/idle.h>
++#include <linux/sprintf.h>
++#include <linux/types.h>
+ 
+ #define POLL_IDLE_RELAX_COUNT	200
+ 
+-- 
+2.43.0
+

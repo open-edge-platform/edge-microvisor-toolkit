@@ -1,0 +1,36 @@
+From d1fce9be69dbc31277ccd237957469626601d47a Mon Sep 17 00:00:00 2001
+From: Zeng Guang <guang.zeng@intel.com>
+Date: Wed, 31 Jan 2024 21:52:30 +0800
+Subject: [PATCH 42/44] KVM: x86: Advise NMI Source to user space
+
+NMI Source can program unique values into the NMI vector at the originating
+site which is generally ignored on handling of NMI interrupt, and repurpose
+it to identify the different event source. It allows the software NMI exception
+handler to call corresponding function reliably and efficiently without checking
+all sources.
+
+The CPUID bit definition to support NMI Source:
+CPUID.(EAX=07H.ECX=1):EAX.NMI_SOURCE[bit 20]
+
+Advertise NMI Source to user space for virtualization support.
+
+Signed-off-by: Zeng Guang <guang.zeng@intel.com>
+---
+ arch/x86/kvm/cpuid.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
+index f4ff5ccbcf1e4..e4726b76915c9 100644
+--- a/arch/x86/kvm/cpuid.c
++++ b/arch/x86/kvm/cpuid.c
+@@ -1019,6 +1019,7 @@ void kvm_set_cpu_caps(void)
+ 		F(AMX_FP16),
+ 		F(AVX_IFMA),
+ 		F(LAM),
++		F(NMI_SOURCE),
+ 	);
+ 
+ 	kvm_cpu_cap_init(CPUID_7_1_ECX,
+-- 
+2.43.0
+
