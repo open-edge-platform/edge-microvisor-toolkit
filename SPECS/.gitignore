@@ -83,6 +83,7 @@ ccache
 cdrkit
 ceph
 cereal
+cert-manager
 check
 check-restart
 checkpolicy
