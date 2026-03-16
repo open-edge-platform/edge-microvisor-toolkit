@@ -154,6 +154,7 @@ docbook-dtds
 docbook-style-xsl
 docbook5-schemas
 docker-buildx
+docker-compose
 dos2unix
 doxygen
 dpdk
