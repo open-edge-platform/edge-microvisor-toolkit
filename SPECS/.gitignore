@@ -911,6 +911,7 @@ postfix
 postgresql
 priv_wrapper
 procps-ng
+prometheus-process-exporter
 protobuf
 protobuf-c
 psmisc
