@@ -227,6 +227,7 @@ gfs2-utils
 gh
 giflib
 git
+git-lfs
 glib
 glib-networking
 glibc
