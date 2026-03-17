@@ -86,6 +86,7 @@ cdrkit
 ceph
 cereal
 cert-manager
+cf-cli
 check
 check-restart
 checkpolicy
