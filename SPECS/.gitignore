@@ -242,6 +242,7 @@ gnu-efi
 gnupg2
 gnuplot
 gnutls
+go-md2man
 gobject-introspection
 golang-packaging
 google-guice
