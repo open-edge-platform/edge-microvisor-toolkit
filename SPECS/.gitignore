@@ -913,6 +913,8 @@ postfix
 postgresql
 priv_wrapper
 procps-ng
+prometheus-adapter
+prometheus-node-exporter
 prometheus-process-exporter
 protobuf
 protobuf-c
