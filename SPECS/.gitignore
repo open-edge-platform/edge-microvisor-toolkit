@@ -1181,6 +1181,7 @@ rng-tools
 rocksdb
 rpcbind
 rpcsvc-proto
+rpm
 rpm-mpi-hooks
 rrdtool
 rshim
