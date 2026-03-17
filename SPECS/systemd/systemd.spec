@@ -1258,7 +1258,7 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
-* Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-33
+* Tue Mar 17 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-33
 - merge from Azure Linux 3.0.20260304-3.0
 - Add fix-stackoverflow-when-dropping-tclass-or-qdisc.patch
 - Apply patches for ipc issue.
