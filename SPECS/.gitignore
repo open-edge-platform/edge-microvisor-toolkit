@@ -333,6 +333,7 @@ jsonbuilder
 jsr-305
 junit
 jurand
+jx
 kata-containers
 kata-containers-cc
 kata-packages-uvm
