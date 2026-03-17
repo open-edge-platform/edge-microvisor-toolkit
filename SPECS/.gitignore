@@ -238,6 +238,7 @@ gnu-efi
 gnupg2
 gnuplot
 gnutls
+gobject-introspection
 google-guice
 google-roboto-slab-fonts
 gperf
