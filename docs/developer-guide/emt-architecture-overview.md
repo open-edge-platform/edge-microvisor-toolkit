@@ -287,10 +287,10 @@ the used image configuration. The artifacts come with associated `sha256` files.
 
 ## "Next" Kernel
 
-We are excited to announce the EMT "Next" `v6.19` kernel which will converge
+We are excited to announce the EMT "Next" `v6.17` kernel which will converge
 to the next LTS kernel for EMT by 2026.1 (mid-2026) release. The stable `v6.12` kernel
 continues to be maintained and recommended for most users unless you have newer Intel
-platforms that require an earlier move ot the "Next" kernel.
+platforms that require an earlier move to the "Next" kernel.
 
 | Intel Platform | Recommended EMT   | Support  |
 | -------------- | ------------------| -------  |

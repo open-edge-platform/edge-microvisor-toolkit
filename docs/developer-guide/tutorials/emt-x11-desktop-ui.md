@@ -13,7 +13,7 @@
 3. Install the required X11 packages through the tdnf package manager. Remove "-E" from the command if your system is not behind a proxy server:
 
    ```bash
-   sudo -E tdnf install xorg-x11-server-Xorg xorg-x11-xinit xorg-x11-xinit-session xorg-x11-drv-libinput xorg-x11-apps xterm openbox libXfont2 freefont freetype gtk3 qemu-with-ui
+   sudo -E tdnf install xorg-x11-server-Xorg xorg-x11-xinit xorg-x11-xinit-session xorg-x11-drv-libinput xorg-x11-apps xterm openbox libXfont2 freefont freetype gtk3
    ```
 4. Install the nano text editor (optional). Remove "-E" from the command if your system is not behind a proxy server:
 
