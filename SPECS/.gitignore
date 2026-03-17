@@ -1300,6 +1300,7 @@ spdlog
 sqlite
 squashfs-tools
 squid
+sriov-network-device-plugin
 sscg
 sshpass
 strongswan
