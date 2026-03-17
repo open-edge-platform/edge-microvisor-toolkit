@@ -365,6 +365,7 @@ kpatch
 kpmcore
 krb5
 ksh
+kube-vip-cloud-provider
 kubernetes
 kubevirt
 kured
