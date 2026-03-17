@@ -550,6 +550,7 @@ libxslt
 libyaml
 libyang
 libzip
+lksctp-tools
 lld
 lldb
 lldpad
