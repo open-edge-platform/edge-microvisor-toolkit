@@ -23,6 +23,7 @@ antlr
 apache-commons-cli
 apache-commons-lang3
 apache-commons-logging
+application-gateway-kubernetes-ingress
 apr
 apr-util
 archivemount
