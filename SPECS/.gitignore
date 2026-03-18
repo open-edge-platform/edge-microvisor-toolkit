@@ -99,6 +99,7 @@ cloud-hypervisor
 cloud-utils-growpart
 cmake
 cmocka
+cni
 cni-plugins
 collectd
 colm
