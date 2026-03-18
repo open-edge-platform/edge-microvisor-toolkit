@@ -1,14 +1,29 @@
-# Edge Microvisor Toolkit Documentation
+# Edge Microvisor Toolkit
 
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/README.md">
      GitHub project
   </a>
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06-preview/README.md">
+     GitHub project - Next version
+  </a>
 </div>
 hide_directive-->
 
 Edge Microvisor Toolkit is a Linux-based operating system that demonstrates the full potential of Intel hardware for Edge AI workloads with the most recent updates that may not yet be available in other distributions. The Linux patches optimize both performance and capabilities of Intel silicon, streamlining integration for operating system vendors and other technology partners.
+
+> **Note:**
+> With 2026.0 release, Open Edge Platform introduces two versions of Edge Microvisor Toolkit.
+>
+> - **25.06.02 - based on Kernel 6.12**
+>   This version is a main release with the most recent improvements.\
+>   It does not support Intel Ultra Core Series 3 Processors (Panther Lake) yet.
+> - **Next - based on Kernel 6.17**\
+>   This version is intended for Panther Lake platforms. It will complement 25.06.02 in the future.\
+>   If you are interested in using this version, refer to the documentation on GitHub for Next:
+>   [Architecture Overview](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06-preview/docs/developer-guide/emt-architecture-overview.md),
+>   [Get Started](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06-preview/docs/developer-guide/emt-get-started.md)
 
 Edge Microvisor Toolkit is developed in several pre-configured versions, targeting
 different use cases demonstrating how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads.
@@ -54,11 +69,8 @@ Intel® Arc™ B-Series Graphics and other components are discoverable for conta
 ## License Information
 
 Based on [Azure Linux](https://github.com/microsoft/azurelinux), Edge Microvisor Toolkit shares its permissive open-source license:
-[MIT](https://github.com/microsoft/azurelinux/blob/3.0/LICENSE).
+[MIT](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/LICENSE).
 
-See the
-[LICENSE](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/LICENSE)
-document.
 
 ## Next Steps
 
