@@ -69,6 +69,7 @@ blktrace
 bluez
 bmake
 bmon
+bolt
 boost
 bpftrace
 brotli
@@ -490,6 +491,7 @@ libnotify
 libnsl2
 libnvidia-container
 libnvme
+libogg
 libpcap
 libpciaccess
 libpipeline
@@ -526,6 +528,7 @@ libtasn1
 libtdb
 libtiff
 libtirpc
+libtheora
 libtool
 libtpms
 libtracecmd
@@ -536,6 +539,7 @@ libunwind
 liburing
 libusb
 libuser
+libutempter
 libuv
 libvma
 libvirt-dbus
@@ -943,6 +947,7 @@ pyflakes
 pygobject3
 pyparsing
 pyproject-rpm-macros
+pyserial
 pytest
 python-absl-py
 python-appdirs
@@ -980,6 +985,7 @@ python-decorator
 python-defusedxml
 python-distlib
 python-distro
+python-dmidecode
 python-docopt
 python-docutils
 python-ecdsa
@@ -1409,6 +1415,7 @@ xorg-x11-xbitmaps
 xorg-x11-xinit
 xorg-x11-xkb-utils
 xorg-x11-xtrans-devel
+xterm
 xxhash
 xz
 yajl

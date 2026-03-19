@@ -46,6 +46,19 @@ skip_list=(
     "xpmem-lib"
 )
 
+extended_list=(
+    "bolt"
+    "libogg"
+    "libtheora"
+    "libutempter"
+    "libvorbis"
+    "lksctp-tools"
+    "pyserial"
+    "python-dmidecode"
+    "xterm"
+)
+
+
 if [ -d "${REPO_ROOT}/azurelinux" ]; then
     cd ${REPO_ROOT}/azurelinux
     git clean -xfd &> /dev/null
@@ -66,5 +79,15 @@ if [ -d "${REPO_ROOT}/azurelinux" ]; then
             continue
         fi
         [ -d "$folder" ] && [ ! -d "SPECS/$fbasename" ] && cp -r "$folder" SPECS/
+    done
+    # Copy specific folders from azurelinux/SPECS-EXTENDED/
+    for extended_spec in "${extended_list[@]}"; do
+        extended_folder="$REPO_ROOT/azurelinux/SPECS-EXTENDED/$extended_spec"
+        if [ -d "$extended_folder" ]; then
+            cp -r "$extended_folder" SPECS/
+        else
+            echo "Error: Extended package $extended_spec not found in azurelinux/SPECS-EXTENDED/"
+            exit 1
+	fi
     done
 fi
