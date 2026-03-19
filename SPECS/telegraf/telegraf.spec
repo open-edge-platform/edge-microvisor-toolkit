@@ -34,7 +34,7 @@ Patch18:        CVE-2026-2303.patch
 Patch19:        CVE-2026-26014.patch
 
 
-BuildRequires:  golang
+BuildRequires:  golang < 1.26.0
 BuildRequires:  systemd-devel
 Requires:       logrotate
 Requires:       procps-ng
