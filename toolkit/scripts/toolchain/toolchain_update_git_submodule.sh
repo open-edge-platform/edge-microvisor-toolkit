@@ -23,6 +23,8 @@ skip_list=(
     "iser-hwe"
     "isert"
     "isert-hwe"
+    "kernel-hwe"
+    "kernel-hwe-headers"
     "kernel-mshv"
     "knem"
     "knem-hwe"
