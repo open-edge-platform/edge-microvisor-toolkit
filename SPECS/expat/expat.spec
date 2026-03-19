@@ -74,7 +74,7 @@ rm -rf %{buildroot}/%{_docdir}/%{name}
 %{_libdir}/libexpat.so.1*
 
 %changelog
-* Thu Jan 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.6.4-3
+* Thu Jan 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.6.4-4
 - add BuildRequires
 - Patch for CVE-2026-25210
 - Patch for CVE-2026-24515
