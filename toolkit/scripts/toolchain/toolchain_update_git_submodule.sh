@@ -39,6 +39,7 @@ skip_list=(
     "mlnx-tools"
     "mlx-bootctl"
     "mlx-steering-dump"
+    "nodejs24"
     "patterns-ceph-containers"
     "srp"
     "srp-hwe"
