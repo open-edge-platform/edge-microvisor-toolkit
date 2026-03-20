@@ -5,7 +5,7 @@
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/README.md">
      GitHub project
   </a>
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06-preview/README.md">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/next/README.md">
      GitHub project - Next version
   </a>
 </div>
@@ -22,8 +22,8 @@ Edge Microvisor Toolkit is a Linux-based operating system that demonstrates the 
 > - **Next - based on Kernel 6.17**\
 >   This version is intended for Panther Lake platforms. It will complement 25.06.02 in the future.\
 >   If you are interested in using this version, refer to the documentation on GitHub for Next:
->   [Architecture Overview](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06-preview/docs/developer-guide/emt-architecture-overview.md),
->   [Get Started](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06-preview/docs/developer-guide/emt-get-started.md)
+>   [Architecture Overview](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/next/docs/developer-guide/emt-architecture-overview.md),
+>   [Get Started](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/next/docs/developer-guide/emt-get-started.md)
 
 Edge Microvisor Toolkit is developed in several pre-configured versions, targeting
 different use cases demonstrating how Intel processors can cost-effectively minimize latency, maximize security, and optimize performance for edge AI workloads.

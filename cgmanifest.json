@@ -21663,8 +21663,8 @@
         "type": "other",
         "other": {
           "name": "platform-manageability-agent",
-          "version": "0.4.4",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.4.4.tar.gz"
+          "version": "0.4.7",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.4.7.tar.gz"
         }
       }
     },
