@@ -34,7 +34,7 @@ Patch18:        CVE-2026-2303.patch
 Patch19:        CVE-2026-26014.patch
 
 
-BuildRequires:  golang
+BuildRequires:  golang < 1.26.0
 BuildRequires:  systemd-devel
 Requires:       logrotate
 Requires:       procps-ng
@@ -138,6 +138,7 @@ fi
 
 %changelog
 * Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-26
+- limit to build with golang < 1.26.0
 - merge from Azure Linux 3.0.20260304-3.0
 - Patch for CVE-2025-10543
 - Patch for CVE-2026-26014, CVE-2026-2303, CVE-2025-58190, CVE-2025-47911
