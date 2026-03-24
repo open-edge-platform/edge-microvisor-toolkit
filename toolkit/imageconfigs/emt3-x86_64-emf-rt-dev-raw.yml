@@ -1,0 +1,165 @@
+# AI-searchable metadata for template discovery
+metadata:
+  description: "Edge Microvisor Toolkit 3 Edge Multifunction Real-Time (EMF-RT) raw image with real-time kernel for time-sensitive edge workloads"
+  use_cases:
+    - "real-time edge"
+    - "industrial automation"
+    - "time-sensitive networking"
+    - "deterministic computing"
+  keywords:
+    - emf
+    - realtime
+    - rt
+    - edge
+    - industrial
+    - automation
+    - emt3
+    - microvisor
+    - deterministic
+
+image:
+  name: emt3-x86_64-emf-rt-dev-raw
+  version: "1.0.0"
+
+target:
+  os: edge-microvisor-toolkit # Target OS name
+  dist: emt3 # Target OS distribution
+  arch: x86_64 # Target OS architecture
+  imageType: raw # Image type, valid value: [raw, iso].
+
+disk:
+  name: edge-readonly-rt-dev # 1:1 mapping to the systemConfigs name
+  artifacts:
+    -
+      type: raw  # image file format, valid value [raw, vhd, vhdx, qcow2, vmdk, vdi]
+      compression: gz # image compression format (optional)
+  size: 4GiB # 4G, 4GB, 4096 MiB also valid. (Required for raw)
+  partitionTableType: gpt # Partition table type, valid value: [gpt, mbr]
+  partitions: # Required for raw, optional for ISO, not needed for rootfs.
+    - id: boot
+      type: esp
+      flags:
+        - esp
+        - boot
+      start: 1MiB
+      end: 384MiB
+      fsType: fat32
+      mountPoint: /boot/efi
+      mountOptions: umask=0077
+
+    - id: rootfs
+      type: linux-root-amd64
+      start: 384MiB
+      end: 3584MiB
+      fsType: ext4
+      mountPoint: /
+      mountOptions: defaults
+
+    - id: edge_persistent
+      type: linux
+      start: 3584MiB
+      end: "0"  # use the rest of the disk space
+      fsType: ext4
+      mountPoint: /opt
+
+systemConfig:
+
+  additionalFiles:
+    - local: ../additionalfiles/layout.env
+      final: /etc/layout.env
+
+  name: edge-readonly-rt-dev
+  description: Default yml configuration for raw image
+  hostname: EdgeMicrovisorToolkit 
+
+  users:
+    # Production user with hashed password
+   - name: guest
+     hash_algo: "sha512"
+     password: "$6$xvFRoIZp1B7AIgby$Lcl5188Ihqz7KRbpauUcj5VtRZO5c93bbE6/gnjv3XahjQaMZE0rXNG/hFCVsuqHXkXWFVWNahd.AgzmwKCtO1"
+     groups: ["sudo"]
+
+  immutability:
+    enabled: false # default is true
+    # To enable Secure Boot, provide the actual file paths for your environment below and uncomment the relevant lines.
+    # secureBootDBKey: "<SECURE_BOOT_DB_KEY_PATH>"
+    # secureBootDBCrt: "<SECURE_BOOT_DB_CRT_PATH>"
+    # secureBootDBCer: "<SECURE_BOOT_DB_CER_PATH>"
+
+    # Package Configuration
+  packages:
+    # Additional packages beyond the base system
+    # ssh server
+    - openssh-server
+
+    # virtualization host
+    - qemu-kvm
+
+    # agent packages
+    - hardware-discovery-agent
+    - cluster-agent
+    - node-agent
+    - platform-observability-agent
+    - platform-telemetry-agent
+    - platform-update-agent
+    - in-band-manageability
+    - reporting-agent
+
+    # tinker tools
+    - gptfdisk
+    - cloud-init
+    - cloud-utils-growpart
+    - tpm2-tools
+    - lvm2
+    - netplan
+    - efibootmgr
+    - unzip
+    - rsyslog
+    - tpm2-initramfs-tool
+    - veritysetup
+    - python3-pyserial
+
+    # persistent mount
+    - rsync
+
+    # selinux full
+    - selinux-policy
+    - selinux-policy-devel
+    - policycoreutils-python-utils
+    - checkpolicy
+    - secilc
+    - setools-console
+
+    # intel gpu base
+    #- kernel-drivers-gpu
+    - linux-firmware-i915
+    - linux-firmware-ice
+    - intel-npu-firmware
+
+    # intel wireless
+    - linux-firmware-iwlwifi
+    - wireless-regdb
+
+    # os update
+    - os-update
+
+    # vpro amt
+    - platform-manageability-agent
+    - rpc
+    - intel-lms
+
+    # docker
+    - moby-engine
+    - docker-cli
+    - docker-compose
+
+    # emf packages
+    - tpm-cryptsetup
+    - persistent-mount
+
+  # Kernel Configuration
+  kernel:
+    version: "6.12"
+    cmdline: "root=/dev/mapper/rootfs_verity quiet splash idle=poll sysctl.vm.overcommit_memory=1 sysctl.kernel.panic=10 sysctl.kernel.panic_on_oops=1 sysctl.fs.inotify.max_user_instances=8192 rd.parallel=1 rd.shell=0 rd.timeout=200 rd.emergency=reboot i915.force_probe=*"
+    packages:
+      - kernel-rt-drivers-gpu
