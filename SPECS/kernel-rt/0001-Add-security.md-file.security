@@ -1,7 +1,7 @@
-From d765be87faa2993a69b07d474d062c37bddb686f Mon Sep 17 00:00:00 2001
+From d8be3f2811d6b2942f2c0ddfeb938db5fa6f18df Mon Sep 17 00:00:00 2001
 From: Lili Li <lili.li@intel.com>
 Date: Tue, 24 Oct 2023 10:33:36 +0800
-Subject: [PATCH] Add security.md file
+Subject: [PATCH 1/2] Add security.md file
 
 Add security.md file to open source repository.
 
@@ -13,7 +13,7 @@ Signed-off-by: Lili Li <lili.li@intel.com>
 
 diff --git a/security.md b/security.md
 new file mode 100644
-index 000000000000..98bca5b7ed9f
+index 0000000000000..98bca5b7ed9fa
 --- /dev/null
 +++ b/security.md
 @@ -0,0 +1,5 @@

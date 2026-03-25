@@ -1,0 +1,39 @@
+From 096687e863b9acf6eeccc25e85c7d8527991eb0c Mon Sep 17 00:00:00 2001
+From: Choong Yong Liang <yong.liang.choong@intel.com>
+Date: Wed, 3 Jan 2024 14:59:29 +0800
+Subject: [PATCH 12/18] net: phylink: Add module_exit()
+
+In free_module(), if mod->init callback is defined but mod->exit callback
+is not defined, it will assume the module cannot be removed and return
+EBUSY. The module_exit() is missing from current phylink module drive
+causing failure while unloading it.
+
+This patch introduces phylink_exit() for phylink module removal.
+
+Fixes: eca68a3c7d05 ("net: phylink: pass supported host PHY interface modes to phylib for SFP's PHYs")
+Signed-off-by: Lai Peter Jun Ann <jun.ann.lai@intel.com>
+Signed-off-by: Gan, Yi Fang <yi.fang.gan@intel.com>
+Signed-off-by: Choong Yong Liang <yong.liang.choong@intel.com>
+---
+ drivers/net/phy/phylink.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/phy/phylink.c b/drivers/net/phy/phylink.c
+index 9182443082158..e9d0dcfa4c7b1 100644
+--- a/drivers/net/phy/phylink.c
++++ b/drivers/net/phy/phylink.c
+@@ -4285,5 +4285,11 @@ static int __init phylink_init(void)
+ 
+ module_init(phylink_init);
+ 
++static void __exit phylink_exit(void)
++{
++}
++
++module_exit(phylink_exit);
++
+ MODULE_LICENSE("GPL v2");
+ MODULE_DESCRIPTION("phylink models the MAC to optional PHY connection");
+-- 
+2.43.0
+

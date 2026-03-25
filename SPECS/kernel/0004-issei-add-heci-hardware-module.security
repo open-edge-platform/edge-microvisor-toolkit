@@ -1,7 +1,7 @@
-From 973f2c7ef086e185271b1e8b12f3a9383a087b26 Mon Sep 17 00:00:00 2001
+From dfc608acd03571d2a2093d92a2c4ed4f372cd908 Mon Sep 17 00:00:00 2001
 From: Alexander Usyskin <alexander.usyskin@intel.com>
 Date: Thu, 31 Oct 2024 10:08:57 +0200
-Subject: [PATCH 4/5] issei: add heci hardware module
+Subject: [PATCH 4/7] issei: add heci hardware module
 
 Add support for the ISSEI (Intel Silicon Security Engine Interface)
 HECI PCI devices.
@@ -16,18 +16,18 @@ Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
 ---
  drivers/misc/issei/Kconfig        |  14 +
  drivers/misc/issei/Makefile       |   4 +
- drivers/misc/issei/hw_heci.c      | 552 ++++++++++++++++++++++++++++++
+ drivers/misc/issei/hw_heci.c      | 548 ++++++++++++++++++++++++++++++
  drivers/misc/issei/hw_heci.h      |  54 +++
  drivers/misc/issei/hw_heci_regs.h |  35 ++
- drivers/misc/issei/pci_heci.c     | 166 +++++++++
- 6 files changed, 825 insertions(+)
+ drivers/misc/issei/pci_heci.c     | 144 ++++++++
+ 6 files changed, 799 insertions(+)
  create mode 100644 drivers/misc/issei/hw_heci.c
  create mode 100644 drivers/misc/issei/hw_heci.h
  create mode 100644 drivers/misc/issei/hw_heci_regs.h
  create mode 100644 drivers/misc/issei/pci_heci.c
 
 diff --git a/drivers/misc/issei/Kconfig b/drivers/misc/issei/Kconfig
-index ffd027e826df..5fbdcb30e20d 100644
+index ffd027e826dfd..5fbdcb30e20d5 100644
 --- a/drivers/misc/issei/Kconfig
 +++ b/drivers/misc/issei/Kconfig
 @@ -11,3 +11,17 @@ config INTEL_SSEI
@@ -49,7 +49,7 @@ index ffd027e826df..5fbdcb30e20d 100644
 +
 +endif
 diff --git a/drivers/misc/issei/Makefile b/drivers/misc/issei/Makefile
-index 712d62eb9790..fb904fda3949 100644
+index 712d62eb97900..fb904fda39499 100644
 --- a/drivers/misc/issei/Makefile
 +++ b/drivers/misc/issei/Makefile
 @@ -9,3 +9,7 @@ issei-objs += fw_client.o
@@ -62,10 +62,10 @@ index 712d62eb9790..fb904fda3949 100644
 +issei-heci-objs += hw_heci.o
 diff --git a/drivers/misc/issei/hw_heci.c b/drivers/misc/issei/hw_heci.c
 new file mode 100644
-index 000000000000..7e6ca72e873c
+index 0000000000000..6efb29f5d759e
 --- /dev/null
 +++ b/drivers/misc/issei/hw_heci.c
-@@ -0,0 +1,552 @@
+@@ -0,0 +1,548 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright (C) 2023-2025 Intel Corporation */
 +#include <linux/dev_printk.h>
@@ -217,7 +217,7 @@ index 000000000000..7e6ca72e873c
 +	if (filled_slots > buffer_depth)
 +		return -EOVERFLOW;
 +
-+	dev_dbg(idev->dev, "filled_slots = %08x\n", filled_slots);
++	dev_dbg(&idev->dev, "filled_slots = %08x\n", filled_slots);
 +	return filled_slots;
 +}
 +
@@ -357,7 +357,7 @@ index 000000000000..7e6ca72e873c
 +	 * we need to clean H_CSR_RST bit to start a successful reset sequence.
 +	 */
 +	if (reg & H_CSR_RST) {
-+		dev_warn(idev->dev, "H_CSR_RST is set = 0x%08X", reg);
++		dev_warn(&idev->dev, "H_CSR_RST is set = 0x%08X", reg);
 +		reg &= ~H_CSR_RST;
 +		heci_hcsr_set(idev, reg);
 +		reg = heci_hcsr_read(idev);
@@ -377,10 +377,10 @@ index 000000000000..7e6ca72e873c
 +	reg = heci_hcsr_read(idev);
 +
 +	if (!(reg & H_CSR_RST))
-+		dev_warn(idev->dev, "H_CSR_RST is not set = 0x%08X", reg);
++		dev_warn(&idev->dev, "H_CSR_RST is not set = 0x%08X", reg);
 +
 +	if (reg & H_CSR_RDY)
-+		dev_warn(idev->dev, "H_CSR_RDY is not cleared 0x%08X", reg);
++		dev_warn(&idev->dev, "H_CSR_RDY is not cleared 0x%08X", reg);
 +
 +	if (!enable)
 +		issei_heci_hw_reset_release(idev);
@@ -435,7 +435,7 @@ index 000000000000..7e6ca72e873c
 +	struct issei_heci_hw *hw = to_heci_hw(idev);
 +
 +	if (!IS_ALIGNED(data_len, CB_SLOT_SIZE)) {
-+		dev_err(idev->dev, "Data size %zu not aligned to slot size %lu\n",
++		dev_err(&idev->dev, "Data size %zu not aligned to slot size %lu\n",
 +			data_len, CB_SLOT_SIZE);
 +		return -EINVAL;
 +	}
@@ -465,7 +465,7 @@ index 000000000000..7e6ca72e873c
 +	u32 *reg_buf = data;
 +
 +	if (!IS_ALIGNED(data_len, CB_SLOT_SIZE)) {
-+		dev_err(idev->dev, "Data size %zu not aligned to slot size %lu\n",
++		dev_err(&idev->dev, "Data size %zu not aligned to slot size %lu\n",
 +			data_len, CB_SLOT_SIZE);
 +		return -EINVAL;
 +	}
@@ -499,7 +499,7 @@ index 000000000000..7e6ca72e873c
 +
 +	ret = heci_write_hbuf(idev, &req, sizeof(req));
 +	if (ret)
-+		dev_err(idev->dev, "Shared memory req write failed ret = %d\n", ret);
++		dev_err(&idev->dev, "Shared memory req write failed ret = %d\n", ret);
 +
 +	return ret;
 +}
@@ -516,23 +516,23 @@ index 000000000000..7e6ca72e873c
 +	int ret;
 +
 +	if (heci_count_full_read_slots(idev) != sizeof(res) / CB_SLOT_SIZE) {
-+		dev_dbg(idev->dev, "Setup response is not fully received\n");
++		dev_dbg(&idev->dev, "Setup response is not fully received\n");
 +		return -ENODATA;
 +	}
 +
 +	ret = heci_read_hbuf(idev, &res, sizeof(res));
 +	if (ret) {
-+		dev_err(idev->dev, "Shared memory res read failed ret = %d\n", ret);
++		dev_err(&idev->dev, "Shared memory res read failed ret = %d\n", ret);
 +		return ret;
 +	}
 +
 +	if (res.msg_id != HAM_CB_MESSAGE_ID_RES) {
-+		dev_err(idev->dev, "Shared memory res header 0x%x != 0x%x\n",
++		dev_err(&idev->dev, "Shared memory res header 0x%x != 0x%x\n",
 +			res.msg_id, HAM_CB_MESSAGE_ID_RES);
 +		return -EPROTO;
 +	}
 +	if (res.status != 0) {
-+		dev_err(idev->dev, "Shared memory res status %d != 0\n", res.status);
++		dev_err(&idev->dev, "Shared memory res status %d != 0\n", res.status);
 +		return -EPROTO;
 +	}
 +
@@ -557,6 +557,11 @@ index 000000000000..7e6ca72e873c
 +	.irq_write_generate = issei_heci_irq_write_generate,
 +};
 +
++const struct issei_hw_ops *issei_heci_get_ops(void)
++{
++	return &hw_heci_ops;
++}
++
 +irqreturn_t issei_heci_irq_quick_handler(int irq, void *dev_id)
 +{
 +	struct issei_device *idev = dev_id;
@@ -575,7 +580,7 @@ index 000000000000..7e6ca72e873c
 +			heci_hcsr_set_hig(idev);
 +	}
 +
-+	dev_dbg(idev->dev, "interrupt source 0x%08X\n", heci_irq_src(reg));
++	dev_dbg(&idev->dev, "interrupt source 0x%08X\n", heci_irq_src(reg));
 +
 +	atomic_set(&idev->rst_irq, 1);
 +	wake_up_interruptible(&idev->wait_rst_irq);
@@ -595,32 +600,23 @@ index 000000000000..7e6ca72e873c
 +}
 +
 +/**
-+ * issei_heci_dev_init - allocates and initializes the issei device structure with hw_heci
-+ * @parent: device associated with physical device (pci/platform)
++ * issei_heci_dev_init - initializes the issei device structure with hw_heci
++ * @idev: device structure
++ * @mem_addr: memory address on bar
 + * @cfg: per device generation config
-+ *
-+ * Return: The issei_device pointer on success, NULL on failure.
 + */
-+struct issei_device *issei_heci_dev_init(struct device *parent, const struct hw_heci_cfg *cfg)
++void issei_heci_dev_init(struct issei_device *idev,
++			 void __iomem *mem_addr, const struct hw_heci_cfg *cfg)
 +{
-+	struct issei_device *idev;
-+	struct issei_heci_hw *hw;
++	struct issei_heci_hw *hw = to_heci_hw(idev);
 +
-+	idev = devm_kzalloc(parent, sizeof(*idev) + sizeof(*hw), GFP_KERNEL);
-+	if (!idev)
-+		return NULL;
-+
-+	hw = to_heci_hw(idev);
 +	spin_lock_init(&hw->access_lock);
-+
-+	issei_device_init(idev, parent, &cfg->dma_length, &hw_heci_ops);
++	hw->mem_addr = mem_addr;
 +	hw->cfg = cfg;
-+
-+	return idev;
 +}
 diff --git a/drivers/misc/issei/hw_heci.h b/drivers/misc/issei/hw_heci.h
 new file mode 100644
-index 000000000000..7ba160c3db54
+index 0000000000000..bec2ce8937d1d
 --- /dev/null
 +++ b/drivers/misc/issei/hw_heci.h
 @@ -0,0 +1,54 @@
@@ -635,7 +631,6 @@ index 000000000000..7ba160c3db54
 +#include "issei_dev.h"
 +
 +struct device;
-+struct issei_device;
 +
 +/*
 + * hw_heci_cfg - issei heci device configuration
@@ -671,16 +666,17 @@ index 000000000000..7ba160c3db54
 +#define to_heci_hw(dev) ((struct issei_heci_hw *)(dev)->hw)
 +
 +const struct hw_heci_cfg *issei_heci_get_cfg(kernel_ulong_t idx);
++const struct issei_hw_ops *issei_heci_get_ops(void);
 +
-+struct issei_device *issei_heci_dev_init(struct device *parent, const struct hw_heci_cfg *cfg);
++void issei_heci_dev_init(struct issei_device *idev,
++			 void __iomem *mem_addr, const struct hw_heci_cfg *cfg);
 +
 +irqreturn_t issei_heci_irq_quick_handler(int irq, void *dev_id);
-+irqreturn_t issei_heci_irq_thread_handler(int irq, void *dev_id);
 +
 +#endif /* _ISSEI_HW_HECI_H_ */
 diff --git a/drivers/misc/issei/hw_heci_regs.h b/drivers/misc/issei/hw_heci_regs.h
 new file mode 100644
-index 000000000000..5e804bdb2e94
+index 0000000000000..5e804bdb2e944
 --- /dev/null
 +++ b/drivers/misc/issei/hw_heci_regs.h
 @@ -0,0 +1,35 @@
@@ -721,12 +717,12 @@ index 000000000000..5e804bdb2e94
 +#endif /* _ISSEI_HW_HECI_REGS_H_ */
 diff --git a/drivers/misc/issei/pci_heci.c b/drivers/misc/issei/pci_heci.c
 new file mode 100644
-index 000000000000..b1fafd284521
+index 0000000000000..003cda7b5e8a7
 --- /dev/null
 +++ b/drivers/misc/issei/pci_heci.c
-@@ -0,0 +1,166 @@
+@@ -0,0 +1,144 @@
 +// SPDX-License-Identifier: GPL-2.0
-+/* Copyright (C) 2023-2024 Intel Corporation */
++/* Copyright (C) 2023-2025 Intel Corporation */
 +#include <linux/module.h>
 +#include <linux/pci.h>
 +
@@ -736,89 +732,74 @@ index 000000000000..b1fafd284521
 +
 +static int issei_heci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 +{
++	struct device *dev = &pdev->dev;
 +	const struct hw_heci_cfg *cfg;
 +	struct issei_device *idev;
 +	struct issei_heci_hw *hw;
++	char __iomem *registers;
 +	int err;
 +
 +	cfg = issei_heci_get_cfg(ent->driver_data);
 +	if (!cfg)
-+		return -ENODEV;
++		return dev_err_probe(dev, -ENODEV, "no usable configuration.\n");
 +
 +	err = pcim_enable_device(pdev);
-+	if (err) {
-+		dev_err(&pdev->dev, "failed to enable pci device. err = %d\n", err);
-+		return err;
-+	}
-+
-+	err = pcim_iomap_regions(pdev, BIT(0), KBUILD_MODNAME);
-+	if (err) {
-+		dev_err(&pdev->dev, "failed to get pci regions. err = %d\n", err);
-+		return err;
-+	}
-+
-+	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
-+	if (err) {
-+		dev_err(&pdev->dev, "no usable DMA configuration, aborting. err = %d\n", err);
-+		return err;
-+	}
++	if (err)
++		return dev_err_probe(dev, err, "failed to enable pci device.\n");
 +
 +	pci_set_master(pdev);
 +
-+	idev = issei_heci_dev_init(&pdev->dev, cfg);
-+	if (!idev)
-+		return -ENOMEM;
-+	hw = to_heci_hw(idev);
-+	hw->mem_addr = pcim_iomap_table(pdev)[0];
++	registers = pcim_iomap_region(pdev, 0, KBUILD_MODNAME);
++	if (IS_ERR(registers))
++		return dev_err_probe(dev, IS_ERR(registers), "failed to get pci region.\n");
 +
-+	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
-+	if (err < 0) {
-+		dev_err(&pdev->dev, "pci_alloc_irq_vectors failure. err = %d\n", err);
-+		return err;
-+	}
++	err = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
++	if (err)
++		return dev_err_probe(dev, err, "no usable DMA configuration.\n");
 +
-+	hw->irq = pci_irq_vector(pdev, 0);
++	idev = issei_register(sizeof(*hw), dev, &cfg->dma_length, issei_heci_get_ops());
++	if (IS_ERR(idev))
++		return dev_err_probe(dev, PTR_ERR(idev), "register failure.\n");
 +
-+	err = devm_request_threaded_irq(&pdev->dev, hw->irq,
-+				   issei_heci_irq_quick_handler,
-+				   NULL,
-+				   IRQF_ONESHOT, KBUILD_MODNAME, idev);
-+	if (err) {
-+		dev_err(&pdev->dev, "request_threaded_irq failure. err = %d, irq = %d\n",
-+			err, hw->irq);
-+		goto release_irq;
-+	}
-+
-+	err = issei_start(idev);
-+	if (err)	{
-+		dev_err(&pdev->dev, "init hw failure. err = %d.\n", err);
-+		goto free_irq;
-+	}
-+
-+	err = issei_register(idev, &pdev->dev);
-+	if (err) {
-+		dev_err(&pdev->dev, "register failure. err = %d.\n", err);
-+		goto stop;
-+	}
++	issei_heci_dev_init(idev, registers, cfg);
 +
 +	pci_set_drvdata(pdev, idev);
 +
-+	dev_dbg(&pdev->dev, "initialization successful.\n");
++	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSI);
++	if (err < 0) {
++		dev_err_probe(dev, err, "pci_alloc_irq_vectors failure.\n");
++		goto deregister;
++	}
++
++	hw = to_heci_hw(idev);
++	hw->irq = pci_irq_vector(pdev, 0);
++
++	err = request_threaded_irq(hw->irq,
++				   issei_heci_irq_quick_handler,
++				   NULL,
++				   IRQF_ONESHOT, KBUILD_MODNAME, idev);
++	if (err)
++		goto release_irq;
++
++	err = issei_start(idev);
++	if (err) {
++		dev_err_probe(dev, err, "init hw failure.\n");
++		goto free_irq;
++	}
 +
 +	return 0;
 +
-+stop:
-+	issei_stop(idev);
 +free_irq:
-+	/* Manually free IRQ otherwise PCI free irq vectors will fail */
-+	devm_free_irq(&pdev->dev, hw->irq, idev);
-+release_irq:
 +	idev->ops->irq_disable(idev);
++	free_irq(hw->irq, idev);
++release_irq:
 +	pci_free_irq_vectors(pdev);
++deregister:
++	issei_deregister(idev);
 +	return err;
 +}
 +
-+static void __issei_heci_deconstruct(struct pci_dev *pdev)
++static void issei_heci_shutdown(struct pci_dev *pdev)
 +{
 +	struct issei_device *idev = pci_get_drvdata(pdev);
 +	struct issei_heci_hw *hw = to_heci_hw(idev);
@@ -826,22 +807,13 @@ index 000000000000..b1fafd284521
 +	issei_stop(idev);
 +
 +	idev->ops->irq_disable(idev);
-+	/* Manually free IRQ otherwise PCI free irq vectors will fail */
-+	devm_free_irq(&pdev->dev, hw->irq, idev);
++	free_irq(hw->irq, idev);
 +	pci_free_irq_vectors(pdev);
-+}
-+
-+
-+static void issei_heci_shutdown(struct pci_dev *pdev)
-+{
-+	dev_dbg(&pdev->dev, "shutdown\n");
-+	__issei_heci_deconstruct(pdev);
 +}
 +
 +static void issei_heci_remove(struct pci_dev *pdev)
 +{
-+	dev_dbg(&pdev->dev, "stop\n");
-+	__issei_heci_deconstruct(pdev);
++	issei_heci_shutdown(pdev);
 +
 +	issei_deregister(pci_get_drvdata(pdev));
 +}
@@ -871,6 +843,8 @@ index 000000000000..b1fafd284521
 +	{PCI_VDEVICE(INTEL, 0xA85D)}, /* Lunar Lake M */
 +	{PCI_VDEVICE(INTEL, 0xE35D)}, /* Panter Lake H */
 +	{PCI_VDEVICE(INTEL, 0xE45D)}, /* Panter Lake P */
++	{PCI_VDEVICE(INTEL, 0xD470)}, /* Nova Lake S */
++	{PCI_VDEVICE(INTEL, 0x4D5D)}, /* Wildcat Lake */
 +
 +	{0, }
 +};

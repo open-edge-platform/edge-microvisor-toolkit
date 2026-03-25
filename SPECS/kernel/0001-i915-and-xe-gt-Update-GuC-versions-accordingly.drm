@@ -1,0 +1,48 @@
+From 16b46595039e12fe48cef4b96a78e3e8061508e5 Mon Sep 17 00:00:00 2001
+From: "Saravanan, Thineshkumar" <thineshkumar.saravanan@intel.com>
+Date: Mon, 9 Mar 2026 13:04:27 +0800
+Subject: [PATCH] i915 and xe/gt: Update GuC versions accordingly
+
+Signed-off-by: Saravanan, Thineshkumar <thineshkumar.saravanan@intel.com>
+---
+ drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c | 2 +-
+ drivers/gpu/drm/xe/xe_uc_fw.c            | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c b/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
+index 20af322d35d7..1636023f2fa6 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_uc_fw.c
+@@ -96,7 +96,7 @@ void intel_uc_fw_change_status(struct intel_uc_fw *uc_fw,
+ 	fw_def(ALDERLAKE_S,  0, guc_maj(tgl,  70, 49, 4)) \
+ 	fw_def(ALDERLAKE_S,  0, guc_mmp(tgl,  70, 1, 1)) \
+ 	fw_def(ALDERLAKE_S,  0, guc_mmp(tgl,  69, 0, 3)) \
+-	fw_def(DG1,          0, guc_maj(dg1,  70, 5, 1)) \
++	fw_def(DG1,          0, guc_maj(dg1,  70, 49, 4)) \
+ 	fw_def(ROCKETLAKE,   0, guc_mmp(tgl,  70, 1, 1)) \
+ 	fw_def(TIGERLAKE,    0, guc_mmp(tgl,  70, 1, 1)) \
+ 	fw_def(JASPERLAKE,   0, guc_mmp(ehl,  70, 1, 1)) \
+diff --git a/drivers/gpu/drm/xe/xe_uc_fw.c b/drivers/gpu/drm/xe/xe_uc_fw.c
+index 049eda2f085b..6aa25c614a55 100644
+--- a/drivers/gpu/drm/xe/xe_uc_fw.c
++++ b/drivers/gpu/drm/xe/xe_uc_fw.c
+@@ -115,12 +115,12 @@ struct fw_blobs_by_type {
+ #define XE_GT_TYPE_ANY XE_GT_TYPE_UNINITIALIZED
+ 
+ #define XE_GUC_FIRMWARE_DEFS(fw_def, mmp_ver, major_ver)					\
+-	fw_def(PANTHERLAKE,	GT_TYPE_ANY,	major_ver(xe,	guc,	ptl,	70, 55, 3))	\
+-	fw_def(BATTLEMAGE,	GT_TYPE_ANY,	major_ver(xe,	guc,	bmg,	70, 55, 3))	\
+-	fw_def(LUNARLAKE,	GT_TYPE_ANY,	major_ver(xe,	guc,	lnl,	70, 53, 0))	\
++	fw_def(PANTHERLAKE,	GT_TYPE_ANY,	major_ver(xe,	guc,	ptl,	70, 58, 0))	\
++	fw_def(BATTLEMAGE,	GT_TYPE_ANY,	major_ver(xe,	guc,	bmg,	70, 58, 0))	\
++	fw_def(LUNARLAKE,	GT_TYPE_ANY,	major_ver(xe,	guc,	lnl,	70, 58, 0))	\
+ 	fw_def(METEORLAKE,	GT_TYPE_ANY,	major_ver(i915,	guc,	mtl,	70, 53, 0))	\
+ 	fw_def(DG2,		GT_TYPE_ANY,	major_ver(i915,	guc,	dg2,	70, 53, 0))	\
+-	fw_def(DG1,		GT_TYPE_ANY,	major_ver(i915,	guc,	dg1,	70, 44, 1))	\
++	fw_def(DG1,		GT_TYPE_ANY,	major_ver(i915,	guc,	dg1,	70, 49, 4))	\
+ 	fw_def(ALDERLAKE_N,	GT_TYPE_ANY,	major_ver(i915,	guc,	tgl,	70, 49, 4))	\
+ 	fw_def(ALDERLAKE_P,	GT_TYPE_ANY,	major_ver(i915,	guc,	adlp,	70, 49, 4))	\
+ 	fw_def(ALDERLAKE_S,	GT_TYPE_ANY,	major_ver(i915,	guc,	tgl,	70, 49, 4))	\
+-- 
+2.34.1
+

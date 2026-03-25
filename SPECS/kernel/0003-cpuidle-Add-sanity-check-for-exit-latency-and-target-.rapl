@@ -1,0 +1,65 @@
+From cf5cc639f8231faee39df708cef6edbe4802cb56 Mon Sep 17 00:00:00 2001
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Date: Fri, 7 Nov 2025 20:07:28 +0100
+Subject: [PATCH 03/17] cpuidle: Add sanity check for exit latency and target
+ residency
+
+Make __cpuidle_driver_init() fail if the exit latency of one of the
+driver's idle states is less than its target residency which would
+break cpuidle assumptions.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Artem Bityutskiy <artem.bityutskiy@linux.intel.com>
+Reviewed-by: Christian Loehle <christian.loehle@arm.com>
+[ rjw: Changelog fix ]
+Link: https://patch.msgid.link/12779486.O9o76ZdvQC@rafael.j.wysocki
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/cpuidle/driver.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/cpuidle/driver.c b/drivers/cpuidle/driver.c
+index 9bbfa594c4425..1c295a93d5829 100644
+--- a/drivers/cpuidle/driver.c
++++ b/drivers/cpuidle/driver.c
+@@ -152,7 +152,7 @@ static void cpuidle_setup_broadcast_timer(void *arg)
+  * __cpuidle_driver_init - initialize the driver's internal data
+  * @drv: a valid pointer to a struct cpuidle_driver
+  */
+-static void __cpuidle_driver_init(struct cpuidle_driver *drv)
++static int __cpuidle_driver_init(struct cpuidle_driver *drv)
+ {
+ 	int i;
+ 
+@@ -193,7 +193,17 @@ static void __cpuidle_driver_init(struct cpuidle_driver *drv)
+ 			s->exit_latency_ns =  0;
+ 		else
+ 			s->exit_latency = div_u64(s->exit_latency_ns, NSEC_PER_USEC);
++
++		/*
++		 * Ensure that the exit latency of a CPU idle state does not
++		 * exceed its target residency which is assumed in cpuidle in
++		 * multiple places.
++		 */
++		if (s->exit_latency_ns > s->target_residency_ns)
++			return -EINVAL;
+ 	}
++
++	return 0;
+ }
+ 
+ /**
+@@ -223,7 +233,9 @@ static int __cpuidle_register_driver(struct cpuidle_driver *drv)
+ 	if (cpuidle_disabled())
+ 		return -ENODEV;
+ 
+-	__cpuidle_driver_init(drv);
++	ret = __cpuidle_driver_init(drv);
++	if (ret)
++		return ret;
+ 
+ 	ret = __cpuidle_set_driver(drv);
+ 	if (ret)
+-- 
+2.43.0
+

@@ -1,0 +1,37 @@
+From a4a595380145401de86d399e5e87227fe0a63a74 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Wed, 11 May 2022 17:53:27 -0700
+Subject: [PATCH 17/44] KVM: x86: Advertise support for FRED
+
+Advertise support for FRED to userspace after changes required to enable
+FRED in a KVM guest are in place.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Change in v5:
+* Don't advertise FRED/LKGS together, LKGS can be advertised as an
+  independent feature (Sean).
+* Add TB from Xuelian Guo.
+---
+ arch/x86/kvm/cpuid.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
+index 52524e0ca97f7..f4ff5ccbcf1e4 100644
+--- a/arch/x86/kvm/cpuid.c
++++ b/arch/x86/kvm/cpuid.c
+@@ -1014,6 +1014,7 @@ void kvm_set_cpu_caps(void)
+ 		F(FSRS),
+ 		F(FSRC),
+ 		F(WRMSRNS),
++		X86_64_F(FRED),
+ 		X86_64_F(LKGS),
+ 		F(AMX_FP16),
+ 		F(AVX_IFMA),
+-- 
+2.43.0
+

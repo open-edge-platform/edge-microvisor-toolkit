@@ -1,0 +1,94 @@
+From adce89d037cdf0dca931ea2ab3edaf9170778a70 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@intel.com>
+Date: Thu, 22 Jan 2026 18:07:15 +0800
+Subject: [PATCH] soundwire: fix bug in sdw_add_element_group_count found by
+ syzkaller
+
+In the original implementation, there is illegal memory access when i is
+equal with num in the for-loop in sdw_add_element_group_count as below.
+
+for (i = 0; i <= num; i++) {
+    if (rate == group->rates[i] && lane == group->lanes[i])
+        ...
+
+To fix it, we check if rate/lane have already been existed first. And then
+add them if not.
+
+There is no further functional changes beside this error.
+
+Fixes: 9026118f20e2 ("soundwire: Add generic bandwidth allocation algorithm")
+Reviewed-by: Bard Liao <yung-chuan.liao@linux.intel.com>
+Signed-off-by: Baoli.Zhang <baoli.zhang@linux.intel.com>
+---
+ .../soundwire/generic_bandwidth_allocation.c  | 47 +++++++++----------
+ 1 file changed, 22 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/soundwire/generic_bandwidth_allocation.c b/drivers/soundwire/generic_bandwidth_allocation.c
+index c18f0c16f929..e52c536d663c 100644
+--- a/drivers/soundwire/generic_bandwidth_allocation.c
++++ b/drivers/soundwire/generic_bandwidth_allocation.c
+@@ -296,39 +296,36 @@ static int sdw_add_element_group_count(struct sdw_group *group,
+ 	int num = group->count;
+ 	int i;
+ 
+-	for (i = 0; i <= num; i++) {
++	for (i = 0; i < num; i++) {
+ 		if (rate == group->rates[i] && lane == group->lanes[i])
+-			break;
+-
+-		if (i != num)
+-			continue;
+-
+-		if (group->count >= group->max_size) {
+-			unsigned int *rates;
+-			unsigned int *lanes;
++			return 0;
++	}
+ 
+-			group->max_size += 1;
+-			rates = krealloc(group->rates,
+-					 (sizeof(int) * group->max_size),
+-					 GFP_KERNEL);
+-			if (!rates)
+-				return -ENOMEM;
++	if (group->count >= group->max_size) {
++		unsigned int *rates;
++		unsigned int *lanes;
+ 
+-			group->rates = rates;
++		group->max_size += 1;
++		rates = krealloc(group->rates,
++				 (sizeof(int) * group->max_size),
++				 GFP_KERNEL);
++		if (!rates)
++			return -ENOMEM;
+ 
+-			lanes = krealloc(group->lanes,
+-					 (sizeof(int) * group->max_size),
+-					 GFP_KERNEL);
+-			if (!lanes)
+-				return -ENOMEM;
++		group->rates = rates;
+ 
+-			group->lanes = lanes;
+-		}
++		lanes = krealloc(group->lanes,
++				 (sizeof(int) * group->max_size),
++				 GFP_KERNEL);
++		if (!lanes)
++			return -ENOMEM;
+ 
+-		group->rates[group->count] = rate;
+-		group->lanes[group->count++] = lane;
++		group->lanes = lanes;
+ 	}
+ 
++	group->rates[group->count] = rate;
++	group->lanes[group->count++] = lane;
++
+ 	return 0;
+ }
+ 
+-- 
+2.34.1
+
