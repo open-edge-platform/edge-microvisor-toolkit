@@ -26,9 +26,6 @@
             "PostInstallScripts": [
                 {
                         "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
-                },
-                {
-                        "Path": "additionalconfigs/add-sudoer.sh"
                 }
             ],
             "KernelOptions": {
