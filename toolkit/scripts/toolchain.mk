@@ -14,6 +14,8 @@ $(call create_folder,$(TOOLCHAIN_RPMS_DIR))
 toolchain_build_dir = $(BUILD_DIR)/toolchain
 toolchain_local_temp = $(toolchain_build_dir)/extract_dir
 toolchain_from_repos = $(toolchain_build_dir)/repo_rpms
+toolchain_build_rpms = $(BUILD_DIR)/toolchain_rpms
+rpmcache_build_dir = $(BUILD_DIR)/rpm_cache/cache
 toolchain_logs_dir = $(LOGS_DIR)/toolchain
 toolchain_downloads_logs_dir = $(toolchain_logs_dir)/downloads
 toolchain_rehydrate_logs_dir = $(toolchain_logs_dir)/rehydrate
@@ -49,7 +51,7 @@ $(call create_folder,$(toolchain_downloads_logs_dir))
 $(call create_folder,$(toolchain_from_repos))
 $(call create_folder,$(populated_toolchain_chroot))
 
-.PHONY: raw-toolchain toolchain clean-toolchain clean-toolchain-containers check-manifests check-aarch64-manifests check-x86_64-manifests
+.PHONY: raw-toolchain prepare_rpmcache toolchain clean-toolchain clean-toolchain-containers check-manifests check-aarch64-manifests check-x86_64-manifests
 ##help:target:raw-toolchain=Build the initial toolchain bootstrap stage.
 raw-toolchain: $(raw_toolchain)
 ##help:target:toolchain=Ensure all toolchain RPMs are present.
@@ -309,7 +311,11 @@ $(toolchain_rpms): $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_local_tem
 
 # No archive was selected, so download from online package server instead. All packages must be available for this step to succeed.
 else
-$(toolchain_rpms): $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_REBUILD_TOOLCHAIN) $(go-downloader) $(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh $(depend_TOOLCHAIN_GPG_VALIDATION_KEYS) $(TOOLCHAIN_GPG_VALIDATION_KEYS)
+prepare_rpmcache:
+	@echo "Preparing rpmcache copy toolchain RPMs to rpmcache $(rpmcache_build_dir)"
+	@cp $(toolchain_build_rpms)/noarch/* $(rpmcache_build_dir) || true
+	@cp $(toolchain_build_rpms)/x86_64/* $(rpmcache_build_dir) || true
+$(toolchain_rpms): prepare_rpmcache $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_REBUILD_TOOLCHAIN) $(go-downloader) $(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh $(depend_TOOLCHAIN_GPG_VALIDATION_KEYS) $(TOOLCHAIN_GPG_VALIDATION_KEYS)
 	@log_file="$(toolchain_downloads_logs_dir)/$(notdir $@).log" && \
 	rm -f "$$log_file" && \
 	$(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh \
