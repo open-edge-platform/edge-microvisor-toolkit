@@ -133,4 +133,64 @@ rm -rf '%{buildroot}%{_docdir}'
 
 %changelog
 * Fri Mar 6 2026 Andy <andy.peng@intel.com> - 6.14.0-1
-- Original version for Edge Microvisor Toolkit. License verified.
+- Upgrade to version 6.14.0
+
+* Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 6.7.0-3
+- Add TSN patches/support
+
+* Fri Jun 07 2024 Pawel Winogrodzki <pawelwi@microsoft.com> - 6.7.0-2
+- Remove dependency on 'libdb'.
+
+* Mon Feb 05 2024 Brian Fjeldstad <bfjelds@microsoft.com> - 6.7.0-1
+- Update libvirt to v6.7.0
+- Use Fedora 39 as basis for new packaging (tc)
+- use _datadir rather than _libdir for iproute2 files
+
+* Wed Sep 20 2023 Jon Slobodzian <joslobo@microsoft.com> - 5.15.0-3
+- Recompile with stack-protection fixed gcc version (CVE-2023-4039)
+
+* Wed Feb 02 2022 Muhammad Falak <mwani@microsoft.com> - 5.15.0-2
+- Add an explict BR on 'sudo' & 'libmnl-devel' to enable check section
+
+* Mon Nov 29 2021 Thomas Crain <thcrain@microsoft.com> - 5.15.0-1
+- Upgrade to latest upstream version
+- Add relevant build/runtime requirements
+- Fix check section instructions for new version
+
+* Sat May 09 2020 Nick Samson <nisamson@microsoft.com> - 4.18.0-5
+- Added %%license line automatically
+
+* Mon Apr 13 2020 Emre Girgin <mrgirgin@microsoft.com> - 4.18.0-4
+- Rename to iproute.
+- Updated Source0 and URL.
+- License verified.
+
+* Tue Sep 03 2019 Mateusz Malisz <mamalisz@microsoft.com> - 4.18.0-3
+- Initial CBL-Mariner import from Photon (license: Apache2).
+
+* Fri Mar 08 2019 Fabio Rapposelli <fabio@vmware.com> - 4.18.0-2
+- Added "Provides: iproute" for better compatibility with other distributions
+
+* Wed Sep 05 2018 Ankit Jain <ankitja@vmware.com> - 4.18.0-1
+- Updated to version 4.18.0
+
+* Tue Aug 15 2017 Alexey Makhalov <amakhalov@vmware.com> - 4.10.0-3
+- Fix compilation issue for glibc-2.26
+
+* Fri Jun 23 2017 Xiaolin Li <xiaolinl@vmware.com> - 4.10.0-2
+- Move man3 to devel package.
+
+* Tue Mar 28 2017 Dheeraj Shetty <dheerajs@vmware.com> - 4.10.0-1
+- Updated to version 4.10.0
+
+* Thu Jun 16 2016 Nick Shi <nshi@vmware.com> - 4.2.0-3
+- Replace killall by pkill in ifcfg
+
+* Tue May 24 2016 Priyesh Padmavilasom <ppadmavilasom@vmware.com> - 4.2.0-2
+- GA - Bump release of all rpms
+
+* Tue Jan 12 2016 Xiaolin Li <xiaolinl@vmware.com> - 4.2.0-1
+- Updated to version 4.2.0
+
+* Wed Nov 5 2014 Divya Thaluru <dthaluru@vmware.com> - 3.12.0-1
+- Initial build. First version
