@@ -1,0 +1,38 @@
+From 092fb023ac87a9d47615df2547aae6f7bcdf3599 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Wed, 14 Jan 2026 13:57:31 -0800
+Subject: [PATCH 3/6] hw/usb/host-libusb: udev->product_desc is non-NULL
+
+Null checking on udev->product_desc is always false as
+it is an array.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ hw/usb/host-libusb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hw/usb/host-libusb.c b/hw/usb/host-libusb.c
+index 3a08caafa5..6291d57cea 100644
+--- a/hw/usb/host-libusb.c
++++ b/hw/usb/host-libusb.c
+@@ -889,7 +889,7 @@ static void usb_host_ep_update(USBHostDevice *s)
+     if (!conf || conf->bNumInterfaces == 0) {
+         warn_report("usb-host: ignoring invalid configuration "
+             "for device %s (bus=%03d, addr=%03d)",
+-            udev->product_desc ? udev->product_desc : "unknown",
++            udev->product_desc,
+             s->bus_num, s->addr);
+         return;
+     }
+@@ -916,7 +916,7 @@ static void usb_host_ep_update(USBHostDevice *s)
+                     alt,
+                     conf->interface[i].num_altsetting ? conf->interface[i].num_altsetting - 1 : -1,
+                     i,
+-                    udev->product_desc ? udev->product_desc : "unknown",
++                    udev->product_desc,
+                     s->bus_num, s->addr);
+                 continue;
+             }
+-- 
+2.43.0
+
