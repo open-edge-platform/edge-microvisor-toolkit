@@ -1,123 +1,33 @@
 {
     "SystemConfigs": [
-	{
-            "Name": "RT Kernel + Docker",
-            "PackageLists": [
-                "packagelists/grub2-mkconfig.json",
-                "packagelists/developer-packages.json",
-                "packagelists/virtualization-host-packages.json",
-                "packagelists/core-packages-image.json",
-                "packagelists/core-tools-packages.json",
-                "packagelists/ssh-server.json",
-                "packagelists/selinux-full.json",
-                "packagelists/intel-gpu-base-rt.json",
-                "packagelists/intel-rdt.json",
-                "packagelists/drtm.json",
-                "packagelists/virt-guest-packages.json",
-                "packagelists/docker.json",
-                "packagelists/intel-wireless.json",
-                "packagelists/kernel-rt-drivers.json"
-            ],
-            "KernelCommandLine": {
-                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0 i915.force_probe=*",
-                "SELinux": "permissive"
-            },
-            "KernelOptions": {
-                "default": "kernel-rt"
-            },
-            "AdditionalFiles": {
-                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network"
-            },
-            "PostInstallScripts": [
-                {
-                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
-                }
-            ]
-        },
-	{
-            "Name": "Standard Kernel + Docker",
-            "PackageLists": [
-                "packagelists/grub2-mkconfig.json",
-                "packagelists/developer-packages.json",
-                "packagelists/virtualization-host-packages.json",
-                "packagelists/core-packages-image.json",
-                "packagelists/core-tools-packages.json",
-                "packagelists/ssh-server.json",
-                "packagelists/selinux-full.json",
-                "packagelists/intel-gpu-base.json",
-                "packagelists/drtm.json",
-                "packagelists/virt-guest-packages.json",
-                "packagelists/docker.json",
-                "packagelists/intel-wireless.json",
-                "packagelists/kernel-drivers.json"
-            ],
-            "KernelCommandLine": {
-                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0 i915.force_probe=*",
-                "SELinux": "permissive"
-            },
-            "KernelOptions": {
-                "default": "kernel"
-            },
-            "AdditionalFiles": {
-                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network"
-            },
-            "PostInstallScripts": [
-                {
-                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
-                }
-            ]
-        },
         {
-		"Name": "RT Kernel",
+            "Name": "EMT-Desktop-Virtualization",
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
-                "packagelists/virtualization-host-packages.json",
+                "packagelists/virtualization-host-full-packages.json",
                 "packagelists/core-packages-image.json",
                 "packagelists/core-tools-packages.json",
                 "packagelists/ssh-server.json",
-                "packagelists/selinux-full.json",
-                "packagelists/intel-gpu-base-rt.json",
-                "packagelists/intel-rdt.json",
-                "packagelists/drtm.json",
-                "packagelists/virt-guest-packages.json",
-                "packagelists/intel-wireless.json",
-                "packagelists/kernel-rt-drivers.json"
-            ],
-            "KernelCommandLine": {
-                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0 i915.force_probe=*",
-                "SELinux": "permissive"
-            },
-            "KernelOptions": {
-                "default": "kernel-rt"
-            },
-            "AdditionalFiles": {
-                "additionalconfigs/99-dhcp-en.network": "/etc/systemd/network/99-dhcp-en.network"
-            },
-            "PostInstallScripts": [
-                {
-                    "Path": "additionalconfigs/configure-systemd-networkd-client-identifier.sh"
-                }
-            ]
-        },
-	{
-            "Name": "Standard Kernel",
-            "PackageLists": [
-                "packagelists/grub2-mkconfig.json",
-                "packagelists/developer-packages.json",
-                "packagelists/virtualization-host-packages.json",
-                "packagelists/core-packages-image.json",
-                "packagelists/core-tools-packages.json",
-                "packagelists/ssh-server.json",
+                "packagelists/qemu-guest-packages.json",
+                "packagelists/xorg-x11-packages.json",
                 "packagelists/selinux-full.json",
                 "packagelists/intel-gpu-base.json",
                 "packagelists/drtm.json",
                 "packagelists/virt-guest-packages.json",
-                "packagelists/intel-wireless.json",
-                "packagelists/kernel-drivers.json"
+                "packagelists/intel-wireless.json"
             ],
+            "Packages": [
+                "lsb-release",
+                "nbd",
+                "ntfs-3g",
+                "ntfs-3g-system-compression",
+                "ntfs-3g-libs",
+                "wpa_supplicant",
+                "igt-gpu-tools"
+	        ],
             "KernelCommandLine": {
-                "ExtraCommandLine": "console=ttyS0,115200n8 console=tty0 i915.force_probe=*",
+                "ExtraCommandLine": "udmabuf.list_limit=8192 i915.enable_guc=3 i915.max_vfs=7 intel_iommu=on i915.force_probe=*",
                 "SELinux": "permissive"
             },
             "KernelOptions": {
