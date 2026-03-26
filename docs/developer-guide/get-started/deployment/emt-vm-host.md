@@ -33,17 +33,7 @@ using [libvirt toolkit](https://libvirt.org/) on
 
 ### Supported Intel IoT Platforms
 
-| Supported Intel IoT platform | Detailed Name |
-| :-- | :-- |
-| PTL-H | Panther Lake H |
-| BTL | Bartlett Lake |
-| TWL | Twin Lake |
-| ARL | Arrow Lake |
-| ASL | Amston Lake |
-| MTL | Meteor Lake |
-| RPL-PS | Raptor Lake PS |
-| RPL-P | Raptor Lake P |
-| ADL-N | Alder Lake N |
+Currently, only RPL-P (Raptor Lake P) platforms are supported.
 
 ### Host operating system
 
@@ -64,8 +54,8 @@ system that is used to prepare the guest OS images.
 | Device | Ubuntu 22.04 | Windows 11 IoT Enterprise |
 | --- | --- | --- |
 | Storage | Sharing | Sharing |
-| iGPU * | SR-IOV | virtio-gpu, SR-IOV, GVT-d* |
-| Display* | SR-IOV | SR-IOV or GVT-d* |
+| iGPU * | SR-IOV | virtio-gpu, SR-IOV |
+| Display* | SR-IOV | SR-IOV |
 | Audio | emulation | emulation |
 | USB inputs (mouse/keyboard) | Passthrough or emulation | Passthrough or emulation |
 | LAN | Virtual NAT | Virtual NAT |
@@ -119,15 +109,14 @@ as hypervisor.
 
    1. Download the Ubuntu 22 host image.
 
-      > **Note:** Use the `ubuntu-22.04-desktop-amd64+intel-iot-215-custom.img.bz2`
-      > base OS image provided in [the host resources](#host-operating-system).
+      > **Note:** Use the base OS image provided in [the host resources](#host-operating-system).
 
    2. Flash the drive.
 
       Replace `/dev/nvme0n1` with your drive:
 
       ```sh
-      sudo bmaptool copy --nobmap ubuntu-22.04-desktop-amd64+intel-iot-215-custom.img.bz2 /dev/nvme0n1
+      sudo bmaptool copy --nobmap ubuntu-22.04.img.bz2 /dev/nvme0n1
       ```
 
    3. Reboot into the Ubuntu 22 host.
@@ -214,7 +203,7 @@ For more details, refer to
    Download Windows 11 24H2 Enterprise Evaluation at
    <https://www.microsoft.com/en-us/evalcenter/evaluate-windows-11-enterprise>.
 
-2. Create a no-prompt Windows installation ISO image.
+2. (Optional) Create a no-prompt Windows installation ISO image.
 
    For more details, refer to
    [the Windows VM installation guide](https://github.com/intel/kvm-multios/blob/v0.19.0/documentation/windows_vm.md).
@@ -274,12 +263,14 @@ For more details, refer to
 
 6. Create the guest Windows 11 VM image.
 
-   Use the sc
+   Use the command below to start automated OS image creation.
+
    ```bash
    ./guest_setup/ubuntu/win11_setup.sh -p client --force --viewer
    ```
 
-   The guest OS image will be located at: `/var/lib/libvirt/images/window11.qcow2`.
+   Once the process has finished, the VM image will be in the shutdown state.
+   It will be located at: `/var/lib/libvirt/images/window11.qcow2`.
    The image must be copied to an appropriate host machine with SR-IOV support.
 
 > **Note:**
