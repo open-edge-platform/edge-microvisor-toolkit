@@ -1,0 +1,66 @@
+image:
+  name: emt3-x86_64-rt-kernel-docker
+  version: "1.0.0"
+
+target:
+  os: edge-microvisor-toolkit
+  dist: emt3
+  arch: x86_64
+  imageType: iso
+
+disk:
+  name: RT-Kernel-Docker
+  partitionTableType: gpt # Partition table type, valid value: [gpt, mbr]
+  partitions: # Required for raw, optional for ISO, not needed for rootfs.
+    - id: boot
+      type: esp
+      flags:
+        - esp
+        - boot
+      start: 1MiB
+      end: 9MiB
+      fsType: fat32
+      mountPoint: /boot/efi
+
+    - id: rootfs
+      type: linux-root-amd64
+      start: 9MiB
+      end: "0"  # 0 means use the rest of the disk space
+      fsType: ext4
+      mountPoint: /
+
+systemConfig:
+  name: RT-Kernel-Docker
+  description: RT kernel configuration with Docker
+
+  packages:
+    # developer packages
+    - alsa-sof-firmware
+
+    # intel gpu base
+    - kernel-rt-drivers-gpu
+    - intel-npu-driver
+
+    # kernel drivers
+    - kernel-rt-drivers-sound
+
+    # intel rtd
+    - intel-cmt-cat
+    - intel-cmt-cat-devel
+
+    # docker
+    - moby-engine
+    - docker-cli
+    - docker-compose
+
+  kernel:
+    name: kernel-rt
+    cmdline: "console=ttyS0,115200n8 console=tty0 i915.force_probe=*"
+    packages:
+      - kernel-rt
+
+  additionalFiles:
+    - local: additionalconfigs/configure-systemd-networkd-client-identifier.sh
+      final: /tmp/configure-systemd-networkd-client-identifier.sh
+    - local: additionalconfigs/configure-ip4save.sh
+      final: /tmp/configure-ip4save.sh
