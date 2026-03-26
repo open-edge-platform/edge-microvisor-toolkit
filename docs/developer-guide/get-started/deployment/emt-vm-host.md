@@ -1,4 +1,4 @@
-# Create VMs under Edge Microvisor Toolkit Host
+# Create Guest OS VMs for Edge Microvisor Toolkit Host
 
 Edge Microvisor Toolkit supports SR-IOV (Single Root Input/Output Virtualization),
 which allows it to serve as a host OS for virtualization of other operating systems,
@@ -18,13 +18,10 @@ using [libvirt toolkit](https://libvirt.org/) on
   - [Host operating system](#host-operating-system)
   - [Supported guest operating systems](#supported-guest-operating-systems)
   - [Device support in guest VMs](#device-support-in-guest-vms)
-  - [KVM MultiOS portfolio release repository](#kvm-kernel-based-virtual-machine-multios-portfolio-release-repository)
+  - [KVM MultiOS repository](#kvm-multios-repository)
 - [Set up the Ubuntu host](#set-up-the-ubuntu-host)
+  - [Configure BIOS settings](#configure-bios-settings)
   - [Install Ubuntu 22.04](#install-ubuntu-2204)
-  - [Clone the KVM MultiOS repository](#clone-the-kvm-multios-repository)
-  - [Prepare the host](#prepare-the-host)
-    - [Prerequisites](#prerequisites)
-    - [Setup the KVM Multios Host](#setup-the-kvm-multios-host)
 - [Create guest OS images](#create-guest-os-images)
   - [Create Ubuntu VM image](#create-ubuntu-vm-image)
   - [Create Windows 11 Enterprise VM image](#create-windows-11-enterprise-vm-image)
@@ -37,10 +34,8 @@ Currently, only RPL-P (Raptor Lake P) platforms are supported.
 
 ### Host operating system
 
-**Ubuntu 22.04 LTS 2024 Engineering Release Candidate** - a host operating
-system that is used to prepare the guest OS images.
-
-> **Note:** Contact your Intel representative for more details on this resource.
+[Ubuntu 22.04 (Jammy Jellyfish) Intel IOT](https://cdimage.ubuntu.com/releases/jammy/release/inteliot/ubuntu-22.04-desktop-amd64+intel-iot.iso) -
+the operating system used as a host where [guest VM images are created](#create-guest-os-images).
 
 ### Supported guest operating systems
 
@@ -77,7 +72,7 @@ system that is used to prepare the guest OS images.
 >
 > \*\* Not Validated in this release.
 
-### KVM (Kernel-based Virtual Machine) MultiOS portfolio release repository
+### KVM MultiOS repository
 
 The [kvm-multios](https://github.com/intel/kvm-multios) repository contains
 configuration and setup scripts required for preparing kernel-based virtual
@@ -92,85 +87,88 @@ The Ubuntu host operating system is used to prepare the guest OS images
 that will be used in virtual machines on Edge Microvisor Toolkit serving
 as hypervisor.
 
+### Configure BIOS settings
+
+Make sure the following settings are configured:
+
+| Name | Menu | Setting |
+| --- | --- | --- |
+| Intel Virtualization Technology (VMX) | Intel Advanced Menu -> CPU Configuration -> VMX | Enable |
+| Intel VT for Directed I/O (VT-d) | Intel Advanced Menu -> System Agent (SA) Configuration -> VT-d | Enable |
+
 ### Install Ubuntu 22.04
 
-1. Configure BIOS settings.
+1. Download [Ubuntu 22.04 (Jammy Jellyfish) Intel IOT ISO](https://cdimage.ubuntu.com/releases/jammy/release/inteliot/ubuntu-22.04-desktop-amd64+intel-iot.iso)
 
-   To check IFWI/ BIOS Version, refer to the [host operating system](#host-operating-system).
-   Make sure the following settings are configured:
+2. Install the OS:
 
-   | Name | Menu | Setting |
-   | --- | --- | --- |
-   | Intel Virtualization Technology (VMX) | Intel Advanced Menu -> CPU Configuration -> VMX | Enable |
-   | Intel VT for Directed I/O (VT-d) | Intel Advanced Menu -> System Agent (SA) Configuration -> VT-d | Enable |
+   ```bash
+   # Copy the iso file into a USB drive
+   sudo dd if=./ubuntu-22.04-desktop-amd64+intel-iot.iso of=/dev/sdX bs=4M && sync
 
+   # Check the boot order number X of the USB drive
+   sudo efibootmgr
 
-2. Flash the host device.
+   # Select the USB drive as the next boot device
+   sudo efibootmgr -n X
 
-   1. Download the Ubuntu 22 host image.
-
-      > **Note:** Use the base OS image provided in [the host resources](#host-operating-system).
-
-   2. Flash the drive.
-
-      Replace `/dev/nvme0n1` with your drive:
-
-      ```sh
-      sudo bmaptool copy --nobmap ubuntu-22.04.img.bz2 /dev/nvme0n1
-      ```
-
-   3. Reboot into the Ubuntu 22 host.
-
-3. Download and run the `installer.sh` script.
-
-   > **Note:** The script is provided in [the host resources](#host-operating-system).
-
-   ```sh
-   chmod +x installer.sh
-   sudo ./installer.sh RPL
+   # Reboot into the drive to start the installation
    sudo reboot
    ```
 
-### Clone the KVM MultiOS repository
+> **Note:** If operating behind a corporate firewall, setup proxy settings as required.
 
-Check the [tag version](#kvm-kernel-based-virtual-machine-multios-portfolio-release-repository)
-and clone the [kvm-multios](https://github.com/intel/kvm-multios) repository.
+3. In the **Software & Updates** GUI, make sure to download from **Main server**, as shown below:
 
-```sh
-cd ~
-git clone -b <tag> https://github.com/intel/kvm-multios.git
-```
+   ![Software and Updates](../../assets/ubuntu-softwareupdates.png)
 
-### Prepare the host
+4. Upgrade the Ubuntu host software to the latest version:
 
-#### Prerequisites
+   ```bash
+   # Upgrade Ubuntu software
+   # Generic host kernel installed from Ubuntu may be incompatible with board
+   # Therefore after upgrade, continue to install host kernel and firmware before rebooting
+   sudo apt -y update
+   sudo apt -y upgrade
+   ```
 
-Make sure the host platform meets the following requirements:
+5. Ensure the host platform meets the following requirements:
 
-- it has sufficiently large disk allocation for `/var` during installation of OS,
+   - it has sufficiently large disk allocation for `/var` during installation of OS,
 
-  > **Note:** The default storage path for libvirt for all guest domain disk
-  > images and other usage is at `/var`.
-- it has a physical display monitor connected prior to the installation,
-- it is setup as per platform release BSP guide and booted accordingly,
-- it has a network connection and Internet access
-- proxy variables (http_proxy, https_proxy, no_proxy) are set appropriately in
-  `/etc/environment` if required for the network access,
-- it is updated by running `sudo apt update`,
-- it has a current date/ time set up,
-- a user already logged into the UI home screen prior to any operations,
-  or a user account set to auto-login, as required for VM support with Intel
-  GPU SR-IOV.
+     > **Note:** The default storage path for libvirt for all guest domain disk
+     > images and other usage is at `/var`.
+   - it has a physical display monitor connected prior to the installation,
+   - it is setup as per platform release BSP guide and booted accordingly,
+   - it has a network connection and Internet access
+   - proxy variables (http_proxy, https_proxy, no_proxy) are set appropriately in
+     `/etc/environment` if required for the network access,
+   - it is updated by running `sudo apt update`,
+   - it has a current date/ time set up,
+   - a user already logged into the UI home screen prior to any operations,
+     or a user account set to auto-login, as required for VM support with Intel
+     GPU SR-IOV.
 
-For more details, refer to
-[the prerequisites](https://github.com/intel/kvm-multios/blob/v0.19.0/documentation/setup_sriov.md#prerequisites).
+   For more details, refer to
+   [the prerequisites](https://github.com/intel/kvm-multios/blob/v0.19.0/documentation/setup_sriov.md#prerequisites).
 
-#### Setup the KVM MultiOS Host
 
-```bash
-cd kvm-multios
-./host_setup/ubuntu/setup_host.sh -u GUI
-```
+6. Clone the KVM MultiOS repository:
+
+   Check the [tag version](#kvm-multios-repository)
+   and clone the [kvm-multios](https://github.com/intel/kvm-multios) repository.
+
+   ```sh
+   cd ~
+   git clone -b <tag> https://github.com/intel/kvm-multios.git
+   ```
+
+6. Run the host setup script:
+
+   ```bash
+   cd kvm-multios
+   ./host_setup/ubuntu/setup_host.sh -u GUI
+   ```
 
 ## Create Guest OS images
 
@@ -273,8 +271,14 @@ For more details, refer to
    It will be located at: `/var/lib/libvirt/images/window11.qcow2`.
    The image must be copied to an appropriate host machine with SR-IOV support.
 
+
+7. Use the virtual machines on [Edge Microvisor Toolkit host](../emt-installation-howto.md).
+
+
 > **Note:**
 > If you are installing with a standard ISO file, you will be prompted to
 > "Press Any Key To Boot From..." during the initial boot.
 > If you miss this prompt, press the ESC key until you reach the BIOS setup
 > screen, then select “reset” to start over again.
+
+
