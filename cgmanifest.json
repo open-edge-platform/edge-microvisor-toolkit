@@ -7511,8 +7511,8 @@
         "type": "other",
         "other": {
           "name": "intel-gmmlib",
-          "version": "22.8.2",
-          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.8.2.tar.gz"
+          "version": "22.9.0",
+          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.9.0.tar.gz"
         }
       }
     },
