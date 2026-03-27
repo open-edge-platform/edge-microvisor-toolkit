@@ -7761,8 +7761,8 @@
         "type": "other",
         "other": {
           "name": "iproute",
-          "version": "6.7.0",
-          "downloadUrl": "https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-6.7.0.tar.xz"
+          "version": "6.14.0",
+          "downloadUrl": "https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-6.14.0.tar.xz"
         }
       }
     },
@@ -29206,8 +29206,8 @@
         "type": "other",
         "other": {
           "name": "strace",
-          "version": "6.17",
-          "downloadUrl": "https://strace.io/files/6.17/strace-6.17.tar.xz"
+          "version": "6.18",
+          "downloadUrl": "https://strace.io/files/6.18/strace-6.18.tar.xz"
         }
       }
     },
