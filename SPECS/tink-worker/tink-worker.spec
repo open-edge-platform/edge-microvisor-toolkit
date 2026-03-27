@@ -13,6 +13,7 @@ Source1:        tink-worker.service
 Source2:        tink-worker-v%{version}-vendor.tar.gz
 
 %{?systemd_requires}
+BuildRequires:  golang < 1.26.0
 BuildRequires:  golang >= 1.25.7
 BuildRequires:  systemd-rpm-macros
 
@@ -48,6 +49,7 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/tink-worker.service
 %changelog
 * Tue Mar 24 2026 Andy <andy.peng@intel.com> - 1.2.2-1
 - Upgrade tink-worker version to 1.2.2 for bug fix
+- limit to build with golang version < 1.26.0
 
 * Tue Feb 24 2026 Andy <andy.peng@intel.com> - 1.2.0-2
 - Upgrade golang version to use 1.25.7

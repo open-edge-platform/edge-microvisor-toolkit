@@ -446,7 +446,7 @@ Obsoletes: sgabios-bin <= 1:0.20180715git-10.fc38
 Summary: QEMU is a FAST! processor emulator
 Name: qemu
 Version: 9.1.0
-Release: 7%{?dist}
+Release: 8%{?dist}
 License: Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND FSFAP AND GPL-1.0-or-later AND GPL-2.0-only AND GPL-2.0-or-later AND GPL-2.0-or-later WITH GCC-exception-2.0 AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND MIT AND LicenseRef-Fedora-Public-Domain AND CC-BY-3.0
 URL: http://www.qemu.org/
 
@@ -735,7 +735,7 @@ BuildRequires: python3-tomli
 %endif
 
 %if %{user_static}
-BuildRequires: glibc-static >= 2.38-12%{?dist}
+BuildRequires: glibc-static >= 2.38-18%{?dist}
 BuildRequires: glib2-static
 BuildRequires: zlib-static
 # -latomic added by GLib 2.81.0, 2024-06-28
@@ -3542,6 +3542,9 @@ useradd -r -u 107 -g qemu -G kvm -d / -s /sbin/nologin \
 
 
 %changelog
+* Wed Mar 25 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 9.1.0-8
+- Bump to rebuild with updated glibc
+
 * Mon Mar 17 2026 Dongwon Kim <dongwon.kim@intel.com> - 9.1.0-7
 - Mouse regrab fix
 - Null check in libusb-udev-product_desc

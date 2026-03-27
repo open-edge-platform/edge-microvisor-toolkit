@@ -82,6 +82,7 @@ ccache
 cdrkit
 ceph
 cereal
+cert-manager
 check
 check-restart
 checkpolicy
@@ -97,6 +98,8 @@ cloud-hypervisor
 cloud-utils-growpart
 cmake
 cmocka
+cni
+cni-plugins
 collectd
 colm
 color-filesystem
@@ -105,7 +108,7 @@ compiler-rt
 conda
 conmon
 conntrack-tools
-coredns
+containerized-data-importer
 coreutils
 cpio
 cpprest
@@ -151,6 +154,7 @@ docbook-dtds
 docbook-style-xsl
 docbook5-schemas
 docker-buildx
+docker-compose
 dos2unix
 doxygen
 dpdk
@@ -162,6 +166,7 @@ dwz
 e2fsprogs
 ebtables
 ed
+edk2
 efivar
 egl-wayland
 eglexternalplatform
@@ -174,7 +179,6 @@ erofs-utils
 espeak-ng
 espeakup
 execstack
-expat
 expect
 expected
 extra-cmake-modules
@@ -219,10 +223,12 @@ geos
 gettext
 gflags
 gfs2-utils
+gh
 giflib
 git
 glib
 glib-networking
+glibc
 glibmm
 glslang
 glusterfs
@@ -330,13 +336,13 @@ kata-packages-uvm
 kbd
 kde-settings
 keepalived
+keda
 keras
 kernel-64k
 kernel-hwe
 kernel-hwe-headers
 kernel-srpm-macros
 kernel-uvm
-kexec-tools
 keyutils
 kf
 kf-kconfig
@@ -515,10 +521,10 @@ liburing
 libusb
 libuser
 libuv
+libvma
 libvirt-dbus
 libvirt-glib
 libvirt-java
-libvirt-python
 libvoikko
 libwacom
 libwebp
@@ -629,6 +635,7 @@ nlohmann-json
 nlopt
 nmap
 nodejs
+nodejs24
 npth
 nspr
 nss
@@ -711,6 +718,7 @@ orangefs
 ostree
 p11-kit
 p7zip
+packer
 pam
 pam_krb5
 pam_wrapper
@@ -1233,6 +1241,7 @@ rubygem-webhdfs
 rubygem-webrick
 rubygem-yajl-ruby
 rubygem-zip-zip
+runc
 rust
 sanlock
 scons
@@ -1246,6 +1255,7 @@ sg3_utils
 sgabios
 sgml-common
 sgx-backwards-compatibility
+skopeo
 shared-mime-info
 sharutils
 shim
@@ -1271,7 +1281,6 @@ squid
 sscg
 sshpass
 strongswan
-stunnel
 subunit
 subversion
 sudo
@@ -1309,6 +1318,7 @@ trace-cmd
 tracelogging
 traceroute
 tree
+trident
 ttembed
 tuna
 tuned

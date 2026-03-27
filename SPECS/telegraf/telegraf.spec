@@ -1,7 +1,7 @@
 Summary:        agent for collecting, processing, aggregating, and writing metrics.
 Name:           telegraf
 Version:        1.31.0
-Release:        24%{?dist}
+Release:        26%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -24,8 +24,17 @@ Patch8:         CVE-2025-30204.patch
 Patch9:         CVE-2025-27144.patch
 Patch10:        CVE-2025-30215.patch
 Patch11:        CVE-2025-22872.patch
+Patch12:        CVE-2025-47913.patch
+Patch13:        CVE-2025-10543.patch
+Patch14:        CVE-2026-27571.patch
+Patch15:        CVE-2025-11065.patch
+Patch16:        CVE-2025-47911.patch
+Patch17:        CVE-2025-58190.patch
+Patch18:        CVE-2026-2303.patch
+Patch19:        CVE-2026-26014.patch
 
-BuildRequires:  golang
+
+BuildRequires:  golang < 1.26.0
 BuildRequires:  systemd-devel
 Requires:       logrotate
 Requires:       procps-ng
@@ -128,6 +137,18 @@ fi
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-26
+- limit to build with golang < 1.26.0
+- merge from Azure Linux 3.0.20260304-3.0
+- Patch for CVE-2025-10543
+- Patch for CVE-2026-26014, CVE-2026-2303, CVE-2025-58190, CVE-2025-47911
+- Patch for CVE-2025-11065
+- Patch for CVE-2026-27571
+
+* Tue Jan 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-25
+- merge from Azure Linux 3.0.20251206-3.0
+- Patch for CVE-2025-47913
+
 * Thu Nov 05 2025 Kishan Mochi <kishan.mochi@intel.com> - 1.31.0-24
 - remove inbm selinux
 

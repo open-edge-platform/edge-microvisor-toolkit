@@ -4,7 +4,7 @@
 Summary:        dracut to create initramfs
 Name:           dracut
 Version:        102
-Release:        15%{?dist}
+Release:        16%{?dist}
 # The entire source code is GPLv2+
 # except install/* which is LGPLv2+
 License:        GPLv2+ AND LGPLv2+
@@ -50,7 +50,6 @@ Patch:          allow-liveos-overlay-no-user-confirmation-prompt.patch
 # azl-liveos-artifacts-download.sh) - which are included as separate sources in
 # this package.
 Patch:          add-livenet-download-service.patch
-Patch:          0006-dracut.sh-validate-instmods-calls.patch
 Patch:          0011-Remove-reference-to-kernel-module-zlib-in-fips-module.patch
 Patch:          0012-fix-dracut-functions-avoid-awk-in-get_maj_min.patch
 Patch:          0013-revert-fix-crypt-unlock-encrypted-devices-by-default.patch
@@ -345,6 +344,10 @@ ln -srv %{buildroot}%{_bindir}/%{name} %{buildroot}%{_sbindir}/%{name}
 %dir %{_sharedstatedir}/%{name}/overlay
 
 %changelog
+* Mon Mar 16 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 102-16
+- merge from Azure Linux 3.0.20260304-3.0 
+- Remove old dracut-validate-instmods-calls patch to support both 6.6 and 6.12 versions.
+
 * Fri May 30 2025 Lishan Liu <lishan.liu@intel.com> - 102-15
 - Update tmpfs mount command in tmpfsroot-mount.sh
 
