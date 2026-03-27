@@ -29116,8 +29116,8 @@
         "type": "other",
         "other": {
           "name": "strace",
-          "version": "6.17",
-          "downloadUrl": "https://strace.io/files/6.17/strace-6.17.tar.xz"
+          "version": "6.18",
+          "downloadUrl": "https://strace.io/files/6.18/strace-6.18.tar.xz"
         }
       }
     },
