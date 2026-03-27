@@ -1,13 +1,13 @@
-Summary:        Basic and advanced IPV4-based networking
+Summary:        Advanced IP routing and network device configuration tools
 Name:           iproute
-Version:        6.7.0
-Release:        3%{?dist}
+Version:        6.14.0
+Release:        1%{?dist}
+URL:            https://www.kernel.org/pub/linux/utils/net/%{name}2/
+Source0:        https://www.kernel.org/pub/linux/utils/net/%{name}2/%{name}2-%{version}.tar.xz
 License:        GPLv2
-URL:            https://www.kernel.org/pub/linux/utils/net/iproute2
 Group:          Applications/System
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
-Source0:        https://www.kernel.org/pub/linux/utils/net/iproute2/%{name}2-%{version}.tar.xz
 
 BuildRequires:      bison
 BuildRequires:      elfutils-libelf-devel
@@ -20,32 +20,31 @@ BuildRequires:      libmnl-devel
 BuildRequires:      libselinux-devel
 BuildRequires:      make
 BuildRequires:      pkgconfig
+%if ! 0%{?_module_build}
+%if 0%{?fedora}
+BuildRequires:      linux-atm-libs-devel
+%endif
+%endif
 Requires:           libbpf
 Requires:           psmisc
 Provides:           /sbin/ip
-
-# Add TSN patches
-Patch0:             0001-Add-moo-feature.patch
-Patch1:             0001-taprio-Add-support-for-preempt-parameter-v2.patch
-Patch2:             0002-mqprio-Add-support-for-configuring-frame-preemption-v2.patch
-Patch3:             0003-taprio-Add-support-for-the-SetAndHold-and-SetAndRele.patch
 
 %description
 The iproute package contains networking utilities (ip and rtmon, for example)
 which are designed to use the advanced networking capabilities of the Linux
 kernel.
- 
+
 %package tc
 Summary:            Linux Traffic Control utility
 License:            GPL-2.0-or-later
 Requires:           %{name}%{?_isa} = %{version}-%{release}
 Provides:           /sbin/tc
- 
+
 %description tc
 The Traffic Control utility manages queueing disciplines, their classes and
 attached filters and actions. It is the standard tool to configure QoS in
 Linux.
- 
+
 %if ! 0%{?_module_build}
 %package doc
 Summary:            Documentation for iproute2 utilities with examples
@@ -54,23 +53,23 @@ Group:              Applications/System
 %endif
 License:            GPL-2.0-or-later
 Requires:           %{name} = %{version}-%{release}
- 
+
 %description doc
 The iproute documentation contains howtos and examples of settings.
 %endif
- 
+
 %package devel
 Summary:            iproute development files
 License:            GPL-2.0-or-later
 Requires:           %{name} = %{version}-%{release}
 Provides:           iproute-static = %{version}-%{release}
- 
+
 %description devel
 The libnetlink static library.
- 
+
 %prep
 %autosetup -p1 -n %{name}2-%{version}
- 
+
 %build
 %configure --libdir %{_libdir}
 echo -e "\nPREFIX=%{_prefix}\nCONFDIR:=%{_sysconfdir}/iproute2\nSBINDIR=%{_sbindir}" >> config.mk
@@ -78,20 +77,21 @@ echo -e "\nPREFIX=%{_prefix}\nCONFDIR:=%{_sysconfdir}/iproute2\nSBINDIR=%{_sbind
 
 %install
 %make_install
+
 echo '.so man8/tc-cbq.8' > %{buildroot}%{_mandir}/man8/cbq.8
- 
+
 # libnetlink
 install -D -m644 include/libnetlink.h %{buildroot}%{_includedir}/libnetlink.h
 install -D -m644 lib/libnetlink.a %{buildroot}%{_libdir}/libnetlink.a
- 
+
 # drop these files, iproute-doc package extracts files directly from _builddir
 rm -rf '%{buildroot}%{_docdir}'
- 
+
 # append deprecated values to rt_dsfield for compatibility reasons
-%if 0%{?rhel} && ! 0%{?eln}
+%if 0%{?rhel}
 # cat %{SOURCE1} >>%{buildroot}%{_datadir}/iproute2/rt_dsfield
 %endif
- 
+
 %files
 %dir %{_datadir}/iproute2
 %license COPYING
@@ -101,12 +101,13 @@ rm -rf '%{buildroot}%{_docdir}'
 %{_mandir}/man8/*
 %exclude %{_mandir}/man8/tc*
 %exclude %{_mandir}/man8/cbq*
+%exclude %{_mandir}/man8/arpd*
 %attr(644,root,root) %config(noreplace) %{_datadir}/iproute2/*
 %{_sbindir}/*
 %exclude %{_sbindir}/tc
 %exclude %{_sbindir}/routel
 %{_datadir}/bash-completion/completions/devlink
- 
+
 %files tc
 %license COPYING
 %{_mandir}/man7/tc-*
@@ -116,21 +117,24 @@ rm -rf '%{buildroot}%{_docdir}'
 %{_libdir}/tc/*
 %{_sbindir}/tc
 %{_datadir}/bash-completion/completions/tc
- 
+
 %if ! 0%{?_module_build}
 %files doc
 %license COPYING
 %doc examples
 %endif
- 
+
 %files devel
 %license COPYING
 %{_mandir}/man3/*
 %{_libdir}/libnetlink.a
 %{_includedir}/libnetlink.h
 %{_includedir}/iproute2/bpf_elf.h
- 
+
 %changelog
+* Fri Mar 6 2026 Andy <andy.peng@intel.com> - 6.14.0-1
+- Upgrade to version 6.14.0
+
 * Wed Jun 04 2025 Aaron Chan <aaron.chun.yew.chan@intel.com> - 6.7.0-3
 - Add TSN patches/support
 
