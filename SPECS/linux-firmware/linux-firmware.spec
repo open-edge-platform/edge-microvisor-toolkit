@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
-Version:        20260110
-Release:        2%{?dist}
+Version:        20260309
+Release:        1%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -187,6 +187,9 @@ dracut --force
 %{_firmwarepath}/intel/qat/qat_c62x_mmp.bin
 
 %changelog
+* Fri Mar 27 2026 Andy <andy.peng@intel.com> - 20260309-1
+- Upgrade firmware to 20260309.
+
 * Thu Feb 5 2026 Andy <andy.peng@intel.com> - 20260110-2
 - modify target value of symlink to point ice package.
 
