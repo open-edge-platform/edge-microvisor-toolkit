@@ -34,5 +34,13 @@ jobs:
       - name: Get Python dependencies
         run: python3 -m pip install -r toolkit/scripts/requirements.txt
 
+      - name: Copy Azure Linux rpm
+        run: |
+          echo ##########
+          echo "Copy Azure Linux rpm"
+          echo ##########
+          toolkit/scripts/toolchain/toolchain_update_git_submodule.sh
+        shell: bash
+
       - name: Verify .spec files
         run: python3 toolkit/scripts/check_static_glibc.py SPECS/**/*.spec SPECS-EXTENDED/**/*.spec SPECS-SIGNED/**/*.spec

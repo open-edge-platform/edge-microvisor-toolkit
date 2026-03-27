@@ -3,7 +3,7 @@ Name:           prebuilt-ca-certificates
 # When updating, "Epoch, "Version", AND "Release" tags must be updated in the "ca-certificates" package as well.
 Epoch:          1
 Version:        %{emt}.0.0
-Release:        11%{?dist}
+Release:        14%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -49,6 +49,10 @@ find %{buildroot} -name README -delete
 %{_sysconfdir}/pki/java/cacerts
 
 %changelog
+* Mon Jan 5 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1:3.0.0-14
+- merge from Azure Linux 3.0.20251206-3.0
+- Making 'Release' match with 'ca-certificates'
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1:3.0.0-11
 - merge from Azure Linux 3.0.20250910-3.0
 - Making 'Release' match with 'ca-certificates'

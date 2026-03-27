@@ -4,7 +4,7 @@
 Summary:        A collection of utilities and DSOs to handle compiled objects
 Name:           elfutils
 Version:        0.189
-Release:        7%{?dist}
+Release:        8%{?dist}
 License:        GPLv3+ AND (GPLv2+ OR LGPLv3+)
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -17,6 +17,7 @@ Patch0:         CVE-2025-1372.patch
 Patch1:         CVE-2025-1376.patch
 Patch2:         CVE-2025-1377.patch
 Patch3:         CVE-2025-1352.patch
+Patch4:         CVE-2024-25260.patch
 
 BuildRequires:  bison >= 1.875
 BuildRequires:  bzip2-devel
@@ -283,6 +284,10 @@ fi
 %defattr(-,root,root)
 
 %changelog
+* Mon Jan 5 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 0.189-8
+- merge from Azure Linux 3.0.20251206-3.0
+- Patch for CVE-2024-25260
+
 * Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 0.189-7
 - merge from Azure Linux 3.0.20250910-3.0.
 - add patch for CVE-2025-1352
