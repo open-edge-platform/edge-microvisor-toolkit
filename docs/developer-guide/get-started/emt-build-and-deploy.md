@@ -177,7 +177,7 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
 
    ```bash
    # Rebuild packages/RPMs local toolchain
-   sudo make build-packages REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n
+   sudo make build-packages REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n ALLOW_TOOLCHAIN_REBUILDS=y
    ```
 
 8. Build the toolkit image:
