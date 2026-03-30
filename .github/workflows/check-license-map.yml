@@ -49,6 +49,4 @@ jobs:
           python3 ./toolkit/scripts/license_map.py \
           ./LICENSES-AND-NOTICES/SPECS/data/licenses.json \
           ./LICENSES-AND-NOTICES/SPECS/LICENSES-MAP.md \
-          ./SPECS \
-          ./SPECS-EXTENDED \
-          ./SPECS-SIGNED
+          ./SPECS
