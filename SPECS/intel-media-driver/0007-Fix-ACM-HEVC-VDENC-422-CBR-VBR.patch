@@ -1,0 +1,27 @@
+From ad81035ce3581a2b768437f0732a4bd91c73170b Mon Sep 17 00:00:00 2001
+From: "Hoe, Sheng Yang" <sheng.yang.hoe@intel.com>
+Date: Wed, 18 Jun 2025 21:36:34 +0800
+Subject: [PATCH 08/12] Fix ACM HEVC VDENC 422 CBR/VBR
+
+Upstream-Status: Submitted [https://github.com/intel/media-driver/pull/1951]
+
+Signed-off-by: Hoe, Sheng Yang <sheng.yang.hoe@intel.com>
+---
+ media_driver/linux/common/ddi/media_libva_caps.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/media_driver/linux/common/ddi/media_libva_caps.cpp b/media_driver/linux/common/ddi/media_libva_caps.cpp
+index 41a51861b..1baa818d2 100755
+--- a/media_driver/linux/common/ddi/media_libva_caps.cpp
++++ b/media_driver/linux/common/ddi/media_libva_caps.cpp
+@@ -2093,6 +2093,7 @@ VAStatus MediaLibvaCaps::CreateEncConfig(
+         {
+             case VAProfileHEVCMain:
+             case VAProfileHEVCMain10:
++            case VAProfileHEVCMain422_10:
+             case VAProfileHEVCMain444:
+             case VAProfileHEVCMain444_10:
+                 rc_mb_flag = true;
+-- 
+2.43.0
+

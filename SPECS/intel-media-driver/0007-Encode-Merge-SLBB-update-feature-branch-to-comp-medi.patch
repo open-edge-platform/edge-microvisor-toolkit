@@ -1,0 +1,138 @@
+From e7aacdadd63e98a06b97dda386bd83472ee301b1 Mon Sep 17 00:00:00 2001
+From: bai-isaac <isaac.bai@intel.com>
+Date: Thu, 22 Jan 2026 21:17:00 +0800
+Subject: [PATCH] [Encode] Merge SLBB update feature branch to comp/media
+
+* [Encode] Merge SLBB update feature branch to comp/media
+Merge SLBB update feature branch to comp/media.
+Init for SLBB Update pipeline.
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20301
+Upstream-status: Backport
+Link: https://github.com/intel/media-driver/commit/e7aacdadd63e98a06b97dda386bd83472ee301b1
+---
+ .../common/codec/shared/codec_def_common_encode.h    |  1 +
+ .../codec/hal/enc/av1/pipeline/encode_av1_pipeline.h |  1 +
+ .../hal/enc/avc/pipeline/encode_avc_vdenc_pipeline.h |  3 ++-
+ .../hal/enc/hevc/pipeline/encode_hevc_pipeline.h     |  3 ++-
+ .../common/codec/hal/enc/shared/encode_utils.h       |  4 +++-
+ .../hal/enc/shared/pipeline/encode_user_setting.cpp  | 12 ++++++++++++
+ .../common/codec/hal/shared/huc_kernel_source.h      |  5 ++++-
+ 7 files changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/media_common/agnostic/common/codec/shared/codec_def_common_encode.h b/media_common/agnostic/common/codec/shared/codec_def_common_encode.h
+index dfe2fbe27..4642e3917 100644
+--- a/media_common/agnostic/common/codec/shared/codec_def_common_encode.h
++++ b/media_common/agnostic/common/codec/shared/codec_def_common_encode.h
+@@ -454,6 +454,7 @@ enum
+     CODECHAL_ENCODE_PERFTAG_CALL_VP9_HPU_SECOND_PASS,
+     CODECHAL_ENCODE_PERFTAG_CALL_RSVD,
+     CODECHAL_ENCODE_PERFTAG_CALL_SALIENCY_KERNEL,
++    CODECHAL_ENCODE_PERFTAG_CALL_SLBB_UPDATE,
+ };
+ 
+ typedef enum _CODECHAL_ENCODE_FUNCTION_ID
+diff --git a/media_softlet/agnostic/common/codec/hal/enc/av1/pipeline/encode_av1_pipeline.h b/media_softlet/agnostic/common/codec/hal/enc/av1/pipeline/encode_av1_pipeline.h
+index d75e767ab..4c47787e4 100644
+--- a/media_softlet/agnostic/common/codec/hal/enc/av1/pipeline/encode_av1_pipeline.h
++++ b/media_softlet/agnostic/common/codec/hal/enc/av1/pipeline/encode_av1_pipeline.h
+@@ -58,6 +58,7 @@ public:
+         Av1BackAnnotation,
+         Av1Superres,
+         EncodeCheckHucLoad,
++        HucSLBBUpdate,
+     };
+ 
+ protected:
+diff --git a/media_softlet/agnostic/common/codec/hal/enc/avc/pipeline/encode_avc_vdenc_pipeline.h b/media_softlet/agnostic/common/codec/hal/enc/avc/pipeline/encode_avc_vdenc_pipeline.h
+index dff575927..74cc0ec5f 100644
+--- a/media_softlet/agnostic/common/codec/hal/enc/avc/pipeline/encode_avc_vdenc_pipeline.h
++++ b/media_softlet/agnostic/common/codec/hal/enc/avc/pipeline/encode_avc_vdenc_pipeline.h
+@@ -58,7 +58,8 @@ public:
+     {
+         HucBrcInit = CONSTRUCTPACKETID(PACKET_COMPONENT_ENCODE, PACKET_SUBCOMPONENT_AVC, 0),
+         HucBrcUpdate,
+-        VdencPacket
++        VdencPacket,
++        HucSLBBUpdate
+     };
+ 
+ protected:
+diff --git a/media_softlet/agnostic/common/codec/hal/enc/hevc/pipeline/encode_hevc_pipeline.h b/media_softlet/agnostic/common/codec/hal/enc/hevc/pipeline/encode_hevc_pipeline.h
+index 240022b77..b737582f2 100644
+--- a/media_softlet/agnostic/common/codec/hal/enc/hevc/pipeline/encode_hevc_pipeline.h
++++ b/media_softlet/agnostic/common/codec/hal/enc/hevc/pipeline/encode_hevc_pipeline.h
+@@ -62,7 +62,8 @@ public:
+         HucLaUpdate,
+         hevcVdencPacket422,
+         EncodeCheckHucLoad,
+-        hevcSaliencyPacket
++        hevcSaliencyPacket,
++        HucSLBBUpdate
+ #if ((_DEBUG || _RELEASE_INTERNAL) && _MEDIA_RESERVED)
+         ,
+         hevcVdencMvdumpPacket
+diff --git a/media_softlet/agnostic/common/codec/hal/enc/shared/encode_utils.h b/media_softlet/agnostic/common/codec/hal/enc/shared/encode_utils.h
+index a165322f7..b886aa694 100644
+--- a/media_softlet/agnostic/common/codec/hal/enc/shared/encode_utils.h
++++ b/media_softlet/agnostic/common/codec/hal/enc/shared/encode_utils.h
+@@ -26,6 +26,7 @@
+ #include "mos_utilities.h"
+ 
+ #define _SW_BRC             _MEDIA_RESERVED && (_DEBUG || _RELEASE_INTERNAL)
++#define _SW_HUC             _MEDIA_RESERVED && (_DEBUG || _RELEASE_INTERNAL)
+ #define _KERNEL_RESERVED    _MEDIA_RESERVED && ENABLE_KERNELS
+ 
+ enum HuCFunction
+@@ -38,7 +39,8 @@ enum HuCFunction
+     LA_RESET,
+     LA_UPDATE,
+     PAK_INTEGRATE,
+-    HPU_VP9
++    HPU_VP9,
++    SLBB_UPDATE
+ };
+ 
+ //------------------------------------------------------------------------------
+diff --git a/media_softlet/agnostic/common/codec/hal/enc/shared/pipeline/encode_user_setting.cpp b/media_softlet/agnostic/common/codec/hal/enc/shared/pipeline/encode_user_setting.cpp
+index 744dc62a5..3bdf69c5e 100644
+--- a/media_softlet/agnostic/common/codec/hal/enc/shared/pipeline/encode_user_setting.cpp
++++ b/media_softlet/agnostic/common/codec/hal/enc/shared/pipeline/encode_user_setting.cpp
+@@ -169,6 +169,18 @@ MOS_STATUS EncodePipeline::InitUserSetting(MediaUserSettingSharedPtr userSetting
+         MediaUserSetting::Group::Sequence,
+         "",
+         false);
++    DeclareUserSettingKeyForDebug(
++        userSettingPtr,
++        "SLBB SW Simulation",
++        MediaUserSetting::Group::Sequence,
++        int32_t(0),
++        false);
++    DeclareUserSettingKeyForDebug(
++        userSettingPtr,
++        "SLBB SW Simulation Modules Path",
++        MediaUserSetting::Group::Sequence,
++        "",
++        false);
+     DeclareUserSettingKey(
+         userSettingPtr,
+         "TCBRC Quality Boost Mode",
+diff --git a/media_softlet/agnostic/common/codec/hal/shared/huc_kernel_source.h b/media_softlet/agnostic/common/codec/hal/shared/huc_kernel_source.h
+index 91c621441..4e7ad6cd3 100644
+--- a/media_softlet/agnostic/common/codec/hal/shared/huc_kernel_source.h
++++ b/media_softlet/agnostic/common/codec/hal/shared/huc_kernel_source.h
+@@ -87,7 +87,10 @@ public:
+         av1BrcUpdateKernelId      = 19,
+         vvcS2lKernelId            = 20,
+         avcPxpBrcInitKernelId     = 21,
+-        avcPxpBrcUpdateKernelId   = 22
++        avcPxpBrcUpdateKernelId   = 22,
++        av1SlbbUpdateKernelId     = 23,  // AV1 SLBB update kernel
++        avcSlbbUpdateKernelId     = 24,  // AVC SLBB update kernel
++        hevcSlbbUpdateKernelId    = 25   // HEVC SLBB update kernel
+     };
+ 
+     //!
+-- 
+2.43.0
+

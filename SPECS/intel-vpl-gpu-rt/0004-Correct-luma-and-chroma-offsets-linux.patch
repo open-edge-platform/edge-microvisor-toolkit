@@ -1,0 +1,62 @@
+From cd4b184ca6f9141c67ae2d066d5e7f6cd50df41c Mon Sep 17 00:00:00 2001
+From: "Cheah, Vincent Beng Keat" <vincent.beng.keat.cheah@intel.com>
+Date: Wed, 27 Aug 2025 13:39:38 +0800
+Subject: [PATCH 4/4] Correct luma and chroma offsets linux
+
+OSV: https://jira.devtools.intel.com/browse/PKT-19569
+Upstream-Status: Inappropriate [IGMDPT-895]
+
+Signed-off-by: Cheah, Vincent Beng Keat vincent.beng.keat.cheah@intel.com>
+---
+ .../codec/h264_dec/src/umc_h264_dec_bitstream_headers.cpp | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/_studio/shared/umc/codec/h264_dec/src/umc_h264_dec_bitstream_headers.cpp b/_studio/shared/umc/codec/h264_dec/src/umc_h264_dec_bitstream_headers.cpp
+index a5f86871..101bf87b 100644
+--- a/_studio/shared/umc/codec/h264_dec/src/umc_h264_dec_bitstream_headers.cpp
++++ b/_studio/shared/umc/codec/h264_dec/src/umc_h264_dec_bitstream_headers.cpp
+@@ -1919,7 +1919,9 @@ Status H264HeadersBitstream::GetPredWeightTable(
+         {
+             pPredWeight_L0[refindex].luma_weight = (int8_t)GetVLCElement(true);
+             pPredWeight_L0[refindex].luma_offset = (int8_t)GetVLCElement(true);
++#if !defined(LINUX)
+             pPredWeight_L0[refindex].luma_offset <<= (sps->bit_depth_luma - 8);
++#endif
+         }
+         else
+         {
+@@ -1940,8 +1942,10 @@ Status H264HeadersBitstream::GetPredWeightTable(
+             pPredWeight_L0[refindex].chroma_weight[1] = (int8_t)GetVLCElement(true);
+             pPredWeight_L0[refindex].chroma_offset[1] = (int8_t)GetVLCElement(true);
+ 
++#if !defined(LINUX)
+             pPredWeight_L0[refindex].chroma_offset[0] <<= (sps->bit_depth_chroma - 8);
+             pPredWeight_L0[refindex].chroma_offset[1] <<= (sps->bit_depth_chroma - 8);
++#endif
+         }
+         else
+         {
+@@ -1961,7 +1965,9 @@ Status H264HeadersBitstream::GetPredWeightTable(
+             {
+                 pPredWeight_L1[refindex].luma_weight = (int8_t)GetVLCElement(true);
+                 pPredWeight_L1[refindex].luma_offset = (int8_t)GetVLCElement(true);
++#if !defined(LINUX)
+                 pPredWeight_L1[refindex].luma_offset <<= (sps->bit_depth_luma - 8);
++#endif
+             }
+             else
+             {
+@@ -1980,8 +1986,10 @@ Status H264HeadersBitstream::GetPredWeightTable(
+                 pPredWeight_L1[refindex].chroma_weight[1] = (int8_t)GetVLCElement(true);
+                 pPredWeight_L1[refindex].chroma_offset[1] = (int8_t)GetVLCElement(true);
+ 
++#if !defined(LINUX)
+                 pPredWeight_L1[refindex].chroma_offset[0] <<= (sps->bit_depth_chroma - 8);
+                 pPredWeight_L1[refindex].chroma_offset[1] <<= (sps->bit_depth_chroma - 8);
++#endif
+             }
+             else
+             {
+-- 
+2.43.0
+

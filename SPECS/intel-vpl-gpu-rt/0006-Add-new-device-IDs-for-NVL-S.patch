@@ -1,0 +1,30 @@
+From f30ca0fc45e7916f891d2f9b20c7014d86aafeba Mon Sep 17 00:00:00 2001
+From: "Zhang, Zhijie" <zhijie.zhang@intel.com>
+Date: Mon, 5 Jan 2026 21:47:38 +0000
+Subject: [PATCH 6/6] Add new device IDs for NVL-S
+
+Add 2 new device IDs.
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20291
+Upstream-status: Backport
+Link: https://github.com/intel/vpl-gpu-rt/commit/dbd42814fb7d747553b302457b26e739b49bbdd2
+---
+ _studio/shared/include/mfxstructures-int.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/_studio/shared/include/mfxstructures-int.h b/_studio/shared/include/mfxstructures-int.h
+index 196c15d9..23851871 100644
+--- a/_studio/shared/include/mfxstructures-int.h
++++ b/_studio/shared/include/mfxstructures-int.h
+@@ -636,6 +636,8 @@ typedef struct {
+     { 0xD743, MFX_HW_NVL_XE3G, MFX_GT2 },
+     { 0xD744, MFX_HW_NVL_XE3G, MFX_GT2 },
+     { 0xD745, MFX_HW_NVL_XE3G, MFX_GT2 },
++    { 0xD74A, MFX_HW_NVL_XE3G, MFX_GT2 },
++    { 0xD74B, MFX_HW_NVL_XE3G, MFX_GT2 },
+ 
+ };
+ 
+-- 
+2.43.0
+
