@@ -52,9 +52,9 @@ if [ -n "$(MEM_GUARD)" ]; then \
         echo "==> [memguard] Using user-specified MemoryMax=$(MEM_GUARD)"; \
 else \
         AVAIL_BYTES="$$(awk '/MemAvailable:/ {print $$2*1024}' /proc/meminfo 2>/dev/null || echo 0)"; \
-        TWO_GB="$$((2*1024*1024*1024))"; \
+        BUFFER_SIZE="$$((2*1024*1024*1024))"; \
         FLOOR="$$((3*1024*1024*1024))"; \
-        LIMIT_BYTES="$$((AVAIL_BYTES - TWO_GB))"; \
+        LIMIT_BYTES="$$((AVAIL_BYTES - BUFFER_SIZE))"; \
         if [ "$$LIMIT_BYTES" -lt "$$FLOOR" ]; then LIMIT_BYTES="$$FLOOR"; fi; \
         LIMIT_STR="$$LIMIT_BYTES"; \
         echo "==> [memguard] Computed MemoryMax=$$LIMIT_STR bytes (MemAvailable=$$AVAIL_BYTES bytes - 2GiB, floor 3GiB)"; \
