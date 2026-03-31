@@ -7,7 +7,7 @@
 Summary:        GRand Unified Bootloader
 Name:           grub2
 Version:        2.06
-Release:        25%{?dist}
+Release:        26%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -110,6 +110,38 @@ Patch:          sbat-4-0006-fs-ntfs-Make-code-more-readable.patch
 # dropped in scenarios like PXE booting.
 Patch:          disable-checksum-code-optimization.patch
 Patch:          CVE-2025-0624.patch
+
+# Additional bulk CVEs
+Patch:          CVE-2014-3591.patch
+Patch:          CVE-2019-13627.patch
+Patch:          CVE-2017-7526.patch
+Patch:          CVE-2024-56737.patch
+Patch:          CVE-2024-45774.patch
+Patch:          CVE-2024-45781.patch
+Patch:          CVE-2024-45775.patch
+Patch:          CVE-2025-1118.patch
+Patch:          CVE-2025-0677.patch
+Patch:          CVE-2024-45777.patch
+Patch:          CVE-2024-45776.patch
+Patch:          CVE-2024-45783.patch
+Patch:          CVE-2025-0690.patch
+Patch:          CVE-2024-45778.patch
+Patch:          CVE-2025-0678.patch
+Patch:          CVE-2024-45780.patch
+Patch:          CVE-2025-61661.patch
+Patch:          CVE-2025-61662.patch
+Patch:          CVE-2025-61663.patch
+# Following are included as part of above CVEs and kept here as nopatch
+# and commented out, because from patch command perspective, these files
+# have garbage content.
+#Patch:          CVE-2024-45782.nopatch
+#Patch:          CVE-2025-0684.nopatch
+#Patch:          CVE-2025-0685.nopatch
+#Patch:          CVE-2025-0686.nopatch
+#Patch:          CVE-2025-0689.nopatch
+#Patch:          CVE-2024-45779.nopatch
+#Patch:          CVE-2025-1125.nopatch
+
 BuildRequires:  autoconf
 BuildRequires:  device-mapper-devel
 BuildRequires:  python3
@@ -436,6 +468,37 @@ cp $GRUB_PXE_MODULE_SOURCE $EFI_BOOT_DIR/$GRUB_PXE_MODULE_NAME
 %config(noreplace) %{_sysconfdir}/grub.d/41_custom
 
 %changelog
+* Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.06-26
+- merge from Azure Linux 3.0.20260107-3.0
+- Patch CVE-2025-61661, CVE-2025-61662 & CVE-2025-61663
+
+* Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.06-26
+- merge from Azure Linux 3.0.20251206-3.0
+- Addressed following grub2 CVEs
+- CVE-2025-0684
+- CVE-2024-45782
+- CVE-2024-45778
+- CVE-2025-0686
+- CVE-2025-0678
+- CVE-2025-0685
+- CVE-2024-45779
+- CVE-2025-0689
+- CVE-2024-45780
+- CVE-2025-1125
+- CVE-2025-0690
+- CVE-2024-45783
+- CVE-2024-45776
+- CVE-2024-45777
+- CVE-2025-0677
+- CVE-2025-1118
+- CVE-2024-45775
+- CVE-2024-45781
+- CVE-2024-45774
+- CVE-2024-56737
+- CVE-2017-7526
+- CVE-2019-13627
+- CVE-2014-3591
+
 * Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.06-25
 - merge from Azure Linux 3.0.20250910-3.0.
 - Patch CVE-2025-0624
