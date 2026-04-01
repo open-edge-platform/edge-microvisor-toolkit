@@ -1,0 +1,27 @@
+From 60ecf14a41389646b286adc9987e0042380bc217 Mon Sep 17 00:00:00 2001
+From: Gan Yi Fang <yi.fang.gan@intel.com>
+Date: Thu, 22 Jun 2023 21:27:11 -0400
+Subject: [PATCH 09/18] stmmac: intel: Enable PHY WoL in ADL-N
+
+Enable PHY Wake On LAN in ADL-N Intel platform.
+
+Signed-off-by: Gan Yi Fang <yi.fang.gan@intel.com>
+---
+ drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+index bf6544ec769b2..ca16568374d5a 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+@@ -1019,6 +1019,7 @@ static int adln_common_data(struct pci_dev *pdev,
+ 	plat->rx_queues_to_use = 6;
+ 	plat->tx_queues_to_use = 4;
+ 	plat->clk_ptp_rate = 204800000;
++	plat->flags |= STMMAC_FLAG_USE_PHY_WOL;
+ 
+ 	plat->safety_feat_cfg->tsoee = 1;
+ 	plat->safety_feat_cfg->mrxpee = 0;
+-- 
+2.43.0
+

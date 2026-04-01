@@ -1,0 +1,47 @@
+From 86ced05172c8e653565845642f8619f2dcf6ab42 Mon Sep 17 00:00:00 2001
+From: Sohil Mehta <sohil.mehta@intel.com>
+Date: Fri, 5 Dec 2025 10:40:18 -0800
+Subject: [PATCH 44/44] fixup! KVM: VMX: Handle #MCs on VM-Enter/TD-Enter
+ outside of the fastpath
+
+The base code of FRED/NMI_source contains a problemtic commit which has
+been fixed in the new code base. Backport the new implementation from
+https://lore.kernel.org/all/20251118222328.2265758-3-seanjc@google.com/
+
+Received this patch from Chenyi Qiang <chenyi.qiang@intel.com>, applied
+manually.
+
+Signed-off-by: Sohil Mehta <sohil.mehta@intel.com>
+---
+ arch/x86/kvm/vmx/vmx.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 2515b8afd2d8f..4491c54b71556 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -7255,10 +7255,19 @@ void vmx_handle_exit_irqoff(struct kvm_vcpu *vcpu)
+ 	if (to_vt(vcpu)->emulation_required)
+ 		return;
+ 
+-	if (vmx_get_exit_reason(vcpu).basic == EXIT_REASON_EXTERNAL_INTERRUPT)
++	switch (vmx_get_exit_reason(vcpu).basic) {
++	case EXIT_REASON_EXTERNAL_INTERRUPT:
+ 		handle_external_interrupt_irqoff(vcpu, vmx_get_intr_info(vcpu));
+-	else if (vmx_get_exit_reason(vcpu).basic == EXIT_REASON_EXCEPTION_NMI)
++		break;
++	case EXIT_REASON_EXCEPTION_NMI:
+ 		handle_exception_irqoff(vcpu, vmx_get_intr_info(vcpu));
++		break;
++	case EXIT_REASON_MCE_DURING_VMENTRY:
++		kvm_machine_check();
++		break;
++	default:
++		break;
++	}
+ }
+ 
+ /*
+-- 
+2.43.0
+

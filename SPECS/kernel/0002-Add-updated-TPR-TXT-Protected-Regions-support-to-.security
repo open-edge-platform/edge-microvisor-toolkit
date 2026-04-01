@@ -1,0 +1,344 @@
+From 7e9b607ccd9a4d4220d9f8054b80311f16f9f642 Mon Sep 17 00:00:00 2001
+From: Adam Pawlicki <adamx.pawlicki@intel.com>
+Date: Thu, 13 Nov 2025 10:32:40 +0100
+Subject: [PATCH 2/2] Add updated TPR (TXT Protected Regions) support to
+ kernel.
+
+This commit applies a TPR-support patch from Tboot Live Image project.
+Its intent is to make kernel aware of the TPR memory and to disable
+it before proceeding with system boot so that kernel can establish its
+own DMA protection.
+
+Signed-off-by: AdamX Pawlicki <adamx.pawlicki@intel.com>
+Signed-off-by: Mateusz Mowka <mateusz.mowka@intel.com>
+---
+ arch/x86/kernel/tboot.c     | 109 +++++++++++++++++++++++++++++++++++-
+ drivers/iommu/intel/dmar.c  |   8 +++
+ drivers/iommu/intel/iommu.c |   7 ++-
+ include/acpi/actbl1.h       |  86 ++++++++++++++++++++++++++++
+ include/linux/tboot.h       |   6 ++
+ 5 files changed, 214 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
+index 46b8f1f16676e..04929aba6a5cc 100644
+--- a/arch/x86/kernel/tboot.c
++++ b/arch/x86/kernel/tboot.c
+@@ -18,6 +18,7 @@
+ #include <linux/mm.h>
+ #include <linux/tboot.h>
+ #include <linux/debugfs.h>
++#include <linux/printk.h>
+ 
+ #include <asm/realmode.h>
+ #include <asm/processor.h>
+@@ -453,8 +454,14 @@ struct sha1_hash {
+ 	u8 hash[SHA1_SIZE];
+ };
+ 
++struct heap_ext_data_elt {
++	u32 type;
++	u32 size;
++	u8  data[];
++} __packed;
++
+ struct sinit_mle_data {
+-	u32               version;             /* currently 6 */
++	u32               version;             /* currently 9 */
+ 	struct sha1_hash  bios_acm_id;
+ 	u32               edx_senter_flags;
+ 	u64               mseg_valid;
+@@ -469,8 +476,18 @@ struct sinit_mle_data {
+ 	u32               mdrs_off;
+ 	u32               num_vtd_dmars;
+ 	u32               vtd_dmars_off;
++	u32               proc_scrtm_status; /* version 8 or later only*/
++	struct heap_ext_data_elt ext_data_elts[];
+ } __packed;
+ 
++#define HEAP_EXTDATA_TYPE_DTPR 14
++
++struct acpi_dtpr_serialize_req {
++	u64 sts    : 1;
++	u64 ctrl   : 1;
++	u64 unused : 62;
++};
++
+ struct acpi_table_header *tboot_get_dmar_table(struct acpi_table_header *dmar_tbl)
+ {
+ 	void *heap_base, *heap_ptr, *config;
+@@ -514,3 +531,93 @@ struct acpi_table_header *tboot_get_dmar_table(struct acpi_table_header *dmar_tb
+ 
+ 	return dmar_tbl;
+ }
++
++struct acpi_table_dtpr *tboot_get_dtpr_table(void)
++{
++	void *heap_base, *heap_ptr, *config;
++	struct sinit_mle_data *sinit_mle;
++	struct heap_ext_data_elt *elt;
++	u64 sinit_mle_size;
++
++	if (!tboot_enabled())
++		return NULL;
++	/*
++	 * ACPI tables may not be DMA protected by tboot, so use DMAR copy
++	 * SINIT saved in SinitMleData in TXT heap (which is DMA protected)
++	 */
++
++	/* map config space in order to get heap addr */
++	config = ioremap(TXT_PUB_CONFIG_REGS_BASE, NR_TXT_CONFIG_PAGES *
++			 PAGE_SIZE);
++	if (!config)
++		return NULL;
++
++	/* now map TXT heap */
++	heap_base = ioremap(*(u64 *)(config + TXTCR_HEAP_BASE),
++			    *(u64 *)(config + TXTCR_HEAP_SIZE));
++	iounmap(config);
++	if (!heap_base)
++		return NULL;
++
++	/* walk heap to SinitMleData */
++	/* skip BiosData */
++	heap_ptr = heap_base + *(u64 *)heap_base;
++	/* skip OsMleData */
++	heap_ptr += *(u64 *)heap_ptr;
++	/* skip OsSinitData */
++	heap_ptr += *(u64 *)heap_ptr;
++	/* now points to SinitMleDataSize; set to SinitMleData */
++	sinit_mle_size = *(u64 *)heap_ptr;
++	heap_ptr += sizeof(u64);
++
++	sinit_mle = (struct sinit_mle_data *)heap_ptr;
++	if (sinit_mle->version < 9)
++		return NULL;
++
++	elt = sinit_mle->ext_data_elts;
++	while (elt->type != HEAP_EXTDATA_TYPE_DTPR) {
++		elt = (void *)elt + elt->size;
++		if ((u64)elt > (u64)sinit_mle + sinit_mle_size)
++			return NULL;
++	}
++	return (struct acpi_table_dtpr *)elt->data;
++}
++
++static bool tboot_tpr_enabled;
++void tboot_parse_dtpr_table(void)
++{
++	struct acpi_table_dtpr *dtpr;
++	struct acpi_dtpr_instance *tpr_inst;
++	u32 *instance_cnt;
++	u32 i, j;
++
++	if (!tboot_enabled())
++		return;
++	dtpr = tboot_get_dtpr_table();
++	if (dtpr == NULL)
++		return;
++	tboot_tpr_enabled = 1;
++	instance_cnt = (u32 *)(dtpr + 1);
++	tpr_inst = (struct acpi_dtpr_instance *)(instance_cnt + 1);
++	for (i = 0; i < *instance_cnt; ++i) {
++		for (j = 0; j < tpr_inst->tpr_cnt; ++j) {
++			uint64_t *base = ioremap(tpr_inst->tpr_array[j].base, 16);
++
++			if (base != NULL) {
++				pr_info("TPR instance %d, TPR %d:base %llx limit %llx\n",
++					   i, j, readq(base), readq(base + 1));
++				*base |= (1 << 4);
++				iounmap(base);
++			}
++		}
++		tpr_inst = (struct acpi_dtpr_instance *)((u8 *)tpr_inst
++		 + sizeof(*tpr_inst) + j*sizeof(*(tpr_inst->tpr_array)));
++	}
++	if (tboot_tpr_enabled)
++		pr_debug("TPR protection detected, PMR will be disabled\n");
++}
++
++bool tboot_is_tpr_enabled(void)
++{
++	return tboot_tpr_enabled;
++}
+diff --git a/drivers/iommu/intel/dmar.c b/drivers/iommu/intel/dmar.c
+index ec975c73cfe6c..9c6f93cf1b3f6 100644
+--- a/drivers/iommu/intel/dmar.c
++++ b/drivers/iommu/intel/dmar.c
+@@ -635,6 +635,7 @@ static int __init
+ parse_dmar_table(void)
+ {
+ 	struct acpi_table_dmar *dmar;
++	struct acpi_table_dtpr *dtpr;
+ 	int drhd_count = 0;
+ 	int ret;
+ 	struct dmar_res_callback cb = {
+@@ -670,6 +671,13 @@ parse_dmar_table(void)
+ 		return -EINVAL;
+ 	}
+ 
++	dtpr = tboot_get_dtpr_table();
++	if (dtpr) {
++		//TPR is enabled
++		//This will also tell not to establish IOMMU PMRs
++		tboot_parse_dtpr_table();
++	}
++
+ 	pr_info("Host address width %d\n", dmar->width + 1);
+ 	ret = dmar_walk_dmar_table(dmar, &cb);
+ 	if (ret == 0 && drhd_count == 0)
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index e236c7ec221f4..5847fb589c892 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -3017,6 +3017,11 @@ static __init int tboot_force_iommu(void)
+ 	if (!tboot_enabled())
+ 		return 0;
+ 
++	//If TPR is enabled we don't need to force IOMMU,
++	//TPR set by SINIT ACM will take care of DMA protection
++	if (tboot_is_tpr_enabled())
++		return 0;
++
+ 	if (no_iommu || dmar_disabled)
+ 		pr_warn("Forcing Intel-IOMMU to enabled\n");
+ 
+@@ -3074,7 +3079,7 @@ int __init intel_iommu_init(void)
+ 		 * calling SENTER, but the kernel is expected to reset/tear
+ 		 * down the PMRs.
+ 		 */
+-		if (intel_iommu_tboot_noforce) {
++		if (intel_iommu_tboot_noforce || tboot_is_tpr_enabled()) {
+ 			for_each_iommu(iommu, drhd)
+ 				iommu_disable_protect_mem_regions(iommu);
+ 		}
+diff --git a/include/acpi/actbl1.h b/include/acpi/actbl1.h
+index 7f35eb0e84586..c77b0890970c6 100644
+--- a/include/acpi/actbl1.h
++++ b/include/acpi/actbl1.h
+@@ -47,6 +47,7 @@
+ #define ACPI_SIG_HPET           "HPET"	/* High Precision Event Timer table */
+ #define ACPI_SIG_IBFT           "IBFT"	/* iSCSI Boot Firmware Table */
+ #define ACPI_SIG_MSCT           "MSCT"	/* Maximum System Characteristics Table */
++#define ACPI_SIG_DTPR           "DTPR"  /* TXT DMA Protection Ranges reporting table */
+ 
+ #define ACPI_SIG_S3PT           "S3PT"	/* S3 Performance (sub)Table */
+ #define ACPI_SIG_PCCS           "PCC"	/* PCC Shared Memory Region */
+@@ -1973,6 +1974,91 @@ struct acpi_ibft_target {
+ 	u16 reverse_chap_secret_offset;
+ };
+ 
++/*******************************************************************************
++ *
++ * DTPR - DMA TPR Reporting
++ *        Version 1
++ *
++ * Conforms to "Intel TXT DMA Protection Ranges",
++ * Version xxx, April 2021
++ *
++ ******************************************************************************/
++
++struct acpi_table_dtpr {
++	struct acpi_table_header header;
++	u32 flags; // 36
++};
++
++struct acpi_tpr_array {
++	u64 base;
++};
++
++struct acpi_dtpr_instance {
++	u32 flags;
++	u32 tpr_cnt;
++	struct acpi_tpr_array tpr_array[];
++};
++
++/*******************************************************************************
++ * TPRn_BASE
++ *
++ * Specifies the start address of TPRn region. TPR region address and size must
++ * be with 1MB resolution. These bits are compared with the result of the
++ * TPRn_LIMIT[63:20] * applied to the incoming address, to determine if an
++ * access fall within the TPRn defined region.
++ ******************************************************************************/
++struct acpi_dtprn_base_reg {
++	u64 reserved0 : 3;
++	u64 rw : 1; // access: 1 == RO, 0 == RW (for TPR must be RW)
++	u64 enable : 1; // 0 == range enabled, 1 == range disabled
++	u64 reserved1 : 15;
++	// Minimal TPRn_Base resolution is 1MB.
++	// Applied to the incoming address, to determine if an access
++	// fall within the TPRn defined region.
++	// Width is determined by a bus width which can be obtained
++	// via CPUID function 0x80000008.
++	u64 tpr_base_rw : 44;
++	//u64 unused : 1;
++};
++
++/*******************************************************************************
++ * TPRn_LIMIT
++ *
++ * This register defines an isolated region of memory that can be enabled
++ * to prohibit certain system agents from accessing memory. When an agent
++ * sends a request upstream, whether snooped or not, a TPR prevents that
++ * transaction from changing the state of memory.
++ ******************************************************************************/
++
++struct acpi_dtprn_limit_reg {
++	u64 reserved0 : 3;
++	u64 rw : 1; // access: 1 == RO, 0 == RW (for TPR must be RW)
++	u64 enable : 1; // 0 == range enabled, 1 == range disabled
++	u64 reserved1 : 15;
++	// Minimal TPRn_Limit resolution is 1MB.
++	// These bits define TPR limit address.
++	// Width is determined by a bus width.
++	u64 tpr_limit_rw : 44;
++	//u64 unused : 1;
++};
++
++/*******************************************************************************
++ * SERIALIZE_REQUEST
++ *
++ * This register is used to request serialization of non-coherent DMA
++ * transactions. OS shall  issue it before changing of TPR settings
++ * (base / size).
++ ******************************************************************************/
++
++struct acpi_tpr_serialize_request {
++	u64 sts : 1; // Status of serialization request (RO)
++				// 0 == register idle, 1 == serialization in progress
++	u64 ctrl : 1; // Control field to initiate serialization (RW)
++				// 0 == normal, 1 == initialize serialization
++				  // (self-clear to allow multiple serialization requests)
++	u64 unused : 62;
++};
++
+ /* Reset to default packing */
+ 
+ #pragma pack()
+diff --git a/include/linux/tboot.h b/include/linux/tboot.h
+index d2279160ef39d..95f784b0bde0a 100644
+--- a/include/linux/tboot.h
++++ b/include/linux/tboot.h
+@@ -126,6 +126,9 @@ extern void tboot_probe(void);
+ extern void tboot_shutdown(u32 shutdown_type);
+ extern struct acpi_table_header *tboot_get_dmar_table(
+ 				      struct acpi_table_header *dmar_tbl);
++extern struct acpi_table_dtpr *tboot_get_dtpr_table(void);
++extern void tboot_parse_dtpr_table(void);
++extern bool tboot_is_tpr_enabled(void);
+ 
+ #else
+ 
+@@ -135,6 +138,9 @@ extern struct acpi_table_header *tboot_get_dmar_table(
+ #define tboot_sleep(sleep_state, pm1a_control, pm1b_control)	\
+ 					do { } while (0)
+ #define tboot_get_dmar_table(dmar_tbl)	(dmar_tbl)
++#define tboot_get_dtpr_table() 0
++#define tboot_parse_dtpr_table() do { } while (0)
++#define tboot_is_tpr_enabled() 0
+ 
+ #endif /* !CONFIG_INTEL_TXT */
+ 
+-- 
+2.43.0
+

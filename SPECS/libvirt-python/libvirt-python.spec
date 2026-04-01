@@ -3,11 +3,11 @@
 
 Summary:        The libvirt virtualization API python3 binding
 Name:           libvirt-python
-Version:        10.0.0
+Version:        10.10.0
 Release:        1%{?dist}
 License:        GPLv2+ and LGPLv2+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 URL:            https://libvirt.org
 Source0:        https://libvirt.org/sources/python/%{name}-%{version}.tar.gz
 
@@ -76,6 +76,10 @@ pip3 install iniconfig
 %{python3_sitearch}/*egg-info
 
 %changelog
+* Fri Mar 20 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 10.10.0-1
+- Upgrade to 10.10.0 to align with libvirt
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
+
 * Wed Mar 06 2024 Brian Fjeldstad <bfjelds@microsoft.com> - 10..00-1
 - Upgrade to 10.0.0.
 

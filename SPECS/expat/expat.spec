@@ -2,15 +2,22 @@
 Summary:        An XML parser library
 Name:           expat
 Version:        2.6.4
-Release:        1%{?dist}
+Release:        4%{?dist}
 License:        MIT
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:         Intel Corporation
+Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/GeneralLibraries
 URL:            https://libexpat.github.io/
 Source0:        https://github.com/libexpat/libexpat/releases/download/R_%{underscore_version}/%{name}-%{version}.tar.bz2
 Patch0:         CVE-2024-8176.patch
+Patch1:         CVE-2025-59375.patch
+Patch2:         CVE-2026-24515.patch
+Patch3:         CVE-2026-25210.patch
 Requires:       %{name}-libs = %{version}-%{release}
+
+BuildRequires: autoconf, libtool, xmlto, gcc-c++
+BuildRequires: make
+BuildRequires: gnupg2
 
 %description
 The Expat package contains a stream oriented C library for parsing XML.
@@ -67,6 +74,15 @@ rm -rf %{buildroot}/%{_docdir}/%{name}
 %{_libdir}/libexpat.so.1*
 
 %changelog
+* Thu Jan 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.6.4-3
+- add BuildRequires
+- Patch for CVE-2026-25210
+- Patch for CVE-2026-24515
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT).
+
+* Tue Sep 23 2025 Akhila Guruju <v-guakhila@microsoft.com> - 2.6.4-2
+- Fix CVE-2025-59375 with a patch
+
 * Thu Mar 20 2025 Kshitiz Godara <kgodara@microsoft.com> - 2.6.4-1
 - Fix CVE-2024-8176 with a patch
 

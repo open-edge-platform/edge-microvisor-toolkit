@@ -1,0 +1,49 @@
+From 037577d50b92f1e879887a8736fdfa0af3c23b39 Mon Sep 17 00:00:00 2001
+From: Malaya Kumar Rout <mrout@redhat.com>
+Date: Sat, 22 Nov 2025 20:46:52 +0530
+Subject: [PATCH 14/21] tools/power x86_energy_perf_policy: Fix potential NULL
+ pointer dereference
+
+In err_on_hypervisor(), strstr() is called to search for "flags" in the
+buffer, but the return value is not checked before being used in pointer
+arithmetic (flags - buffer). If strstr() returns NULL because "flags" is
+not found in /proc/cpuinfo, this will cause undefined behavior and likely
+a crash.
+
+Add a NULL check after the strstr() call and handle the error appropriately
+by cleaning up resources and reporting a meaningful error message.
+
+Signed-off-by: Malaya Kumar Rout <mrout@redhat.com>
+Signed-off-by: Len Brown <len.brown@intel.com>
+---
+ .../x86/x86_energy_perf_policy/x86_energy_perf_policy.c    | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c b/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
+index b2125275c69e0..ac37132207a47 100644
+--- a/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
++++ b/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
+@@ -520,7 +520,7 @@ void for_packages(unsigned long long pkg_set, int (func)(int))
+ 
+ void print_version(void)
+ {
+-	printf("x86_energy_perf_policy 2025.9.19 Len Brown <lenb@kernel.org>\n");
++	printf("x86_energy_perf_policy 2025.11.22 Len Brown <lenb@kernel.org>\n");
+ }
+ 
+ void cmdline(int argc, char **argv)
+@@ -662,6 +662,11 @@ void err_on_hypervisor(void)
+ 	}
+ 
+ 	flags = strstr(buffer, "flags");
++	if (!flags) {
++		fclose(cpuinfo);
++		free(buffer);
++		err(1, "Failed to find 'flags' in /proc/cpuinfo");
++	}
+ 	rewind(cpuinfo);
+ 	fseek(cpuinfo, flags - buffer, SEEK_SET);
+ 	if (!fgets(buffer, 4096, cpuinfo)) {
+-- 
+2.43.0
+

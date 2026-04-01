@@ -1,0 +1,40 @@
+From 353fba46fd0866f0bbbca8c86c315f54baa2e3db Mon Sep 17 00:00:00 2001
+From: Len Brown <len.brown@intel.com>
+Date: Thu, 14 Aug 2025 23:29:57 -0400
+Subject: [PATCH 02/21] tools/power turbostat: Add Wildcat Lake and Nova Lake
+ support
+
+Treat Wildcat Lake and Nova Lake (and Panther Lake)
+the same as Lunar Lake, for now.
+
+Signed-off-by: Len Brown <len.brown@intel.com>
+---
+ tools/power/x86/turbostat/turbostat.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/tools/power/x86/turbostat/turbostat.c b/tools/power/x86/turbostat/turbostat.c
+index 1b5ca2f4e92ff..7c24c2f9a0752 100644
+--- a/tools/power/x86/turbostat/turbostat.c
++++ b/tools/power/x86/turbostat/turbostat.c
+@@ -1210,6 +1210,9 @@ static const struct platform_data turbostat_pdata[] = {
+ 	{ INTEL_ARROWLAKE, &adl_features },
+ 	{ INTEL_LUNARLAKE_M, &lnl_features },
+ 	{ INTEL_PANTHERLAKE_L, &lnl_features },
++	{ INTEL_NOVALAKE, &lnl_features },
++	{ INTEL_NOVALAKE_L, &lnl_features },
++	{ INTEL_WILDCATLAKE_L, &lnl_features },
+ 	{ INTEL_ATOM_SILVERMONT, &slv_features },
+ 	{ INTEL_ATOM_SILVERMONT_D, &slvd_features },
+ 	{ INTEL_ATOM_AIRMONT, &amt_features },
+@@ -10126,7 +10129,7 @@ int get_and_dump_counters(void)
+ 
+ void print_version()
+ {
+-	fprintf(outf, "turbostat version 2025.09.09 - Len Brown <lenb@kernel.org>\n");
++	fprintf(outf, "turbostat version 2025.10.18 - Len Brown <lenb@kernel.org>\n");
+ }
+ 
+ #define COMMAND_LINE_SIZE 2048
+-- 
+2.43.0
+

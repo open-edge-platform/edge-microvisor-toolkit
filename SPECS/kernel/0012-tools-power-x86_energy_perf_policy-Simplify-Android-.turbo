@@ -1,0 +1,92 @@
+From 74b6b483cba4e31ffce21e1c5364a14d55dcc8f6 Mon Sep 17 00:00:00 2001
+From: Len Brown <len.brown@intel.com>
+Date: Tue, 25 Nov 2025 11:47:04 -0500
+Subject: [PATCH 12/21] tools/power x86_energy_perf_policy: Simplify Android
+ MSR probe
+
+no functional change
+
+Signed-off-by: Len Brown <len.brown@intel.com>
+---
+ .../x86_energy_perf_policy.c                  | 38 ++++++-------------
+ 1 file changed, 11 insertions(+), 27 deletions(-)
+
+diff --git a/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c b/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
+index 5301efc741cee..e68eaa9f7cd4d 100644
+--- a/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
++++ b/tools/power/x86/x86_energy_perf_policy/x86_energy_perf_policy.c
+@@ -95,7 +95,6 @@ unsigned int bdx_highest_ratio;
+ #define PATH_TO_CPU "/sys/devices/system/cpu/"
+ #define SYSFS_PATH_MAX 255
+ 
+-/* keep Default as a linux path */
+ static int use_android_msr_path;
+ 
+ /*
+@@ -681,29 +680,6 @@ void err_on_hypervisor(void)
+ 		    "not supported on this virtual machine");
+ }
+ 
+-static void probe_msr_path_format(void)
+-{
+-	struct stat sb;
+-	char test_path[32];
+-
+-	/* Test standard Linux path */
+-	sprintf(test_path, "/dev/cpu/%d/msr", base_cpu);
+-	if (stat(test_path, &sb) == 0) {
+-		use_android_msr_path = 0;
+-		return;
+-	}
+-
+-	/* Test Android-style path */
+-	sprintf(test_path, "/dev/msr%d", base_cpu);
+-	if (stat(test_path, &sb) == 0) {
+-		use_android_msr_path = 1;
+-		return;
+-	}
+-
+-	/* If neither exists, keep the default Linux format */
+-	use_android_msr_path = 0;
+-}
+-
+ int get_msr(int cpu, int offset, unsigned long long *msr)
+ {
+ 	int retval;
+@@ -1450,12 +1426,23 @@ void set_base_cpu(void)
+ 		err(-ENODEV, "No valid cpus found");
+ }
+ 
++static void probe_android_msr_path(void)
++{
++	struct stat sb;
++	char test_path[32];
++
++	sprintf(test_path, "/dev/msr%d", base_cpu);
++	if (stat(test_path, &sb) == 0)
++		use_android_msr_path = 1;
++}
+ 
+ void probe_dev_msr(void)
+ {
+ 	struct stat sb;
+ 	char pathname[32];
+ 
++	probe_android_msr_path();
++
+ 	sprintf(pathname, use_android_msr_path ? "/dev/msr%d" : "/dev/cpu/%d/msr", base_cpu);
+ 	if (stat(pathname, &sb)) {
+ 		if (system("/sbin/modprobe msr > /dev/null 2>&1")) {
+@@ -1582,9 +1569,6 @@ int main(int argc, char **argv)
+ {
+ 	set_base_cpu();
+ 
+-	/* probe MSR path */
+-	probe_msr_path_format();
+-
+ 	probe_dev_msr();
+ 	init_data_structures();
+ 
+-- 
+2.43.0
+

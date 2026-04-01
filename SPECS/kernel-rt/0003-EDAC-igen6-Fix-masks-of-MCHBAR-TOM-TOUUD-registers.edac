@@ -1,0 +1,163 @@
+From 5b64d5870c761a47c148280951e13ffd4ac6d00b Mon Sep 17 00:00:00 2001
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Date: Thu, 13 Nov 2025 13:01:01 +0800
+Subject: [PATCH 3/3] EDAC/igen6: Fix masks of {MCHBAR, TOM, TOUUD} registers
+
+The masks used to retrieve base addresses from {MCHBAR, TOM, TOUUD}
+registers are CPU model-specific. Currently, igen6_edac uses the
+same masks for all CPUs, which is incorrect. Add three new fields
+to structure res_config to make these masks CPU model-specific and
+configure them properly.
+
+Fixes: 0b7338b27e82 ("EDAC/igen6: Add Intel Tiger Lake SoC support")
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+---
+ drivers/edac/igen6_edac.c | 41 +++++++++++++++++++++++++++++++++++----
+ 1 file changed, 37 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/edac/igen6_edac.c b/drivers/edac/igen6_edac.c
+index 3e9d0118e3958..5f851c772a321 100644
+--- a/drivers/edac/igen6_edac.c
++++ b/drivers/edac/igen6_edac.c
+@@ -87,7 +87,6 @@
+ /* Host MMIO base address */
+ #define MCHBAR_OFFSET			0x48
+ #define MCHBAR_EN			BIT_ULL(0)
+-#define MCHBAR_BASE(v)			(GET_BITFIELD(v, 16, 38) << 16)
+ #define MCHBAR_SIZE			0x10000
+ 
+ /* Parameters for the channel decode stage */
+@@ -129,6 +128,12 @@ static struct res_config {
+ 	bool machine_check;
+ 	/* The number of present memory controllers. */
+ 	int num_imc;
++	/* Host MMIO configuration register */
++	u64 reg_mchbar_mask;
++	/* Top of Memory */
++	u64 reg_tom_mask;
++	/* Top of Upper Usable DRAM */
++	u64 reg_touud_mask;
+ 	u32 imc_base;
+ 	u32 cmf_base;
+ 	u32 cmf_size;
+@@ -315,7 +320,8 @@ static int get_mchbar(struct pci_dev *pdev, u64 *mchbar)
+ 		return -ENODEV;
+ 	}
+ 
+-	*mchbar = MCHBAR_BASE(u.v);
++	*mchbar = u.v & res_cfg->reg_mchbar_mask;
++	edac_dbg(2, "MCHBAR 0x%llx (reg 0x%llx)\n", *mchbar, u.v);
+ 
+ 	return 0;
+ }
+@@ -496,6 +502,9 @@ static u64 rpl_p_err_addr(u64 ecclog)
+ 
+ static struct res_config ehl_cfg = {
+ 	.num_imc		= 1,
++	.reg_mchbar_mask	= GENMASK_ULL(38, 16),
++	.reg_tom_mask		= GENMASK_ULL(38, 20),
++	.reg_touud_mask		= GENMASK_ULL(38, 20),
+ 	.imc_base		= 0x5000,
+ 	.ibecc_base		= 0xdc00,
+ 	.ibecc_available	= ehl_ibecc_available,
+@@ -506,6 +515,9 @@ static struct res_config ehl_cfg = {
+ 
+ static struct res_config icl_cfg = {
+ 	.num_imc		= 1,
++	.reg_mchbar_mask	= GENMASK_ULL(38, 16),
++	.reg_tom_mask		= GENMASK_ULL(38, 20),
++	.reg_touud_mask		= GENMASK_ULL(38, 20),
+ 	.imc_base		= 0x5000,
+ 	.ibecc_base		= 0xd800,
+ 	.ibecc_error_log_offset	= 0x170,
+@@ -517,6 +529,9 @@ static struct res_config icl_cfg = {
+ static struct res_config tgl_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
++	.reg_mchbar_mask	= GENMASK_ULL(38, 17),
++	.reg_tom_mask		= GENMASK_ULL(38, 20),
++	.reg_touud_mask		= GENMASK_ULL(38, 20),
+ 	.imc_base		= 0x5000,
+ 	.cmf_base		= 0x11000,
+ 	.cmf_size		= 0x800,
+@@ -531,6 +546,9 @@ static struct res_config tgl_cfg = {
+ static struct res_config adl_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
++	.reg_mchbar_mask	= GENMASK_ULL(41, 17),
++	.reg_tom_mask		= GENMASK_ULL(41, 20),
++	.reg_touud_mask		= GENMASK_ULL(41, 20),
+ 	.imc_base		= 0xd800,
+ 	.ibecc_base		= 0xd400,
+ 	.ibecc_error_log_offset	= 0x68,
+@@ -542,6 +560,9 @@ static struct res_config adl_cfg = {
+ static struct res_config adl_n_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 1,
++	.reg_mchbar_mask	= GENMASK_ULL(41, 17),
++	.reg_tom_mask		= GENMASK_ULL(41, 20),
++	.reg_touud_mask		= GENMASK_ULL(41, 20),
+ 	.imc_base		= 0xd800,
+ 	.ibecc_base		= 0xd400,
+ 	.ibecc_error_log_offset	= 0x68,
+@@ -553,6 +574,9 @@ static struct res_config adl_n_cfg = {
+ static struct res_config rpl_p_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
++	.reg_mchbar_mask	= GENMASK_ULL(41, 17),
++	.reg_tom_mask		= GENMASK_ULL(41, 20),
++	.reg_touud_mask		= GENMASK_ULL(41, 20),
+ 	.imc_base		= 0xd800,
+ 	.ibecc_base		= 0xd400,
+ 	.ibecc_error_log_offset	= 0x68,
+@@ -565,6 +589,9 @@ static struct res_config rpl_p_cfg = {
+ static struct res_config mtl_ps_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
++	.reg_mchbar_mask	= GENMASK_ULL(41, 17),
++	.reg_tom_mask		= GENMASK_ULL(41, 20),
++	.reg_touud_mask		= GENMASK_ULL(41, 20),
+ 	.imc_base		= 0xd800,
+ 	.ibecc_base		= 0xd400,
+ 	.ibecc_error_log_offset	= 0x170,
+@@ -576,6 +603,9 @@ static struct res_config mtl_ps_cfg = {
+ static struct res_config mtl_p_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 2,
++	.reg_mchbar_mask	= GENMASK_ULL(41, 17),
++	.reg_tom_mask		= GENMASK_ULL(41, 20),
++	.reg_touud_mask		= GENMASK_ULL(41, 20),
+ 	.imc_base		= 0xd800,
+ 	.ibecc_base		= 0xd400,
+ 	.ibecc_error_log_offset	= 0x170,
+@@ -587,6 +617,9 @@ static struct res_config mtl_p_cfg = {
+ static struct res_config wcl_cfg = {
+ 	.machine_check		= true,
+ 	.num_imc		= 1,
++	.reg_mchbar_mask	= GENMASK_ULL(41, 17),
++	.reg_tom_mask		= GENMASK_ULL(41, 20),
++	.reg_touud_mask		= GENMASK_ULL(41, 20),
+ 	.imc_base		= 0xd800,
+ 	.ibecc_base		= 0xd400,
+ 	.ibecc_error_log_offset	= 0x170,
+@@ -1216,7 +1249,7 @@ static int igen6_pci_setup(struct pci_dev *pdev, u64 *mchbar)
+ 		goto fail;
+ 	}
+ 
+-	igen6_tom = u.v & GENMASK_ULL(38, 20);
++	igen6_tom = u.v & res_cfg->reg_tom_mask;
+ 
+ 	if (get_mchbar(pdev, mchbar))
+ 		goto fail;
+@@ -1227,7 +1260,7 @@ static int igen6_pci_setup(struct pci_dev *pdev, u64 *mchbar)
+ 	else if (pci_read_config_dword(pdev, TOUUD_OFFSET + 4, &u.v_hi))
+ 		edac_dbg(2, "Failed to read upper TOUUD\n");
+ 	else
+-		igen6_touud = u.v & GENMASK_ULL(38, 20);
++		igen6_touud = u.v & res_cfg->reg_touud_mask;
+ #endif
+ 
+ 	return 0;
+-- 
+2.43.0
+

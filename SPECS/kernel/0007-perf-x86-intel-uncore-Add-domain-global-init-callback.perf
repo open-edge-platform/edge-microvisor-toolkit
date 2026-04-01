@@ -1,0 +1,82 @@
+From dfc75ded70ed507b85d920b00ce199d2821c8b61 Mon Sep 17 00:00:00 2001
+From: Zide Chen <zide.chen@intel.com>
+Date: Mon, 29 Dec 2025 11:41:02 -0800
+Subject: [PATCH 07/13] perf/x86/intel/uncore: Add domain global init callback
+
+In the Intel uncore self-describing mechanism, the Global Control
+Register freeze_all bit is SoC-wide and propagates to all uncore PMUs.
+
+On Diamond Rapids, this bit is set at power-on, unlike some prior
+platforms.  Add a global_init callback to unfreeze all PMON units.
+
+Signed-off-by: Zide Chen <zide.chen@intel.com>
+---
+ arch/x86/events/intel/uncore.c           | 16 ++++++++++++++++
+ arch/x86/events/intel/uncore.h           |  2 ++
+ arch/x86/events/intel/uncore_discovery.c |  3 +++
+ 3 files changed, 21 insertions(+)
+
+diff --git a/arch/x86/events/intel/uncore.c b/arch/x86/events/intel/uncore.c
+index eb57eb7159959..34d0822dc0022 100644
+--- a/arch/x86/events/intel/uncore.c
++++ b/arch/x86/events/intel/uncore.c
+@@ -1697,6 +1697,21 @@ static int __init uncore_mmio_init(void)
+ 	return ret;
+ }
+ 
++static int uncore_mmio_global_init(u64 ctl)
++{
++	void __iomem *io_addr;
++
++	io_addr = ioremap(ctl, sizeof(ctl));
++	if (!io_addr)
++		return -ENOMEM;
++
++	/* Clear bit 0, all other bits are reserved */
++	writel(0, io_addr);
++
++	iounmap(io_addr);
++	return 0;
++}
++
+ static const struct uncore_plat_init nhm_uncore_init __initconst = {
+ 	.cpu_init = nhm_uncore_cpu_init,
+ };
+@@ -1839,6 +1854,7 @@ static const struct uncore_plat_init dmr_uncore_init __initconst = {
+ 	.domain[0].units_ignore = dmr_uncore_imh_units_ignore,
+ 	.domain[1].discovery_base = CBB_UNCORE_DISCOVERY_MSR,
+ 	.domain[1].units_ignore = dmr_uncore_cbb_units_ignore,
++	.domain[1].global_init = uncore_mmio_global_init,
+ };
+ 
+ static const struct uncore_plat_init generic_uncore_init __initconst = {
+diff --git a/arch/x86/events/intel/uncore.h b/arch/x86/events/intel/uncore.h
+index 83d01a9cefc00..55e3aebf4b5e0 100644
+--- a/arch/x86/events/intel/uncore.h
++++ b/arch/x86/events/intel/uncore.h
+@@ -51,6 +51,8 @@ struct uncore_discovery_domain {
+ 	/* MSR address or PCI device used as the discovery base */
+ 	u32	discovery_base;
+ 	bool	base_is_pci;
++	int	(*global_init)(u64 ctl);
++
+ 	/* The units in the discovery table should be ignored. */
+ 	int	*units_ignore;
+ };
+diff --git a/arch/x86/events/intel/uncore_discovery.c b/arch/x86/events/intel/uncore_discovery.c
+index 24b8da18ee6c8..9779e38e272e0 100644
+--- a/arch/x86/events/intel/uncore_discovery.c
++++ b/arch/x86/events/intel/uncore_discovery.c
+@@ -287,6 +287,9 @@ static int __parse_discovery_table(char *type,
+ 	if (!io_addr)
+ 		return -ENOMEM;
+ 
++	if (domain->global_init && domain->global_init(global.ctl))
++		return -ENODEV;
++
+ 	/* Parsing Unit Discovery State */
+ 	for (i = 0; i < global.max_units; i++) {
+ 		memcpy_fromio(&unit, io_addr + (i + 1) * (global.stride * 8),
+-- 
+2.43.0
+

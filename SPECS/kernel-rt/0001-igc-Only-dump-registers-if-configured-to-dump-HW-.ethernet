@@ -1,7 +1,7 @@
-From eec452978215d4a46a735237cf74a8bfd7acdca6 Mon Sep 17 00:00:00 2001
+From def1018b29cd29ff0d8fc01068a119777bec7012 Mon Sep 17 00:00:00 2001
 From: Malli C <mallikarjuna.chilakala@intel.com>
 Date: Mon, 25 Jan 2021 17:43:51 -0800
-Subject: [PATCH 01/19] igc: Only dump registers if configured to dump HW
+Subject: [PATCH 1/4] igc: Only dump registers if configured to dump HW
  information
 
 To avoid polluting the users logs with register dumps, only dump the
@@ -20,7 +20,7 @@ Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/net/ethernet/intel/igc/igc_dump.c b/drivers/net/ethernet/intel/igc/igc_dump.c
-index c09c95cc5f70..4abbeb763374 100644
+index c09c95cc5f70e..4abbeb763374e 100644
 --- a/drivers/net/ethernet/intel/igc/igc_dump.c
 +++ b/drivers/net/ethernet/intel/igc/igc_dump.c
 @@ -308,6 +308,9 @@ void igc_regs_dump(struct igc_adapter *adapter)

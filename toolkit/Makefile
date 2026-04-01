@@ -210,6 +210,8 @@ all: toolchain go-tools chroot-tools
 
 ######## SUBMAKE INCLUDES ########
 
+$(call shell_real_build_only, $(SCRIPTS_DIR)/toolchain/toolchain_update_git_submodule.sh)
+
 # General help information used by 'help' target; this should be included first so
 # its help will be displayed at the top of the help output.
 include $(SCRIPTS_DIR)/help.mk

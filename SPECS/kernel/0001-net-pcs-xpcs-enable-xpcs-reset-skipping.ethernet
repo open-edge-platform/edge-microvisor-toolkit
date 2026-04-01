@@ -1,0 +1,181 @@
+From 8bc3d99d56e4782d8249523be7ea84dc6c27b4c2 Mon Sep 17 00:00:00 2001
+From: Michael Sit Wei Hong <michael.wei.hong.sit@intel.com>
+Date: Wed, 9 Jun 2021 15:12:19 +0800
+Subject: [PATCH 01/18] net: pcs: xpcs: enable xpcs reset skipping
+
+Some platforms such as the Intel AlderLake configure the xPCS in the
+BIOS and a xPCS Soft Reset is not required during driver init.
+
+This changes the xpcs_create function to take in an additional argument
+to check if the platform request to skip xpcs reset during device
+initialization.
+
+Signed-off-by: Michael Sit Wei Hong <michael.wei.hong.sit@intel.com>
+---
+ drivers/net/dsa/microchip/ksz9477.c               |  2 +-
+ drivers/net/dsa/sja1105/sja1105_mdio.c            |  2 +-
+ drivers/net/ethernet/stmicro/stmmac/stmmac_mdio.c |  4 +++-
+ drivers/net/ethernet/wangxun/txgbe/txgbe_phy.c    |  2 +-
+ drivers/net/pcs/pcs-xpcs.c                        | 14 +++++++-------
+ include/linux/pcs/pcs-xpcs.h                      |  4 ++--
+ include/linux/stmmac.h                            |  1 +
+ 7 files changed, 16 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/dsa/microchip/ksz9477.c b/drivers/net/dsa/microchip/ksz9477.c
+index 5df8f153d511b..451e173408564 100644
+--- a/drivers/net/dsa/microchip/ksz9477.c
++++ b/drivers/net/dsa/microchip/ksz9477.c
+@@ -336,7 +336,7 @@ int ksz9477_pcs_create(struct ksz_device *dev)
+ 		if (ret)
+ 			return ret;
+ 
+-		pcs = xpcs_create_pcs_mdiodev(bus, 0);
++		pcs = xpcs_create_pcs_mdiodev(bus, 0, false);
+ 		if (IS_ERR(pcs))
+ 			return PTR_ERR(pcs);
+ 		p->pcs = pcs;
+diff --git a/drivers/net/dsa/sja1105/sja1105_mdio.c b/drivers/net/dsa/sja1105/sja1105_mdio.c
+index 8d535c033cef7..d751b2c6f6f9d 100644
+--- a/drivers/net/dsa/sja1105/sja1105_mdio.c
++++ b/drivers/net/dsa/sja1105/sja1105_mdio.c
+@@ -409,7 +409,7 @@ static int sja1105_mdiobus_pcs_register(struct sja1105_private *priv)
+ 		    priv->phy_mode[port] != PHY_INTERFACE_MODE_2500BASEX)
+ 			continue;
+ 
+-		pcs = xpcs_create_pcs_mdiodev(bus, port);
++		pcs = xpcs_create_pcs_mdiodev(bus, port, false);
+ 		if (IS_ERR(pcs)) {
+ 			rc = PTR_ERR(pcs);
+ 			goto out_pcs_free;
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_mdio.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_mdio.c
+index f408737f6fc73..117ce5da99792 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_mdio.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_mdio.c
+@@ -429,8 +429,10 @@ int stmmac_pcs_setup(struct net_device *ndev)
+ 	struct fwnode_handle *devnode, *pcsnode;
+ 	struct dw_xpcs *xpcs = NULL;
+ 	int addr, ret;
++	bool skip_reset;
+ 
+ 	devnode = priv->plat->port_node;
++	skip_reset = priv->plat->skip_reset;
+ 
+ 	if (priv->plat->pcs_init) {
+ 		ret = priv->plat->pcs_init(priv);
+@@ -442,7 +444,7 @@ int stmmac_pcs_setup(struct net_device *ndev)
+ 	} else if (priv->plat->mdio_bus_data &&
+ 		   priv->plat->mdio_bus_data->pcs_mask) {
+ 		addr = ffs(priv->plat->mdio_bus_data->pcs_mask) - 1;
+-		xpcs = xpcs_create_mdiodev(priv->mii, addr);
++		xpcs = xpcs_create_mdiodev(priv->mii, addr, skip_reset);
+ 		ret = PTR_ERR_OR_ZERO(xpcs);
+ 	} else {
+ 		return 0;
+diff --git a/drivers/net/ethernet/wangxun/txgbe/txgbe_phy.c b/drivers/net/ethernet/wangxun/txgbe/txgbe_phy.c
+index 03f1b9bc604d5..d7e95106a45a9 100644
+--- a/drivers/net/ethernet/wangxun/txgbe/txgbe_phy.c
++++ b/drivers/net/ethernet/wangxun/txgbe/txgbe_phy.c
+@@ -151,7 +151,7 @@ static int txgbe_mdio_pcs_init(struct txgbe *txgbe)
+ 	if (ret)
+ 		return ret;
+ 
+-	pcs = xpcs_create_pcs_mdiodev(mii_bus, 0);
++	pcs = xpcs_create_pcs_mdiodev(mii_bus, 0, false);
+ 	if (IS_ERR(pcs))
+ 		return PTR_ERR(pcs);
+ 
+diff --git a/drivers/net/pcs/pcs-xpcs.c b/drivers/net/pcs/pcs-xpcs.c
+index 3d1bd5aac0937..532d8da588b58 100644
+--- a/drivers/net/pcs/pcs-xpcs.c
++++ b/drivers/net/pcs/pcs-xpcs.c
+@@ -1476,7 +1476,7 @@ static int xpcs_init_id(struct dw_xpcs *xpcs)
+ 	return xpcs_identify(xpcs);
+ }
+ 
+-static struct dw_xpcs *xpcs_create(struct mdio_device *mdiodev)
++static struct dw_xpcs *xpcs_create(struct mdio_device *mdiodev, bool skip_reset)
+ {
+ 	struct dw_xpcs *xpcs;
+ 	int ret;
+@@ -1495,7 +1495,7 @@ static struct dw_xpcs *xpcs_create(struct mdio_device *mdiodev)
+ 
+ 	xpcs_get_interfaces(xpcs, xpcs->pcs.supported_interfaces);
+ 
+-	if (xpcs->info.pma == WX_TXGBE_XPCS_PMA_10G_ID)
++	if (xpcs->info.pma == WX_TXGBE_XPCS_PMA_10G_ID || skip_reset)
+ 		xpcs->pcs.poll = false;
+ 	else
+ 		xpcs->need_reset = true;
+@@ -1520,7 +1520,7 @@ static struct dw_xpcs *xpcs_create(struct mdio_device *mdiodev)
+  * the PCS device couldn't be found on the bus and other negative errno related
+  * to the data allocation and MDIO-bus communications.
+  */
+-struct dw_xpcs *xpcs_create_mdiodev(struct mii_bus *bus, int addr)
++struct dw_xpcs *xpcs_create_mdiodev(struct mii_bus *bus, int addr, bool skip_reset)
+ {
+ 	struct mdio_device *mdiodev;
+ 	struct dw_xpcs *xpcs;
+@@ -1529,7 +1529,7 @@ struct dw_xpcs *xpcs_create_mdiodev(struct mii_bus *bus, int addr)
+ 	if (IS_ERR(mdiodev))
+ 		return ERR_CAST(mdiodev);
+ 
+-	xpcs = xpcs_create(mdiodev);
++	xpcs = xpcs_create(mdiodev, skip_reset);
+ 
+ 	/* xpcs_create() has taken a refcount on the mdiodev if it was
+ 	 * successful. If xpcs_create() fails, this will free the mdio
+@@ -1543,11 +1543,11 @@ struct dw_xpcs *xpcs_create_mdiodev(struct mii_bus *bus, int addr)
+ }
+ EXPORT_SYMBOL_GPL(xpcs_create_mdiodev);
+ 
+-struct phylink_pcs *xpcs_create_pcs_mdiodev(struct mii_bus *bus, int addr)
++struct phylink_pcs *xpcs_create_pcs_mdiodev(struct mii_bus *bus, int addr, bool skip_reset)
+ {
+ 	struct dw_xpcs *xpcs;
+ 
+-	xpcs = xpcs_create_mdiodev(bus, addr);
++	xpcs = xpcs_create_mdiodev(bus, addr, skip_reset);
+ 	if (IS_ERR(xpcs))
+ 		return ERR_CAST(xpcs);
+ 
+@@ -1577,7 +1577,7 @@ struct dw_xpcs *xpcs_create_fwnode(struct fwnode_handle *fwnode)
+ 	if (!mdiodev)
+ 		return ERR_PTR(-EPROBE_DEFER);
+ 
+-	xpcs = xpcs_create(mdiodev);
++	xpcs = xpcs_create(mdiodev, false);
+ 
+ 	/* xpcs_create() has taken a refcount on the mdiodev if it was
+ 	 * successful. If xpcs_create() fails, this will free the mdio
+diff --git a/include/linux/pcs/pcs-xpcs.h b/include/linux/pcs/pcs-xpcs.h
+index e40f554ff717a..f521032124927 100644
+--- a/include/linux/pcs/pcs-xpcs.h
++++ b/include/linux/pcs/pcs-xpcs.h
+@@ -51,11 +51,11 @@ struct dw_xpcs;
+ struct phylink_pcs *xpcs_to_phylink_pcs(struct dw_xpcs *xpcs);
+ int xpcs_get_an_mode(struct dw_xpcs *xpcs, phy_interface_t interface);
+ void xpcs_config_eee_mult_fact(struct dw_xpcs *xpcs, u8 mult_fact);
+-struct dw_xpcs *xpcs_create_mdiodev(struct mii_bus *bus, int addr);
++struct dw_xpcs *xpcs_create_mdiodev(struct mii_bus *bus, int addr, bool skip_reset);
+ struct dw_xpcs *xpcs_create_fwnode(struct fwnode_handle *fwnode);
+ void xpcs_destroy(struct dw_xpcs *xpcs);
+ 
+-struct phylink_pcs *xpcs_create_pcs_mdiodev(struct mii_bus *bus, int addr);
++struct phylink_pcs *xpcs_create_pcs_mdiodev(struct mii_bus *bus, int addr, bool skip_reset);
+ void xpcs_destroy_pcs(struct phylink_pcs *pcs);
+ 
+ #endif /* __LINUX_PCS_XPCS_H */
+diff --git a/include/linux/stmmac.h b/include/linux/stmmac.h
+index fa1318bac06c4..d7d6998fa5bd0 100644
+--- a/include/linux/stmmac.h
++++ b/include/linux/stmmac.h
+@@ -299,5 +299,6 @@ struct plat_stmmacenet_data {
+ 	int msi_tx_base_vec;
+ 	const struct dwmac4_addrs *dwmac4_addrs;
+ 	unsigned int flags;
++	bool skip_reset;
+ };
+ #endif
+-- 
+2.43.0
+

@@ -1,0 +1,162 @@
+From 9796175f56299f2cec3b9677aa71f4bd82f30ad4 Mon Sep 17 00:00:00 2001
+From: Xin Li <xin3.li@intel.com>
+Date: Tue, 9 Aug 2022 09:58:24 -0700
+Subject: [PATCH 18/44] KVM: nVMX: Enable support for secondary VM exit
+ controls
+
+Add support for secondary VM exit controls in nested VMX to facilitate
+future FRED integration.
+
+Signed-off-by: Xin Li <xin3.li@intel.com>
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+Tested-by: Shan Kang <shan.kang@intel.com>
+Tested-by: Xuelian Guo <xuelian.guo@intel.com>
+---
+
+Changes in v8:
+* Relocate secondary_vm_exit_controls to the last u64 padding field.
+* Remove the change to Documentation/virt/kvm/x86/nested-vmx.rst.
+
+Changes in v5:
+* Allow writing MSR_IA32_VMX_EXIT_CTLS2 (Sean).
+* Add TB from Xuelian Guo.
+
+Change in v3:
+* Read secondary VM exit controls from vmcs_conf insteasd of the hardware
+  MSR MSR_IA32_VMX_EXIT_CTLS2 to avoid advertising features to L1 that KVM
+  itself doesn't support, e.g. because the expected entry+exit pairs aren't
+  supported. (Sean Christopherson)
+---
+ arch/x86/kvm/vmx/capabilities.h |  1 +
+ arch/x86/kvm/vmx/nested.c       | 26 +++++++++++++++++++++++++-
+ arch/x86/kvm/vmx/vmcs12.c       |  1 +
+ arch/x86/kvm/vmx/vmcs12.h       |  3 ++-
+ arch/x86/kvm/x86.h              |  2 +-
+ 5 files changed, 30 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/capabilities.h b/arch/x86/kvm/vmx/capabilities.h
+index 651507627ef32..f390f9f883c30 100644
+--- a/arch/x86/kvm/vmx/capabilities.h
++++ b/arch/x86/kvm/vmx/capabilities.h
+@@ -34,6 +34,7 @@ struct nested_vmx_msrs {
+ 	u32 pinbased_ctls_high;
+ 	u32 exit_ctls_low;
+ 	u32 exit_ctls_high;
++	u64 secondary_exit_ctls;
+ 	u32 entry_ctls_low;
+ 	u32 entry_ctls_high;
+ 	u32 misc_low;
+diff --git a/arch/x86/kvm/vmx/nested.c b/arch/x86/kvm/vmx/nested.c
+index bcea087b642fd..b994f264acc0a 100644
+--- a/arch/x86/kvm/vmx/nested.c
++++ b/arch/x86/kvm/vmx/nested.c
+@@ -1531,6 +1531,11 @@ int vmx_set_vmx_msr(struct kvm_vcpu *vcpu, u32 msr_index, u64 data)
+ 			return -EINVAL;
+ 		vmx->nested.msrs.vmfunc_controls = data;
+ 		return 0;
++	case MSR_IA32_VMX_EXIT_CTLS2:
++		if (data & ~vmcs_config.nested.secondary_exit_ctls)
++			return -EINVAL;
++		vmx->nested.msrs.secondary_exit_ctls = data;
++		return 0;
+ 	default:
+ 		/*
+ 		 * The rest of the VMX capability MSRs do not support restore.
+@@ -1570,6 +1575,9 @@ int vmx_get_vmx_msr(struct nested_vmx_msrs *msrs, u32 msr_index, u64 *pdata)
+ 		if (msr_index == MSR_IA32_VMX_EXIT_CTLS)
+ 			*pdata |= VM_EXIT_ALWAYSON_WITHOUT_TRUE_MSR;
+ 		break;
++	case MSR_IA32_VMX_EXIT_CTLS2:
++		*pdata = msrs->secondary_exit_ctls;
++		break;
+ 	case MSR_IA32_VMX_TRUE_ENTRY_CTLS:
+ 	case MSR_IA32_VMX_ENTRY_CTLS:
+ 		*pdata = vmx_control_msr(
+@@ -2520,6 +2528,11 @@ static void prepare_vmcs02_early(struct vcpu_vmx *vmx, struct loaded_vmcs *vmcs0
+ 		exec_control &= ~VM_EXIT_LOAD_IA32_EFER;
+ 	vm_exit_controls_set(vmx, exec_control);
+ 
++	if (exec_control & VM_EXIT_ACTIVATE_SECONDARY_CONTROLS) {
++		exec_control = __secondary_vm_exit_controls_get(vmcs01);
++		secondary_vm_exit_controls_set(vmx, exec_control);
++	}
++
+ 	/*
+ 	 * Interrupt/Exception Fields
+ 	 */
+@@ -7187,7 +7200,8 @@ static void nested_vmx_setup_exit_ctls(struct vmcs_config *vmcs_conf,
+ 		VM_EXIT_HOST_ADDR_SPACE_SIZE |
+ #endif
+ 		VM_EXIT_LOAD_IA32_PAT | VM_EXIT_SAVE_IA32_PAT |
+-		VM_EXIT_CLEAR_BNDCFGS | VM_EXIT_LOAD_CET_STATE;
++		VM_EXIT_CLEAR_BNDCFGS | VM_EXIT_LOAD_CET_STATE |
++		VM_EXIT_ACTIVATE_SECONDARY_CONTROLS;
+ 	msrs->exit_ctls_high |=
+ 		VM_EXIT_ALWAYSON_WITHOUT_TRUE_MSR |
+ 		VM_EXIT_LOAD_IA32_EFER | VM_EXIT_SAVE_IA32_EFER |
+@@ -7200,6 +7214,16 @@ static void nested_vmx_setup_exit_ctls(struct vmcs_config *vmcs_conf,
+ 
+ 	/* We support free control of debug control saving. */
+ 	msrs->exit_ctls_low &= ~VM_EXIT_SAVE_DEBUG_CONTROLS;
++
++	if (msrs->exit_ctls_high & VM_EXIT_ACTIVATE_SECONDARY_CONTROLS) {
++		msrs->secondary_exit_ctls = vmcs_conf->vmexit_2nd_ctrl;
++		/*
++		 * As the secondary VM exit control is always loaded, do not
++		 * advertise any feature in it to nVMX until its nVMX support
++		 * is ready.
++		 */
++		msrs->secondary_exit_ctls &= 0;
++	}
+ }
+ 
+ static void nested_vmx_setup_entry_ctls(struct vmcs_config *vmcs_conf,
+diff --git a/arch/x86/kvm/vmx/vmcs12.c b/arch/x86/kvm/vmx/vmcs12.c
+index 4233b5ca9461a..3b01175f392ae 100644
+--- a/arch/x86/kvm/vmx/vmcs12.c
++++ b/arch/x86/kvm/vmx/vmcs12.c
+@@ -66,6 +66,7 @@ const unsigned short vmcs12_field_offsets[] = {
+ 	FIELD64(HOST_IA32_PAT, host_ia32_pat),
+ 	FIELD64(HOST_IA32_EFER, host_ia32_efer),
+ 	FIELD64(HOST_IA32_PERF_GLOBAL_CTRL, host_ia32_perf_global_ctrl),
++	FIELD64(SECONDARY_VM_EXIT_CONTROLS, secondary_vm_exit_controls),
+ 	FIELD(PIN_BASED_VM_EXEC_CONTROL, pin_based_vm_exec_control),
+ 	FIELD(CPU_BASED_VM_EXEC_CONTROL, cpu_based_vm_exec_control),
+ 	FIELD(EXCEPTION_BITMAP, exception_bitmap),
+diff --git a/arch/x86/kvm/vmx/vmcs12.h b/arch/x86/kvm/vmx/vmcs12.h
+index 4ad6b16525b93..fa5306dc0311f 100644
+--- a/arch/x86/kvm/vmx/vmcs12.h
++++ b/arch/x86/kvm/vmx/vmcs12.h
+@@ -71,7 +71,7 @@ struct __packed vmcs12 {
+ 	u64 pml_address;
+ 	u64 encls_exiting_bitmap;
+ 	u64 tsc_multiplier;
+-	u64 padding64[1]; /* room for future expansion */
++	u64 secondary_vm_exit_controls;
+ 	/*
+ 	 * To allow migration of L1 (complete with its L2 guests) between
+ 	 * machines of different natural widths (32 or 64 bit), we cannot have
+@@ -261,6 +261,7 @@ static inline void vmx_check_vmcs12_offsets(void)
+ 	CHECK_OFFSET(pml_address, 312);
+ 	CHECK_OFFSET(encls_exiting_bitmap, 320);
+ 	CHECK_OFFSET(tsc_multiplier, 328);
++	CHECK_OFFSET(secondary_vm_exit_controls, 336);
+ 	CHECK_OFFSET(cr0_guest_host_mask, 344);
+ 	CHECK_OFFSET(cr4_guest_host_mask, 352);
+ 	CHECK_OFFSET(cr0_read_shadow, 360);
+diff --git a/arch/x86/kvm/x86.h b/arch/x86/kvm/x86.h
+index e9c6f304b02e4..1576f192a647b 100644
+--- a/arch/x86/kvm/x86.h
++++ b/arch/x86/kvm/x86.h
+@@ -95,7 +95,7 @@ do {											\
+  * associated feature that KVM supports for nested virtualization.
+  */
+ #define KVM_FIRST_EMULATED_VMX_MSR	MSR_IA32_VMX_BASIC
+-#define KVM_LAST_EMULATED_VMX_MSR	MSR_IA32_VMX_VMFUNC
++#define KVM_LAST_EMULATED_VMX_MSR	MSR_IA32_VMX_EXIT_CTLS2
+ 
+ #define KVM_DEFAULT_PLE_GAP		128
+ #define KVM_VMX_DEFAULT_PLE_WINDOW	4096
+-- 
+2.43.0
+

@@ -1,0 +1,40 @@
+From 286a9f326584d99b206a35959e027ae8f2424b24 Mon Sep 17 00:00:00 2001
+From: Len Brown <len.brown@intel.com>
+Date: Wed, 22 Oct 2025 20:26:33 -0300
+Subject: [PATCH 07/21] tools/power turbostat: Remove dead code
+
+amperf_group_fd is never used.
+
+Signed-off-by: Len Brown <len.brown@intel.com>
+---
+ tools/power/x86/turbostat/turbostat.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/tools/power/x86/turbostat/turbostat.c b/tools/power/x86/turbostat/turbostat.c
+index 47cb723430389..f63525a1877c7 100644
+--- a/tools/power/x86/turbostat/turbostat.c
++++ b/tools/power/x86/turbostat/turbostat.c
+@@ -466,8 +466,6 @@ static void bic_groups_init(void)
+ #define PCL_10 14		/* PC10 */
+ #define PCLUNL 15		/* Unlimited */
+ 
+-struct amperf_group_fd;
+-
+ char *proc_stat = "/proc/stat";
+ FILE *outf;
+ int *fd_percpu;
+@@ -4418,11 +4416,6 @@ int get_core_throt_cnt(int cpu, unsigned long long *cnt)
+ 	return 0;
+ }
+ 
+-struct amperf_group_fd {
+-	int aperf;		/* Also the group descriptor */
+-	int mperf;
+-};
+-
+ static int read_perf_counter_info(const char *const path, const char *const parse_format, void *value_ptr)
+ {
+ 	int fdmt;
+-- 
+2.43.0
+

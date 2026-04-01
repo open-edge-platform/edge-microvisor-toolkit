@@ -1,0 +1,32 @@
+From 674b9153b1c57fa9deac9efb6b0debaf52b746a5 Mon Sep 17 00:00:00 2001
+From: Michael Sit Wei Hong <michael.wei.hong.sit@intel.com>
+Date: Tue, 23 Aug 2022 12:05:21 +0800
+Subject: [PATCH 08/18] net: stmmac: add check for 2.5G mode to prevent MAC
+ capability update
+
+Checking the 2.5G capabilities to prevent other capabilities
+from turning on, since we cannot switch from 2.5G to other
+speeds dynamically.
+
+Signed-off-by: Michael Sit Wei Hong <michael.wei.hong.sit@intel.com>
+---
+ drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c b/drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c
+index d85bc0bb5c3c0..07357df01a1d2 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac4_core.c
+@@ -69,7 +69,8 @@ static void dwmac4_core_init(struct mac_device_info *hw,
+ 
+ static void dwmac4_update_caps(struct stmmac_priv *priv)
+ {
+-	if (priv->plat->tx_queues_to_use > 1)
++	if (priv->plat->tx_queues_to_use > 1 &&
++	    !priv->plat->fixed_2G5_clock_rate)
+ 		priv->hw->link.caps &= ~(MAC_10HD | MAC_100HD | MAC_1000HD);
+ 	else
+ 		priv->hw->link.caps |= (MAC_10HD | MAC_100HD | MAC_1000HD);
+-- 
+2.43.0
+

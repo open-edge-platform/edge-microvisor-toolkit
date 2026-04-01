@@ -1,0 +1,3 @@
+[submodule "azurelinux"]
+	path = azurelinux
+	url = https://github.com/microsoft/azurelinux

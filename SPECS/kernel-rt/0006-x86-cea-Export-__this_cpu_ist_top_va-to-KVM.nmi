@@ -1,0 +1,45 @@
+From 543b5b749bd79a5cd3301151e3fa1aa95751014f Mon Sep 17 00:00:00 2001
+From: "Xin Li (Intel)" <xin@zytor.com>
+Date: Fri, 24 Oct 2025 11:52:32 -0700
+Subject: [PATCH 06/44] x86/cea: Export __this_cpu_ist_top_va() to KVM
+
+Export __this_cpu_ist_top_va() to allow KVM to retrieve the per-CPU
+exception stack top.
+
+FRED introduced new fields in the host-state area of the VMCS for stack
+levels 1->3 (HOST_IA32_FRED_RSP[123]), each respectively corresponding to
+per-CPU exception stacks for #DB, NMI and #DF.  KVM must populate these
+fields each time a vCPU is loaded onto a CPU.
+
+Signed-off-by: Xin Li (Intel) <xin@zytor.com>
+---
+ arch/x86/mm/cpu_entry_area.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/arch/x86/mm/cpu_entry_area.c b/arch/x86/mm/cpu_entry_area.c
+index b3d90f9cfbb11..e507621d5c209 100644
+--- a/arch/x86/mm/cpu_entry_area.c
++++ b/arch/x86/mm/cpu_entry_area.c
+@@ -19,6 +19,11 @@ static DEFINE_PER_CPU_PAGE_ALIGNED(struct exception_stacks, exception_stacks);
+ DEFINE_PER_CPU(struct cea_exception_stacks*, cea_exception_stacks);
+ 
+ /*
++ * FRED introduced new fields in the host-state area of the VMCS for
++ * stack levels 1->3 (HOST_IA32_FRED_RSP[123]), each respectively
++ * corresponding to per CPU stacks for #DB, NMI and #DF.  KVM must
++ * populate these each time a vCPU is loaded onto a CPU.
++ *
+  * Typically invoked by entry code, so must be noinstr.
+  */
+ noinstr unsigned long __this_cpu_ist_bottom_va(enum exception_stack_ordering stack)
+@@ -36,6 +41,7 @@ noinstr unsigned long __this_cpu_ist_top_va(enum exception_stack_ordering stack)
+ {
+ 	return __this_cpu_ist_bottom_va(stack) + EXCEPTION_STKSZ;
+ }
++EXPORT_SYMBOL_FOR_MODULES(__this_cpu_ist_top_va, "kvm-intel");
+ 
+ static DEFINE_PER_CPU_READ_MOSTLY(unsigned long, _cea_offset);
+ 
+-- 
+2.43.0
+

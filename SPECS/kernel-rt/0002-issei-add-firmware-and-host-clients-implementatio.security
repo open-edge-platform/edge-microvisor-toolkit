@@ -1,7 +1,7 @@
-From f6896065a2048df5ca9aa66bc01ee1058022ba10 Mon Sep 17 00:00:00 2001
+From e46a110e08da5c96d76e4bb79db4a74a525eff87 Mon Sep 17 00:00:00 2001
 From: Alexander Usyskin <alexander.usyskin@intel.com>
 Date: Thu, 31 Oct 2024 09:57:32 +0200
-Subject: [PATCH 2/5] issei: add firmware and host clients implementation,
+Subject: [PATCH 2/7] issei: add firmware and host clients implementation,
  finish character device
 
 Add the core implementation for firmware and host client
@@ -29,12 +29,12 @@ Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
 ---
  Documentation/ABI/testing/sysfs-class-issei |  78 ++++
  drivers/misc/issei/Makefile                 |   2 +
- drivers/misc/issei/cdev.c                   | 229 ++++++++++
- drivers/misc/issei/fw_client.c              | 176 +++++++
- drivers/misc/issei/fw_client.h              |  51 +++
- drivers/misc/issei/host_client.c            | 482 ++++++++++++++++++++
+ drivers/misc/issei/cdev.c                   | 237 ++++++++++
+ drivers/misc/issei/fw_client.c              | 162 +++++++
+ drivers/misc/issei/fw_client.h              |  51 ++
+ drivers/misc/issei/host_client.c            | 489 ++++++++++++++++++++
  drivers/misc/issei/host_client.h            |  70 +++
- 7 files changed, 1088 insertions(+)
+ 7 files changed, 1089 insertions(+)
  create mode 100644 Documentation/ABI/testing/sysfs-class-issei
  create mode 100644 drivers/misc/issei/fw_client.c
  create mode 100644 drivers/misc/issei/fw_client.h
@@ -43,7 +43,7 @@ Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
 
 diff --git a/Documentation/ABI/testing/sysfs-class-issei b/Documentation/ABI/testing/sysfs-class-issei
 new file mode 100644
-index 000000000000..61af59cd87e1
+index 0000000000000..61af59cd87e1d
 --- /dev/null
 +++ b/Documentation/ABI/testing/sysfs-class-issei
 @@ -0,0 +1,78 @@
@@ -126,7 +126,7 @@ index 000000000000..61af59cd87e1
 +
 +		The version of the firmware client
 diff --git a/drivers/misc/issei/Makefile b/drivers/misc/issei/Makefile
-index 9e3ef22305ac..4e8f6a435a31 100644
+index 9e3ef22305ac9..4e8f6a435a318 100644
 --- a/drivers/misc/issei/Makefile
 +++ b/drivers/misc/issei/Makefile
 @@ -5,3 +5,5 @@ ccflags-y += -DDEFAULT_SYMBOL_NAMESPACE='"INTEL_SSEI"'
@@ -136,14 +136,15 @@ index 9e3ef22305ac..4e8f6a435a31 100644
 +issei-objs += fw_client.o
 +issei-objs += host_client.o
 diff --git a/drivers/misc/issei/cdev.c b/drivers/misc/issei/cdev.c
-index 26ac95e5f818..c7e204374eba 100644
+index c265012062c71..4296af754830b 100644
 --- a/drivers/misc/issei/cdev.c
 +++ b/drivers/misc/issei/cdev.c
-@@ -7,8 +7,11 @@
- #include <linux/fs.h>
- #include <linux/kernel.h>
+@@ -7,8 +7,12 @@
+ #include <linux/idr.h>
+ #include <linux/issei.h>
  #include <linux/module.h>
 +#include <linux/poll.h>
++#include <linux/sched/signal.h>
 +#include <linux/slab.h>
  
  #include "issei_dev.h"
@@ -151,7 +152,7 @@ index 26ac95e5f818..c7e204374eba 100644
  #include "cdev.h"
  
  struct class *issei_class;
-@@ -19,6 +22,225 @@ static dev_t issei_devt;
+@@ -19,6 +23,232 @@ static dev_t issei_devt;
  static DEFINE_MUTEX(issei_minor_lock);
  static DEFINE_IDR(issei_idr);
  
@@ -160,11 +161,16 @@ index 26ac95e5f818..c7e204374eba 100644
 +	struct issei_host_client *cl;
 +	struct issei_device *idev;
 +
-+	idev = container_of(inode->i_cdev, struct issei_device, cdev);
++	idev = idr_find(&issei_idr, iminor(inode));
++	if (!idev)
++		return -ENODEV;
++	get_device(&idev->dev);
 +
 +	cl = issei_cl_create(idev, fp);
-+	if (IS_ERR(cl))
++	if (IS_ERR(cl)) {
++		put_device(&idev->dev);
 +		return PTR_ERR(cl);
++	}
 +	fp->private_data = cl;
 +
 +	return nonseekable_open(inode, fp);
@@ -173,8 +179,10 @@ index 26ac95e5f818..c7e204374eba 100644
 +static int issei_release(struct inode *inode, struct file *fp)
 +{
 +	struct issei_host_client *cl = fp->private_data;
++	struct issei_device *idev = cl->idev;
 +
 +	issei_cl_remove(cl);
++	put_device(&idev->dev);
 +
 +	return 0;
 +}
@@ -196,15 +204,15 @@ index 26ac95e5f818..c7e204374eba 100644
 +
 +	switch (cmd) {
 +	case IOCTL_ISSEI_CONNECT_CLIENT:
-+		dev_dbg(idev->dev, "IOCTL_ISSEI_CONNECT_CLIENT\n");
++		dev_dbg(&idev->dev, "IOCTL_ISSEI_CONNECT_CLIENT\n");
 +
 +		if (idev->rst_state != ISSEI_RST_STATE_DONE) {
-+			dev_dbg(idev->dev, "Device is in transition\n");
++			dev_dbg(&idev->dev, "Device is in transition\n");
 +			return -ENODEV;
 +		}
 +
 +		if (copy_from_user(&conn, (char __user *)data, sizeof(conn))) {
-+			dev_dbg(idev->dev, "failed to copy data from userland\n");
++			dev_dbg(&idev->dev, "failed to copy data from userland\n");
 +			return -EFAULT;
 +		}
 +
@@ -216,16 +224,16 @@ index 26ac95e5f818..c7e204374eba 100644
 +			return ret;
 +
 +		if (copy_to_user((char __user *)data, &conn, sizeof(conn))) {
-+			dev_dbg(idev->dev, "failed to copy data to userland\n");
++			dev_dbg(&idev->dev, "failed to copy data to userland\n");
 +			return -EFAULT;
 +		}
 +		break;
 +
 +	case IOCTL_ISSEI_DISCONNECT_CLIENT:
-+		dev_dbg(idev->dev, "IOCTL_ISSEI_DISCONNECT_CLIENT\n");
++		dev_dbg(&idev->dev, "IOCTL_ISSEI_DISCONNECT_CLIENT\n");
 +
 +		if (idev->rst_state != ISSEI_RST_STATE_DONE) {
-+			dev_dbg(idev->dev, "Device is in transition\n");
++			dev_dbg(&idev->dev, "Device is in transition\n");
 +			return -ENODEV;
 +		}
 +
@@ -253,20 +261,20 @@ index 26ac95e5f818..c7e204374eba 100644
 +		return 0;
 +
 +	if (idev->rst_state != ISSEI_RST_STATE_DONE) {
-+		dev_dbg(idev->dev, "Device is in transition\n");
++		dev_dbg(&idev->dev, "Device is in transition\n");
 +		return -EBUSY;
 +	}
 +
 +	/* sanity check */
 +	if (length > idev->dma.length.h2f) {
-+		dev_dbg(idev->dev, "Write is too big %zu > %zu\n",
++		dev_dbg(&idev->dev, "Write is too big %zu > %zu\n",
 +			length, idev->dma.length.h2f);
 +		return -EFBIG;
 +	}
 +
 +	buf = memdup_user(ubuf, length);
 +	if (IS_ERR(buf)) {
-+		dev_dbg(idev->dev, "failed to copy data from userland\n");
++		dev_dbg(&idev->dev, "failed to copy data from userland\n");
 +		return PTR_ERR(buf);
 +	}
 +
@@ -299,13 +307,13 @@ index 26ac95e5f818..c7e204374eba 100644
 +		return 0;
 +
 +	if (idev->rst_state != ISSEI_RST_STATE_DONE) {
-+		dev_dbg(idev->dev, "Device is in transition\n");
++		dev_dbg(&idev->dev, "Device is in transition\n");
 +		return -EBUSY;
 +	}
 +
 +	/* sanity check */
 +	if (length > idev->dma.length.f2h) {
-+		dev_dbg(idev->dev, "Read is too big %zu > %zu\n",
++		dev_dbg(&idev->dev, "Read is too big %zu > %zu\n",
 +			length, idev->dma.length.f2h);
 +		return -EFBIG;
 +	}
@@ -328,7 +336,7 @@ index 26ac95e5f818..c7e204374eba 100644
 +
 +copy:
 +	if (copy_to_user(ubuf, data, data_size)) {
-+		dev_dbg(idev->dev, "failed to copy data to userland\n");
++		dev_dbg(&idev->dev, "failed to copy data to userland\n");
 +		ret = -EFAULT;
 +	} else {
 +		*offset = 0;
@@ -349,7 +357,7 @@ index 26ac95e5f818..c7e204374eba 100644
 +	int ret;
 +
 +	if (idev->rst_state != ISSEI_RST_STATE_DONE) {
-+		dev_dbg(idev->dev, "Device is in transition\n");
++		dev_dbg(&idev->dev, "Device is in transition\n");
 +		return EPOLLERR;
 +	}
 +
@@ -377,7 +385,7 @@ index 26ac95e5f818..c7e204374eba 100644
  static ssize_t fw_ver_show(struct device *device,
  			   struct device_attribute *attr, char *buf)
  {
-@@ -37,6 +259,13 @@ ATTRIBUTE_GROUPS(issei);
+@@ -37,6 +267,13 @@ ATTRIBUTE_GROUPS(issei);
  
  static const struct file_operations issei_fops = {
  	.owner = THIS_MODULE,
@@ -393,16 +401,15 @@ index 26ac95e5f818..c7e204374eba 100644
  static int issei_minor_get(struct issei_device *idev)
 diff --git a/drivers/misc/issei/fw_client.c b/drivers/misc/issei/fw_client.c
 new file mode 100644
-index 000000000000..5f9ba46bdfe7
+index 0000000000000..43c42f16b9cbc
 --- /dev/null
 +++ b/drivers/misc/issei/fw_client.c
-@@ -0,0 +1,176 @@
+@@ -0,0 +1,162 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright (C) 2023-2025 Intel Corporation */
 +#include <linux/cleanup.h>
 +#include <linux/container_of.h>
 +#include <linux/device.h>
-+#include <linux/device/class.h>
 +#include <linux/dev_printk.h>
 +#include <linux/list.h>
 +#include <linux/slab.h>
@@ -470,12 +477,7 @@ index 000000000000..5f9ba46bdfe7
 +					   const uuid_t *uuid, u32 mtu, u32 flags)
 +{
 +	struct issei_fw_client *fw_cl;
-+	struct device *clsdev;
 +	int ret;
-+
-+	clsdev = class_find_device_by_devt(issei_class, idev->cdev.dev);
-+	if (!clsdev)
-+		return ERR_PTR(-ENODEV);
 +
 +	guard(mutex)(&idev->fw_client_lock);
 +
@@ -506,34 +508,26 @@ index 000000000000..5f9ba46bdfe7
 +
 +	list_add_tail(&fw_cl->list, &idev->fw_client_list);
 +
-+	ret = sysfs_create_group(&clsdev->kobj, &fw_cl->attr_grp);
++	ret = sysfs_create_group(&idev->dev.kobj, &fw_cl->attr_grp);
 +	if (ret)
-+		dev_err(idev->dev, "Attr group for client %pUb failed %d\n", uuid, ret);
++		dev_err(&idev->dev, "Attr group for client %pUb failed %d\n", uuid, ret);
 +
-+	dev_dbg(idev->dev, "FW client %pUb created\n", uuid);
-+	put_device(clsdev);
++	dev_dbg(&idev->dev, "FW client %pUb created\n", uuid);
 +	return fw_cl;
 +
 +free:
 +	kfree(fw_cl);
 +err:
-+	put_device(clsdev);
 +	return ERR_PTR(ret);
 +}
 +
 +static void __issei_fw_cl_remove(struct issei_device *idev, struct issei_fw_client *fw_cl)
 +{
-+	struct device *clsdev;
-+
 +	WARN(fw_cl->cl, "Removing connected client!\n");
 +
-+	dev_dbg(idev->dev, "FW client %pUb will be removed\n", &fw_cl->uuid);
++	dev_dbg(&idev->dev, "FW client %pUb will be removed\n", &fw_cl->uuid);
 +
-+	clsdev = class_find_device_by_devt(issei_class, idev->cdev.dev);
-+	if (clsdev) {
-+		sysfs_remove_group(&clsdev->kobj, &fw_cl->attr_grp);
-+		put_device(clsdev);
-+	}
++	sysfs_remove_group(&idev->dev.kobj, &fw_cl->attr_grp);
 +	kfree(fw_cl->attr_grp.name);
 +	list_del(&fw_cl->list);
 +	kfree(fw_cl);
@@ -575,7 +569,7 @@ index 000000000000..5f9ba46bdfe7
 +}
 diff --git a/drivers/misc/issei/fw_client.h b/drivers/misc/issei/fw_client.h
 new file mode 100644
-index 000000000000..208fdb235b1b
+index 0000000000000..208fdb235b1b1
 --- /dev/null
 +++ b/drivers/misc/issei/fw_client.h
 @@ -0,0 +1,51 @@
@@ -632,10 +626,10 @@ index 000000000000..208fdb235b1b
 +#endif /* _ISSEI_FW_CLIENT_H_ */
 diff --git a/drivers/misc/issei/host_client.c b/drivers/misc/issei/host_client.c
 new file mode 100644
-index 000000000000..1eaf33df1da3
+index 0000000000000..6b8dbe566f5f3
 --- /dev/null
 +++ b/drivers/misc/issei/host_client.c
-@@ -0,0 +1,482 @@
+@@ -0,0 +1,489 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright (C) 2023-2025 Intel Corporation */
 +#include <linux/cleanup.h>
@@ -650,13 +644,7 @@ index 000000000000..1eaf33df1da3
 +#include "host_client.h"
 +#include "fw_client.h"
 +
-+/**
-+ * issei_cl_fw_id - fw client id in safe way
-+ * @cl: host client
-+ *
-+ * Return: fw client id or 0 if client is not connected
-+ */
-+static inline u8 issei_cl_fw_id(const struct issei_host_client *cl)
++static inline u8 __issei_cl_fw_id(const struct issei_host_client *cl)
 +{
 +	return cl->fw_cl ? cl->fw_cl->id : 0;
 +}
@@ -665,17 +653,20 @@ index 000000000000..1eaf33df1da3
 +
 +#define cl_dbg(_dev_, _cl_, format, arg...) { \
 +	struct issei_host_client *_l_cl_ = _cl_; \
-+	dev_dbg((_dev_)->dev, ISSEI_CL_FMT format, (_l_cl_)->id, issei_cl_fw_id(_l_cl_), ##arg); \
++	dev_dbg(&(_dev_)->dev, ISSEI_CL_FMT format, (_l_cl_)->id, \
++		__issei_cl_fw_id(_l_cl_), ##arg); \
 +}
 +
 +#define cl_warn(_dev_, _cl_, format, arg...) { \
 +	struct issei_host_client *_l_cl_ = _cl_; \
-+	dev_warn((_dev_)->dev, ISSEI_CL_FMT format, (_l_cl_)->id, issei_cl_fw_id(_l_cl_), ##arg); \
++	dev_warn(&(_dev_)->dev, ISSEI_CL_FMT format, (_l_cl_)->id, \
++		__issei_cl_fw_id(_l_cl_), ##arg); \
 +}
 +
 +#define cl_err(_dev_, _cl_, format, arg...) { \
 +	struct issei_host_client *_l_cl_ = _cl_; \
-+	dev_err((_dev_)->dev, ISSEI_CL_FMT format, (_l_cl_)->id, issei_cl_fw_id(_l_cl_), ##arg); \
++	dev_err(&(_dev_)->dev, ISSEI_CL_FMT format, (_l_cl_)->id, \
++		__issei_cl_fw_id(_l_cl_), ##arg); \
 +}
 +
 +static void __issei_cl_clean_wbuf(struct issei_write_buf *wbuf)
@@ -758,6 +749,13 @@ index 000000000000..1eaf33df1da3
 +	__issei_cl_release_rbuf(cl);
 +}
 +
++/**
++ * issei_cl_create - create the host client
++ * @idev: issei device
++ * @fp: file pointer to associate with host client
++ *
++ * Return: client pointer on success, ERR_PTR on error
++ */
 +struct issei_host_client *issei_cl_create(struct issei_device *idev, struct file *fp)
 +{
 +	struct issei_host_client *cl;
@@ -766,7 +764,7 @@ index 000000000000..1eaf33df1da3
 +	guard(mutex)(&idev->host_client_lock);
 +
 +	if (idev->host_client_count == ISSEI_HOST_CLIENTS_MAX) {
-+		dev_err(idev->dev, "Maximum open clients %d is reached.", ISSEI_HOST_CLIENTS_MAX);
++		dev_err(&idev->dev, "Maximum open clients %d is reached.", ISSEI_HOST_CLIENTS_MAX);
 +		return ERR_PTR(-EMFILE);
 +	}
 +
@@ -792,6 +790,10 @@ index 000000000000..1eaf33df1da3
 +	return cl;
 +}
 +
++/**
++ * issei_cl_remove - disconnect and free the host client
++ * @cl: host client
++ */
 +void issei_cl_remove(struct issei_host_client *cl)
 +{
 +	struct issei_device *idev;
@@ -1044,8 +1046,7 @@ index 000000000000..1eaf33df1da3
 +
 +/**
 + * issei_cl_read - read data from firmware to provided buffer
-+ * @idev: issei device
-+ * @length: buffer length
++ * @cl: host client
 + * @buf: buffer to store data
 + * @buf_size: maximum buffer size passed and actual buffer size on return
 + *
@@ -1120,7 +1121,7 @@ index 000000000000..1eaf33df1da3
 +}
 diff --git a/drivers/misc/issei/host_client.h b/drivers/misc/issei/host_client.h
 new file mode 100644
-index 000000000000..9f081bed190d
+index 0000000000000..9f081bed190d2
 --- /dev/null
 +++ b/drivers/misc/issei/host_client.h
 @@ -0,0 +1,70 @@

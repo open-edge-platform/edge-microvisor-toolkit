@@ -1,7 +1,7 @@
-From 28c125e31e9c3aac24f3d4229282ee03ed5f05a9 Mon Sep 17 00:00:00 2001
+From b50d2a7550d5cf9d63171d44eda4bdc124c0dd1e Mon Sep 17 00:00:00 2001
 From: Alexander Usyskin <alexander.usyskin@intel.com>
 Date: Thu, 17 Apr 2025 12:38:06 +0300
-Subject: [PATCH 1/5] issei: initial driver skeleton
+Subject: [PATCH 1/7] issei: initial driver skeleton
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -21,19 +21,19 @@ Co-developed-by: Vitaly Lubart <lubvital@gmail.com>
 Signed-off-by: Vitaly Lubart <lubvital@gmail.com>
 Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
 ---
- Documentation/driver-api/issei/issei.rst | 138 ++++++++++++++++++
+ Documentation/driver-api/issei/issei.rst | 138 ++++++++++++++
  drivers/misc/Kconfig                     |   1 +
  drivers/misc/Makefile                    |   1 +
  drivers/misc/issei/Kconfig               |  13 ++
  drivers/misc/issei/Makefile              |   7 +
- drivers/misc/issei/cdev.c                | 160 +++++++++++++++++++++
- drivers/misc/issei/cdev.h                |  12 ++
- drivers/misc/issei/dma.c                 | 172 ++++++++++++++++++++++
- drivers/misc/issei/dma.h                 |  58 ++++++++
- drivers/misc/issei/hw_msg.h              | 176 +++++++++++++++++++++++
- drivers/misc/issei/issei_dev.h           | 153 ++++++++++++++++++++
- include/uapi/linux/issei.h               |  78 ++++++++++
- 12 files changed, 969 insertions(+)
+ drivers/misc/issei/cdev.c                | 225 +++++++++++++++++++++++
+ drivers/misc/issei/cdev.h                |  18 ++
+ drivers/misc/issei/dma.c                 | 172 +++++++++++++++++
+ drivers/misc/issei/dma.h                 |  58 ++++++
+ drivers/misc/issei/hw_msg.h              | 176 ++++++++++++++++++
+ drivers/misc/issei/issei_dev.h           | 155 ++++++++++++++++
+ include/uapi/linux/issei.h               |  67 +++++++
+ 12 files changed, 1031 insertions(+)
  create mode 100644 Documentation/driver-api/issei/issei.rst
  create mode 100644 drivers/misc/issei/Kconfig
  create mode 100644 drivers/misc/issei/Makefile
@@ -47,7 +47,7 @@ Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
 
 diff --git a/Documentation/driver-api/issei/issei.rst b/Documentation/driver-api/issei/issei.rst
 new file mode 100644
-index 000000000000..8bfbe1e0c6b6
+index 0000000000000..07b0412d1b3d9
 --- /dev/null
 +++ b/Documentation/driver-api/issei/issei.rst
 @@ -0,0 +1,138 @@
@@ -74,7 +74,7 @@ index 000000000000..8bfbe1e0c6b6
 +upon connection.
 +
 +Intel ISSEI Driver
-+================
++==================
 +
 +The driver exposes a character device with device nodes /dev/isseiX.
 +
@@ -139,12 +139,12 @@ index 000000000000..8bfbe1e0c6b6
 +User space API
 +
 +ioctl:
-+=======
++======
 +
 +The Intel ISSEI Driver supports the following ioctl commands:
 +
 +IOCTL_ISSEI_CONNECT_CLIENT
-+-------------------------
++--------------------------
 +Connect to firmware Feature/Client.
 +
 +.. code-block:: none
@@ -176,7 +176,7 @@ index 000000000000..8bfbe1e0c6b6
 +        requests up to bytes 2k and received responses up to 2k bytes).
 +
 +IOCTL_ISSEI_DISCONNECT_CLIENT
-+-------------------------
++-----------------------------
 +Disconnect from firmware Feature/Client.
 +
 +.. code-block:: none
@@ -190,7 +190,7 @@ index 000000000000..8bfbe1e0c6b6
 +                ENODEV        Device or Connection is not initialized or ready.
 +                ENOTCONN  Feature/Client is not connected.
 diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index b9c11f67315f..43ab202e0b22 100644
+index b9c11f67315f0..43ab202e0b224 100644
 --- a/drivers/misc/Kconfig
 +++ b/drivers/misc/Kconfig
 @@ -661,4 +661,5 @@ source "drivers/misc/mchp_pci1xxxx/Kconfig"
@@ -200,17 +200,17 @@ index b9c11f67315f..43ab202e0b22 100644
 +source "drivers/misc/issei/Kconfig"
  endmenu
 diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index e2e66f5f4fb8..60d004bcde29 100644
+index b32a2597d2467..01072ebecf829 100644
 --- a/drivers/misc/Makefile
 +++ b/drivers/misc/Makefile
-@@ -76,3 +76,4 @@ obj-$(CONFIG_MCHP_LAN966X_PCI)	+= lan966x-pci.o
+@@ -75,3 +75,4 @@ obj-$(CONFIG_MCHP_LAN966X_PCI)	+= lan966x-pci.o
  obj-y				+= keba/
  obj-y				+= amd-sbi/
  obj-$(CONFIG_MISC_RP1)		+= rp1/
 +obj-$(CONFIG_INTEL_SSEI)	+= issei/
 diff --git a/drivers/misc/issei/Kconfig b/drivers/misc/issei/Kconfig
 new file mode 100644
-index 000000000000..ffd027e826df
+index 0000000000000..ffd027e826dfd
 --- /dev/null
 +++ b/drivers/misc/issei/Kconfig
 @@ -0,0 +1,13 @@
@@ -229,7 +229,7 @@ index 000000000000..ffd027e826df
 +	  If in doubt, select N.
 diff --git a/drivers/misc/issei/Makefile b/drivers/misc/issei/Makefile
 new file mode 100644
-index 000000000000..9e3ef22305ac
+index 0000000000000..9e3ef22305ac9
 --- /dev/null
 +++ b/drivers/misc/issei/Makefile
 @@ -0,0 +1,7 @@
@@ -242,18 +242,18 @@ index 000000000000..9e3ef22305ac
 +issei-objs += dma.o
 diff --git a/drivers/misc/issei/cdev.c b/drivers/misc/issei/cdev.c
 new file mode 100644
-index 000000000000..26ac95e5f818
+index 0000000000000..c265012062c71
 --- /dev/null
 +++ b/drivers/misc/issei/cdev.c
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,225 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/* Copyright (C) 2023-2025 Intel Corporation */
 +#include <linux/cdev.h>
 +#include <linux/device.h>
++#include <linux/export.h>
++#include <linux/fs.h>
 +#include <linux/idr.h>
 +#include <linux/issei.h>
-+#include <linux/fs.h>
-+#include <linux/kernel.h>
 +#include <linux/module.h>
 +
 +#include "issei_dev.h"
@@ -297,64 +297,129 @@ index 000000000000..26ac95e5f818
 +	if (ret >= 0)
 +		idev->minor = ret;
 +	else if (ret == -ENOSPC)
-+		dev_err(idev->dev, "too many issei devices\n");
++		dev_err(&idev->dev, "too many issei devices\n");
 +
 +	return ret;
 +}
 +
-+static void issei_minor_free(struct issei_device *idev)
++static void issei_minor_free(int minor)
 +{
 +	guard(mutex)(&issei_minor_lock);
 +
-+	idr_remove(&issei_idr, idev->minor);
++	idr_remove(&issei_idr, minor);
++}
++
++static void issei_device_release(struct device *dev)
++{
++	kfree(dev_get_drvdata(dev));
++}
++
++static void issei_device_init(struct issei_device *idev, struct device *parent,
++			      const struct issei_dma_length *dma_length,
++			      const struct issei_hw_ops *ops)
++{
++	idev->parent = parent;
++	idev->power_down = false;
++	init_waitqueue_head(&idev->wait_rst_irq);
++	atomic_set(&idev->rst_irq, 0);
++	init_waitqueue_head(&idev->wait_rst_state);
++	idev->rst_state = ISSEI_RST_STATE_INIT;
++
++	mutex_init(&idev->host_client_lock);
++	INIT_LIST_HEAD(&idev->host_client_list);
++	idev->host_client_last_id = 0;
++	idev->host_client_count = 0;
++
++	mutex_init(&idev->fw_client_lock);
++	INIT_LIST_HEAD(&idev->fw_client_list);
++
++	idev->dma.length = *dma_length;
++
++	INIT_LIST_HEAD(&idev->write_queue);
++
++	idev->ops = ops;
 +}
 +
 +/**
 + * issei_register: register issei character device
-+ * @idev: the device structure
++ * @hw_size: size of the hardware structure to allocate
 + * @parent: parent device
++ * @dma_length: structure with DMA sizes
++ * @ops: hardware-related operations
 + *
-+ * Return: 0 on sucess, <0 on failure
++ * Return: pointer allocated to issei_device structure, error on failure
 + */
-+int issei_register(struct issei_device *idev, struct device *parent)
++struct issei_device *issei_register(size_t hw_size, struct device *parent,
++				    const struct issei_dma_length *dma_length,
++				    const struct issei_hw_ops *ops)
 +{
-+	struct device *clsdev;
++	struct issei_device *idev;
++	int minor;
 +	int ret, devno;
 +
++	idev = kzalloc(sizeof(*idev) + hw_size, GFP_KERNEL);
++	if (!idev)
++		return ERR_PTR(-ENOMEM);
++
++	issei_device_init(idev, parent, dma_length, ops);
++
 +	ret = issei_minor_get(idev);
-+	if (ret < 0)
-+		return ret;
++	if (ret < 0) {
++		kfree(idev);
++		return ERR_PTR(ret);
++	}
++	minor = idev->minor;
 +
 +	devno = MKDEV(MAJOR(issei_devt), idev->minor);
-+	cdev_init(&idev->cdev, &issei_fops);
-+	if (parent->driver)
-+		idev->cdev.owner = parent->driver->owner;
 +
-+	ret = cdev_add(&idev->cdev, devno, 1);
++	device_initialize(&idev->dev);
++	idev->dev.devt = devno;
++	idev->dev.class = issei_class;
++	idev->dev.parent = parent;
++	idev->dev.groups = issei_groups;
++	idev->dev.release = issei_device_release;
++	dev_set_drvdata(&idev->dev, idev);
++
++	idev->cdev = cdev_alloc();
++	if (!idev->cdev) {
++		ret = -ENOMEM;
++		goto err;
++	}
++	idev->cdev->ops = &issei_fops;
++	if (parent->driver)
++		idev->cdev->owner = parent->driver->owner;
++	cdev_set_parent(idev->cdev, &idev->dev.kobj);
++
++	ret = cdev_add(idev->cdev, devno, 1);
 +	if (ret) {
 +		dev_err(parent, "unable to add device %d:%d\n",
 +			MAJOR(issei_devt), idev->minor);
-+		goto err_dev_add;
++		goto err_del_cdev;
 +	}
 +
-+	clsdev = device_create_with_groups(issei_class, parent, devno,
-+					   idev, issei_groups,
-+					   "issei%d", idev->minor);
-+	if (IS_ERR(clsdev)) {
-+		dev_err(parent, "unable to create device %d:%d\n",
-+			MAJOR(issei_devt), idev->minor);
-+		ret = PTR_ERR(clsdev);
-+		goto err_dev_create;
++	ret = dev_set_name(&idev->dev, "issei%d", idev->minor);
++	if (ret) {
++		dev_err(parent, "unable to set name to device %d:%d ret = %d\n",
++			MAJOR(issei_devt), idev->minor, ret);
++		goto err_del_cdev;
 +	}
 +
-+	return 0;
++	ret = device_add(&idev->dev);
++	if (ret) {
++		dev_err(parent, "unable to add device %d:%d ret = %d\n",
++			MAJOR(issei_devt), idev->minor, ret);
++		goto err_del_cdev;
++	}
 +
-+err_dev_create:
-+	cdev_del(&idev->cdev);
-+err_dev_add:
-+	issei_minor_free(idev);
++	return idev;
 +
-+	return ret;
++err_del_cdev:
++	cdev_del(idev->cdev);
++err:
++	put_device(&idev->dev);
++	issei_minor_free(minor);
++
++	return ERR_PTR(ret);
 +}
 +EXPORT_SYMBOL_GPL(issei_register);
 +
@@ -364,14 +429,14 @@ index 000000000000..26ac95e5f818
 + */
 +void issei_deregister(struct issei_device *idev)
 +{
-+	int devno;
++	int minor = idev->minor;
++	int devno = idev->cdev->dev;
 +
-+	devno = idev->cdev.dev;
-+	cdev_del(&idev->cdev);
++	cdev_del(idev->cdev);
 +
 +	device_destroy(issei_class, devno);
 +
-+	issei_minor_free(idev);
++	issei_minor_free(minor);
 +}
 +EXPORT_SYMBOL_GPL(issei_deregister);
 +
@@ -408,25 +473,31 @@ index 000000000000..26ac95e5f818
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/misc/issei/cdev.h b/drivers/misc/issei/cdev.h
 new file mode 100644
-index 000000000000..dbdb0e868482
+index 0000000000000..d63541227e677
 --- /dev/null
 +++ b/drivers/misc/issei/cdev.h
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,18 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright (C) 2023-2025 Intel Corporation */
 +#ifndef _ISSEI_CDEV_H_
 +#define _ISSEI_CDEV_H_
 +
++#include <linux/types.h>
++
 +struct device;
 +struct issei_device;
++struct issei_dma_length;
++struct issei_hw_ops;
 +
-+int issei_register(struct issei_device *idev, struct device *parent);
++struct issei_device *issei_register(size_t hw_size, struct device *parent,
++				    const struct issei_dma_length *dma_length,
++				    const struct issei_hw_ops *ops);
 +void issei_deregister(struct issei_device *idev);
 +
 +#endif /* _ISSEI_CDEV_H_ */
 diff --git a/drivers/misc/issei/dma.c b/drivers/misc/issei/dma.c
 new file mode 100644
-index 000000000000..8ad54f4636dc
+index 0000000000000..2dd081d05a6bd
 --- /dev/null
 +++ b/drivers/misc/issei/dma.c
 @@ -0,0 +1,172 @@
@@ -476,7 +547,7 @@ index 000000000000..8ad54f4636dc
 +		return 0;
 +	}
 +
-+	dma->vaddr = dmam_alloc_coherent(idev->dev, size, &dma->daddr, GFP_KERNEL | __GFP_ZERO);
++	dma->vaddr = dmam_alloc_coherent(idev->parent, size, &dma->daddr, GFP_KERNEL | __GFP_ZERO);
 +	return dma->vaddr ? 0 : -ENOMEM;
 +}
 +
@@ -503,7 +574,7 @@ index 000000000000..8ad54f4636dc
 +{
 +	struct control_buffer *ctl = __dma_get_ctl_buf(&idev->dma);
 +
-+	dev_dbg(idev->dev, "ctl->f2h_counter_rd %u\n", ctl->f2h_counter_rd);
++	dev_dbg(&idev->dev, "ctl->f2h_counter_rd %u\n", ctl->f2h_counter_rd);
 +	/* No need to check overflow - the firmware counters overflow the same way */
 +	ctl->f2h_counter_rd++;
 +}
@@ -512,7 +583,7 @@ index 000000000000..8ad54f4636dc
 +{
 +	struct control_buffer *ctl = __dma_get_ctl_buf(&idev->dma);
 +
-+	dev_dbg(idev->dev, "ctl->h2f_counter_wr %u\n", ctl->h2f_counter_wr);
++	dev_dbg(&idev->dev, "ctl->h2f_counter_wr %u\n", ctl->h2f_counter_wr);
 +	/* No need to check overflow - the firmware counters overflow the same way */
 +	ctl->h2f_counter_wr++;
 +}
@@ -530,16 +601,16 @@ index 000000000000..8ad54f4636dc
 +	struct ham_message_header *hdr = (struct ham_message_header *)write_buf;
 +
 +	if (data->length > idev->dma.length.h2f - sizeof(*hdr)) {
-+		dev_err(idev->dev, "Message too big\n");
++		dev_err(&idev->dev, "Message too big\n");
 +		return -EMSGSIZE;
 +	}
 +
 +	if (__issei_dma_is_write_busy(&idev->dma)) {
 +		if (ktime_ms_delta(ktime_get(), idev->last_write_ts) > ISSEI_WRITE_TIMEOUT_MSEC) {
-+			dev_err(idev->dev, "Write stuck in queue\n");
++			dev_err(&idev->dev, "Write stuck in queue\n");
 +			return -EIO;
 +		}
-+		dev_info(idev->dev, "Write is busy\n");
++		dev_info(&idev->dev, "Write is busy\n");
 +		return -EBUSY;
 +	}
 +
@@ -586,14 +657,14 @@ index 000000000000..8ad54f4636dc
 +int issei_dma_read(struct issei_device *idev, struct issei_dma_data *data)
 +{
 +	if (!__issei_dma_is_read_busy(&idev->dma)) {
-+		dev_dbg(idev->dev, "Nothing to read\n");
++		dev_dbg(&idev->dev, "Nothing to read\n");
 +		return -ENODATA;
 +	}
 +
-+	dev_dbg(idev->dev, "Reading header\n");
++	dev_dbg(&idev->dev, "Reading header\n");
 +	__issei_dma_read_hdr(idev, data);
 +
-+	dev_dbg(idev->dev, "Reading data (size %u)\n", data->length);
++	dev_dbg(&idev->dev, "Reading data (size %u)\n", data->length);
 +	data->buf = kmalloc(data->length, GFP_KERNEL);
 +	if (!data->buf)
 +		return -ENOMEM;
@@ -604,7 +675,7 @@ index 000000000000..8ad54f4636dc
 +}
 diff --git a/drivers/misc/issei/dma.h b/drivers/misc/issei/dma.h
 new file mode 100644
-index 000000000000..8d92285f5da7
+index 0000000000000..8d92285f5da76
 --- /dev/null
 +++ b/drivers/misc/issei/dma.h
 @@ -0,0 +1,58 @@
@@ -668,7 +739,7 @@ index 000000000000..8d92285f5da7
 +#endif /*_ISSEI_DMA_H_*/
 diff --git a/drivers/misc/issei/hw_msg.h b/drivers/misc/issei/hw_msg.h
 new file mode 100644
-index 000000000000..75346d3ff986
+index 0000000000000..75346d3ff986b
 --- /dev/null
 +++ b/drivers/misc/issei/hw_msg.h
 @@ -0,0 +1,176 @@
@@ -850,10 +921,10 @@ index 000000000000..75346d3ff986
 +#endif /* _ISSEI_HW_MSG_H_ */
 diff --git a/drivers/misc/issei/issei_dev.h b/drivers/misc/issei/issei_dev.h
 new file mode 100644
-index 000000000000..4e507ce4d10e
+index 0000000000000..cfac43c14ba24
 --- /dev/null
 +++ b/drivers/misc/issei/issei_dev.h
-@@ -0,0 +1,153 @@
+@@ -0,0 +1,155 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright (C) 2023-2025 Intel Corporation */
 +#ifndef _ISSEI_DEV_H_
@@ -951,6 +1022,7 @@ index 000000000000..4e507ce4d10e
 +
 +/**
 + * struct issei_device - issei device
++ * @parent: parent device object
 + * @dev: associated device object
 + * @cdev: character device
 + * @minor: allocated minor number
@@ -977,8 +1049,9 @@ index 000000000000..4e507ce4d10e
 + * @hw: hw-specific data
 + */
 +struct issei_device {
-+	struct device *dev;
-+	struct cdev cdev;
++	struct device *parent;
++	struct device dev;
++	struct cdev *cdev;
 +	int minor;
 +	bool power_down;
 +	wait_queue_head_t wait_rst_irq;
@@ -1009,10 +1082,10 @@ index 000000000000..4e507ce4d10e
 +#endif /* _ISSEI_DEV_H_ */
 diff --git a/include/uapi/linux/issei.h b/include/uapi/linux/issei.h
 new file mode 100644
-index 000000000000..234fbc0aeaaa
+index 0000000000000..78a231775b521
 --- /dev/null
 +++ b/include/uapi/linux/issei.h
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,67 @@
 +/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 +/*
 + * Copyright (C) 2023-2025 Intel Corporation
@@ -1078,17 +1151,6 @@ index 000000000000..234fbc0aeaaa
 + */
 +#define IOCTL_ISSEI_DISCONNECT_CLIENT \
 +	_IO('H', 0x02)
-+
-+/*
-+ * This IOCTL is used to obtain driver status
-+ *
-+ * The 32bit output parameter:
-+ * Bit[0] - driver reset status (1 - in reset, 0 - out of reset)
-+ * Bit[1-7] - Reserved
-+ * Bit[8-15] - Number of resets performed after driver load
-+ */
-+#define IOCTL_ISSEI_DRIVER_STATUS \
-+	_IOR('H', 0x03, __u32)
 +
 +#endif /* _LINUX_ISSEI_H */
 -- 

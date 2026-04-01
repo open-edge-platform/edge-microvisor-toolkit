@@ -1,0 +1,60 @@
+From 7302a5d52e119f352b20bff0ea104d1c5f97aecb Mon Sep 17 00:00:00 2001
+From: Zide Chen <zide.chen@intel.com>
+Date: Mon, 17 Nov 2025 15:31:01 -0800
+Subject: [PATCH 12/13] perf pmu: Relax uncore wildcard matching to allow
+ numeric suffix
+
+Diamond Rapids introduces two types of PCIe related uncore PMUs:
+"uncore_pcie4_*" and "uncore_pcie6_*".
+
+To ensure that generic PCIe events (e.g., UNC_PCIE_CLOCKTICKS) can match
+and collect events from both PMU types, slightly relax the wildcard
+matching logic in perf_pmu__match_wildcard().
+
+This change allows a wildcard such as "pcie" to match PMU names that
+include a numeric suffix, such as "pcie4_*" and "pcie6_*".
+
+Co-developed-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Reviewed-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Zide Chen <zide.chen@intel.com>
+---
+ tools/perf/util/pmu.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/tools/perf/util/pmu.c b/tools/perf/util/pmu.c
+index 3d1f975e8db9f..00cb72615621d 100644
+--- a/tools/perf/util/pmu.c
++++ b/tools/perf/util/pmu.c
+@@ -905,6 +905,7 @@ static bool perf_pmu__match_wildcard(const char *pmu_name, const char *tok)
+ {
+ 	const char *p, *suffix;
+ 	bool has_hex = false;
++	bool has_underscore = false;
+ 	size_t tok_len = strlen(tok);
+ 
+ 	/* Check start of pmu_name for equality. */
+@@ -915,13 +916,14 @@ static bool perf_pmu__match_wildcard(const char *pmu_name, const char *tok)
+ 	if (*p == 0)
+ 		return true;
+ 
+-	if (*p == '_') {
+-		++p;
+-		++suffix;
+-	}
+-
+-	/* Ensure we end in a number */
++	/* Ensure we end in a number or a mix of number and "_". */
+ 	while (1) {
++		if (!has_underscore && (*p == '_')) {
++			has_underscore = true;
++			++p;
++			++suffix;
++		}
++
+ 		if (!isxdigit(*p))
+ 			return false;
+ 		if (!has_hex)
+-- 
+2.43.0
+

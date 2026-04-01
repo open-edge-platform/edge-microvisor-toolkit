@@ -65,10 +65,6 @@ version_release_matching_groups = [
         "SPECS/shim-unsigned-aarch64/shim-unsigned-aarch64.spec"
     ]),
     frozenset([
-        "SPECS-SIGNED/fwctl-signed/fwctl-signed.spec",
-        "SPECS/fwctl/fwctl.spec"
-    ]),
-    frozenset([
         "SPECS-SIGNED/iser-signed/iser-signed.spec",
         "SPECS/iser/iser.spec"
     ]),

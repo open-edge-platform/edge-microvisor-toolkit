@@ -1,0 +1,38 @@
+From 1ae1abe63f9eb8907fd4d0805b5759983b4d707f Mon Sep 17 00:00:00 2001
+From: KhaiWenTan <khai.wen.tan@intel.com>
+Date: Tue, 13 Jan 2026 22:52:50 +0800
+Subject: [PATCH 18/18] net: stmmac: intel: Initialize plat->phy_interfaces in
+ tgl_common_data()
+
+Commit d3836052fe09 ("net: stmmac: intel: convert speed_mode_2500()
+to get_interfaces()") has made the initialization of phy_interfaces
+to be done after Intel mgbe xpcs setup.
+
+The pcs-xpcs setup rely on checking the phy_interfaces is whether
+SGMII or 1000BASEX. Without the phy_interfaces initialized first,
+pcs-xpcs setup will be skipped no matter the condition, causing ping
+issue for 100Mbps and 10Mbps.
+
+Adding the initialization of plat->phy_interfaces to tgl_common_data()
+ensure the pcs-xpcs setup will be executed for SGMII and 1000BASEX.
+
+Signed-off-by: KhaiWenTan <khai.wen.tan@intel.com>
+---
+ drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+index 932432846800d..0bd4ae619289e 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+@@ -940,6 +940,7 @@ static int tgl_common_data(struct pci_dev *pdev,
+ 	plat->rx_queues_to_use = 6;
+ 	plat->tx_queues_to_use = 4;
+ 	plat->clk_ptp_rate = 204800000;
++	plat->phy_interface = PHY_INTERFACE_MODE_SGMII;
+ 	plat->get_interfaces = tgl_get_interfaces;
+ 
+ 	plat->safety_feat_cfg->tsoee = 1;
+-- 
+2.43.0
+
