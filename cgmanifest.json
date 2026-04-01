@@ -31538,8 +31538,8 @@
         "type": "other",
         "other": {
           "name": "xorg-x11-server",
-          "version": "21.1.11",
-          "downloadUrl": "https://www.x.org/archive/individual/xserver/xorg-server-21.1.11.tar.gz"
+          "version": "21.1.12",
+          "downloadUrl": "https://www.x.org/archive/individual/xserver/xorg-server-21.1.12.tar.gz"
         }
       }
     },
