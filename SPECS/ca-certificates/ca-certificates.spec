@@ -47,7 +47,7 @@ Name:           ca-certificates
 # When updating, "Epoch, "Version", AND "Release" tags must be updated in the "prebuilt-ca-certificates*" packages as well.
 Epoch:          1
 Version:        %{emt}.0.0
-Release:        14%{?dist}
+Release:        1%{?dist}
 License:        MPLv2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -340,6 +340,9 @@ rm -f %{pkidir}/tls/certs/*.{0,pem}
 %{_bindir}/bundle2pem.sh
 
 %changelog
+* Mon Mar 30 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1:26.0.0-1
+- bump for 26.06 release.
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1:3.0.0-14
 - merge from Azure Linux 3.0.20251206-3.0
 - Adding 2 new base CAs: 'Microsoft TLS RSA Root G2' and 'Microsoft TLS ECC Root G2'.

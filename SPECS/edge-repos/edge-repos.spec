@@ -1,21 +1,29 @@
 Summary:        Edge Microvisor Toolkit repo files, gpg keys
 Name:           edge-repos
-Version:        3.0
-Release:        8%{?dist}
+Version:        26.06
+Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
 URL:            https://github.com/open-edge-platform/edge-microvisor-toolkit
 Source0:        INTEL-RPM-GPG-KEY
-Source2:        edge-base.repo
-
+Source1:        edge-base.repo
+Source2:        edge-next.repo
 Requires:       %{name}-shared = %{version}-%{release}
 
 BuildArch:      noarch
 
 %description
 Edge Microvisor Toolkit repo files and gpg keys
+
+%package next
+Summary:        Development and Experimental repo file.
+Group:          System Environment/Base
+Requires:       %{name}-next = %{version}-%{release}
+
+%description next
+%{summary}
 
 %package shared
 Summary:        Directories and files needed by all %{name} configurations.
@@ -31,6 +39,7 @@ Requires(preun): gpgme
 %install
 export REPO_DIRECTORY="%{buildroot}%{_sysconfdir}/yum.repos.d"
 install -d -m 755 $REPO_DIRECTORY
+install -m 644 %{SOURCE1} $REPO_DIRECTORY
 install -m 644 %{SOURCE2} $REPO_DIRECTORY
 
 export RPM_GPG_DIRECTORY="%{buildroot}%{_sysconfdir}/pki/rpm-gpg"
@@ -49,11 +58,18 @@ gpg --batch --yes --delete-keys 84910237BDFAAD16C4F9D44411FF864ABDCE8692
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/yum.repos.d/edge-base.repo
 
+%files next
+%defattr(-,root,root,-)
+%config(noreplace) %{_sysconfdir}/yum.repos.d/edge-next.repo
+
 %files shared
 %dir %{_sysconfdir}/yum.repos.d
 %{_sysconfdir}/pki/rpm-gpg/INTEL-RPM-GPG-KEY
 
 %changelog
+* Mon Mar 30 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.06-1
+- split repos to 26.06 and next.
+
 * Fri Dec 5 2025 Lishan Liu <lishan.liu@intel.com> - 3.0-8
 - Change repo priority
 
