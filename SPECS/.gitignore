@@ -23,6 +23,7 @@ antlr
 apache-commons-cli
 apache-commons-lang3
 apache-commons-logging
+application-gateway-kubernetes-ingress
 apr
 apr-util
 archivemount
@@ -49,6 +50,7 @@ autofs
 autogen
 automake
 avahi
+azcopy
 azure-iot-sdk-c
 azure-nvme-utils
 azure-storage-cpp
@@ -67,6 +69,7 @@ blktrace
 bluez
 bmake
 bmon
+bolt
 boost
 bpftrace
 brotli
@@ -83,6 +86,8 @@ ccache
 cdrkit
 ceph
 cereal
+cert-manager
+cf-cli
 check
 check-restart
 checkpolicy
@@ -98,6 +103,8 @@ cloud-hypervisor
 cloud-utils-growpart
 cmake
 cmocka
+cni
+cni-plugins
 collectd
 colm
 color-filesystem
@@ -106,7 +113,7 @@ compiler-rt
 conda
 conmon
 conntrack-tools
-coredns
+containerized-data-importer
 coreutils
 cpio
 cpprest
@@ -152,6 +159,8 @@ docbook-dtds
 docbook-style-xsl
 docbook5-schemas
 docker-buildx
+docker-cli
+docker-compose
 dos2unix
 doxygen
 dpdk
@@ -163,6 +172,7 @@ dwz
 e2fsprogs
 ebtables
 ed
+edk2
 efivar
 egl-wayland
 eglexternalplatform
@@ -174,8 +184,8 @@ erlang
 erofs-utils
 espeak-ng
 espeakup
+etcd
 execstack
-expat
 expect
 expected
 extra-cmake-modules
@@ -211,6 +221,7 @@ fuse3
 gawk
 gbenchmark
 gc
+gcc
 gcovr
 gd
 gdb
@@ -220,10 +231,13 @@ geos
 gettext
 gflags
 gfs2-utils
+gh
 giflib
 git
+git-lfs
 glib
 glib-networking
+glibc
 glibmm
 glslang
 glusterfs
@@ -233,6 +247,9 @@ gnu-efi
 gnupg2
 gnuplot
 gnutls
+go-md2man
+gobject-introspection
+golang-packaging
 google-guice
 google-roboto-slab-fonts
 gperf
@@ -284,6 +301,7 @@ icu
 im-chooser
 imsettings
 infinipath-psm
+influx-cli
 influxdb
 inih
 iniparser
@@ -325,19 +343,20 @@ jsonbuilder
 jsr-305
 junit
 jurand
+jx
 kata-containers
 kata-containers-cc
 kata-packages-uvm
 kbd
 kde-settings
 keepalived
+keda
 keras
 kernel-64k
 kernel-hwe
 kernel-hwe-headers
 kernel-srpm-macros
 kernel-uvm
-kexec-tools
 keyutils
 kf
 kf-kconfig
@@ -349,8 +368,10 @@ kpatch
 kpmcore
 krb5
 ksh
+kube-vip-cloud-provider
 kubernetes
 kubevirt
+kured
 kyua
 lapack
 lato-fonts
@@ -470,6 +491,7 @@ libnotify
 libnsl2
 libnvidia-container
 libnvme
+libogg
 libpcap
 libpciaccess
 libpipeline
@@ -485,6 +507,7 @@ libreswan
 librsvg2
 librsync
 libsafec
+libseccomp
 libselinux
 libsemanage
 libsepol
@@ -505,6 +528,7 @@ libtasn1
 libtdb
 libtiff
 libtirpc
+libtheora
 libtool
 libtpms
 libtracecmd
@@ -515,12 +539,14 @@ libunwind
 liburing
 libusb
 libuser
+libutempter
 libuv
+libvma
 libvirt-dbus
 libvirt-glib
 libvirt-java
-libvirt-python
 libvoikko
+libvorbis
 libwacom
 libwebp
 libxcb
@@ -535,6 +561,7 @@ libxslt
 libyaml
 libyang
 libzip
+lksctp-tools
 lld
 lldb
 lldpad
@@ -604,6 +631,7 @@ mtdev
 mtools
 mtr
 multiperf
+multus
 munge
 mysql
 nano
@@ -630,6 +658,7 @@ nlohmann-json
 nlopt
 nmap
 nodejs
+nodejs24
 npth
 nspr
 nss
@@ -696,6 +725,7 @@ ocaml-uutf
 ofed-docs
 ofed-scripts
 oniguruma
+opa
 open-vm-tools
 opencsd
 openldap
@@ -712,6 +742,7 @@ orangefs
 ostree
 p11-kit
 p7zip
+packer
 pam
 pam_krb5
 pam_wrapper
@@ -896,6 +927,9 @@ postfix
 postgresql
 priv_wrapper
 procps-ng
+prometheus-adapter
+prometheus-node-exporter
+prometheus-process-exporter
 protobuf
 protobuf-c
 psmisc
@@ -912,6 +946,7 @@ pyflakes
 pygobject3
 pyparsing
 pyproject-rpm-macros
+pyserial
 pytest
 python-absl-py
 python-appdirs
@@ -949,6 +984,7 @@ python-decorator
 python-defusedxml
 python-distlib
 python-distro
+python-dmidecode
 python-docopt
 python-docutils
 python-ecdsa
@@ -1150,6 +1186,7 @@ rng-tools
 rocksdb
 rpcbind
 rpcsvc-proto
+rpm
 rpm-mpi-hooks
 rrdtool
 rshim
@@ -1234,6 +1271,7 @@ rubygem-webhdfs
 rubygem-webrick
 rubygem-yajl-ruby
 rubygem-zip-zip
+runc
 rust
 sanlock
 scons
@@ -1247,6 +1285,7 @@ sg3_utils
 sgabios
 sgml-common
 sgx-backwards-compatibility
+skopeo
 shared-mime-info
 sharutils
 shim
@@ -1269,10 +1308,10 @@ spdlog
 sqlite
 squashfs-tools
 squid
+sriov-network-device-plugin
 sscg
 sshpass
 strongswan
-stunnel
 subunit
 subversion
 sudo
@@ -1293,6 +1332,7 @@ tcpdump
 tcsh
 tensorflow
 texinfo
+thrift
 tidy
 time
 tini
@@ -1310,6 +1350,7 @@ trace-cmd
 tracelogging
 traceroute
 tree
+trident
 ttembed
 tuna
 tuned
@@ -1320,6 +1361,7 @@ uid_wrapper
 unbound
 unixODBC
 unzip
+usbip
 usbredir
 usbutils
 userspace-rcu
@@ -1373,6 +1415,7 @@ xorg-x11-xbitmaps
 xorg-x11-xinit
 xorg-x11-xkb-utils
 xorg-x11-xtrans-devel
+xterm
 xxhash
 xz
 yajl

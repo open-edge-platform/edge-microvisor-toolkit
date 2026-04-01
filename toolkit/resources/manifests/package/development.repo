@@ -9,7 +9,7 @@ priority=8
 
 [development-repo]
 name=development Repo
-baseurl=http://rpm-emt.intel.com/pulp/content/emt-3.0-test-base
+baseurl=http://rpm-emt.intel.com/pulp/content/emt-26.06-test-base
 enabled=1
 gpgcheck=0
 skip_if_unavailable=1

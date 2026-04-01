@@ -73,7 +73,7 @@ git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch
 
    ```bash
    # Rebuild packages/RPMs
-   sudo make build-packages REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n
+   sudo make build-packages REBUILD_TOOLS=y VALIDATE_TOOLCHAIN_GPG=n ALLOW_TOOLCHAIN_REBUILDS=y
    ```
 
 ## Build the Edge Microvisor Toolkit Image

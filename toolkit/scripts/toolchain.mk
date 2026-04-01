@@ -19,6 +19,8 @@ rpmcache_build_dir = $(BUILD_DIR)/rpm_cache/cache
 toolchain_logs_dir = $(LOGS_DIR)/toolchain
 toolchain_downloads_logs_dir = $(toolchain_logs_dir)/downloads
 toolchain_rehydrate_logs_dir = $(toolchain_logs_dir)/rehydrate
+toolchain_raw_logs_dir = $(toolchain_logs_dir)/raw
+toolchain_official_logs_dir = $(toolchain_logs_dir)/official
 toolchain_downloads_manifest = $(toolchain_downloads_logs_dir)/download_manifest.txt
 toolchain_log_tail_length = 20
 populated_toolchain_chroot = $(toolchain_build_dir)/populated_toolchain
@@ -159,13 +161,18 @@ hydrate-toolchain:
 # out/toolchain/toolchain_from_container.tar.gz
 $(raw_toolchain): $(toolchain_files)
 	@echo "Building raw toolchain"
+	rm -rf $(toolchain_raw_logs_dir) && mkdir -p $(toolchain_raw_logs_dir)
 	cd $(SCRIPTS_DIR)/toolchain && \
 		./create_toolchain_in_container.sh \
 			$(BUILD_DIR) \
 			$(SPECS_DIR) \
 			$(SOURCE_URL) \
 			$(INCREMENTAL_TOOLCHAIN) \
-			$(ARCHIVE_TOOL)
+			$(ARCHIVE_TOOL) \
+			$(toolchain_raw_logs_dir) 2>&1 | tee $(toolchain_raw_logs_dir)/create_toolchain_in_container_full.log; \
+		if [ $${PIPESTATUS[0]} -ne 0 ]; then \
+			$(call print_error, create_toolchain_in_container.sh failed); \
+		fi
 
 # This target establishes a cache of toolchain RPMs for partially rehydrating the toolchain from package repos.
 # $(toolchain_from_repos) is a staging folder for these RPMs. We use the toolchain manifest to get a list of
@@ -213,6 +220,7 @@ $(final_toolchain): $(no_repo_acl) $(raw_toolchain) $(toolchain_rpms_rehydrated)
 	# Clean the existing chroot if not doing an incremental build
 	$(if $(filter y,$(INCREMENTAL_TOOLCHAIN)),,$(SCRIPTS_DIR)/safeunmount.sh "$(populated_toolchain_chroot)" || $(call print_error,failed to clean mounts for toolchain build))
 	$(if $(filter y,$(INCREMENTAL_TOOLCHAIN)),,rm -rf $(populated_toolchain_chroot))
+	rm -rf $(toolchain_official_logs_dir) && mkdir -p $(toolchain_official_logs_dir)
 	cd $(SCRIPTS_DIR)/toolchain && \
 		./build_mariner_toolchain.sh \
 			"$(DIST_TAG)" \
@@ -230,7 +238,10 @@ $(final_toolchain): $(no_repo_acl) $(raw_toolchain) $(toolchain_rpms_rehydrated)
 			"$(toolchain_from_repos)" \
 			"$(TOOLCHAIN_MANIFEST)" \
 			"$(go-bldtracker)" \
-			"$(TIMESTAMP_DIR)/build_mariner_toolchain.jsonl" && \
+			"$(TIMESTAMP_DIR)/build_mariner_toolchain.jsonl" 2>&1 | tee $(toolchain_official_logs_dir)/build_official_rpms.log; \
+		if [ $${PIPESTATUS[0]} -ne 0 ]; then \
+			$(call print_error, build_mariner_toolchain.sh failed); \
+		fi && \
 	$(if $(filter y,$(UPDATE_TOOLCHAIN_LIST)), ls -1 $(toolchain_build_dir)/built_rpms_all > $(MANIFESTS_DIR)/package/toolchain_$(build_arch).txt && ) \
 	touch $@
 
@@ -304,7 +315,7 @@ prepare_rpmcache:
 	@echo "Preparing rpmcache copy toolchain RPMs to rpmcache $(rpmcache_build_dir)"
 	@cp $(toolchain_build_rpms)/noarch/* $(rpmcache_build_dir) || true
 	@cp $(toolchain_build_rpms)/x86_64/* $(rpmcache_build_dir) || true
-$(toolchain_rpms): prepare_rpmcache $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_REBUILD_TOOLCHAIN) $(go-downloader) $(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh $(TOOLCHAIN_GPG_VALIDATION_KEYS)
+$(toolchain_rpms): prepare_rpmcache $(TOOLCHAIN_MANIFEST) $(STATUS_FLAGS_DIR)/toolchain_auto_cleanup.flag $(depend_REBUILD_TOOLCHAIN) $(go-downloader) $(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh $(depend_TOOLCHAIN_GPG_VALIDATION_KEYS) $(TOOLCHAIN_GPG_VALIDATION_KEYS)
 	@log_file="$(toolchain_downloads_logs_dir)/$(notdir $@).log" && \
 	rm -f "$$log_file" && \
 	$(SCRIPTS_DIR)/toolchain/download_toolchain_rpm.sh \
