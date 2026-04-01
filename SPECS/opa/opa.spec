@@ -5,7 +5,7 @@
 Summary:        Open source, general-purpose policy engine
 Name:           opa
 Version:        0.63.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 # Upstream license specification: MIT and Apache-2.0
 # Main package:    ASL 2.0
 # internal/jwx:    MIT
@@ -22,6 +22,7 @@ Patch0:         0001-Make-telemetry-opt-out.patch
 Patch1:         0001-Skip-tests-requiring-network.patch
 Patch2:         CVE-2023-45288.patch
 Patch3:         CVE-2025-46569.patch
+Patch4:         CVE-2025-11065.patch
 # Warn users about WebAssembly missing
 BuildRequires:  golang
 BuildRequires:  make
@@ -55,6 +56,10 @@ install -D -p -m 0644 man/*             %{buildroot}%{_mandir}/man1/
 %{_bindir}/*
 
 %changelog
+* Mon Mar 16 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 0.63.0-4
+- merge from Azure Linux 3.0.20260304-3.0 
+- Patch for CVE-2025-11065
+
 * Mon Sep 8 2025 Chee Yang Lee <chee.yang.lee@intel.com> - 0.63.0-3
 - merge from Azure Linux 3.0.20250910-3.0.
 - Patch CVE-2025-46569

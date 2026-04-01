@@ -5,7 +5,7 @@
 Summary: Industry-standard container runtime
 Name: %{upstream_name}2
 Version: 2.0.0
-Release: 14%{?dist}
+Release: 18%{?dist}
 License: ASL 2.0
 Group: Tools/Container
 URL: https://www.containerd.io
@@ -23,6 +23,11 @@ Patch3:	CVE-2025-22872.patch
 Patch4:	CVE-2025-47291.patch
 Patch5:	multi-snapshotters-support.patch
 Patch6:	tardev-support.patch
+Patch7: CVE-2024-25621.patch
+Patch8: CVE-2025-64329.patch
+Patch9: fix-credential-leak-in-cri-errors.patch
+Patch10:CVE-2025-47911.patch
+Patch11:CVE-2025-58190.patch
 %{?systemd_requires}
 
 BuildRequires: golang < 1.25
@@ -132,6 +137,13 @@ fi
 %{_bindir}/containerd-stress
 
 %changelog
+* Thu Mar 12 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.0.0-18
+- merge from Azure Linux 3.0.20260304-3.0
+- Patch for CVE-2025-64329
+- Patch for CVE-2024-25621
+- Backport fix for credential leak in CRI error logs
+- Patch for CVE-2025-58190, CVE-2025-47911
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.0.0-14
 - merge from Azure Linux 3.0.20250910-3.0
 - Set BR for golang to < 1.25

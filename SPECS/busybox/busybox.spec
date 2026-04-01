@@ -1,7 +1,7 @@
 Summary:        Statically linked binary providing simplified versions of system commands
 Name:           busybox
 Version:        1.36.1
-Release:        15%{?dist}
+Release:        22%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -16,11 +16,12 @@ Patch3:         CVE-2023-42363.patch
 # Also Fixes CVE-2023-42364
 Patch4:         CVE-2023-42365.patch
 Patch5:         CVE-2023-42366.patch
-Patch6:         no-cbq.patch
-Patch7:         CVE-2023-39810.patch
-Patch8:         CVE-2022-48174.patch
+Patch6:         CVE-2023-39810.patch
+Patch7:         CVE-2022-48174.patch
+Patch8:         CVE-2026-26157.patch
+Patch99:        no-cbq.patch
 BuildRequires:  gcc
-BuildRequires:  glibc-static >= 2.38-12%{?dist}
+BuildRequires:  glibc-static >= 2.38-18%{?dist}
 BuildRequires:  libselinux-devel >= 1.27.7-2
 BuildRequires:  libsepol-devel
 %if 0%{?with_check}
@@ -92,7 +93,10 @@ install -m 644 docs/busybox.petitboot.1 %{buildroot}/%{_mandir}/man1/busybox.pet
 
 %check
 cd testsuite
-SKIP_KNOWN_BUGS=1 ./runtest
+
+# CVE-2026-26157: hardened tar extraction blocks symlink + hardlink write attacks
+# These tests validate insecure legacy behavior and are expected to fail
+./runtest --skip "tar-symlink-attack,tar-symlink-hardlink-coexist"
 
 %files
 %license LICENSE
@@ -107,6 +111,11 @@ SKIP_KNOWN_BUGS=1 ./runtest
 %{_mandir}/man1/busybox.petitboot.1.gz
 
 %changelog
+* Thu Mar 12 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.36.1-22
+- merge from Azure Linux 3.0.20260304-3.0
+- Bump to rebuild with updated glibc
+- Patch for CVE-2026-26157
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 1.36.1-15
 - merge from Azure Linux 3.0.20250910-3.0
 - Patch CVE-2022-48174

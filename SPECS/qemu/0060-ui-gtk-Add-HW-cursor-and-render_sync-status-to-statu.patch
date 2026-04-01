@@ -1,0 +1,55 @@
+From 37c235ed7b3f18d5d7c3a437939742c0c4ccafe9 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 8 Jan 2026 15:31:32 -0800
+Subject: [PATCH] ui/gtk: Add HW cursor and render_sync status to status bar
+
+Display HW cursor and render_sync status at the beginning of the GTK
+status bar before FPS information. The status shows 'on' when hw_cursor
+option is enabled and a cursor image is present, otherwise shows 'off'.
+Similarly, render_sync shows 'on' when dmabuf has render_sync enabled.
+
+This provides better visibility into hardware cursor and render_sync
+state during runtime.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ ui/gtk.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/ui/gtk.c b/ui/gtk.c
+index 1442507b45..9496b6dad4 100644
+--- a/ui/gtk.c
++++ b/ui/gtk.c
+@@ -618,9 +618,28 @@ void gd_gl_count_frame(DisplayChangeListener *dcl, bool ups, bool fps)
+ 
+     delta = curr - prev;
+     if (delta > 1000000) {
+-	int d = 0;
++        int d = 0;
+         /* update rate is calculated and displayed at every 1 secs */
+         prev = curr;
++
++        /* Add HW cursor status at the beginning */
++        bool hw_cursor_active = false;
++        bool render_sync_active = false;
++        for (i = 0; i < vc->s->nb_vcs; i++) {
++            vc = &s->vc[i];
++            if (vc->type == GD_VC_GFX && vc->gfx.cursor_image != NULL) {
++                hw_cursor_active = true;
++            }
++            if (vc->type == GD_VC_GFX && vc->gfx.guest_fb.dmabuf &&
++                qemu_dmabuf_get_render_sync(vc->gfx.guest_fb.dmabuf)) {
++                render_sync_active = true;
++            }
++        }
++        offset += sprintf(ups_fps_str + offset, "HW cursor %s | render_sync %s    ",
++                          (s->opts->u.gtk.has_hw_cursor &&
++                          s->opts->u.gtk.hw_cursor && hw_cursor_active) ? "on" : "off",
++                          render_sync_active ? "on" : "off");
++
+         for (i = 0; i < vc->s->nb_vcs; i++) {
+             vc = &s->vc[i];
+             if (vc->type == GD_VC_GFX &&
+-- 
+2.43.0
+

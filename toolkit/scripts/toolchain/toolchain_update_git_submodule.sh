@@ -8,13 +8,53 @@ set -e
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
+skip_list=(
+    "apparmor"
+    "azurelinux-release"
+    "azurelinux-repos"
+    "azurelinux-rpm-macros"
+    "cloud-provider-kubevirt"
+    "ceph"
+    "coredns"
+    "dcos-cli"
+    "fwctl"
+    "fwctl-hwe"
+    "iser"
+    "iser-hwe"
+    "isert"
+    "isert-hwe"
+    "kernel-hwe"
+    "kernel-hwe-headers"
+    "kernel-mshv"
+    "knem"
+    "knem-hwe"
+    "mft_kernel"
+    "mft_kernel-hwe"
+    "mlnx-ethtool"
+    "mlnx-iproute2"
+    "mlnx-nfsrdma"
+    "mlnx-nfsrdma-hwe"
+    "mlnx-ofa_kernel"
+    "mlnx-ofa_kernel-hwe"
+    "mlnx-tools"
+    "mlx-bootctl"
+    "mlx-steering-dump"
+    "nodejs24"
+    "patterns-ceph-containers"
+    "srp"
+    "srp-hwe"
+    "vitess"
+    "xpmem"
+    "xpmem-hwe"
+    "xpmem-lib"
+)
+
 if [ -d "${REPO_ROOT}/azurelinux" ]; then
     cd ${REPO_ROOT}/azurelinux
     git clean -xfd &> /dev/null
     git reset --hard &> /dev/null
     git submodule update --init &> /dev/null
     cd ${REPO_ROOT}
-    skip_list=("cloud-provider-kubevirt" "perl-DBIx-Simple" "dcos-cli" "vitess" "fwctl" "mlx-bootctl" "kernel-mshv" "srp" "mft_kernel" "knem" "xpmem" "xpmem-lib" "iser" "isert" "mlnx-ethtool" "mlnx-iproute2" "mlnx-nfsrdma" "mlnx-ofa_kernel" "mlnx-tools" "azurelinux-release" "azurelinux-repos" "azurelinux-rpm-macros")
     for folder in azurelinux/SPECS/*; do
         fbasename=$(basename "$folder")
         skip=false

@@ -25,7 +25,7 @@
 Summary:        Kubernetes daemonset to perform safe automatic node reboots
 Name:           kured
 Version:        1.15.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        Apache-2.0
 Vendor:         Microsoft Corporation
 Distribution:   Azure Linux
@@ -49,6 +49,7 @@ Source0:        %{name}-%{version}.tar.gz
 Source1:        %{name}-%{version}-vendor.tar.gz
 Patch0:         kured-imagePullPolicy.patch
 Patch1:         CVE-2023-45288.patch
+Patch2:         CVE-2025-11065.patch
 BuildRequires:  fdupes
 BuildRequires:  go-go-md2man
 BuildRequires:  golang
@@ -77,12 +78,7 @@ This package contains the yaml file requried to download and run the
 kured container in a kubernetes cluster.
 
 %prep
-%setup -q
-%patch 0 -p1
-
-# create vendor folder from the vendor tarball and set vendor mode
-tar -xf %{SOURCE1} --no-same-owner
-%patch 1 -p1
+%autosetup -p1 -a1
 
 %build
 
@@ -125,6 +121,10 @@ sed -i -e 's|image: .*|image: registry.opensuse.org/kubic/kured:%{version}|g' %{
 %{_datarootdir}/k8s-yaml/kured/kured.yaml
 
 %changelog
+* Mon Mar 16 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.15.0-4
+- merge from Azure Linux 3.0.20260304-3.0 
+- Patch for CVE-2025-11065
+
 * Fri Mar 21 2025 Anuj Mittal <anuj.mittal@intel.com> - 1.15.0-3
 - Bump Release to rebuild
 
