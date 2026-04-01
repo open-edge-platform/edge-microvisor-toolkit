@@ -30636,8 +30636,8 @@
         "type": "other",
         "other": {
           "name": "wayland-protocols",
-          "version": "1.38",
-          "downloadUrl": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.38/downloads/wayland-protocols-1.38.tar.xz"
+          "version": "1.45",
+          "downloadUrl": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.45/downloads/wayland-protocols-1.45.tar.xz"
         }
       }
     },
