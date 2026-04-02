@@ -1,0 +1,7 @@
+{
+ "Signatures": {
+  "libdisplay-info-0.3.0.tar.xz": "6ae77cd937f9cf7d1321d35c116062c4911e8447010a6a713ac4286f7a9d5987",
+  "libdisplay-info-0.3.0.tar.xz.sig": "a158d8d7d69e0d2e54f8351477f830f78cad8a83096adc75cf1d7aee3edaa734",
+  "gpgkey-0FDE7BE0E88F5E48.gpg": "8cf2e1d9e903875d2c3b43f835eb89f2dd7e94263304a3cb56e03b8ae5d16d8a"
+ }
+}

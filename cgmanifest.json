@@ -5010,6 +5010,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libdisplay-info",
+          "version": "0.3.0",
+          "downloadUrl": "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.3.0/downloads/libdisplay-info-0.3.0.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libdnet",
           "version": "1.17.0",
           "downloadUrl": "https://github.com/ofalk/libdnet/archive/refs/tags/libdnet-1.17.0.tar.gz"
@@ -7391,8 +7401,8 @@
         "type": "other",
         "other": {
           "name": "mesa",
-          "version": "25.0.0",
-          "downloadUrl": "https://archive.mesa3d.org/mesa-25.0.0.tar.xz"
+          "version": "25.3.4",
+          "downloadUrl": "https://archive.mesa3d.org/mesa-25.3.4.tar.xz"
         }
       }
     },
