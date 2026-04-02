@@ -5,7 +5,7 @@
 
 Summary:        Intel NPU Firmware
 Name:           intel-npu-firmware
-Version:        1.28.0
+Version:        1.30.0
 Release:        1%{?dist}
 License:        MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
@@ -23,16 +23,22 @@ This package includes Intel NPU(VPU) firmware files required for some devices to
 
 %install
 mkdir -p %{buildroot}%{_firmwarepath}
-cp -a firmware/bin/COPYRIGHT firmware/bin/mtl_vpu_v0.0.bin firmware/bin/vpu_37xx_v0.0.bin firmware/bin/vpu_50xx_v1.bin %{buildroot}%{_firmwarepath}
+cp -a firmware/bin/COPYRIGHT firmware/bin/* %{buildroot}%{_firmwarepath}
 
 %files
 %defattr(-,root,root)
 %{_firmwarepath}/COPYRIGHT
 %{_firmwarepath}/mtl_vpu_v0.0.bin
 %{_firmwarepath}/vpu_37xx_v0.0.bin
+%{_firmwarepath}/vpu_37xx_v1.bin
+%{_firmwarepath}/vpu_40xx_v0.0.bin
+%{_firmwarepath}/vpu_40xx_v1.bin
 %{_firmwarepath}/vpu_50xx_v1.bin
 
 %changelog
+* Fri Apr 10 2026 Lishan Liu <lishan.liu@intel.com> - 1.30.0-1
+- Update version to v1.30.0
+
 * Mon Jan 5 2026 Lishan Liu <lishan.liu@intel.com> - 1.28.0-1
 - Update version to v1.28.0
 
