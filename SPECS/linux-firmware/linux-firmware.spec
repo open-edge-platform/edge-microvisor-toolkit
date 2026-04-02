@@ -133,6 +133,7 @@ dracut --force
 %license WHENCE LICENSE.i915
 %{_firmwarepath}/i915/mtl_guc_70.bin
 %{_firmwarepath}/i915/adlp_guc_70.bin
+%{_firmwarepath}/i915/dg1_guc_70.bin
 %{_firmwarepath}/i915/dg2_guc_70.bin
 %{_firmwarepath}/i915/tgl_guc_70.bin
 %{_firmwarepath}/i915/tgl_huc.bin
@@ -143,12 +144,15 @@ dracut --force
 %{_firmwarepath}/i915/adls_dmc_ver2_01.bin
 %{_firmwarepath}/i915/dg2_dmc_ver2_08.bin
 %{_firmwarepath}/i915/mtl_gsc_1.bin
+%{_firmwarepath}/i915/xe2lpd_dmc.bin
+%{_firmwarepath}/i915/xe3p_lpd_dmc.bin
 %{_firmwarepath}/i915/xe3lpd_dmc.bin
 %{_firmwarepath}/i915/xe3lpd_3002_dmc.bin
 %{_firmwarepath}/xe/bmg_guc_70.bin
 %{_firmwarepath}/xe/bmg_huc.bin
 %{_firmwarepath}/xe/ptl_guc_70.bin
 %{_firmwarepath}/xe/ptl_huc.bin
+%{_firmwarepath}/xe/ptl_gsc_1.bin
 
 %files iwlwifi
 %defattr(-,root,root)
@@ -159,6 +163,9 @@ dracut --force
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-86.ucode
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-89.ucode
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0.pnvm
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-sc-a0-wh-b0-101.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-sc-a0-wh-b0-c101.ucode
+%{_firmwarepath}/intel/iwlwifi/iwlwifi-sc-a0-wh-b0-c102.ucode
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-ty-a0-gf-a0-89.ucode
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-ty-a0-gf-a0.pnvm
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-9000-*.ucode
