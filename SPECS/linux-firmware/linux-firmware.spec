@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20260309
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -144,6 +144,7 @@ dracut --force
 %{_firmwarepath}/i915/dg2_dmc_ver2_08.bin
 %{_firmwarepath}/i915/mtl_gsc_1.bin
 %{_firmwarepath}/i915/xe3lpd_dmc.bin
+%{_firmwarepath}/i915/xe3lpd_3002_dmc.bin
 %{_firmwarepath}/xe/bmg_guc_70.bin
 %{_firmwarepath}/xe/bmg_huc.bin
 %{_firmwarepath}/xe/ptl_guc_70.bin
@@ -187,6 +188,9 @@ dracut --force
 %{_firmwarepath}/intel/qat/qat_c62x_mmp.bin
 
 %changelog
+* Fri Apr 3 2026 Andy <andy.peng@intel.com> - 20260309-2
+- Include more i915 xe file from firmware.
+
 * Fri Mar 27 2026 Andy <andy.peng@intel.com> - 20260309-1
 - Upgrade firmware to 20260309.
 
