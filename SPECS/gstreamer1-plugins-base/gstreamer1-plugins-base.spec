@@ -2,8 +2,8 @@
 %global         majorminor      1.0
 Summary:        GStreamer streaming media framework base plugins
 Name:           gstreamer1-plugins-base
-Version:        1.26.5
-Release:        2%{?dist}
+Version:        1.28.1
+Release:        1%{?dist}
 License:        LGPLv2+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -426,6 +426,9 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_libdir}/pkgconfig/*.pc
 
 %changelog
+* Thu Apr 02 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 1.28.1-1
+- Upgrade to gstreamer version.
+
 * Mon Oct 13 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.26.5-2
 - Upgrading to 1.26.5 based on Fedora 44 (license: MIT) for guidance.
 

@@ -7,7 +7,7 @@
 
 Summary:        GStreamer streaming media framework runtime
 Name:           gstreamer1
-Version:        1.26.5
+Version:        1.28.1
 Release:        1%{?dist}
 License:        LGPLv2+
 Vendor:         Intel Corporation
@@ -170,6 +170,9 @@ install -m0644 -D %{SOURCE2} $RPM_BUILD_ROOT%{_rpmconfigdir}/fileattrs/gstreamer
 %{_datadir}/cmake/FindGStreamer.cmake
 
 %changelog
+* Thu Apr 02 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 1.28.1-1
+- Upgrade version to fix CVE-2026-3083 and CVE-2026-3085.
+
 * Mon Oct 06 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.26.5-1
 - Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT)
 - License verified.
