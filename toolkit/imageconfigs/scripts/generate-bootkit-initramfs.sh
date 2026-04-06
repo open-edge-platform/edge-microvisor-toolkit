@@ -23,10 +23,10 @@ function generate_images() {
     cp "$1" "/tmp/$arfname.tar.gz"
     local outputdir="$2"
 
-    tar -xvf "/tmp/$arfname.tar.gz" -C "$outputdir" --strip-components=2 --wildcards ./boot/vmlinuz-*.emt3 ./boot/initramfs-*.emt3.img
+    tar -xvf "/tmp/$arfname.tar.gz" -C "$outputdir" --strip-components=2 --wildcards ./boot/vmlinuz-*.emt26 ./boot/initramfs-*.emt26.img
     gunzip -f "/tmp/$arfname.tar.gz"
     tar -vf "/tmp/$arfname.tar" --delete ./tmp
-    tar -vf "/tmp/$arfname.tar" --delete --wildcards ./boot/vmlinuz-*.emt3 ./boot/initramfs-*.emt3.img ./boot/System.map-*.emt3 ./boot/config-*.emt3
+    tar -vf "/tmp/$arfname.tar" --delete --wildcards ./boot/vmlinuz-*.emt26 ./boot/initramfs-*.emt26.img ./boot/System.map-*.emt26 ./boot/config-*.emt26
     gzip -f "/tmp/$arfname.tar"
     #cp "/tmp/$arfname.tar.gz" "$outputdir"
 
@@ -46,7 +46,7 @@ function generate_images() {
 
     echo "$pprefix: $(sync;du -h $outputdir/$ramfs)"
     rm -rf /tmp/initramfs
-    chmod 0666 $outputdir/vmlinuz-*.emt3 $outputdir/initramfs-*.emt3.img
+    chmod 0666 $outputdir/vmlinuz-*.emt26 $outputdir/initramfs-*.emt26.img
 }
 
 # inputs
