@@ -6,7 +6,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/device-discovery-agent -config /etc/edge-node/node/confs/device-discovery-agent.env
+ExecStart=/usr/bin/device-discovery-agent -config /etc/emf/env_config -use-kernel-args
 StandardOutput=journal
 StandardError=journal
 TimeoutStartSec=10m
