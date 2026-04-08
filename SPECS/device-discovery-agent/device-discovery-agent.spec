@@ -14,8 +14,6 @@ BuildRequires:  golang >= 1.25.5
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       dmidecode
-Requires:       iproute
-Requires:       lshw
 
 %global debug_package   %{nil}
 %global _build_id_links none
