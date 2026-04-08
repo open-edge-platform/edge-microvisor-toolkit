@@ -80,4 +80,4 @@ cp debian/copyright %{buildroot}%{_defaultlicensedir}/%{name}
 
 %changelog
 * Tue Apr 08 2026 Device Discovery Agent Team <team@example.com> - 1.0.1-1
-- Original version for Edge Microvisor Toolkit.
+- Original version for Edge Microvisor Toolkit. License verified.
