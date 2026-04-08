@@ -1,0 +1,42 @@
+[Unit]
+Description=Device Discovery Agent
+Documentation=https://github.com/open-edge-platform/edge-node-agents/blob/main/device-discovery-agent/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/device-discovery-agent -config /etc/edge-node/node/confs/device-discovery-agent.env
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=10m
+RemainAfterExit=no
+User=device-discovery-agent
+Group=bm-agents
+CPUQuota=20%
+MemoryMax=128M
+
+PrivateTmp=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+
+CapabilityBoundingSet=~CAP_LINUX_IMMUTABLE CAP_IPC_LOCK CAP_SYS_CHROOT CAP_BLOCK_SUSPEND CAP_LEASE
+CapabilityBoundingSet=~CAP_SYS_BOOT CAP_SYS_PTRACE CAP_SYS_RAWIO CAP_SYS_TIME CAP_SYS_TTY_CONFIG
+CapabilityBoundingSet=~CAP_WAKE_ALARM CAP_MAC_ADMIN CAP_MAC_OVERRIDE
+CapabilityBoundingSet=~CAP_SETPCAP CAP_CHOWN CAP_NET_ADMIN
+CapabilityBoundingSet=~CAP_CHOWN CAP_FSETID CAP_SETFCAP
+CapabilityBoundingSet=~CAP_DAC_READ_SEARCH CAP_FOWNER CAP_IPC_OWNER
+CapabilityBoundingSet=~CAP_KILL CAP_MKNOD CAP_BPF CAP_SYS_NICE CAP_SYS_RESOURCE
+
+[Install]
+WantedBy=multi-user.target
