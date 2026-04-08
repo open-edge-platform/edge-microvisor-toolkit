@@ -5120,8 +5120,8 @@
         "type": "other",
         "other": {
           "name": "gstreamer1",
-          "version": "1.26.5",
-          "downloadUrl": "http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.26.5.tar.xz"
+          "version": "1.26.10",
+          "downloadUrl": "http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.26.10.tar.xz"
         }
       }
     },
@@ -5130,8 +5130,8 @@
         "type": "other",
         "other": {
           "name": "gstreamer1-plugins-base",
-          "version": "1.26.5",
-          "downloadUrl": "https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.26.5.tar.xz"
+          "version": "1.26.10",
+          "downloadUrl": "https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.26.10.tar.xz"
         }
       }
     },
@@ -7521,8 +7521,8 @@
         "type": "other",
         "other": {
           "name": "intel-compute-runtime",
-          "version": "25.18.33578.6",
-          "downloadUrl": "https://github.com/intel/compute-runtime/archive/25.18.33578.6/compute-runtime-25.18.33578.6.tar.gz"
+          "version": "25.40.35563.4",
+          "downloadUrl": "https://github.com/intel/compute-runtime/archive/25.40.35563.4/compute-runtime-25.40.35563.4.tar.gz"
         }
       }
     },
@@ -7531,8 +7531,8 @@
         "type": "other",
         "other": {
           "name": "intel-gmmlib",
-          "version": "22.7.1",
-          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.7.1.tar.gz"
+          "version": "22.9.0",
+          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.9.0.tar.gz"
         }
       }
     },
@@ -12011,8 +12011,8 @@
         "type": "other",
         "other": {
           "name": "libvpl",
-          "version": "2.14.0",
-          "downloadUrl": "https://github.com/intel/libvpl/archive/v2.14.0/libvpl-2.14.0.tar.gz"
+          "version": "2.16.0",
+          "downloadUrl": "https://github.com/intel/libvpl/archive/v2.16.0/libvpl-2.16.0.tar.gz"
         }
       }
     },
@@ -29056,7 +29056,7 @@
         "type": "other",
         "other": {
           "name": "spirv-headers",
-          "version": "1.5.5",
+          "version": "1.6.1",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Headers//archive/refs/tags/vulkan-sdk-1.4.309.0.tar.gz"
         }
       }
@@ -30736,8 +30736,8 @@
         "type": "other",
         "other": {
           "name": "wayland-protocols",
-          "version": "1.38",
-          "downloadUrl": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.38/downloads/wayland-protocols-1.38.tar.xz"
+          "version": "1.45",
+          "downloadUrl": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.45/downloads/wayland-protocols-1.45.tar.xz"
         }
       }
     },
@@ -31121,8 +31121,8 @@
         "type": "other",
         "other": {
           "name": "xdp-tools",
-          "version": "1.5.8",
-          "downloadUrl": "https://github.com/xdp-project/xdp-tools/releases/download/v1.5.8/xdp-tools-1.5.8.tar.gz"
+          "version": "1.6.1",
+          "downloadUrl": "https://github.com/xdp-project/xdp-tools/releases/download/v1.6.1/xdp-tools-1.6.1.tar.gz"
         }
       }
     },
