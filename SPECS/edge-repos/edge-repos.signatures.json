@@ -2,6 +2,6 @@
  "Signatures": {
   "edge-base.repo": "3ac9b9154647cc0abe47ac9110814d9ae40900cfc75b3a934c6a8def197c0f23",
   "edge-next.repo": "b021cbce9f1d3f08f4656ac51fafa0d5530206e0fead58559905d0038f9c8513",
-  "INTEL-RPM-GPG-KEY": "90cf27d0aff4e69a11cc3da2e492a383e05e681cafff23525e796c6494d58336"
+  "INTEL-RPM-GPG-KEY": "8521474b6798a3f5ff0bc50757ea68f3047f7632209370476035c0e6b847c35a"
  }
 }
