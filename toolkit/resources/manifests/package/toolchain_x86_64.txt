@@ -72,9 +72,9 @@ e2fsprogs-devel-1.47.0-2.emt26.x86_64.rpm
 e2fsprogs-lang-1.47.0-2.emt26.x86_64.rpm
 e2fsprogs-libs-1.47.0-2.emt26.x86_64.rpm
 edge-check-macros-26.0-1.emt26.noarch.rpm
-edge-repos-26.06-1.emt26.noarch.rpm
-edge-repos-next-26.06-1.emt26.noarch.rpm
-edge-repos-shared-26.06-1.emt26.noarch.rpm
+edge-repos-26.06-2.emt26.noarch.rpm
+edge-repos-next-26.06-2.emt26.noarch.rpm
+edge-repos-shared-26.06-2.emt26.noarch.rpm
 edge-rpm-macros-26.0-1.emt26.noarch.rpm
 elfutils-0.189-8.emt26.x86_64.rpm
 elfutils-debuginfo-0.189-8.emt26.x86_64.rpm

@@ -1,7 +1,7 @@
 Summary:        Edge Microvisor Toolkit repo files, gpg keys
 Name:           edge-repos
 Version:        26.06
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -67,6 +67,9 @@ gpg --batch --yes --delete-keys 84910237BDFAAD16C4F9D44411FF864ABDCE8692
 %{_sysconfdir}/pki/rpm-gpg/INTEL-RPM-GPG-KEY
 
 %changelog
+* Wed Apr 8 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.06-2
+- update GPG key
+
 * Mon Mar 30 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.06-1
 - split repos to 26.06 and next.
 
