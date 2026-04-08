@@ -1,6 +1,6 @@
 Summary:        Device Discovery Agent for Edge Node
 Name:           device-discovery-agent
-Version:        1.0.0
+Version:        1.0.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -79,5 +79,5 @@ cp debian/copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %systemd_postun_with_restart %{name}.service
 
 %changelog
-* Tue Apr 08 2026 Device Discovery Agent Team <team@example.com> - 1.0.0-1
+* Tue Apr 08 2026 Device Discovery Agent Team <team@example.com> - 1.0.1-1
 - Original version for Edge Microvisor Toolkit.

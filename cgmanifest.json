@@ -1598,8 +1598,8 @@
         "type": "other",
         "other": {
           "name": "device-discovery-agent",
-          "version": "1.0.0",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/device-discovery-agent/v1.0.0.tar.gz"
+          "version": "1.0.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/device-discovery-agent/v1.0.1.tar.gz"
         }
       }
     },
