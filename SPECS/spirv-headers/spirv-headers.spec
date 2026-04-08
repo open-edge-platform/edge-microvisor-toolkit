@@ -2,8 +2,8 @@
 
 
 Name:           spirv-headers
-Version:        1.5.5
-Release:        3%{?dist}
+Version:        1.6.1
+Release:        1%{?dist}
 Summary:        Header files from the SPIR-V registry
 
 License:        MIT
@@ -62,6 +62,9 @@ chmod a-x include/spirv/1.2/spirv.py
 %{_datadir}/pkgconfig/SPIRV-Headers.pc
 
 %changelog
+* Tue Mar 10 2026 Andy Peng <andy.peng@intel.com> - 1.6.1-1
+- Updating Spec to version 1.6.1.
+
 * Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.5.5-3
 - Promote and upgrade to 2025.1 based on Fedora 41.
 

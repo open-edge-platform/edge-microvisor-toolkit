@@ -1,6 +1,6 @@
 %global neo_major 25
-%global neo_minor 18
-%global neo_build 33578.6
+%global neo_minor 40
+%global neo_build 35563.4
 
 %global optflags %{optflags} -Wno-error=maybe-uninitialized
 
@@ -156,6 +156,9 @@ popd
 
 %doc
 %changelog
+* Mon Mar 9 2026 Andy <andy.peng@intel.com> - 25.40.35563.4-1
+- Update version to 25.40.35563.4.
+
 * Mon Jul 21 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 25.18.33578.6-1
 - Update version to 25.18.33578.6.
 

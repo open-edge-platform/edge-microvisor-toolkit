@@ -12,10 +12,10 @@ Signed-off-by: Lee Chee Yang <chee.yang.lee@intel.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/headers/linux/if_xdp.h b/headers/linux/if_xdp.h
-index a78a809..7c5168c 100644
+index 2ecf792..236687d 100644
 --- a/headers/linux/if_xdp.h
 +++ b/headers/linux/if_xdp.h
-@@ -104,6 +104,7 @@ struct xdp_desc {
+@@ -111,6 +111,7 @@ struct xdp_desc {
  	__u64 addr;
  	__u32 len;
  	__u32 options;
