@@ -866,7 +866,7 @@
             "license": "[MIT License](/LICENSES-AND-NOTICES/LICENSE.md)",
             "specs": [
                 "cluster-agent",
-                "device-discovery",
+                "device-discovery-agent",
                 "edge-release",
                 "edge-repos",
                 "edge-rpm-macros",

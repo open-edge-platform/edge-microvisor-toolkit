@@ -12,7 +12,7 @@ pprefix="Bootkit"
 systemctl disable systemd-homed.service
 systemctl enable caddy.service
 systemctl enable fluent-bit.service
-systemctl enable device-discovery.service
+systemctl enable device-discovery-agent.service
 systemctl enable tink-worker.service
 mkdir -p /etc/fluent-bit
 if [ ! -f /etc/fluent-bit/fluent-bit.conf ]; then

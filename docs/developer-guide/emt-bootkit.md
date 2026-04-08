@@ -60,7 +60,7 @@ or [Edge Microvisor Toolkit Standalone Node](#edge-microvisor-toolkit-build-with
 
 ## Integration with Edge Manageability Framework and Edge Microvisor Toolkit Standalone Node
 
-The primary components in Edge Microvisor Bootkit, that is *device-discovery*,
+The primary components in Edge Microvisor Bootkit, that is *device-discovery-agent*,
 *tink-worker* are required for provisioning of Edge Manageability Framework (orchestrator)
 and are built as RPMs (from open source) and included in an output *emt-bootkit.tar.gz* image file by
 standard image build process of Edge Microvisor Toolkit (microvisor).
@@ -100,8 +100,8 @@ When using Edge Microvisor Bootkit in the build workflow, the following RPM
 packages are run as native systemd services in the Edge Microvisor Toolkit OS:
 
 * Caddy and Fluent Bit are existing RPM packages which are included in Bootkit OS.
-* [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery/device-discovery.spec)
-  - from [Edge Infrastructure Manager](https://github.com/open-edge-platform/infra-onboarding)
+* [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery-agent/device-discovery-agent.spec)
+  - from [edge-node-agents](https://github.com/open-edge-platform/edge-node-agents)
   of the Edge Manageability Framework is built as an RPM package to run as systemd service
   and is included in the OS image.
 * [Tinkerbell tink-worker](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/tink-worker/tink-worker.spec)
@@ -142,7 +142,7 @@ components are added to run as native systemd services in the `initramfs` image:
 - The [installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/provisioning_scripts/install-os.sh) from Edge Microvisor Toolkit Standalone Node
 - Bootkit specific RPM packages:
 
-  - [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery/device-discovery.spec)
+  - [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery-agent/device-discovery-agent.spec)
   - [Tinkerbell tink-worker](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/tink-worker/tink-worker.spec) -
     is a modified version of open source [Tink](https://github.com/tinkerbell/tink) and is maintained in
     [Edge Infrastructure Manager](https://github.com/open-edge-platform/infra-onboarding/tree/main/tink-worker)

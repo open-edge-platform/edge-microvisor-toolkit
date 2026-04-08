@@ -1597,9 +1597,9 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "device-discovery",
-          "version": "0.0.4",
-          "downloadUrl": "https://github.com/open-edge-platform/infra-onboarding/archive/refs/tags/device-discovery/0.0.4.tar.gz"
+          "name": "device-discovery-agent",
+          "version": "1.0.0",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/device-discovery-agent/v1.0.0.tar.gz"
         }
       }
     },
