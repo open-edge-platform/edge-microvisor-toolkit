@@ -1,13 +1,14 @@
 Summary:        Edge Microvisor Toolkit repo files, gpg keys
 Name:           edge-repos
 Version:        3.0
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Base
 URL:            https://github.com/open-edge-platform/edge-microvisor-toolkit
 Source0:        INTEL-RPM-GPG-KEY
+Source1:        INTEL-RPM-GPG-KEY-26
 Source2:        edge-base.repo
 
 Requires:       %{name}-shared = %{version}-%{release}
@@ -37,13 +38,16 @@ export RPM_GPG_DIRECTORY="%{buildroot}%{_sysconfdir}/pki/rpm-gpg"
 
 install -d -m 755 $RPM_GPG_DIRECTORY
 install -m 644 %{SOURCE0} $RPM_GPG_DIRECTORY
+install -m 644 %{SOURCE1} $RPM_GPG_DIRECTORY
 
 %posttrans shared
 gpg --import %{_sysconfdir}/pki/rpm-gpg/INTEL-RPM-GPG-KEY
+gpg --import %{_sysconfdir}/pki/rpm-gpg/INTEL-RPM-GPG-KEY-26
 
 %preun shared
 # Remove the INTEL-RPM-GPG-KEY
 gpg --batch --yes --delete-keys 84910237BDFAAD16C4F9D44411FF864ABDCE8692
+gpg --batch --yes --delete-keys A09FA73087A8689BD61FD5E96847E910F78C54C7
 
 %files
 %defattr(-,root,root,-)
@@ -52,8 +56,12 @@ gpg --batch --yes --delete-keys 84910237BDFAAD16C4F9D44411FF864ABDCE8692
 %files shared
 %dir %{_sysconfdir}/yum.repos.d
 %{_sysconfdir}/pki/rpm-gpg/INTEL-RPM-GPG-KEY
+%{_sysconfdir}/pki/rpm-gpg/INTEL-RPM-GPG-KEY-26
 
 %changelog
+* Mon Apr 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 3.0-6
+- add new gpg key
+
 * Mon Oct 06 2025 Lishan Liu <lishan.liu@intel.com> - 3.0-5
 - Update repo URL
 
