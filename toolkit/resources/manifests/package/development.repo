@@ -1,6 +1,6 @@
 [development-next-repo]
 name=development next Repo
-baseurl=http://rpm-emt.intel.com/pulp/content/emt-lts-v6.18.15-emt-260310T050801Z-base/20260317.0641
+baseurl=http://rpm-emt.intel.com/pulp/content/emt-next-test-base
 enabled=1
 gpgcheck=0
 skip_if_unavailable=1
