@@ -1,6 +1,6 @@
 Summary:        Wayland protocols that adds functionality not available in the core protocol
 Name:           wayland-protocols
-Version:        1.38
+Version:        1.45
 Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
@@ -48,6 +48,9 @@ wayland-protocols.
 %{_includedir}/%{name}/
 
 %changelog
+* Wed Apr 1 2026 Andy <andy.peng@intel.com> - 1.45-1
+- Upgrade to version 1.45
+
 * Mon Sep 15 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 1.38-1
 - Upgrade to version 1.38
 
