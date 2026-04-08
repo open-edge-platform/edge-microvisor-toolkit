@@ -12011,8 +12011,8 @@
         "type": "other",
         "other": {
           "name": "libvpl",
-          "version": "2.14.0",
-          "downloadUrl": "https://github.com/intel/libvpl/archive/v2.14.0/libvpl-2.14.0.tar.gz"
+          "version": "2.16.0",
+          "downloadUrl": "https://github.com/intel/libvpl/archive/v2.16.0/libvpl-2.16.0.tar.gz"
         }
       }
     },
