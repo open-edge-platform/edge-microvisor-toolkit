@@ -1,9 +1,9 @@
 %global mfx_major 2
-%global mfx_minor 14
+%global mfx_minor 16
 
 Name:           libvpl
 Epoch:          1
-Version:        2.14.0
+Version:        2.16.0
 Release:        1%{?dist}
 Summary:        Intel Video Processing Library
 License:        MIT
@@ -13,6 +13,8 @@ URL:            https://intel.github.io/libvpl/latest/index.html
 ExclusiveArch:  x86_64
 
 Source0:        https://github.com/intel/libvpl/archive/v%{version}/%{name}-%{version}.tar.gz
+
+Patch1: 0001-Revert-Stop-requiring-INSTALL_DEV-to-build-examples.patch
 
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
@@ -93,6 +95,9 @@ rm -fr %{buildroot}%{_datadir}/vpl/licensing
 %{_datadir}/vpl/examples
 
 %changelog
+* Wed Mar 25 2026 Lishan Liu<lishan.liu@intel.com> - 2.16.0-1
+- Upgraded version 2.16
+
 * Thu Jul 10 2025 Swee Yee Fonn<swee.yee.fonn@intel.com> - 2.14.0-1
 - Upgraded version 2.14
 
