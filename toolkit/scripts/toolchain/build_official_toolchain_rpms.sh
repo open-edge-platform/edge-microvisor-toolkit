@@ -348,9 +348,9 @@ start_record_timestamp "build packages/install"
 # Download JDK rpm
 echo "Downloading MsOpenJDK rpm"
 MSOPENJDK_FILENAME="msopenjdk-17-17.0.12-1.$(uname -m).rpm"
-MSOPENJDK_URL="https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/3.0/base/Packages/m/$MSOPENJDK_FILENAME"
+MSOPENJDK_URL="https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/rpms/26.06/base/Packages/m/$MSOPENJDK_FILENAME"
 case $(uname -m) in
-    x86_64)  MSOPENJDK_EXPECTED_HASH="ec41e3ccf6f78c49f2ee2373df80b375ed3c2d5d97eac412b7ade0f045b0d9f4" ;;
+    x86_64)  MSOPENJDK_EXPECTED_HASH="973e9a7c652ff4967575189687096db6441a355dfdfa9cec90933476f0bc2db5" ;;
     aarch64) MSOPENJDK_EXPECTED_HASH="0532d42d5c010152c09e88971f9aecd84af54f935973bbf0f1eba2c1c6839726" ;;
 esac
 wget -nv --server-response --no-clobber --timeout=30 --tries=3 --waitretry=10 --retry-connrefused $MSOPENJDK_URL --directory-prefix=$CHROOT_RPMS_DIR_ARCH
