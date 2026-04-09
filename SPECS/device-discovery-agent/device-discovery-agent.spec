@@ -43,11 +43,10 @@ cp %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
 mkdir -p %{buildroot}%{_unitdir}
 cp %{SOURCE2} %{buildroot}%{_unitdir}
 
-install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
-install -m 644 device-discovery-agent/configs/device-discovery-agent.env %{buildroot}%{_sysconfdir}/edge-node/node/confs/device-discovery-agent.env
-
 mkdir -p %{buildroot}%{_sysconfdir}/sudoers.d
 cp device-discovery-agent/configs/sudoers.d/device-discovery-agent %{buildroot}%{_sysconfdir}/sudoers.d
+
+install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
 
 install -d -m 700 %{buildroot}%{_sysconfdir}/intel_edge_node
 install -d -m 700 %{buildroot}%{_sysconfdir}/intel_edge_node/client-credentials
@@ -62,9 +61,9 @@ cp device-discovery-agent/debian/copyright %{buildroot}%{_defaultlicensedir}/%{n
 %{_unitdir}/%{name}.service
 %{_sysusersdir}/%{name}.conf
 
-%config %attr(-, -, bm-agents) %{_sysconfdir}/edge-node/node/confs
-%config %attr(-, device-discovery-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs/device-discovery-agent.env
 %config %{_sysconfdir}/sudoers.d/device-discovery-agent
+
+%dir %attr(0755, device-discovery-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs
 
 %dir %attr(0700, device-discovery-agent, bm-agents) %{_sysconfdir}/intel_edge_node
 %dir %attr(0700, device-discovery-agent, bm-agents) %{_sysconfdir}/intel_edge_node/client-credentials
