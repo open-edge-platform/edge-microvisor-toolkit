@@ -1,0 +1,35 @@
+From 95743f7dd22b55344296f9e32afc4a446d832e0e Mon Sep 17 00:00:00 2001
+From: zhijie-zh <zhijie.zhang@intel.com>
+Date: Wed, 7 Jan 2026 09:07:55 +0800
+Subject: [PATCH] [Media Common] Add new device IDs for NVL-S
+
+Add 2 new device IDs.
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20294
+Upstream-status: Backport
+Link: https://github.com/intel/media-driver/commit/95743f7dd22b55344296f9e32afc4a446d832e0e
+---
+ media_softlet/linux/xe3p_lpm/ddi/media_sysinfo_nvls.cpp | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/media_softlet/linux/xe3p_lpm/ddi/media_sysinfo_nvls.cpp b/media_softlet/linux/xe3p_lpm/ddi/media_sysinfo_nvls.cpp
+index 288eedec5..d0794e2b9 100644
+--- a/media_softlet/linux/xe3p_lpm/ddi/media_sysinfo_nvls.cpp
++++ b/media_softlet/linux/xe3p_lpm/ddi/media_sysinfo_nvls.cpp
+@@ -198,4 +198,10 @@ static bool nvlDeviceD744 = DeviceInfoFactory<GfxDeviceInfo>::
+     RegisterDevice(0xD744, &nvlXe3GInfo);
+ 
+ static bool nvlDeviceD745 = DeviceInfoFactory<GfxDeviceInfo>::
+-    RegisterDevice(0xD745, &nvlXe3GInfo);
+\ No newline at end of file
++    RegisterDevice(0xD745, &nvlXe3GInfo);
++
++static bool nvlDeviceD74A = DeviceInfoFactory<GfxDeviceInfo>::
++    RegisterDevice(0xD74A, &nvlXe3GInfo);
++
++static bool nvlDeviceD74B = DeviceInfoFactory<GfxDeviceInfo>::
++    RegisterDevice(0xD74B, &nvlXe3GInfo);
+\ No newline at end of file
+-- 
+2.43.0
+

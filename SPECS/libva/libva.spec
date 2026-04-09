@@ -23,7 +23,7 @@
 
 Name:           libva
 %define _name   libva
-Version:        2.22.0
+Version:        2.23.0
 Release:        1%{?dist}
 Summary:        Video Acceleration (VA) API
 License:        MIT
@@ -205,6 +205,9 @@ rm -rf `find %{buildroot}%{_libdir}/pkgconfig/libva*.pc | grep -v "glx"`
 %endif
 
 %changelog
+* Thu Mar 26 2026 Lishan Liu<lishan.liu@intel.com> - 2.23.0-1
+- Upgraded version 2.23.0
+
 * Fri Jul 11 2025 Liang Yang <liang1.yang@intel.com> - 2.22.0-1
 - Upgraded to version 2.22.0
 - Updated Vendor and Distribution info.

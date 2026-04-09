@@ -1,0 +1,1752 @@
+From aa709dd00141c2e7780335d556b1d281ce557195 Mon Sep 17 00:00:00 2001
+From: Gu_Lihao <lihao.gu@intel.com>
+Date: Sat, 10 Jan 2026 06:46:17 +0800
+Subject: [PATCH] [Media Common] Media Interface and Codec HW Upstream for
+ NVL-S
+
+Upstream Media Interface and Codec HW
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20296
+Upstream-status: Backport
+Link: https://github.com/intel/media-driver/commit/aa709dd00141c2e7780335d556b1d281ce557195
+---
+ .../hw/vdbox/mhw_vdbox_mfx_hwcmd_xe3p_lpm.h   |   2 +-
+ .../hal/shared/codec_hw_xe3p_lpm_base.cpp     | 465 +++++++++++++++
+ .../codec/hal/shared/codec_hw_xe3p_lpm_base.h | 228 +++++++
+ .../codec/hal/shared/media_srcs.cmake         |  13 +
+ .../media_interfaces_huc_kernel_source.h      |  68 +++
+ .../common/media_interfaces/media_srcs.cmake  |   5 +-
+ .../media_interfaces_nvls.cpp                 | 564 ++++++++++++++++++
+ .../media_interfaces_nvls.h                   | 224 +++++++
+ .../media_interfaces_nvl/media_srcs.cmake     |  43 ++
+ .../media_interface/media_srcs.cmake          |   6 +-
+ 10 files changed, 1612 insertions(+), 6 deletions(-)
+ create mode 100644 media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.cpp
+ create mode 100644 media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.h
+ create mode 100644 media_softlet/agnostic/common/media_interfaces/media_interfaces_huc_kernel_source.h
+ create mode 100644 media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.cpp
+ create mode 100644 media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.h
+ create mode 100644 media_softlet/media_interface/media_interfaces_nvl/media_srcs.cmake
+
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM/hw/vdbox/mhw_vdbox_mfx_hwcmd_xe3p_lpm.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM/hw/vdbox/mhw_vdbox_mfx_hwcmd_xe3p_lpm.h
+index 9dd34af21..290bbeaa2 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM/hw/vdbox/mhw_vdbox_mfx_hwcmd_xe3p_lpm.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM/hw/vdbox/mhw_vdbox_mfx_hwcmd_xe3p_lpm.h
+@@ -3998,7 +3998,7 @@ public:
+                 uint32_t                 Framewidthinmbsminus170PictureWidthInMacroblocks : __CODEGEN_BITFIELD( 0,  7)    ; //!< FrameWidthInMBsMinus1[7:0] (Picture Width in Macroblocks) 
+                 uint32_t                 Reserved104                                      : __CODEGEN_BITFIELD( 8, 15)    ; //!< Reserved
+                 uint32_t                 Frameheightinmbsminus170PictureHeightInMacroblocks : __CODEGEN_BITFIELD(16, 23)    ; //!< FrameHeightInMBsMinus1[7:0] (Picture Height in Macroblocks) 
+-                uint32_t                 OldbpquantEncoderThisFieldShouldBeSetToZero      : __CODEGEN_BITFIELD(24, 28)    ; //!< OldbPQuant (encoder this field should be set to zero)
++                uint32_t                 MFX_MPEG2_PIC_STATE_CMD_DW3_BIT24_28             : __CODEGEN_BITFIELD(24, 28)    ; //!< OldbPQuant (encoder this field should be set to zero)
+                 uint32_t                 Reserved125                                      : __CODEGEN_BITFIELD(29, 30)    ; //!< Reserved
+                 uint32_t                 SliceConcealmentDisableBit                       : __CODEGEN_BITFIELD(31, 31)    ; //!< SLICE_CONCEALMENT_DISABLE_BIT
+             };
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.cpp
+new file mode 100644
+index 000000000..16e9dc449
+--- /dev/null
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.cpp
+@@ -0,0 +1,465 @@
++/*
++* Copyright (c) 2023-2026, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file     codec_hw_xe3p_lpm_base.cpp
++//! \brief    Implements HW interface layer for Xe3P_LPM_Base used on all OSs.
++//! \details  Implements HW interface layer for CNL+ to be used on on all operating systems/DDIs, across CODECHAL components.
++//!           This module must not contain any OS dependent code.
++//!
++
++#include "codec_hw_xe3p_lpm_base.h"
++
++// Currently initialized with dummy values, just as an example. Will be updated later.
++const CODECHAL_SSEU_SETTING CodechalHwInterfaceXe3P_Lpm_Base::m_defaultSsEuLutM16[CODECHAL_NUM_MEDIA_STATES_XE3P_LPM_BASE] =
++    {
++    // Slice    Sub-Slice   EU      Rsvd(freq)
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_OLP
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ENC_NORMAL
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ENC_PERFORMANCE
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ENC_QUALITY
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ENC_I_FRAME_DIST
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_32X_SCALING
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_16X_SCALING
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_4X_SCALING
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_32X_ME
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_16X_ME
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_4X_ME
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_BRC_INIT_RESET
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_BRC_UPDATE
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_BRC_BLOCK_COPY
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_HYBRID_PAK_P1
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_HYBRID_PAK_P2
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ENC_I_FRAME_CHROMA
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ENC_I_FRAME_LUMA
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_MPU_FHB
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_TPU_FHB
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_PA_COPY
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_PL2_COPY
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ENC_ADV
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_2X_SCALING
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_32x32_PU_MODE_DECISION
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_16x16_PU_SAD
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_16x16_PU_MODE_DECISION
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_8x8_PU
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_8x8_PU_FMODE
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_32x32_B_INTRA_CHECK
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_HEVC_B_MBENC
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_RESET_VLINE_STRIDE
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_HEVC_B_PAK
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_HEVC_BRC_LCU_UPDATE
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ME_VDENC_STREAMIN
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_ENC_I_32x32
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_ENC_I_16x16
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_ENC_P
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_ENC_TX
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_LUMA_RECON
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_CHROMA_RECON
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_DEBLOCK_MASK
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_LUMA_DEBLOCK
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_CHROMA_DEBLOCK
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_MC_PRED
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_P_FRAME_LUMA_RECON
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_P_FRAME_CHROMA_RECON
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_P_FRAME_INTRA_LUMA_RECON
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_VP9_PAK_P_FRAME_INTRA_CHROMA_RECON
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_PREPROC
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_ENC_WP
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_HEVC_I_MBENC
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_CSC_DS_COPY
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_2X_4X_SCALING
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_HEVC_LCU64_B_MBENC
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_MB_BRC_UPDATE
++    { 1,        0,        8,         0 },    // CODECHAL_MEDIA_STATE_STATIC_FRAME_DETECTION
++    { 1,        0,        8,         0 },
++    { 1,        0,        8,         0 },
++    { 1,        0,        8,         0 },
++    { 1,        0,        8,         0 },
++    { 2,        3,        8,         0 },
++    { 2,        3,        8,         0 },
++    { 2,        3,        8,         0 },
++    { 2,        3,        8,         0 },
++};
++
++CodechalHwInterfaceXe3P_Lpm_Base::CodechalHwInterfaceXe3P_Lpm_Base(
++    PMOS_INTERFACE    osInterface,
++    CODECHAL_FUNCTION codecFunction,
++    MhwInterfacesNext *mhwInterfacesNext,
++    bool              disableScalability)
++    : CodechalHwInterfaceNext(osInterface, codecFunction, mhwInterfacesNext, disableScalability)
++{
++    CODEC_HW_FUNCTION_ENTER;
++
++    m_mediaSfcItf = std::make_shared<MediaSfcInterface>(m_osInterface);
++    InitCacheabilityControlSettings(codecFunction);
++    
++    if (GetHcpInterfaceNext())
++    {
++        m_hcpItf = GetHcpInterfaceNext();
++        ENCODE_CHK_NULL_NO_STATUS_RETURN(m_hcpItf);
++    }
++    m_isVdencSuperSliceEnabled = true;
++
++    m_ssEuTable = m_defaultSsEuLutM16;
++    m_numMediaStates = CODECHAL_NUM_MEDIA_STATES_XE3P_LPM_BASE;
++
++    // Set platform dependent parameters
++    m_sizeOfCmdBatchBufferEnd    = m_miItf->MHW_GETSIZE_F(MI_BATCH_BUFFER_END)();
++    m_sizeOfCmdMediaReset        = m_miItf->MHW_GETSIZE_F(MI_LOAD_REGISTER_IMM)() * 8;
++    m_vdencBrcImgStateBufferSize = m_vdencItf->MHW_GETSIZE_F(VDENC_AVC_IMG_STATE)()
++        + m_mfxItf->MHW_GETSIZE_F(MFX_AVC_IMG_STATE)()
++        + m_vdencItf->MHW_GETSIZE_F(VDENC_CMD3)()
++        + m_miItf->MHW_GETSIZE_F(MI_BATCH_BUFFER_END)();
++
++    m_vdencBatchBuffer1stGroupSize = m_hcpItf->MHW_GETSIZE_F(HCP_PIPE_MODE_SELECT)()
++        + m_miItf->MHW_GETSIZE_F(MFX_WAIT)() * 2
++        + m_miItf->MHW_GETSIZE_F(MI_BATCH_BUFFER_END)();
++
++    m_vdencBatchBuffer2ndGroupSize = m_vdencItf->MHW_GETSIZE_F(VDENC_CMD1)()
++        + m_hcpItf->MHW_GETSIZE_F(HCP_PIC_STATE)()
++        + m_vdencItf->MHW_GETSIZE_F(VDENC_CMD2)()
++        + m_miItf->MHW_GETSIZE_F(MI_BATCH_BUFFER_END)();
++
++    m_vdencReadBatchBufferSize =
++    m_vdenc2ndLevelBatchBufferSize = m_vdencBatchBuffer1stGroupSize
++        + m_vdencBatchBuffer2ndGroupSize
++        + ENCODE_HEVC_VDENC_NUM_MAX_SLICES
++        * (2 * m_hcpItf->MHW_GETSIZE_F(HCP_WEIGHTOFFSET_STATE)()
++            + m_hcpItf->MHW_GETSIZE_F(HCP_SLICE_STATE)()
++            + (HEVC_MAX_NAL_UNIT_TYPE + 2) * m_hcpItf->MHW_GETSIZE_F(HCP_PAK_INSERT_OBJECT)()
++            + m_vdencItf->MHW_GETSIZE_F(VDENC_WEIGHTSOFFSETS_STATE)()
++            + m_miItf->MHW_GETSIZE_F(MI_BATCH_BUFFER_END)()
++            + 4 * ENCODE_VDENC_HEVC_PADDING_DW_SIZE);
++
++    m_HucStitchCmdBatchBufferSize = 7 * 4 
++                                    + 14 * 4 
++                                    + m_miItf->MHW_GETSIZE_F(MI_BATCH_BUFFER_END)();
++                                    
++    // HCP_WEIGHTOFFSET_STATE_CMD cmds is planned to be added in near future
++    m_vdencBatchBufferPerSliceConstSize = m_hcpItf->MHW_GETSIZE_F(HCP_SLICE_STATE)()
++        + m_hcpItf->MHW_GETSIZE_F(HCP_PAK_INSERT_OBJECT)() // 1st PakInsertObject cmd is not always inserted for each slice, 2nd PakInsertObject cmd is always inserted for each slice
++        + m_vdencItf->MHW_GETSIZE_F(VDENC_WEIGHTSOFFSETS_STATE)()
++        + m_miItf->MHW_GETSIZE_F(MI_BATCH_BUFFER_END)();
++
++    // Set to size of the BRC update command buffer, since it is larger than BRC Init/ PAK integration commands
++    m_hucCommandBufferSize = m_hucItf->MHW_GETSIZE_F(HUC_IMEM_STATE)()
++        + m_hucItf->MHW_GETSIZE_F(HUC_PIPE_MODE_SELECT)()
++        + m_miItf->MHW_GETSIZE_F(MFX_WAIT)() * 3
++        + m_hucItf->MHW_GETSIZE_F(HUC_DMEM_STATE)()
++        + m_hucItf->MHW_GETSIZE_F(HUC_VIRTUAL_ADDR_STATE)()
++        + m_hucItf->MHW_GETSIZE_F(HUC_STREAM_OBJECT)()
++        + m_miItf->MHW_GETSIZE_F(MI_STORE_DATA_IMM)()
++        + m_miItf->MHW_GETSIZE_F(MI_STORE_REGISTER_MEM)()
++        + m_hucItf->MHW_GETSIZE_F(HUC_START)()
++        + m_vdencItf->MHW_GETSIZE_F(VD_PIPELINE_FLUSH)()
++        + m_miItf->MHW_GETSIZE_F(MI_FLUSH_DW)()
++        + m_miItf->MHW_GETSIZE_F(MI_STORE_DATA_IMM)() * 2
++        + m_miItf->MHW_GETSIZE_F(MI_STORE_REGISTER_MEM)() * 2
++        + m_miItf->MHW_GETSIZE_F(MI_BATCH_BUFFER_END)();
++
++    m_maxKernelLoadCmdSize = 0;
++
++    m_sizeOfCmdMediaObject = 0;
++    m_sizeOfCmdMediaStateFlush = 0;
++}
++
++MOS_STATUS CodechalHwInterfaceXe3P_Lpm_Base::SetRowstoreCachingOffsets(
++    PMHW_VDBOX_ROWSTORE_PARAMS rowstoreParams)
++{
++    MOS_STATUS eStatus = MOS_STATUS_SUCCESS;
++
++    CODEC_HW_FUNCTION_ENTER;
++
++    CODEC_HW_CHK_STATUS_RETURN(CodechalHwInterfaceNext::SetRowstoreCachingOffsets(rowstoreParams));
++    if (GetMfxInterfaceNext())
++    {
++        CODEC_HW_CHK_STATUS_RETURN(GetMfxInterfaceNext()->GetRowstoreCachingAddrs(rowstoreParams));
++    }
++
++    if (GetVvcpInterfaceNext())
++    {
++        CODEC_HW_CHK_STATUS_RETURN(GetVvcpInterfaceNext()->GetRowstoreCachingAddrs(rowstoreParams));
++    }
++
++    return eStatus;
++}
++
++MOS_STATUS CodechalHwInterfaceXe3P_Lpm_Base::GetAvpStateCommandSize(
++    uint32_t                        mode,
++    uint32_t                        *commandsSize,
++    uint32_t                        *patchListSize,
++    PMHW_VDBOX_STATE_CMDSIZE_PARAMS params)
++{
++    CODEC_HW_FUNCTION_ENTER;
++
++    //calculate AVP related commands size
++    uint32_t    avpCommandsSize = 0;
++    uint32_t    avpPatchListSize = 0;
++    uint32_t    cpCmdsize        = 0;
++    uint32_t    cpPatchListSize  = 0;
++
++    if (GetAvpInterfaceNext() != nullptr)
++    {
++        CODEC_HW_CHK_STATUS_RETURN(GetAvpInterfaceNext()->GetAvpStateCmdSize(
++        (uint32_t *)&avpCommandsSize,
++        (uint32_t *)&avpPatchListSize,
++        params));
++    }
++
++    if (m_cpInterface != nullptr)
++    {
++        m_cpInterface->GetCpStateLevelCmdSize(cpCmdsize, cpPatchListSize);
++    }
++
++    //Calc final command size
++    *commandsSize = avpCommandsSize + cpCmdsize;
++    *patchListSize = avpPatchListSize + cpPatchListSize;
++
++    return MOS_STATUS_SUCCESS;
++}
++
++MOS_STATUS CodechalHwInterfaceXe3P_Lpm_Base::GetAvpPrimitiveCommandSize(
++    uint32_t                        mode,
++    uint32_t                        *commandsSize,
++    uint32_t                        *patchListSize)
++{
++    CODEC_HW_FUNCTION_ENTER;
++
++    //calculate AVP related commands size
++    uint32_t avpCommandsSize  = 0;
++    uint32_t avpPatchListSize = 0;
++    uint32_t cpCmdsize        = 0;
++    uint32_t cpPatchListSize  = 0;
++
++    if (GetAvpInterfaceNext() != nullptr)
++    {
++        MHW_VDBOX_STATE_CMDSIZE_PARAMS stateCmdSizeParams;
++        CODEC_HW_CHK_STATUS_RETURN(GetAvpInterfaceNext()->GetAvpPrimitiveCmdSize(
++            (uint32_t*)&avpCommandsSize,
++            (uint32_t*)&avpPatchListSize,
++            &stateCmdSizeParams));
++    }
++
++    if (m_cpInterface != nullptr)
++    {
++        m_cpInterface->GetCpSliceLevelCmdSize(cpCmdsize, cpPatchListSize);
++    }
++
++    //Calc final command size
++    *commandsSize = avpCommandsSize + cpCmdsize;
++    *patchListSize = avpPatchListSize + cpPatchListSize;
++
++    return MOS_STATUS_SUCCESS;
++}
++
++
++MOS_STATUS CodechalHwInterfaceXe3P_Lpm_Base::SendCondBbEndCmd(
++    PMOS_RESOURCE              resource,
++    uint32_t                   offset,
++    uint32_t                   compData,
++    bool                       disableCompMask,
++    bool                       enableEndCurrentBatchBuffLevel,
++    uint32_t                   compareOperation,
++    PMOS_COMMAND_BUFFER        cmdBuffer)
++{
++    CODEC_HW_FUNCTION_ENTER;
++
++    MOS_STATUS eStatus = MOS_STATUS_SUCCESS;
++
++    if (!Mos_ResourceIsNull(&m_conditionalBbEndDummy))
++    {
++        auto &par = GetMiInterfaceNext()->GETPAR_MI_FLUSH_DW();
++        par                             = {};
++        par.postSyncOperation           = 1;
++        par.pOsResource                 = &m_conditionalBbEndDummy;
++        par.dwDataDW1                   = 0;
++        CODEC_HW_CHK_STATUS_RETURN(GetMiInterfaceNext()->ADDCMD_MI_FLUSH_DW(cmdBuffer));
++    }
++
++    auto &par = GetMiInterfaceNext()->GETPAR_MI_CONDITIONAL_BATCH_BUFFER_END();
++    par       = {};
++    par.presSemaphoreBuffer                             = resource;
++    par.dwOffset                                        = offset;
++    par.dwValue                                         = compData;
++    par.bDisableCompareMask                             = disableCompMask;
++    par.dwParamsType                                    = mhw::mi::MHW_MI_ENHANCED_CONDITIONAL_BATCH_BUFFER_END_PARAMS::ENHANCED_PARAMS;
++    if (enableEndCurrentBatchBuffLevel)
++    {
++        par.enableEndCurrentBatchBuffLevel              = enableEndCurrentBatchBuffLevel;
++        par.compareOperation                            = compareOperation;
++    }
++    eStatus = GetMiInterfaceNext()->ADDCMD_MI_CONDITIONAL_BATCH_BUFFER_END(cmdBuffer);
++
++    return eStatus;
++}
++
++MOS_STATUS CodechalHwInterfaceXe3P_Lpm_Base::Initialize(
++    CodechalSetting *settings)
++{
++    MOS_STATUS eStatus = MOS_STATUS_SUCCESS;
++
++    CODEC_HW_FUNCTION_ENTER;
++
++    CODEC_HW_CHK_STATUS_RETURN(CodechalHwInterfaceNext::Initialize(settings));
++
++    //Initialize renderHal
++    m_renderHal = (PRENDERHAL_INTERFACE)MOS_AllocAndZeroMemory(sizeof(RENDERHAL_INTERFACE));
++    CODEC_HW_CHK_NULL_RETURN(m_renderHal);
++    CODEC_HW_CHK_STATUS_RETURN(RenderHal_InitInterface(
++        m_renderHal,
++        &m_renderHalCpInterface,
++        m_osInterface));
++
++    RENDERHAL_SETTINGS RenderHalSettings;
++    RenderHalSettings.iMediaStates = 32;
++    CODEC_HW_CHK_STATUS_RETURN(m_renderHal->pfnInitialize(m_renderHal, &RenderHalSettings));
++
++    //set SSEU table
++    m_renderHal->sseuTable = m_ssEuTable;
++
++    return eStatus;
++}
++
++MOS_STATUS CodechalHwInterfaceXe3P_Lpm_Base::GetVvcpStateCommandSize(
++    uint32_t                        mode,
++    uint32_t                       *commandsSize,
++    uint32_t                       *patchListSize,
++    PMHW_VDBOX_STATE_CMDSIZE_PARAMS params)
++{
++    CODEC_HW_FUNCTION_ENTER;
++
++    //calculate VVCP related commands size
++    uint32_t    vvcpCommandsSize  = 0;
++    uint32_t    vvcpPatchListSize = 0;
++    uint32_t    cpCmdsize         = 0;
++    uint32_t    cpPatchListSize   = 0;
++
++    if (GetVvcpInterfaceNext())
++    {
++        CODEC_HW_CHK_STATUS_RETURN(GetVvcpInterfaceNext()->GetVvcpStateCmdSize(
++            (uint32_t *)&vvcpCommandsSize,
++            (uint32_t *)&vvcpPatchListSize,
++            params));
++    }
++
++    if (m_cpInterface)
++    {
++        m_cpInterface->GetCpStateLevelCmdSize(cpCmdsize, cpPatchListSize);
++    }
++
++    //Calc final command size
++    *commandsSize  = vvcpCommandsSize + cpCmdsize;
++    *patchListSize = vvcpPatchListSize + cpPatchListSize;
++
++    return MOS_STATUS_SUCCESS;
++}
++
++MOS_STATUS CodechalHwInterfaceXe3P_Lpm_Base::GetVvcpPrimitiveCommandSize(
++    uint32_t  mode,
++    uint32_t *sliceCommandsSize,
++    uint32_t *slicePatchListSize,
++    uint32_t *tileCommandsSize,
++    uint32_t *tilePatchListSize)
++{
++    CODEC_HW_FUNCTION_ENTER;
++
++    //calculate VVCP related commands size
++    uint32_t vvcpSliceCommandsSize  = 0;
++    uint32_t vvcpSlicePatchListSize = 0;
++    uint32_t vvcpTileCommandsSize   = 0;
++    uint32_t vvcpTilePatchListSize  = 0;
++    uint32_t cpCmdsize              = 0;
++    uint32_t cpPatchListSize        = 0;
++
++    if (GetVvcpInterfaceNext())
++    {
++        CODEC_HW_CHK_STATUS_RETURN(GetVvcpInterfaceNext()->GetVvcpPrimitiveCmdSize(
++            (uint32_t*)&vvcpSliceCommandsSize,
++            (uint32_t*)&vvcpSlicePatchListSize,
++            (uint32_t*)&vvcpTileCommandsSize,
++            (uint32_t*)&vvcpTilePatchListSize));
++    }
++
++    if (m_cpInterface)
++    {
++        m_cpInterface->GetCpSliceLevelCmdSize(cpCmdsize, cpPatchListSize);
++    }
++
++    //Calc final command size
++    *sliceCommandsSize  = vvcpSliceCommandsSize + cpCmdsize;
++    *slicePatchListSize = vvcpSlicePatchListSize + cpPatchListSize;
++    *tileCommandsSize   = vvcpTileCommandsSize;
++    *tilePatchListSize  = vvcpTilePatchListSize;
++
++    return MOS_STATUS_SUCCESS;
++}
++
++CodechalHwInterfaceXe3P_Lpm_Base::~CodechalHwInterfaceXe3P_Lpm_Base()
++{
++    if (m_renderHal != nullptr && m_renderHal->pfnDestroy != nullptr)
++    {
++        MOS_STATUS eStatus = m_renderHal->pfnDestroy(m_renderHal);
++        if (eStatus != MOS_STATUS_SUCCESS)
++        {
++            MHW_ASSERTMESSAGE("Failed to destroy RenderHal, eStatus:%d.\n", eStatus);
++        }
++
++        if (m_renderHalCpInterface)
++        {
++            MOS_Delete(m_renderHalCpInterface);
++            m_renderHalCpInterface = nullptr;
++        }
++
++        MOS_FreeMemory(m_renderHal);
++        m_renderHal = nullptr;
++    }
++}
++
++MOS_STATUS CodechalHwInterfaceXe3P_Lpm_Base::GetHcpStateCommandSize(
++    uint32_t                        mode,
++    uint32_t *                      commandsSize,
++    uint32_t *                      patchListSize,
++    PMHW_VDBOX_STATE_CMDSIZE_PARAMS params)
++{
++    MOS_STATUS eStatus = MOS_STATUS_SUCCESS;
++
++    CODEC_HW_FUNCTION_ENTER;
++
++    uint32_t standard = CodecHal_GetStandardFromMode(mode);
++
++    uint32_t hcpCommandsSize  = 0;
++    uint32_t hcpPatchListSize = 0;
++    uint32_t cpCmdsize        = 0;
++    uint32_t cpPatchListSize  = 0;
++
++    if (m_hcpItf && (standard == CODECHAL_HEVC || standard == CODECHAL_VP9))
++    {
++        CODEC_HW_CHK_STATUS_RETURN(m_hcpItf->GetHcpStateCommandSize(
++            mode, &hcpCommandsSize, &hcpPatchListSize, params));
++
++        m_cpInterface->GetCpStateLevelCmdSize(cpCmdsize, cpPatchListSize);
++    }
++
++    *commandsSize  = hcpCommandsSize + cpCmdsize;
++    *patchListSize = hcpPatchListSize + cpPatchListSize;
++
++    return eStatus;
++}
+\ No newline at end of file
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.h
+new file mode 100644
+index 000000000..cc39a883b
+--- /dev/null
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.h
+@@ -0,0 +1,228 @@
++/*
++* Copyright (c) 2023-2026, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file      codec_hw_xe3p_lpm_base.h
++//! \brief     This modules implements HW interface layer to be used on Xe3P_LPM_Base platforms on all operating systems/DDIs, across CODECHAL components.
++//!
++#ifndef __CODEC_HW_XE3P_LPM_BASE_H__
++#define __CODEC_HW_XE3P_LPM_BASE_H__
++
++#include "codec_hw_next.h"
++#include "mhw_vdbox_vvcp_itf.h"
++#include "media_interfaces_mhw_next_ext.h"
++
++#define CODECHAL_NUM_MEDIA_STATES_XE3P_LPM_BASE (CODECHAL_NUM_MEDIA_STATES + 4)
++
++//!  Codechal hw interface Xe3P_LPM_Base
++/*!
++This class defines the interfaces for hardware dependent settings and functions used in Codechal for M15 platforms
++*/
++class CodechalHwInterfaceXe3P_Lpm_Base : public CodechalHwInterfaceNext
++{
++protected:
++    static const CODECHAL_SSEU_SETTING m_defaultSsEuLutM16[CODECHAL_NUM_MEDIA_STATES_XE3P_LPM_BASE];
++
++public:
++    //!
++    //! \brief    Constructor
++    //!
++    CodechalHwInterfaceXe3P_Lpm_Base(
++        PMOS_INTERFACE    osInterface,
++        CODECHAL_FUNCTION codecFunction,
++        MhwInterfacesNext *mhwInterfacesNext,
++        bool              disableScalability = false);
++
++    //!
++    //! \brief    Copy constructor
++    //!
++    CodechalHwInterfaceXe3P_Lpm_Base(const CodechalHwInterfaceXe3P_Lpm_Base&) = delete;
++
++    //!
++    //! \brief    Copy assignment operator
++    //!
++    CodechalHwInterfaceXe3P_Lpm_Base& operator=(const CodechalHwInterfaceXe3P_Lpm_Base&) = delete;
++
++    //!
++    //! \brief    Destructor
++    //!
++    virtual ~CodechalHwInterfaceXe3P_Lpm_Base();
++
++    //!
++    //! \brief    Calculates the maximum size for AVP picture level commands
++    //! \details  Client facing function to calculate the maximum size for AVP picture level commands
++    //! \param    [in] mode
++    //!           Indicate the codec mode
++    //! \param    [out] commandsSize
++    //!           The maximum command buffer size
++    //! \param    [out] patchListSize
++    //!           The maximum command patch list size
++    //! \param    [in] params
++    //!           Indicate the command size parameters
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    MOS_STATUS GetAvpStateCommandSize(
++        uint32_t                        mode,
++        uint32_t                        *commandsSize,
++        uint32_t                        *patchListSize,
++        PMHW_VDBOX_STATE_CMDSIZE_PARAMS params);
++
++    //!
++    //! \brief    Calculates maximum size for AVP tile level commands
++    //! \details  Client facing function to calculate maximum size for AVP tile level commands
++    //! \param    [in] mode
++    //!           Indicate the codec mode
++    //! \param    [out] commandsSize
++    //!            The maximum command buffer size
++    //! \param    [out] patchListSize
++    //!           The maximum command patch list size
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    MOS_STATUS GetAvpPrimitiveCommandSize(
++        uint32_t                        mode,
++        uint32_t                        *commandsSize,
++        uint32_t                        *patchListSize);
++
++    //!
++    //! \brief    Set Rowstore Cache offsets for Gen12 specific interfaces
++    //! \details  Set Rowstore Cache offsets in sub interfaces in codechal hw G12 interface
++    //!
++    //! \param    [in] rowstoreParams
++    //!           parameters to set rowstore cache offsets
++    //!
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    MOS_STATUS SetRowstoreCachingOffsets(
++        PMHW_VDBOX_ROWSTORE_PARAMS rowstoreParams) override;
++
++    //!
++    //! \brief    Send conditional batch buffer end cmd
++    //! \details  Send conditional batch buffer end cmd
++    //!
++    //! \param    [in] resource
++    //!           Reource used in conditional batch buffer end cmd
++    //! \param    [in] offset
++    //!           Reource offset used in mi atomic dword cmd
++    //! \param    [in] compData
++    //!           Compare data
++    //! \param    [in] disableCompMask
++    //!           Indicate disabling compare mask
++    //! \param    [in] enableEndCurrentBatchBuffLevel
++    //!           End Current Batch Buffer Level
++    //! \param    [in] compareOperation
++    //!           Compare operation
++    //! \param    [in,out] cmdBuffer
++    //!           command buffer
++    //!
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    MOS_STATUS SendCondBbEndCmd(
++        PMOS_RESOURCE              resource,
++        uint32_t                   offset,
++        uint32_t                   compData,
++        bool                       disableCompMask,
++        bool                       enableEndCurrentBatchBuffLevel,
++        uint32_t                   compareOperation,
++        PMOS_COMMAND_BUFFER        cmdBuffer);
++
++    //!
++    //! \brief    Initialize the codechal hw interface
++    //! \details  Initialize the interface before using
++    //!
++    //! \param    [in] settings
++    //!           Settings for initialization
++    //!
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    MOS_STATUS Initialize(
++        CodechalSetting *settings) override;
++
++    //!
++    //! \brief    Calculates the maximum size for VVCP picture level commands
++    //! \details  Client facing function to calculate the maximum size for VVCP picture level commands
++    //! \param    [in] mode
++    //!           Indicate the codec mode
++    //! \param    [out] commandsSize
++    //!           The maximum command buffer size
++    //! \param    [out] patchListSize
++    //!           The maximum command patch list size
++    //! \param    [in] params
++    //!           Indicate the command size parameters
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    MOS_STATUS GetVvcpStateCommandSize(
++        uint32_t                        mode,
++        uint32_t                       *commandsSize,
++        uint32_t                       *patchListSize,
++        PMHW_VDBOX_STATE_CMDSIZE_PARAMS params);
++
++    //!
++    //! \brief    Calculates the size for VVCP slice level commands
++    //! \details  Client facing function to calculate the maximum size for VVCP picture level commands
++    //! \param    [in] mode
++    //!           Indicate the codec mode
++    //! \param    [out] sliceCommandsSize
++    //!           The maximum command buffer size for slice
++    //! \param    [out] slicePatchListSize
++    //!           The maximum command patch list size for slice
++    //! \param    [out] tileCommandsSize
++    //!           The maximum command buffer size for tile
++    //! \param    [out] tilePatchListSize
++    //!           The maximum command patch list size for tile
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    MOS_STATUS GetVvcpPrimitiveCommandSize(
++        uint32_t  mode,
++        uint32_t *sliceCommandsSize,
++        uint32_t *slicePatchListSize,
++        uint32_t *tileCommandsSize,
++        uint32_t *tilePatchListSize);
++
++    //!
++    //! \brief    Calculates the maximum size for HCP picture level commands
++    //! \details  Client facing function to calculate the maximum size for HCP picture level commands
++    //! \param    [in] mode
++    //!           Indicate the codec mode
++    //! \param    [out] commandsSize
++    //!           The maximum command buffer size
++    //! \param    [out] patchListSize
++    //!           The maximum command patch list size
++    //! \param    [in] params
++    //!           Indicate the command size parameters
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    MOS_STATUS GetHcpStateCommandSize(
++        uint32_t                        mode,
++        uint32_t *                      commandsSize,
++        uint32_t *                      patchListSize,
++        PMHW_VDBOX_STATE_CMDSIZE_PARAMS params);
++
++MEDIA_CLASS_DEFINE_END(CodechalHwInterfaceXe3P_Lpm_Base)
++};
++#endif // __CODEC_HW_XE3P_LPM_BASE_H__
+\ No newline at end of file
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/media_srcs.cmake b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/media_srcs.cmake
+index 881206e6a..e93442c88 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/media_srcs.cmake
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/media_srcs.cmake
+@@ -26,20 +26,33 @@ set(TMP_MMC_HEADERS_
+     ${CMAKE_CURRENT_LIST_DIR}/codec_mem_compression_xe3p_lpm_base.h
+ )
+ 
++set(TMP_HW_SOURCES_
++    ${CMAKE_CURRENT_LIST_DIR}/codec_hw_xe3p_lpm_base.cpp
++)
++
++set(TMP_HW_HEADERS_
++    ${CMAKE_CURRENT_LIST_DIR}/codec_hw_xe3p_lpm_base.h
++)
++
+ set(SOFTLET_CODEC_COMMON_SOURCES_
+     ${SOFTLET_CODEC_COMMON_SOURCES_}
+     ${TMP_MMC_SOURCES_}
++    ${TMP_HW_SOURCES_}
+ )
+ 
+ set(SOFTLET_CODEC_COMMON_HEADERS_
+     ${SOFTLET_CODEC_COMMON_HEADERS_}
+     ${TMP_MMC_HEADERS_}
++    ${TMP_HW_HEADERS_}
+ )
+ 
+ source_group(CodecHalNext\\Xe3P_M\\shared\\mmc FILES ${TMP_MMC_SOURCES_} ${TMP_MMC_HEADERS_})
++source_group(CodecHalNext\\Xe3P_M\\shared\\hw FILES ${TMP_HW_SOURCES_} ${TMP_HW_HEADERS_})
+ 
+ set(TMP_MMC_SOURCES_ "")
+ set(TMP_MMC_HEADERS_ "")
++set(TMP_HW_SOURCES_ "")
++set(TMP_HW_HEADERS_ "")
+ set(SOFTLET_CODEC_COMMON_PRIVATE_INCLUDE_DIRS_
+     ${SOFTLET_CODEC_COMMON_PRIVATE_INCLUDE_DIRS_}
+     ${CMAKE_CURRENT_LIST_DIR}
+diff --git a/media_softlet/agnostic/common/media_interfaces/media_interfaces_huc_kernel_source.h b/media_softlet/agnostic/common/media_interfaces/media_interfaces_huc_kernel_source.h
+new file mode 100644
+index 000000000..539bde615
+--- /dev/null
++++ b/media_softlet/agnostic/common/media_interfaces/media_interfaces_huc_kernel_source.h
+@@ -0,0 +1,68 @@
++/*
++* Copyright (c) 2024, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file     media_interfaces_huc_kernel_source.h
++//! \brief    Gen-specific factory creation of the huc kernel source interfaces
++//!
++
++#ifndef __MEDIA_INTERFACES_HUC_KERNEL_SOURCE_H__
++#define __MEDIA_INTERFACES_HUC_KERNEL_SOURCE_H__
++#include "media_factory.h"
++
++// forward declaration
++class HucKernelSource;
++
++//!
++//! \class    HucKernelSourceDevice
++//! \brief    MMD device
++//!
++class HucKernelSourceDevice
++{
++public:
++    virtual ~HucKernelSourceDevice() {}
++
++    HucKernelSource *m_hucKernelSource; //!< Media huc kernel source device
++
++    //!
++    //! \brief    Create decode huc kernel source instance
++    //! \details  Entry point to create Gen specific huc kernel source instance
++    //! \param    [in] osInterface
++    //!           OS interface
++    //! \return   Pointer to Gen specific huc kernel instance if
++    //!           successful, otherwise return nullptr
++    //!
++    static HucKernelSource *CreateFactory(PMOS_INTERFACE osInterface);
++
++    //!
++    //! \brief    Initializes platform specific Huc kernel source states
++    //! \param    [in] osInterface
++    //!           OS interface
++    //! \return   MOS_STATUS_SUCCESS if succeeded, else error code.
++    //!
++    virtual MOS_STATUS Initialize() = 0;
++
++MEDIA_CLASS_DEFINE_END(HucKernelSourceDevice)
++};
++
++extern template class MediaFactory<uint32_t, HucKernelSourceDevice>;
++
++#endif // __MEDIA_INTERFACES_HUC_KERNEL_SOURCE_H__
+diff --git a/media_softlet/agnostic/common/media_interfaces/media_srcs.cmake b/media_softlet/agnostic/common/media_interfaces/media_srcs.cmake
+index 7180592c9..8b3cd8b99 100644
+--- a/media_softlet/agnostic/common/media_interfaces/media_srcs.cmake
++++ b/media_softlet/agnostic/common/media_interfaces/media_srcs.cmake
+@@ -23,11 +23,8 @@ set(TMP_HEADERS_
+     ${CMAKE_CURRENT_LIST_DIR}/media_interfaces_mcpy_next.h
+     ${CMAKE_CURRENT_LIST_DIR}/media_interfaces_codechal_next.h
+     ${CMAKE_CURRENT_LIST_DIR}/skuwa_factory.h
+-)
+-
+-set(TMP_HEADERS_
+-    ${TMP_HEADERS_}
+     ${CMAKE_CURRENT_LIST_DIR}/media_interfaces_mmd_next.h
++    ${CMAKE_CURRENT_LIST_DIR}/media_interfaces_huc_kernel_source.h
+ )
+ 
+ set(SOFTLET_COMMON_SOURCES_
+diff --git a/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.cpp b/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.cpp
+new file mode 100644
+index 000000000..91c4d1abc
+--- /dev/null
++++ b/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.cpp
+@@ -0,0 +1,564 @@
++/*===================== begin_copyright_notice ==================================
++Copyright (c) 2026, Intel Corporation
++
++# Permission is hereby granted, free of charge, to any person obtaining a
++# copy of this software and associated documentation files (the "Software"),
++# to deal in the Software without restriction, including without limitation
++# the rights to use, copy, modify, merge, publish, distribute, sublicense,
++# and/or sell copies of the Software, and to permit persons to whom the
++# Software is furnished to do so, subject to the following conditions:
++
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++# OTHER DEALINGS IN THE SOFTWARE.
++======================= end_copyright_notice ==================================*/
++//!
++//! \file     media_interfaces_nvls.cpp
++
++//! \brief    Helps with NVL_Xe3G factory creation.
++//!
++
++#include "media_interfaces_nvls.h"
++#include "vp_pipeline_adapter_xe3p_lpm.h"
++#include "vp_platform_interface_xe3p_lpm.h"
++#include "vp_kernel_config_xe2_hpg.h"
++
++#include "mhw_mi_xe3p_lpm_impl.h"
++#include "mhw_sfc_xe3p_lpm_impl.h"
++#include "mhw_vebox_xe3p_lpm_impl.h"
++#include "mhw_render_xe2_hpg_next_impl.h"
++#include "mhw_blt_xe3p_lpm_impl.h"
++#include "mhw_vdbox_hcp_impl_xe3p_lpm.h"
++#include "mhw_vdbox_mfx_impl_xe3p_lpm.h"
++#include "mhw_vdbox_vvcp_impl_xe3p_lpm.h"
++#include "mhw_vdbox_avp_impl_xe3p_lpm.h"
++#include "mhw_vdbox_huc_impl_xe3p_lpm.h"
++
++#ifdef _MEDIA_RESERVED
++#include "mhw_vdbox_aqm_impl_xe3p_lpm.h"
++#include "mhw_vdbox_vdenc_impl_xe3p_lpm.h"
++#include "huc_kernel_source_xe3p_lpm_base.h"
++#endif
++
++// VP9 Encode WA: Use VDEnc from xe_lpm_plus instead of xe3p_lpm.
++#include "mhw_vdbox_vdenc_impl_xe_lpm_plus.h"
++
++#if defined(ENABLE_KERNELS) && !defined(_FULL_OPEN_SOURCE)
++#include "igvpkrn_xe2_hpg.h"
++#include "igvpkrn_xe2_hpg_cmfcpatch.h"
++#include "igvpfc_common_xe2.h"
++#include "igvpfc_fp_xe2.h"
++#include "igvpfc_420PL3_input_xe2.h"
++#include "igvpfc_420PL3_output_xe2.h"
++#include "igvpfc_444PL3_input_xe2.h"
++#include "igvpfc_444PL3_output_xe2.h"
++#include "igvpfc_422HV_input_xe2.h"
++#include "igvp3dlut_xe2.h"
++#endif
++
++extern template class MediaFactory<uint32_t, CodechalDeviceNext>;
++extern template class MediaFactory<uint32_t, VphalDevice>;
++extern template class MediaFactory<uint32_t, RenderHalDevice>;
++extern template class MediaFactory<uint32_t, MediaInterfacesHwInfoDevice>;
++extern template class MediaFactory<uint32_t, HucKernelSourceDevice>;
++extern template class MediaFactory<uint32_t, MhwInterfacesNext>;
++
++static bool nvlXe3GRegisteredVphal =
++    MediaFactory<uint32_t, VphalDevice>::
++        Register<VphalInterfacesNvl_Xe3G>((uint32_t)IGFX_NVL_XE3G);
++
++MOS_STATUS VphalInterfacesNvl_Xe3G::Initialize(
++    PMOS_INTERFACE osInterface,
++    bool           bInitVphalState,
++    MOS_STATUS *   eStatus,
++    bool           clearViewMode)
++{
++    vp::VpPlatformInterface* vpPlatformInterface = MOS_New(vp::VpPlatformInterfacsXe3P_Lpm, osInterface);
++    if (nullptr == vpPlatformInterface)
++    {
++        *eStatus = MOS_STATUS_NULL_POINTER;
++        return *eStatus;
++    }
++
++    InitPlatformKernelBinary(vpPlatformInterface);
++
++    if (!bInitVphalState)
++    {
++        m_vpPipeline = MOS_New(vp::VpPipeline, osInterface);
++        if (nullptr == m_vpPipeline)
++        {
++            MOS_Delete(vpPlatformInterface);
++            MOS_OS_CHK_NULL_RETURN(m_vpPipeline);
++        }
++        m_vpPlatformInterface = vpPlatformInterface;
++        *eStatus = MOS_STATUS_SUCCESS;
++        return *eStatus;
++    }
++
++    m_vpBase = MOS_New(
++        VpPipelineAdapterXe3P_Lpm,
++        osInterface,
++        *vpPlatformInterface,
++        *eStatus);
++    if (nullptr == m_vpBase)
++    {
++        MOS_Delete(vpPlatformInterface);
++        *eStatus = MOS_STATUS_NULL_POINTER;
++        return *eStatus;
++    }
++    m_isNextEnabled = true;
++
++    return *eStatus;
++}
++
++MOS_STATUS VphalInterfacesNvl_Xe3G::CreateVpPlatformInterface(
++    PMOS_INTERFACE osInterface,
++    MOS_STATUS *   eStatus)
++{
++    vp::VpPlatformInterface *vpPlatformInterface = MOS_New(vp::VpPlatformInterfacsXe3P_Lpm, osInterface);
++    if (nullptr == vpPlatformInterface)
++    {
++        *eStatus = MOS_STATUS_NULL_POINTER;
++    }
++    else
++    {
++        InitPlatformKernelBinary(vpPlatformInterface);
++
++        m_vpPlatformInterface = vpPlatformInterface;
++        *eStatus              = MOS_STATUS_SUCCESS;
++    }
++    return *eStatus;
++}
++
++void VphalInterfacesNvl_Xe3G::InitPlatformKernelBinary(
++    vp::VpPlatformInterface *&vpPlatformInterface)
++{
++    static vp::VpKernelConfigXe2_Hpg kernelConfig;
++    vpPlatformInterface->SetKernelConfig(&kernelConfig);
++#if defined(ENABLE_KERNELS) && !defined(_FULL_OPEN_SOURCE)
++    vpPlatformInterface->SetVpFCKernelBinary(
++                        IGVPKRN_XE2_HPG,
++                        IGVPKRN_XE2_HPG_SIZE,
++                        IGVPKRN_XE2_HPG_CMFCPATCH,
++                        IGVPKRN_XE2_HPG_CMFCPATCH_SIZE);
++    // Need to SetOclKernelEnable in platform interface for ocl kernels
++    vpPlatformInterface->SetOclKernelEnable();
++    AddVpNativeKernelEntryToListFc_commonXe2(*vpPlatformInterface);
++    AddVpNativeKernelEntryToListFc_fpXe2(*vpPlatformInterface);
++    AddVpNativeKernelEntryToListFc_444pl3_inputXe2(*vpPlatformInterface);
++    AddVpNativeKernelEntryToListFc_444pl3_outputXe2(*vpPlatformInterface);
++    AddVpNativeKernelEntryToListFc_420pl3_inputXe2(*vpPlatformInterface);
++    AddVpNativeKernelEntryToListFc_420pl3_outputXe2(*vpPlatformInterface);
++    AddVpNativeKernelEntryToList3dlutXe2(*vpPlatformInterface);
++    AddVpNativeKernelEntryToListFc_422hv_inputXe2(*vpPlatformInterface);
++#endif
++}
++
++
++static bool nvlXe3GRegisteredMhwNext =
++    MediaFactory<uint32_t, MhwInterfacesNext>::
++        Register<MhwInterfacesNvl_Xe3G>((uint32_t)IGFX_NVL_XE3G);
++
++MOS_STATUS MhwInterfacesNvl_Xe3G::Initialize(
++    CreateParams   params,
++    PMOS_INTERFACE osInterface)
++{
++    if (osInterface == nullptr)
++    {
++        MHW_ASSERTMESSAGE("The OS interface is not valid!");
++        return MOS_STATUS_INVALID_PARAMETER;
++    }
++    m_osInterface = osInterface;
++
++    auto gtSystemInfo = osInterface->pfnGetGtSystemInfo(osInterface);
++    if (gtSystemInfo == nullptr)
++    {
++        MHW_ASSERTMESSAGE("The OS interface is not valid!");
++        return MOS_STATUS_INVALID_PARAMETER;
++    }
++
++    if ((params.m_isCp == false) && (params.Flags.m_value == 0) && (params.m_isMos) == 0)
++    {
++        MHW_ASSERTMESSAGE("No MHW interfaces were requested for creation.");
++        return MOS_STATUS_INVALID_PARAMETER;
++    }
++
++    //MHW_MI must always be created
++    auto ptr      = std::make_shared<mhw::mi::xe3p_lpm::Impl>(osInterface);
++    m_miItf       = std::static_pointer_cast<mhw::mi::Itf>(ptr);
++
++    //For mos, need miInterface only
++    if(params.m_isMos)
++    {
++        return MOS_STATUS_SUCCESS;
++    }
++
++    // MHW_CP must always be created
++    MOS_STATUS status;
++    m_cpInterface = osInterface->pfnCreateMhwCpInterface(osInterface);
++    MHW_MI_CHK_NULL(m_cpInterface);
++    ptr->SetCpInterface(m_cpInterface, m_miItf);
++
++    InitializeRenderComponent(params, osInterface);
++
++    if (params.Flags.m_sfc)
++    {
++        auto sfcPtr    = std::make_shared<mhw::sfc::xe3p_lpm::Impl>(osInterface);
++        m_sfcItf       = std::static_pointer_cast<mhw::sfc::Itf>(sfcPtr);
++    }
++    if (params.Flags.m_vebox)
++    {
++        auto veboxPtr    = std::make_shared<mhw::vebox::xe3p_lpm::Impl>(osInterface);
++        m_veboxItf       = std::static_pointer_cast<mhw::vebox::Itf>(veboxPtr);
++    }
++
++    if (params.Flags.m_vdboxAll || params.Flags.m_mfx)
++    {
++        auto ptr = std::make_shared<mhw::vdbox::mfx::xe3p_lpm_base::xe3p_lpm::Impl>(osInterface, m_cpInterface);
++        m_mfxItf = std::static_pointer_cast<mhw::vdbox::mfx::Itf>(ptr);
++    }
++    if (params.Flags.m_vdboxAll || params.Flags.m_hcp)
++    {
++        m_hcpItf = std::make_shared<mhw::vdbox::hcp::xe3p_lpm_base::xe3p_lpm::Impl>(osInterface);
++    }
++    if (params.Flags.m_vdboxAll)
++    {
++        auto ptr = std::make_shared<mhw::vdbox::avp::xe3p_lpm_base::xe3p_lpm::Impl>(osInterface);
++        m_avpItf = std::static_pointer_cast<mhw::vdbox::avp::Itf>(ptr);
++    }
++    if (params.Flags.m_vdboxAll)
++    {
++        auto ptr  = std::make_shared<mhw::vdbox::vvcp::xe3p_lpm_base::xe3p_lpm::Impl>(osInterface, m_cpInterface);
++        m_vvcpItf = std::static_pointer_cast<mhw::vdbox::vvcp::Itf>(ptr);
++    }
++    if (params.Flags.m_vdboxAll || params.Flags.m_huc)
++    {
++        auto ptr = std::make_shared<mhw::vdbox::huc::xe3p_lpm_base::xe3p_lpm::Impl>(osInterface, m_cpInterface);
++        m_hucItf = std::static_pointer_cast<mhw::vdbox::huc::Itf>(ptr);
++    }
++#ifdef _MEDIA_RESERVED
++    if (params.Flags.m_vdboxAll)
++    {
++        auto ptr   = std::make_shared<mhw::vdbox::aqm::xe3p_lpm_base::xe3p_lpm::Impl>(osInterface);
++        m_aqmItf = std::static_pointer_cast<mhw::vdbox::aqm::Itf>(ptr);
++    }
++    if (params.Flags.m_vdboxAll || params.Flags.m_vdenc)
++    {
++        auto ptr = std::make_shared<mhw::vdbox::vdenc::xe3p_lpm_base::xe3p_lpm::Impl>(osInterface);
++        m_vdencItf = std::static_pointer_cast<mhw::vdbox::vdenc::Itf>(ptr);
++    }
++#endif
++    if (params.Flags.m_blt)
++    {
++        auto bltptr = std::make_shared<mhw::blt::xe3p_lpm::Impl>(osInterface);
++        m_bltItf    = std::static_pointer_cast<mhw::blt::Itf>(bltptr);
++    }
++
++    return MOS_STATUS_SUCCESS;
++}
++
++void MhwInterfacesNvl_Xe3G::InitializeRenderComponent(
++    CreateParams   params,
++    PMOS_INTERFACE osInterface)
++{
++    if (params.Flags.m_render)
++    {
++        auto renderPtr = std::make_shared<mhw::render::xe2_hpg_next::Impl>(osInterface);
++        m_renderItf    = std::static_pointer_cast<mhw::render::Itf>(renderPtr);
++    }
++    if (params.Flags.m_stateHeap)
++    {
++        m_stateHeapInterface =
++            MOS_New(StateHeap, osInterface, params.m_heapMode);
++    }
++}
++
++static bool nvlXe3GRegisteredCodecHal =
++    MediaFactory<uint32_t, CodechalDeviceNext>::
++        Register<CodechalInterfacesXe3P_Lpm>((uint32_t)IGFX_NVL_XE3G);
++
++MOS_STATUS CodechalInterfacesXe3P_Lpm::Initialize(
++    void *         standardInfo,
++    void *         settings,
++    MhwInterfacesNext *mhwInterfaces,
++    PMOS_INTERFACE osInterface)
++{
++    if (standardInfo == nullptr ||
++        mhwInterfaces == nullptr ||
++        osInterface == nullptr)
++    {
++        CODECHAL_PUBLIC_ASSERTMESSAGE("CodecHal device is not valid!");
++        return MOS_STATUS_INVALID_PARAMETER;
++    }
++
++    // This part should be moved back to media_intefaces.cpp for softlet build
++    PCODECHAL_STANDARD_INFO info          = ((PCODECHAL_STANDARD_INFO)standardInfo);
++    CODECHAL_FUNCTION       CodecFunction = info->CodecFunction;
++
++#ifdef _VP9_ENCODE_VDENC_SUPPORTED  // VP9 Encode WA: Use VDEnc from xe_lpm_plus instead of xe3p_lpm.
++    if (mhwInterfaces != nullptr && info->Mode == CODECHAL_ENCODE_MODE_VP9)
++    {
++        auto ptr                  = std::make_shared<mhw::vdbox::vdenc::xe_lpm_plus_base::v0::Impl>(osInterface);
++        mhwInterfaces->m_vdencItf = std::dynamic_pointer_cast<mhw::vdbox::vdenc::Itf>(ptr);
++        CODECHAL_PUBLIC_CHK_NULL_RETURN(mhwInterfaces->m_vdencItf);
++    }
++#endif
++
++    bool disableScalability = true;
++
++    auto hwInterface = MOS_New(Hw, osInterface, CodecFunction, mhwInterfaces, disableScalability);
++
++    if (hwInterface == nullptr)
++    {
++        CODECHAL_PUBLIC_ASSERTMESSAGE("hwInterface is not valid!");
++        return MOS_STATUS_NO_SPACE;
++    }
++    hwInterface->pfnCreateDecodeSinglePipe = decode::DecodeScalabilitySinglePipeNext::CreateDecodeSinglePipe;
++    hwInterface->pfnCreateDecodeMultiPipe  = decode::DecodeScalabilityMultiPipeNext::CreateDecodeMultiPipe;
++
++#if USE_CODECHAL_DEBUG_TOOL
++    CodechalDebugInterface *debugInterface = MOS_New(CodechalDebugInterface);
++    if (debugInterface == nullptr)
++    {
++        MOS_Delete(hwInterface);
++        CODECHAL_PUBLIC_ASSERTMESSAGE("debugInterface is not valid!");
++        return MOS_STATUS_NO_SPACE;
++    }
++    if (debugInterface->Initialize(hwInterface, CodecFunction) != MOS_STATUS_SUCCESS)
++    {
++        MOS_Delete(hwInterface);
++        MOS_Delete(debugInterface);
++        CODECHAL_PUBLIC_ASSERTMESSAGE("Debug interface creation failed!");
++        return MOS_STATUS_INVALID_PARAMETER;
++    }
++#else
++    CodechalDebugInterface *debugInterface = nullptr;
++#endif  // USE_CODECHAL_DEBUG_TOOL
++
++    auto release_func = [&]() 
++    {
++        MOS_Delete(hwInterface);
++#if USE_CODECHAL_DEBUG_TOOL
++        MOS_Delete(debugInterface);
++#endif  // USE_CODECHAL_DEBUG_TOOL
++    };
++
++    if (CodecHalIsDecode(CodecFunction))
++    {
++#ifdef _MPEG2_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_MPEG2IDCT ||
++            info->Mode == CODECHAL_DECODE_MODE_MPEG2VLD)
++        {
++            m_codechalDevice = MOS_New(Decode::Mpeg2, hwInterface, debugInterface);
++        }
++        else
++#endif
++#ifdef _VC1_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_VC1IT ||
++            info->Mode == CODECHAL_DECODE_MODE_VC1VLD)
++        {
++            CODECHAL_PUBLIC_ASSERTMESSAGE("NVL doesn't support VC1!");
++        }
++        else
++#endif
++#ifdef _AVC_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_AVCVLD)
++        {
++           m_codechalDevice = MOS_New(Decode::Avc, hwInterface, debugInterface);
++        }
++        else
++#endif
++#ifdef _JPEG_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_JPEG)
++        {
++            m_codechalDevice = MOS_New(Decode::Jpeg, hwInterface, debugInterface);
++        }
++        else
++#endif
++#ifdef _VP8_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_VP8VLD)
++        {
++            m_codechalDevice = MOS_New(Decode::Vp8, hwInterface, debugInterface);
++        }
++        else
++#endif
++#ifdef _HEVC_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_HEVCVLD)
++        {
++            m_codechalDevice = MOS_New(Decode::Hevc, hwInterface, debugInterface);
++        }
++        else
++#endif
++#ifdef _VP9_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_VP9VLD)
++        {
++            m_codechalDevice = MOS_New(Decode::Vp9, hwInterface, debugInterface);
++        }
++        else
++#endif
++#ifdef _AV1_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_AV1VLD)
++        {
++            m_codechalDevice = MOS_New(Decode::Av1, hwInterface, debugInterface);
++        }
++        else
++#endif
++#ifdef _VVC_DECODE_SUPPORTED
++        if (info->Mode == CODECHAL_DECODE_MODE_VVCVLD) //VVC
++        {
++            m_codechalDevice = MOS_New(Decode::Vvc, hwInterface, debugInterface);
++        }
++        else
++#endif
++        {
++            CODECHAL_PUBLIC_ASSERTMESSAGE("Decode mode requested invalid!");
++            CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++        }
++
++        if (m_codechalDevice == nullptr)
++        {
++            CODECHAL_PUBLIC_ASSERTMESSAGE("Decoder device creation failed!");
++            CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_NO_SPACE, release_func);
++        }
++    }
++    else if (CodecHalIsEncode(CodecFunction))
++    {
++#if defined(_AVC_ENCODE_VDENC_SUPPORTED) && defined(_MEDIA_RESERVED)
++        if (info->Mode == CODECHAL_ENCODE_MODE_AVC)
++        {
++            if (CodecHalUsesVdencEngine(info->CodecFunction))
++            {
++                m_codechalDevice = MOS_New(EncodeAvcVdencPipelineAdapterXe3P_Lpm, hwInterface, debugInterface);
++                if (m_codechalDevice == nullptr)
++                {
++                    CODECHAL_PUBLIC_ASSERTMESSAGE("Encode state creation failed!");
++                    CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++                }
++                return MOS_STATUS_SUCCESS;
++            }
++        }
++        else
++#endif
++#if defined(_VP9_ENCODE_VDENC_SUPPORTED) && defined(_MEDIA_RESERVED)
++        if (info->Mode == CODECHAL_ENCODE_MODE_VP9)
++        {
++            m_codechalDevice = MOS_New(EncodeVp9VdencPipelineAdapterXe3p_Lpm_Base, hwInterface, debugInterface);
++            if (m_codechalDevice == nullptr)
++            {
++                CODECHAL_PUBLIC_ASSERTMESSAGE("Encode state creation failed!");
++                CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++            }
++            return MOS_STATUS_SUCCESS;
++        }
++        else
++#endif
++#if defined(_JPEG_ENCODE_SUPPORTED) && defined(_MEDIA_RESERVED)
++        if (info->Mode == CODECHAL_ENCODE_MODE_JPEG)
++        {
++            m_codechalDevice = MOS_New(EncodeJpegPipelineAdapterXe3P_Lpm_Base, hwInterface, debugInterface);
++            if (m_codechalDevice == nullptr)
++            {
++                CODECHAL_PUBLIC_ASSERTMESSAGE("Encode state creation failed!");
++                CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++            }
++            return MOS_STATUS_SUCCESS;
++        }
++        else
++#endif
++#if defined(_AV1_ENCODE_VDENC_SUPPORTED) && defined(_MEDIA_RESERVED)
++        if (info->Mode == codechalEncodeModeAv1)
++        {
++            if (CodecHalUsesVdencEngine(info->CodecFunction))
++            {
++                m_codechalDevice = MOS_New(EncodeAv1VdencPipelineAdapterXe3P_Lpm, hwInterface, debugInterface);
++                if (m_codechalDevice == nullptr)
++                {
++                    CODECHAL_PUBLIC_ASSERTMESSAGE("Encode state creation failed!");
++                    CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++                }
++                return MOS_STATUS_SUCCESS;
++            }
++            else
++            {
++                CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++            }
++        }
++        else
++#endif
++#if defined(_HEVC_ENCODE_VDENC_SUPPORTED) && defined(_MEDIA_RESERVED)
++        if (info->Mode == CODECHAL_ENCODE_MODE_HEVC)
++        {
++            if (CodecHalUsesVdencEngine(info->CodecFunction))
++            {
++                m_codechalDevice = MOS_New(EncodeHevcVdencPipelineAdapterXe3P_Lpm_Base, hwInterface, debugInterface);
++                if (m_codechalDevice == nullptr)
++                {
++                    CODECHAL_PUBLIC_ASSERTMESSAGE("Encode state creation failed!");
++                    CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++                }
++                return MOS_STATUS_SUCCESS;
++            }
++        }
++        else
++#endif
++        {
++            CODECHAL_PUBLIC_ASSERTMESSAGE("Unsupported encode function requested.");
++            CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++        }
++    }
++    else
++    {
++        CODECHAL_PUBLIC_ASSERTMESSAGE("Unsupported codec function requested.");
++        CODECHAL_PUBLIC_CHK_STATUS_WITH_DESTROY_RETURN(MOS_STATUS_INVALID_PARAMETER, release_func);
++    }
++
++    return MOS_STATUS_SUCCESS;
++}
++
++static bool nvlXe3GRegisteredRenderHal =
++    MediaFactory<uint32_t, RenderHalDevice>::
++        Register<RenderHalInterfacesNvl_Xe3G>((uint32_t)IGFX_NVL_XE3G);
++
++MOS_STATUS RenderHalInterfacesNvl_Xe3G::Initialize()
++{
++    m_renderhalDevice = MOS_New(XRenderHal);
++    if (m_renderhalDevice == nullptr)
++    {
++        MHW_ASSERTMESSAGE("Create Render Hal interfaces failed.")
++        return MOS_STATUS_NO_SPACE;
++    }
++    return MOS_STATUS_SUCCESS;
++}
++
++#define IP_VERSION_XE3P_LPM 0x1700
++static bool nvlXe3GRegisteredHwInfo =
++    MediaFactory<uint32_t, MediaInterfacesHwInfoDevice>::Register<MediaInterfacesHwInfoDeviceXe3P_Lpm>((uint32_t)IGFX_NVL_XE3G);
++
++MOS_STATUS MediaInterfacesHwInfoDeviceXe3P_Lpm::Initialize(PLATFORM platform)
++{
++    m_hwInfo.SetDeviceInfo(IP_VERSION_XE3P_LPM, platform.usRevId);
++    return MOS_STATUS_SUCCESS;
++}
++
++static bool nvlXe3GRegisteredMcpy =
++    MediaFactory<uint32_t, McpyDeviceNext>::
++        Register<McpyDeviceXe3P_Lpm_Base>((uint32_t)IGFX_NVL_XE3G);
++
++static bool nvlXe3GRegisteredHucKernelSource =
++    MediaFactory<uint32_t, HucKernelSourceDevice>::
++        Register<HucKernelSourceDeviceXe3P_Lpm>((uint32_t)IGFX_NVL_XE3G);
++
++MOS_STATUS HucKernelSourceDeviceXe3P_Lpm::Initialize()
++{
++#ifdef _MEDIA_RESERVED
++    m_hucKernelSource = &HucKernelSourceXe3P_Lpm_Base::GetInstance();
++#endif
++    return MOS_STATUS_SUCCESS;
++}
+diff --git a/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.h b/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.h
+new file mode 100644
+index 000000000..d6671a72c
+--- /dev/null
++++ b/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.h
+@@ -0,0 +1,224 @@
++/*===================== begin_copyright_notice ==================================
++Copyright (c) 2026, Intel Corporation
++
++# Permission is hereby granted, free of charge, to any person obtaining a
++# copy of this software and associated documentation files (the "Software"),
++# to deal in the Software without restriction, including without limitation
++# the rights to use, copy, modify, merge, publish, distribute, sublicense,
++# and/or sell copies of the Software, and to permit persons to whom the
++# Software is furnished to do so, subject to the following conditions:
++
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++# OTHER DEALINGS IN THE SOFTWARE.
++======================= end_copyright_notice ==================================*/
++//!
++//! \file     media_interfaces_nvls.h
++//! \brief    All interfaces used for NVL_Xe3G that require factory creation
++//!
++
++#ifndef __MEDIA_INTERFACES_NVL_XE3G_H__
++#define __MEDIA_INTERFACES_NVL_XE3G_H__
++
++#include "media_interfaces_mhw_next.h"
++#include "media_interfaces_codechal_next.h"
++#include "media_interfaces_vphal.h"
++#include "media_interfaces_renderhal.h"
++#include "media_interfaces_hwinfo_device.h"
++#include "media_interfaces_mcpy_next.h"
++#include "media_interfaces_huc_kernel_source.h"
++
++#include "mhw_cp_interface.h"
++#include "mhw_state_heap_xe2_hpg.h"
++#include "renderhal_xe2_hpg_next.h"
++#include "media_copy_xe3p_lpm_base.h"
++#include "decode_scalability_singlepipe_next.h"
++#include "decode_scalability_multipipe_next.h"
++
++#ifdef _AVC_DECODE_SUPPORTED
++#include "decode_avc_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _HEVC_DECODE_SUPPORTED
++#include "decode_hevc_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _JPEG_DECODE_SUPPORTED
++#include "decode_jpeg_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _MPEG2_DECODE_SUPPORTED
++#include "decode_mpeg2_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _VP9_DECODE_SUPPORTED
++#include "decode_vp9_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _VP8_DECODE_SUPPORTED
++#include "decode_vp8_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _AV1_DECODE_SUPPORTED
++#include "decode_av1_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _VVC_DECODE_SUPPORTED
++#include "decode_vvc_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _MEDIA_RESERVED
++#ifdef _JPEG_ENCODE_SUPPORTED
++#include "encode_jpeg_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _HEVC_ENCODE_VDENC_SUPPORTED
++#include "encode_hevc_vdenc_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++
++#ifdef _AV1_ENCODE_VDENC_SUPPORTED
++#include "encode_av1_vdenc_pipeline_adapter_xe3p_lpm.h"
++#endif
++
++#ifdef _AVC_ENCODE_VDENC_SUPPORTED
++#include "encode_avc_vdenc_pipeline_adapter_xe3p_lpm.h"
++#endif
++
++#ifdef _VP9_ENCODE_VDENC_SUPPORTED
++#include "encode_vp9_vdenc_pipeline_adapter_xe3p_lpm_base.h"
++#endif
++#endif
++class MhwInterfacesNvl_Xe3G : virtual public MhwInterfacesNext
++{
++public:
++    using Cp        = MhwCpInterface;
++    using StateHeap = MHW_STATE_HEAP_INTERFACE_XE2_HPG;
++
++    virtual MOS_STATUS Initialize(
++        CreateParams   params,
++        PMOS_INTERFACE osInterface);
++
++protected:
++    virtual void InitializeRenderComponent(
++        CreateParams   params,
++        PMOS_INTERFACE osInterface);
++
++MEDIA_CLASS_DEFINE_END(MhwInterfacesNvl_Xe3G)
++};
++
++class CodechalDecodeInterfacesXe3P_Lpm
++{
++public:
++#ifdef _AVC_DECODE_SUPPORTED
++    using Avc = DecodeAvcPipelineAdapterXe3P_Lpm_Base;
++#endif
++#ifdef _HEVC_DECODE_SUPPORTED
++    using Hevc = DecodeHevcPipelineAdapterXe3P_Lpm_Base;
++#endif
++#ifdef _JPEG_DECODE_SUPPORTED
++    using Jpeg = DecodeJpegPipelineAdapterXe3P_Lpm_Base;
++#endif
++#ifdef _MPEG2_DECODE_SUPPORTED
++    using Mpeg2 = DecodeMpeg2PipelineAdapterXe3P_Lpm_Base;
++#endif
++#ifdef _VP9_DECODE_SUPPORTED
++    using Vp9 = DecodeVp9PipelineAdapterXe3P_Lpm_Base;
++#endif
++#ifdef _VP8_DECODE_SUPPORTED
++    using Vp8 = DecodeVp8PipelineAdapterXe3P_Lpm_Base;
++#endif
++#ifdef _AV1_DECODE_SUPPORTED
++    using Av1 = DecodeAv1PipelineAdapterXe3P_Lpm_Base;
++#endif
++#ifdef _VVC_DECODE_SUPPORTED
++    using Vvc = DecodeVvcPipelineAdapterXe3P_Lpm_Base;
++#endif
++
++    MEDIA_CLASS_DEFINE_END(CodechalDecodeInterfacesXe3P_Lpm)
++};
++
++class CodechalInterfacesXe3P_Lpm : public CodechalDeviceNext
++{
++public:
++    using Decode = CodechalDecodeInterfacesXe3P_Lpm;
++    using Hw     = CodechalHwInterfaceXe3P_Lpm_Base;
++
++    MOS_STATUS Initialize(
++        void *         standardInfo,
++        void *         settings,
++        MhwInterfacesNext *mhwInterfaces,
++        PMOS_INTERFACE osInterface) override;
++
++    MEDIA_CLASS_DEFINE_END(CodechalInterfacesXe3P_Lpm)
++};
++
++class VphalInterfacesNvl_Xe3G : public VphalDevice
++{
++public:
++    MOS_STATUS Initialize(
++        PMOS_INTERFACE osInterface,
++        bool           bInitVphalState,
++        MOS_STATUS *   eStatus,
++        bool           clearViewMode = false) override;
++
++    MOS_STATUS CreateVpPlatformInterface(
++        PMOS_INTERFACE osInterface,
++        MOS_STATUS *   eStatus) override;
++
++protected:
++    virtual void InitPlatformKernelBinary(
++        vp::VpPlatformInterface *&vpPlatformInterface);
++
++    MEDIA_CLASS_DEFINE_END(VphalInterfacesNvl_Xe3G)
++};
++
++class RenderHalInterfacesNvl_Xe3G : public RenderHalDevice
++{
++protected:
++    using XRenderHal = XRenderHal_Interface_Xe2_Hpg_Next;
++    MOS_STATUS Initialize();
++
++    MEDIA_CLASS_DEFINE_END(RenderHalInterfacesNvl_Xe3G)
++};
++
++class MediaInterfacesHwInfoDeviceXe3P_Lpm : public MediaInterfacesHwInfoDevice
++{
++public:
++    virtual MOS_STATUS Initialize(PLATFORM platform) override;
++
++    MEDIA_CLASS_DEFINE_END(MediaInterfacesHwInfoDeviceXe3P_Lpm)
++};
++
++class McpyDeviceXe3P_Lpm_Base: public McpyDeviceNextImpl<MediaCopyStateXe3P_Lpm_Base>
++{
++protected:
++    virtual MhwInterfacesNext *CreateMhwInterface(
++        PMOS_INTERFACE osInterface)
++    {
++            MhwInterfacesNext::CreateParams params;
++            MOS_ZeroMemory(&params, sizeof(params));
++            params.Flags.m_vebox     = true;
++            params.Flags.m_blt       = true;
++
++            MhwInterfacesNext *mhw = MhwInterfacesNext::CreateFactory(params, osInterface);
++        
++            return mhw;
++    }
++    MEDIA_CLASS_DEFINE_END(McpyDeviceXe3P_Lpm_Base)
++};
++
++class HucKernelSourceDeviceXe3P_Lpm : public HucKernelSourceDevice
++{
++public:
++    MOS_STATUS Initialize() override;
++
++    MEDIA_CLASS_DEFINE_END(HucKernelSourceDeviceXe3P_Lpm)
++};
++#endif  // __MEDIA_INTERFACES_NVL_XE3G_H__
+diff --git a/media_softlet/media_interface/media_interfaces_nvl/media_srcs.cmake b/media_softlet/media_interface/media_interfaces_nvl/media_srcs.cmake
+new file mode 100644
+index 000000000..093a3e83a
+--- /dev/null
++++ b/media_softlet/media_interface/media_interfaces_nvl/media_srcs.cmake
+@@ -0,0 +1,43 @@
++# Copyright (c) 2026, Intel Corporation
++#
++# Permission is hereby granted, free of charge, to any person obtaining a
++# copy of this software and associated documentation files (the "Software"),
++# to deal in the Software without restriction, including without limitation
++# the rights to use, copy, modify, merge, publish, distribute, sublicense,
++# and/or sell copies of the Software, and to permit persons to whom the
++# Software is furnished to do so, subject to the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++# OTHER DEALINGS IN THE SOFTWARE.
++# and approved by Intel in writing.
++
++set(TMP_SOURCES_
++    ${CMAKE_CURRENT_LIST_DIR}/media_interfaces_nvls.cpp
++)
++
++set(TMP_HEADERS_
++    ${CMAKE_CURRENT_LIST_DIR}/media_interfaces_nvls.h
++)
++
++set(SOFTLET_COMMON_SOURCES_
++    ${SOFTLET_COMMON_SOURCES_}
++    ${TMP_SOURCES_}
++)
++
++set(SOFTLET_COMMON_HEADERS_
++    ${SOFTLET_COMMON_HEADERS_}
++    ${TMP_HEADERS_}
++)
++
++set(SOFTLET_COMMON_PRIVATE_INCLUDE_DIRS_
++    ${SOFTLET_COMMON_PRIVATE_INCLUDE_DIRS_}
++    ${CMAKE_CURRENT_LIST_DIR}
++)
+\ No newline at end of file
+diff --git a/media_softlet/media_interface/media_srcs.cmake b/media_softlet/media_interface/media_srcs.cmake
+index d1a07ee81..24be21046 100644
+--- a/media_softlet/media_interface/media_srcs.cmake
++++ b/media_softlet/media_interface/media_srcs.cmake
+@@ -1,4 +1,4 @@
+-# Copyright (c) 2022-2023, Intel Corporation
++# Copyright (c) 2022-2026, Intel Corporation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining a
+ # copy of this software and associated documentation files (the "Software"),
+@@ -36,4 +36,8 @@ endif()
+ 
+ if(PTL)
+     media_include_subdirectory(media_interfaces_ptl)
++endif()
++
++if(NVL)
++    media_include_subdirectory(media_interfaces_nvl)
+ endif()
+\ No newline at end of file
+-- 
+2.43.0
+

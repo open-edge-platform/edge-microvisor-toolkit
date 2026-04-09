@@ -1,5 +1,5 @@
 Name:           intel-media-driver
-Version:        25.2.3
+Version:        25.4.6
 Release:        1%{?dist}
 Summary:        The Intel Media Driver for VAAPI
 License:        MIT and BSD-3-Clause
@@ -13,6 +13,26 @@ URL:        https://github.com/intel/media-driver
 
 Source0:    https://github.com/intel/media-driver/archive/refs/tags/intel-media-%{version}.tar.gz
 
+Patch0001: 0001-Force-ARGB-surface-to-tile4-for-ACM.patch
+Patch0002: 0002-Fix-failed-4k-videowalll-test-case-and-color-corrupt.patch
+Patch0003: 0003-Disable-Xe3_Lpm-VD-SFC.patch
+Patch0004: 0004-Add-AVC-10-Bit-decode.patch
+Patch0005: 0005-Fix-MHW-interface-for-AVC-10-decode.patch
+Patch0006: 0006-Add-YUY2-and-Y210-caps-for-MTL-ARL-HEVC-encode.patch
+Patch0007: 0007-Fix-ACM-HEVC-VDENC-422-CBR-VBR.patch
+Patch0008: 0008-Mark-the-imported-dmabuf-as-cacheable-in-Media-Libva.patch
+Patch0009: 0009-Decode-Add-AVC-10-Bit-decode-for-WCL.patch
+Patch0010: 0010-Decode-Add-AVC-10-Bit-decode-for-NVL.patch
+
+Patch0011: 0001-Media-Common-Add-new-device-IDs-for-NVL-S.patch
+Patch0012: 0002-Encode-Open-Source-for-VP9-Hal-Layer.patch
+Patch0013: 0003-Media-Common-Media-Interface-and-Codec-HW-Upstream-f.patch
+Patch0014: 0004-Media-Common-Enable-NVL-S-Open-Source-Build.patch
+Patch0015: 0005-Media-Common-HUC-Kernel-Bin-Upstream-for-NVL-S.patch
+Patch0016: 0006-Media-Common-disable-pat-index-for-MTL-ARL-on-i915.patch
+Patch0017: 0007-Encode-Merge-SLBB-update-feature-branch-to-comp-medi.patch
+Patch0018: 0008-Media-Common-Add-WA-for-Decode-Open-Source-Test.patch
+Patch0019: 0011-Enable-AV1-422-decode.patch
 # This is an Intel only vaapi backend
 ExclusiveArch:  x86_64
 
@@ -96,6 +116,9 @@ fn=%{buildroot}%{_metainfodir}/intel-media-driver.metainfo.xml
 %{_libdir}/pkgconfig/igfxcmrt.pc
 
 %changelog
+* Wed Apr 1 2026 Lishan Liu <lishan.liu@intel.com> - 25.4.6-1
+- Upgraded to version 25.4.6
+
 * Fri Jul 11 2025 Liang Yang <liang1.yang@intel.com> - 25.2.3-1
 - Upgraded to version 25.2.3.
 
