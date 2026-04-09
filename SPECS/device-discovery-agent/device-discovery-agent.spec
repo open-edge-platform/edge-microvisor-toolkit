@@ -52,6 +52,8 @@ cp configs/sudoers.d/device-discovery-agent %{buildroot}%{_sysconfdir}/sudoers.d
 install -d -m 700 %{buildroot}%{_sysconfdir}/intel_edge_node
 install -d -m 700 %{buildroot}%{_sysconfdir}/intel_edge_node/client-credentials
 
+install -d -m 755 %{buildroot}%{_localstatedir}/log/client-auth
+
 mkdir -p %{buildroot}%{_defaultlicensedir}/%{name}
 cp debian/copyright %{buildroot}%{_defaultlicensedir}/%{name}
 
@@ -66,6 +68,8 @@ cp debian/copyright %{buildroot}%{_defaultlicensedir}/%{name}
 
 %dir %attr(0700, device-discovery-agent, bm-agents) %{_sysconfdir}/intel_edge_node
 %dir %attr(0700, device-discovery-agent, bm-agents) %{_sysconfdir}/intel_edge_node/client-credentials
+
+%dir %attr(0755, device-discovery-agent, bm-agents) %{_localstatedir}/log/client-auth
 
 %license %{_defaultlicensedir}/%{name}/copyright
 
