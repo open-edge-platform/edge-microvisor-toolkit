@@ -6,7 +6,7 @@
 
 Summary:        X.Org X11 X server
 Name:           xorg-x11-server
-Version:        21.1.11
+Version:        21.1.12
 Release:        1%{?dist}
 License:        X11 License Distribution Modification Variant
 Vendor:         Intel Corporation
@@ -261,6 +261,9 @@ find %{buildroot} -type f -name "*.la" -delete -print
 %{_datadir}/aclocal/xorg-server.m4
 
 %changelog
+* Thu Apr 9 2026 Lishan Liu <lishan.liu@intel.com> - 21.1.12-1
+- Upgrade to 21.1.12
+
 * Mon Apr 7 2025 Lishan Liu <lishan.liu@intel.com> - 21.1.11-1
 - Upgrade to 21.1.11 to include fixes for CVE-2023-6816 CVE-2024-0408 CVE-2024-0409.
 
