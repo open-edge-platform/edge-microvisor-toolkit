@@ -27,7 +27,7 @@ registers devices with the onboarding manager, and facilitates both interactive
 and non-interactive onboarding workflows for edge nodes.
 
 %prep
-%setup -q
+%setup -q -n edge-node-agents-device-discovery-agent-v%{version}
 tar -xzf %{SOURCE3} -C .
 
 %build
@@ -86,5 +86,5 @@ cp debian/copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %systemd_postun_with_restart %{name}.service
 
 %changelog
-* Tue Apr 08 2026 Device Discovery Agent Team <team@example.com> - 1:1.0.1-1
+* Wed Apr 08 2026 Piyush Panigrahi <piyush.panigrahi@intel.com> - 1:1.0.1-1
 - Original version for Edge Microvisor Toolkit. License verified.
