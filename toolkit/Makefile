@@ -168,7 +168,7 @@ VALIDATE_TOOLCHAIN_GPG ?= y
 endif
 endif
 
-TOOLCHAIN_GPG_VALIDATION_KEYS ?= $(wildcard $(PROJECT_ROOT)/SPECS/edge-repos/INTEL-*-GPG-KEY) $(wildcard $(toolkit_root)/repos/INTEL-*-GPG-KEY)
+TOOLCHAIN_GPG_VALIDATION_KEYS ?= $(wildcard $(PROJECT_ROOT)/SPECS/edge-repos/INTEL-*-GPG-KEY*) $(wildcard $(toolkit_root)/repos/INTEL-*-GPG-KEY)
 
 ######## COMMON MAKEFILE UTILITIES ########
 

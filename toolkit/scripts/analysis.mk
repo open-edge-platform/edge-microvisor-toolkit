@@ -91,6 +91,7 @@ $(SODIFF_REPO_FILE_EXTENDED): $(SODIFF_OUTPUT_FOLDER)
 sodiff-setup:
 	mkdir -p /etc/pki/rpm-gpg
 	cp $(SPECS_DIR)/edge-repos/INTEL-RPM-GPG-KEY /etc/pki/rpm-gpg/
+	cp $(SPECS_DIR)/edge-repos/INTEL-RPM-GPG-KEY-26 /etc/pki/rpm-gpg/
 
 # sodiff-check: runs check in a mariner container. Each failed package will be listed in $(SODIFF_OUTPUT_FOLDER).
 .SILENT .PHONY: sodiff-check

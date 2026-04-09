@@ -30,8 +30,8 @@ To find out how to deploy and work with Edge Microvisor Toolkit, see the
 [Get Started guide](https://docs.openedgeplatform.intel.com/2025.2/edge-microvisor-toolkit/emt-get-started.html).
 
 For a quick start, get the current
-[ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-\ [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum).
+[ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-25.06.2.iso)
+\ [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-25.06.2.iso.sha256sum).
 
 If you're interested in most up-to-date versions, check out the
 [weekly Immutable Raw Images](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements+weekly+build)
