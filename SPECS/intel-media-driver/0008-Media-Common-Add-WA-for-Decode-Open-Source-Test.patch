@@ -1,0 +1,46 @@
+From 96aca9e68ecb800381d2323f083bfc80ef39474e Mon Sep 17 00:00:00 2001
+From: Gu_Lihao <lihao.gu@intel.com>
+Date: Sun, 25 Jan 2026 03:59:08 +0800
+Subject: [PATCH] [Media Common] Add WA for Decode Open Source Test
+
+The xe3p_lpm vdenc is not yet available in the open source build. As a temporary fix, the xe3_lpm vdenc is used for open source decode test.
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20302
+Upstream-status: Backport
+Link: https://github.com/intel/media-driver/commit/229401021b9a0dfa3cd75293a5e0709432b61598
+---
+ .../media_interfaces_nvl/media_interfaces_nvls.cpp    | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.cpp b/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.cpp
+index 44f1015f5..1050536e4 100644
+--- a/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.cpp
++++ b/media_softlet/media_interface/media_interfaces_nvl/media_interfaces_nvls.cpp
+@@ -44,6 +44,8 @@ Copyright (c) 2026, Intel Corporation
+ #ifdef _MEDIA_RESERVED
+ #include "mhw_vdbox_aqm_impl_xe3p_lpm.h"
+ #include "mhw_vdbox_vdenc_impl_xe3p_lpm.h"
++#else
++#include "mhw_vdbox_vdenc_impl_xe3_lpm.h" // Temporary WA for decode open source test. Remove after xe3p_lpm VDEnc is available.
+ #endif
+ #include "huc_kernel_source_xe3p_lpm_base.h"
+ 
+@@ -254,6 +256,15 @@ MOS_STATUS MhwInterfacesNvl_Xe3G::Initialize(
+         auto ptr = std::make_shared<mhw::vdbox::vdenc::xe3p_lpm_base::xe3p_lpm::Impl>(osInterface);
+         m_vdencItf = std::static_pointer_cast<mhw::vdbox::vdenc::Itf>(ptr);
+     }
++#else
++    // The xe3p_lpm vdenc is not yet available in the open source build.
++    // As a temporary workaround, the xe3_lpm vdenc is used for open source decode test.
++    // TODO: Remove this workaround once the xe3p_lpm vdenc is ready in open source.
++    if (params.Flags.m_vdboxAll || params.Flags.m_vdenc)
++    {
++        auto ptr = std::make_shared<mhw::vdbox::vdenc::xe3_lpm_base::xe3_lpm::Impl>(osInterface);
++        m_vdencItf = std::static_pointer_cast<mhw::vdbox::vdenc::Itf>(ptr);
++    }
+ #endif
+     if (params.Flags.m_blt)
+     {
+-- 
+2.43.0
+

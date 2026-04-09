@@ -1,0 +1,1914 @@
+From 789e465b105223a2f959c859fb8fb63d6939a585 Mon Sep 17 00:00:00 2001
+From: Gu_Lihao <lihao.gu@intel.com>
+Date: Sat, 17 Jan 2026 09:40:50 +0800
+Subject: [PATCH] [Media Common] Enable NVL-S Open-Source Build
+
+1. Upstream HuC PPGTT support and rename the ext interface to PPGTT
+2. Add MI ext wrapper for MI_SEMAPHORE_WAIT_64
+3. Upstream missing files required by the open-source build
+4. Add missing ext micro for open-source build
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20297
+Upstream-status: Backport
+Link: https://github.com/intel/media-driver/commit/789e465b105223a2f959c859fb8fb63d6939a585
+---
+ .../cmake/linux/media_gen_flags_linux.cmake   |   9 +-
+ .../hw/vdbox/mhw_vdbox_vvcp_impl_xe3p_lpm.h   |   1 -
+ ...ecode_av1_picture_packet_xe3p_lpm_base.cpp |   6 +-
+ ...ecode_avc_picture_packet_xe3p_lpm_base.cpp |   3 +-
+ .../decode_huc_s2l_packet_xe3p_lpm_base.cpp   |  10 +-
+ .../decode_huc_s2l_packet_xe3p_lpm_base.h     |   4 +-
+ .../decode_vvc_s2l_packet_xe3p_lpm_base.cpp   |  10 +-
+ .../decode_vvc_s2l_packet_xe3p_lpm_base.h     |   4 +-
+ .../codec/hal/enc/media_srcs.cmake            |   3 +-
+ .../encode_mem_compression_xe3p_lpm_base.cpp  |  50 ++++
+ .../encode_mem_compression_xe3p_lpm_base.h    |  59 ++++
+ .../hal/enc/shared/common/media_srcs.cmake    |  47 +++
+ .../codec/hal/enc/shared/media_srcs.cmake     |  21 ++
+ .../encode_vp9_hpu_packet_xe3p_lpm_base.cpp   |  10 +-
+ .../encode_vp9_hpu_packet_xe3p_lpm_base.h     |   4 +-
+ ..._vp9_huc_brc_init_packet_xe3p_lpm_base.cpp |  10 +-
+ ...de_vp9_huc_brc_init_packet_xe3p_lpm_base.h |   4 +-
+ ...p9_huc_brc_update_packet_xe3p_lpm_base.cpp |  10 +-
+ ..._vp9_huc_brc_update_packet_xe3p_lpm_base.h |   4 +-
+ ...vp9_pak_integrate_packet_xe3p_lpm_base.cpp |  10 +-
+ ...e_vp9_pak_integrate_packet_xe3p_lpm_base.h |   4 +-
+ .../codec/hal/shared/codec_hw_xe3p_lpm_base.h |   1 -
+ .../hw/mhw_mi_xe3p_lpm_base_impl.h            |  59 +---
+ .../vdbox/mhw_vdbox_huc_impl_xe3p_lpm_base.h  |   6 +-
+ .../vp_vebox_cmd_packet_xe3p_lpm_base.cpp     |   5 +-
+ .../decode_huc_prob_update_packet_ppgtt.cpp   | 165 +++++++++++
+ .../decode_huc_prob_update_packet_ppgtt.h     |  82 ++++++
+ .../codec/hal/dec/vp9/packet/media_srcs.cmake |   4 +-
+ .../enc/shared/packet/encode_huc_ppgtt.cpp    |  46 +++
+ .../hal/enc/shared/packet/encode_huc_ppgtt.h  |  54 ++++
+ .../hal/enc/shared/packet/media_srcs.cmake    |   4 +-
+ .../codec/hal/shared/huc_kernel_source.h      | 272 ++++++++++++++++++
+ .../common/codec/hal/shared/media_srcs.cmake  |   3 +-
+ .../agnostic/common/hw/mhw_mi_cmdpar.h        |   5 +
+ .../agnostic/common/hw/vdbox/media_srcs.cmake |   5 +-
+ .../hw/vdbox/mhw_vdbox_huc_ppgtt_cmdpar.h     |  52 ++++
+ .../hw/vdbox/mhw_vdbox_huc_ppgtt_impl.h       |  92 ++++++
+ .../common/hw/vdbox/mhw_vdbox_huc_ppgtt_itf.h |  75 +++++
+ .../media_interfaces_next.cpp                 |  36 ++-
+ 39 files changed, 1140 insertions(+), 109 deletions(-)
+ create mode 100644 media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/encode_mem_compression_xe3p_lpm_base.cpp
+ create mode 100644 media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/encode_mem_compression_xe3p_lpm_base.h
+ create mode 100644 media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/media_srcs.cmake
+ create mode 100644 media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/media_srcs.cmake
+ create mode 100644 media_softlet/agnostic/common/codec/hal/dec/vp9/packet/decode_huc_prob_update_packet_ppgtt.cpp
+ create mode 100644 media_softlet/agnostic/common/codec/hal/dec/vp9/packet/decode_huc_prob_update_packet_ppgtt.h
+ create mode 100644 media_softlet/agnostic/common/codec/hal/enc/shared/packet/encode_huc_ppgtt.cpp
+ create mode 100644 media_softlet/agnostic/common/codec/hal/enc/shared/packet/encode_huc_ppgtt.h
+ create mode 100644 media_softlet/agnostic/common/codec/hal/shared/huc_kernel_source.h
+ create mode 100644 media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_cmdpar.h
+ create mode 100644 media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_impl.h
+ create mode 100644 media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_itf.h
+
+diff --git a/media_driver/cmake/linux/media_gen_flags_linux.cmake b/media_driver/cmake/linux/media_gen_flags_linux.cmake
+index 92a94a383..176cdf9d2 100644
+--- a/media_driver/cmake/linux/media_gen_flags_linux.cmake
++++ b/media_driver/cmake/linux/media_gen_flags_linux.cmake
+@@ -122,7 +122,14 @@ if(LNL)
+     option(XE2_LPM_SUPPORT "Enable XE2_LPM support" ON)
+ endif()
+ 
+-if(LNL OR BMG)
++# NVL linux build enable.
++option(NVL "Enable NVL support" ON)
++if(NVL)
++    option(XE3P_LPM_SUPPORT "Enable XE3P_LPM support" ON)
++    add_definitions(-DIGFX_NVL_SUPPORTED)
++endif()
++
++if(LNL OR BMG OR NVL)
+     option(XE2_HPG "Enable XE2_HPG support" ON)
+ endif()
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM/hw/vdbox/mhw_vdbox_vvcp_impl_xe3p_lpm.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM/hw/vdbox/mhw_vdbox_vvcp_impl_xe3p_lpm.h
+index 98d6af577..e3893cb36 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM/hw/vdbox/mhw_vdbox_vvcp_impl_xe3p_lpm.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM/hw/vdbox/mhw_vdbox_vvcp_impl_xe3p_lpm.h
+@@ -30,7 +30,6 @@
+ 
+ #include "mhw_vdbox_vvcp_impl_xe3p_lpm_base.h"
+ #include "mhw_mi_hwcmd_xe3p_lpm.h"
+-#include "mhw_vdbox_vdenc_hwcmd_xe3p_lpm.h"
+ #include "mhw_vdbox_vvcp_hwcmd_xe3p_lpm.h"
+ 
+ namespace mhw
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/av1/packet/decode_av1_picture_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/av1/packet/decode_av1_picture_packet_xe3p_lpm_base.cpp
+index 7cb5f78dc..ae48fac1b 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/av1/packet/decode_av1_picture_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/av1/packet/decode_av1_picture_packet_xe3p_lpm_base.cpp
+@@ -26,8 +26,10 @@
+ #include "decode_av1_picture_packet_xe3p_lpm_base.h"
+ #include "mhw_vdbox_xe3p_lpm_base.h"
+ #include "decode_common_feature_defs.h"
++#include "mhw_vdbox_avp_hwcmd_xe3p_lpm.h"
+ 
+ using namespace mhw::vdbox::xe3p_lpm_base;
++using namespace mhw::vdbox::avp::xe3p_lpm_base::xe3p_lpm;
+ 
+ namespace decode
+ {
+@@ -543,11 +545,11 @@ namespace decode
+         if (m_av1PicParams->m_seqInfoFlags.m_fields.m_subsamplingX == 0 && m_av1PicParams->m_seqInfoFlags.m_fields.m_subsamplingY == 0)
+         {
+             // 4:4:4
+-            params.chromaFormat = mhw::vdbox::avp::SEQUENCE_CHROMA_SUBSAMPLING_FORMAT_444;
++            params.chromaFormat = Cmd::AVP_PIC_STATE_CMD::SEQUENCE_CHROMA_SUBSAMPLING_FORMAT_444;
+         }
+         else if (m_av1PicParams->m_seqInfoFlags.m_fields.m_subsamplingX == 1 && m_av1PicParams->m_seqInfoFlags.m_fields.m_subsamplingY == 0)
+         {
+-            params.chromaFormat = mhw::vdbox::avp::SEQUENCE_CHROMA_SUBSAMPLING_FORMAT_422;
++            params.chromaFormat = Cmd::AVP_PIC_STATE_CMD::SEQUENCE_CHROMA_SUBSAMPLING_FORMAT_422;
+         }
+ 
+         return MOS_STATUS_SUCCESS;
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/avc/packet/decode_avc_picture_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/avc/packet/decode_avc_picture_packet_xe3p_lpm_base.cpp
+index c9db92cd3..a6b21636f 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/avc/packet/decode_avc_picture_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/avc/packet/decode_avc_picture_packet_xe3p_lpm_base.cpp
+@@ -248,6 +248,7 @@ namespace decode
+                 params.surfaceFormat = SURFACE_FORMAT_PLANAR4208;  // 420 8 bit
+             }
+         }
++#ifdef IGFX_MFX_INTERFACE_EXT_SUPPORT
+         else if (chromaType == avcChromaFormat420 && psSurface->Format == Format_P010)
+         {
+             if (ucBitDepthLumaMinus8 == 2 && ucBitDepthChromaMinus8 == 2)
+@@ -262,7 +263,7 @@ namespace decode
+                 params.surfaceFormat = SURFACE_FORMAT_Y216;  // 422 10 bit (upto 16 bit)
+             }
+         }
+-
++#endif
+         return MOS_STATUS_SUCCESS;
+     }
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/hevc/packet/decode_huc_s2l_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/hevc/packet/decode_huc_s2l_packet_xe3p_lpm_base.cpp
+index e424dd695..444692359 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/hevc/packet/decode_huc_s2l_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/hevc/packet/decode_huc_s2l_packet_xe3p_lpm_base.cpp
+@@ -47,11 +47,11 @@ namespace decode {
+ 
+         if (m_isPpgttMode)
+         {
+-            std::shared_ptr<mhw::vdbox::huc::ItfExt> itf =
+-                std::dynamic_pointer_cast<mhw::vdbox::huc::ItfExt>(m_hucItf);
++            std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> itf =
++                std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
+             DECODE_CHK_COND(!itf, "cannot convert huc itf to Huc ext itf!");
+             m_pictureStatesSize += itf->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
+-            m_picturePatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfExt::HUC_IMEM_ADDR_CMD);
++            m_picturePatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfPPGTT::HUC_IMEM_ADDR_CMD);
+         }
+ 
+         return MOS_STATUS_SUCCESS;
+@@ -189,8 +189,8 @@ namespace decode {
+ 
+         if (m_isPpgttMode)
+         {
+-            std::shared_ptr<mhw::vdbox::huc::ItfExt> itf =
+-                std::dynamic_pointer_cast<mhw::vdbox::huc::ItfExt>(m_hucItf);
++            std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> itf =
++                std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
+             DECODE_CHK_COND(!itf, "cannot convert huc itf to Huc ext itf!");
+ 
+             SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, itf, &cmdBuffer);
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/hevc/packet/decode_huc_s2l_packet_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/hevc/packet/decode_huc_s2l_packet_xe3p_lpm_base.h
+index fd718ace5..daff6a91b 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/hevc/packet/decode_huc_s2l_packet_xe3p_lpm_base.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/hevc/packet/decode_huc_s2l_packet_xe3p_lpm_base.h
+@@ -29,7 +29,7 @@
+ 
+ #include "decode_huc_s2l_packet.h"
+ #include "codec_hw_xe3p_lpm_base.h"
+-#include "mhw_vdbox_huc_itf_ext.h"
++#include "mhw_vdbox_huc_ppgtt_itf.h"
+ #include "huc_kernel_source.h"
+ 
+ namespace decode
+@@ -72,7 +72,7 @@ namespace decode
+         HucHevcS2lSliceBss SliceBss[CODECHAL_HEVC_MAX_NUM_SLICES_LVL_6];
+     };
+ 
+-    class HucS2lPktXe3P_Lpm_Base : public HucS2lPkt, public mhw::vdbox::huc::ItfExt::ParSetting
++    class HucS2lPktXe3P_Lpm_Base : public HucS2lPkt, public mhw::vdbox::huc::ItfPPGTT::ParSetting
+     {
+     public:
+         HucS2lPktXe3P_Lpm_Base(MediaPipeline *pipeline, MediaTask *task, CodechalHwInterfaceNext *hwInterface)
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/vvc/packet/decode_vvc_s2l_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/vvc/packet/decode_vvc_s2l_packet_xe3p_lpm_base.cpp
+index 1e014d6dc..ce96fe244 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/vvc/packet/decode_vvc_s2l_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/vvc/packet/decode_vvc_s2l_packet_xe3p_lpm_base.cpp
+@@ -46,11 +46,11 @@ namespace decode
+ 
+         if (m_isPpgttMode)
+         {
+-            std::shared_ptr<mhw::vdbox::huc::ItfExt> itf =
+-                std::dynamic_pointer_cast<mhw::vdbox::huc::ItfExt>(m_hucItf);
++            std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> itf =
++                std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
+             DECODE_CHK_COND(!itf, "cannot convert huc itf to Huc ext itf!");
+             m_pictureStatesSize += itf->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
+-            m_picturePatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfExt::HUC_IMEM_ADDR_CMD);
++            m_picturePatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfPPGTT::HUC_IMEM_ADDR_CMD);
+         }
+ 
+         return MOS_STATUS_SUCCESS;
+@@ -102,8 +102,8 @@ namespace decode
+ 
+         if (m_isPpgttMode)
+         {
+-            std::shared_ptr<mhw::vdbox::huc::ItfExt> itf =
+-                std::dynamic_pointer_cast<mhw::vdbox::huc::ItfExt>(m_hucItf);
++            std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> itf =
++                std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
+             DECODE_CHK_COND(!itf, "cannot convert huc itf to Huc ext itf!");
+ 
+             SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, itf, &cmdBuffer);
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/vvc/packet/decode_vvc_s2l_packet_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/vvc/packet/decode_vvc_s2l_packet_xe3p_lpm_base.h
+index 948564248..06f6cacef 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/vvc/packet/decode_vvc_s2l_packet_xe3p_lpm_base.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/vvc/packet/decode_vvc_s2l_packet_xe3p_lpm_base.h
+@@ -28,12 +28,12 @@
+ #define __DECODE_VVC_S2L_PACKET_XE3P_LPM_BASE_H__
+ 
+ #include "decode_vvc_s2l_packet.h"
+-#include "mhw_vdbox_huc_itf_ext.h"
++#include "mhw_vdbox_huc_ppgtt_itf.h"
+ #include "huc_kernel_source.h"
+ 
+ namespace decode
+ {
+-class VvcDecodeS2LPktXe3P_Lpm_Base : public VvcDecodeS2LPkt, public mhw::vdbox::huc::ItfExt::ParSetting
++class VvcDecodeS2LPktXe3P_Lpm_Base : public VvcDecodeS2LPkt, public mhw::vdbox::huc::ItfPPGTT::ParSetting
+ {
+ public:
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/media_srcs.cmake b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/media_srcs.cmake
+index 5c2e83022..3b49f7322 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/media_srcs.cmake
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/media_srcs.cmake
+@@ -18,4 +18,6 @@
+ # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ # OTHER DEALINGS IN THE SOFTWARE.
+
+-media_include_subdirectory(vp9)
+\ No newline at end of file
++media_include_subdirectory(vp9)
++media_include_subdirectory(jpeg)
++media_include_subdirectory(shared)
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/encode_mem_compression_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/encode_mem_compression_xe3p_lpm_base.cpp
+new file mode 100644
+index 000000000..348bcf3f2
+--- /dev/null
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/encode_mem_compression_xe3p_lpm_base.cpp
+@@ -0,0 +1,50 @@
++/*
++* Copyright (c) 2023, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++
++//!
++//! \file     encode_mem_compression_xe3p_lpm_base.cpp
++//! \brief    Defines the common interface for encode mmc.
++//! \details  The mmc is to handle mmc operations,
++//! including compression and decompressin of encode
++//!
++
++#include "encode_mem_compression_xe3p_lpm_base.h"
++#include "encode_utils.h"
++
++EncodeMemCompXe3P_Lpm_Base::EncodeMemCompXe3P_Lpm_Base(
++    CodechalHwInterfaceNext *hwInterface):
++    EncodeMemComp(hwInterface), CodecMmcAuxTableXe3P_Lpm_Base()
++{
++
++}
++
++MOS_STATUS EncodeMemCompXe3P_Lpm_Base::SendPrologCmd(
++    PMOS_COMMAND_BUFFER    cmdBuffer,
++    bool    bRcsIsUsed)
++{
++    MOS_STATUS status = MOS_STATUS_SUCCESS;
++
++    ENCODE_CHK_NULL_RETURN(m_miItf);
++    ENCODE_CHK_STATUS_RETURN(CodecMmcAuxTableXe3P_Lpm_Base::LoadAuxTableMmio(m_osInterface, *m_miItf, cmdBuffer, bRcsIsUsed));
++
++    return MOS_STATUS_SUCCESS;
++}
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/encode_mem_compression_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/encode_mem_compression_xe3p_lpm_base.h
+new file mode 100644
+index 000000000..b13056f20
+--- /dev/null
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/encode_mem_compression_xe3p_lpm_base.h
+@@ -0,0 +1,59 @@
++/*
++* Copyright (c) 2023, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++
++//!
++//! \file     encode_mem_compression_xe3p_lpm_base.h
++//! \brief    Defines the common interface for encode mmc
++//! \details  The encode mmc is to handle mmc operations
++//!
++
++#ifndef __MEDIA_ENCODE_MEM_COMPRESSION_XE3P_LPM_BASE_H__
++#define __MEDIA_ENCODE_MEM_COMPRESSION_XE3P_LPM_BASE_H__
++
++#include "encode_mem_compression.h"
++#include "codec_mem_compression_xe3p_lpm_base.h"
++
++class EncodeMemCompXe3P_Lpm_Base : public EncodeMemComp, public CodecMmcAuxTableXe3P_Lpm_Base
++{
++    public:
++    //!
++    //! \brief    Construct
++    //!
++    EncodeMemCompXe3P_Lpm_Base(CodechalHwInterfaceNext *hwInterface);
++
++    //!
++    //! \brief    Destructor
++    //!
++    virtual ~EncodeMemCompXe3P_Lpm_Base() {};
++
++    //!
++    //! \brief    SendPrologCmd
++    //!
++    virtual MOS_STATUS SendPrologCmd(
++        PMOS_COMMAND_BUFFER cmdBuffer,
++        bool bRcsIsUsed);
++
++    MEDIA_CLASS_DEFINE_END(EncodeMemCompXe3P_Lpm_Base)
++};
++
++#endif //__MEDIA_ENCODE_MEM_COMPRESSION_XE3P_LPM_BASE_H__
++
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/media_srcs.cmake b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/media_srcs.cmake
+new file mode 100644
+index 000000000..50785472d
+--- /dev/null
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/common/media_srcs.cmake
+@@ -0,0 +1,47 @@
++# Copyright (c) 2023, Intel Corporation
++#
++# Permission is hereby granted, free of charge, to any person obtaining a
++# copy of this software and associated documentation files (the "Software"),
++# to deal in the Software without restriction, including without limitation
++# the rights to use, copy, modify, merge, publish, distribute, sublicense,
++# and/or sell copies of the Software, and to permit persons to whom the
++# Software is furnished to do so, subject to the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++# OTHER DEALINGS IN THE SOFTWARE.
++
++set(TMP_SOURCES_
++    ${CMAKE_CURRENT_LIST_DIR}/encode_mem_compression_xe3p_lpm_base.cpp
++)
++
++set(TMP_HEADERS_
++    ${CMAKE_CURRENT_LIST_DIR}/encode_mem_compression_xe3p_lpm_base.h
++)
++
++set(SOFTLET_ENCODE_COMMON_HEADERS_
++    ${SOFTLET_ENCODE_COMMON_HEADERS_}
++    ${TMP_HEADERS_}
++)
++
++set(SOFTLET_ENCODE_COMMON_SOURCES_
++    ${SOFTLET_ENCODE_COMMON_SOURCES_}
++    ${TMP_SOURCES_}
++)
++
++source_group( CodecHalNext\\Xe3P_LPM_base\\Encode FILES ${TMP_SOURCES_} ${TMP_HEADERS_} )
++
++set(TMP_SOURCES_ "")
++set(TMP_HEADERS_ "")
++
++set(SOFTLET_ENCODE_COMMON_PRIVATE_INCLUDE_DIRS_
++    ${SOFTLET_ENCODE_COMMON_PRIVATE_INCLUDE_DIRS_}
++    ${CMAKE_CURRENT_LIST_DIR}
++)
+\ No newline at end of file
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/media_srcs.cmake b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/media_srcs.cmake
+new file mode 100644
+index 000000000..842dc7014
+--- /dev/null
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/shared/media_srcs.cmake
+@@ -0,0 +1,21 @@
++# Copyright (c) 2023, Intel Corporation
++#
++# Permission is hereby granted, free of charge, to any person obtaining a
++# copy of this software and associated documentation files (the "Software"),
++# to deal in the Software without restriction, including without limitation
++# the rights to use, copy, modify, merge, publish, distribute, sublicense,
++# and/or sell copies of the Software, and to permit persons to whom the
++# Software is furnished to do so, subject to the following conditions:
++#
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++# OTHER DEALINGS IN THE SOFTWARE.
++
++media_include_subdirectory(common)
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_hpu_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_hpu_packet_xe3p_lpm_base.cpp
+index 5281a8645..ba9376230 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_hpu_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_hpu_packet_xe3p_lpm_base.cpp
+@@ -47,7 +47,7 @@ MOS_STATUS Vp9HpuPktXe3p_Lpm_Base::Execute(PMOS_COMMAND_BUFFER cmdBuffer, bool s
+ {
+     ENCODE_FUNC_CALL();
+     HUC_CHK_NULL_RETURN(cmdBuffer);
+-    ENCODE_CHK_NULL_RETURN(m_itfExt);
++    ENCODE_CHK_NULL_RETURN(m_itfPPGTT);
+ 
+ #if _SW_BRC
+     HUC_CHK_STATUS_RETURN(InitSwBrc(function));
+@@ -82,7 +82,7 @@ MOS_STATUS Vp9HpuPktXe3p_Lpm_Base::Execute(PMOS_COMMAND_BUFFER cmdBuffer, bool s
+ 
+     if (m_isPPGTT)
+     {
+-        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, m_itfExt, cmdBuffer);
++        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, m_itfPPGTT, cmdBuffer);
+     }
+     ENCODE_CHK_STATUS_RETURN(AddAllCmds_HUC_IMEM_STATE(cmdBuffer));
+     ENCODE_CHK_STATUS_RETURN(AddAllCmds_HUC_PIPE_MODE_SELECT(cmdBuffer));
+@@ -120,9 +120,9 @@ MOS_STATUS Vp9HpuPktXe3p_Lpm_Base::CalculateCommandSize(uint32_t &commandBufferS
+ 
+     if (m_isPPGTT)
+     {
+-        ENCODE_CHK_NULL_RETURN(m_itfExt);
+-        commandBufferSize += m_itfExt->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
+-        requestedPatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfExt::HUC_IMEM_ADDR_CMD);
++        ENCODE_CHK_NULL_RETURN(m_itfPPGTT);
++        commandBufferSize += m_itfPPGTT->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
++        requestedPatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfPPGTT::HUC_IMEM_ADDR_CMD);
+         commandBufferSize = MOS_ALIGN_CEIL(commandBufferSize, CODECHAL_PAGE_SIZE);
+     }
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_hpu_packet_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_hpu_packet_xe3p_lpm_base.h
+index c50408dd1..e553219c9 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_hpu_packet_xe3p_lpm_base.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_hpu_packet_xe3p_lpm_base.h
+@@ -41,7 +41,7 @@ public:
+     Vp9HpuPktXe3p_Lpm_Base(MediaPipeline *pipeline, MediaTask *task, CodechalHwInterfaceNext *hwInterface)
+         : Vp9HpuPkt(pipeline, task, hwInterface), EncodeHucPPGTTPkt(hwInterface)
+     {
+-        m_itfExt = std::dynamic_pointer_cast<mhw::vdbox::huc::ItfExt>(m_hucItf);
++        m_itfPPGTT = std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
+     }
+ 
+     virtual ~Vp9HpuPktXe3p_Lpm_Base()
+@@ -59,7 +59,7 @@ public:
+ protected:
+     virtual MOS_STATUS AllocateResources() override;
+ 
+-    std::shared_ptr<mhw::vdbox::huc::ItfExt> m_itfExt          = nullptr;
++    std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> m_itfPPGTT      = nullptr;
+     bool                                     m_isPPGTT         = false;
+     HucKernelSource                         *m_hucKernelSource = nullptr;
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_init_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_init_packet_xe3p_lpm_base.cpp
+index 74ba49e47..a94f9b0bf 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_init_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_init_packet_xe3p_lpm_base.cpp
+@@ -47,7 +47,7 @@ MOS_STATUS Vp9HucBrcInitPktXe3p_Lpm_Base::Execute(PMOS_COMMAND_BUFFER cmdBuffer,
+ {
+     ENCODE_FUNC_CALL();
+     HUC_CHK_NULL_RETURN(cmdBuffer);
+-    ENCODE_CHK_NULL_RETURN(m_itfExt);
++    ENCODE_CHK_NULL_RETURN(m_itfPPGTT);
+ 
+ #if _SW_BRC
+     HUC_CHK_STATUS_RETURN(InitSwBrc(function));
+@@ -82,7 +82,7 @@ MOS_STATUS Vp9HucBrcInitPktXe3p_Lpm_Base::Execute(PMOS_COMMAND_BUFFER cmdBuffer,
+ 
+     if (m_isPPGTT)
+     {
+-        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, m_itfExt, cmdBuffer);
++        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, m_itfPPGTT, cmdBuffer);
+     }
+     ENCODE_CHK_STATUS_RETURN(AddAllCmds_HUC_IMEM_STATE(cmdBuffer));
+     ENCODE_CHK_STATUS_RETURN(AddAllCmds_HUC_PIPE_MODE_SELECT(cmdBuffer));
+@@ -120,9 +120,9 @@ MOS_STATUS Vp9HucBrcInitPktXe3p_Lpm_Base::CalculateCommandSize(uint32_t &command
+ 
+     if (m_isPPGTT)
+     {
+-        ENCODE_CHK_NULL_RETURN(m_itfExt);
+-        commandBufferSize += m_itfExt->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
+-        requestedPatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfExt::HUC_IMEM_ADDR_CMD);
++        ENCODE_CHK_NULL_RETURN(m_itfPPGTT);
++        commandBufferSize += m_itfPPGTT->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
++        requestedPatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfPPGTT::HUC_IMEM_ADDR_CMD);
+         commandBufferSize = MOS_ALIGN_CEIL(commandBufferSize, CODECHAL_PAGE_SIZE);
+     }
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_init_packet_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_init_packet_xe3p_lpm_base.h
+index 18c53e292..3c305aa55 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_init_packet_xe3p_lpm_base.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_init_packet_xe3p_lpm_base.h
+@@ -42,7 +42,7 @@ public:
+     Vp9HucBrcInitPktXe3p_Lpm_Base(MediaPipeline *pipeline, MediaTask *task, CodechalHwInterfaceNext *hwInterface)
+         : Vp9HucBrcInitPkt(pipeline, task, hwInterface), EncodeHucPPGTTPkt(hwInterface)
+     {
+-        m_itfExt = std::dynamic_pointer_cast<mhw::vdbox::huc::ItfExt>(m_hucItf);
++        m_itfPPGTT = std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
+     }
+ 
+     virtual ~Vp9HucBrcInitPktXe3p_Lpm_Base()
+@@ -61,7 +61,7 @@ public:
+ protected:
+     virtual MOS_STATUS AllocateResources() override;
+ 
+-    std::shared_ptr<mhw::vdbox::huc::ItfExt> m_itfExt          = nullptr;
++    std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> m_itfPPGTT      = nullptr;
+     bool                                     m_isPPGTT         = false;
+     HucKernelSource                         *m_hucKernelSource = nullptr;
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_update_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_update_packet_xe3p_lpm_base.cpp
+index 061237db9..4c46c4203 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_update_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_update_packet_xe3p_lpm_base.cpp
+@@ -52,9 +52,9 @@ MOS_STATUS Vp9HucBrcUpdatePktXe3p_Lpm_Base::CalculateCommandSize(uint32_t &comma
+ 
+     if (m_isPPGTT)
+     {
+-        ENCODE_CHK_NULL_RETURN(m_itfExt);
+-        commandBufferSize += m_itfExt->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
+-        requestedPatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfExt::HUC_IMEM_ADDR_CMD);
++        ENCODE_CHK_NULL_RETURN(m_itfPPGTT);
++        commandBufferSize += m_itfPPGTT->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
++        requestedPatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfPPGTT::HUC_IMEM_ADDR_CMD);
+         commandBufferSize = MOS_ALIGN_CEIL(commandBufferSize, CODECHAL_PAGE_SIZE);
+     }
+ 
+@@ -98,7 +98,7 @@ MOS_STATUS Vp9HucBrcUpdatePktXe3p_Lpm_Base::Execute(PMOS_COMMAND_BUFFER cmdBuffe
+ {
+     ENCODE_FUNC_CALL();
+     HUC_CHK_NULL_RETURN(cmdBuffer);
+-    ENCODE_CHK_NULL_RETURN(m_itfExt);
++    ENCODE_CHK_NULL_RETURN(m_itfPPGTT);
+ 
+ #if _SW_BRC
+     HUC_CHK_STATUS_RETURN(InitSwBrc(function));
+@@ -133,7 +133,7 @@ MOS_STATUS Vp9HucBrcUpdatePktXe3p_Lpm_Base::Execute(PMOS_COMMAND_BUFFER cmdBuffe
+ 
+     if (m_isPPGTT)
+     {
+-        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, m_itfExt, cmdBuffer);
++        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, m_itfPPGTT, cmdBuffer);
+     }
+     ENCODE_CHK_STATUS_RETURN(AddAllCmds_HUC_IMEM_STATE(cmdBuffer));
+     ENCODE_CHK_STATUS_RETURN(AddAllCmds_HUC_PIPE_MODE_SELECT(cmdBuffer));
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_update_packet_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_update_packet_xe3p_lpm_base.h
+index 744e1a07a..4776ab1a0 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_update_packet_xe3p_lpm_base.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_huc_brc_update_packet_xe3p_lpm_base.h
+@@ -42,7 +42,7 @@ public:
+     Vp9HucBrcUpdatePktXe3p_Lpm_Base(MediaPipeline *pipeline, MediaTask *task, CodechalHwInterfaceNext *hwInterface)
+         : Vp9HucBrcUpdatePkt(pipeline, task, hwInterface), EncodeHucPPGTTPkt(hwInterface)
+     {
+-        m_itfExt = std::dynamic_pointer_cast<mhw::vdbox::huc::ItfExt>(m_hucItf);
++        m_itfPPGTT = std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
+     }
+ 
+     virtual ~Vp9HucBrcUpdatePktXe3p_Lpm_Base()
+@@ -60,7 +60,7 @@ public:
+ protected:
+     virtual MOS_STATUS AllocateResources() override;
+ 
+-    std::shared_ptr<mhw::vdbox::huc::ItfExt> m_itfExt          = nullptr;
++    std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> m_itfPPGTT      = nullptr;
+     bool                                     m_isPPGTT         = false;
+     HucKernelSource                         *m_hucKernelSource = nullptr;
+     MEDIA_CLASS_DEFINE_END(encode__Vp9HucBrcUpdatePktXe3p_Lpm_Base)
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_pak_integrate_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_pak_integrate_packet_xe3p_lpm_base.cpp
+index 922144e5e..05e37977e 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_pak_integrate_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_pak_integrate_packet_xe3p_lpm_base.cpp
+@@ -123,9 +123,9 @@ MOS_STATUS Vp9PakIntegratePktXe3p_Lpm_Base::CalculateCommandSize(uint32_t &comma
+ 
+     if (m_isPPGTT)
+     {
+-        ENCODE_CHK_NULL_RETURN(m_itfExt);
+-        commandBufferSize += m_itfExt->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
+-        requestedPatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfExt::HUC_IMEM_ADDR_CMD);
++        ENCODE_CHK_NULL_RETURN(m_itfPPGTT);
++        commandBufferSize += m_itfPPGTT->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
++        requestedPatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfPPGTT::HUC_IMEM_ADDR_CMD);
+         commandBufferSize = MOS_ALIGN_CEIL(commandBufferSize, CODECHAL_PAGE_SIZE);
+     }
+ 
+@@ -169,7 +169,7 @@ MOS_STATUS Vp9PakIntegratePktXe3p_Lpm_Base::Execute(PMOS_COMMAND_BUFFER cmdBuffe
+ {
+     ENCODE_FUNC_CALL();
+     HUC_CHK_NULL_RETURN(cmdBuffer);
+-    ENCODE_CHK_NULL_RETURN(m_itfExt);
++    ENCODE_CHK_NULL_RETURN(m_itfPPGTT);
+ 
+ #if _SW_BRC
+     HUC_CHK_STATUS_RETURN(InitSwBrc(function));
+@@ -204,7 +204,7 @@ MOS_STATUS Vp9PakIntegratePktXe3p_Lpm_Base::Execute(PMOS_COMMAND_BUFFER cmdBuffe
+ 
+     if (m_isPPGTT)
+     {
+-        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, m_itfExt, cmdBuffer);
++        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, m_itfPPGTT, cmdBuffer);
+     }
+     ENCODE_CHK_STATUS_RETURN(AddAllCmds_HUC_IMEM_STATE(cmdBuffer));
+     ENCODE_CHK_STATUS_RETURN(AddAllCmds_HUC_PIPE_MODE_SELECT(cmdBuffer));
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_pak_integrate_packet_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_pak_integrate_packet_xe3p_lpm_base.h
+index 93553b464..f829dbd55 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_pak_integrate_packet_xe3p_lpm_base.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/enc/vp9/packet/encode_vp9_pak_integrate_packet_xe3p_lpm_base.h
+@@ -76,7 +76,7 @@ public:
+ 
+     Vp9PakIntegratePktXe3p_Lpm_Base(MediaPipeline *pipeline, MediaTask *task, CodechalHwInterfaceNext *hwInterface) : Vp9PakIntegratePkt(pipeline, task, hwInterface), EncodeHucPPGTTPkt(hwInterface)
+     {
+-        m_itfExt = std::dynamic_pointer_cast<mhw::vdbox::huc::ItfExt>(m_hucItf);
++        m_itfPPGTT = std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
+     }
+ 
+     virtual ~Vp9PakIntegratePktXe3p_Lpm_Base()
+@@ -97,7 +97,7 @@ protected:
+     virtual MOS_STATUS AllocateResources() override;
+     virtual MOS_STATUS SetDmemBuffer() const override;
+ 
+-    std::shared_ptr<mhw::vdbox::huc::ItfExt> m_itfExt          = nullptr;
++    std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> m_itfPPGTT      = nullptr;
+     bool                                     m_isPPGTT         = false;
+     HucKernelSource                         *m_hucKernelSource = nullptr;
+     static constexpr uint32_t                m_pakIntDmemOffsetsSize = 216;  // First six offsets are set to 0xFF as unavailable. See details in HucPakIntDmemXehp struct.
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.h
+index cc39a883b..fc6e2d65b 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/shared/codec_hw_xe3p_lpm_base.h
+@@ -28,7 +28,6 @@
+ 
+ #include "codec_hw_next.h"
+ #include "mhw_vdbox_vvcp_itf.h"
+-#include "media_interfaces_mhw_next_ext.h"
+ 
+ #define CODECHAL_NUM_MEDIA_STATES_XE3P_LPM_BASE (CODECHAL_NUM_MEDIA_STATES + 4)
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/hw/mhw_mi_xe3p_lpm_base_impl.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/hw/mhw_mi_xe3p_lpm_base_impl.h
+index 51ac49971..58f084da2 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/hw/mhw_mi_xe3p_lpm_base_impl.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/hw/mhw_mi_xe3p_lpm_base_impl.h
+@@ -33,6 +33,10 @@
+ #include "mhw_impl.h"
+ #include "mhw_mmio_xe3p_lpm_base.h"
+ 
++#ifdef _MEDIA_RESERVED
++#include "mhw_mi_xe3p_lpm_base_impl_ext.h"
++#endif
++
+ namespace mhw
+ {
+ namespace mi
+@@ -590,47 +594,16 @@ public:
+         return MOS_STATUS_SUCCESS;
+     }
+ 
++#ifdef _MEDIA_RESERVED
+     _MHW_SETCMD_OVERRIDE_DECL(MI_SEMAPHORE_WAIT_64)
+     {
+         _MHW_SETCMD_CALLBASE(MI_SEMAPHORE_WAIT_64);
+-        if (params.presSemaphoreMem)
+-        {
+-            MHW_MI_CHK_NULL(this->m_currentCmdBuf);
+-            MHW_RESOURCE_PARAMS resourceParams = {};
+-            resourceParams.presResource        = params.presSemaphoreMem;
+-            resourceParams.dwOffset            = params.resourceOffset;
+-            resourceParams.pdwCmd              = cmd.DW3_4.Value;
+-            resourceParams.dwLocationInCmd     = _MHW_CMD_DW_LOCATION(DW3_4.Value);
+-
+-            resourceParams.dwLsbNum      = MHW_COMMON_MI_GENERAL_SHIFT;
+-            resourceParams.HwCommandType = MOS_MI_SEMAPHORE_WAIT;
+-
+-            MHW_MI_CHK_STATUS(this->AddResourceToCmd(
+-                this->m_osItf,
+-                this->m_currentCmdBuf,
+-                &resourceParams));
+-        }
+-        else if (params.gpuVirtualAddress != 0)
+-        {
+-            cmd.DW3_4.SemaphoreAddress = (params.gpuVirtualAddress) >> MHW_COMMON_MI_GENERAL_SHIFT;
+-        }
+-        else
+-        {
+-            MHW_ASSERTMESSAGE("Invalid parameter, both resource and gpuva zero.");
+-            return MOS_STATUS_INVALID_PARAMETER;
+-        }
+-
+-        cmd.DW0.MemoryType         = this->IsGlobalGttInUse();
+-        cmd.DW0.CompareOperation   = params.compareOperation;
+-        cmd.DW1_2.SemaphoreDataDword = params.semaphoreData;
+ 
+-        cmd.DW0.RegisterPollMode         = params.registerPollMode;
+-        cmd.DW0._64BCompareDisable       = params.is64BCompareDisable;
+-        cmd.DW5_6.SemaphoreToken         = params.semaphoreToken;
++        __MHW_MI_WRAPPER_EXT(MI_SEMAPHORE_WAIT_64_IMPL_XE3P_LPM_BASE_EXT)
+ 
+         return MOS_STATUS_SUCCESS;
+     }
+-
++#endif
+     _MHW_SETCMD_OVERRIDE_DECL(PIPE_CONTROL)
+     {
+         _MHW_SETCMD_CALLBASE(PIPE_CONTROL);
+@@ -1109,23 +1082,7 @@ public:
+      {
+          MOS_STATUS status = MOS_STATUS_SUCCESS;
+ 
+-         //MI_SEMAPHORE_WAIT
+-         bool     isSemaphore64Inuse = MEDIA_IS_SKU(this->m_osItf->pfnGetSkuTable(this->m_osItf), FtrHwSemaphore64);
+-         if (isSemaphore64Inuse)
+-         {
+-             auto &params             = this->MHW_GETPAR_F(MI_SEMAPHORE_WAIT_64)();
+-             params                   = {};
+-             params.gpuVirtualAddress = gpuVirtualAddress;
+-             params.semaphoreData     = waitValue;
+-             params.compareOperation  = MHW_MI_SAD_GREATER_THAN_OR_EQUAL_SDD;
+-             params.resourceOffset  = 0;
+-             params.registerPollMode  = 0;
+-             params.is64BCompareDisable = true;
+-             params.semaphoreToken    = fenceTokenValue;
+-             status                   = this->MHW_ADDCMD_F(MI_SEMAPHORE_WAIT_64)(cmdbuffer, batchBuffer);
+-             MHW_CHK_STATUS_RETURN(status);
+-         }
+-         else
++        __MHW_MI_WRAPPER_EXT(ADD_WAIT_IN_SYNC_BB_XE3P_LPM_BASE_EXT)
+          {
+              // set fence token value to token register
+              auto &miLoadRegImmParams      = this->MHW_GETPAR_F(MI_LOAD_REGISTER_IMM)();
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/hw/vdbox/mhw_vdbox_huc_impl_xe3p_lpm_base.h b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/hw/vdbox/mhw_vdbox_huc_impl_xe3p_lpm_base.h
+index 549fc259a..208e50903 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/hw/vdbox/mhw_vdbox_huc_impl_xe3p_lpm_base.h
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/hw/vdbox/mhw_vdbox_huc_impl_xe3p_lpm_base.h
+@@ -30,7 +30,7 @@
+ #ifndef __MHW_VDBOX_HUC_IMPL_XE3P_LPM_BASE_H__
+ #define __MHW_VDBOX_HUC_IMPL_XE3P_LPM_BASE_H__
+ 
+-#include "mhw_vdbox_huc_impl_ext.h"
++#include "mhw_vdbox_huc_ppgtt_impl.h"
+ 
+ namespace mhw
+ {
+@@ -41,10 +41,10 @@ namespace huc
+ namespace xe3p_lpm_base
+ {
+ template <typename cmd_t>
+-class BaseImpl: public huc::ImplExt<cmd_t>
++class BaseImpl: public huc::ImplPPGTT<cmd_t>
+ {
+ protected:
+-    using base_t = huc::ImplExt<cmd_t>;
++    using base_t = huc::ImplPPGTT<cmd_t>;
+ 
+     BaseImpl(PMOS_INTERFACE osItf, MhwCpInterface *cpItf) : base_t(osItf, cpItf){};
+ 
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/vp/hal/packet/vp_vebox_cmd_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/vp/hal/packet/vp_vebox_cmd_packet_xe3p_lpm_base.cpp
+index 3176bce00..24bc6f53c 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/vp/hal/packet/vp_vebox_cmd_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/vp/hal/packet/vp_vebox_cmd_packet_xe3p_lpm_base.cpp
+@@ -28,7 +28,9 @@
+ #include "vp_vebox_cmd_packet_xe3p_lpm_base.h"
+ #include "vp_platform_interface.h"
+ #include "vp_utils.h"
++#ifdef _MEDIA_RESERVED
+ #include "vp_cmodel_algorithm.h"
++#endif
+ #include "mhw_mmio_xe3p_lpm_base.h"
+ 
+ const uint32_t   dwDenoiseASDThreshold[NOISEFACTOR_MAX + 1] = {
+@@ -653,9 +655,10 @@ MOS_STATUS VpVeboxCmdPacketXe3P_Lpm_Base::SetupVeboxFP16State(mhw::vebox::VEBOX_
+     pVeboxMode->Hdr1DLutEnable            = true;
+     pVeboxMode->Hdr1K1DLut                = false;  // 1k1dlut is EOTF16, when FP16 enable should use EOTF32.
+     pVeboxMode->ColorGamutExpansionEnable = false;  // When FP16 enable, GEC shoulse disable and enable HDR.
+-
++#ifdef _MEDIA_RESERVED
+     VP_PUBLIC_CHK_STATUS_RETURN(VpCmodelAlgorithm::GenerateOETF2084LUT(
+         fp16Params->OETFLutX, fp16Params->OETFLutY, 256, 32, 16, 1));
++#endif
+     VP_RENDER_CHK_STATUS_RETURN(AddFP16State(fp16Params));
+     VP_RENDER_CHK_STATUS_RETURN(m_veboxItf->SetDisableHistogram(&pRenderData->GetIECPParams()));
+ 
+diff --git a/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/decode_huc_prob_update_packet_ppgtt.cpp b/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/decode_huc_prob_update_packet_ppgtt.cpp
+new file mode 100644
+index 000000000..5d30f8082
+--- /dev/null
++++ b/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/decode_huc_prob_update_packet_ppgtt.cpp
+@@ -0,0 +1,165 @@
++/*
++* Copyright (c) 2024-2026, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file     decode_huc_prob_update_packet_ppgtt.cpp
++//! \brief    Defines the interface for huc prob update ppgtt packet for VP9 decode
++//!
++#include "decode_huc_prob_update_packet_ppgtt.h"
++#include "mhw_vdbox.h"
++#include "decode_resource_auto_lock.h"
++#include "mos_os_cp_interface_specific.h"
++#include "media_interfaces_huc_kernel_source.h"
++
++namespace decode
++{
++MOS_STATUS HucVp9ProbUpdatePktPpgtt::AllocateResources()
++{
++    DECODE_CHK_STATUS(HucVp9ProbUpdatePkt::AllocateResources());
++
++    if (m_isPpgttMode && m_kernelBinBuffer == nullptr)
++    {
++        DECODE_CHK_NULL(m_hucKernelSource);
++        HucKernelSource::HucBinary hucBinary;
++        DECODE_CHK_STATUS(m_hucKernelSource->GetKernelBin(HucKernelSource::vp9ProbUpdateKernelId, hucBinary));
++        DECODE_CHK_NULL(hucBinary.m_data);
++
++        m_kernelBinBuffer = m_allocator->AllocateBuffer(
++            MOS_ALIGN_CEIL(hucBinary.m_size, CODECHAL_CACHELINE_SIZE), "Vp9ProbUpdateKernelBinBuffer",
++            resourceInternalReadWriteCache, lockableVideoMem);
++        DECODE_CHK_NULL(m_kernelBinBuffer);
++
++        ResourceAutoLock kernelBinResLock(m_allocator, &m_kernelBinBuffer->OsResource);
++        void *kernelBinBuffer = kernelBinResLock.LockResourceForWrite();
++        DECODE_CHK_NULL(kernelBinBuffer);
++
++        MOS_SecureMemcpy(kernelBinBuffer, hucBinary.m_size, hucBinary.m_data, hucBinary.m_size);
++    }
++
++    return MOS_STATUS_SUCCESS;
++}
++
++HucVp9ProbUpdatePktPpgtt::~HucVp9ProbUpdatePktPpgtt()
++{
++    if (m_hucKernelSource != nullptr && m_pipeline != nullptr)
++    {
++        m_hucKernelSource->ReportMode(m_pipeline->GetSkuTable(), m_pipeline->GetUserSetting());
++    }
++
++    if (m_allocator != nullptr && m_kernelBinBuffer != nullptr)
++    {
++        m_allocator->Destroy(m_kernelBinBuffer);
++    }
++}
++
++MOS_STATUS HucVp9ProbUpdatePktPpgtt::Init()
++{
++    DECODE_FUNC_CALL();
++
++    m_hucKernelSource = HucKernelSourceDevice::CreateFactory(m_osInterface);
++    DECODE_CHK_NULL(m_hucKernelSource);
++    DECODE_CHK_NULL(m_pipeline);
++    m_isPpgttMode = m_hucKernelSource->IsPpgttMode(m_pipeline->GetSkuTable(), m_pipeline->GetUserSetting());
++
++    DECODE_CHK_STATUS(HucVp9ProbUpdatePkt::Init());
++
++    if (m_isPpgttMode)
++    {
++        std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> itf =
++            std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
++        DECODE_CHK_COND(!itf, "cannot convert huc itf to Huc ext itf!");
++        m_pictureStatesSize += itf->MHW_GETSIZE_F(HUC_IMEM_ADDR)();
++        m_picturePatchListSize += PATCH_LIST_COMMAND(mhw::vdbox::huc::ItfPPGTT::HUC_IMEM_ADDR_CMD);
++    }
++
++    return MOS_STATUS_SUCCESS;
++}
++
++MOS_STATUS HucVp9ProbUpdatePktPpgtt::PackPictureLevelCmds(MOS_COMMAND_BUFFER &cmdBuffer)
++{
++    PERF_UTILITY_AUTO(__FUNCTION__, PERF_DECODE, PERF_LEVEL_HAL);
++
++    if (m_isPpgttMode)
++    {
++        std::shared_ptr<mhw::vdbox::huc::ItfPPGTT> itf =
++            std::dynamic_pointer_cast<mhw::vdbox::huc::ItfPPGTT>(m_hucItf);
++        DECODE_CHK_COND(!itf, "cannot convert huc itf to Huc ext itf!");
++
++        SETPAR_AND_ADDCMD(HUC_IMEM_ADDR, itf, &cmdBuffer);
++    }
++
++    DECODE_CHK_STATUS(AddCmd_HUC_IMEM_STATE(cmdBuffer));
++    DECODE_CHK_STATUS(AddCmd_HUC_PIPE_MODE_SELECT(cmdBuffer));
++
++    SETPAR_AND_ADDCMD(HUC_DMEM_STATE, m_hucItf, &cmdBuffer);
++    SETPAR_AND_ADDCMD(HUC_VIRTUAL_ADDR_STATE, m_hucItf, &cmdBuffer);
++
++    return MOS_STATUS_SUCCESS;
++}
++
++MOS_STATUS HucVp9ProbUpdatePktPpgtt::AddCmd_HUC_IMEM_STATE(MOS_COMMAND_BUFFER &cmdBuffer)
++{
++    DECODE_FUNC_CALL();
++
++    uint32_t index = HucKernelSource::vp9ProbUpdateKernelId;
++    if(m_isPpgttMode)
++    {
++        DECODE_CHK_NULL(m_hucKernelSource);
++        DECODE_CHK_STATUS(m_hucKernelSource->GetKernelHashIdx(
++            HucKernelSource::vp9ProbUpdateKernelId, index));
++    }
++
++    auto &par = m_hucItf->MHW_GETPAR_F(HUC_IMEM_STATE)();
++    par                  = {};
++    par.kernelDescriptor = index;
++    DECODE_CHK_STATUS(m_hucItf->MHW_ADDCMD_F(HUC_IMEM_STATE)(&cmdBuffer));
++
++    auto &mfxWaitParams               = m_miItf->MHW_GETPAR_F(MFX_WAIT)();
++    mfxWaitParams                     = {};
++    mfxWaitParams.iStallVdboxPipeline = true;
++    DECODE_CHK_STATUS((m_miItf->MHW_ADDCMD_F(MFX_WAIT)(&cmdBuffer)));
++
++    return MOS_STATUS_SUCCESS;
++}
++
++MHW_SETPAR_DECL_SRC(HUC_IMEM_ADDR, HucVp9ProbUpdatePktPpgtt)
++{
++    DECODE_FUNC_CALL();
++    DECODE_CHK_NULL(m_kernelBinBuffer);
++
++    params.kernelbinOffset = 0;
++    params.kernelBinBuffer = &(m_kernelBinBuffer->OsResource);
++    params.kernelBinSize   = m_kernelBinBuffer->size;
++
++    if (m_osInterface->osCpInterface != nullptr && m_osInterface->osCpInterface->IsHMEnabled())
++    {
++        params.integrityEnable = true;
++    }
++    else
++    {
++        params.integrityEnable = false;
++    }
++
++    return MOS_STATUS_SUCCESS;
++}
++
++}  // namespace decode
++
+diff --git a/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/decode_huc_prob_update_packet_ppgtt.h b/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/decode_huc_prob_update_packet_ppgtt.h
+new file mode 100644
+index 000000000..72fafc6ce
+--- /dev/null
++++ b/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/decode_huc_prob_update_packet_ppgtt.h
+@@ -0,0 +1,82 @@
++/*
++* Copyright (c) 2024-2026, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file     decode_huc_prob_update_packet_ppgtt.h
++//! \brief    Defines the implementation of huc prob update ppgtt packet for VP9 decode
++//!
++
++#ifndef __DECODE_HUC_PROB_UPDATE_PACKET_PPGTT_H__
++#define __DECODE_HUC_PROB_UPDATE_PACKET_PPGTT_H__
++
++#include "decode_huc_prob_update_packet.h"
++#include "mhw_vdbox_huc_ppgtt_itf.h"
++#include "huc_kernel_source.h"
++
++namespace decode
++{
++
++class HucVp9ProbUpdatePktPpgtt : public HucVp9ProbUpdatePkt, public mhw::vdbox::huc::ItfPPGTT::ParSetting
++{
++public:
++    HucVp9ProbUpdatePktPpgtt(MediaPipeline *pipeline, MediaTask *task, CodechalHwInterfaceNext *hwInterface)
++        : HucVp9ProbUpdatePkt(pipeline, task, hwInterface){}
++
++    virtual ~HucVp9ProbUpdatePktPpgtt();
++
++    //!
++    //! \brief  Initialize the media packet, allocate required resources
++    //! \return MOS_STATUS
++    //!         MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    virtual MOS_STATUS Init() override;
++
++    //!
++    //! \brief  Get Packet Name
++    //! \return std::string
++    //!
++    virtual std::string GetPacketName() override
++    {
++        return "VP9_PROB_UPDATE_PPGTT";
++    }
++
++protected:
++
++    virtual MOS_STATUS AllocateResources() override;
++
++    virtual MOS_STATUS PackPictureLevelCmds(MOS_COMMAND_BUFFER &cmdBuffer);
++
++    virtual MOS_STATUS AddCmd_HUC_IMEM_STATE(MOS_COMMAND_BUFFER &cmdBuffer) override;
++
++    virtual MHW_SETPAR_DECL_HDR(HUC_IMEM_ADDR);
++
++    HucKernelSource *m_hucKernelSource = nullptr;
++
++    MOS_BUFFER *m_kernelBinBuffer = nullptr;
++
++    bool m_isPpgttMode = false;
++
++    MEDIA_CLASS_DEFINE_END(decode__HucVp9ProbUpdatePktPpgtt)
++};
++
++}  // namespace decode
++#endif
++
+diff --git a/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/media_srcs.cmake b/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/media_srcs.cmake
+index 8c0b6ccaf..f94eae478 100644
+--- a/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/media_srcs.cmake
++++ b/media_softlet/agnostic/common/codec/hal/dec/vp9/packet/media_srcs.cmake
+@@ -1,4 +1,4 @@
+-# Copyright (c) 2020-2022, Intel Corporation
++# Copyright (c) 2020-2026, Intel Corporation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining a
+ # copy of this software and associated documentation files (the "Software"),
+@@ -22,6 +22,7 @@ if(${VP9_Decode_Supported} STREQUAL "yes")
+ set(SOFTLET_DECODE_VP9_SOURCES_
+     ${SOFTLET_DECODE_VP9_SOURCES_}
+     ${CMAKE_CURRENT_LIST_DIR}/decode_huc_prob_update_packet.cpp
++    ${CMAKE_CURRENT_LIST_DIR}/decode_huc_prob_update_packet_ppgtt.cpp
+     ${CMAKE_CURRENT_LIST_DIR}/decode_vp9_packet.cpp
+     ${CMAKE_CURRENT_LIST_DIR}/decode_vp9_packet_back_end.cpp
+     ${CMAKE_CURRENT_LIST_DIR}/decode_vp9_packet_front_end.cpp
+@@ -35,6 +36,7 @@ set(SOFTLET_DECODE_VP9_SOURCES_
+ set(SOFTLET_DECODE_VP9_HEADERS_
+     ${SOFTLET_DECODE_VP9_HEADERS_}
+     ${CMAKE_CURRENT_LIST_DIR}/decode_huc_prob_update_packet.h
++    ${CMAKE_CURRENT_LIST_DIR}/decode_huc_prob_update_packet_ppgtt.h
+     ${CMAKE_CURRENT_LIST_DIR}/decode_vp9_packet.h
+     ${CMAKE_CURRENT_LIST_DIR}/decode_vp9_packet_back_end.h
+     ${CMAKE_CURRENT_LIST_DIR}/decode_vp9_packet_front_end.h
+diff --git a/media_softlet/agnostic/common/codec/hal/enc/shared/packet/encode_huc_ppgtt.cpp b/media_softlet/agnostic/common/codec/hal/enc/shared/packet/encode_huc_ppgtt.cpp
+new file mode 100644
+index 000000000..65130efee
+--- /dev/null
++++ b/media_softlet/agnostic/common/codec/hal/enc/shared/packet/encode_huc_ppgtt.cpp
+@@ -0,0 +1,46 @@
++/*
++* Copyright (c) 2024, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++
++//!
++//! \file     encode_huc_ppgtt.cpp
++//! \brief    Defines the common interface for encode huc implementation
++//! \details  The encode huc interface is further sub-divided by different huc usage,
++//!           this file is for the base interface which is shared by all.
++//!
++
++#include "encode_huc_ppgtt.h"
++
++namespace encode
++{
++    MHW_SETPAR_DECL_SRC(HUC_IMEM_ADDR, EncodeHucPPGTTPkt)
++    {
++        ENCODE_FUNC_CALL();
++        ENCODE_CHK_NULL_RETURN(m_kernelBinBuffer);
++
++        params.kernelbinOffset = 0;
++        params.kernelBinBuffer = m_kernelBinBuffer;
++        params.kernelBinSize   = m_kernelBinBuffer->iSize;
++        params.integrityEnable = false;
++
++        return MOS_STATUS_SUCCESS;
++    }
++}
+diff --git a/media_softlet/agnostic/common/codec/hal/enc/shared/packet/encode_huc_ppgtt.h b/media_softlet/agnostic/common/codec/hal/enc/shared/packet/encode_huc_ppgtt.h
+new file mode 100644
+index 000000000..d98441ac2
+--- /dev/null
++++ b/media_softlet/agnostic/common/codec/hal/enc/shared/packet/encode_huc_ppgtt.h
+@@ -0,0 +1,54 @@
++/*
++* Copyright (c) 2024, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++
++//!
++//! \file     encode_huc_ppgtt.h
++//! \brief    Defines the common interface for media huc usage
++//! \details  The media huc interface is further sub-divided by different huc usages,
++//!           this file is for the base interface which is shared by all components.
++//!
++
++#ifndef __ENCODE_HUC_PPGTT_H__
++#define __ENCODE_HUC_PPGTT_H__
++
++#include "mhw_vdbox_huc_ppgtt_itf.h"
++#include "mhw_vdbox_huc_ppgtt_cmdpar.h"
++
++namespace encode
++{
++    class EncodeHucPPGTTPkt : public mhw::vdbox::huc::ItfPPGTT::ParSetting
++    {
++    public:
++        EncodeHucPPGTTPkt(CodechalHwInterfaceNext *hwInterface)
++        {
++        }
++        virtual ~EncodeHucPPGTTPkt() {}
++
++    protected:
++        MHW_SETPAR_DECL_HDR(HUC_IMEM_ADDR);
++
++        PMOS_RESOURCE m_kernelBinBuffer = nullptr;
++
++        MEDIA_CLASS_DEFINE_END(encode__EncodeHucPPGTTPkt)
++    };
++}
++#endif  // !__ENCODE_HUC_PPGTT_H__
+diff --git a/media_softlet/agnostic/common/codec/hal/enc/shared/packet/media_srcs.cmake b/media_softlet/agnostic/common/codec/hal/enc/shared/packet/media_srcs.cmake
+index 731942c85..049656038 100644
+--- a/media_softlet/agnostic/common/codec/hal/enc/shared/packet/media_srcs.cmake
++++ b/media_softlet/agnostic/common/codec/hal/enc/shared/packet/media_srcs.cmake
+@@ -1,4 +1,4 @@
+-# Copyright (c) 2018, Intel Corporation
++# Copyright (c) 2018-2026, Intel Corporation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining a
+ # copy of this software and associated documentation files (the "Software"),
+@@ -22,6 +22,7 @@ if(${Common_Encode_Supported} STREQUAL "yes")
+ set(TMP_SOURCES_
+     ${CMAKE_CURRENT_LIST_DIR}/encode_check_huc_load_packet.cpp
+     ${CMAKE_CURRENT_LIST_DIR}/encode_huc.cpp
++    ${CMAKE_CURRENT_LIST_DIR}/encode_huc_ppgtt.cpp
+     ${CMAKE_CURRENT_LIST_DIR}/encode_packet_utilities.cpp
+     ${CMAKE_CURRENT_LIST_DIR}/encode_preenc_packet.cpp
+ )
+@@ -29,6 +30,7 @@ set(TMP_SOURCES_
+ set(TMP_HEADERS_
+     ${CMAKE_CURRENT_LIST_DIR}/encode_check_huc_load_packet.h
+     ${CMAKE_CURRENT_LIST_DIR}/encode_huc.h
++    ${CMAKE_CURRENT_LIST_DIR}/encode_huc_ppgtt.h
+     ${CMAKE_CURRENT_LIST_DIR}/encode_packet_utilities.h
+     ${CMAKE_CURRENT_LIST_DIR}/encode_preenc_packet.h
+ )
+diff --git a/media_softlet/agnostic/common/codec/hal/shared/huc_kernel_source.h b/media_softlet/agnostic/common/codec/hal/shared/huc_kernel_source.h
+new file mode 100644
+index 000000000..91c621441
+--- /dev/null
++++ b/media_softlet/agnostic/common/codec/hal/shared/huc_kernel_source.h
+@@ -0,0 +1,272 @@
++/*
++* Copyright (c) 2024, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file     huc_kernel_source.h
++//! \brief    Defines the common interface for Huc kernel source management.
++//! \details  The Huc kernel source is further sub-divided by platforms.
++//!
++#ifndef __HUC_KERNEL_SOURCE_H__
++#define __HUC_KERNEL_SOURCE_H__
++
++#include <map>
++#include "media_class_trace.h"
++#include "media_pipeline.h"
++
++#if defined(MEDIA_BIN_SUPPORT)
++#define HUC_KERNEL_BIN_ELEMENT(bin) \
++{                                   \
++    (uint32_t * const *)&(bin),     \
++    (uint32_t *)&(bin##_size)       \
++}
++#else
++#define HUC_KERNEL_BIN_ELEMENT(bin)         \
++{                                           \
++    (uint32_t * const *)&(bin##_local),     \
++    (uint32_t *)&(bin##_size_local)         \
++}
++#define HUC_KERNEL_BIN_LOCAL(bin)                 \
++    const uint32_t * const bin##_local = &bin[0]; \
++    const uint32_t bin##_size_local = bin##_size;
++#endif
++
++//! \brief Interface of the Huc binary management.
++class HucKernelSource
++{
++public:
++    struct HucManifest
++    {
++        const uint8_t *m_data = nullptr;
++        uint32_t       m_size = 0;
++    };
++
++    struct HucBinary
++    {
++        const uint8_t *m_data = nullptr;
++        uint32_t       m_size = 0;
++    };
++
++    enum KernelId
++    {
++        hevcS2lKernelId           = 1,
++        drmKernelId               = 2,
++        copyKernelId              = 3,
++        vdencBrcInitKernelId      = 4,
++        vdencBrcUpdateKernelId    = 5,
++        vp9ProbUpdateKernelId     = 6,
++        vp9EncKernelId            = 7,
++        hevcBrcInitKernelId       = 8,
++        hevcBrcUpdateKernelId     = 9,
++        hevcBrcLowdelayKernelId   = 10,
++        vp9VdencBrcInitKernelId   = 11,
++        vp9VdencBrcUpdateKernelId = 12,
++        vp9VdencProbKernelId      = 13,
++        cmdInitializerKernelId    = 14,
++        pakIntegrationKernelId    = 15,
++        hevcLaAnalysisKernelId    = 16,
++        backAnnonationKernelId    = 17,
++        av1BrcInitKernelId        = 18,
++        av1BrcUpdateKernelId      = 19,
++        vvcS2lKernelId            = 20,
++        avcPxpBrcInitKernelId     = 21,
++        avcPxpBrcUpdateKernelId   = 22
++    };
++
++    //!
++    //! \brief    Copy constructor
++    //!
++    HucKernelSource(const HucKernelSource &) = delete;
++
++    //!
++    //! \brief    Copy assignment operator
++    //!
++    HucKernelSource &operator=(const HucKernelSource &) = delete;
++
++    //!
++    //! \brief    Destructor
++    //!
++    virtual ~HucKernelSource() {}
++
++    //!
++    //! \brief    Return manifest for Huc kernels
++    //! \param  [out] manifest
++    //!         Manifest for Huc kernels in order
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    virtual MOS_STATUS GetManifest(HucManifest &manifest) = 0;
++
++    //!
++    //! \brief    Return hash index for specified kernel
++    //! \param  [in] kernelId
++    //!         Kernel ID for hash index query
++    //! \param  [out] hashIndex
++    //!         Kernel hash index returned if kernel ID is valid
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    virtual MOS_STATUS GetKernelHashIdx(const uint32_t kernelId, uint32_t &hashIndex)
++    {
++        auto &hashIdxTable = GetHashIdxTable();
++        auto iter = hashIdxTable.find(kernelId);
++        if (iter == hashIdxTable.end())
++        {
++            return MOS_STATUS_INVALID_PARAMETER;
++        }
++
++        if (iter->second < GetMinHashIndex() || iter->second > GetMaxHashIndex())
++        {
++            MOS_OS_CRITICALMESSAGE("hask index %d out of range [%d, %d].",
++                iter->second, GetMinHashIndex(), GetMaxHashIndex());
++            return MOS_STATUS_INVALID_PARAMETER;
++        }
++
++        hashIndex = iter->second;
++        return MOS_STATUS_SUCCESS;
++    }
++
++    //!
++    //! \brief    Return binary for specified kernel
++    //! \param  [in] kernelId
++    //!         Kernel ID for hash index query
++    //! \param  [out] hucBinary
++    //!         Kernel binary returned if kernel ID is valid
++    //! \return   MOS_STATUS
++    //!           MOS_STATUS_SUCCESS if success, else fail reason
++    //!
++    virtual MOS_STATUS GetKernelBin(const uint32_t kernelId, HucBinary &hucBinary)
++    {
++        auto &binTable = GetBinTable();
++        auto iter = binTable.find(kernelId);
++        if (iter == binTable.end())
++        {
++            return MOS_STATUS_INVALID_PARAMETER;
++        }
++
++        hucBinary.m_data = (iter->second.m_data == nullptr) ? nullptr : reinterpret_cast<const uint8_t *>(*(iter->second.m_data));
++        hucBinary.m_size = (iter->second.m_size == nullptr) ? 0       : *(iter->second.m_size);
++        return MOS_STATUS_SUCCESS;
++    }
++
++    virtual bool IsPpgttMode(MEDIA_FEATURE_TABLE *skuTable, MediaUserSettingSharedPtr userSettingPtr)
++    {
++        if (skuTable == nullptr)
++        {
++            return false;
++        }
++
++        if(!MEDIA_IS_SKU(skuTable, FtrPPGTTBasedHuCLoad))
++        {
++            return false;
++        }
++
++#if (_DEBUG || _RELEASE_INTERNAL)
++        const std::string enableKey = "PPGTT Huc Enable";
++
++        MOS_STATUS status = DeclareUserSettingKeyForDebug(
++            userSettingPtr,
++            enableKey,
++            MediaUserSetting::Group::Device,
++            true, // enable by default
++            false);
++
++        if (status == MOS_STATUS_SUCCESS || status == MOS_STATUS_FILE_EXISTS)
++        {
++            // check if disabled by regkey
++            bool enablePpgtt = true;
++            ReadUserSettingForDebug(
++                userSettingPtr,
++                enablePpgtt,
++                enableKey,
++                MediaUserSetting::Group::Device);
++
++            if (!enablePpgtt)
++            {
++                return false;
++            }
++        }
++#endif
++
++        return true;
++    }
++
++    virtual MOS_STATUS ReportMode(MEDIA_FEATURE_TABLE *skuTable, MediaUserSettingSharedPtr userSettingPtr)
++    {
++        MOS_CHK_NULL_RETURN(MOS_COMPONENT_CODEC, MOS_CODEC_SUBCOMP_PUBLIC, skuTable);
++
++        const std::string inUseKey = "PPGTT Huc In Use";
++
++        MOS_STATUS status = DeclareUserSettingKey(
++            userSettingPtr,
++            inUseKey,
++            MediaUserSetting::Group::Device,
++            (int32_t)0,
++            true);
++        if (status == MOS_STATUS_SUCCESS || status == MOS_STATUS_FILE_EXISTS)
++        {
++            bool isPpgttEnable = IsPpgttMode(skuTable, userSettingPtr);
++
++            ReportUserSetting(
++                userSettingPtr,
++                inUseKey,
++                isPpgttEnable ? 1 : 0,
++                MediaUserSetting::Group::Device);
++        }
++
++        return MOS_STATUS_SUCCESS;
++    }
++
++protected:
++    //!
++    //! \brief    Constructor
++    //!
++    HucKernelSource() {}
++
++    struct HucBinaryInternal
++    {
++        uint32_t * const *m_data = nullptr;
++        uint32_t         *m_size = nullptr;
++    };
++
++    // Binary map table (kernel id, binay data point)
++    using BinaryTable  = std::map<const uint32_t, const HucBinaryInternal>;
++
++    // Hash index table (kernel id, hash index)
++    using HashIdxTable = std::map<const uint32_t, const uint32_t>;
++
++    constexpr static HucBinaryInternal m_invalidKernelBin = { nullptr, nullptr };
++
++    constexpr static uint32_t m_invalidHashIndex = 0xff; //!< Invalid hash index
++
++private:
++    virtual const BinaryTable  &GetBinTable() = 0;
++    virtual const HashIdxTable &GetHashIdxTable() = 0;
++
++    virtual const uint32_t GetMinHashIndex() { return m_minHashIndex; }
++    virtual const uint32_t GetMaxHashIndex() { return m_maxHashIndex; }
++
++    constexpr static uint32_t m_minHashIndex = 1;  //!< min hash index
++    constexpr static uint32_t m_maxHashIndex = 31; //!< max hash index
++
++MEDIA_CLASS_DEFINE_END(HucKernelSource)
++};
++
++#endif  // __HUC_KERNEL_SOURCE_H__
+diff --git a/media_softlet/agnostic/common/codec/hal/shared/media_srcs.cmake b/media_softlet/agnostic/common/codec/hal/shared/media_srcs.cmake
+index 6e2f41acd..bff2058e9 100644
+--- a/media_softlet/agnostic/common/codec/hal/shared/media_srcs.cmake
++++ b/media_softlet/agnostic/common/codec/hal/shared/media_srcs.cmake
+@@ -1,4 +1,4 @@
+-# Copyright (c) 2021-2022, Intel Corporation
++# Copyright (c) 2021-2026, Intel Corporation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining a
+ # copy of this software and associated documentation files (the "Software"),
+@@ -31,6 +31,7 @@ set(TMP_HEADERS_
+     ${TMP_HEADERS_}
+     ${CMAKE_CURRENT_LIST_DIR}/codec_hw_next.h
+     ${CMAKE_CURRENT_LIST_DIR}/codec_utilities_next.h
++    ${CMAKE_CURRENT_LIST_DIR}/huc_kernel_source.h
+ )
+ 
+ set(SOFTLET_CODEC_COMMON_SOURCES_
+diff --git a/media_softlet/agnostic/common/hw/mhw_mi_cmdpar.h b/media_softlet/agnostic/common/hw/mhw_mi_cmdpar.h
+index fc5342265..ef5446755 100644
+--- a/media_softlet/agnostic/common/hw/mhw_mi_cmdpar.h
++++ b/media_softlet/agnostic/common/hw/mhw_mi_cmdpar.h
+@@ -32,6 +32,11 @@
+ #include "mhw_state_heap.h"
+ #include "mhw_mmio_common.h"
+ 
++#ifdef _MEDIA_RESERVED
++#define __MHW_MI_WRAPPER_EXT(STUFF) STUFF
++#else
++#define __MHW_MI_WRAPPER_EXT(STUFF)
++#endif
+ namespace mhw
+ {
+ namespace mi
+diff --git a/media_softlet/agnostic/common/hw/vdbox/media_srcs.cmake b/media_softlet/agnostic/common/hw/vdbox/media_srcs.cmake
+index 7a020ea97..006f63f37 100644
+--- a/media_softlet/agnostic/common/hw/vdbox/media_srcs.cmake
++++ b/media_softlet/agnostic/common/hw/vdbox/media_srcs.cmake
+@@ -1,4 +1,4 @@
+-# Copyright (c) 2020-2024, Intel Corporation
++# Copyright (c) 2020-2026, Intel Corporation
+ #
+ # Permission is hereby granted, free of charge, to any person obtaining a
+ # copy of this software and associated documentation files (the "Software"),
+@@ -32,6 +32,9 @@ set(TMP_SOFTLET_MHW_VDBOX_HUC_HEADERS_
+     ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_huc_cmdpar.h
+     ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_huc_impl.h
+     ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_huc_itf.h
++    ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_huc_ppgtt_cmdpar.h
++    ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_huc_ppgtt_impl.h
++    ${CMAKE_CURRENT_LIST_DIR}/mhw_vdbox_huc_ppgtt_itf.h
+ )
+ 
+ set(TMP_SOFTLET_MHW_VDBOX_VDENC_HEADERS_
+diff --git a/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_cmdpar.h b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_cmdpar.h
+new file mode 100644
+index 000000000..426d523a7
+--- /dev/null
++++ b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_cmdpar.h
+@@ -0,0 +1,52 @@
++/*
++* Copyright (c) 2024-2026, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file     mhw_vdbox_huc_ppgtt_cmdpar.h
++//! \brief    MHW Huc PPGTT command parameters
++//! \details
++//!
++
++#ifndef __MHW_VDBOX_HUC_PPGTT_CMDPAR_H__
++#define __MHW_VDBOX_HUC_PPGTT_CMDPAR_H__
++
++#include "mhw_vdbox_huc_cmdpar.h"
++
++namespace mhw
++{
++namespace vdbox
++{
++namespace huc
++{
++
++struct _MHW_PAR_T(HUC_IMEM_ADDR)
++{
++    PMOS_RESOURCE kernelBinBuffer = nullptr;
++    uint32_t      kernelbinOffset = 0;
++    uint32_t      kernelBinSize   = 0;
++    bool          integrityEnable = false;
++};
++
++}  // namespace huc
++}  // namespace vdbox
++}  // namespace mhw
++
++#endif  // __MHW_VDBOX_HUC_PPGTT_CMDPAR_H__
+\ No newline at end of file
+diff --git a/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_impl.h b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_impl.h
+new file mode 100644
+index 000000000..8056e2c78
+--- /dev/null
++++ b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_impl.h
+@@ -0,0 +1,92 @@
++/*===================== begin_copyright_notice ==================================
++
++# Copyright (c) 2023-2026, Intel Corporation
++
++# Permission is hereby granted, free of charge, to any person obtaining a
++# copy of this software and associated documentation files (the "Software"),
++# to deal in the Software without restriction, including without limitation
++# the rights to use, copy, modify, merge, publish, distribute, sublicense,
++# and/or sell copies of the Software, and to permit persons to whom the
++# Software is furnished to do so, subject to the following conditions:
++
++# The above copyright notice and this permission notice shall be included
++# in all copies or substantial portions of the Software.
++
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++# OTHER DEALINGS IN THE SOFTWARE.
++
++======================= end_copyright_notice ==================================*/
++//!
++//! \file     mhw_vdbox_huc_ppgtt_impl.h
++//! \brief    MHW VDBOX HUC PPGTT interface common base for Xe3P_plus+ platforms
++//! \details
++//!
++
++#ifndef __MHW_VDBOX_HUC_PPGTT_IMPL_H__
++#define __MHW_VDBOX_HUC_PPGTT_IMPL_H__
++
++#include "mhw_vdbox_huc_impl.h"
++#include "mhw_vdbox_huc_ppgtt_itf.h"
++
++namespace mhw
++{
++namespace vdbox
++{
++namespace huc
++{
++template <typename cmd_t>
++class ImplPPGTT: public ItfPPGTT, public huc::Impl<cmd_t>
++{
++    _HUC_PPGTT_CMD_DEF(_MHW_CMD_ALL_DEF_FOR_IMPL);
++
++protected:
++    using base_t = ItfPPGTT;
++
++    ImplPPGTT(PMOS_INTERFACE osItf, MhwCpInterface *cpItf) : huc::Impl<cmd_t>(osItf, cpItf) {};
++
++    _MHW_SETCMD_OVERRIDE_DECL(HUC_IMEM_ADDR)
++    {
++        MHW_FUNCTION_ENTER;
++
++        _MHW_SETCMD_CALLBASE(HUC_IMEM_ADDR);
++
++        MHW_RESOURCE_PARAMS resourceParams = {};
++
++        resourceParams.dwLsbNum      = MHW_VDBOX_HUC_GENERAL_STATE_SHIFT;
++        resourceParams.HwCommandType = MOS_HUC_DMEM;
++
++        if (!Mos_ResourceIsNull(params.kernelBinBuffer))
++        {
++            resourceParams.presResource    = params.kernelBinBuffer;
++            resourceParams.dwOffset        = params.kernelbinOffset;
++            resourceParams.pdwCmd          = cmd.HucPpgttAddress.DW0_1.Value;
++            resourceParams.dwLocationInCmd = 1;
++            resourceParams.bIsWritable     = false;
++            resourceParams.dwSize          = params.kernelBinSize;
++
++            InitMocsParams(resourceParams, &cmd.MemoryAddressAttributes.DW0.Value, 1, 6);
++
++            MHW_MI_CHK_STATUS(this->AddResourceToCmd(
++                this->m_osItf,
++                this->m_currentCmdBuf,
++                &resourceParams));
++        }
++
++#define DO_FIELDS() \
++        DO_FIELD(DW4, IntegrityEnabledBit, params.integrityEnable ? 1 : 0);
++
++#include "mhw_hwcmd_process_cmdfields.h"
++    }
++
++MEDIA_CLASS_DEFINE_END(mhw__vdbox__huc__ImplPPGTT)
++};
++}  // namespace huc
++}  // namespace vdbox
++}  // namespace mhw
++
++#endif  // __MHW_VDBOX_HUC_PPGTT_IMPL_H__
+diff --git a/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_itf.h b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_itf.h
+new file mode 100644
+index 000000000..b7b1d749d
+--- /dev/null
++++ b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_huc_ppgtt_itf.h
+@@ -0,0 +1,75 @@
++/*
++* Copyright (c) 2024-2026, Intel Corporation
++*
++* Permission is hereby granted, free of charge, to any person obtaining a
++* copy of this software and associated documentation files (the "Software"),
++* to deal in the Software without restriction, including without limitation
++* the rights to use, copy, modify, merge, publish, distribute, sublicense,
++* and/or sell copies of the Software, and to permit persons to whom the
++* Software is furnished to do so, subject to the following conditions:
++*
++* The above copyright notice and this permission notice shall be included
++* in all copies or substantial portions of the Software.
++*
++* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
++* OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
++* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
++* OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
++* ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++* OTHER DEALINGS IN THE SOFTWARE.
++*/
++//!
++//! \file     mhw_vdbox_huc_ppgtt_itf.h
++//! \brief    MHW VDBOX Huc PPGTT interface for Xe3P+
++//! \details
++//!
++
++#ifndef __MHW_VDBOX_HUC_PPGTT_ITF_H__
++#define __MHW_VDBOX_HUC_PPGTT_ITF_H__
++
++#include "mhw_itf.h"
++#include "mhw_vdbox.h"
++#include "mhw_vdbox_huc_ppgtt_cmdpar.h"
++
++// add all HUC PPGTT cmds here
++#define _HUC_PPGTT_CMD_DEF(DEF) \
++    DEF(HUC_IMEM_ADDR);
++
++namespace mhw
++{
++namespace vdbox
++{
++namespace huc
++{
++class ItfPPGTT
++{
++public:
++    //!
++    //! \enum     CommandsNumberOfAddresses
++    //! \brief    Commands number of addresses
++    //!
++    enum CommandsNumberOfAddresses
++    {
++        HUC_IMEM_ADDR_CMD_NUMBER_OF_ADDRESSES = 1, // 2 DW for 1 address field
++    };
++
++    class ParSetting
++    {
++    public:
++        virtual ~ParSetting() = default;
++
++        _HUC_PPGTT_CMD_DEF(_MHW_SETPAR_DEF);
++    };
++
++    virtual ~ItfPPGTT() = default;
++
++    _HUC_PPGTT_CMD_DEF(_MHW_CMD_ALL_DEF_FOR_ITF);
++
++MEDIA_CLASS_DEFINE_END(mhw__vdbox__huc__ItfPPGTT)
++};
++}  // namespace huc
++}  // namespace vdbox
++}  // namespace mhw
++
++#endif  // __MHW_VDBOX_HUC_PPGTT_ITF_H__
+diff --git a/media_softlet/linux/common/media_interfaces/media_interfaces_next.cpp b/media_softlet/linux/common/media_interfaces/media_interfaces_next.cpp
+index 39c771c96..42049fd60 100644
+--- a/media_softlet/linux/common/media_interfaces/media_interfaces_next.cpp
++++ b/media_softlet/linux/common/media_interfaces/media_interfaces_next.cpp
+@@ -1,5 +1,5 @@
+ /*
+-* Copyright (c) 2021, Intel Corporation
++* Copyright (c) 2021-2026, Intel Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+@@ -40,6 +40,7 @@
+ #include "media_interfaces_mmd_next.h"
+ #include "media_interfaces_mhw_next.h"
+ #include "media_interfaces_codechal_next.h"
++#include "media_interfaces_huc_kernel_source.h"
+ 
+ template class MediaFactory<uint32_t, VphalDevice>;
+ template class MediaFactory<uint32_t, RenderHalDevice>;
+@@ -47,6 +48,7 @@ template class MediaFactory<uint32_t, CodechalDeviceNext>;
+ template class MediaFactory<uint32_t, MhwInterfacesNext>;
+ template class MediaFactory<uint32_t, McpyDeviceNext>;
+ template class MediaFactory<uint32_t, MmdDeviceNext>;
++template class MediaFactory<uint32_t, HucKernelSourceDevice>;
+ 
+ typedef MediaFactory<uint32_t, VphalDevice> VphalFactory;
+ typedef MediaFactory<uint32_t, RenderHalDevice> RenderHalFactory;
+@@ -54,6 +56,7 @@ typedef MediaFactory<uint32_t, CodechalDeviceNext> CodechalFactoryNext;
+ typedef MediaFactory<uint32_t, MhwInterfacesNext> MhwFactoryNext;
+ typedef MediaFactory<uint32_t, McpyDeviceNext> McpyFactoryNext;
+ typedef MediaFactory<uint32_t, MmdDeviceNext> MmdFactoryNext;
++typedef MediaFactory<uint32_t, HucKernelSourceDevice> HucKernelSourceFactory;
+ 
+ VpBase *VphalDevice::CreateFactoryNext(
+     PMOS_INTERFACE     osInterface,
+@@ -532,3 +535,34 @@ MhwInterfacesNext* MmdDeviceNext::CreateMhwInterface(PMOS_INTERFACE osInterface)
+ 
+     return mhw;
+ }
++
++HucKernelSource *HucKernelSourceDevice::CreateFactory(
++    PMOS_INTERFACE osInterface)
++{
++    if (osInterface == nullptr)
++    {
++        CODECHAL_PUBLIC_ASSERTMESSAGE("Invalid(null) osInterface!");
++        return nullptr;
++    }
++
++    PLATFORM platform = {};
++    osInterface->pfnGetPlatform(osInterface, &platform);
++    HucKernelSourceDevice *device = HucKernelSourceFactory::Create(platform.eProductFamily);
++    if (device == nullptr)
++    {
++        CODECHAL_PUBLIC_ASSERTMESSAGE("HucKernelSource device creation failed!");
++        return nullptr;
++    }
++
++    device->Initialize();
++    if (device->m_hucKernelSource == nullptr)
++    {
++        CODECHAL_PUBLIC_ASSERTMESSAGE("HucKernelSource creation failed!");
++        MOS_Delete(device);
++        return nullptr;
++    }
++
++    HucKernelSource *hucKrnelSrc = device->m_hucKernelSource;
++    MOS_Delete(device);
++    return hucKrnelSrc;
++}
+-- 
+2.43.0
+

@@ -1,0 +1,53 @@
+From e6fbb60bd54e09f1c4d6797da7dc5165253bf907 Mon Sep 17 00:00:00 2001
+From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
+Date: Wed, 27 Aug 2025 20:38:21 +0800
+Subject: [PATCH 09/12] Mark the imported dmabuf as cacheable in Media Libva
+
+While generating the GMM params, we need to set the cacheable flag
+to true for imported dmabufs (or prime bos). This allows GmmLib to
+return the CoherentPATIndex, that is verified by the Xe KMD as part
+of vm_bind. Otherwise, the Xe KMD will return an error when it finds
+that the coherency mode for the default PAT index is XE_COH_NONE.
+This is similar to Mesa's behavior where it selects "cached_coherent"
+PAT index for imported dmabufs.
+
+This patch fixes the following error (vm_bind failure) seen while
+running VDI test (Remote Desktop) with Qemu + Spice (uses Gstreamer)
+on BMG/PTL:
+0:00:05.933571208  1868 0x7f27f4000b90 ERROR vadisplay
+vasurfaceimage.c:171:va_create_surfaces: vaCreateSurfaces: resource
+allocation failed
+
+while testing with the following GStreamer pipeline:
+appsrc is-live=true format=time do-timestamp=true name=src !
+vapostproc ! video/x-raw(memory:VAMemory),format=NV12 !
+vah264enc name=encoder rate-control=16 b-frames=0 target-usage=7
+min-qp=15 max-qp=35 ! appsink name=sink
+
+Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+Rebased-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+---
+ media_softlet/linux/common/ddi/media_libva_util_next.cpp | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/media_softlet/linux/common/ddi/media_libva_util_next.cpp b/media_softlet/linux/common/ddi/media_libva_util_next.cpp
+index 17602630e..234ebc02e 100644
+--- a/media_softlet/linux/common/ddi/media_libva_util_next.cpp
++++ b/media_softlet/linux/common/ddi/media_libva_util_next.cpp
+@@ -352,6 +352,13 @@ VAStatus MediaLibvaUtilNext::GenerateGmmParamsForNoneCompressionExternalSurface(
+     // Init NotCompressed flag as true to default Create as uncompressed surface on Xe2 Compression.
+     gmmCustomParams.Flags.Info.NotCompressed = 1;
+ 
++    if (VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME == mediaSurface->pSurfDesc->uiVaMemType ||
++        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2 == mediaSurface->pSurfDesc->uiVaMemType ||
++        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_3 == mediaSurface->pSurfDesc->uiVaMemType)
++    {
++        gmmCustomParams.Flags.Info.Cacheable = true;
++    }
++
+     switch (mediaSurface->pSurfDesc->uiPlanes)
+     {
+         case 1:
+-- 
+2.43.0
+

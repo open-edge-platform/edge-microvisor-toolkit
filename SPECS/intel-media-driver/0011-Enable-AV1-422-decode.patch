@@ -1,0 +1,217 @@
+From 5618c02e08a7544811ae57d0d80ac4056fed09f5 Mon Sep 17 00:00:00 2001
+From: "Ch'ng, Seng Guan" <seng.guan.chng@intel.com>
+Date: Tue, 10 Mar 2026 05:31:15 +0800
+Subject: [PATCH] Enable AV1 422 decode
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20328
+Upstream-Status: Pending
+---
+ ...ecode_av1_picture_packet_xe3p_lpm_base.cpp |  5 ++-
+ .../av1/features/decode_av1_basic_feature.cpp |  3 +-
+ .../hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h       |  4 ++
+ .../codec/ddi/dec/ddi_decode_av1_specific.cpp | 10 ++++-
+ .../ddi/ddi_register_components_specific.h    |  4 ++
+ .../ddi/capstable_data_xe3p_lpm_r0_specific.h |  8 ++++
+ ...ble_data_av1_decode_xe3p_lpm_r0_specific.h | 42 +++++++++++++++++++
+ 7 files changed, 72 insertions(+), 4 deletions(-)
+
+diff --git a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/av1/packet/decode_av1_picture_packet_xe3p_lpm_base.cpp b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/av1/packet/decode_av1_picture_packet_xe3p_lpm_base.cpp
+index ae48fac1b..3fd6284e1 100644
+--- a/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/av1/packet/decode_av1_picture_packet_xe3p_lpm_base.cpp
++++ b/media_softlet/agnostic/Xe3P_M_plus/Xe3P_LPM_base/codec/hal/dec/av1/packet/decode_av1_picture_packet_xe3p_lpm_base.cpp
+@@ -27,9 +27,11 @@
+ #include "mhw_vdbox_xe3p_lpm_base.h"
+ #include "decode_common_feature_defs.h"
+ #include "mhw_vdbox_avp_hwcmd_xe3p_lpm.h"
++#include "mhw_vdbox_mfx_cmdpar_ext.h"
+ 
+ using namespace mhw::vdbox::xe3p_lpm_base;
+ using namespace mhw::vdbox::avp::xe3p_lpm_base::xe3p_lpm;
++using namespace mhw::vdbox::mfx;
+ 
+ namespace decode
+ {
+@@ -562,7 +564,6 @@ namespace decode
+         params = {};
+         Av1DecodePicPkt::MHW_SETPAR_F(AVP_SURFACE_STATE)(params);
+ 
+-#ifdef _MEDIA_RESERVED
+         if (m_av1PicParams->m_seqInfoFlags.m_fields.m_subsamplingX == 0 && m_av1PicParams->m_seqInfoFlags.m_fields.m_subsamplingY == 0)  // 4:4:4
+         {
+             if (params.bitDepthLumaMinus8 == 0)
+@@ -585,7 +586,7 @@ namespace decode
+                 params.srcFormat = static_cast<mhw::vdbox::avp::SURFACE_FORMAT>(SURFACE_FORMAT_EXT::SURFACE_FORMAT_Y216Y210FORMAT);
+             }
+         }
+-#endif
++
+         return MOS_STATUS_SUCCESS;
+     }
+ 
+diff --git a/media_softlet/agnostic/common/codec/hal/dec/av1/features/decode_av1_basic_feature.cpp b/media_softlet/agnostic/common/codec/hal/dec/av1/features/decode_av1_basic_feature.cpp
+index d52041838..bf6b001cd 100644
+--- a/media_softlet/agnostic/common/codec/hal/dec/av1/features/decode_av1_basic_feature.cpp
++++ b/media_softlet/agnostic/common/codec/hal/dec/av1/features/decode_av1_basic_feature.cpp
+@@ -107,7 +107,8 @@ namespace decode
+         m_av1PicParams  = static_cast<CodecAv1PicParams*>(decodeParams->m_picParams);
+         DECODE_CHK_NULL(m_av1PicParams);
+ 
+-        if (decodeParams->m_destSurface->OsResource.Format == Format_P010)
++        if (decodeParams->m_destSurface->OsResource.Format == Format_P010 ||
++            decodeParams->m_destSurface->OsResource.Format == Format_Y210)
+         {
+             m_bitDepth = 10;
+         }
+diff --git a/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h
+index 2b77a1455..b9b1f2ca9 100644
+--- a/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h
++++ b/media_softlet/agnostic/common/hw/vdbox/mhw_vdbox_mfx_cmdpar_ext.h
+@@ -37,6 +37,10 @@ namespace mfx
+ 
+ enum SURFACE_FORMAT_EXT
+ {
++    SURFACE_FORMAT_YUY2FORMAT       = 0,   //!< YUY2 for 422 8 bit
++    SURFACE_FORMAT_AYUV4444FORMAT   = 2,   //!< No additional details
++    SURFACE_FORMAT_Y216Y210FORMAT   = 8,   //!< Same value is used to represent Y216 and Y210
++    SURFACE_FORMAT_Y410FORMAT       = 10,  //!< No additional details
+     SURFACE_FORMAT_P010             = 13,  //!< P010 for 420 10 bits
+     SURFACE_FORMAT_Y216             = 14,  //!< Y216 for 422 10 bit (upto 16 bit)
+     SURFACE_FORMAT_Y210V            = 14,  //!< Y210 Variant
+diff --git a/media_softlet/linux/common/codec/ddi/dec/ddi_decode_av1_specific.cpp b/media_softlet/linux/common/codec/ddi/dec/ddi_decode_av1_specific.cpp
+index 8d9c2d008..9ea778ed3 100644
+--- a/media_softlet/linux/common/codec/ddi/dec/ddi_decode_av1_specific.cpp
++++ b/media_softlet/linux/common/codec/ddi/dec/ddi_decode_av1_specific.cpp
+@@ -951,7 +951,15 @@ MOS_FORMAT DdiDecodeAv1::GetFormat()
+     CodechalDecodeParams *decodeParams = &m_decodeCtx->DecodeParams;
+ 
+     CodecAv1PicParams *picParams = (CodecAv1PicParams *)decodeParams->m_picParams;
+-    if (picParams->m_bitDepthIdx > 0)
++    if (picParams->m_bitDepthIdx == 0)
++    {
++        if ((picParams->m_seqInfoFlags.m_fields.m_subsamplingX == 1) &&
++            (picParams->m_seqInfoFlags.m_fields.m_subsamplingY == 0))
++        {
++            Format = Format_YUY2;
++        }
++    }
++    else if (picParams->m_bitDepthIdx > 0)
+     {
+         Format = Format_P010;
+         if (picParams->m_bitDepthIdx > 2)
+diff --git a/media_softlet/linux/common/ddi/ddi_register_components_specific.h b/media_softlet/linux/common/ddi/ddi_register_components_specific.h
+index 2d5832c72..7d7b2aead 100644
+--- a/media_softlet/linux/common/ddi/ddi_register_components_specific.h
++++ b/media_softlet/linux/common/ddi/ddi_register_components_specific.h
+@@ -180,6 +180,10 @@ static bool RegisteredH264High422VLD =
+ static bool RegisteredAv1Profile0VLD =
+     DdiDecodeFactory::
+         Register<decode::DdiDecodeAv1>(ComponentInfo {VAProfileAV1Profile0, VAEntrypointVLD});
++
++static bool RegisteredAv1Profile2VLD =
++    DdiDecodeFactory::
++        Register<decode::DdiDecodeAv1>(ComponentInfo {VAProfileAV1Profile2, VAEntrypointVLD});
+ #endif // _AV1_DECODE_SUPPORTED
+ 
+ #if defined (_VVC_DECODE_SUPPORTED)
+diff --git a/media_softlet/linux/xe3p_lpm_r0/ddi/capstable_data_xe3p_lpm_r0_specific.h b/media_softlet/linux/xe3p_lpm_r0/ddi/capstable_data_xe3p_lpm_r0_specific.h
+index b06e4dfa5..3bf4cd522 100644
+--- a/media_softlet/linux/xe3p_lpm_r0/ddi/capstable_data_xe3p_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3p_lpm_r0/ddi/capstable_data_xe3p_lpm_r0_specific.h
+@@ -299,6 +299,13 @@ static const EntrypointMap entrypointMap_VAProfileAV1Profile1_Xe3p_Lpm_r0
+ #endif
+ };
+ 
++static const EntrypointMap entrypointMap_VAProfileAV1Profile2_Xe3p_Lpm_r0
++{
++#if defined(_AV1_DECODE_SUPPORTED)
++    {VAEntrypointVLD, &entrypointMap_VAProfileAV1Profile2Dec_Data_Xe3p_Lpm_r0},
++#endif
++};
++
+ static const EntrypointMap entrypointMap_VAProfileVP9Profile0_Xe3p_Lpm_r0
+ {
+ #if defined(_VP9_ENCODE_VDENC_SUPPORTED) && defined(_MEDIA_RESERVED)
+@@ -405,6 +412,7 @@ static const ProfileMap profileMap_Xe3p_Lpm_r0
+ #if defined(_AV1_ENCODE_VDENC_SUPPORTED) || defined(_AV1_DECODE_SUPPORTED)
+     {VAProfileAV1Profile0, &entrypointMap_VAProfileAV1Profile0_Xe3p_Lpm_r0},
+     {VAProfileAV1Profile1, &entrypointMap_VAProfileAV1Profile1_Xe3p_Lpm_r0},
++    {VAProfileAV1Profile2, &entrypointMap_VAProfileAV1Profile2_Xe3p_Lpm_r0},
+ #endif
+ 
+ #if defined(_VP9_ENCODE_VDENC_SUPPORTED) || defined(_VP9_DECODE_SUPPORTED)
+diff --git a/media_softlet/linux/xe3p_lpm_r0/decode/av1/ddi/capstable_data_av1_decode_xe3p_lpm_r0_specific.h b/media_softlet/linux/xe3p_lpm_r0/decode/av1/ddi/capstable_data_av1_decode_xe3p_lpm_r0_specific.h
+index 5eaed10a2..6ab91f96f 100644
+--- a/media_softlet/linux/xe3p_lpm_r0/decode/av1/ddi/capstable_data_av1_decode_xe3p_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3p_lpm_r0/decode/av1/ddi/capstable_data_av1_decode_xe3p_lpm_r0_specific.h
+@@ -48,6 +48,12 @@ static ConfigDataList configDataList_VAProfileAV1Profile1_VAEntrypointVLD_Xe3p_L
+   {VA_DEC_SLICE_MODE_BASE,   VA_CENC_TYPE_NONE, VA_DEC_PROCESSING_NONE},
+ };
+ 
++static ConfigDataList configDataList_VAProfileAV1Profile2_VAEntrypointVLD_Xe3p_Lpm_r0 =
++{
++  {VA_DEC_SLICE_MODE_NORMAL, VA_CENC_TYPE_NONE, VA_DEC_PROCESSING_NONE},
++  {VA_DEC_SLICE_MODE_BASE,   VA_CENC_TYPE_NONE, VA_DEC_PROCESSING_NONE},
++};
++
+ //!
+ //! \brief  Definition for AttribList
+ //!
+@@ -81,6 +87,21 @@ static const AttribList attribList_VAProfileAV1Profile1_VAEntrypointVLD_Xe3p_Lpm
+ #endif
+ };
+ 
++static const AttribList attribList_VAProfileAV1Profile2_VAEntrypointVLD_Xe3p_Lpm_r0
++{
++  {VAConfigAttribRTFormat,              VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_YUV422_10},
++  {VAConfigAttribMaxPictureWidth,       CODEC_16K_MAX_PIC_WIDTH},
++  {VAConfigAttribMaxPictureHeight,      CODEC_16K_MAX_PIC_HEIGHT},
++  {VAConfigAttribDecSliceMode,          VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
++  {VAConfigAttribDecProcessing,         VA_DEC_PROCESSING_NONE},
++  {VAConfigAttribEncryption,            VA_ATTRIB_NOT_SUPPORTED},
++  {VAConfigAttribProcessingRate,        VA_PROCESSING_RATE_DECODE},
++  {VAConfigAttribCustomRoundingControl, 1},
++#if VA_CHECK_VERSION(1, 11, 0)
++  {VAConfigAttribDecAV1Features,        1},
++#endif
++};
++
+ //!
+ //! \brief   Definition for ProfileSurfaceAttribInfo
+ //!
+@@ -114,6 +135,21 @@ static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileAV1Profile1_VAEntrypo
+     }}}
+ };
+ 
++static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileAV1Profile2_VAEntrypointVLD_Xe3p_Lpm_r0 =
++{
++  {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_YUY2}}},
++  {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_Y210}}},
++  {VASurfaceAttribMaxWidth,    VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_16K_MAX_PIC_WIDTH}}},
++  {VASurfaceAttribMaxHeight,   VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_16K_MAX_PIC_HEIGHT}}},
++  {VASurfaceAttribMemoryType,  VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {
++#if VA_CHECK_VERSION(1, 21, 0)
++        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_3 |
++#endif
++        VA_SURFACE_ATTRIB_MEM_TYPE_VA |
++        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2
++    }}}
++};
++
+ //!
+ //! \brief  Definition for EmtrypointMap
+ //!
+@@ -131,4 +167,10 @@ static const EntrypointData entrypointMap_VAProfileAV1Profile1Dec_Data_Xe3p_Lpm_
+   &surfaceAttribInfo_VAProfileAV1Profile1_VAEntrypointVLD_Xe3p_Lpm_r0
+ };
+ 
++static const EntrypointData entrypointMap_VAProfileAV1Profile2Dec_Data_Xe3p_Lpm_r0
++{
++  &attribList_VAProfileAV1Profile2_VAEntrypointVLD_Xe3p_Lpm_r0,
++  &configDataList_VAProfileAV1Profile2_VAEntrypointVLD_Xe3p_Lpm_r0,
++  &surfaceAttribInfo_VAProfileAV1Profile2_VAEntrypointVLD_Xe3p_Lpm_r0
++};
+ #endif
+\ No newline at end of file
+-- 
+2.43.0
+

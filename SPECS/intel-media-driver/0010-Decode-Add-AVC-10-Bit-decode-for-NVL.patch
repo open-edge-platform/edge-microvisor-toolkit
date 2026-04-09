@@ -1,0 +1,142 @@
+From 188684d4d261f94c90d28aa51ab1cd1d0d4dbacb Mon Sep 17 00:00:00 2001
+From: "Cheah, Vincent Beng Keat" <vincent.beng.keat.cheah@intel.com>
+Date: Mon, 26 Jan 2026 21:25:15 +0800
+Subject: [PATCH] [Decode] Add AVC 10 Bit decode for NVL
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20303
+Upstream-Status: Inappropriate [IGMDPT-991, HSD-15018960610]
+Platform: PTL, WCL, NVL
+---
+ .../ddi/capstable_data_xe3p_lpm_r0_specific.h | 21 ++++++++-
+ ...ble_data_avc_decode_xe3p_lpm_r0_specific.h | 45 +++++++++++++++++--
+ 2 files changed, 62 insertions(+), 4 deletions(-)
+
+diff --git a/media_softlet/linux/xe3p_lpm_r0/ddi/capstable_data_xe3p_lpm_r0_specific.h b/media_softlet/linux/xe3p_lpm_r0/ddi/capstable_data_xe3p_lpm_r0_specific.h
+index 690cd19f2..87d35ff2f 100644
+--- a/media_softlet/linux/xe3p_lpm_r0/ddi/capstable_data_xe3p_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3p_lpm_r0/ddi/capstable_data_xe3p_lpm_r0_specific.h
+@@ -248,6 +248,20 @@ static const EntrypointMap entrypointMap_VAProfileH264High_Xe3p_Lpm_r0
+ #endif
+ };
+ 
++static const EntrypointMap entrypointMap_VAProfileH264High10_Xe3p_Lpm_r0
++{
++#if defined(_AVC_DECODE_SUPPORTED)
++    {VAEntrypointVLD, &entrypointMap_VAProfileH264High10Dec_Data_Xe3p_Lpm_r0},
++#endif
++};
++
++static const EntrypointMap entrypointMap_VAProfileH264High422_Xe3p_Lpm_r0
++{
++#if defined(_AVC_DECODE_SUPPORTED)
++    {VAEntrypointVLD, &entrypointMap_VAProfileH264High422Dec_Data_Xe3p_Lpm_r0},
++#endif
++};
++
+ static const EntrypointMap entrypointMap_VAProfileH264ConstrainedBaseline_Xe3p_Lpm_r0
+ {
+ #if defined(_AVC_ENCODE_VDENC_SUPPORTED) && defined(_MEDIA_RESERVED)
+@@ -379,6 +393,11 @@ static const ProfileMap profileMap_Xe3p_Lpm_r0
+     {VAProfileH264ConstrainedBaseline, &entrypointMap_VAProfileH264ConstrainedBaseline_Xe3p_Lpm_r0},
+ #endif
+ 
++#if defined(_AVC_DECODE_SUPPORTED)
++    {VAProfileH264High10, &entrypointMap_VAProfileH264High10_Xe3p_Lpm_r0},
++    {VAProfileH264High422, &entrypointMap_VAProfileH264High422_Xe3p_Lpm_r0},
++#endif
++
+ #if defined(_JPEG_ENCODE_SUPPORTED) || defined(_JPEG_DECODE_SUPPORTED)
+     {VAProfileJPEGBaseline, &entrypointMap_VAProfileJPEGBaseline_Xe3p_Lpm_r0},
+ #endif
+@@ -411,4 +430,4 @@ static const CapsData capsData_Xe3p_Lpm_r0
+   &imgtbl_Xe3p_lpm_r0
+ };
+ 
+-#endif //__CAPSTABLE_DATA_XE3P_LPM_R0_SPECIFIC_H__
+\ No newline at end of file
++#endif //__CAPSTABLE_DATA_XE3P_LPM_R0_SPECIFIC_H__
+diff --git a/media_softlet/linux/xe3p_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3p_lpm_r0_specific.h b/media_softlet/linux/xe3p_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3p_lpm_r0_specific.h
+index 68e95d531..b021d15a9 100644
+--- a/media_softlet/linux/xe3p_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3p_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3p_lpm_r0/decode/avc/ddi/capstable_data_avc_decode_xe3p_lpm_r0_specific.h
+@@ -68,6 +68,14 @@ static ConfigDataList configDataList_VAProfileH264High10_VAEntrypointVLD_Xe3p_Lp
+   {VA_DEC_SLICE_MODE_BASE,   VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING}
+ };
+ 
++static ConfigDataList configDataList_VAProfileH264High422_VAEntrypointVLD_Xe3p_Lpm_r0 =
++{
++  {VA_DEC_SLICE_MODE_NORMAL, VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING_NONE},
++  {VA_DEC_SLICE_MODE_NORMAL, VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING},
++  {VA_DEC_SLICE_MODE_BASE,   VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING_NONE},
++  {VA_DEC_SLICE_MODE_BASE,   VA_ENCRYPTION_TYPE_NONE, VA_DEC_PROCESSING}
++};
++
+ //!
+ //! \brief  Definition for AttribList
+ //!
+@@ -107,6 +115,18 @@ static const AttribList attribList_VAProfileH264High10_VAEntrypointVLD_Xe3p_Lpm_
+    {VAConfigAttribCustomRoundingControl, 1},
+ };
+ 
++static const AttribList attribList_VAProfileH264High422_VAEntrypointVLD_Xe3p_Lpm_r0
++{
++   {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420_10 | VA_RT_FORMAT_YUV422_10 | VA_RT_FORMAT_YUV420_10BPP},
++   {VAConfigAttribDecSliceMode, VA_DEC_SLICE_MODE_NORMAL | VA_DEC_SLICE_MODE_BASE},
++   {VAConfigAttribDecProcessing, VA_DEC_PROCESSING},
++   {VAConfigAttribMaxPictureWidth, CODEC_4K_MAX_PIC_WIDTH},
++   {VAConfigAttribMaxPictureHeight, CODEC_4K_MAX_PIC_HEIGHT},
++   {VAConfigAttribEncryption, VA_ATTRIB_NOT_SUPPORTED},
++   {VAConfigAttribProcessingRate, VA_PROCESSING_RATE_DECODE},
++   {VAConfigAttribCustomRoundingControl, 1},
++};
++
+ static const AttribList attribList_VAProfileH264ConstrainedBaseline_VAEntrypointVLD_Xe3p_Lpm_r0 =
+ {
+    {VAConfigAttribRTFormat, VA_RT_FORMAT_YUV420 | VA_RT_FORMAT_YUV422 | VA_RT_FORMAT_RGB32},
+@@ -153,8 +173,6 @@ static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileH264High_VAEntrypoint
+ static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileH264High10_VAEntrypointVLD_Xe3p_Lpm_r0 =
+ {
+   {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_P010}}},
+-  {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_Y210}}},
+-  {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_Y216}}},
+   {VASurfaceAttribMaxWidth,    VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_4K_MAX_PIC_WIDTH}}},
+   {VASurfaceAttribMaxHeight,   VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_4K_MAX_PIC_HEIGHT}}},
+   {VASurfaceAttribMemoryType,  VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {
+@@ -166,6 +184,20 @@ static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileH264High10_VAEntrypoi
+     }}}
+ };
+ 
++static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileH264High422_VAEntrypointVLD_Xe3p_Lpm_r0 =
++{
++  {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_Y210}}},
++  {VASurfaceAttribMaxWidth,    VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_4K_MAX_PIC_WIDTH}}},
++  {VASurfaceAttribMaxHeight,   VA_SURFACE_ATTRIB_GETTABLE, {VAGenericValueTypeInteger, {CODEC_4K_MAX_PIC_HEIGHT}}},
++  {VASurfaceAttribMemoryType,  VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {
++#if VA_CHECK_VERSION(1, 21, 0)
++        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_3 |
++#endif
++        VA_SURFACE_ATTRIB_MEM_TYPE_VA |
++        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2
++    }}}
++};
++
+ static ProfileSurfaceAttribInfo surfaceAttribInfo_VAProfileH264ConstrainedBaseline_VAEntrypointVLD_Xe3p_Lpm_r0 =
+ {
+   {VASurfaceAttribPixelFormat, VA_SURFACE_ATTRIB_GETTABLE | VA_SURFACE_ATTRIB_SETTABLE, {VAGenericValueTypeInteger, {VA_FOURCC_NV12}}},
+@@ -211,4 +243,11 @@ static const EntrypointData entrypointMap_VAProfileH264High10Dec_Data_Xe3p_Lpm_r
+     &surfaceAttribInfo_VAProfileH264High10_VAEntrypointVLD_Xe3p_Lpm_r0
+ };
+ 
+-#endif
+\ No newline at end of file
++static const EntrypointData entrypointMap_VAProfileH264High422Dec_Data_Xe3p_Lpm_r0
++{
++    &attribList_VAProfileH264High422_VAEntrypointVLD_Xe3p_Lpm_r0,
++    &configDataList_VAProfileH264High422_VAEntrypointVLD_Xe3p_Lpm_r0,
++    &surfaceAttribInfo_VAProfileH264High422_VAEntrypointVLD_Xe3p_Lpm_r0
++};
++
++#endif
+-- 
+2.43.0
+

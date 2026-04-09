@@ -1,0 +1,29 @@
+From 5e7174996b1e16ca988411801ca52df751303568 Mon Sep 17 00:00:00 2001
+From: "Fan, Daniel Chun Yin" <daniel.chun.yin.fan@intel.com>
+Date: Thu, 6 Nov 2025 18:03:21 +0800
+Subject: [PATCH] Add AVC 10-Bit Decode for WCL
+
+Signed-off-by: Fan, Daniel Chun Yin <daniel.chun.yin.fan@intel.com>
+---
+ .../xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h      | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/media_softlet/linux/xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h b/media_softlet/linux/xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h
+index d39063425..a9370cf8e 100644
+--- a/media_softlet/linux/xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h
++++ b/media_softlet/linux/xe3_lpm_r0/ddi/capstable_data_xe3_lpm_r0_specific.h
+@@ -472,6 +472,11 @@ static const ProfileMap profileMap_Xe3_Lpm_ext_r0
+     {VAProfileH264ConstrainedBaseline, &entrypointMap_VAProfileH264ConstrainedBaseline_Xe3_Lpm_r0},
+ #endif
+ 
++#if defined(_AVC_DECODE_SUPPORTED)
++    {VAProfileH264High10, &entrypointMap_VAProfileH264High10_Xe3_Lpm_r0},
++    {VAProfileH264High422, &entrypointMap_VAProfileH264High422_Xe3_Lpm_r0},
++#endif
++
+ #if defined(_JPEG_ENCODE_SUPPORTED) || defined(_JPEG_DECODE_SUPPORTED)
+     {VAProfileJPEGBaseline, &entrypointMap_VAProfileJPEGBaseline_Xe3_Lpm_r0},
+ #endif
+-- 
+2.43.0
+
