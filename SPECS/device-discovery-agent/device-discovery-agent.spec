@@ -63,6 +63,8 @@ cp device-discovery-agent/debian/copyright %{buildroot}%{_defaultlicensedir}/%{n
 
 %config %{_sysconfdir}/sudoers.d/device-discovery-agent
 
+%dir %{_sysconfdir}/edge-node
+%dir %{_sysconfdir}/edge-node/node
 %dir %attr(0755, device-discovery-agent, bm-agents) %{_sysconfdir}/edge-node/node/confs
 
 %dir %attr(0700, device-discovery-agent, bm-agents) %{_sysconfdir}/intel_edge_node
