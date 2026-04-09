@@ -28,14 +28,14 @@ and non-interactive onboarding workflows for edge nodes.
 
 %prep
 %setup -q -n edge-node-agents-device-discovery-agent-v%{version}
-tar -xzf %{SOURCE3} -C .
+tar -xzf %{SOURCE3} -C device-discovery-agent
 
 %build
 export GOEXPERIMENT=nosystemcrypto
-make ddabuild GO_MOD=vendor
+make -C device-discovery-agent ddabuild GO_MOD=vendor
 
 %install
-make install DESTDIR=%{buildroot} PREFIX=%{_prefix}
+make -C device-discovery-agent install DESTDIR=%{buildroot} PREFIX=%{_prefix}
 
 mkdir -p %{buildroot}%{_sysusersdir}
 cp %{SOURCE1} %{buildroot}%{_sysusersdir}/%{name}.conf
@@ -44,10 +44,10 @@ mkdir -p %{buildroot}%{_unitdir}
 cp %{SOURCE2} %{buildroot}%{_unitdir}
 
 install -d -m 755 %{buildroot}%{_sysconfdir}/edge-node/node/confs
-install -m 644 configs/device-discovery-agent.env %{buildroot}%{_sysconfdir}/edge-node/node/confs/device-discovery-agent.env
+install -m 644 device-discovery-agent/configs/device-discovery-agent.env %{buildroot}%{_sysconfdir}/edge-node/node/confs/device-discovery-agent.env
 
 mkdir -p %{buildroot}%{_sysconfdir}/sudoers.d
-cp configs/sudoers.d/device-discovery-agent %{buildroot}%{_sysconfdir}/sudoers.d
+cp device-discovery-agent/configs/sudoers.d/device-discovery-agent %{buildroot}%{_sysconfdir}/sudoers.d
 
 install -d -m 700 %{buildroot}%{_sysconfdir}/intel_edge_node
 install -d -m 700 %{buildroot}%{_sysconfdir}/intel_edge_node/client-credentials
@@ -55,7 +55,7 @@ install -d -m 700 %{buildroot}%{_sysconfdir}/intel_edge_node/client-credentials
 install -d -m 755 %{buildroot}%{_localstatedir}/log/client-auth
 
 mkdir -p %{buildroot}%{_defaultlicensedir}/%{name}
-cp debian/copyright %{buildroot}%{_defaultlicensedir}/%{name}
+cp device-discovery-agent/debian/copyright %{buildroot}%{_defaultlicensedir}/%{name}
 
 %files
 %{_bindir}/%{name}
