@@ -147,7 +147,7 @@ Specs' license information is out of date. Run the following command to regenera
     {__file__} --no_check --update --remove_missing \\
         {json_filename} \\
         {markdown_filename} \\
-        SPECS SPECS-EXTENDED SPECS-SIGNED
+        SPECS
 
 NOTE: the script requires installation of the 'python-rpm-spec' module:
 
