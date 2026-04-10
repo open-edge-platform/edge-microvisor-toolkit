@@ -49,7 +49,7 @@
 %global with_panfrost  1
 %global with_v3d       1
 %global with_xa        0
-%global extra_platform_vulkan %{?with_vulkan_hw:,broadcom,freedreno,panfrost,imagination-experimental}%{!?with_vulkan_hw:%{nil}}
+%global extra_platform_vulkan %{?with_vulkan_hw:,broadcom,freedreno,panfrost}%{!?with_vulkan_hw:%{nil}}
 %endif
 
 %if !0%{?rhel}
@@ -71,8 +71,8 @@
 
 Name:           mesa
 Summary:        Mesa graphics libraries
-Version:        25.0.0
-Release:        2%{?dist}
+Version:        25.3.4
+Release:        1%{?dist}
 License:        BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -88,24 +88,19 @@ Source2:        LICENSE.PTR
 
 Patch10:        gnome-shell-glthread-disable.patch
 
-Patch20:        0001-vulkan-wsi-x11-fix-use-of-uninitialised-xfixes-regio.patch
 
-# SRIOV support patches
-Patch30:        0001-iris-Add-renderonly-support.patch
-Patch31:        0002-kmsro-Add-iris-renderonly-support.patch
-Patch32:        0003-iris-kmsro-use-ro-device-to-allocate-scanout-for-ren.patch
-Patch33:        0004-meson-version-update.patch
-Patch34:        0005-Revert-Auto-enable-TLSDESC-support.patch
-Patch35:        0006-Revert-meson-ci-remove-dead-kmsro-option-in-gallium-.patch
-Patch36:        0007-pipe_kmsro-fix-linking-issue.patch
-Patch37:        0008-iris-Added-BMG-PO-Device-ID.patch
-Patch38:        0009-kmsro-Add-xekmd-support.patch
-Patch39:        0010-intel-dev-Drop-FORCE_PROBE-from-PTL-devices.patch
-Patch40:        0011-anv-Print-warning-that-Xe3-is-not-supported-rather-t.patch
-Patch41:        0012-intel-dev-Add-WCL-platform-enum.patch
-Patch42:        0013-intel-dev-Add-WCL-device-info.patch
-Patch43:        0014-intel-dev-Add-WCL-PCI-IDs.patch
-Patch44:        0015-add-INTEL_PLATFORM_WCL-and-dev-info.patch
+# Intel and backport patches
+Patch20:        0001-intel-dev-Add-INTEL_PLATFORM_NVL_U-platform-enum.patch
+Patch21:        0002-intel-dev-Add-NVL-S-U-device-info.patch
+Patch22:        0003-intel-dev-Add-NVL-S-U-PCI-IDs-with-FORCE_PROBE-requi.patch
+Patch23:        0004-iris-Add-renderonly-support.patch
+Patch24:        0005-kmsro-Add-iris-renderonly-support.patch
+Patch25:        0006-kmsro-Add-xekmd-support.patch
+Patch26:        0007-iris-Included-resource-scannout-as-pre-condition-che.patch
+Patch27:        0008-meson-version-update.patch
+Patch28:        0009-Revert-Auto-enable-TLSDESC-support.patch
+Patch29:        0010-meson-Enable-kmsro-options-in-gallium-driver.patch
+Patch30:        0011-intel-dev-Remove-force_probe-for-NVL-S-Hx-enablement.patch
 
 BuildRequires:  meson >= 1.3.0
 BuildRequires:  gcc
@@ -123,6 +118,7 @@ BuildRequires:  pkgconfig(libunwind)
 %endif
 BuildRequires:  pkgconfig(expat)
 BuildRequires:  pkgconfig(zlib) >= 1.2.3
+BuildRequires:  pkgconfig(libdisplay-info)
 BuildRequires:  pkgconfig(libzstd)
 BuildRequires:  pkgconfig(libselinux)
 BuildRequires:  pkgconfig(wayland-scanner)
@@ -420,31 +416,15 @@ export MESON_PACKAGE_CACHE_DIR="%{cargo_registry}/"
 
 %meson \
   -Dplatforms=x11,wayland \
-  -Dosmesa=true \
 %if 0%{?with_hardware}
-  -Dgallium-drivers=swrast,virgl,nouveau%{?with_r300:,r300}%{?with_crocus:,crocus}%{?with_i915:,i915}%{?with_iris:,iris}%{?with_vmware:,svga}%{?with_radeonsi:,radeonsi}%{?with_r600:,r600}%{?with_freedreno:,freedreno}%{?with_etnaviv:,etnaviv}%{?with_tegra:,tegra}%{?with_vc4:,vc4}%{?with_v3d:,v3d}%{?with_kmsro:,kmsro}%{?with_lima:,lima}%{?with_panfrost:,panfrost} \
+  -Dgallium-drivers=virgl,nouveau%{?with_r300:,r300}%{?with_crocus:,crocus}%{?with_i915:,i915}%{?with_iris:,iris}%{?with_vmware:,svga}%{?with_radeonsi:,radeonsi}%{?with_r600:,r600}%{?with_freedreno:,freedreno}%{?with_etnaviv:,etnaviv}%{?with_tegra:,tegra}%{?with_vc4:,vc4}%{?with_v3d:,v3d}%{?with_kmsro:,kmsro}%{?with_lima:,lima}%{?with_panfrost:,panfrost} \
 %else
   -Dgallium-drivers=swrast,virgl \
-%endif
-%if 0%{?with_vdpau}
-  -Dgallium-vdpau=enabled \
-%else
-  -Dgallium-vdpau=disabled \
 %endif
 %if 0%{?with_va}
   -Dgallium-va=enabled \
 %else
   -Dgallium-va=disabled \
-%endif
-%if 0%{?with_xa}
-  -Dgallium-xa=enabled \
-%else
-  -Dgallium-xa=disabled \
-%endif
-%if 0%{?with_nine}
-  -Dgallium-nine=true \
-%else
-  -Dgallium-nine=false \
 %endif
 %if 0%{?with_teflon}
   -Dteflon=true \
@@ -452,10 +432,8 @@ export MESON_PACKAGE_CACHE_DIR="%{cargo_registry}/"
   -Dteflon=false \
 %endif
 %if 0%{?with_opencl}
-  -Dgallium-opencl=icd \
   -Dgallium-rusticl=true \
 %else
-  -Dgallium-opencl=disabled \
   -Dgallium-rusticl=false \
 %endif
   -Dvulkan-drivers=%{?vulkan_drivers} \
@@ -468,9 +446,6 @@ export MESON_PACKAGE_CACHE_DIR="%{cargo_registry}/"
   -Dglx=dri \
   -Degl=enabled \
   -Dglvnd=enabled \
-%if 0%{?with_intel_clc}
-  -Dintel-clc=enabled \
-%endif
 %if 0%{?with_intel_vk_rt}
   -Dintel-rt=enabled \
 %else
@@ -500,6 +475,7 @@ export MESON_PACKAGE_CACHE_DIR="%{cargo_registry}/"
 %ifarch %{ix86}
   -Dglx-read-only-text=true \
 %endif
+  -Dgallium-mediafoundation=disabled \
   %{nil}
 %meson_build
 
@@ -548,16 +524,6 @@ popd
 %{_includedir}/EGL/eglext_angle.h
 %{_includedir}/EGL/eglmesaext.h
 
-%post libOSMesa -p /sbin/ldconfig
-%postun libOSMesa -p /sbin/ldconfig
-%files libOSMesa
-%{_libdir}/libOSMesa.so.8*
-%files libOSMesa-devel
-%dir %{_includedir}/GL
-%{_includedir}/GL/osmesa.h
-%{_libdir}/libOSMesa.so
-%{_libdir}/pkgconfig/osmesa.pc
-
 %post libgbm -p /sbin/ldconfig
 %postun libgbm -p /sbin/ldconfig
 %files libgbm
@@ -566,6 +532,7 @@ popd
 %files libgbm-devel
 %{_libdir}/libgbm.so
 %{_includedir}/gbm.h
+%{_includedir}/gbm_backend_abi.h
 %{_libdir}/pkgconfig/gbm.pc
 
 %if 0%{?with_xa}
@@ -621,9 +588,7 @@ popd
 %{_datadir}/drirc.d/00-mesa-defaults.conf
 %{_libdir}/libgallium-*.so
 %{_libdir}/gbm/dri_gbm.so
-%{_libdir}/dri/kms_swrast_dri.so
 %{_libdir}/dri/libdril_dri.so
-%{_libdir}/dri/swrast_dri.so
 %{_libdir}/dri/virtio_gpu_dri.so
 
 %if 0%{?with_hardware}
@@ -772,13 +737,14 @@ popd
 %{_datadir}/vulkan/icd.d/freedreno_icd.*.json
 %{_libdir}/libvulkan_panfrost.so
 %{_datadir}/vulkan/icd.d/panfrost_icd.*.json
-%{_libdir}/libpowervr_rogue.so
-%{_libdir}/libvulkan_powervr_mesa.so
-%{_datadir}/vulkan/icd.d/powervr_mesa_icd.*.json
 %endif
+%{_libdir}/dri/apple_dri.so
 %endif
 
 %changelog
+* Thu Apr 2 2025 Lishan Liu <lishan.liu@intel.com> - 25.3.4-1
+- Upgraded to 25.3.4
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.0-2
 - Bump release to rebuild with rust
 

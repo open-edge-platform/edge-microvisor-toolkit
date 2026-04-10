@@ -1,7 +1,12 @@
-From 28c774cb71e867e7ecb9dac6353367309fb6673d Mon Sep 17 00:00:00 2001
+From 7f4ad2e5e6234fb93442f20fd98f4daa67f6821a Mon Sep 17 00:00:00 2001
 From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
-Date: Wed, 11 Dec 2024 14:13:50 +0800
-Subject: [PATCH 09/11] kmsro: Add xekmd support
+Date: Wed, 19 Nov 2025 10:33:51 +0800
+Subject: [PATCH 06/11] kmsro: Add xekmd support
+
+Upstream PR: NA
+Upstream-status: Innapropriate
+
+OSV: https://jira.devtools.intel.com/browse/PKT-19625
 
 Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
 Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
@@ -11,32 +16,32 @@ Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
  2 files changed, 6 insertions(+)
 
 diff --git a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
-index 9df6c0ce31b..2cd1809da71 100644
+index 0c4b4499b250..3c933910d0ef 100644
 --- a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
 +++ b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
-@@ -334,6 +334,7 @@ pipe_loader_get_compatible_render_capable_device_fd(int kms_only_fd)
+@@ -391,6 +391,7 @@ pipe_loader_get_compatible_render_capable_device_fds(int kms_only_fd, unsigned i
  #endif
  #if defined GALLIUM_IRIS
-       "i915",
-+      "xe",
+      "i915",
++     "xe",
  #endif
     };
  
 diff --git a/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c b/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
-index 46916e86722..618b53fe480 100644
+index e676c633572b..ff6c6466fb5c 100644
 --- a/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
 +++ b/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
-@@ -126,6 +126,11 @@ struct pipe_screen *kmsro_drm_screen_create(int kms_fd,
+@@ -131,6 +131,11 @@ struct pipe_screen *kmsro_drm_screen_create(int kms_fd,
  #if defined(GALLIUM_IRIS)
-       ro->create_for_resource = renderonly_create_kms_dumb_buffer_for_resource,
-       screen = iris_screen_create_renderonly(ro->gpu_fd, ro, config);
+ 	 ro->create_for_resource = renderonly_create_kms_dumb_buffer_for_resource;
+ 	 screen = iris_drm_screen_create_renderonly(ro->gpu_fd, ro, config);
 +#endif
-+   } else if (strcmp(render_dev_name, "xe") == 0) {
++      } else if (strcmp(render_dev_name, "xe") == 0) {
 +#if defined(GALLIUM_IRIS)
-+      ro->create_for_resource = renderonly_create_kms_dumb_buffer_for_resource,
-+      screen = iris_screen_create_renderonly(ro->gpu_fd, ro, config);
++	 ro->create_for_resource = renderonly_create_kms_dumb_buffer_for_resource;
++	 screen = iris_drm_screen_create_renderonly(ro->gpu_fd, ro, config);
  #endif
-    }
+       }
  
 -- 
 2.34.1

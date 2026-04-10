@@ -1,7 +1,12 @@
-From 40c3c14b3bb1926d5232cf138d841386a512e774 Mon Sep 17 00:00:00 2001
+From 9a5ea5131516ac910f4ec2103622b99b3a543953 Mon Sep 17 00:00:00 2001
 From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
 Date: Wed, 28 Aug 2024 16:38:31 +0800
-Subject: [PATCH 05/11] Revert "Auto-enable TLSDESC support"
+Subject: [PATCH 09/11] Revert "Auto-enable TLSDESC support"
+
+Upstream URL: NA
+Upstream-status: Innapropriate
+
+OSV: https://jira.devtools.intel.com/browse/PKT-19621
 
 Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
 ---
@@ -9,10 +14,10 @@ Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
  1 file changed, 42 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index 67243458b54..d6dd612165b 100644
+index 967185a5d058..3599a16e68f6 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -512,48 +512,6 @@ if with_platform_android and get_option('platform-sdk-version') >= 29
+@@ -525,48 +525,6 @@ if with_platform_android and get_option('platform-sdk-version') >= 29
    add_project_link_arguments('-Wl,-plugin-opt=-emulated-tls=0', language: ['c', 'cpp'])
  endif
  
