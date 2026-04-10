@@ -2910,8 +2910,8 @@
         "type": "other",
         "other": {
           "name": "golang",
-          "version": "1.25.7",
-          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.25.7-1/go1.25.7-20260204.4.src.tar.gz"
+          "version": "1.26.1",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.26.1-1/go1.26.1-20260306.1.src.tar.gz"
         }
       }
     },
