@@ -257,6 +257,7 @@ newt-lang-0.52.23-1.emt26.x86_64.rpm
 chkconfig-1.25-1.emt26.x86_64.rpm
 chkconfig-lang-1.25-1.emt26.x86_64.rpm
 msopenjdk-17-17.0.12-1.x86_64.rpm
+libpcre2-8-0-10.42-3.emt26.x86_64.rpm
 pyproject-rpm-macros-1.12.0-2.emt26.noarch.rpm
 pyproject-srpm-macros-1.12.0-2.emt26.noarch.rpm
 python3-rpm-generators-14-11.emt26.noarch.rpm
