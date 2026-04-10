@@ -1,0 +1,34 @@
+From 1bc5f8f77ec06df1fa6e7b274e10de8094606f67 Mon Sep 17 00:00:00 2001
+From: Jordan Justen <jordan.l.justen@intel.com>
+Date: Mon, 12 Aug 2024 14:52:17 -0700
+Subject: [PATCH 01/11] intel/dev: Add INTEL_PLATFORM_NVL_U platform enum
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Ref: https://gitlab.freedesktop.org/mesa/mesa/-/commit/84bba237cae6516ce0fd3e333a586949612d732d
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20280
+
+Signed-off-by: Jordan Justen <jordan.l.justen@intel.com>
+Reviewed-by: Tapani Pälli <tapani.palli@intel.com>
+Part-of: <https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/38020>
+---
+ src/intel/dev/intel_device_info.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/intel/dev/intel_device_info.py b/src/intel/dev/intel_device_info.py
+index bcc4126d5dbd..d47f376eea27 100644
+--- a/src/intel/dev/intel_device_info.py
++++ b/src/intel/dev/intel_device_info.py
+@@ -136,6 +136,7 @@ Enum("intel_platform",
+       "INTEL_PLATFORM_BMG",
+       "INTEL_PLATFORM_PTL",
+       "INTEL_PLATFORM_WCL",
++      "INTEL_PLATFORM_NVL_U",
+       ])
+ 
+ Struct("intel_memory_class_instance",
+-- 
+2.34.1
+

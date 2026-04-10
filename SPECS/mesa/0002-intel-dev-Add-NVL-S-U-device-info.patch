@@ -1,0 +1,44 @@
+From 8b6b9f13335a9f75a989c88fd62bc5e9e0364c21 Mon Sep 17 00:00:00 2001
+From: Jordan Justen <jordan.l.justen@intel.com>
+Date: Mon, 12 Aug 2024 14:57:12 -0700
+Subject: [PATCH 02/11] intel/dev: Add NVL-S/U device info
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Ref: https://gitlab.freedesktop.org/mesa/mesa/-/commit/ac1a7e19e86bcc52a742e746251237642eff72a8
+
+OSV: https://jira.devtools.intel.com/browse/PKT-20281
+
+Signed-off-by: Jordan Justen <jordan.l.justen@intel.com>
+Reviewed-by: Tapani Pälli <tapani.palli@intel.com>
+Part-of: <https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/38020>
+---
+ src/intel/dev/intel_device_info.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/intel/dev/intel_device_info.c b/src/intel/dev/intel_device_info.c
+index 379d9f6baa89..63b786262945 100644
+--- a/src/intel/dev/intel_device_info.c
++++ b/src/intel/dev/intel_device_info.c
+@@ -1232,6 +1232,17 @@ static const struct intel_device_info intel_device_info_wcl = {
+    .has_ray_tracing = false,
+ };
+ 
++UNUSED static const struct intel_device_info intel_device_info_nvl_s_hx_ul = {
++   XE3_CONFIG(NVL_U),
++   .has_local_mem = false,
++   .has_ray_tracing = false,
++};
++
++UNUSED static const struct intel_device_info intel_device_info_nvl_u_h = {
++   XE3_CONFIG(NVL_U),
++   .has_local_mem = false,
++};
++
+ void
+ intel_device_info_topology_reset_masks(struct intel_device_info *devinfo)
+ {
+-- 
+2.34.1
+
