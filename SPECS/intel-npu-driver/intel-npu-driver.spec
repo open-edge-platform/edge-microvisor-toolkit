@@ -1,14 +1,14 @@
 Summary:	    Intel Neural Processing Unit Driver
 Name:		    intel-npu-driver
-Version:	    1.30.0
+Version:	    1.32.0
 Release:	    1%{?dist}
 License:	    MIT AND Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:		    https://github.com/intel/linux-npu-driver
 Source0:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
-Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/49fdfc269cc5147dc18c2e4710bc76c3f33e0be3/level-zero-npu-extensions-49fdfc2.tar.gz
-Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/7d4577ea194eb4ef3b05bcceea8bdccaf00df10e/npu_compiler_elf-7d4577e.tar.gz
+Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/42768cc73e74f6d371bd9dd51b1860b07774e7ec/level-zero-npu-extensions-42768cc.tar.gz
+Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/82c444bcb9feb0f55fa33e18fbd711ec35426fba/npu_compiler_elf-82c444b.tar.gz
 
 ExclusiveArch:	x86_64
 
@@ -64,6 +64,9 @@ rm -rf %{buildroot}%{_libdir}/lib64
 %{_libdir}/libze_intel_npu.so*
 
 %changelog
+* Tue Apr 14 2026 Andy <andy.peng@intel.com> - 1.32.0-1
+- Upgrade version to 1.32.0.
+
 * Fri Apr 3 2026 Andy <andy.peng@intel.com> - 1.30.0-1
 - Upgrade version to 1.30.0.
 
