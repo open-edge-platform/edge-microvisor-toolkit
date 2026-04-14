@@ -3851,8 +3851,8 @@
         "type": "other",
         "other": {
           "name": "intel-npu-firmware",
-          "version": "1.30.0",
-          "downloadUrl": "https://github.com/intel/linux-npu-driver//archive/refs/tags/v1.30.0/linux-npu-driver-1.30.0.tar.gz"
+          "version": "1.32.0",
+          "downloadUrl": "https://github.com/intel/linux-npu-driver//archive/refs/tags/v1.32.0/linux-npu-driver-1.32.0.tar.gz"
         }
       }
     },
