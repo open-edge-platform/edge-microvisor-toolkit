@@ -43,4 +43,4 @@ jobs:
         shell: bash
 
       - name: Verify .spec files
-        run: python3 toolkit/scripts/check_static_glibc.py SPECS/**/*.spec SPECS-EXTENDED/**/*.spec SPECS-SIGNED/**/*.spec
+        run: python3 toolkit/scripts/check_static_glibc.py SPECS/**/*.spec

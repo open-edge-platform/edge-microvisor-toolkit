@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        specs-dir: [SPECS, SPECS-EXTENDED]
+        specs-dir: [SPECS]
 
     steps:
       # Checkout the branch of our repo that triggered this action

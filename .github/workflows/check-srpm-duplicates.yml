@@ -22,7 +22,7 @@ jobs:
       matrix:
         # Each group is published to a different repo, thus we only need to check
         # for SRPM duplicates within the group.
-        specs-dirs-groups: ["SPECS SPECS-SIGNED", "SPECS-EXTENDED"]
+        specs-dirs-groups: ["SPECS"]
 
     steps:
       # Checkout the branch of our repo that triggered this action
