@@ -1498,7 +1498,6 @@
                 "perl-Crypt-SSLeay",
                 "perl-DBD-SQLite",
                 "perl-DBI",
-                "perl-DBIx-Simple",
                 "perl-Exporter-Tiny",
                 "perl-File-HomeDir",
                 "perl-File-Which",
