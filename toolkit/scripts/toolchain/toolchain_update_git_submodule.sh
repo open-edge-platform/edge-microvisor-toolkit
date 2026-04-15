@@ -41,6 +41,7 @@ skip_list=(
     "mlx-steering-dump"
     "nodejs24"
     "patterns-ceph-containers"
+    "perl-DBIx-Simple"
     "srp"
     "srp-hwe"
     "trident"

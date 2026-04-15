@@ -782,7 +782,6 @@ perl-Crypt-Random-Seed
 perl-Crypt-SSLeay
 perl-DBD-SQLite
 perl-DBI
-perl-DBIx-Simple
 perl-Data-Dump
 perl-Data-OptList
 perl-Date-Calc
