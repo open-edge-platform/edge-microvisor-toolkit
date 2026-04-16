@@ -10,9 +10,9 @@
 Summary:        nvidia gpu driver kernel module for data center devices
 Name:           nvidia-data-center-driver
 Version:        570.133.20
-Release:        16%{?dist}
+Release:        17%{?dist}
 License:        Public Domain
-Source0:        https://us.download.nvidia.com/tesla/%{version}/NVIDIA-Linux-x86_64-%{version}.run
+Source0:        https://us.download.nvidia.com/tesla/%{version}/NVIDIA-Linux-%{_arch}-%{version}.run
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 
@@ -28,29 +28,32 @@ This kernel driver package contains Nvidia data center GPU driver.
 %prep
 cp -p %{SOURCE0} .
 chmod 755 %{SOURCE0}
-rm -rf NVIDIA-Linux-x86_64-%{version}
-sh ./NVIDIA-Linux-x86_64-%{version}.run -x
+rm -rf NVIDIA-Linux-%{_arch}-%{version}
+sh ./NVIDIA-Linux-%{_arch}-%{version}.run -x
 
 %build
 export KERNEL_UNAME=%{kernel_ver}
 unset LDFLAGS
-cd NVIDIA-Linux-x86_64-%{version}/kernel
+cd NVIDIA-Linux-%{_arch}-%{version}/kernel
 make %{?_smp_mflags} modules
 
 %install
 export KERNEL_UNAME=%{kernel_ver}
-cd NVIDIA-Linux-x86_64-%{version}/kernel
+cd NVIDIA-Linux-%{_arch}-%{version}/kernel
 make INSTALL_MOD_PATH=%{buildroot} modules_install
 
 %files
 %defattr(-,root,root)
-%license NVIDIA-Linux-x86_64-%{version}/LICENSE
+%license NVIDIA-Linux-%{_arch}-%{version}/LICENSE
 /lib/modules/
 
 %post
 /sbin/depmod -a
 
 %changelog
+* Wed Apr 15 2026 Mateo Guzman <mateo.guzman@intel.com> - 570.133.20-17
+- Add aarch64 support
+
 * Thu Feb 05 2026 Lishan Liu <lishan.liu@intel.com> - 570.133.20-16
 - Bump release to rebuild
 
