@@ -18,8 +18,8 @@ Source4:        platform-update-agent.te
 Source5:        platform-update-agent.fc
 %global debug_package %{nil}
 %global _build_id_links none
-BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang < 1.27
+BuildRequires:  golang >= 1.26.1
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 Requires(pre):  %{_bindir}/systemd-sysusers
