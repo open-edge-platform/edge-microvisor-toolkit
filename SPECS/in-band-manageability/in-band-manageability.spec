@@ -4,7 +4,7 @@
 
 Summary:        An agent to manage systems via in-band connection
 Name:           in-band-manageability
-Version:        1.1.2
+Version:        1.2.1
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -208,6 +208,9 @@ fi
 %systemd_postun inbd.service
 
 %changelog
+* Wed Apr 17 2026 Kishan Mochi <kishan.mochi@intel.com> - 1.2.1-1
+- inbc cmd timeout increase for update
+
 * Wed Feb 25 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.1.2-1
 - Update dependencies
 

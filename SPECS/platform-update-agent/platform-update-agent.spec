@@ -3,7 +3,7 @@
 
 Summary:        An agent for updating the OS and bare metal agents packages
 Name:           platform-update-agent
-Version:        1.9.1
+Version:        1.10.1
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -135,6 +135,9 @@ rm -rf %{_var}/edge-node/pua
 echo "Successfully purged platform-update-agent"
 
 %changelog
+* Fri Apr 17 2026 Kishan Mochi <kishan.mochi@intel.com> - 1.10.1-1
+- PUA inbc cmd timeout increase for update
+
 * Fri Feb 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.9.1-1
 - Update to golang 1.25.7
 
