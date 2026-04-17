@@ -2,7 +2,7 @@
 %global         majorminor      1.0
 Summary:        GStreamer streaming media framework base plugins
 Name:           gstreamer1-plugins-base
-Version:        1.26.10
+Version:        1.28.1
 Release:        1%{?dist}
 License:        LGPLv2+
 Vendor:         Intel Corporation
@@ -166,7 +166,7 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 
 %files -f gst-plugins-base-%{majorminor}.lang
 %license COPYING
-%doc AUTHORS NEWS README.md README.static-linking RELEASE REQUIREMENTS
+%doc README.md README.static-linking RELEASE
 %{_datadir}/appdata/*.appdata.xml
 %{_libdir}/libgstallocators-%{majorminor}.so.*
 %{_libdir}/libgstaudio-%{majorminor}.so.*
@@ -250,6 +250,7 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstfdmemory.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstphysmemory.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstshmallocator.h
+%{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstudmabufallocator.h
 %dir %{_includedir}/gstreamer-%{majorminor}/gst/app
 %{_includedir}/gstreamer-%{majorminor}/gst/app/app.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/app-prelude.h
@@ -391,6 +392,7 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_includedir}/gstreamer-%{majorminor}/gst/video/videodirection.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/videoorientation.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/videooverlay.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideodmabufpool.h
 
 %{_libdir}/libgstallocators-%{majorminor}.so
 %{_libdir}/libgstaudio-%{majorminor}.so
@@ -426,6 +428,9 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_libdir}/pkgconfig/*.pc
 
 %changelog
+* Tue Apr 14 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 1.28.1-1
+- Upgrade to gstreamer1 version.
+
 * Thu Mar 26 2026 Lishan Liu<lishan.liu@intel.com> - 1.26.10-1
 - Upgraded version 1.26.10
 
