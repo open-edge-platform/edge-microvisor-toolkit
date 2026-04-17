@@ -52,7 +52,7 @@ convert_id() {
 
 #BUILD_FILENAME="$(convert_id "$build_id").json"
 # we donot manage multiple lkg, hardcode the lkg json file
-BUILD_FILENAME="lkg-3.0-dev.json"
+BUILD_FILENAME="lkg-26.06-dev.json"
 BUILD_TEMP_FILENAME="$(mktemp -p "$temp_dir" "${BUILD_FILENAME}.XXXXXX" )"
 BUILD_TEMP_MANIFEST_FILENAME="$(mktemp -p "$temp_dir" "$(basename "$manifest_file").XXXXXX" )"
 
