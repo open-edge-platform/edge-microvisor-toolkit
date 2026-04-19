@@ -1,0 +1,56 @@
+From a6fb7ad9e1bcc2efb5c4c5ad585ff17c6dd178c3 Mon Sep 17 00:00:00 2001
+From: Nikolay Aleksandrov <razor@blackwall.org>
+Date: Mon, 9 Mar 2026 01:51:28 -0700
+Subject: [PATCH 14/16] bonding: fix use-after-free due to enslave fail after
+ slave array update
+
+[ Upstream commit e9acda52fd2ee0cdca332f996da7a95c5fd25294 ]
+
+Fix a use-after-free which happens due to enslave failure after the new
+slave has been added to the array. Since the new slave can be used for Tx
+immediately, we can use it after it has been freed by the enslave error
+cleanup path which frees the allocated slave memory. Slave update array is
+supposed to be called last when further enslave failures are not expected.
+Move it after xdp setup to avoid any problems.
+
+Fixes: 9e2ee5c7e7c3 ("net, bonding: Add XDP support to the bonding driver")
+Signed-off-by: Nikolay Aleksandrov <razor@blackwall.org>
+Reported-by: Chen Zhen <chenzhen126@huawei.com>
+Acked-by: Daniel Borkmann <daniel@iogearbox.net>
+Link: https://patch.msgid.link/20260123120659.571187-1-razor@blackwall.org
+Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+(cherry picked from commit bd25b092a06a3e05f7e8bd6da6fa7318777d8c3d)
+---
+ drivers/net/bonding/bond_main.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/bonding/bond_main.c b/drivers/net/bonding/bond_main.c
+index dd1f8cad953b..fdda9dd320df 100644
+--- a/drivers/net/bonding/bond_main.c
++++ b/drivers/net/bonding/bond_main.c
+@@ -2379,9 +2379,6 @@ int bond_enslave(struct net_device *bond_dev, struct net_device *slave_dev,
+ 		unblock_netpoll_tx();
+ 	}
+ 
+-	if (bond_mode_can_use_xmit_hash(bond))
+-		bond_update_slave_arr(bond, NULL);
+-
+ 	if (!slave_dev->netdev_ops->ndo_bpf ||
+ 	    !slave_dev->netdev_ops->ndo_xdp_xmit) {
+ 		if (bond->xdp_prog) {
+@@ -2415,6 +2412,11 @@ int bond_enslave(struct net_device *bond_dev, struct net_device *slave_dev,
+ 			bpf_prog_inc(bond->xdp_prog);
+ 	}
+ 
++	/* broadcast mode uses the all_slaves to loop through slaves. */
++	if (bond_mode_can_use_xmit_hash(bond) ||
++	    BOND_MODE(bond) == BOND_MODE_BROADCAST)
++		bond_update_slave_arr(bond, NULL);
++
+ 	bond_xdp_set_features(bond_dev);
+ 
+ 	slave_info(bond_dev, slave_dev, "Enslaving as %s interface with %s link\n",
+-- 
+2.43.0
+

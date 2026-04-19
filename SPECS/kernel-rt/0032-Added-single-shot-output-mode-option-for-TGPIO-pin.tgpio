@@ -10,8 +10,8 @@ Signed-off-by: Rajvi Jingar <rajvi.jingar@intel.com>
  tools/testing/selftests/ptp/testptp.c | 9 +++++++--
  1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/tools/testing/selftests/ptp/testptp.c b/tools/testing/selftests/ptp/testptp.c
-index e637577133cc8..55285e9abf91e 100644
+Index: b/tools/testing/selftests/ptp/testptp.c
+===================================================================
 --- a/tools/testing/selftests/ptp/testptp.c
 +++ b/tools/testing/selftests/ptp/testptp.c
 @@ -181,6 +181,8 @@ static void usage(char *progname)
@@ -23,7 +23,7 @@ index e637577133cc8..55285e9abf91e 100644
  		" -p val     enable output with a period of 'val' nanoseconds\n"
  		"            period val 0 to set single shot output for TGPIO pins\n"
  		" -H val     set output phase to 'val' nanoseconds (requires -p)\n"
-@@ -233,6 +235,7 @@ int main(int argc, char *argv[])
+@@ -235,6 +237,7 @@ int main(int argc, char *argv[])
  	int getextended = 0;
  	int getcross = 0;
  	int n_samples = 0;
@@ -31,16 +31,16 @@ index e637577133cc8..55285e9abf91e 100644
  	int new_period = -1;
  	int pin_index = -1, pin_func;
  	int pps = -1;
-@@ -249,7 +252,7 @@ int main(int argc, char *argv[])
+@@ -253,7 +256,7 @@ int main(int argc, char *argv[])
  
  	progname = strrchr(argv[0], '/');
  	progname = progname ? 1+progname : argv[0];
--	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:n:o:p:P:sSt:T:w:x:Xz"))) {
-+	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:n:o:Op:P:sSt:T:w:x:Xz"))) {
+-	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:n:o:p:P:rsSt:T:w:x:Xy:z"))) {
++	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:n:o:Op:P:rsSt:T:w:x:Xy:z"))) {
  		switch (c) {
  		case 'a':
  			new_period = atoi(optarg);
-@@ -299,10 +302,12 @@ int main(int argc, char *argv[])
+@@ -303,10 +306,12 @@ int main(int argc, char *argv[])
  			break;
  		case 'n':
  			adjns = atoi(optarg);
@@ -54,6 +54,3 @@ index e637577133cc8..55285e9abf91e 100644
  		case 'p':
  			perout = atoll(optarg);
  			break;
--- 
-2.25.1
-

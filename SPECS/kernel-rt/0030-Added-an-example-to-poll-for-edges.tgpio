@@ -11,8 +11,8 @@ Signed-off-by: Rajvi Jingar <rajvi.jingar@intel.com>
  tools/testing/selftests/ptp/testptp.c | 82 ++++++++++++++++++++++++++-
  1 file changed, 81 insertions(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/ptp/testptp.c b/tools/testing/selftests/ptp/testptp.c
-index df41fba187c56..45db2ad6b6234 100644
+Index: b/tools/testing/selftests/ptp/testptp.c
+===================================================================
 --- a/tools/testing/selftests/ptp/testptp.c
 +++ b/tools/testing/selftests/ptp/testptp.c
 @@ -38,6 +38,10 @@
@@ -26,7 +26,7 @@ index df41fba187c56..45db2ad6b6234 100644
  /* clock_adjtime is not available in GLIBC < 2.14 */
  #if !__GLIBC_PREREQ(2, 14)
  #include <sys/syscall.h>
-@@ -114,6 +118,42 @@ static int64_t pctns(struct ptp_clock_time *t)
+@@ -114,6 +118,42 @@ static int64_t pctns(struct ptp_clock_ti
  	return t->sec * NSEC_PER_SEC + t->nsec;
  }
  
@@ -77,7 +77,7 @@ index df41fba187c56..45db2ad6b6234 100644
  		" -f val     adjust the ptp clock frequency by 'val' ppb\n"
  		" -F chan    Enable single channel mask and keep device open for debugfs verification.\n"
  		" -g         get the ptp clock time\n"
-@@ -160,6 +201,7 @@ int main(int argc, char *argv[])
+@@ -162,6 +203,7 @@ int main(int argc, char *argv[])
  	struct ptp_extts_event event;
  	struct ptp_extts_request extts_request;
  	struct ptp_perout_request perout_request;
@@ -85,7 +85,7 @@ index df41fba187c56..45db2ad6b6234 100644
  	struct ptp_pin_desc desc;
  	struct timespec ts;
  	struct timex tx;
-@@ -167,6 +209,7 @@ int main(int argc, char *argv[])
+@@ -169,6 +211,7 @@ int main(int argc, char *argv[])
  	struct ptp_sys_offset *sysoff;
  	struct ptp_sys_offset_extended *soe;
  	struct ptp_sys_offset_precise *xts;
@@ -93,24 +93,24 @@ index df41fba187c56..45db2ad6b6234 100644
  
  	char *progname;
  	unsigned int i;
-@@ -194,6 +237,7 @@ int main(int argc, char *argv[])
- 	int seconds = 0;
+@@ -197,6 +240,7 @@ int main(int argc, char *argv[])
+ 	int readonly = 0;
  	int settime = 0;
  	int channel = -1;
 +	int poll = 0;
+ 	clockid_t ext_clockid = CLOCK_REALTIME;
  
  	int64_t t1, t2, tp;
- 	int64_t interval, offset;
-@@ -203,7 +247,7 @@ int main(int argc, char *argv[])
+@@ -207,7 +251,7 @@ int main(int argc, char *argv[])
  
  	progname = strrchr(argv[0], '/');
  	progname = progname ? 1+progname : argv[0];
--	while (EOF != (c = getopt(argc, argv, "a:cd:e:f:F:ghH:i:k:lL:n:o:p:P:sSt:T:w:x:Xz"))) {
-+	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:ghH:i:k:lL:n:o:p:P:sSt:T:w:x:Xz"))) {
+-	while (EOF != (c = getopt(argc, argv, "a:cd:e:f:F:ghH:i:k:lL:n:o:p:P:rsSt:T:w:x:Xy:z"))) {
++	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:ghH:i:k:lL:n:o:p:P:rsSt:T:w:x:Xy:z"))) {
  		switch (c) {
  		case 'a':
  			new_period = atoi(optarg);
-@@ -217,6 +261,9 @@ int main(int argc, char *argv[])
+@@ -221,6 +265,9 @@ int main(int argc, char *argv[])
  		case 'e':
  			extts = atoi(optarg);
  			break;
@@ -120,7 +120,7 @@ index df41fba187c56..45db2ad6b6234 100644
  		case 'f':
  			adjfreq = atoi(optarg);
  			break;
-@@ -547,6 +594,39 @@ int main(int argc, char *argv[])
+@@ -574,6 +621,39 @@ int main(int argc, char *argv[])
  		}
  	}
  
@@ -160,6 +160,3 @@ index df41fba187c56..45db2ad6b6234 100644
  	if (pps != -1) {
  		int enable = pps ? 1 : 0;
  		if (ioctl(fd, PTP_ENABLE_PPS, enable)) {
--- 
-2.25.1
-

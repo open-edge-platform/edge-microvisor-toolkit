@@ -11,13 +11,13 @@ Signed-off-by: Rajvi Jingar <rajvi.jingar@intel.com>
  tools/testing/selftests/ptp/testptp.c | 31 ++++++++++++++++-----------
  1 file changed, 18 insertions(+), 13 deletions(-)
 
-diff --git a/tools/testing/selftests/ptp/testptp.c b/tools/testing/selftests/ptp/testptp.c
-index 011252fe238c8..0df89b4717061 100644
+Index: b/tools/testing/selftests/ptp/testptp.c
+===================================================================
 --- a/tools/testing/selftests/ptp/testptp.c
 +++ b/tools/testing/selftests/ptp/testptp.c
-@@ -428,20 +428,25 @@ int main(int argc, char *argv[])
- 		} else {
- 			puts("external time stamp request okay");
+@@ -452,15 +452,21 @@ int main(int argc, char *argv[])
+ 				puts("external time stamp request okay");
+ 			}
  		}
 -		for (; extts; extts--) {
 -			cnt = read(fd, &event, sizeof(event));
@@ -42,18 +42,6 @@ index 011252fe238c8..0df89b4717061 100644
 -			printf("event index %u at %lld.%09u\n", event.index,
 -			       event.t.sec, event.t.nsec);
 -			fflush(stdout);
--		}
--		/* Disable the feature again. */
--		extts_request.flags = 0;
--		if (ioctl(fd, PTP_EXTTS_REQUEST, &extts_request)) {
--			perror("PTP_EXTTS_REQUEST");
-+			/* Disable the feature again. */
-+			extts_request.flags = 0;
-+			if (ioctl(fd, PTP_EXTTS_REQUEST, &extts_request))
-+				perror("PTP_EXTTS_REQUEST");
  		}
- 	}
- 
--- 
-2.25.1
-
+ 		if (!readonly) {
+ 			/* Disable the feature again. */
