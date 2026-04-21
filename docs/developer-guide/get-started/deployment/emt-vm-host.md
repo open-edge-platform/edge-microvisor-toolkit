@@ -306,6 +306,9 @@ creation and login, modify the auto-install configuration file.
 
    Run the following commands to configure automatic user creation and auto-login.
 
+   > **Note**:  Make sure to replace `YOURUSERNAME` and `YOURPASSWORD` with
+   > your proper credentials.
+
    ```bash
    cd ~/kvm-multios
    # Backup the original file
