@@ -203,7 +203,9 @@ dracut --force
 %{_firmwarepath}/iwlwifi-9000-*
 %{_firmwarepath}/iwlwifi-9260-*
 %{_firmwarepath}/iwlwifi-bz-b0-gf-a0-*
+%{_firmwarepath}/iwlwifi-bz-b0-gf-a0.pnvm
 %{_firmwarepath}/iwlwifi-gl-c0-fm-c0-*
+%{_firmwarepath}/iwlwifi-gl-c0-fm-c0.pnvm
 
 %files ice
 %defattr(-,root,root)
@@ -229,7 +231,7 @@ dracut --force
 %{_firmwarepath}/qat_*.bin
 
 %changelog
-* Tue Apr 15 2026 Andy <andy.peng@intel.com> - 20260309-3
+* Wed Apr 15 2026 Andy <andy.peng@intel.com> - 20260309-3
 - Use upstream copy-firmware.sh to install firmware with proper symlinks.
 - Fixes missing ibt-19-* Bluetooth firmware symlinks.
 - Add root-level iwlwifi-* and qat_* compat symlinks so kernel can find firmware.
