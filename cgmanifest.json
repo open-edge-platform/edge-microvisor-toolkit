@@ -3601,8 +3601,8 @@
         "type": "other",
         "other": {
           "name": "in-band-manageability",
-          "version": "1.1.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.1.2.tar.gz"
+          "version": "1.2.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.2.1.tar.gz"
         }
       }
     },
@@ -10703,8 +10703,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.9.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.9.1.tar.gz"
+          "version": "1.10.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.10.1.tar.gz"
         }
       }
     },

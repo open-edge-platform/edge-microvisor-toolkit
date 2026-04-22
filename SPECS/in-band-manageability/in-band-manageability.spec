@@ -4,7 +4,7 @@
 
 Summary:        An agent to manage systems via in-band connection
 Name:           in-band-manageability
-Version:        1.1.2
+Version:        1.2.1
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -15,8 +15,8 @@ Source1:        intel_manageability.conf
 Source2:        inbm-configuration-replace-FQDN.sh
 Source3:        inbm.te
 Source4:        inbm.fc
-BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang < 1.27
+BuildRequires:  golang >= 1.26.1
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 BuildRequires:  make
@@ -77,13 +77,13 @@ COMMON_LDFLAGS="-s -w -extldflags=-static \
 
 # Build the inbc CLI binary
 go build -buildmode=pie -trimpath -mod=vendor \
-    -gcflags "all=-spectre=all -l" -asmflags "all=-spectre=all" \
+    -gcflags "all=-l" -gcflags "github.com/open-edge-platform/...=-spectre=all -l" -asmflags "github.com/open-edge-platform/...=-spectre=all" \
     -ldflags "${COMMON_LDFLAGS} -X main.Version=${BUILD_VERSION}" \
     -o "${BUILD_DIR}/inbc" cmd/inbc/main.go
 
 # Build the inbd daemon binary
 go build -buildmode=pie -trimpath -mod=vendor \
-    -gcflags "all=-spectre=all -l" -asmflags "all=-spectre=all" \
+    -gcflags "all=-l" -gcflags "github.com/open-edge-platform/...=-spectre=all -l" -asmflags "github.com/open-edge-platform/...=-spectre=all" \
     -ldflags "${COMMON_LDFLAGS}" \
     -o "${BUILD_DIR}/inbd" cmd/inbd/main.go
 
@@ -208,6 +208,9 @@ fi
 %systemd_postun inbd.service
 
 %changelog
+* Wed Apr 17 2026 Kishan Mochi <kishan.mochi@intel.com> - 1.2.1-1
+- inbc cmd timeout increase for update
+
 * Wed Feb 25 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.1.2-1
 - Update dependencies
 
