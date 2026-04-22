@@ -12,6 +12,11 @@ Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/82c444b
 
 ExclusiveArch:	x86_64
 
+# Disable LTO - the project builds static libraries (.a) with LTO bitcode
+# objects that the BFD linker cannot resolve, causing undefined reference
+# errors when linking unit tests.
+%define _lto_cflags %{nil}
+
 BuildRequires:	cmake
 BuildRequires:	gcc-c++
 BuildRequires:	glibc-devel
