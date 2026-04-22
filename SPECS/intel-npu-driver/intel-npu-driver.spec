@@ -54,7 +54,7 @@ cmake \
 	-DENABLE_VALIDATION_BUILD=OFF \
 	-DENABLE_NPU_COMPILER_BUILD=OFF
 
-cmake --build build
+cmake --build build --target ze_intel_npu
 
 %install
 mkdir -p %{buildroot}%{_libdir}
