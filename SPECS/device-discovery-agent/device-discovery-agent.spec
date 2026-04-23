@@ -11,8 +11,8 @@ Source0:        %{url}/archive/refs/tags/%{name}/v%{version}.tar.gz#/%{name}-%{v
 Source1:        %{name}.conf
 Source2:        %{name}.service
 Source3:        %{name}-%{version}-vendor.tar.gz
-BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang < 1.27
+BuildRequires:  golang >= 1.26.1
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       dmidecode
