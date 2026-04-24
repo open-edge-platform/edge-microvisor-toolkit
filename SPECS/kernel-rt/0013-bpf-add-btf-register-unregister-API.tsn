@@ -15,11 +15,11 @@ Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
  kernel/bpf/btf.c    | 90 +++++++++++++++++++++++++++++++++++++++++++++
  2 files changed, 98 insertions(+)
 
-diff --git a/include/linux/btf.h b/include/linux/btf.h
-index b8a583194c4a9..a339710b89e9b 100644
+Index: b/include/linux/btf.h
+===================================================================
 --- a/include/linux/btf.h
 +++ b/include/linux/btf.h
-@@ -581,6 +581,8 @@ int get_kern_ctx_btf_id(struct bpf_verifier_log *log, enum bpf_prog_type prog_ty
+@@ -586,6 +586,8 @@ int get_kern_ctx_btf_id(struct bpf_verif
  bool btf_types_are_same(const struct btf *btf1, u32 id1,
  			const struct btf *btf2, u32 id2);
  int btf_check_iter_arg(struct btf *btf, const struct btf_type *func, int arg_idx);
@@ -28,7 +28,7 @@ index b8a583194c4a9..a339710b89e9b 100644
  #else
  static inline const struct btf_type *btf_type_by_id(const struct btf *btf,
  						    u32 type_id)
-@@ -659,6 +661,12 @@ static inline int btf_check_iter_arg(struct btf *btf, const struct btf_type *fun
+@@ -664,6 +666,12 @@ static inline int btf_check_iter_arg(str
  {
  	return -EOPNOTSUPP;
  }
@@ -41,11 +41,11 @@ index b8a583194c4a9..a339710b89e9b 100644
  #endif
  
  static inline bool btf_type_is_struct_ptr(struct btf *btf, const struct btf_type *t)
-diff --git a/kernel/bpf/btf.c b/kernel/bpf/btf.c
-index 346826e3c933d..2eb5cc3b8630a 100644
+Index: b/kernel/bpf/btf.c
+===================================================================
 --- a/kernel/bpf/btf.c
 +++ b/kernel/bpf/btf.c
-@@ -6333,6 +6333,95 @@ static struct btf *btf_parse_module(const char *module_name, const void *data,
+@@ -6337,6 +6337,95 @@ errout:
  
  #endif /* CONFIG_DEBUG_INFO_BTF_MODULES */
  
@@ -141,14 +141,11 @@ index 346826e3c933d..2eb5cc3b8630a 100644
  struct btf *bpf_prog_get_target_btf(const struct bpf_prog *prog)
  {
  	struct bpf_prog *tgt_prog = prog->aux->dst_prog;
-@@ -7819,6 +7908,7 @@ u32 btf_obj_id(const struct btf *btf)
+@@ -7966,6 +8055,7 @@ u32 btf_obj_id(const struct btf *btf)
  {
- 	return btf->id;
+ 	return READ_ONCE(btf->id);
  }
 +EXPORT_SYMBOL(btf_obj_id);
  
  bool btf_is_kernel(const struct btf *btf)
  {
--- 
-2.25.1
-

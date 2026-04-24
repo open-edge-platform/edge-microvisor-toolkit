@@ -250,7 +250,7 @@ Index: b/drivers/media/pci/intel/ipu6/ipu6-isys-video.c
  	int ret = 0;
  
  	dev_dbg(dev, "set stream: %d\n", state);
-@@ -1074,31 +1079,22 @@ int ipu6_isys_video_set_streaming(struct
+@@ -1074,29 +1079,19 @@ int ipu6_isys_video_set_streaming(struct
  
  	sd = &stream->asd->sd;
  	r_pad = media_pad_remote_pad_first(&av->pad);
@@ -279,18 +279,15 @@ Index: b/drivers/media/pci/intel/ipu6/ipu6-isys-video.c
  		ret = v4l2_subdev_disable_streams(sd, r_pad->index,
 -						  stream_mask);
 +						  BIT_ULL(r_stream));
- 		if (ret) {
+ 		if (ret)
 -			dev_err(dev, "stream off %s failed with %d\n", sd->name,
 -				ret);
 +			dev_err(dev, "disable streams %s failed with %d\n",
 +				sd->name, ret);
- 			return ret;
- 		}
-+
+ 
  		close_streaming_firmware(av);
  	} else {
- 		ret = start_stream_firmware(av, bl);
-@@ -1108,12 +1104,14 @@ int ipu6_isys_video_set_streaming(struct
+@@ -1107,12 +1102,14 @@ int ipu6_isys_video_set_streaming(struct
  		}
  
  		/* start sub-device which connects with video */
@@ -310,7 +307,7 @@ Index: b/drivers/media/pci/intel/ipu6/ipu6-isys-video.c
  			goto out_media_entity_stop_streaming_firmware;
  		}
  	}
-@@ -1277,8 +1275,6 @@ int ipu6_isys_setup_video(struct ipu6_is
+@@ -1277,8 +1274,6 @@ int ipu6_isys_setup_video(struct ipu6_is
  	/* Find the root */
  	state = v4l2_subdev_lock_and_get_active_state(remote_sd);
  	for_each_active_route(&state->routing, r) {
@@ -319,7 +316,7 @@ Index: b/drivers/media/pci/intel/ipu6/ipu6-isys-video.c
  		if (r->source_pad == remote_pad->index)
  			route = r;
  	}
-@@ -1293,11 +1289,13 @@ int ipu6_isys_setup_video(struct ipu6_is
+@@ -1293,11 +1288,13 @@ int ipu6_isys_setup_video(struct ipu6_is
  
  	ret = ipu6_isys_csi2_get_remote_desc(av->source_stream,
  					     to_ipu6_isys_csi2(asd),

@@ -12,8 +12,8 @@ Signed-off-by: Tan, Raymond <raymond.tan@intel.com>
  tools/testing/selftests/ptp/testptp.c | 15 ++++++++++++++-
  1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/ptp/testptp.c b/tools/testing/selftests/ptp/testptp.c
-index 55285e9abf91e..c269702da1dfd 100644
+Index: b/tools/testing/selftests/ptp/testptp.c
+===================================================================
 --- a/tools/testing/selftests/ptp/testptp.c
 +++ b/tools/testing/selftests/ptp/testptp.c
 @@ -179,6 +179,8 @@ static void usage(char *progname)
@@ -25,7 +25,7 @@ index 55285e9abf91e..c269702da1dfd 100644
  		" -n val     shift the ptp clock time by 'val' nanoseconds\n"
  		" -o val     phase offset (in nanoseconds) to be provided to the PHC servo\n"
  		" -O         enable single shot output for TGPIO pins\n"
-@@ -235,6 +237,7 @@ int main(int argc, char *argv[])
+@@ -237,6 +239,7 @@ int main(int argc, char *argv[])
  	int getextended = 0;
  	int getcross = 0;
  	int n_samples = 0;
@@ -33,16 +33,16 @@ index 55285e9abf91e..c269702da1dfd 100644
  	int single_shot = -1;
  	int new_period = -1;
  	int pin_index = -1, pin_func;
-@@ -252,7 +255,7 @@ int main(int argc, char *argv[])
+@@ -256,7 +259,7 @@ int main(int argc, char *argv[])
  
  	progname = strrchr(argv[0], '/');
  	progname = progname ? 1+progname : argv[0];
--	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:n:o:Op:P:sSt:T:w:x:Xz"))) {
-+	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:m:n:o:Op:P:sSt:T:w:x:Xz"))) {
+-	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:n:o:Op:P:rsSt:T:w:x:Xy:z"))) {
++	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:m:n:o:Op:P:rsSt:T:w:x:Xy:z"))) {
  		switch (c) {
  		case 'a':
  			new_period = atoi(optarg);
-@@ -300,6 +303,9 @@ int main(int argc, char *argv[])
+@@ -304,6 +307,9 @@ int main(int argc, char *argv[])
  				return -1;
  			}
  			break;
@@ -52,20 +52,17 @@ index 55285e9abf91e..c269702da1dfd 100644
  		case 'n':
  			adjns = atoi(optarg);
  		case 'o':
-@@ -524,6 +530,13 @@ int main(int argc, char *argv[])
- 		memset(&extts_request, 0, sizeof(extts_request));
- 		extts_request.index = index;
- 		extts_request.flags = PTP_ENABLE_FEATURE;
+@@ -547,6 +553,13 @@ int main(int argc, char *argv[])
+ 			memset(&extts_request, 0, sizeof(extts_request));
+ 			extts_request.index = index;
+ 			extts_request.flags = PTP_ENABLE_FEATURE;
 +
-+		if (event_count) {
-+			extts_request.flags |= PTP_EVENT_COUNTER_MODE;
-+			extts_request.rsv[0] = event_count;
-+			/* Input Event Control only supports 1 event for now */
-+			extts = 1;
-+		}
- 		if (ioctl(fd, PTP_EXTTS_REQUEST, &extts_request)) {
- 			perror("PTP_EXTTS_REQUEST");
- 			extts = 0;
--- 
-2.25.1
-
++			if (event_count) {
++				extts_request.flags |= PTP_EVENT_COUNTER_MODE;
++				extts_request.rsv[0] = event_count;
++				/* Input Event Control only supports 1 event for now */
++				extts = 1;
++			}
+ 			if (ioctl(fd, PTP_EXTTS_REQUEST, &extts_request)) {
+ 				perror("PTP_EXTTS_REQUEST");
+ 				extts = 0;
