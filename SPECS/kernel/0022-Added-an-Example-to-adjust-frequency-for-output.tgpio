@@ -11,8 +11,8 @@ Signed-off-by: Rajvi Jingar <rajvi.jingar@intel.com>
  tools/testing/selftests/ptp/testptp.c | 20 +++++++++++++++++++-
  1 file changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/ptp/testptp.c b/tools/testing/selftests/ptp/testptp.c
-index 0df89b4717061..86d0a521c721b 100644
+Index: b/tools/testing/selftests/ptp/testptp.c
+===================================================================
 --- a/tools/testing/selftests/ptp/testptp.c
 +++ b/tools/testing/selftests/ptp/testptp.c
 @@ -117,6 +117,8 @@ static void usage(char *progname)
@@ -24,7 +24,7 @@ index 0df89b4717061..86d0a521c721b 100644
  		" -c         query the ptp clock's capabilities\n"
  		" -d name    device to open\n"
  		" -e val     read 'val' external time stamp events\n"
-@@ -184,6 +186,7 @@ int main(int argc, char *argv[])
+@@ -186,6 +188,7 @@ int main(int argc, char *argv[])
  	int getextended = 0;
  	int getcross = 0;
  	int n_samples = 0;
@@ -32,12 +32,12 @@ index 0df89b4717061..86d0a521c721b 100644
  	int pin_index = -1, pin_func;
  	int pps = -1;
  	int seconds = 0;
-@@ -198,8 +201,11 @@ int main(int argc, char *argv[])
+@@ -202,8 +205,11 @@ int main(int argc, char *argv[])
  
  	progname = strrchr(argv[0], '/');
  	progname = progname ? 1+progname : argv[0];
--	while (EOF != (c = getopt(argc, argv, "cd:e:f:F:ghH:i:k:lL:n:o:p:P:sSt:T:w:x:Xz"))) {
-+	while (EOF != (c = getopt(argc, argv, "a:cd:e:f:F:ghH:i:k:lL:n:o:p:P:sSt:T:w:x:Xz"))) {
+-	while (EOF != (c = getopt(argc, argv, "cd:e:f:F:ghH:i:k:lL:n:o:p:P:rsSt:T:w:x:Xy:z"))) {
++	while (EOF != (c = getopt(argc, argv, "a:cd:e:f:F:ghH:i:k:lL:n:o:p:P:rsSt:T:w:x:Xy:z"))) {
  		switch (c) {
 +		case 'a':
 +			new_period = atoi(optarg);
@@ -45,7 +45,7 @@ index 0df89b4717061..86d0a521c721b 100644
  		case 'c':
  			capabilities = 1;
  			break;
-@@ -482,6 +488,18 @@ int main(int argc, char *argv[])
+@@ -509,6 +515,18 @@ int main(int argc, char *argv[])
  		return -1;
  	}
  
@@ -64,6 +64,3 @@ index 0df89b4717061..86d0a521c721b 100644
  	if (perout >= 0) {
  		if (clock_gettime(clkid, &ts)) {
  			perror("clock_gettime");
--- 
-2.25.1
-

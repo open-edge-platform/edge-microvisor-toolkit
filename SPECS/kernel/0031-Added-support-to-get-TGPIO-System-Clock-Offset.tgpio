@@ -10,8 +10,8 @@ Signed-off-by: Rajvi Jingar <rajvi.jingar@intel.com>
  tools/testing/selftests/ptp/testptp.c | 44 ++++++++++++++++++++++++++-
  1 file changed, 43 insertions(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/ptp/testptp.c b/tools/testing/selftests/ptp/testptp.c
-index 45db2ad6b6234..e637577133cc8 100644
+Index: b/tools/testing/selftests/ptp/testptp.c
+===================================================================
 --- a/tools/testing/selftests/ptp/testptp.c
 +++ b/tools/testing/selftests/ptp/testptp.c
 @@ -167,6 +167,7 @@ static void usage(char *progname)
@@ -22,7 +22,7 @@ index 45db2ad6b6234..e637577133cc8 100644
  		" -h         prints this message\n"
  		" -i val     index for event/trigger\n"
  		" -k val     measure the time offset between system and phc clock\n"
-@@ -225,6 +226,7 @@ int main(int argc, char *argv[])
+@@ -227,6 +228,7 @@ int main(int argc, char *argv[])
  	int extts = 0;
  	int flagtest = 0;
  	int gettime = 0;
@@ -30,16 +30,16 @@ index 45db2ad6b6234..e637577133cc8 100644
  	int index = 0;
  	int list_pins = 0;
  	int pct_offset = 0;
-@@ -247,7 +249,7 @@ int main(int argc, char *argv[])
+@@ -251,7 +253,7 @@ int main(int argc, char *argv[])
  
  	progname = strrchr(argv[0], '/');
  	progname = progname ? 1+progname : argv[0];
--	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:ghH:i:k:lL:n:o:p:P:sSt:T:w:x:Xz"))) {
-+	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:n:o:p:P:sSt:T:w:x:Xz"))) {
+-	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:ghH:i:k:lL:n:o:p:P:rsSt:T:w:x:Xy:z"))) {
++	while (EOF != (c = getopt(argc, argv, "a:cd:e:Ef:F:GghH:i:k:lL:n:o:p:P:rsSt:T:w:x:Xy:z"))) {
  		switch (c) {
  		case 'a':
  			new_period = atoi(optarg);
-@@ -275,6 +277,8 @@ int main(int argc, char *argv[])
+@@ -279,6 +281,8 @@ int main(int argc, char *argv[])
  			break;
  		case 'H':
  			perout_phase = atoll(optarg);
@@ -48,7 +48,7 @@ index 45db2ad6b6234..e637577133cc8 100644
  			break;
  		case 'i':
  			index = atoi(optarg);
-@@ -433,6 +437,44 @@ int main(int argc, char *argv[])
+@@ -455,6 +459,44 @@ int main(int argc, char *argv[])
  		}
  	}
  
@@ -93,6 +93,3 @@ index 45db2ad6b6234..e637577133cc8 100644
  	if (settime == 1) {
  		clock_gettime(CLOCK_REALTIME, &ts);
  		if (clock_settime(clkid, &ts)) {
--- 
-2.25.1
-

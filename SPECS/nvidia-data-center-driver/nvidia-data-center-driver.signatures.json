@@ -1,5 +1,6 @@
 {
  "Signatures": {
+  "NVIDIA-Linux-aarch64-570.133.20.run": "7e135f98be5d13afcc5f0ab23f4fdfd057364143b11bb6f4932f565534c89bd0",
   "NVIDIA-Linux-x86_64-570.133.20.run": "1253d17b1528e8a24bf1f34a8ac6591c924b98ad7a32344bde253aa622ac1605"
  }
 }

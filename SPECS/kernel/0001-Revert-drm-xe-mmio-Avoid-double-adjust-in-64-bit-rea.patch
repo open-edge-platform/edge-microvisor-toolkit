@@ -1,0 +1,36 @@
+From a0a014018ca6e87385bfc5b1390bb6687c3717ea Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Sat, 7 Mar 2026 16:36:15 +0800
+Subject: [PATCH 1/2] Revert "drm/xe/mmio: Avoid double-adjust in 64-bit reads"
+
+This reverts commit 8f6848b2f6eadd903d29572ba0a684eda1e2f4ef.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ drivers/gpu/drm/xe/xe_mmio.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_mmio.c b/drivers/gpu/drm/xe/xe_mmio.c
+index 449e6c5636712..9ea0973337eda 100644
+--- a/drivers/gpu/drm/xe/xe_mmio.c
++++ b/drivers/gpu/drm/xe/xe_mmio.c
+@@ -316,11 +316,11 @@ u64 __xe_mmio_read64_2x32(struct xe_mmio *mmio, struct xe_reg reg)
+ 	struct xe_reg reg_udw = { .addr = reg.addr + 0x4 };
+ 	u32 ldw, udw, oldudw, retries;
+ 
+-	/*
+-	 * The two dwords of a 64-bit register can never straddle the offset
+-	 * adjustment cutoff.
+-	 */
+-	xe_tile_assert(mmio->tile, !in_range(mmio->adj_limit, reg.addr + 1, 7));
++	reg.addr = xe_mmio_adjusted_addr(mmio, reg.addr);
++	reg_udw.addr = xe_mmio_adjusted_addr(mmio, reg_udw.addr);
++
++	/* we shouldn't adjust just one register address */
++	xe_tile_assert(mmio->tile, reg_udw.addr == reg.addr + 0x4);
+ 
+ 	oldudw = xe_mmio_read32(mmio, reg_udw);
+ 	for (retries = 5; retries; --retries) {
+-- 
+2.43.0
+
