@@ -7,7 +7,7 @@
 
 Summary:        GStreamer streaming media framework runtime
 Name:           gstreamer1
-Version:        1.26.10
+Version:        1.28.1
 Release:        1%{?dist}
 License:        LGPLv2+
 Vendor:         Intel Corporation
@@ -89,7 +89,7 @@ install -m0644 -D %{SOURCE2} $RPM_BUILD_ROOT%{_rpmconfigdir}/fileattrs/gstreamer
 
 %files -f gstreamer-%{majorminor}.lang
 %license COPYING
-%doc AUTHORS NEWS README.md README.static-linking RELEASE
+%doc README.md README.static-linking RELEASE
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstbase-%{majorminor}.so.*
 %{_libdir}/libgstcheck-%{majorminor}.so.*
@@ -170,6 +170,9 @@ install -m0644 -D %{SOURCE2} $RPM_BUILD_ROOT%{_rpmconfigdir}/fileattrs/gstreamer
 %{_datadir}/cmake/FindGStreamer.cmake
 
 %changelog
+* Tue Apr 28 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 1.28.1-1
+- Upgrade to fix CVE-2026-3083 and CVE-2026-3085
+
 * Wed Mar 25 2026 Lishan Liu<lishan.liu@intel.com> - 1.26.10-1
 - Upgraded version 1.26.10
 
