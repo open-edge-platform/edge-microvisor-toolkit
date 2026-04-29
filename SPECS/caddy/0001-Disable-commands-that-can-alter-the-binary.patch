@@ -8,10 +8,10 @@ Subject: [PATCH 1/2] Disable commands that can alter the binary
  1 file changed, 45 deletions(-)
 
 diff --git a/cmd/commands.go b/cmd/commands.go
-index 259dd358..31b85a18 100644
+index 417720f..bee012a 100644
 --- a/cmd/commands.go
 +++ b/cmd/commands.go
-@@ -395,51 +395,6 @@ is always printed to stdout.
+@@ -405,51 +405,6 @@ is always printed to stdout.
  		},
  	})
  
@@ -61,8 +61,8 @@ index 259dd358..31b85a18 100644
 -	})
 -
  	defaultFactory.Use(func(rootCmd *cobra.Command) {
- 		rootCmd.AddCommand(caddyCmdToCobra(Command{
+ 		manpageCommand := Command{
  			Name:  "manpage",
 -- 
-2.47.1
+2.34.1
 
