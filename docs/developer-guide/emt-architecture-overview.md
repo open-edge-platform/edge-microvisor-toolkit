@@ -32,7 +32,7 @@ The toolkit comes pre-configured to produce different images; the following tabl
 | Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with a toolkit to build an image with opt-in data integrity and security features.</li></ul> | <ul><li>Designed for [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework) and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare metal or as a guest OS.</li><li>Fast atomic updates and rollback support with a small image footprint and short boot time.|
 | Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
 | Update Mechanism | RPM package updates with TDNF | Image based A/B updates + Rollback       |
-| Linux Kernel     | Intel® “Next” Kernel 6.17   | Intel® “Next” Kernel 6.17                                |
+| Linux Kernel     | Intel® “Next” Kernel 6.18   | Intel® “Next” Kernel 6.18                                |
 | Real time        | Available for opt-in | Image variants with standard and RT kernel provided |
 | Desktop Virtualization | Available      | Dedicated non-RT image variant provided                                    |
 | Add-on packages  | Available for opt-in: Docker + K3s | Downloaded during installation: K3s and extensions    |
@@ -115,7 +115,7 @@ The RT version of Edge Microvisor Toolkit includes several features over the sta
 
 ### Preempt RT Kernel
 
-The Preempt RT Linux Kernel 6.17 is designed to offer enhanced real-time performance compared
+The Preempt RT Linux Kernel 6.18 is designed to offer enhanced real-time performance compared
 to the standard kernel:
 
 - **Reduced Latency**

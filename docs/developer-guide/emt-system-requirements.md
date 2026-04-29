@@ -74,6 +74,6 @@ NVIDIA® GPU:
 
 | Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node) |
 |------------------|----------------------------------------|---------------------------------------------------------------------------|
-| Kernel Version   | Intel® “Next” Kernel 6.17              | Intel® “Next” Kernel 6.17                                                 |
+| Kernel Version   | Intel® “Next” Kernel 6.18              | Intel® “Next” Kernel 6.18                                                 |
 | Bootloader       | GRUB                                   | Systemd-boot                                                              |
 | Update Mechanism | RPM-based with TDNF                    | Image-based A/B updates                                                   |
