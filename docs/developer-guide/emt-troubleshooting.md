@@ -244,5 +244,25 @@ instability for real-time workloads using RAW/ISO toolkit images with RT kernel.
 
  Platform | Processor family | Operating System | RT kernel
 --- | --- | --- | ---
- Intel Corporation Panther Lake Client Platform | Intel(R) Core(TM) Ultra X7 358H | Edge Microvisor Toolkit | 6.17 Next
+ Intel Corporation Panther Lake Client Platform | Intel(R) Core(TM) Ultra X7 358H | Edge Microvisor Toolkit | 6.18 Next
 
+#### Minimize real-time jitter
+
+High scheduling jitter can occur due to CPU idle power state on
+Edge Microvisor Toolkit built from the ISO image. As the toolkit is optimized
+for power efficiency and general workloads, the `idle=poll` kernel parameter is
+disabled by default.
+
+To target optimization of real‑time or latency‑sensitive workloads you can
+enable `idle=poll` by running the following commands:
+
+```bash
+sudo vi /etc/default/grub 
+GRUB_CMDLINE_LINUX="security=selinux selinux=1 rd.auto=1 net.ifnames=0 lockdown=integrity quiet idle=poll"
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
+sudo reboot
+```
+
+It will prevent a CPU from entering deep idle (C‑states),
+eliminating wake‑up latency, significantly minimizing RT jitter and
+improving determinism.
