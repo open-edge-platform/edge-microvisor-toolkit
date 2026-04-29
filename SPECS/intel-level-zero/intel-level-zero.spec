@@ -1,6 +1,6 @@
 Summary:        OneAPI Level Zero Specification Headers and Loader
 Name:           intel-level-zero
-Version:        1.24.2
+Version:        1.27.0
 Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
@@ -79,6 +79,9 @@ chrpath --delete %{buildroot}%{_bindir}/zello_world
 %{_libdir}/pkgconfig/level-zero.pc
 
 %changelog
+* Wed Apr 22 2026 Andy <andy.peng@intel.com> - 1.27.0-1
+- Update version to 1.27.0.
+
 * Mon Jan 19 2026 Andy <andy.peng@intel.com> - 1.24.2-1
 - Update version to 1.24.2.
 
