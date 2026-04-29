@@ -1,0 +1,67 @@
+From 0e8fca4a3c57e0e008cd103f89be3c0eff2f8a6e Mon Sep 17 00:00:00 2001
+From: SyazwanHalim <mohd.syazwan.abdul.halim@intel.com>
+Date: Mon, 11 Mar 2024 23:19:38 +0800
+Subject: [PATCH 45/69] drm/i915: CTB TLB invalidation fix on VM
+
+port over delta changes between existing patches with
+latest patches https://patchwork.freedesktop.org/series/125245/
+
+The GuC firmware had defined the interface for Translation Look-Aside
+Buffer (TLB) invalidation.  We should use this interface when
+invalidating the engine and GuC TLBs.
+Add additional functionality to intel_gt_invalidate_tlb, invalidating
+the GuC TLBs and falling back to GT invalidation when the GuC is
+disabled.
+The invalidation is done by sending a request directly to the GuC
+tlb_lookup that invalidates the table.  The invalidation is submitted as
+a wait request and is performed in the CT event handler.  This means we
+cannot perform this TLB invalidation path if the CT is not enabled.
+If the request isn't fulfilled in two seconds, this would constitute
+an error in the invalidation as that would constitute either a lost
+request or a severe GuC overload.
+
+With this new invalidation routine, we can perform GuC-based GGTT
+invalidations.  GuC-based GGTT invalidation is incompatible with
+MMIO invalidation so we should not perform MMIO invalidation when
+GuC-based GGTT invalidation is expected.
+
+The additional complexity incurred in this patch will be necessary for
+range-based tlb invalidations, which will be platformed in the future.
+
+Signed-off-by: SyazwanHalim <mohd.syazwan.abdul.halim@intel.com>
+Signed-off-by: Prathap Kumar Valsan <prathap.kumar.valsan@intel.com>
+Signed-off-by: Bruce Chang <yu.bruce.chang@intel.com>
+Signed-off-by: Chris Wilson <chris.p.wilson@intel.com>
+Signed-off-by: Umesh Nerlige Ramappa <umesh.nerlige.ramappa@intel.com>
+Signed-off-by: Jonathan Cavitt <jonathan.cavitt@intel.com>
+Signed-off-by: Aravind Iddamsetty <aravind.iddamsetty@intel.com>
+Signed-off-by: Fei Yang <fei.yang@intel.com>
+CC: Andi Shyti <andi.shyti@linux.intel.com>
+Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
+Acked-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Acked-by: Nirmoy Das <nirmoy.das@intel.com>
+Reviewed-by: John Harrison <John.C.Harrison@Intel.com>
+(cherry picked from commit 12cb229cb941481962aa6fb150b46c37320e5f35)
+---
+ drivers/gpu/drm/i915/i915_driver.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
+index 3177d48195c5f..7e4ee1408b302 100644
+--- a/drivers/gpu/drm/i915/i915_driver.c
++++ b/drivers/gpu/drm/i915/i915_driver.c
+@@ -1339,11 +1339,6 @@ static int i915_drm_resume(struct drm_device *dev)
+ 
+ 	intel_gvt_resume(dev_priv);
+ 
+-	for_each_gt(gt, dev_priv, i) {
+-		intel_guc_invalidate_tlb_engines(&gt->uc.guc);
+-		intel_guc_invalidate_tlb_guc(&gt->uc.guc);
+-	}
+-
+ 	enable_rpm_wakeref_asserts(&dev_priv->runtime_pm);
+ 
+ 	return 0;
+-- 
+2.43.0
+

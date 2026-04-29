@@ -1,0 +1,28 @@
+From e3c30afd1b2c7f6e86540ae712e16d90351e20d9 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 13:32:27 +0800
+Subject: [PATCH 49/52] Enable ipu8 pci id support
+
+Add the support for ipu8 pci id
+support based on patch
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7.c b/drivers/staging/media/ipu7/ipu7.c
+index dda8a577aab0..4ae9d14882b2 100644
+--- a/drivers/staging/media/ipu7/ipu7.c
++++ b/drivers/staging/media/ipu7/ipu7.c
+@@ -2762,6 +2762,7 @@ static const struct dev_pm_ops ipu7_pm_ops = {
+ static const struct pci_device_id ipu7_pci_tbl[] = {
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, IPU7_PCI_ID)},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, IPU7P5_PCI_ID)},
++	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, IPU8_PCI_ID)},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, ipu7_pci_tbl);
+-- 
+2.34.1
+

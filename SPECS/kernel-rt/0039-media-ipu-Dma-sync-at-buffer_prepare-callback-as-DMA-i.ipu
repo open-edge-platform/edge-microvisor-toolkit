@@ -1,0 +1,43 @@
+From 0354aa8f5252a28090ebe45e02cfa287a2c64e9f Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Sat, 25 Oct 2025 16:42:45 +0800
+Subject: [PATCH 39/52] media: ipu: Dma sync at buffer_prepare callback as DMA
+ is non-coherent
+
+Test Platform:
+PTLRVP
+LNLRVP
+
+Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys-queue.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+index 28c7f2761ed9..d0e37cfef72a 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+@@ -85,7 +85,9 @@ static int ipu7_isys_queue_setup(struct vb2_queue *q, unsigned int *num_buffers,
+ static int ipu7_isys_buf_prepare(struct vb2_buffer *vb)
+ {
+ 	struct ipu7_isys_queue *aq = vb2_queue_to_isys_queue(vb->vb2_queue);
++	struct ipu7_isys *isys = vb2_get_drv_priv(vb->vb2_queue);
+ 	struct ipu7_isys_video *av = ipu7_isys_queue_to_video(aq);
++	struct sg_table *sg = vb2_dma_sg_plane_desc(vb, 0);
+ 	struct device *dev = &av->isys->adev->auxdev.dev;
+ 	u32 bytesperline = av->pix_fmt.bytesperline;
+ 	u32 height = av->pix_fmt.height;
+@@ -100,6 +102,9 @@ static int ipu7_isys_buf_prepare(struct vb2_buffer *vb)
+ 		av->vdev.name, bytesperline, height);
+ 	vb2_set_plane_payload(vb, 0, bytesperline * height);
+ 
++	/* assume IPU is not DMA coherent */
++	ipu7_dma_sync_sgtable(isys->adev, sg);
++
+ 	return 0;
+ }
+ 
+-- 
+2.34.1
+

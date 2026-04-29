@@ -1,0 +1,42 @@
+From 7955ffbafbf6f2b753b3c441f910715917d304c2 Mon Sep 17 00:00:00 2001
+From: "Baoli.Zhang" <baoli.zhang@linux.intel.com>
+Date: Thu, 2 Apr 2026 09:54:21 +0800
+Subject: [PATCH] tpm: restore timeout for key creation commands
+
+After the per-command duration map was introduced, TPM2 key creation
+commands (`CREATE_PRIMARY`, `CREATE`, `CREATE_LOADED`) were limited to
+30 seconds.
+
+On some platforms this is not sufficient and key creation can time out.
+Commit 207696b17f38 ("tpm: use a map for tpm2_calc_ordinal_duration()")
+inadvertently reduced these command timeouts from 300 seconds to 30
+seconds. Restore them to 300 seconds to avoid spurious failures.
+
+Fixes: 207696b17f38 ("tpm: use a map for tpm2_calc_ordinal_duration()")
+
+Signed-off-by: Baoli.Zhang <baoli.zhang@linux.intel.com>
+Co-developed-by: lili.li <lili.li@intel.com>
+---
+ drivers/char/tpm/tpm2-cmd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/char/tpm/tpm2-cmd.c b/drivers/char/tpm/tpm2-cmd.c
+index 58a8477cda85..63f76df60651 100644
+--- a/drivers/char/tpm/tpm2-cmd.c
++++ b/drivers/char/tpm/tpm2-cmd.c
+@@ -59,9 +59,9 @@ static const struct {
+ 	{TPM2_CC_HIERARCHY_CHANGE_AUTH, 2000},
+ 	{TPM2_CC_GET_CAPABILITY, 750},
+ 	{TPM2_CC_NV_READ, 2000},
+-	{TPM2_CC_CREATE_PRIMARY, 30000},
+-	{TPM2_CC_CREATE, 30000},
+-	{TPM2_CC_CREATE_LOADED, 30000},
++	{TPM2_CC_CREATE_PRIMARY, 300000},
++	{TPM2_CC_CREATE, 300000},
++	{TPM2_CC_CREATE_LOADED, 300000},
+ };
+ 
+ /**
+-- 
+2.34.1
+

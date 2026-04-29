@@ -1,0 +1,474 @@
+From 0f8588ccbcafa81fa9b45475b81c3b5048f70f30 Mon Sep 17 00:00:00 2001
+From: Subramanian Mohan <subramanian.mohan@intel.com>
+Date: Tue, 3 Mar 2026 14:10:28 +0530
+Subject: [PATCH 4/5] pps: store const pps_source_info pointer in core instead
+ of copying
+
+The PPS core currently copies struct pps_source_info into
+struct pps_device during pps_register_source(). This allows
+callers to pass stack-based descriptors but obscures ownership
+semantics and lifetime requirements.
+
+Some PPS clients (e.g. timer-based implementations) execute
+callbacks from asynchronous contexts such as hrtimer. In those
+paths, the driver must reliably retrieve its parent context and
+associated state. This requires well-defined descriptor lifetime
+and clear ownership rules.
+
+Instead of copying the descriptor into struct pps_device, store
+a const pointer to the driver-provided pps_source_info. This:
+
+  - Makes descriptor ownership explicitly driver-managed
+  - Prevents unintended mutation by the core
+
+This change follows upstream commit<ac9c5170a181>("pps: generators:
+replace copy of pps-gen info struct with const pointer"),which made
+the same architectural adjustment for PPS generator drivers in order
+to support safe access to driver state from callback paths.
+
+Since descriptors are no longer copied, stack-based pps_source_info
+usage is replaced with properly allocated per-instance storage to
+ensure correct lifetime handling.
+
+Update all in-tree PPS clients accordingly
+
+No functional change intended.
+
+Co-developed-by: Christopher Hall <christopher.s.hall@intel.com>
+Signed-off-by: Christopher Hall <christopher.s.hall@intel.com>
+Signed-off-by: Subramanian Mohan <subramanian.mohan@intel.com>
+---
+ drivers/pps/clients/pps-ktimer.c  |  2 +-
+ drivers/pps/clients/pps-ldisc.c   | 55 +++++++++++++++++++------------
+ drivers/pps/clients/pps_parport.c | 18 +++++-----
+ drivers/pps/kapi.c                | 24 ++++----------
+ drivers/pps/pps.c                 | 14 ++++----
+ drivers/pps/sysfs.c               | 20 ++++++-----
+ drivers/ptp/ptp_clock.c           | 11 +++----
+ drivers/ptp/ptp_private.h         |  1 +
+ include/linux/pps_kernel.h        |  4 +--
+ 9 files changed, 78 insertions(+), 71 deletions(-)
+
+diff --git a/drivers/pps/clients/pps-ktimer.c b/drivers/pps/clients/pps-ktimer.c
+index 121bd29d863d..a4e07ad1d847 100644
+--- a/drivers/pps/clients/pps-ktimer.c
++++ b/drivers/pps/clients/pps-ktimer.c
+@@ -41,7 +41,7 @@ static void pps_ktimer_event(struct timer_list *unused)
+  * The PPS info struct
+  */
+ 
+-static struct pps_source_info pps_ktimer_info = {
++static const struct pps_source_info pps_ktimer_info = {
+ 	.name		= "ktimer",
+ 	.path		= "",
+ 	.mode		= PPS_CAPTUREASSERT | PPS_OFFSETASSERT |
+diff --git a/drivers/pps/clients/pps-ldisc.c b/drivers/pps/clients/pps-ldisc.c
+index fa5660f3c4b7..762fd16b8ec9 100644
+--- a/drivers/pps/clients/pps-ldisc.c
++++ b/drivers/pps/clients/pps-ldisc.c
+@@ -13,6 +13,11 @@
+ #include <linux/pps_kernel.h>
+ #include <linux/bug.h>
+ 
++struct pps_ldisc_dev {
++	struct pps_device *pps;
++	struct pps_source_info info;
++};
++
+ static void pps_tty_dcd_change(struct tty_struct *tty, bool active)
+ {
+ 	struct pps_device *pps;
+@@ -40,41 +45,46 @@ static int (*alias_n_tty_open)(struct tty_struct *tty);
+ 
+ static int pps_tty_open(struct tty_struct *tty)
+ {
+-	struct pps_source_info info;
+ 	struct tty_driver *drv = tty->driver;
+ 	int index = tty->index + drv->name_base;
+-	struct pps_device *pps;
++	struct pps_ldisc_dev *lddev;
+ 	int ret;
+ 
+-	info.owner = THIS_MODULE;
+-	info.dev = NULL;
+-	snprintf(info.name, PPS_MAX_NAME_LEN, "%s%d", drv->driver_name, index);
+-	snprintf(info.path, PPS_MAX_NAME_LEN, "/dev/%s%d", drv->name, index);
+-	info.mode = PPS_CAPTUREBOTH | \
+-			PPS_OFFSETASSERT | PPS_OFFSETCLEAR | \
+-			PPS_CANWAIT | PPS_TSFMT_TSPEC;
++	lddev = kzalloc(sizeof(*lddev), GFP_KERNEL);
++	if (!lddev)
++		return -ENOMEM;
++
++	lddev->info.owner = THIS_MODULE;
++	lddev->info.dev = NULL;
++	snprintf(lddev->info.name, PPS_MAX_NAME_LEN, "%s%d", drv->driver_name, index);
++	snprintf(lddev->info.path, PPS_MAX_NAME_LEN, "/dev/%s%d", drv->name, index);
++	lddev->info.mode = PPS_CAPTUREBOTH | PPS_OFFSETASSERT | \
++			   PPS_OFFSETCLEAR | PPS_CANWAIT | PPS_TSFMT_TSPEC;
+ 
+-	pps = pps_register_source(&info, PPS_CAPTUREBOTH | \
++	lddev->pps = pps_register_source(&lddev->info, PPS_CAPTUREBOTH | \
+ 				PPS_OFFSETASSERT | PPS_OFFSETCLEAR);
+-	if (IS_ERR(pps)) {
+-		pr_err("cannot register PPS source \"%s\"\n", info.path);
+-		return PTR_ERR(pps);
++	if (IS_ERR(lddev->pps)) {
++		pr_err("cannot register PPS source \"%s\"\n", lddev->info.path);
++		kfree(lddev);
++		return PTR_ERR(lddev->pps);
+ 	}
+-	pps->lookup_cookie = tty;
++	lddev->pps->lookup_cookie = tty;
+ 
+ 	/* Now open the base class N_TTY ldisc */
+ 	ret = alias_n_tty_open(tty);
+ 	if (ret < 0) {
+-		pr_err("cannot open tty ldisc \"%s\"\n", info.path);
++		pr_err("cannot open tty ldisc \"%s\"\n", lddev->info.path);
+ 		goto err_unregister;
+ 	}
+ 
+-	dev_dbg(&pps->dev, "source \"%s\" added\n", info.path);
++	dev_dbg(&lddev->pps->dev, "source \"%s\" added\n", lddev->info.path);
++
++	tty->disc_data = lddev;
+ 
+ 	return 0;
+ 
+ err_unregister:
+-	pps_unregister_source(pps);
++	pps_unregister_source(lddev->pps);
+ 	return ret;
+ }
+ 
+@@ -82,15 +92,18 @@ static void (*alias_n_tty_close)(struct tty_struct *tty);
+ 
+ static void pps_tty_close(struct tty_struct *tty)
+ {
+-	struct pps_device *pps = pps_lookup_dev(tty);
++	struct pps_ldisc_dev *lddev = tty->disc_data;
+ 
+ 	alias_n_tty_close(tty);
+ 
+-	if (WARN_ON(!pps))
++	if (WARN_ON(!lddev))
+ 		return;
+ 
+-	dev_info(&pps->dev, "removed\n");
+-	pps_unregister_source(pps);
++	dev_info(&lddev->pps->dev, "removed\n");
++	pps_unregister_source(lddev->pps);
++	kfree(lddev);
++
++	tty->disc_data = NULL;
+ }
+ 
+ static struct tty_ldisc_ops pps_ldisc_ops;
+diff --git a/drivers/pps/clients/pps_parport.c b/drivers/pps/clients/pps_parport.c
+index 24db06750297..5a8180c190f2 100644
+--- a/drivers/pps/clients/pps_parport.c
++++ b/drivers/pps/clients/pps_parport.c
+@@ -39,6 +39,7 @@ static DEFINE_IDA(pps_client_index);
+ struct pps_client_pp {
+ 	struct pardevice *pardev;	/* parport device */
+ 	struct pps_device *pps;		/* PPS device */
++	struct pps_source_info info;	/* PPS source info */
+ 	unsigned int cw;		/* port clear timeout */
+ 	unsigned int cw_err;		/* number of timeouts */
+ 	int index;			/* device number */
+@@ -126,14 +127,6 @@ static void parport_attach(struct parport *port)
+ 	int index;
+ 	struct pps_client_pp *device;
+ 	struct pps_source_info info = {
+-		.name		= KBUILD_MODNAME,
+-		.path		= "",
+-		.mode		= PPS_CAPTUREBOTH | \
+-				  PPS_OFFSETASSERT | PPS_OFFSETCLEAR | \
+-				  PPS_ECHOASSERT | PPS_ECHOCLEAR | \
+-				  PPS_CANWAIT | PPS_TSFMT_TSPEC,
+-		.owner		= THIS_MODULE,
+-		.dev		= NULL
+ 	};
+ 
+ 	if (clear_wait > CLEAR_WAIT_MAX) {
+@@ -170,6 +163,15 @@ static void parport_attach(struct parport *port)
+ 		goto err_unregister_dev;
+ 	}
+ 
++	snprintf(device->info.name, PPS_MAX_NAME_LEN, "%s", KBUILD_MODNAME);
++	snprintf(device->info.path, PPS_MAX_NAME_LEN, "%s", "");
++	device->info.mode = PPS_CAPTUREBOTH | \
++			PPS_OFFSETASSERT | PPS_OFFSETCLEAR | \
++			PPS_ECHOASSERT | PPS_ECHOCLEAR | \
++			PPS_CANWAIT | PPS_TSFMT_TSPEC,
++	device->info.owner = THIS_MODULE,
++	device->info.dev = NULL;
++
+ 	device->pps = pps_register_source(&info,
+ 			PPS_CAPTUREBOTH | PPS_OFFSETASSERT | PPS_OFFSETCLEAR);
+ 	if (IS_ERR(device->pps)) {
+diff --git a/drivers/pps/kapi.c b/drivers/pps/kapi.c
+index e9389876229e..bf4dacdc30e6 100644
+--- a/drivers/pps/kapi.c
++++ b/drivers/pps/kapi.c
+@@ -38,14 +38,6 @@ static void pps_add_offset(struct pps_ktime *ts, struct pps_ktime *offset)
+ 	ts->sec += offset->sec;
+ }
+ 
+-static void pps_echo_client_default(struct pps_device *pps, int event,
+-		void *data)
+-{
+-	dev_info(&pps->dev, "echo %s %s\n",
+-		event & PPS_CAPTUREASSERT ? "assert" : "",
+-		event & PPS_CAPTURECLEAR ? "clear" : "");
+-}
+-
+ /*
+  * Exported functions
+  */
+@@ -62,8 +54,8 @@ static void pps_echo_client_default(struct pps_device *pps, int event,
+  * ERR_PTR(errno).
+  */
+ 
+-struct pps_device *pps_register_source(struct pps_source_info *info,
+-		int default_params)
++struct pps_device *pps_register_source(const struct pps_source_info *info,
++				       int default_params)
+ {
+ 	struct pps_device *pps;
+ 	int err;
+@@ -94,12 +86,8 @@ struct pps_device *pps_register_source(struct pps_source_info *info,
+ 	 */
+ 	pps->params.api_version = PPS_API_VERS;
+ 	pps->params.mode = default_params;
+-	pps->info = *info;
+-
+-	/* check for default echo function */
+-	if ((pps->info.mode & (PPS_ECHOASSERT | PPS_ECHOCLEAR)) &&
+-			pps->info.echo == NULL)
+-		pps->info.echo = pps_echo_client_default;
++	pps->info = info;
++	pps->is_poll_enabled = false;
+ 
+ 	init_waitqueue_head(&pps->queue);
+ 	spin_lock_init(&pps->lock);
+@@ -151,7 +139,7 @@ EXPORT_SYMBOL(pps_unregister_source);
+  *
+  * If an echo function is associated with the PPS device it will be called
+  * as:
+- *	pps->info.echo(pps, event, data);
++ *	pps->info->echo(pps, event, data);
+  */
+ void pps_event(struct pps_device *pps, struct pps_event_time *ts, int event,
+ 		void *data)
+@@ -172,7 +160,7 @@ void pps_event(struct pps_device *pps, struct pps_event_time *ts, int event,
+ 
+ 	/* Must call the echo function? */
+ 	if ((pps->params.mode & (PPS_ECHOASSERT | PPS_ECHOCLEAR)))
+-		pps->info.echo(pps, event, data);
++		pps->info->echo(pps, event, data);
+ 
+ 	/* Check the event */
+ 	pps->current_mode = pps->params.mode;
+diff --git a/drivers/pps/pps.c b/drivers/pps/pps.c
+index c6b8b6478276..9ef20b906ae2 100644
+--- a/drivers/pps/pps.c
++++ b/drivers/pps/pps.c
+@@ -133,7 +133,7 @@ static long pps_cdev_ioctl(struct file *file,
+ 		}
+ 
+ 		/* Check for supported capabilities */
+-		if ((params.mode & ~pps->info.mode) != 0) {
++		if ((params.mode & ~pps->info->mode) != 0) {
+ 			dev_dbg(&pps->dev, "unsupported capabilities (%x)\n",
+ 								params.mode);
+ 			return -EINVAL;
+@@ -151,7 +151,7 @@ static long pps_cdev_ioctl(struct file *file,
+ 								params.mode);
+ 			pps->params.mode |= PPS_TSFMT_TSPEC;
+ 		}
+-		if (pps->info.mode & PPS_CANWAIT)
++		if (pps->info->mode & PPS_CANWAIT)
+ 			pps->params.mode |= PPS_CANWAIT;
+ 		pps->params.api_version = PPS_API_VERS;
+ 
+@@ -170,7 +170,7 @@ static long pps_cdev_ioctl(struct file *file,
+ 	case PPS_GETCAP:
+ 		dev_dbg(&pps->dev, "PPS_GETCAP\n");
+ 
+-		err = put_user(pps->info.mode, iuarg);
++		err = put_user(pps->info->mode, iuarg);
+ 		if (err)
+ 			return -EFAULT;
+ 
+@@ -222,7 +222,7 @@ static long pps_cdev_ioctl(struct file *file,
+ 			return -EFAULT;
+ 
+ 		/* Check for supported capabilities */
+-		if ((bind_args.edge & ~pps->info.mode) != 0) {
++		if ((bind_args.edge & ~pps->info->mode) != 0) {
+ 			dev_err(&pps->dev, "unsupported capabilities (%x)\n",
+ 					bind_args.edge);
+ 			return -EINVAL;
+@@ -371,7 +371,7 @@ int pps_register_cdev(struct pps_device *pps)
+ 	if (err < 0) {
+ 		if (err == -ENOSPC) {
+ 			pr_err("%s: too many PPS sources in the system\n",
+-			       pps->info.name);
++			       pps->info->name);
+ 			err = -EBUSY;
+ 		}
+ 		kfree(pps);
+@@ -380,7 +380,7 @@ int pps_register_cdev(struct pps_device *pps)
+ 	pps->id = err;
+ 
+ 	pps->dev.class = pps_class;
+-	pps->dev.parent = pps->info.dev;
++	pps->dev.parent = pps->info->dev;
+ 	pps->dev.devt = MKDEV(pps_major, pps->id);
+ 	dev_set_drvdata(&pps->dev, pps);
+ 	dev_set_name(&pps->dev, "pps%d", pps->id);
+@@ -389,7 +389,7 @@ int pps_register_cdev(struct pps_device *pps)
+ 	if (err)
+ 		goto free_idr;
+ 
+-	pr_debug("source %s got cdev (%d:%d)\n", pps->info.name, pps_major,
++	pr_debug("source %s got cdev (%d:%d)\n", pps->info->name, pps_major,
+ 		 pps->id);
+ 
+ 	get_device(&pps->dev);
+diff --git a/drivers/pps/sysfs.c b/drivers/pps/sysfs.c
+index 799a5b254fd4..86db91f56ed2 100644
+--- a/drivers/pps/sysfs.c
++++ b/drivers/pps/sysfs.c
+@@ -19,7 +19,7 @@ static ssize_t assert_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pps_device *pps = dev_get_drvdata(dev);
+ 
+-	if (!(pps->info.mode & PPS_CAPTUREASSERT))
++	if (!(pps->info->mode & PPS_CAPTUREASSERT))
+ 		return 0;
+ 
+ 	return sprintf(buf, "%lld.%09d#%d\n",
+@@ -33,7 +33,7 @@ static ssize_t clear_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pps_device *pps = dev_get_drvdata(dev);
+ 
+-	if (!(pps->info.mode & PPS_CAPTURECLEAR))
++	if (!(pps->info->mode & PPS_CAPTURECLEAR))
+ 		return 0;
+ 
+ 	return sprintf(buf, "%lld.%09d#%d\n",
+@@ -47,7 +47,7 @@ static ssize_t mode_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pps_device *pps = dev_get_drvdata(dev);
+ 
+-	return sprintf(buf, "%4x\n", pps->info.mode);
++	return sprintf(buf, "%4x\n", pps->info->mode);
+ }
+ static DEVICE_ATTR_RO(mode);
+ 
+@@ -56,7 +56,11 @@ static ssize_t echo_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pps_device *pps = dev_get_drvdata(dev);
+ 
+-	return sprintf(buf, "%d\n", !!pps->info.echo);
++	if (!(pps->info->mode & (PPS_ECHOASSERT | PPS_ECHOCLEAR)) &&
++	    !pps->info->echo)
++		return -EOPNOTSUPP;
++
++	return sprintf(buf, "%d\n", !!pps->info->echo);
+ }
+ static DEVICE_ATTR_RO(echo);
+ 
+@@ -65,7 +69,7 @@ static ssize_t name_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pps_device *pps = dev_get_drvdata(dev);
+ 
+-	return sprintf(buf, "%s\n", pps->info.name);
++	return sprintf(buf, "%s\n", pps->info->name);
+ }
+ static DEVICE_ATTR_RO(name);
+ 
+@@ -74,7 +78,7 @@ static ssize_t path_show(struct device *dev, struct device_attribute *attr,
+ {
+ 	struct pps_device *pps = dev_get_drvdata(dev);
+ 
+-	return sprintf(buf, "%s\n", pps->info.path);
++	return sprintf(buf, "%s\n", pps->info->path);
+ }
+ static DEVICE_ATTR_RO(path);
+ 
+@@ -89,10 +93,10 @@ static ssize_t poll_store(struct device *dev, struct device_attribute *attr,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (!pps->info.enable_poll)
++	if (!pps->info->enable_poll)
+ 		return -EOPNOTSUPP;
+ 
+-	ret = pps->info.enable_poll(pps, status);
++	ret = pps->info->enable_poll(pps, status);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/ptp/ptp_clock.c b/drivers/ptp/ptp_clock.c
+index ef020599b771..97a374de00cc 100644
+--- a/drivers/ptp/ptp_clock.c
++++ b/drivers/ptp/ptp_clock.c
+@@ -410,12 +410,11 @@ struct ptp_clock *ptp_clock_register(struct ptp_clock_info *info,
+ 
+ 	/* Register a new PPS source. */
+ 	if (info->pps) {
+-		struct pps_source_info pps;
+-		memset(&pps, 0, sizeof(pps));
+-		snprintf(pps.name, PPS_MAX_NAME_LEN, "ptp%d", index);
+-		pps.mode = PTP_PPS_MODE;
+-		pps.owner = info->owner;
+-		ptp->pps_source = pps_register_source(&pps, PTP_PPS_DEFAULTS);
++		memset(&ptp->pps_info, 0, sizeof(ptp->pps_info));
++		snprintf(ptp->pps_info.name, PPS_MAX_NAME_LEN, "ptp%d", index);
++		ptp->pps_info.mode = PTP_PPS_MODE;
++		ptp->pps_info.owner = info->owner;
++		ptp->pps_source = pps_register_source(&ptp->pps_info, PTP_PPS_DEFAULTS);
+ 		if (IS_ERR(ptp->pps_source)) {
+ 			err = PTR_ERR(ptp->pps_source);
+ 			pr_err("failed to register pps source\n");
+diff --git a/drivers/ptp/ptp_private.h b/drivers/ptp/ptp_private.h
+index db4039d642b4..fe52a3642f4d 100644
+--- a/drivers/ptp/ptp_private.h
++++ b/drivers/ptp/ptp_private.h
+@@ -48,6 +48,7 @@ struct ptp_clock {
+ 	dev_t devid;
+ 	int index; /* index into clocks.map */
+ 	struct pps_device *pps_source;
++	struct pps_source_info pps_info;
+ 	long dialed_frequency; /* remembers the frequency adjustment */
+ 	struct list_head tsevqs; /* timestamp fifo list */
+ 	spinlock_t tsevqs_lock; /* protects tsevqs from concurrent access */
+diff --git a/include/linux/pps_kernel.h b/include/linux/pps_kernel.h
+index 4329d08662f0..d0367d696a50 100644
+--- a/include/linux/pps_kernel.h
++++ b/include/linux/pps_kernel.h
+@@ -44,7 +44,7 @@ struct pps_event_time {
+ 
+ /* The main struct */
+ struct pps_device {
+-	struct pps_source_info info;		/* PSS source info */
++	const struct pps_source_info *info;	/* PSS source info */
+ 
+ 	bool is_poll_enabled;			/* Polling enabled */
+ 
+@@ -88,7 +88,7 @@ extern void pps_unregister_cdev(struct pps_device *pps);
+  */
+ 
+ extern struct pps_device *pps_register_source(
+-		struct pps_source_info *info, int default_params);
++		const struct pps_source_info *info, int default_params);
+ extern void pps_unregister_source(struct pps_device *pps);
+ extern void pps_event(struct pps_device *pps,
+ 		struct pps_event_time *ts, int event, void *data);
+-- 
+2.34.1
+

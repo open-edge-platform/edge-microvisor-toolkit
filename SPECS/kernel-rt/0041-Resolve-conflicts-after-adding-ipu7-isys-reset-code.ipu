@@ -1,0 +1,1317 @@
+From c8cd575929f699e343b3cde3a495f9a70efd7f83 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 11:47:05 +0800
+Subject: [PATCH 41/52] Resolve conflicts after adding ipu7 isys reset code
+
+Remove unnecessary IPU8 config and MGC
+config and update with latest changes
+from patch 0007 v6.18.0 iot.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/staging/media/ipu7/Kconfig           |  31 --
+ drivers/staging/media/ipu7/ipu7-isys-queue.c | 369 ++++++++++++++++++-
+ drivers/staging/media/ipu7/ipu7-isys-video.c | 110 ++++++
+ drivers/staging/media/ipu7/ipu7-isys-video.h |   8 +
+ drivers/staging/media/ipu7/ipu7-isys.c       | 344 ++++++++++++++++-
+ drivers/staging/media/ipu7/ipu7-isys.h       |  40 ++
+ 6 files changed, 862 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/Kconfig b/drivers/staging/media/ipu7/Kconfig
+index a4c70d032918..e9c4361b27bd 100644
+--- a/drivers/staging/media/ipu7/Kconfig
++++ b/drivers/staging/media/ipu7/Kconfig
+@@ -1,23 +1,3 @@
+-config VIDEO_INTEL_IPU8
+-	tristate "Intel IPU7 driver"
+-	depends on ACPI || COMPILE_TEST
+-	depends on VIDEO_DEV
+-	depends on X86 && HAS_DMA
+-	depends on IPU_BRIDGE || !IPU_BRIDGE
+-	depends on PCI
+-	select AUXILIARY_BUS
+-	select IOMMU_IOVA
+-	select VIDEO_V4L2_SUBDEV_API
+-	select MEDIA_CONTROLLER
+-	select VIDEOBUF2_DMA_SG
+-	select V4L2_FWNODE
+-	help
+-	  This is the 7th Gen Intel Image Processing Unit, found in Intel SoCs
+-	  and used for capturing images and video from camera sensors.
+-
+-	  To compile this driver, say Y here! It contains 2 modules -
+-	  intel_ipu7 and intel_ipu7_isys.
+-
+ config VIDEO_INTEL_IPU7
+ 	tristate "Intel IPU7 driver"
+ 	depends on ACPI || COMPILE_TEST
+@@ -43,17 +23,6 @@ config VIDEO_INTEL_IPU7
+ 	  To compile this driver, say Y here! It contains 3 modules -
+ 	  intel_ipu7, intel_ipu7_isys and intel_ipu7_psys.
+ 
+-config VIDEO_INTEL_IPU7_MGC
+-	bool "Compile for IPU7 MGC driver"
+-	depends on VIDEO_INTEL_IPU7
+-	help
+-	  If selected, MGC device nodes would be created.
+-
+-	  Recommended for driver developers only.
+-
+-	  If you want to the MGC devices exposed to user as media entity,
+-	  you must select this option, otherwise no.
+-
+ config VIDEO_INTEL_IPU7_ISYS_RESET
+ 	bool "IPU7 ISYS RESET"
+ 	depends on VIDEO_INTEL_IPU7
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+index d0e37cfef72a..a05a8d5c77c9 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+@@ -11,6 +11,10 @@
+ #include <linux/mutex.h>
+ #include <linux/spinlock.h>
+ #include <linux/types.h>
++#include <linux/version.h>
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++#include <linux/delay.h>
++#endif
+ 
+ #include <media/media-entity.h>
+ #include <media/v4l2-subdev.h>
+@@ -26,6 +30,9 @@
+ #include "ipu7-isys-csi2-regs.h"
+ #include "ipu7-isys-video.h"
+ #include "ipu7-platform-regs.h"
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++#include "ipu7-cpd.h"
++#endif
+ 
+ #define IPU_MAX_FRAME_COUNTER	(U8_MAX + 1)
+ 
+@@ -230,6 +237,17 @@ static int buffer_list_get(struct ipu7_isys_stream *stream,
+ 		ib = list_last_entry(&aq->incoming,
+ 				     struct ipu7_isys_buffer, head);
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++		struct ipu7_isys_video *av = ipu7_isys_queue_to_video(aq);
++
++		if (av->skipframe) {
++			atomic_set(&ib->skipframe_flag, 1);
++			av->skipframe--;
++		} else {
++			atomic_set(&ib->skipframe_flag, 0);
++		}
++#endif
++
+ 		dev_dbg(dev, "buffer: %s: buffer %u\n",
+ 			ipu7_isys_queue_to_video(aq)->vdev.name,
+ 			ipu7_isys_buffer_to_vb2_buffer(ib)->index);
+@@ -253,8 +271,9 @@ static void ipu7_isys_buf_to_fw_frame_buf_pin(struct vb2_buffer *vb,
+ 	struct ipu7_isys_video_buffer *ivb =
+ 		vb2_buffer_to_ipu7_isys_video_buffer(vvb);
+ 
+-	set->output_pins[aq->fw_output].addr = ivb->dma_addr;
+-	set->output_pins[aq->fw_output].user_token = (uintptr_t)set;
++	set->output_pins[aq->fw_output].pin_payload.addr = ivb->dma_addr;
++	set->output_pins[aq->fw_output].pin_payload.user_token = (uintptr_t)set;
++	set->output_pins[aq->fw_output].upipe_capture_cfg = 0;
+ }
+ 
+ /*
+@@ -384,6 +403,19 @@ static void buf_queue(struct vb2_buffer *vb)
+ 		return;
+ 	}
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	mutex_lock(&av->isys->reset_mutex);
++	if (av->isys->state & RESET_STATE_IN_RESET) {
++		dev_dbg(dev, "in reset, adding to incoming\n");
++		mutex_unlock(&av->isys->reset_mutex);
++		return;
++	}
++	mutex_unlock(&av->isys->reset_mutex);
++
++	/* ip may be cleared in ipu reset */
++	stream = av->stream;
++#endif
++
+ 	mutex_lock(&stream->mutex);
+ 
+ 	if (stream->nr_streaming != stream->nr_queues) {
+@@ -598,6 +630,9 @@ static int start_streaming(struct vb2_queue *q, unsigned int count)
+ 
+ out:
+ 	mutex_unlock(&stream->mutex);
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	av->start_streaming = 1;
++#endif
+ 
+ 	return 0;
+ 
+@@ -618,17 +653,334 @@ static int start_streaming(struct vb2_queue *q, unsigned int count)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++static void reset_stop_streaming(struct ipu7_isys_video *av)
++{
++	struct ipu7_isys_queue *aq = &av->aq;
++	struct ipu7_isys_stream *stream = av->stream;
++	struct ipu7_isys_buffer *ib;
++	struct vb2_buffer *vb;
++	unsigned long flags;
++
++	mutex_lock(&av->isys->stream_mutex);
++	if (stream->nr_streaming == stream->nr_queues && stream->streaming)
++		ipu7_isys_video_set_streaming(av, 0, NULL);
++	mutex_unlock(&av->isys->stream_mutex);
++
++	mutex_lock(&stream->mutex);
++	stream->nr_streaming--;
++	list_del(&aq->node);
++	stream->streaming = 0;
++	mutex_unlock(&stream->mutex);
++
++	ipu7_isys_stream_cleanup(av);
++
++	spin_lock_irqsave(&aq->lock, flags);
++	while (!list_empty(&aq->active)) {
++		ib = list_last_entry(&aq->active, struct ipu7_isys_buffer,
++				     head);
++		vb = ipu7_isys_buffer_to_vb2_buffer(ib);
++
++		list_del(&ib->head);
++		spin_unlock_irqrestore(&aq->lock, flags);
++
++		vb2_buffer_done(vb, VB2_BUF_STATE_ERROR);
++
++		spin_lock_irqsave(&aq->lock, flags);
++	}
++	spin_unlock_irqrestore(&aq->lock, flags);
++
++	ipu7_isys_fw_close(av->isys);
++}
++
++static int reset_start_streaming(struct ipu7_isys_video *av)
++{
++	struct ipu7_isys_queue *aq = &av->aq;
++	struct device *dev = &av->isys->adev->auxdev.dev;
++	struct ipu7_isys_buffer_list __bl, *bl = NULL;
++	struct ipu7_isys_stream *stream;
++	struct media_entity *source_entity = NULL;
++	int nr_queues;
++	int ret;
++
++	dev_dbg(dev, "%s: reset start streaming\n", av->vdev.name);
++
++	av->skipframe = 1;
++
++	ret = ipu7_isys_setup_video(av, &source_entity, &nr_queues);
++	if (ret < 0) {
++		dev_dbg(dev, "failed to setup video\n");
++		goto out_return_buffers;
++	}
++
++	ret = ipu7_isys_link_fmt_validate(aq);
++	if (ret) {
++		dev_dbg(dev,
++			"%s: link format validation failed (%d)\n",
++			av->vdev.name, ret);
++		goto out_pipeline_stop;
++	}
++
++	stream = av->stream;
++	mutex_lock(&stream->mutex);
++	if (!stream->nr_streaming) {
++		ret = ipu7_isys_video_prepare_stream(av, source_entity,
++						     nr_queues);
++		if (ret) {
++			mutex_unlock(&stream->mutex);
++			goto out_pipeline_stop;
++		}
++	}
++
++	stream->nr_streaming++;
++	dev_dbg(dev, "queue %u of %u\n", stream->nr_streaming,
++		stream->nr_queues);
++
++	list_add(&aq->node, &stream->queues);
++
++	if (stream->nr_streaming != stream->nr_queues)
++		goto out;
++
++	bl = &__bl;
++
++	int retry = 5;
++
++	while (retry--) {
++		ret = buffer_list_get(stream, bl);
++		if (ret < 0) {
++			dev_dbg(dev, "wait for incoming buffer, retry %d\n", retry);
++			usleep_range(100000, 110000);
++			continue;
++		}
++		break;
++	}
++
++	/*
++	 * In reset start streaming and no buffer available,
++	 * it is considered that gstreamer has been closed,
++	 * and reset start is no needed, not driver bug.
++	 */
++	if (ret) {
++		dev_dbg(dev, "reset start: no buffer available, gstreamer colsed\n");
++		mutex_lock(&av->isys->stream_mutex);
++		if (stream->nr_streaming == stream->nr_queues && stream->streaming)
++			ipu7_isys_video_set_streaming(av, 0, NULL);
++		mutex_unlock(&av->isys->stream_mutex);
++
++		goto out_stream_start;
++	}
++
++	ret = ipu7_isys_fw_open(av->isys);
++	if (ret)
++		goto out_stream_start;
++
++	ipu7_isys_setup_hw(av->isys);
++
++	ret = ipu7_isys_stream_start(av, bl, false);
++	if (ret)
++		goto out_isys_fw_close;
++
++out:
++	mutex_unlock(&stream->mutex);
++	av->start_streaming = 1;
++	return 0;
++
++out_isys_fw_close:
++	ipu7_isys_fw_close(av->isys);
++
++out_stream_start:
++	list_del(&aq->node);
++	stream->nr_streaming--;
++	mutex_unlock(&stream->mutex);
++
++out_pipeline_stop:
++	ipu7_isys_stream_cleanup(av);
++
++out_return_buffers:
++	return_buffers(aq, VB2_BUF_STATE_QUEUED);
++	av->start_streaming = 0;
++	dev_dbg(dev, "%s: reset start streaming failed!\n", av->vdev.name);
++	return ret;
++}
++
++static int ipu_isys_reset(struct ipu7_isys_video *self_av,
++			  struct ipu7_isys_stream *self_stream)
++{
++	struct ipu7_isys *isys = self_av->isys;
++	struct ipu7_bus_device *adev = isys->adev;
++	struct ipu7_isys_video *av = NULL;
++	struct ipu7_isys_stream *stream = NULL;
++	struct device *dev = &adev->auxdev.dev;
++	int i, j;
++	int has_streaming = 0;
++	const struct ipu7_isys_internal_csi2_pdata *csi2_pdata =
++		&isys->pdata->ipdata->csi2;
++
++	mutex_lock(&isys->reset_mutex);
++	if (isys->state & RESET_STATE_IN_RESET) {
++		mutex_unlock(&isys->reset_mutex);
++		return 0;
++	}
++	isys->state |= RESET_STATE_IN_RESET;
++	dev_dbg(dev, "%s: %s\n", __func__, self_av->vdev.name);
++
++	while (isys->state & RESET_STATE_IN_STOP_STREAMING) {
++		dev_dbg(dev, "isys reset: %s: wait for stop\n",
++			self_av->vdev.name);
++		mutex_unlock(&isys->reset_mutex);
++		usleep_range(10000, 11000);
++		mutex_lock(&isys->reset_mutex);
++	}
++
++	mutex_unlock(&isys->reset_mutex);
++
++	dev_dbg(dev, "reset stop streams\n");
++	for (i = 0; i < csi2_pdata->nports; i++) {
++		for (j = 0; j < IPU7_NR_OF_CSI2_SRC_PADS; j++) {
++			av = &isys->csi2[i].av[j];
++			if (av == self_av)
++				continue;
++
++			stream = av->stream;
++			if (!stream || stream == self_stream)
++				continue;
++
++			if (!stream->streaming && !stream->nr_streaming)
++				continue;
++
++			av->reset = true;
++			has_streaming = true;
++			reset_stop_streaming(av);
++		}
++	}
++
++	if (!has_streaming)
++		goto end_of_reset;
++
++	ipu7_cleanup_fw_msg_bufs(isys);
++
++	dev_dbg(dev, "reset start streams\n");
++
++	for (j = 0; j < csi2_pdata->nports; j++) {
++		for (i = 0; i < IPU7_NR_OF_CSI2_SRC_PADS; i++) {
++			av = &isys->csi2[j].av[i];
++			if (!av->reset)
++				continue;
++
++			av->reset = false;
++			reset_start_streaming(av);
++		}
++	}
++
++end_of_reset:
++	mutex_lock(&isys->reset_mutex);
++	isys->state &= ~RESET_STATE_IN_RESET;
++	mutex_unlock(&isys->reset_mutex);
++	dev_dbg(dev, "reset done\n");
++
++	return 0;
++}
++
+ static void stop_streaming(struct vb2_queue *q)
+ {
+ 	struct ipu7_isys_queue *aq = vb2_queue_to_isys_queue(q);
+ 	struct ipu7_isys_video *av = ipu7_isys_queue_to_video(aq);
+ 	struct ipu7_isys_stream *stream = av->stream;
++	int ret = 0;
++
++	struct device *dev = &av->isys->adev->auxdev.dev;
++	bool need_reset;
++
++	dev_dbg(dev, "stop: %s: enter\n", av->vdev.name);
++
++	mutex_lock(&av->isys->reset_mutex);
++	while (av->isys->state) {
++		mutex_unlock(&av->isys->reset_mutex);
++		dev_dbg(dev, "stop: %s: wait for reset or stop, isys->state = %d\n",
++			av->vdev.name, av->isys->state);
++		usleep_range(10000, 11000);
++		mutex_lock(&av->isys->reset_mutex);
++	}
++
++	if (!av->start_streaming) {
++		mutex_unlock(&av->isys->reset_mutex);
++		return_buffers(aq, VB2_BUF_STATE_ERROR);
++		return;
++	}
++
++	av->isys->state |= RESET_STATE_IN_STOP_STREAMING;
++	mutex_unlock(&av->isys->reset_mutex);
++
++	stream = av->stream;
++	if (!stream) {
++		dev_err(dev, "stop: %s: ip cleard!\n", av->vdev.name);
++		return_buffers(aq, VB2_BUF_STATE_ERROR);
++		mutex_lock(&av->isys->reset_mutex);
++		av->isys->state &= ~RESET_STATE_IN_STOP_STREAMING;
++		mutex_unlock(&av->isys->reset_mutex);
++		return;
++	}
+ 
+ 	mutex_lock(&stream->mutex);
+ 	mutex_lock(&av->isys->stream_mutex);
+ 	if (stream->nr_streaming == stream->nr_queues && stream->streaming)
+-		ipu7_isys_video_set_streaming(av, 0, NULL);
++		ret = ipu7_isys_video_set_streaming(av, 0, NULL);
++	mutex_unlock(&av->isys->stream_mutex);
++	if (ret) {
++		dev_err(dev, "stop: video set streaming failed\n");
++		mutex_unlock(&stream->mutex);
++		return;
++	}
++
++	stream->nr_streaming--;
++	list_del(&aq->node);
++	stream->streaming = 0;
++
++	mutex_unlock(&stream->mutex);
++
++	ipu7_isys_stream_cleanup(av);
++
++	return_buffers(aq, VB2_BUF_STATE_ERROR);
++
++	ipu7_isys_fw_close(av->isys);
++
++	av->start_streaming = 0;
++	mutex_lock(&av->isys->reset_mutex);
++	av->isys->state &= ~RESET_STATE_IN_STOP_STREAMING;
++	need_reset = av->isys->need_reset;
++	mutex_unlock(&av->isys->reset_mutex);
++
++	if (need_reset) {
++		if (!stream->nr_streaming) {
++			ipu_isys_reset(av, stream);
++		} else {
++			mutex_lock(&av->isys->reset_mutex);
++			av->isys->need_reset = false;
++			mutex_unlock(&av->isys->reset_mutex);
++		}
++	}
++
++	dev_dbg(dev, "stop: %s: exit\n", av->vdev.name);
++}
++#else
++static void stop_streaming(struct vb2_queue *q)
++{
++	struct ipu7_isys_queue *aq = vb2_queue_to_isys_queue(q);
++	struct ipu7_isys_video *av = ipu7_isys_queue_to_video(aq);
++	struct ipu7_isys_stream *stream = av->stream;
++	int ret = 0;
++
++	mutex_lock(&stream->mutex);
++	mutex_lock(&av->isys->stream_mutex);
++	if (stream->nr_streaming == stream->nr_queues && stream->streaming)
++		ret = ipu7_isys_video_set_streaming(av, 0, NULL);
+ 	mutex_unlock(&av->isys->stream_mutex);
++	if (ret) {
++		dev_err(&av->isys->adev->auxdev.dev,
++			"stop: video set streaming failed\n");
++		mutex_unlock(&stream->mutex);
++		return;
++	}
+ 
+ 	stream->nr_streaming--;
+ 	list_del(&aq->node);
+@@ -642,6 +994,7 @@ static void stop_streaming(struct vb2_queue *q)
+ 
+ 	ipu7_isys_fw_close(av->isys);
+ }
++#endif
+ 
+ static unsigned int
+ get_sof_sequence_by_timestamp(struct ipu7_isys_stream *stream, u64 time)
+@@ -723,6 +1076,11 @@ static void ipu7_isys_queue_buf_done(struct ipu7_isys_buffer *ib)
+ 		 * to the userspace when it is de-queued
+ 		 */
+ 		atomic_set(&ib->str2mmio_flag, 0);
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	} else if (atomic_read(&ib->skipframe_flag)) {
++		vb2_buffer_done(vb, VB2_BUF_STATE_ERROR);
++		atomic_set(&ib->skipframe_flag, 0);
++#endif
+ 	} else {
+ 		vb2_buffer_done(vb, VB2_BUF_STATE_DONE);
+ 	}
+@@ -783,7 +1141,6 @@ void ipu7_isys_queue_buf_ready(struct ipu7_isys_stream *stream,
+ 		spin_unlock_irqrestore(&aq->lock, flags);
+ 
+ 		ipu7_isys_buf_calc_sequence_time(ib, time);
+-
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+ 		if (!IA_GOFO_MSG_ERR_IS_OK(info->error_info)) {
+ 			vbuf = to_vb2_v4l2_buffer(vb);
+@@ -804,6 +1161,10 @@ void ipu7_isys_queue_buf_ready(struct ipu7_isys_stream *stream,
+ 
+ static const struct vb2_ops ipu7_isys_queue_ops = {
+ 	.queue_setup = ipu7_isys_queue_setup,
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(6, 12, 255)
++	.wait_prepare = vb2_ops_wait_prepare,
++	.wait_finish = vb2_ops_wait_finish,
++#endif
+ 	.buf_init = ipu7_isys_buf_init,
+ 	.buf_prepare = ipu7_isys_buf_prepare,
+ 	.buf_cleanup = ipu7_isys_buf_cleanup,
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-video.c b/drivers/staging/media/ipu7/ipu7-isys-video.c
+index 1a7c8a91fffb..c91c7bd5e8cc 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-video.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-video.c
+@@ -18,6 +18,9 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++#include <linux/delay.h>
++#endif
+ 
+ #include <media/media-entity.h>
+ #include <media/v4l2-dev.h>
+@@ -90,9 +93,44 @@ const struct ipu7_isys_pixelformat ipu7_isys_pfmts[] = {
+ 
+ static int video_open(struct file *file)
+ {
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	struct ipu7_isys_video *av = video_drvdata(file);
++	struct ipu7_isys *isys = av->isys;
++	struct ipu7_bus_device *adev = isys->adev;
++
++	mutex_lock(&isys->reset_mutex);
++	if (isys->need_reset) {
++		mutex_unlock(&isys->reset_mutex);
++		dev_warn(&adev->auxdev.dev, "isys power cycle required\n");
++		return -EIO;
++	}
++	mutex_unlock(&isys->reset_mutex);
++
++#endif
+ 	return v4l2_fh_open(file);
+ }
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++static int video_release(struct file *file)
++{
++	struct ipu7_isys_video *av = video_drvdata(file);
++
++	dev_dbg(&av->isys->adev->auxdev.dev,
++		"release: %s: enter\n", av->vdev.name);
++	mutex_lock(&av->isys->reset_mutex);
++	while (av->isys->state & RESET_STATE_IN_RESET) {
++		mutex_unlock(&av->isys->reset_mutex);
++		dev_dbg(&av->isys->adev->auxdev.dev,
++			"release: %s: wait for reset\n", av->vdev.name);
++		usleep_range(10000, 11000);
++		mutex_lock(&av->isys->reset_mutex);
++	}
++	mutex_unlock(&av->isys->reset_mutex);
++	return vb2_fop_release(file);
++}
++
++#endif
++
+ const struct ipu7_isys_pixelformat *ipu7_isys_get_isys_format(u32 pixelformat)
+ {
+ 	unsigned int i;
+@@ -418,10 +456,23 @@ static int ipu7_isys_fw_pin_cfg(struct ipu7_isys_video *av,
+ 	/* output pin crop */
+ 	output_pin->crop.line_top = 0;
+ 	output_pin->crop.line_bottom = 0;
++	output_pin->crop.column_left = 0;
++	output_pin->crop.column_right = 0;
+ 
+ 	/* output de-compression */
+ 	output_pin->dpcm.enable = 0;
+ 
++	/* upipe_cfg */
++	output_pin->upipe_pin_cfg.opaque_pin_cfg = 0;
++	output_pin->upipe_pin_cfg.plane_offset_1 = 0;
++	output_pin->upipe_pin_cfg.plane_offset_2 = 0;
++	output_pin->upipe_pin_cfg.single_uob_fifo = 0;
++	output_pin->upipe_pin_cfg.shared_uob_fifo = 0;
++	output_pin->upipe_enable = 0;
++	output_pin->binning_factor = 0;
++	/* stupid setting, even unused, SW still need to set a valid value */
++	output_pin->cfa_dim = IPU_INSYS_CFA_DIM_2x2;
++
+ 	/* frame format type */
+ 	pfmt = ipu7_isys_get_isys_format(av->pix_fmt.pixelformat);
+ 	output_pin->ft = (u16)pfmt->css_pixelformat;
+@@ -587,7 +638,11 @@ static void stop_streaming_firmware(struct ipu7_isys_video *av)
+ 	}
+ 
+ 	tout = wait_for_completion_timeout(&stream->stream_stop_completion,
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++				       FW_CALL_TIMEOUT_JIFFIES_RESET);
++#else
+ 					   FW_CALL_TIMEOUT_JIFFIES);
++#endif
+ 	if (!tout)
+ 		dev_warn(dev, "stream stop time out\n");
+ 	else if (stream->error)
+@@ -612,7 +667,11 @@ static void close_streaming_firmware(struct ipu7_isys_video *av)
+ 	}
+ 
+ 	tout = wait_for_completion_timeout(&stream->stream_close_completion,
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++					   FW_CALL_TIMEOUT_JIFFIES_RESET);
++#else
+ 					   FW_CALL_TIMEOUT_JIFFIES);
++#endif
+ 	if (!tout)
+ 		dev_warn(dev, "stream close time out\n");
+ 	else if (stream->error)
+@@ -620,6 +679,13 @@ static void close_streaming_firmware(struct ipu7_isys_video *av)
+ 	else
+ 		dev_dbg(dev, "close stream: complete\n");
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++		stream->last_sequence = atomic_read(&stream->sequence);
++		dev_dbg(dev, "ip->last_sequence = %d\n",
++			stream->last_sequence);
++
++#endif
++
+ 	put_stream_opened(av);
+ }
+ 
+@@ -634,7 +700,18 @@ int ipu7_isys_video_prepare_stream(struct ipu7_isys_video *av,
+ 		return -EINVAL;
+ 
+ 	stream->nr_queues = nr_queues;
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	if (av->isys->state & RESET_STATE_IN_RESET) {
++		atomic_set(&stream->sequence, stream->last_sequence);
++		dev_dbg(&av->isys->adev->auxdev.dev,
++			"atomic_set : stream->last_sequence = %d\n",
++			stream->last_sequence);
++	} else {
++		atomic_set(&stream->sequence, 0);
++	}
++#else
+ 	atomic_set(&stream->sequence, 0);
++#endif
+ 	atomic_set(&stream->buf_id, 0);
+ 
+ 	stream->seq_index = 0;
+@@ -868,7 +945,11 @@ static const struct v4l2_file_operations isys_fops = {
+ 	.unlocked_ioctl = video_ioctl2,
+ 	.mmap = vb2_fop_mmap,
+ 	.open = video_open,
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	.release = video_release,
++#else
+ 	.release = vb2_fop_release,
++#endif
+ };
+ 
+ int ipu7_isys_fw_open(struct ipu7_isys *isys)
+@@ -907,6 +988,28 @@ int ipu7_isys_fw_open(struct ipu7_isys *isys)
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++void ipu7_isys_fw_close(struct ipu7_isys *isys)
++{
++	mutex_lock(&isys->mutex);
++
++	isys->ref_count--;
++
++	if (!isys->ref_count)
++		ipu7_fw_isys_close(isys);
++
++	mutex_unlock(&isys->mutex);
++
++	mutex_lock(&isys->reset_mutex);
++	if (isys->need_reset) {
++		mutex_unlock(&isys->reset_mutex);
++		pm_runtime_put_sync(&isys->adev->auxdev.dev);
++	} else {
++		mutex_unlock(&isys->reset_mutex);
++		pm_runtime_put(&isys->adev->auxdev.dev);
++	}
++}
++#else
+ void ipu7_isys_fw_close(struct ipu7_isys *isys)
+ {
+ 	mutex_lock(&isys->mutex);
+@@ -919,6 +1022,7 @@ void ipu7_isys_fw_close(struct ipu7_isys *isys)
+ 	mutex_unlock(&isys->mutex);
+ 	pm_runtime_put(&isys->adev->auxdev.dev);
+ }
++#endif
+ 
+ int ipu7_isys_setup_video(struct ipu7_isys_video *av,
+ 			  struct media_entity **source_entity, int *nr_queues)
+@@ -1054,6 +1158,12 @@ int ipu7_isys_video_init(struct ipu7_isys_video *av)
+ 	__ipu_isys_vidioc_try_fmt_vid_cap(av, &format);
+ 	av->pix_fmt = format.fmt.pix;
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	av->reset = false;
++	av->skipframe = 0;
++	av->start_streaming = 0;
++#endif
++
+ 	video_set_drvdata(&av->vdev, av);
+ 
+ 	ret = video_register_device(&av->vdev, VFL_TYPE_VIDEO, -1);
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-video.h b/drivers/staging/media/ipu7/ipu7-isys-video.h
+index 1ac1787fabef..e6d1da2b7b47 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-video.h
++++ b/drivers/staging/media/ipu7/ipu7-isys-video.h
+@@ -53,6 +53,9 @@ struct ipu7_isys_stream {
+ 	struct mutex mutex;
+ 	struct media_entity *source_entity;
+ 	atomic_t sequence;
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	int last_sequence;
++#endif
+ 	atomic_t buf_id;
+ 	unsigned int seq_index;
+ 	struct sequence_info seq[IPU_ISYS_MAX_PARALLEL_SOF];
+@@ -89,6 +92,11 @@ struct ipu7_isys_video {
+ 	unsigned int streaming;
+ 	u8 vc;
+ 	u8 dt;
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	unsigned int reset;
++	unsigned int skipframe;
++	unsigned int start_streaming;
++#endif
+ };
+ 
+ #define ipu7_isys_queue_to_video(__aq)			\
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
+index e770a511b69a..cb994bdc9b10 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-isys.c
+@@ -9,6 +9,9 @@
+ #include <linux/bug.h>
+ #include <linux/completion.h>
+ #include <linux/container_of.h>
++#ifdef CONFIG_DEBUG_FS
++#include <linux/debugfs.h>
++#endif
+ #include <linux/delay.h>
+ #include <linux/device.h>
+ #include <linux/dma-mapping.h>
+@@ -24,6 +27,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/types.h>
++#include <linux/version.h>
+ 
+ #include <media/ipu-bridge.h>
+ #include <media/media-entity.h>
+@@ -81,10 +85,10 @@ isys_complete_ext_device_registration(struct ipu7_isys *isys,
+ 	}
+ 
+ 	isys->csi2[csi2->port].nlanes = csi2->nlanes;
+-	if (csi2->bus_type == V4L2_MBUS_CSI2_DPHY)
+-		isys->csi2[csi2->port].phy_mode = PHY_MODE_DPHY;
+-	else
++	if (csi2->bus_type == V4L2_MBUS_CSI2_CPHY)
+ 		isys->csi2[csi2->port].phy_mode = PHY_MODE_CPHY;
++	else
++		isys->csi2[csi2->port].phy_mode = PHY_MODE_DPHY;
+ 
+ 	return 0;
+ 
+@@ -93,6 +97,126 @@ isys_complete_ext_device_registration(struct ipu7_isys *isys,
+ 	return ret;
+ }
+ 
++struct isys_i2c_test {
++	u8 bus_nr;
++	u16 addr;
++	struct i2c_client *client;
++};
++
++static int isys_i2c_test(struct device *dev, void *priv)
++{
++	struct i2c_client *client = i2c_verify_client(dev);
++	struct isys_i2c_test *test = priv;
++
++	if (!client)
++		return 0;
++
++	if (i2c_adapter_id(client->adapter) != test->bus_nr ||
++	    client->addr != test->addr)
++		return 0;
++
++	test->client = client;
++
++	return 0;
++}
++
++static
++struct i2c_client *isys_find_i2c_subdev(struct i2c_adapter *adapter,
++					struct ipu7_isys_subdev_info *sd_info)
++{
++	struct i2c_board_info *info = &sd_info->i2c.board_info;
++	struct isys_i2c_test test = {
++		.bus_nr = i2c_adapter_id(adapter),
++		.addr = info->addr,
++	};
++	int ret;
++
++	ret = i2c_for_each_dev(&test, isys_i2c_test);
++	if (ret || !test.client)
++		return NULL;
++	return test.client;
++}
++
++static int isys_register_ext_subdev(struct ipu7_isys *isys,
++				    struct ipu7_isys_subdev_info *sd_info)
++{
++	struct device *dev = &isys->adev->auxdev.dev;
++	struct i2c_adapter *adapter;
++	struct v4l2_subdev *sd;
++	struct i2c_client *client;
++	int ret;
++	int bus;
++
++	bus = sd_info->i2c.i2c_adapter_id;
++	adapter = i2c_get_adapter(bus);
++	if (!adapter) {
++		dev_warn(dev, "can't find adapter\n");
++		return -ENOENT;
++	}
++
++	dev_info(dev, "creating i2c subdev for %s (address %2.2x, bus %d)\n",
++		 sd_info->i2c.board_info.type, sd_info->i2c.board_info.addr,
++		 bus);
++
++	if (sd_info->csi2) {
++		dev_info(dev, "sensor device on CSI port: %d\n",
++			 sd_info->csi2->port);
++		if (sd_info->csi2->port >= isys->pdata->ipdata->csi2.nports ||
++		    !isys->csi2[sd_info->csi2->port].isys) {
++			dev_warn(dev, "invalid csi2 port %u\n",
++				 sd_info->csi2->port);
++			ret = -EINVAL;
++			goto skip_put_adapter;
++		}
++	} else {
++		dev_info(dev, "No camera subdevice\n");
++	}
++
++	client = isys_find_i2c_subdev(adapter, sd_info);
++	if (client) {
++		dev_warn(dev, "Device exists\n");
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++		/* TODO: remove i2c_unregister_device() */
++		i2c_unregister_device(client);
++#else
++		ret = 0;
++		goto skip_put_adapter;
++#endif
++	}
++
++	sd = v4l2_i2c_new_subdev_board(&isys->v4l2_dev, adapter,
++				       &sd_info->i2c.board_info, NULL);
++	if (!sd) {
++		dev_warn(dev, "can't create new i2c subdev\n");
++		ret = -EINVAL;
++		goto skip_put_adapter;
++	}
++
++	if (!sd_info->csi2)
++		return 0;
++
++	return isys_complete_ext_device_registration(isys, sd, sd_info->csi2);
++
++skip_put_adapter:
++	i2c_put_adapter(adapter);
++
++	return ret;
++}
++
++static void isys_register_ext_subdevs(struct ipu7_isys *isys)
++{
++	struct ipu7_isys_subdev_pdata *spdata = isys->pdata->spdata;
++	struct ipu7_isys_subdev_info **sd_info;
++
++	if (!spdata) {
++		dev_info(&isys->adev->auxdev.dev,
++			 "no subdevice info provided\n");
++		return;
++	}
++	for (sd_info = spdata->subdevs; *sd_info; sd_info++)
++		isys_register_ext_subdev(isys, *sd_info);
++}
++
+ static void isys_stream_init(struct ipu7_isys *isys)
+ {
+ 	unsigned int i;
+@@ -139,6 +263,7 @@ static int isys_fw_log_init(struct ipu7_isys *isys)
+ 	return 0;
+ }
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
+ /* The .bound() notifier callback when a match is found */
+ static int isys_notifier_bound(struct v4l2_async_notifier *notifier,
+ 			       struct v4l2_subdev *sd,
+@@ -257,6 +382,7 @@ static void isys_notifier_cleanup(struct ipu7_isys *isys)
+ 	v4l2_async_nf_unregister(&isys->notifier);
+ 	v4l2_async_nf_cleanup(&isys->notifier);
+ }
++#endif
+ 
+ static void isys_unregister_video_devices(struct ipu7_isys *isys)
+ {
+@@ -407,6 +533,7 @@ static void isys_v4l2_notify(struct v4l2_subdev *sd, unsigned int notification,
+ }
+ #endif
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
+ static int isys_register_devices(struct ipu7_isys *isys)
+ {
+ 	struct device *dev = &isys->adev->auxdev.dev;
+@@ -445,7 +572,75 @@ static int isys_register_devices(struct ipu7_isys *isys)
+ 	if (ret)
+ 		goto out_csi2_unregister_subdevices;
+ 
+-	ret = isys_notifier_init(isys);
++	if (!isys->pdata->spdata) {
++		ret = isys_notifier_init(isys);
++
++	if (ret)
++		goto out_csi2_unregister_subdevices;
++	} else {
++		isys_register_ext_subdevs(isys);
++		ret = v4l2_device_register_subdev_nodes(&isys->v4l2_dev);
++		if (ret)
++			goto out_csi2_unregister_subdevices;
++	}
++
++	return 0;
++
++out_csi2_unregister_subdevices:
++	isys_csi2_unregister_subdevices(isys);
++
++out_video_unregister_device:
++	isys_unregister_video_devices(isys);
++
++out_v4l2_device_unregister:
++	v4l2_device_unregister(&isys->v4l2_dev);
++
++out_media_device_unregister:
++	media_device_unregister(&isys->media_dev);
++	media_device_cleanup(&isys->media_dev);
++
++	dev_err(dev, "failed to register isys devices\n");
++
++	return ret;
++}
++#else
++static int isys_register_devices(struct ipu7_isys *isys)
++{
++	struct device *dev = &isys->adev->auxdev.dev;
++	struct pci_dev *pdev = isys->adev->isp->pdev;
++	int ret;
++
++	media_device_pci_init(&isys->media_dev,
++			      pdev, IPU_MEDIA_DEV_MODEL_NAME);
++
++	strscpy(isys->v4l2_dev.name, isys->media_dev.model,
++		sizeof(isys->v4l2_dev.name));
++
++	ret = media_device_register(&isys->media_dev);
++	if (ret < 0)
++		goto out_media_device_unregister;
++
++	isys->v4l2_dev.mdev = &isys->media_dev;
++	isys->v4l2_dev.ctrl_handler = NULL;
++
++	ret = v4l2_device_register(dev, &isys->v4l2_dev);
++	if (ret < 0)
++		goto out_media_device_unregister;
++
++	ret = isys_register_video_devices(isys);
++	if (ret)
++		goto out_v4l2_device_unregister;
++
++	ret = isys_csi2_register_subdevices(isys);
++	if (ret)
++		goto out_video_unregister_device;
++
++	ret = isys_csi2_create_media_links(isys);
++	if (ret)
++		goto out_csi2_unregister_subdevices;
++
++	isys_register_ext_subdevs(isys);
++	ret = v4l2_device_register_subdev_nodes(&isys->v4l2_dev);
+ 	if (ret)
+ 		goto out_csi2_unregister_subdevices;
+ 
+@@ -468,6 +663,7 @@ static int isys_register_devices(struct ipu7_isys *isys)
+ 
+ 	return ret;
+ }
++#endif
+ 
+ static void isys_unregister_devices(struct ipu7_isys *isys)
+ {
+@@ -579,6 +775,12 @@ static int isys_runtime_pm_suspend(struct device *dev)
+ 	isys->power = 0;
+ 	spin_unlock_irqrestore(&isys->power_lock, flags);
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	mutex_lock(&isys->reset_mutex);
++	isys->need_reset = false;
++	mutex_unlock(&isys->reset_mutex);
++
++#endif
+ 	cpu_latency_qos_update_request(&isys->pm_qos, PM_QOS_DEFAULT_VALUE);
+ 
+ 	ipu7_mmu_hw_cleanup(adev->mmu);
+@@ -609,12 +811,51 @@ static const struct dev_pm_ops isys_pm_ops = {
+ 	.resume = isys_resume,
+ };
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++static void isys_remove(struct auxiliary_device *auxdev)
++{
++	struct ipu7_isys *isys = dev_get_drvdata(&auxdev->dev);
++	struct isys_fw_msgs *fwmsg, *safe;
++	struct ipu7_bus_device *adev = auxdev_to_adev(auxdev);
++
++#ifdef CONFIG_DEBUG_FS
++	if (adev->isp->ipu7_dir)
++		debugfs_remove_recursive(isys->debugfsdir);
++#endif
++	for (int i = 0; i < IPU_ISYS_MAX_STREAMS; i++)
++		mutex_destroy(&isys->streams[i].mutex);
++
++	list_for_each_entry_safe(fwmsg, safe, &isys->framebuflist, head)
++		ipu7_dma_free(adev, sizeof(struct isys_fw_msgs),
++			      fwmsg, fwmsg->dma_addr, 0);
++
++	list_for_each_entry_safe(fwmsg, safe, &isys->framebuflist_fw, head)
++		ipu7_dma_free(adev, sizeof(struct isys_fw_msgs),
++			      fwmsg, fwmsg->dma_addr, 0);
++	if (!isys->pdata->spdata)
++		isys_notifier_cleanup(isys);
++
++	isys_unregister_devices(isys);
++
++	cpu_latency_qos_remove_request(&isys->pm_qos);
++
++	mutex_destroy(&isys->stream_mutex);
++	mutex_destroy(&isys->mutex);
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	mutex_destroy(&isys->reset_mutex);
++#endif
++}
++#else
+ static void isys_remove(struct auxiliary_device *auxdev)
+ {
+ 	struct ipu7_isys *isys = dev_get_drvdata(&auxdev->dev);
+ 	struct isys_fw_msgs *fwmsg, *safe;
+ 	struct ipu7_bus_device *adev = auxdev_to_adev(auxdev);
+ 
++#ifdef CONFIG_DEBUG_FS
++	if (adev->isp->ipu7_dir)
++		debugfs_remove_recursive(isys->debugfsdir);
++#endif
+ 	for (int i = 0; i < IPU_ISYS_MAX_STREAMS; i++)
+ 		mutex_destroy(&isys->streams[i].mutex);
+ 
+@@ -626,14 +867,89 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ 		ipu7_dma_free(adev, sizeof(struct isys_fw_msgs),
+ 			      fwmsg, fwmsg->dma_addr, 0);
+ 
+-	isys_notifier_cleanup(isys);
+ 	isys_unregister_devices(isys);
+ 
+ 	cpu_latency_qos_remove_request(&isys->pm_qos);
+ 
+ 	mutex_destroy(&isys->stream_mutex);
+ 	mutex_destroy(&isys->mutex);
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	mutex_destroy(&isys->reset_mutex);
++#endif
+ }
++#endif
++
++#ifdef CONFIG_DEBUG_FS
++static ssize_t fwlog_read(struct file *file, char __user *userbuf, size_t size,
++			  loff_t *pos)
++{
++	struct ipu7_isys *isys = file->private_data;
++	struct isys_fw_log *fw_log = isys->fw_log;
++	struct device *dev = &isys->adev->auxdev.dev;
++	u32 log_size;
++	int ret = 0;
++	void *buf;
++
++	if (!fw_log)
++		return 0;
++
++	buf = kvzalloc(FW_LOG_BUF_SIZE, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	mutex_lock(&fw_log->mutex);
++	if (!fw_log->size) {
++		dev_warn(dev, "no available fw log\n");
++		mutex_unlock(&fw_log->mutex);
++		goto free_and_return;
++	}
++
++	if (fw_log->size > FW_LOG_BUF_SIZE)
++		log_size = FW_LOG_BUF_SIZE;
++	else
++		log_size = fw_log->size;
++
++	memcpy(buf, fw_log->addr, log_size);
++	dev_info(dev, "copy %d bytes fw log to user...\n", log_size);
++	mutex_unlock(&fw_log->mutex);
++
++	ret = simple_read_from_buffer(userbuf, size, pos, buf,
++				      log_size);
++free_and_return:
++	kvfree(buf);
++
++	return ret;
++}
++
++static const struct file_operations isys_fw_log_fops = {
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.read = fwlog_read,
++	.llseek = default_llseek,
++};
++
++static int ipu7_isys_init_debugfs(struct ipu7_isys *isys)
++{
++	struct dentry *file;
++	struct dentry *dir;
++
++	dir = debugfs_create_dir("isys", isys->adev->isp->ipu7_dir);
++	if (IS_ERR(dir))
++		return -ENOMEM;
++
++	file = debugfs_create_file("fwlog", 0400,
++				   dir, isys, &isys_fw_log_fops);
++	if (IS_ERR(file))
++		goto err;
++
++	isys->debugfsdir = dir;
++
++	return 0;
++err:
++	debugfs_remove_recursive(dir);
++	return -ENOMEM;
++}
++#endif
+ 
+ static int alloc_fw_msg_bufs(struct ipu7_isys *isys, int amount)
+ {
+@@ -777,6 +1093,10 @@ static int isys_probe(struct auxiliary_device *auxdev,
+ 
+ 	mutex_init(&isys->mutex);
+ 	mutex_init(&isys->stream_mutex);
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	mutex_init(&isys->reset_mutex);
++	isys->state = 0;
++#endif
+ 
+ 	spin_lock_init(&isys->listlock);
+ 	INIT_LIST_HEAD(&isys->framebuflist);
+@@ -789,6 +1109,11 @@ static int isys_probe(struct auxiliary_device *auxdev,
+ 
+ 	isys_stream_init(isys);
+ 
++#ifdef CONFIG_DEBUG_FS
++	/* Debug fs failure is not fatal. */
++	ipu7_isys_init_debugfs(isys);
++#endif
++
+ 	cpu_latency_qos_add_request(&isys->pm_qos, PM_QOS_DEFAULT_VALUE);
+ 	ret = alloc_fw_msg_bufs(isys, 20);
+ 	if (ret < 0)
+@@ -939,6 +1264,10 @@ int isys_isr_one(struct ipu7_bus_device *adev)
+ 	if (!isys->adev->syscom)
+ 		return 1;
+ 
++#ifdef ENABLE_FW_OFFLINE_LOGGER
++	ipu7_fw_isys_get_log(isys);
++#endif
++
+ 	resp = ipu7_fw_isys_get_resp(isys);
+ 	if (!resp)
+ 		return 1;
+@@ -1204,5 +1533,10 @@ MODULE_AUTHOR("Tianshu Qiu <tian.shu.qiu@intel.com>");
+ MODULE_AUTHOR("Qingwu Zhang <qingwu.zhang@intel.com>");
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Intel ipu7 input system driver");
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ MODULE_IMPORT_NS("INTEL_IPU7");
+ MODULE_IMPORT_NS("INTEL_IPU_BRIDGE");
++#else
++MODULE_IMPORT_NS(INTEL_IPU7);
++MODULE_IMPORT_NS(INTEL_IPU_BRIDGE);
++#endif
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
+index 0559aa133c5e..be8707fc7cf5 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.h
++++ b/drivers/staging/media/ipu7/ipu7-isys.h
+@@ -25,6 +25,11 @@
+ #include "ipu7-isys-csi2.h"
+ #include "ipu7-isys-video.h"
+ 
++#ifdef CONFIG_DEBUG_FS
++struct dentry;
++
++#endif
++
+ #define IPU_ISYS_ENTITY_PREFIX		"Intel IPU7"
+ 
+ /* FW support max 16 streams */
+@@ -44,8 +49,16 @@
+ #define IPU_ISYS_MAX_WIDTH		8160U
+ #define IPU_ISYS_MAX_HEIGHT		8190U
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++#define RESET_STATE_IN_RESET                 1U
++#define RESET_STATE_IN_STOP_STREAMING        2U
++#endif
++
+ #define FW_CALL_TIMEOUT_JIFFIES		\
+ 	msecs_to_jiffies(IPU_LIB_CALL_TIMEOUT_MS)
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++#define FW_CALL_TIMEOUT_JIFFIES_RESET	msecs_to_jiffies(200)
++#endif
+ 
+ struct isys_fw_log {
+ 	struct mutex mutex; /* protect whole struct */
+@@ -75,6 +88,9 @@ struct ipu7_isys_abi_ops {
+  * @streams_lock: serialise access to streams
+  * @streams: streams per firmware stream ID
+  * @syscom: fw communication layer context
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++ * @need_reset: Isys requires d0i0->i3 transition
++#endif
+  * @ref_count: total number of callers fw open
+  * @mutex: serialise access isys video open/release related operations
+  * @stream_mutex: serialise stream start and stop, queueing requests
+@@ -99,6 +115,10 @@ struct ipu7_isys {
+ 	unsigned int ref_count;
+ 	unsigned int stream_opened;
+ 
++#ifdef CONFIG_DEBUG_FS
++	struct dentry *debugfsdir;
++#endif
++
+ 	struct mutex mutex;	/* Serialise isys video open/release related */
+ 	struct mutex stream_mutex;	/* Stream start, stop, queueing reqs */
+ 
+@@ -118,6 +138,11 @@ struct ipu7_isys {
+ 
+ 	struct ipu7_insys_config *subsys_config;
+ 	dma_addr_t subsys_config_dma_addr;
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	struct mutex reset_mutex;
++	bool need_reset;
++	int state;
++#endif
+ };
+ 
+ struct isys_fw_msgs {
+@@ -136,6 +161,21 @@ struct ipu7_isys_csi2_config {
+ 	enum v4l2_mbus_type bus_type;
+ };
+ 
++struct ipu7_isys_subdev_i2c_info {
++	struct i2c_board_info board_info;
++	int i2c_adapter_id;
++	char i2c_adapter_bdf[32];
++};
++
++struct ipu7_isys_subdev_info {
++	struct ipu7_isys_csi2_config *csi2;
++	struct ipu7_isys_subdev_i2c_info i2c;
++};
++
++struct ipu7_isys_subdev_pdata {
++	struct ipu7_isys_subdev_info **subdevs;
++};
++
+ struct sensor_async_sd {
+ 	struct v4l2_async_connection asc;
+ 	struct ipu7_isys_csi2_config csi2;
+-- 
+2.34.1
+

@@ -1,0 +1,33 @@
+From 6009c94c942f33dbdc0d2ca11dc4fda2cf36cf93 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 12:55:00 +0800
+Subject: [PATCH 43/52] Add patch for ipu7 Makefile
+
+Fill in missing code line for ipu7 Makefile based on patch 0012 v6.18.0 iot
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/staging/media/ipu7/Makefile | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/staging/media/ipu7/Makefile b/drivers/staging/media/ipu7/Makefile
+index d3bf07d7acdf..0997656e9491 100644
+--- a/drivers/staging/media/ipu7/Makefile
++++ b/drivers/staging/media/ipu7/Makefile
+@@ -1,6 +1,13 @@
+ # SPDX-License-Identifier: GPL-2.0
+ # Copyright (c) 2017 - 2025 Intel Corporation.
+ 
++is_kernel_lt_6_10 = $(shell if [ $$(printf "6.10\n$(KERNELVERSION)" | sort -V | head -n1) != "6.10" ]; then echo 1; fi)
++ifeq ($(is_kernel_lt_6_10), 1)
++ifneq ($(EXTERNAL_BUILD), 1)
++src := $(srctree)/$(src)
++endif
++endif
++
+ intel-ipu7-objs				+= ipu7.o \
+ 					   ipu7-bus.o \
+ 					   ipu7-dma.o \
+-- 
+2.34.1
+

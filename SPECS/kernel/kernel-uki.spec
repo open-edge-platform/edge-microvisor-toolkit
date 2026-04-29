@@ -12,7 +12,7 @@
 
 Summary:        Unified Kernel Image
 Name:           kernel-uki
-Version:        6.18.15
+Version:        6.18.20
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
@@ -70,6 +70,10 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Wed Apr 29 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.20-1
+- Update kernel to 6.18.20-1
+- lts-v6.18.20-emt-cve-260417T093242Z
+
 * Mon Mar 16 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.15-1
 - Update kernel to 6.18.15-1
 - lts-v6.18.15-emt-260310T050801Z

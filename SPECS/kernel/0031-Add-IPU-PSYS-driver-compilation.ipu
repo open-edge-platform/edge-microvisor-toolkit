@@ -1,0 +1,24 @@
+From fd8b5179099f14884c569e677d0bcc8989af8d64 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Mon, 13 Apr 2026 13:14:54 +0800
+Subject: [PATCH 31/52] Add IPU PSYS driver compilation
+
+Adding psys as part of compiled drivers in IPU6 pci.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/pci/intel/ipu6/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/pci/intel/ipu6/Makefile b/drivers/media/pci/intel/ipu6/Makefile
+index a821b0a1567f..8a4f4cd7610d 100644
+--- a/drivers/media/pci/intel/ipu6/Makefile
++++ b/drivers/media/pci/intel/ipu6/Makefile
+@@ -21,3 +21,4 @@ intel-ipu6-isys-y		:= ipu6-isys.o \
+ 				ipu6-isys-dwc-phy.o
+ 
+ obj-$(CONFIG_VIDEO_INTEL_IPU6)	+= intel-ipu6-isys.o
++obj-$(CONFIG_VIDEO_INTEL_IPU6)  += psys/
+-- 
+2.34.1
+

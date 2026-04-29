@@ -1,0 +1,47 @@
+From 469a6d21d86c7cab47cfe65312f5cf4d1f7f4de8 Mon Sep 17 00:00:00 2001
+From: KhaiWenTan <khai.wen.tan@intel.com>
+Date: Wed, 1 Apr 2026 10:11:55 +0800
+Subject: [PATCH 3/3] net: stmmac: Update default_an_inband before assign to
+ phylink_config
+
+get_interfaces() will update both the plat->phy_interfaces and
+mdio_bus_data->default_an_inband based on reading a SERDES register.
+Therefore, we moved the get_interfaces() to be executed before
+assigning mdio_bus_data->default_an_inband to
+config->default_an_inband to ensure default_an_inband is in correct
+value.
+
+Signed-off-by: KhaiWenTan <khai.wen.tan@intel.com>
+---
+ drivers/net/ethernet/stmicro/stmmac/stmmac_main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index c0e8f2a67017..72dcf50585d8 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -1209,10 +1209,6 @@ static int stmmac_phy_setup(struct stmmac_priv *priv)
+ 	priv->tx_lpi_clk_stop = priv->plat->flags &
+ 				STMMAC_FLAG_EN_TX_LPI_CLOCKGATING;
+ 
+-	mdio_bus_data = priv->plat->mdio_bus_data;
+-	if (mdio_bus_data)
+-		config->default_an_inband = mdio_bus_data->default_an_inband;
+-
+ 	/* Get the PHY interface modes (at the PHY end of the link) that
+ 	 * are supported by the platform.
+ 	 */
+@@ -1220,6 +1216,10 @@ static int stmmac_phy_setup(struct stmmac_priv *priv)
+ 		priv->plat->get_interfaces(priv, priv->plat->bsp_priv,
+ 					   config->supported_interfaces);
+ 
++	mdio_bus_data = priv->plat->mdio_bus_data;
++	if (mdio_bus_data)
++		config->default_an_inband = mdio_bus_data->default_an_inband;
++
+ 	/* Set the platform/firmware specified interface mode if the
+ 	 * supported interfaces have not already been provided using
+ 	 * phy_interface as a last resort.
+-- 
+2.34.1
+

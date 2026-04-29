@@ -1,0 +1,78 @@
+From bbe2d87fe9e5b0db8ab2660607b41963ac776ee0 Mon Sep 17 00:00:00 2001
+From: "Kooran Paul, Princy" <princy.kooran.paul@intel.com>
+Date: Thu, 1 Aug 2024 10:38:43 +0800
+Subject: [PATCH 11/69] drm/i915: enable CCS on DG1 and TGL for testing
+
+As CCS is not POR for DG1 and TGL, disabled the feature from their
+respective sections in internal, but renabling at hack section
+for testing purpose
+
+v2(MattR):
+ - Now that we expose CCS on gen12lp platforms, consider compute engines
+   when determining offset of CMD_BUF_CCTL in the context image.
+
+Cc: John Harrison <john.c.harrison@intel.com>
+Cc: Ashutosh Dixit <ashutosh.dixit@intel.com>
+Cc: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Cc: Daniele Ceraolo Spurio <daniele.ceraolospurio@intel.com>
+Signed-off-by: Kooran Paul, Princy <princy.kooran.paul@intel.com>
+Signed-off-by: Aravind Iddamsetty <aravind.iddamsetty@intel.com>
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+(cherry picked from commit 1dd1050bfcdfaa79fa879d8e76f76e254c174753)
+---
+ drivers/gpu/drm/i915/gt/intel_lrc.c |  3 ++-
+ drivers/gpu/drm/i915/i915_driver.c  | 17 +++++++++++++++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/intel_lrc.c b/drivers/gpu/drm/i915/gt/intel_lrc.c
+index 764397b28a19a..61b680a6c1b4c 100644
+--- a/drivers/gpu/drm/i915/gt/intel_lrc.c
++++ b/drivers/gpu/drm/i915/gt/intel_lrc.c
+@@ -758,7 +758,8 @@ static int lrc_ring_cmd_buf_cctl(const struct intel_engine_cs *engine)
+ 		 * simply to match the RCS context image layout.
+ 		 */
+ 		return 0xc6;
+-	else if (engine->class != RENDER_CLASS)
++	else if (engine->class != RENDER_CLASS &&
++		 engine->class != COMPUTE_CLASS)
+ 		return -1;
+ 	else if (GRAPHICS_VER(engine->i915) >= 12)
+ 		return 0xb6;
+diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
+index 08aca1b987974..94fcc5d7e01b8 100644
+--- a/drivers/gpu/drm/i915/i915_driver.c
++++ b/drivers/gpu/drm/i915/i915_driver.c
+@@ -814,6 +814,8 @@ static void i915_virtualization_probe(struct drm_i915_private *i915)
+  */
+ int i915_driver_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
++	const struct intel_device_info *match_info =
++		(struct intel_device_info *)ent->driver_data;
+ 	struct drm_i915_private *i915;
+ 	struct intel_display *display;
+ 	int ret;
+@@ -832,6 +834,21 @@ int i915_driver_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	display = i915->display;
+ 
++	/*
++	 * Hack to enable CCS and set ppgtt_size to 47
++	 * on TGL and DG1 for testing purpose
++	 *
++	 */
++	if ((match_info->platform == INTEL_DG1 ||
++	     match_info->platform == INTEL_TIGERLAKE ||
++	     match_info->platform == INTEL_ALDERLAKE_S ||
++	     match_info->platform == INTEL_ALDERLAKE_P) &&
++	     (i915->params.enable_guc & ENABLE_GUC_SUBMISSION)
++	     && i915->params.enable_guc != -1) {
++		RUNTIME_INFO(i915)->ppgtt_size = 47;
++		RUNTIME_INFO(i915)->platform_engine_mask |= BIT(CCS0);
++	}
++
+ 	/* This must be called before any calls to IS/IOV_MODE() macros */
+ 	i915_virtualization_probe(i915);
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,71 @@
+From e067463b9760394f0e4ad093574350b4c36ed41f Mon Sep 17 00:00:00 2001
+From: "Lorenzo Stoakes (Oracle)" <ljs@kernel.org>
+Date: Fri, 27 Mar 2026 17:31:04 +0000
+Subject: [PATCH 6/9] mm/mseal: update VMA end correctly on merge
+
+Previously we stored the end of the current VMA in curr_end, and then upon
+iterating to the next VMA updated curr_start to curr_end to advance to the
+next VMA.
+
+However, this doesn't take into account the fact that a VMA might be
+updated due to a merge by vma_modify_flags(), which can result in curr_end
+being stale and thus, upon setting curr_start to curr_end, ending up with
+an incorrect curr_start on the next iteration.
+
+Resolve the issue by setting curr_end to vma->vm_end unconditionally to
+ensure this value remains updated should this occur.
+
+While we're here, eliminate this entire class of bug by simply setting
+const curr_[start/end] to be clamped to the input range and VMAs, which
+also happens to simplify the logic.
+
+Link: https://lkml.kernel.org/r/20260327173104.322405-1-ljs@kernel.org
+Fixes: 6c2da14ae1e0 ("mm/mseal: rework mseal apply logic")
+Signed-off-by: Lorenzo Stoakes (Oracle) <ljs@kernel.org>
+Reported-by: Antonius <antonius@bluedragonsec.com>
+Closes: https://lore.kernel.org/linux-mm/CAK8a0jwWGj9-SgFk0yKFh7i8jMkwKm5b0ao9=kmXWjO54veX2g@mail.gmail.com/
+Suggested-by: David Hildenbrand (ARM) <david@kernel.org>
+Acked-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Reviewed-by: Pedro Falcato <pfalcato@suse.de>
+Acked-by: David Hildenbrand (Arm) <david@kernel.org>
+Cc: Jann Horn <jannh@google.com>
+Cc: Jeff Xu <jeffxu@chromium.org>
+Cc: Liam Howlett <liam.howlett@oracle.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+(cherry picked from commit 2697dd8ae721db4f6a53d4f4cbd438212a80f8dc)
+---
+ mm/mseal.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/mm/mseal.c b/mm/mseal.c
+index ae442683c5c0d..3d2f06046e90b 100644
+--- a/mm/mseal.c
++++ b/mm/mseal.c
+@@ -56,7 +56,6 @@ static int mseal_apply(struct mm_struct *mm,
+ 		unsigned long start, unsigned long end)
+ {
+ 	struct vm_area_struct *vma, *prev;
+-	unsigned long curr_start = start;
+ 	VMA_ITERATOR(vmi, mm, start);
+ 
+ 	/* We know there are no gaps so this will be non-NULL. */
+@@ -66,6 +65,7 @@ static int mseal_apply(struct mm_struct *mm,
+ 		prev = vma;
+ 
+ 	for_each_vma_range(vmi, vma, end) {
++		const unsigned long curr_start = MAX(vma->vm_start, start);
+ 		const unsigned long curr_end = MIN(vma->vm_end, end);
+ 
+ 		if (!(vma->vm_flags & VM_SEALED)) {
+@@ -79,7 +79,6 @@ static int mseal_apply(struct mm_struct *mm,
+ 		}
+ 
+ 		prev = vma;
+-		curr_start = curr_end;
+ 	}
+ 
+ 	return 0;
+-- 
+2.43.0
+

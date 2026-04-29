@@ -1,0 +1,449 @@
+From 22a2b3b4e119cd328b4553b2dec59da8f9810b75 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 11:36:31 +0800
+Subject: [PATCH 34/52] Modify Kconfig, Makefile and ACPI data
+
+Adapt Kconfig and Makefile to match with
+latest PR61, port over ACPI including pdata
+from PR61.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/platform/intel/Kconfig          |  16 +-
+ drivers/media/platform/intel/Makefile         |  26 +++-
+ drivers/media/platform/intel/ipu-acpi-pdata.c | 137 +++++++++++-------
+ drivers/media/platform/intel/ipu-acpi.c       |  38 ++++-
+ 4 files changed, 156 insertions(+), 61 deletions(-)
+
+diff --git a/drivers/media/platform/intel/Kconfig b/drivers/media/platform/intel/Kconfig
+index e2ebd416dd15..4f5d7ddb94d2 100644
+--- a/drivers/media/platform/intel/Kconfig
++++ b/drivers/media/platform/intel/Kconfig
+@@ -17,8 +17,18 @@ config INTEL_IPU_ACPI
+         tristate "Enable IPU ACPI driver"
+         depends on I2C
+         depends on ACPI
+-        depends on INTEL_SKL_INT3472
++	depends on INTEL_SKL_INT3472
+         help
+-        Driver to read ACPI data from BIOS
++          Driver to read ACPI data from BIOS
+ 
+-        This driver is used to read ACPI data from BIOS
++          This driver is used to read ACPI data from BIOS
++
++config INTEL_IPU7_FPGA_PDATA
++        bool "Enable built in platform data for ipu7 fpga"
++        depends on VIDEO_INTEL_IPU7
++        help
++        Pre-ACPI system platform data is compiled inside kernel.
++
++        This platform data is only used for PSS stage software
++        development and mainly used for pixter or sensor enablement
++        without ACPI support.
+diff --git a/drivers/media/platform/intel/Makefile b/drivers/media/platform/intel/Makefile
+index f430ad64764f..962ad4a5a276 100644
+--- a/drivers/media/platform/intel/Makefile
++++ b/drivers/media/platform/intel/Makefile
+@@ -1,14 +1,30 @@
+ # SPDX-License-Identifier: GPL-2.0-only
++# Copyright (c) 2010 - 2025 Intel Corporation.
++
+ obj-$(CONFIG_VIDEO_PXA27x) += pxa_camera.o
+ 
+-ifneq ($(filter y m, $(CONFIG_VIDEO_INTEL_IPU7)),)
+-ccflags-y += -I$(src)/../../pci/intel/ipu7/
++is_kernel_lt_6_10 = $(shell if [ $$(printf "6.10\n$(KERNELVERSION)" | sort -V | head -n1) != "6.10" ]; then echo 1; fi)
++ifeq ($(is_kernel_lt_6_10), 1)
++ifneq ($(EXTERNAL_BUILD), 1)
++src := $(srctree)/$(src)
++endif
+ endif
+ 
++ccflags-y += -I$(src)/../../../staging/media/ipu7/
++
++# Comment: For checking purposes if this is needed for kernel compilation
++# ifneq ($(filter y m, $(CONFIG_VIDEO_INTEL_IPU7)),)
++# ccflags-y += -I$(src)/../../pci/intel/ipu7/
++# endif
++
+ ifneq ($(filter y m, $(CONFIG_VIDEO_INTEL_IPU6)),)
+ ccflags-y += -I$(src)/../../pci/intel/ipu6/
+ endif
+ 
+-obj-$(CONFIG_INTEL_IPU_ACPI)         += ipu-acpi.o \
+-                                         ipu-acpi-pdata.o \
+-                                         ipu-acpi-common.o
++ifneq ($(filter y m, $(CONFIG_INTEL_IPU_ACPI)),)
++obj-$(CONFIG_INTEL_IPU_ACPI) += ipu-acpi.o \
++                                 ipu-acpi-pdata.o \
++                                 ipu-acpi-common.o
++else
++obj-y += ipu7-fpga-pdata.o
++endif
+\ No newline at end of file
+diff --git a/drivers/media/platform/intel/ipu-acpi-pdata.c b/drivers/media/platform/intel/ipu-acpi-pdata.c
+index 71aa207a94b7..de8a8fe8fda0 100644
+--- a/drivers/media/platform/intel/ipu-acpi-pdata.c
++++ b/drivers/media/platform/intel/ipu-acpi-pdata.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0
+ /*
+- * Copyright (c) 2016-2025 Intel Corporation.
++ * Copyright (c) 2016-2026 Intel Corporation.
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License version
+@@ -125,6 +125,14 @@ static void print_serdes_sdinfo(struct serdes_subdev_info *sdinfo)
+ 	pr_debug("\t\tsuffix \t\t\t= %s", sdinfo->suffix);
+ 	pr_debug("\t\tboard_info.type \t= %s", sdinfo->board_info.type);
+ 	pr_debug("\t\tboard_info.addr \t= 0x%x", sdinfo->board_info.addr);
++	pr_debug("\t\tser_gpio \t\t= ");
++	for (i = 0; i < MAX_SER_GPIO_NUM; i++) {
++		pr_debug("\t\t\t\t\tpin[%d] = %d, func = %s, flags = %lu", i,
++			 sdinfo->ser_gpio[i].chip_hwnum,
++			 sdinfo->ser_gpio[i].con_id, sdinfo->ser_gpio[i].flags);
++	}
++
++	pr_debug("\t\tsensor_dt \t\t= %x", sdinfo->sensor_dt);
+ 
+ 	pr_debug("serdes board_info.platform_data");
+ 	pr_debug("\t\tlanes \t\t\t= %d", sd_mpdata->lanes);
+@@ -210,7 +218,7 @@ static void print_subdev(struct ipu_isys_subdev_info *sd)
+ 	pr_debug("\t\ti2c_slave_address \t= 0x%x", spdata->i2c_slave_address);
+ 	pr_debug("\t\tirq_pin \t\t= %d", spdata->irq_pin);
+ 	pr_debug("\t\tirq_pin_name \t\t= %s", spdata->irq_pin_name);
+-	pr_debug("\t\tsuffix \t\t\t= %c", spdata->suffix);
++	pr_debug("\t\tsuffix \t\t\t=%s", spdata->suffix);
+ 	pr_debug("\t\treset_pin \t\t= %d", spdata->reset_pin);
+ 	pr_debug("\t\tdetect_pin \t\t= %d", spdata->detect_pin);
+ 
+@@ -255,10 +263,21 @@ static void update_hex(struct device *dev,
+ 	}
+ }
+ 
+-static void update_int(struct device *dev,
++static void update_uint(struct device *dev,
+ 		char msg[MSG_LEN],
+ 		unsigned int *old_int,
+ 		unsigned int new_int)
++{
++	if (*old_int != new_int) {
++		dev_info(dev, "%s %u -> %u", msg, *old_int, new_int);
++		*old_int = new_int;
++	}
++}
++
++static void update_int(struct device *dev,
++		char msg[MSG_LEN],
++		int *old_int,
++		int new_int)
+ {
+ 	if (*old_int != new_int) {
+ 		dev_info(dev, "%s %d -> %d", msg, *old_int, new_int);
+@@ -304,8 +323,8 @@ static void update_subdev(struct device *dev,
+ 					new_sd->i2c.board_info.platform_data;
+ 
+ 	/* csi2 */
+-	update_int(dev, "CSI2 port", &(*old_sd)->csi2->port, new_sd->csi2->port);
+-	update_int(dev, "CSI2 nlanes", &(*old_sd)->csi2->nlanes, new_sd->csi2->nlanes);
++	update_uint(dev, "CSI2 port", &(*old_sd)->csi2->port, new_sd->csi2->port);
++	update_uint(dev, "CSI2 nlanes", &(*old_sd)->csi2->nlanes, new_sd->csi2->nlanes);
+ 
+ 	/* i2c */
+ 	update_short(dev, "I2C board_info addr", &(*old_sd)->i2c.board_info.addr,
+@@ -314,18 +333,20 @@ static void update_subdev(struct device *dev,
+ 		new_sd->i2c.i2c_adapter_bdf);
+ 
+ 	/* platform data */
+-	update_int(dev, "pdata port", &(old_pdata)->port, new_pdata->port);
+-	update_int(dev, "pdata lanes", &(old_pdata)->lanes, new_pdata->lanes);
++	update_uint(dev, "pdata port", &(old_pdata)->port, new_pdata->port);
++	update_uint(dev, "pdata lanes", &(old_pdata)->lanes, new_pdata->lanes);
+ 	update_hex(dev, "pdata I2C slave addr", &(old_pdata)->i2c_slave_address,
+ 		new_pdata->i2c_slave_address);
+-	if (new_pdata->irq_pin >= 0)
+-		update_int(dev, "pdata irq_pin", (unsigned int *)&(old_pdata)->irq_pin, new_pdata->irq_pin);
+-	update_str(dev, "pdata irq_pin_name", old_pdata->irq_pin_name, new_pdata->irq_pin_name);
+-	if (new_pdata->reset_pin >= 0)
+-		update_int(dev, "pdata reset_pin", (unsigned int *)&(old_pdata)->reset_pin, new_pdata->reset_pin);
+-	if (new_pdata->detect_pin >= 0)
+-		update_int(dev, "pdata detect_pin", (unsigned int *)&(old_pdata)->detect_pin, new_pdata->detect_pin);
+-	update_inta(dev, "pdata gpios", old_pdata->gpios, new_pdata->gpios, IPU_SPDATA_GPIO_NUM);
++	update_int(dev, "pdata irq_pin", &(old_pdata)->irq_pin,
++		new_pdata->irq_pin);
++	update_str(dev, "pdata irq_pin_name", old_pdata->irq_pin_name,
++		new_pdata->irq_pin_name);
++	update_int(dev, "pdata reset_pin", (unsigned int *)&(old_pdata)->reset_pin,
++		new_pdata->reset_pin);
++	update_int(dev, "pdata detect_pin", (unsigned int *)&(old_pdata)->detect_pin,
++		new_pdata->detect_pin);
++	update_inta(dev, "pdata gpios", old_pdata->gpios, new_pdata->gpios,
++		IPU_SPDATA_GPIO_NUM);
+ }
+ 
+ static void update_serdes_subdev(struct device *dev,
+@@ -343,8 +364,8 @@ static void update_serdes_subdev(struct device *dev,
+ 	struct serdes_module_pdata *old_mpdata, *new_mpdata;
+ 
+ 	/* csi2 */
+-	update_int(dev, "CSI2 port", &(*old_sd)->csi2->port, new_sd->csi2->port);
+-	update_int(dev, "CSI2 nlanes", &(*old_sd)->csi2->nlanes, new_sd->csi2->nlanes);
++	update_uint(dev, "CSI2 port", &(*old_sd)->csi2->port, new_sd->csi2->port);
++	update_uint(dev, "CSI2 nlanes", &(*old_sd)->csi2->nlanes, new_sd->csi2->nlanes);
+ 
+ 	/* i2c */
+ 	update_short(dev, "I2C board_info addr", &(*old_sd)->i2c.board_info.addr,
+@@ -352,9 +373,9 @@ static void update_serdes_subdev(struct device *dev,
+ 	update_str(dev, "I2C i2c_adapter_bdf", (*old_sd)->i2c.i2c_adapter_bdf,
+ 		new_sd->i2c.i2c_adapter_bdf);
+ 
+-	update_int(dev, "I2C Pdata reset_gpio", &old_pdata->reset_gpio,
++	update_uint(dev, "I2C Pdata reset_gpio", &old_pdata->reset_gpio,
+ 		new_pdata->reset_gpio);
+-	update_int(dev, "I2C Pdata FPD_gpio", &old_pdata->FPD_gpio, new_pdata->FPD_gpio);
++	update_uint(dev, "I2C Pdata FPD_gpio", &old_pdata->FPD_gpio, new_pdata->FPD_gpio);
+ 
+ 	/* platform data */
+ 	for (i = 0; i < SERDES_MAX_PORT; i++) {
+@@ -365,7 +386,7 @@ static void update_serdes_subdev(struct device *dev,
+ 		new_mpdata = new_sdinfo->board_info.platform_data;
+ 
+ 		if (!strcmp(old_sdinfo->board_info.type, new_sdinfo->board_info.type) &&
+-			old_sdinfo->suffix == new_sdinfo->suffix) {
++			!strcmp(old_sdinfo->suffix, new_sdinfo->suffix)) {
+ 			update_short(dev, "SdInfo port", &old_sdinfo->rx_port,
+ 				new_sdinfo->rx_port);
+ 			update_short(dev, "SdInfo ser_alias", &old_sdinfo->ser_alias,
+@@ -374,12 +395,10 @@ static void update_serdes_subdev(struct device *dev,
+ 				new_sdinfo->board_info.addr);
+ 
+ 			if (!strcmp(old_mpdata->module_name, new_mpdata->module_name)) {
+-				update_int(dev, "mPdata lanes", &old_mpdata->lanes,
++				update_uint(dev, "mPdata lanes", &old_mpdata->lanes,
+ 					new_mpdata->lanes);
+-				if (new_mpdata->fsin >= 0)
+-					update_int(dev, "mPdata fsin",
+-						   (unsigned int *)&old_mpdata->fsin,
+-						   new_mpdata->fsin);
++				update_int(dev, "mPdata fsin", &old_mpdata->fsin,
++					new_mpdata->fsin);
+ 				update_inta(dev, "mPdata gpio_powerup_seq",
+ 						(int *)old_mpdata->gpio_powerup_seq,
+ 						(int *)new_mpdata->gpio_powerup_seq,
+@@ -415,11 +434,11 @@ static int compare_subdev(struct device *dev,
+ 			new_pdata = (struct sensor_platform_data *)
+ 					new_subdev->i2c.board_info.platform_data;
+ 
+-			if (old_pdata->suffix == new_pdata->suffix) {
+-				dev_info(dev, "Found matching sensor : %s %c",
+-					old_subdev->i2c.board_info.type,
+-					old_pdata->suffix);
+-				return 0;
++		if (!strcmp(old_pdata->suffix, new_pdata->suffix)) {
++			dev_info(dev, "Found matching sensor : %s %s",
++			old_subdev->i2c.board_info.type,
++			old_pdata->suffix);
++			return 0;
+ 			}
+ 		} else if (connect == TYPE_SERDES) {
+ 			struct serdes_platform_data *old_pdata, *new_pdata;
+@@ -491,7 +510,7 @@ static void update_pdata(struct device *dev,
+ 				acpi_pdata = (struct sensor_platform_data *)
+ 					acpi_subdev->i2c.board_info.platform_data;
+ 
+-				dev_err(dev, "Pdata does not contain %s %c\n",
++				dev_err(dev, "Pdata does not contain %s %s\n",
+ 					acpi_subdev->i2c.board_info.type,
+ 					acpi_pdata->suffix);
+ 
+@@ -642,10 +661,11 @@ static int set_serdes_subdev(struct ipu_isys_subdev_info **serdes_sd,
+ 		serdes_sdinfo[i].phy_i2c_addr = serdes_info.phy_i2c_addr;
+ 		snprintf(serdes_sdinfo[i].suffix, sizeof(serdes_sdinfo[i].suffix), "%c-%d",
+ 			 SUFFIX_BASE + i, port);
+-#if IS_ENABLED(CONFIG_VIDEO_ISX031)
+-		serdes_sdinfo[i].ser_phys_addr = 0x40;
+-		serdes_sdinfo[i].sensor_dt = 0x1e;
+-#endif
++		serdes_sdinfo[i].ser_phys_addr = serdes_info.ser_phys_addr;
++
++		memcpy(serdes_sdinfo[i].ser_gpio, serdes_info.ser_gpio,
++			sizeof(struct gpiod_lookup) * MAX_SER_GPIO_NUM);
++		serdes_sdinfo[i].sensor_dt = serdes_info.sensor_dt;
+ 	}
+ 
+ 	(*pdata)->subdev_info = serdes_sdinfo;
+@@ -680,7 +700,7 @@ static int set_pdata(struct ipu_isys_subdev_info **sensor_sd,
+ 		/* use ascii */
+ 		/* port for start from 0 */
+ 		if (port >= 0) {
+-			pdata->suffix = port + SUFFIX_BASE;
++			snprintf(pdata->suffix, sizeof(pdata->suffix), "%c", port + SUFFIX_BASE);
+ 			pr_info("IPU ACPI: create %s on port %d",
+ 				sensor_name, port);
+ 		} else
+@@ -726,9 +746,12 @@ static int set_pdata(struct ipu_isys_subdev_info **sensor_sd,
+ }
+ 
+ static void set_serdes_info(struct device *dev, const char *sensor_name,
+-			    const char *serdes_name,
+-			    struct sensor_bios_data *cam_data,
+-			    int sensor_physical_addr)
++				const char *serdes_name,
++				struct sensor_bios_data *cam_data,
++				int sensor_physical_addr,
++				int ser_physical_addr,
++				const struct gpiod_lookup *ser_gpio,
++				unsigned int sensor_dt)
+ {
+ 	int i;
+ 
+@@ -742,12 +765,22 @@ static void set_serdes_info(struct device *dev, const char *sensor_name,
+ 	i = 1;
+ 	/* serializer mapped addr */
+ 	serdes_info.ser_map_addr = cam_data->i2c[i++].addr;
++	/* serializer physical addr */
++	serdes_info.ser_phys_addr = ser_physical_addr;
+ 	/* sensor mapped addr */
+ 	serdes_info.sensor_map_addr = cam_data->i2c[i++].addr;
+ 
+ 		serdes_info.gpio_powerup_seq = 0;
+ 
+ 	serdes_info.phy_i2c_addr = sensor_physical_addr;
++
++	/* ser_gpio is random numbering. re-order and only update serdes_info.ser_gpio if valid. */
++	for (int i = 0; i < MAX_SER_GPIO_NUM; i++) {
++		if (ser_gpio[i].chip_hwnum < MAX_SER_GPIO_NUM &&
++			ser_gpio[i].con_id)
++			serdes_info.ser_gpio[i] = ser_gpio[i];
++	}
++	serdes_info.sensor_dt = sensor_dt;
+ }
+ 
+ static int populate_sensor_pdata(struct device *dev,
+@@ -759,7 +792,10 @@ static int populate_sensor_pdata(struct device *dev,
+ 			const char *serdes_name,
+ 			const char *hid_name,
+ 			int sensor_physical_addr,
+-			int link_freq)
++			int link_freq,
++			int ser_physical_addr,
++			const struct gpiod_lookup *ser_gpio,
++			unsigned int sensor_dt)
+ {
+ 	int ret;
+ 
+@@ -811,7 +847,8 @@ static int populate_sensor_pdata(struct device *dev,
+ 		}
+ 
+ 		/* local serdes info */
+-		set_serdes_info(dev, sensor_name, serdes_name, cam_data, sensor_physical_addr);
++		set_serdes_info(dev, sensor_name, serdes_name, cam_data,
++				sensor_physical_addr, ser_physical_addr, ser_gpio, sensor_dt);
+ 	}
+ 
+ 	/* Use last I2C device */
+@@ -828,12 +865,12 @@ static int populate_sensor_pdata(struct device *dev,
+ 	return 0;
+ }
+ 
+-int get_sensor_pdata(struct device *dev,
+-			struct ipu_camera_module_data *data,
+-			void *priv, size_t size,
+-			enum connection_type connect, const char *sensor_name,
+-			const char *serdes_name, const char *hid_name,
+-			int sensor_physical_addr, int link_freq)
++int get_sensor_pdata(struct device *dev, struct ipu_camera_module_data *data,
++		     void *priv, size_t size, enum connection_type connect,
++		     const char *sensor_name, const char *serdes_name,
++		     const char *hid_name, int sensor_physical_addr,
++		     int link_freq, int ser_physical_addr, const struct gpiod_lookup *ser_gpio,
++		     unsigned int sensor_dt)
+ {
+ 	struct sensor_bios_data *cam_data;
+ 	struct control_logic_data *ctl_data;
+@@ -881,8 +918,10 @@ int get_sensor_pdata(struct device *dev,
+ 
+ 	/* populate pdata */
+ 	rval = populate_sensor_pdata(dev, &sensor_sd, cam_data, ctl_data,
+-				     connect, sensor_name, serdes_name, hid_name,
+-				     sensor_physical_addr, link_freq);
++					connect, sensor_name, serdes_name,
++					hid_name, sensor_physical_addr,
++					link_freq, ser_physical_addr, ser_gpio,
++					sensor_dt);
+ 	if (rval) {
+ 		kfree(sensor_sd);
+ 		kfree(cam_data);
+diff --git a/drivers/media/platform/intel/ipu-acpi.c b/drivers/media/platform/intel/ipu-acpi.c
+index 8b94dc307735..d7bd98160dd6 100644
+--- a/drivers/media/platform/intel/ipu-acpi.c
++++ b/drivers/media/platform/intel/ipu-acpi.c
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0
+ /*
+- * Copyright (c) 2016-2025 Intel Corporation.
++ * Copyright (c) 2016-2026 Intel Corporation.
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License version
+@@ -37,6 +37,10 @@
+ #include <media/ipu-acpi.h>
+ #include <media/ipu-get-acpi.h>
+ 
++#if IS_ENABLED(CONFIG_VIDEO_ISX031)
++#include <media/i2c/isx031.h>
++#endif
++
+ static LIST_HEAD(devices);
+ 
+ static struct ipu_camera_module_data *add_device_to_list(
+@@ -60,8 +64,31 @@ static const struct ipu_acpi_devices supported_devices[] = {
+ 
+ #if IS_ENABLED(CONFIG_VIDEO_MAX9X)
+ #if IS_ENABLED(CONFIG_VIDEO_ISX031)
+-	{ "INTC031M", ISX031_NAME, get_sensor_pdata, NULL, 0, TYPE_SERDES, "max9x",
+-		ISX031_I2C_ADDRESS, 1600 },	// D3 ISX031 HID
++	{
++		.hid_name = "INTC031M",
++		.real_driver = ISX031_NAME,
++		.get_platform_data = get_sensor_pdata,
++		.priv_data = NULL,
++		.priv_size = 0,
++		.connect = TYPE_SERDES,
++		.serdes_name = "max9x",
++		.sensor_physical_addr = ISX031_I2C_ADDRESS,
++		.link_freq = 1600,
++		.ser_physical_addr = 0x40,
++		.ser_gpio = {
++			{
++				.chip_hwnum = 0,
++				.con_id = "reset",
++				.flags = GPIO_ACTIVE_LOW,
++			},
++			{
++				.chip_hwnum = 7,
++				.con_id = "fsin",
++				.flags = GPIO_ACTIVE_LOW,
++			},
++		},
++		.sensor_dt = MIPI_CSI2_TYPE_YUV422_8,
++	},	// ISX031 HID
+ #endif
+ #endif
+ };
+@@ -118,7 +145,10 @@ static int ipu_acpi_get_pdata(struct device *dev, int index)
+ 		supported_devices[index].serdes_name,
+ 		supported_devices[index].hid_name,
+ 		supported_devices[index].sensor_physical_addr,
+-		supported_devices[index].link_freq);
++		supported_devices[index].link_freq,
++		supported_devices[index].ser_physical_addr,
++		supported_devices[index].ser_gpio,
++		supported_devices[index].sensor_dt);
+ 
+ 	if (rval)
+ 		return -EPROBE_DEFER;
+-- 
+2.34.1
+

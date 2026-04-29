@@ -1,0 +1,131 @@
+From 4a5e2bae89e79d329cdc8c3839e9e991d95b952e Mon Sep 17 00:00:00 2001
+From: Subramanian Mohan <subramanian.mohan@intel.com>
+Date: Mon, 2 Mar 2026 14:36:24 +0530
+Subject: [PATCH 3/5] pps: add optional driver-controlled polling interface
+
+Some PPS devices operate without a dedicated interrupt source or may
+run on platforms where interrupt delivery is unavailable or unreliable.
+Such drivers typically implement internal polling mechanisms to detect
+PPS signal transitions.
+
+Introduce an optional polling control interface in the PPS subsystem.
+A new optional callback is added to struct pps_source_info allowing
+drivers to enable or disable polling operation. A corresponding sysfs
+attribute is provided to allow userspace to request polling mode.
+
+The PPS core itself does not perform hardware polling. The sysfs
+interface acts only as a control path and forwards the request to the
+driver via the registered callback. Drivers remain responsible for
+implementing polling, typically using hrtimers, and for generating PPS
+events using pps_event().
+
+Drivers that do not implement the polling callback are unaffected and
+attempts to enable polling return -EOPNOTSUPP.
+
+This enables PPS support on hardware lacking interrupt capability while
+preserving subsystem layering by keeping hardware interaction confined
+to drivers.
+
+Co-developed-by: Christopher Hall <christopher.s.hall@intel.com>
+Signed-off-by: Christopher Hall <christopher.s.hall@intel.com>
+Signed-off-by: Subramanian Mohan <subramanian.mohan@intel.com>
+---
+ drivers/pps/sysfs.c        | 30 +++++++++++++++++++++++++++---
+ include/linux/pps_kernel.h |  5 +++++
+ 2 files changed, 32 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pps/sysfs.c b/drivers/pps/sysfs.c
+index 134bc33f6ad0..799a5b254fd4 100644
+--- a/drivers/pps/sysfs.c
++++ b/drivers/pps/sysfs.c
+@@ -5,7 +5,6 @@
+  * Copyright (C) 2007-2009   Rodolfo Giometti <giometti@linux.it>
+  */
+ 
+-
+ #include <linux/device.h>
+ #include <linux/module.h>
+ #include <linux/string.h>
+@@ -24,7 +23,7 @@ static ssize_t assert_show(struct device *dev, struct device_attribute *attr,
+ 		return 0;
+ 
+ 	return sprintf(buf, "%lld.%09d#%d\n",
+-			(long long) pps->assert_tu.sec, pps->assert_tu.nsec,
++			(long long)pps->assert_tu.sec, pps->assert_tu.nsec,
+ 			pps->assert_sequence);
+ }
+ static DEVICE_ATTR_RO(assert);
+@@ -38,7 +37,7 @@ static ssize_t clear_show(struct device *dev, struct device_attribute *attr,
+ 		return 0;
+ 
+ 	return sprintf(buf, "%lld.%09d#%d\n",
+-			(long long) pps->clear_tu.sec, pps->clear_tu.nsec,
++			(long long)pps->clear_tu.sec, pps->clear_tu.nsec,
+ 			pps->clear_sequence);
+ }
+ static DEVICE_ATTR_RO(clear);
+@@ -79,6 +78,30 @@ static ssize_t path_show(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR_RO(path);
+ 
++static ssize_t poll_store(struct device *dev, struct device_attribute *attr,
++			  const char *buf, size_t count)
++{
++	struct pps_device *pps = dev_get_drvdata(dev);
++	bool status;
++	int ret;
++
++	ret = kstrtobool(buf, &status);
++	if (ret)
++		return ret;
++
++	if (!pps->info.enable_poll)
++		return -EOPNOTSUPP;
++
++	ret = pps->info.enable_poll(pps, status);
++	if (ret)
++		return ret;
++
++	pps->is_poll_enabled = status;
++
++	return count;
++}
++static DEVICE_ATTR_WO(poll);
++
+ static struct attribute *pps_attrs[] = {
+ 	&dev_attr_assert.attr,
+ 	&dev_attr_clear.attr,
+@@ -86,6 +109,7 @@ static struct attribute *pps_attrs[] = {
+ 	&dev_attr_echo.attr,
+ 	&dev_attr_name.attr,
+ 	&dev_attr_path.attr,
++	&dev_attr_poll.attr,
+ 	NULL,
+ };
+ 
+diff --git a/include/linux/pps_kernel.h b/include/linux/pps_kernel.h
+index aab0aebb529e..4329d08662f0 100644
+--- a/include/linux/pps_kernel.h
++++ b/include/linux/pps_kernel.h
+@@ -28,6 +28,9 @@ struct pps_source_info {
+ 	void (*echo)(struct pps_device *pps,
+ 			int event, void *data);	/* PPS echo function */
+ 
++	int (*enable_poll)(struct pps_device *pps,
++			   bool enable);	/* PPS poll enable function */
++
+ 	struct module *owner;
+ 	struct device *dev;		/* Parent device for device_create */
+ };
+@@ -43,6 +46,8 @@ struct pps_event_time {
+ struct pps_device {
+ 	struct pps_source_info info;		/* PSS source info */
+ 
++	bool is_poll_enabled;			/* Polling enabled */
++
+ 	struct pps_kparams params;		/* PPS current params */
+ 
+ 	__u32 assert_sequence;			/* PPS assert event seq # */
+-- 
+2.34.1
+

@@ -1,0 +1,328 @@
+From d11c37c4a86922df2e7c4005e9b39fb428aa1d54 Mon Sep 17 00:00:00 2001
+From: Andi Shyti <andi.shyti@linux.intel.com>
+Date: Thu, 22 Aug 2024 11:19:11 +0200
+Subject: [PATCH 63/69] drm/i915: Protect access to the UABI engines list with
+ a mutex
+
+Until now, the UABI engines list has been accessed in read-only
+mode, as it was created once during boot and destroyed upon
+module unload.
+
+In upcoming commits, we will be modifying this list by changing
+the CCS mode, allowing compute engines to be dynamically added
+and removed at runtime based on user whims.
+
+To ensure thread safety and prevent race conditions, we need to
+protect the engine list with a mutex, thereby serializing access
+to it.
+
+Signed-off-by: Andi Shyti <andi.shyti@linux.intel.com>
+(cherry picked from commit cfbb5643af27c8faf1d0d9849e826cf7c65fd978)
+---
+ drivers/gpu/drm/i915/gem/i915_gem_context.c |  3 +++
+ drivers/gpu/drm/i915/gt/intel_engine_user.c |  7 +++++++
+ drivers/gpu/drm/i915/gt/sysfs_engines.c     |  5 +++++
+ drivers/gpu/drm/i915/i915_cmd_parser.c      |  2 ++
+ drivers/gpu/drm/i915/i915_debugfs.c         |  4 ++++
+ drivers/gpu/drm/i915/i915_drv.h             |  4 ++++
+ drivers/gpu/drm/i915/i915_gem.c             |  4 ++++
+ drivers/gpu/drm/i915/i915_perf.c            |  8 +++++---
+ drivers/gpu/drm/i915/i915_pmu.c             | 11 +++++++++--
+ drivers/gpu/drm/i915/i915_query.c           | 21 ++++++++++++++++-----
+ 10 files changed, 59 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_context.c b/drivers/gpu/drm/i915/gem/i915_gem_context.c
+index ed6599694835f..c7da4cce494b2 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_context.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_context.c
+@@ -1123,6 +1123,7 @@ static struct i915_gem_engines *default_engines(struct i915_gem_context *ctx,
+ 	if (!e)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	mutex_lock(&ctx->i915->uabi_engines_mutex);
+ 	for_each_uabi_engine(engine, ctx->i915) {
+ 		struct intel_context *ce;
+ 		struct intel_sseu sseu = {};
+@@ -1154,9 +1155,11 @@ static struct i915_gem_engines *default_engines(struct i915_gem_context *ctx,
+ 
+ 	}
+ 
++	mutex_unlock(&ctx->i915->uabi_engines_mutex);
+ 	return e;
+ 
+ free_engines:
++	mutex_unlock(&ctx->i915->uabi_engines_mutex);
+ 	free_engines(e);
+ 	return err;
+ }
+diff --git a/drivers/gpu/drm/i915/gt/intel_engine_user.c b/drivers/gpu/drm/i915/gt/intel_engine_user.c
+index 8e5284af8335a..209d5badbd3d7 100644
+--- a/drivers/gpu/drm/i915/gt/intel_engine_user.c
++++ b/drivers/gpu/drm/i915/gt/intel_engine_user.c
+@@ -210,6 +210,13 @@ void intel_engines_driver_register(struct drm_i915_private *i915)
+ 	LIST_HEAD(engines);
+ 
+ 	sort_engines(i915, &engines);
++	mutex_init(&i915->uabi_engines_mutex);
++
++	/*
++	 * We are still booting i915 and we are sure we are running
++	 * single-threaded. We don't need at this point to protect the
++	 * uabi_engines access list with the mutex.
++	 */
+ 
+ 	prev = NULL;
+ 	p = &i915->uabi_engines.rb_node;
+diff --git a/drivers/gpu/drm/i915/gt/sysfs_engines.c b/drivers/gpu/drm/i915/gt/sysfs_engines.c
+index f1b0e3fdbb0a1..704a89250cc00 100644
+--- a/drivers/gpu/drm/i915/gt/sysfs_engines.c
++++ b/drivers/gpu/drm/i915/gt/sysfs_engines.c
+@@ -509,6 +509,11 @@ void intel_engines_add_sysfs(struct drm_i915_private *i915)
+ 
+ 	i915->sysfs_engine = dir;
+ 
++	/*
++	 * We are still booting i915 and we are sure we are running
++	 * single-threaded. We don't need at this point to protect the
++	 * uabi_engines access list with the mutex.
++	 */
+ 	for_each_uabi_engine(engine, i915) {
+ 		struct kobject *kobj;
+ 
+diff --git a/drivers/gpu/drm/i915/i915_cmd_parser.c b/drivers/gpu/drm/i915/i915_cmd_parser.c
+index 2905df83e180e..12987ece6f8ed 100644
+--- a/drivers/gpu/drm/i915/i915_cmd_parser.c
++++ b/drivers/gpu/drm/i915/i915_cmd_parser.c
+@@ -1592,12 +1592,14 @@ int i915_cmd_parser_get_version(struct drm_i915_private *dev_priv)
+ 	bool active = false;
+ 
+ 	/* If the command parser is not enabled, report 0 - unsupported */
++	mutex_lock(&dev_priv->uabi_engines_mutex);
+ 	for_each_uabi_engine(engine, dev_priv) {
+ 		if (intel_engine_using_cmd_parser(engine)) {
+ 			active = true;
+ 			break;
+ 		}
+ 	}
++	mutex_unlock(&dev_priv->uabi_engines_mutex);
+ 	if (!active)
+ 		return 0;
+ 
+diff --git a/drivers/gpu/drm/i915/i915_debugfs.c b/drivers/gpu/drm/i915/i915_debugfs.c
+index 7733e7c58a8e5..7ef0f3eb84a51 100644
+--- a/drivers/gpu/drm/i915/i915_debugfs.c
++++ b/drivers/gpu/drm/i915/i915_debugfs.c
+@@ -460,8 +460,10 @@ static int i915_engine_info(struct seq_file *m, void *unused)
+ 		   to_gt(i915)->clock_period_ns);
+ 
+ 	p = drm_seq_file_printer(m);
++	mutex_lock(&i915->uabi_engines_mutex);
+ 	for_each_uabi_engine(engine, i915)
+ 		intel_engine_dump(engine, &p, "%s\n", engine->name);
++	mutex_unlock(&i915->uabi_engines_mutex);
+ 
+ 	intel_gt_show_timelines(to_gt(i915), &p, i915_request_show_with_schedule);
+ 
+@@ -475,6 +477,7 @@ static int i915_wa_registers(struct seq_file *m, void *unused)
+ 	struct drm_i915_private *i915 = node_to_i915(m->private);
+ 	struct intel_engine_cs *engine;
+ 
++	mutex_lock(&i915->uabi_engines_mutex);
+ 	for_each_uabi_engine(engine, i915) {
+ 		const struct i915_wa_list *wal = &engine->ctx_wa_list;
+ 		const struct i915_wa *wa;
+@@ -494,6 +497,7 @@ static int i915_wa_registers(struct seq_file *m, void *unused)
+ 
+ 		seq_printf(m, "\n");
+ 	}
++	mutex_unlock(&i915->uabi_engines_mutex);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
+index ae65b7e02c015..dee0b60521aea 100644
+--- a/drivers/gpu/drm/i915/i915_drv.h
++++ b/drivers/gpu/drm/i915/i915_drv.h
+@@ -233,6 +233,10 @@ struct drm_i915_private {
+ 		struct rb_root uabi_engines;
+ 	};
+ 	unsigned int engine_uabi_class_count[I915_LAST_UABI_ENGINE_CLASS + 1];
++	/*
++	 * Protect access to the uabi_engines list.
++	 */
++	struct mutex uabi_engines_mutex;
+ 
+ 	bool irqs_enabled;
+ 
+diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
+index e14a0c3db999b..c7adb418c4ffa 100644
+--- a/drivers/gpu/drm/i915/i915_gem.c
++++ b/drivers/gpu/drm/i915/i915_gem.c
+@@ -1260,7 +1260,11 @@ void i915_gem_driver_remove(struct drm_i915_private *dev_priv)
+ 	i915_gem_suspend_late(dev_priv);
+ 	for_each_gt(gt, dev_priv, i)
+ 		intel_gt_driver_remove(gt);
++
++	/* Let's make sure no one is using the uabi_engines list */
++	mutex_lock(&dev_priv->uabi_engines_mutex);
+ 	dev_priv->uabi_engines = RB_ROOT;
++	mutex_unlock(&dev_priv->uabi_engines_mutex);
+ 
+ 	/* Flush any outstanding unpin_work. */
+ 	i915_gem_drain_workqueue(dev_priv);
+diff --git a/drivers/gpu/drm/i915/i915_perf.c b/drivers/gpu/drm/i915/i915_perf.c
+index 25a770625ce64..6b763df7cb06e 100644
+--- a/drivers/gpu/drm/i915/i915_perf.c
++++ b/drivers/gpu/drm/i915/i915_perf.c
+@@ -2694,7 +2694,7 @@ oa_configure_all_contexts(struct i915_perf_stream *stream,
+ 	struct intel_engine_cs *engine;
+ 	struct intel_gt *gt = stream->engine->gt;
+ 	struct i915_gem_context *ctx, *cn;
+-	int err;
++	int err = 0;
+ 
+ 	lockdep_assert_held(&gt->perf.lock);
+ 
+@@ -2738,6 +2738,7 @@ oa_configure_all_contexts(struct i915_perf_stream *stream,
+ 	 * If we don't modify the kernel_context, we do not get events while
+ 	 * idle.
+ 	 */
++	mutex_lock(&i915->uabi_engines_mutex);
+ 	for_each_uabi_engine(engine, i915) {
+ 		struct intel_context *ce = engine->kernel_context;
+ 
+@@ -2748,10 +2749,11 @@ oa_configure_all_contexts(struct i915_perf_stream *stream,
+ 
+ 		err = gen8_modify_self(ce, regs, num_regs, active);
+ 		if (err)
+-			return err;
++			break;
+ 	}
++	mutex_unlock(&i915->uabi_engines_mutex);
+ 
+-	return 0;
++	return err;
+ }
+ 
+ static int
+diff --git a/drivers/gpu/drm/i915/i915_pmu.c b/drivers/gpu/drm/i915/i915_pmu.c
+index 39b128e91857d..6ff1cce2074fd 100644
+--- a/drivers/gpu/drm/i915/i915_pmu.c
++++ b/drivers/gpu/drm/i915/i915_pmu.c
+@@ -1017,6 +1017,7 @@ create_event_attributes(struct i915_pmu *pmu)
+ 		}
+ 	}
+ 
++	mutex_lock(&i915->uabi_engines_mutex);
+ 	for_each_uabi_engine(engine, i915) {
+ 		for (i = 0; i < ARRAY_SIZE(engine_events); i++) {
+ 			if (!engine_event_status(engine,
+@@ -1024,6 +1025,7 @@ create_event_attributes(struct i915_pmu *pmu)
+ 				count++;
+ 		}
+ 	}
++	mutex_unlock(&i915->uabi_engines_mutex);
+ 
+ 	/* Allocate attribute objects and table. */
+ 	i915_attr = kcalloc(count, sizeof(*i915_attr), GFP_KERNEL);
+@@ -1081,6 +1083,7 @@ create_event_attributes(struct i915_pmu *pmu)
+ 	}
+ 
+ 	/* Initialize supported engine counters. */
++	mutex_lock(&i915->uabi_engines_mutex);
+ 	for_each_uabi_engine(engine, i915) {
+ 		for (i = 0; i < ARRAY_SIZE(engine_events); i++) {
+ 			char *str;
+@@ -1092,7 +1095,7 @@ create_event_attributes(struct i915_pmu *pmu)
+ 			str = kasprintf(GFP_KERNEL, "%s-%s",
+ 					engine->name, engine_events[i].name);
+ 			if (!str)
+-				goto err;
++				goto err_unlock;
+ 
+ 			*attr_iter++ = &i915_iter->attr.attr;
+ 			i915_iter =
+@@ -1104,18 +1107,22 @@ create_event_attributes(struct i915_pmu *pmu)
+ 			str = kasprintf(GFP_KERNEL, "%s-%s.unit",
+ 					engine->name, engine_events[i].name);
+ 			if (!str)
+-				goto err;
++				goto err_unlock;
+ 
+ 			*attr_iter++ = &pmu_iter->attr.attr;
+ 			pmu_iter = add_pmu_attr(pmu_iter, str, "ns");
+ 		}
+ 	}
++	mutex_unlock(&i915->uabi_engines_mutex);
+ 
+ 	pmu->i915_attr = i915_attr;
+ 	pmu->pmu_attr = pmu_attr;
+ 
+ 	return attr;
+ 
++err_unlock:
++	mutex_unlock(&i915->uabi_engines_mutex);
++
+ err:;
+ 	for (attr_iter = attr; *attr_iter; attr_iter++)
+ 		kfree((*attr_iter)->name);
+diff --git a/drivers/gpu/drm/i915/i915_query.c b/drivers/gpu/drm/i915/i915_query.c
+index 14d9ec0ed7771..7c6669cc4c96f 100644
+--- a/drivers/gpu/drm/i915/i915_query.c
++++ b/drivers/gpu/drm/i915/i915_query.c
+@@ -140,6 +140,7 @@ query_engine_info(struct drm_i915_private *i915,
+ 	if (query_item->flags)
+ 		return -EINVAL;
+ 
++	mutex_lock(&i915->uabi_engines_mutex);
+ 	for_each_uabi_engine(engine, i915)
+ 		num_uabi_engines++;
+ 
+@@ -147,11 +148,13 @@ query_engine_info(struct drm_i915_private *i915,
+ 
+ 	ret = copy_query_item(&query, sizeof(query), len, query_item);
+ 	if (ret != 0)
+-		return ret;
++		goto err;
+ 
+ 	if (query.num_engines || query.rsvd[0] || query.rsvd[1] ||
+-	    query.rsvd[2])
+-		return -EINVAL;
++	    query.rsvd[2]) {
++		ret = -EINVAL;
++		goto err;
++	}
+ 
+ 	info_ptr = &query_ptr->engines[0];
+ 
+@@ -162,17 +165,25 @@ query_engine_info(struct drm_i915_private *i915,
+ 		info.capabilities = engine->uabi_capabilities;
+ 		info.logical_instance = ilog2(engine->logical_mask);
+ 
+-		if (copy_to_user(info_ptr, &info, sizeof(info)))
+-			return -EFAULT;
++		if (copy_to_user(info_ptr, &info, sizeof(info))) {
++			ret = -EFAULT;
++			goto err;
++		}
+ 
+ 		query.num_engines++;
+ 		info_ptr++;
+ 	}
++	mutex_unlock(&i915->uabi_engines_mutex);
+ 
+ 	if (copy_to_user(query_ptr, &query, sizeof(query)))
+ 		return -EFAULT;
+ 
+ 	return len;
++
++err:
++	mutex_unlock(&i915->uabi_engines_mutex);
++
++	return ret;
+ }
+ 
+ static int can_copy_perf_config_registers_or_number(u32 user_n_regs,
+-- 
+2.43.0
+

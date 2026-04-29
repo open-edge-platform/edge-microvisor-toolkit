@@ -1,0 +1,68 @@
+From c8916bd5daa29aca311b6d811197dfeb9af3c368 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 13:00:14 +0800
+Subject: [PATCH 44/52] Add Lontium sensor support for ipu7
+
+Enable Lontium sensor LT6911gxd patch.
+Add LT6911GXD entry in Makefile.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/i2c/Kconfig  | 15 +++++++++++++--
+ drivers/media/i2c/Makefile |  2 +-
+ 2 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index abfa8c67afb8..d5ff6dccc68a 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -288,13 +288,24 @@ config VIDEO_IMX415
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called imx415.
+ 
++config VIDEO_LT6911GXD
++	tristate "Lontium LT6911GXD decoder"
++	depends on ACPI || COMPILE_TEST
++	select V4L2_CCI_I2C
++	help
++		This is a Video4Linux2 sensor-level driver for the Lontium
++		LT6911GXD HDMI to MIPI CSI-2 bridge.
++
++		To compile this driver as a module, choose M here: the
++		module will be called lt6911gxd.
++
+ config VIDEO_ISX031
+ 	tristate "ISX031 sensor support"
+ 	depends on VIDEO_DEV && I2C
+ 	select VIDEO_V4L2_SUBDEV_API
+ 	depends on MEDIA_CAMERA_SUPPORT
+ 	help
+-	  This is a Video4Linux2 sensor-level driver for ISX031 camera.
++		This is a Video4Linux2 sensor-level driver for ISX031 camera.
+ 
+ config VIDEO_MAX9X
+ 	tristate "MAX9X serdes support"
+@@ -302,7 +313,7 @@ config VIDEO_MAX9X
+ 	select VIDEO_V4L2_SUBDEV_API
+ 	depends on MEDIA_CAMERA_SUPPORT
+ 	help
+-	  This is a Video4Linux2 sensor-level driver for MAX9X serdes.
++		This is a Video4Linux2 sensor-level driver for MAX9X serdes.
+ 
+ config VIDEO_MAX9271_LIB
+ 	tristate
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index b9b8559eb9eb..55db77a458ea 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -167,6 +167,6 @@ obj-$(CONFIG_VIDEO_VP27SMPX) += vp27smpx.o
+ obj-$(CONFIG_VIDEO_VPX3220) += vpx3220.o
+ obj-$(CONFIG_VIDEO_WM8739) += wm8739.o
+ obj-$(CONFIG_VIDEO_WM8775) += wm8775.o
+-
++obj-$(CONFIG_VIDEO_LT6911GXD) += lt6911gxd.o
+ obj-$(CONFIG_VIDEO_MAX9X) += max9x/
+ obj-$(CONFIG_VIDEO_ISX031) += isx031.o
+-- 
+2.34.1
+

@@ -1,0 +1,27 @@
+From 66b9d827ddd2eef9e10f20fa1604f243c5c794d2 Mon Sep 17 00:00:00 2001
+From: Intel Next Project <intel-next-maintainers@eclists.intel.com>
+Date: Tue, 17 Dec 2024 16:00:14 -0800
+Subject: [PATCH 5/5] FIXUP: Add argument to register_nmi_handler thanks to
+ FRED NMI Source
+
+Signed-off-by: Jie Wang <jie.wang@intel.com>
+---
+ drivers/edac/ieh_edac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/edac/ieh_edac.c b/drivers/edac/ieh_edac.c
+index 46eca4bddea85..d108d87304386 100644
+--- a/drivers/edac/ieh_edac.c
++++ b/drivers/edac/ieh_edac.c
+@@ -708,7 +708,7 @@ static int register_err_handler(void)
+ 	if (has_notification_by(IEH_NMI)) {
+ 		init_irq_work(&ieh_irq_work, ieh_irq_work_cb);
+ 		rc = register_nmi_handler(NMI_SERR, ieh_nmi_handler,
+-					  0, IEH_NMI_NAME);
++					  0, IEH_NMI_NAME, 0);
+ 		if (rc) {
+ 			ieh_printk(KERN_ERR, "Can't register NMI handler\n");
+ 			return rc;
+-- 
+2.43.0
+

@@ -1,0 +1,38 @@
+From af1285e54452f701231b3a7a38709bcf2ce6f57d Mon Sep 17 00:00:00 2001
+From: ShradhaGupta31 <shradha.gupta@intel.com>
+Date: Wed, 3 Jan 2024 14:11:02 +0530
+Subject: [PATCH 23/69] drm/i915: access ddc pointer only if it is available
+
+delaying call to intel_gmbus_get_adapter after dp_dual_mode check.
+This change is to fix an i915 warning during S5/WR.
+
+Fixes: a4f3c0a43de5 ("drm/i915: Call the DDC bus i2c adapter "ddc"")
+Signed-off-by: ShradhaGupta31 <shradha.gupta@intel.com>
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+(cherry picked from commit 35e4924326721e6b25a465414edb3bd13b7f7f40)
+---
+ drivers/gpu/drm/i915/display/intel_hdmi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_hdmi.c b/drivers/gpu/drm/i915/display/intel_hdmi.c
+index 4ab7e2e3bfd42..e4bd54e7b6dc0 100644
+--- a/drivers/gpu/drm/i915/display/intel_hdmi.c
++++ b/drivers/gpu/drm/i915/display/intel_hdmi.c
+@@ -1284,11 +1284,13 @@ static void hsw_set_infoframes(struct intel_encoder *encoder,
+ void intel_dp_dual_mode_set_tmds_output(struct intel_hdmi *hdmi, bool enable)
+ {
+ 	struct intel_display *display = to_intel_display(hdmi);
+-	struct i2c_adapter *ddc = hdmi->attached_connector->base.ddc;
++	struct i2c_adapter *ddc;
+ 
+ 	if (hdmi->dp_dual_mode.type < DRM_DP_DUAL_MODE_TYPE2_DVI)
+ 		return;
+ 
++	ddc = hdmi->attached_connector->base.ddc;
++
+ 	drm_dbg_kms(display->drm, "%s DP dual mode adaptor TMDS output\n",
+ 		    enable ? "Enabling" : "Disabling");
+ 
+-- 
+2.43.0
+
