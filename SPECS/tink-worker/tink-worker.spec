@@ -30,7 +30,7 @@ tar -xzf %{SOURCE2} -C .
 %build
 export GOEXPERIMENT=nosystemcrypto
 cd tink-worker
-CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -gcflags="all=-spectre=all -l" -asmflags="all=-spectre=all" -o tink-worker ./cmd/tink-worker
+CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -gcflags="all=-l" -gcflags="%{tinkworkergitpath}/...=-spectre=all" -asmflags="%{tinkworkergitpath}/...=-spectre=all" -o tink-worker ./cmd/tink-worker
 
 %install
 cd tink-worker
