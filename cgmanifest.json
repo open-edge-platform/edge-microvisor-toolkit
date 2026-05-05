@@ -837,8 +837,8 @@
         "type": "other",
         "other": {
           "name": "caddy",
-          "version": "2.9.1",
-          "downloadUrl": "https://github.com/caddyserver/caddy/archive/v2.9.1/caddy-2.9.1.tar.gz"
+          "version": "2.11.2",
+          "downloadUrl": "https://github.com/caddyserver/caddy/archive/v2.11.2/caddy-2.11.2.tar.gz"
         }
       }
     },
