@@ -8,15 +8,15 @@ published as RAW or ISO:
 
 - RAW:
 
-  - [Non-Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250717.0734.raw.gz)
-    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250717.0734.raw.gz.sha256sum)
-  - [Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/rt/edge-readonly-rt-3.0.20250717.0732.raw.gz)
-    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/rt/edge-readonly-rt-3.0.20250717.0732.raw.gz.sha256sum)
+  - [Non-Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20260225.0914-prod-signed.raw.gz)
+    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20260225.0914-prod-signed.raw.gz.sha256sum)
+  - [Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/rt/edge-readonly-rt-3.0.20260225.0748-prod-signed.raw.gz)
+    \- [SHA256](http://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/rt/edge-readonly-rt-3.0.20260225.0748-prod-signed.raw.gz.sha256sum)
 
-- [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-  \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum)
+- [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-25.06.2.iso)
+  \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-25.06.2.iso.sha256sum)
 
-All of the images above were created from the [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718) release. For weekly builds, see [Announcements in GitHub discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
+All of the images above were created from the [25.06.02](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/25.06.02) release. For weekly builds, see [Announcements in GitHub discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
 
 If you want to start virtual machines using
 **"non-dev"** images, built with

@@ -6,11 +6,11 @@ RAW images.
 ## Requirements
 
 - OS image of Edge Microvisor Toolkit Developer Node 3.1:
-  - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum)
+  - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-25.06.2.iso)
+    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-25.06.2.iso.sha256sum)
 
     The image above was created from the
-    [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718)
+    [25.06.02](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/25.06.02)
     release.\
     For weekly builds, see
     [Announcements in GitHub Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
@@ -23,7 +23,7 @@ RAW images.
 ### Flash the ISO
 
 Download the
-[ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
+[ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-25.06.2.iso)
 and insert a USB drive.
 
 #### On Linux OS

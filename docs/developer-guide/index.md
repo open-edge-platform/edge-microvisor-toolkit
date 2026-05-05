@@ -31,7 +31,7 @@ To select the right version for you, follow the article on
 [Edge Microvisor Toolkit Versions](./get-started/emt-versions.md).
 
 For an immediate hands-on experience with no limitations, download the
-[Developer Node ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso) and
+[Developer Node ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-25.06.2.iso) and
 [install on a virtual machine](https://docs.openedgeplatform.intel.com/2025.2/edge-microvisor-toolkit/get-started/deployment/emt-vm-guest.html).
 
 ## Demonstrating the Capabilities of Intel Technology
