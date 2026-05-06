@@ -1,0 +1,47 @@
+From: Andy Peng <andy.peng@intel.com>
+Date: Mon, 5 May 2026 00:00:00 +0000
+Subject: [PATCH] capability: add prctl fallback when /proc/sys/kernel/cap_last_cap is unavailable
+
+When running inside a container namespace where /proc may not yet be
+mounted or /proc/sys is restricted, reading /proc/sys/kernel/cap_last_cap
+can fail. Add a fallback that probes capabilities using prctl(PR_CAPBSET_READ)
+syscall, which works regardless of procfs availability.
+
+This fixes container startup failures with runc 1.3.3 where the lazy
+initialization of lastCap happens inside the container's mount namespace.
+
+diff --git a/vendor/github.com/moby/sys/capability/capability_linux.go b/vendor/github.com/moby/sys/capability/capability_linux.go
+--- a/vendor/github.com/moby/sys/capability/capability_linux.go
++++ b/vendor/github.com/moby/sys/capability/capability_linux.go
+@@ -30,7 +30,7 @@
+ var lastCap = sync.OnceValues(func() (Cap, error) {
+ 	f, err := os.Open("/proc/sys/kernel/cap_last_cap")
+ 	if err != nil {
+-		return 0, err
++		return lastCapProbe()
+ 	}
+ 
+ 	buf := make([]byte, 11)
+@@ -45,6 +45,23 @@
+ 	return Cap(last), nil
+ })
+ 
++// lastCapProbe probes the last supported capability using
++// prctl(PR_CAPBSET_READ). This is a fallback for when
++// /proc/sys/kernel/cap_last_cap is not available, such as
++// inside a container namespace before /proc is mounted.
++func lastCapProbe() (Cap, error) {
++	last := Cap(0)
++	for i := Cap(0); i <= 63; i++ {
++		ret, _, _ := syscall.RawSyscall(syscall.SYS_PRCTL,
++			syscall.PR_CAPBSET_READ, uintptr(i), 0)
++		// prctl returns -1 on error (unsupported cap number)
++		if int(ret) < 0 {
++			break
++		}
++		last = i
++	}
++	return last, nil
++}
++
+ func capUpperMask() uint32 {
