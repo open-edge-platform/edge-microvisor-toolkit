@@ -1,19 +1,26 @@
 From: Andy Peng <andy.peng@intel.com>
 Date: Mon, 5 May 2026 00:00:00 +0000
-Subject: [PATCH] capability: add prctl fallback when /proc/sys/kernel/cap_last_cap is unavailable
+Subject: [PATCH] capability: add prctl fallback when
+ /proc/sys/kernel/cap_last_cap is unavailable
 
 When running inside a container namespace where /proc may not yet be
 mounted or /proc/sys is restricted, reading /proc/sys/kernel/cap_last_cap
-can fail. Add a fallback that probes capabilities using prctl(PR_CAPBSET_READ)
-syscall, which works regardless of procfs availability.
+can fail. Add a fallback that probes capabilities using
+prctl(PR_CAPBSET_READ) syscall, which works regardless of procfs
+availability.
 
 This fixes container startup failures with runc 1.3.3 where the lazy
 initialization of lastCap happens inside the container's mount namespace.
 
+Signed-off-by: Andy Peng <andy.peng@intel.com>
+---
+ .../moby/sys/capability/capability_linux.go   | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
 diff --git a/vendor/github.com/moby/sys/capability/capability_linux.go b/vendor/github.com/moby/sys/capability/capability_linux.go
 --- a/vendor/github.com/moby/sys/capability/capability_linux.go
 +++ b/vendor/github.com/moby/sys/capability/capability_linux.go
-@@ -30,7 +30,7 @@
+@@ -28,7 +28,7 @@ const (
  var lastCap = sync.OnceValues(func() (Cap, error) {
  	f, err := os.Open("/proc/sys/kernel/cap_last_cap")
  	if err != nil {
@@ -22,7 +29,7 @@ diff --git a/vendor/github.com/moby/sys/capability/capability_linux.go b/vendor/
  	}
  
  	buf := make([]byte, 11)
-@@ -45,6 +45,23 @@
+@@ -46,6 +46,24 @@ var lastCap = sync.OnceValues(func() (Cap, error) {
  	return Cap(last), nil
  })
  
@@ -45,3 +52,5 @@ diff --git a/vendor/github.com/moby/sys/capability/capability_linux.go b/vendor/
 +}
 +
  func capUpperMask() uint32 {
+ 	last, err := lastCap()
+ 	if err != nil || last < 32 {
