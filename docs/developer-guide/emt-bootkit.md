@@ -20,7 +20,7 @@ the resulting image are defined in [edge-image-bootkit.json](https://github.com/
 as well as
 [Bootkit specific packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/packagelists/bootkit-packages.json).
 
-Before you can build the image, make sure you have [installed prerequisites and built the toolchain](../get-started/emt-building-howto.md).
+Before you can build the image, make sure you have [installed prerequisites and built the toolchain](./get-started/emt-building-howto.md).
 To build the Bootkit OS image, run the following command:
 
 ```bash

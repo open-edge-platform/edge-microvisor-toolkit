@@ -13,7 +13,7 @@ There are many areas in which you can contribute, such as:
 
 New feature requests should always be made by opening an Architecture Decision Record (ADR)
 GitHub issue, regardless of whether you want to contribute directly or just file a request.
-To do so, use the [Design Proposal](/design-proposals/design-propsal-template.md) template
+To do so, use the [Design Proposal](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/design-proposals/design-proposal-template.md) template
 and provide as much information as possible. This helps maintainers and stakeholders to
 review, better understand, and prioritize the request.
 
@@ -30,15 +30,15 @@ Both issues and feature requests (also raised as issues) are evaluated and
 prioritized by product maintainers. This means they may or may not be included in the
 next release.
 
-Following the [Azure Linux](https://github.com/microsoft/azurelinux/blob/3.0/CONTRIBUTING.md#packages)
+Following the [Azure Linux](https://github.com/microsoft/azurelinux/blob/3.0-dev/CONTRIBUTING.md#packages)
 scheme for packages, Edge Microvisor Toolkit maintains two directories:
-* [SPECS](../../SPECS) - fully supported and published,
+* [SPECS](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/SPECS) - fully supported and published,
 * [SPECS-EXTENDED](../../SPECS-EXTENDED) - experimental, if you want to use these packages,
   you will need to [run your own build](./get-started/emt-building-howto.md).
 
 When raising a PR, make sure that:
 
-* The [cgmanifest file](./cgmanifest.json) is up-to-date and alphabetically sorted.
+* The [cgmanifest file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/cgmanifest.json) is up-to-date and alphabetically sorted.
   It is used to record all package sources. To validate it, run:
 
   ```bash
