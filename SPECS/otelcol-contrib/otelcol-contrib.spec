@@ -1,7 +1,7 @@
 Summary:        OpenTelemetry Collector Contrib
 Name:           otelcol-contrib
 Version:        0.141.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -12,8 +12,8 @@ Source0:        %{url}/releases/download/v%{version}/%{name}_%{version}_linux_am
 Source1:        otelcol_contrib.te
 Source2:        otelcol_contrib.fc
 Patch0:         CVE-2026-32287.patch
-BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang < 1.27
+BuildRequires:  golang >= 1.26.2
 BuildRequires:  make
 BuildRequires:  systemd-rpm-macros
 Requires:       (%{name}-selinux if selinux-policy-targeted)
@@ -69,6 +69,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu May 7 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 0.141.0-4
+- upgrade golang version to fix golang-runtime cve vulnerabilities
+
 * Mon May 4 2026 Jing Hui Tham <jing.hui.tham@intel.com> - 0.141.0-3
 - Fix CVE-2026-32287
 
