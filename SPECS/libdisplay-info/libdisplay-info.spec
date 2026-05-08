@@ -73,4 +73,4 @@ developing applications that use %{name}.
  
 %changelog
 * Thu Apr 2 2026 Lishan Liu <lishan.liu@intel.com> - 0.3.0-1
-- Initial Edge Microvisor Toolkit import from Fedora (license: MIT). License verified.
+- Initial Edge Microvisor Toolkit import from Fedora 44 (license: MIT). License verified.
