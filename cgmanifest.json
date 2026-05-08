@@ -6651,8 +6651,8 @@
         "type": "other",
         "other": {
           "name": "linux-firmware",
-          "version": "20260110",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20260110.tar.xz"
+          "version": "20260309",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20260309.tar.xz"
         }
       }
     },
