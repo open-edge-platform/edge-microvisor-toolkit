@@ -13,7 +13,7 @@ There are many areas in which you can contribute, such as:
 
 New feature requests should always be made by opening an Architecture Decision Record (ADR)
 GitHub issue, regardless of whether you want to contribute directly or just file a request.
-To do so, use the [Design Proposal](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0-dev/design-proposals/design-proposal-template.md) template
+To do so, use the [Design Proposal](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0-dev/design-proposals/design-propsal-template.md) template
 and provide as much information as possible. This helps maintainers and stakeholders to
 review, better understand, and prioritize the request.
 
