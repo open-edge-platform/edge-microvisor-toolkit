@@ -1,0 +1,32 @@
+From a235dfe29e05011588a7724eeee20cf29eadd61a Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Mon, 6 Apr 2026 22:50:31 -0700
+Subject: [PATCH] Revert "x86/fred: Enable FRED by default"
+
+This reverts commit fe4c0a9c022d16919105f76a56ee67958ef97555.
+
+Due to Ubuntu VMs unable to recover after  system wakes up from S3 for
+multiple iterations, this commit will be temporarily reverted to avoid
+blocking release.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ arch/x86/kernel/cpu/common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/x86/kernel/cpu/common.c b/arch/x86/kernel/cpu/common.c
+index 40ad8a394cdc..a2a251549fa1 100644
+--- a/arch/x86/kernel/cpu/common.c
++++ b/arch/x86/kernel/cpu/common.c
+@@ -1721,7 +1721,7 @@ static void __init cpu_parse_early_param(void)
+ 
+ 	/* Minimize the gap between FRED is available and available but disabled. */
+ 	arglen = cmdline_find_option(boot_command_line, "fred", arg, sizeof(arg));
+-	if (arglen == 3 && !strncmp(arg, "off", 3))
++	if (arglen != 2 || strncmp(arg, "on", 2))
+ 		setup_clear_cpu_cap(X86_FEATURE_FRED);
+ 
+ 	arglen = cmdline_find_option(boot_command_line, "clearcpuid", arg, sizeof(arg));
+-- 
+2.34.1
+

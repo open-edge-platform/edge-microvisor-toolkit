@@ -1,0 +1,47 @@
+From 60ad7321bd7535785d9c7ea3fbe9a44782456f85 Mon Sep 17 00:00:00 2001
+From: hepengpx <pengpengx.he@intel.com>
+Date: Mon, 5 Jan 2026 16:37:22 +0800
+Subject: [PATCH 38/52] media: ipu7: ignore interrupts when device is suspended
+
+IPU7 devices have shared interrupts with others. In some case when
+IPU7 device is suspended, driver get unexpected interrupt and invalid
+irq status 0xffffffff from ISR_STATUS and PB LOCAL_STATUS
+registers as interrupt is triggered from other device on shared
+irq line.
+
+In order to avoid this issue use pm_runtime_get_if_active() to check
+if IPU7 device is resumed, ignore the invalid irq status and use
+synchronize_irq() in suspend.
+
+Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-buttress.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-buttress.c b/drivers/staging/media/ipu7/ipu7-buttress.c
+index 40c6c8473357..4383e2cc33a2 100644
+--- a/drivers/staging/media/ipu7/ipu7-buttress.c
++++ b/drivers/staging/media/ipu7/ipu7-buttress.c
+@@ -353,8 +353,7 @@ irqreturn_t ipu_buttress_isr(int irq, void *isp_ptr)
+ 
+ 	/* check btrs ATS, CFI and IMR errors, BIT(0) is unused for IPU */
+ 	pb_local_irq = readl(isp->pb_base + BTRS_LOCAL_INTERRUPT_MASK);
+-	if (pb_local_irq == 0xffffffff) {
+-		dev_warn_once(dev, "invalid PB irq status\n");
++	if (WARN_ON_ONCE(pb_local_irq == 0xffffffff)) {
+ 		pm_runtime_put_noidle(dev);
+ 		return IRQ_NONE;
+ 	}
+@@ -374,7 +373,7 @@ irqreturn_t ipu_buttress_isr(int irq, void *isp_ptr)
+ 	}
+ 
+ 	irq_status = readl(isp->base + BUTTRESS_REG_IRQ_STATUS);
+-	if (!irq_status) {
++	if (!irq_status || WARN_ON_ONCE(irq_status == 0xffffffff)) {
+ 		pm_runtime_put_noidle(dev);
+ 		return IRQ_NONE;
+ 	}
+-- 
+2.34.1
+

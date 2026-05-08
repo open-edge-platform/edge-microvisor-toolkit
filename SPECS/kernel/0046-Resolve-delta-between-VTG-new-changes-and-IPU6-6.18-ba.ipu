@@ -1,0 +1,110 @@
+From 052f9144e7ceeab8c4ae96cd5d05ee14c7a24533 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 13:15:40 +0800
+Subject: [PATCH 46/52] Resolve delta between VTG new changes and IPU6 6.18
+ baseline
+
+There are some differences between those
+2 files, filling in gap to ensure no conflict.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/pci/intel/ipu-bridge.c | 22 +++++++++++++++++++++-
+ include/media/ipu-bridge.h           |  7 +++++--
+ 2 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-bridge.c b/drivers/media/pci/intel/ipu-bridge.c
+index 64d1f9736ad1..5385663032ca 100644
+--- a/drivers/media/pci/intel/ipu-bridge.c
++++ b/drivers/media/pci/intel/ipu-bridge.c
+@@ -34,6 +34,8 @@
+  * Used to match IVSC device by ipu_bridge_match_ivsc_dev()
+  */
+ #define IVSC_DEV_NAME "intel_vsc"
++#define PHY_MODE_DPHY  0
++#define PHY_MODE_CPHY  1
+ 
+ static const struct ipu_sensor_config ipu_supported_sensors_dummy[] = {
+ 	/* Lontium LT6911UXC dummy port for split mode */
+@@ -322,6 +324,7 @@ int ipu_bridge_parse_ssdb(struct acpi_device *adev, struct ipu_sensor *sensor)
+ 	sensor->link = ssdb.link;
+ 	sensor->pprval = ssdb.pprval;
+ 	sensor->lanes = ssdb.lanes;
++	sensor->phyconfig = ssdb.phyconfig;
+ 	sensor->mclkspeed = ssdb.mclkspeed;
+ 	sensor->rotation = ipu_bridge_parse_rotation(adev, &ssdb);
+ 	sensor->orientation = ipu_bridge_parse_orientation(adev);
+@@ -340,6 +343,7 @@ static void ipu_bridge_create_fwnode_properties(
+ {
+ 	struct ipu_property_names *names = &sensor->prop_names;
+ 	struct software_node *nodes = sensor->swnodes;
++	u8 bus_type;
+ 
+ 	sensor->prop_names = prop_names;
+ 
+@@ -397,9 +401,16 @@ static void ipu_bridge_create_fwnode_properties(
+ 			PROPERTY_ENTRY_REF_ARRAY("lens-focus", sensor->vcm_ref);
+ 	}
+ 
++	if (sensor->phyconfig == PHY_MODE_DPHY)
++		bus_type = V4L2_FWNODE_BUS_TYPE_CSI2_DPHY;
++	else if (sensor->phyconfig == PHY_MODE_CPHY)
++		bus_type = V4L2_FWNODE_BUS_TYPE_CSI2_CPHY;
++	else
++		bus_type = V4L2_FWNODE_BUS_TYPE_GUESS;
++
+ 	sensor->ep_properties[0] = PROPERTY_ENTRY_U32(
+ 					sensor->prop_names.bus_type,
+-					V4L2_FWNODE_BUS_TYPE_CSI2_DPHY);
++					bus_type);
+ 	sensor->ep_properties[1] = PROPERTY_ENTRY_U32_ARRAY_LEN(
+ 					sensor->prop_names.data_lanes,
+ 					bridge->data_lanes, sensor->lanes);
+@@ -419,6 +430,15 @@ static void ipu_bridge_create_fwnode_properties(
+ 	sensor->ipu_properties[1] = PROPERTY_ENTRY_REF_ARRAY(
+ 					sensor->prop_names.remote_endpoint,
+ 					sensor->remote_ref);
++
++	/*
++	 * TODO: Remove the bus_type property for IPU
++	 * 1. keep fwnode property list no change.
++	 * 2. IPU driver needs to get bus_type from remote sensor ep.
++	 */
++	sensor->ipu_properties[2] = PROPERTY_ENTRY_U32
++					(sensor->prop_names.bus_type,
++					bus_type);
+ }
+ 
+ static void ipu_bridge_init_swnode_names(struct ipu_sensor *sensor)
+diff --git a/include/media/ipu-bridge.h b/include/media/ipu-bridge.h
+index 176b55ab69c6..fd429257c78e 100644
+--- a/include/media/ipu-bridge.h
++++ b/include/media/ipu-bridge.h
+@@ -96,7 +96,9 @@ struct ipu_sensor_ssdb {
+ 	u8 pprval;
+ 	u8 pprunit;
+ 	u8 flashid;
+-	u8 reserved2[8];
++	u8 reserved2[5];
++	u8 phyconfig;
++	u8 reserved3[7];
+ } __packed;
+ 
+ struct ipu_property_names {
+@@ -145,11 +147,12 @@ struct ipu_sensor {
+ 	u32 rotation;
+ 	enum v4l2_fwnode_orientation orientation;
+ 	const char *vcm_type;
++	u8 phyconfig;
+ 
+ 	struct ipu_property_names prop_names;
+ 	struct property_entry ep_properties[5];
+ 	struct property_entry dev_properties[5];
+-	struct property_entry ipu_properties[3];
++	struct property_entry ipu_properties[4];
+ 	struct property_entry ivsc_properties[1];
+ 	struct property_entry ivsc_sensor_ep_properties[4];
+ 	struct property_entry ivsc_ipu_ep_properties[4];
+-- 
+2.34.1
+

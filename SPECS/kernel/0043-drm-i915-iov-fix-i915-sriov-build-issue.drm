@@ -1,0 +1,638 @@
+From 656716091db8d205a0c81d2de2cb54ebb0528fa9 Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Wed, 12 Jun 2024 20:30:31 +0800
+Subject: [PATCH 43/69] drm/i915/iov: fix i915 sriov build issue
+
+including necessary header file.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+(cherry picked from commit 7926c8a2bf29a55a14769d66333b30e2330ae16c)
+---
+ .../i915/display/intel_display_power_map.c    |   5 +
+ drivers/gpu/drm/i915/display/intel_wm.c       |   5 +
+ drivers/gpu/drm/i915/gt/iov/intel_iov_relay.c |  39 ++++---
+ drivers/gpu/drm/i915/gt/iov/intel_iov_state.c |   4 +-
+ drivers/gpu/drm/i915/gt/iov/intel_iov_utils.h |   1 +
+ .../iov/selftests/selftest_live_iov_relay.c   | 106 ++++++++++++------
+ .../iov/selftests/selftest_mock_iov_relay.c   |  34 +++++-
+ .../iov/selftests/selftest_perf_iov_relay.c   |  46 +++++---
+ .../gpu/drm/i915/gt/uc/intel_guc_submission.c |   3 +-
+ drivers/gpu/drm/i915/i915_sriov.c             |   4 +
+ 10 files changed, 175 insertions(+), 72 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_display_power_map.c b/drivers/gpu/drm/i915/display/intel_display_power_map.c
+index ef363cb0fe259..c74b669128e2b 100644
+--- a/drivers/gpu/drm/i915/display/intel_display_power_map.c
++++ b/drivers/gpu/drm/i915/display/intel_display_power_map.c
+@@ -6,6 +6,11 @@
+ #include <drm/drm_print.h>
+ 
+ #include "i915_drv.h"
++
++/* xe builds i915 display code with compat headers; avoid pulling i915 SR-IOV. */
++#ifndef _XE_I915_DRV_H_
++#include "i915_sriov.h"
++#endif
+ #include "intel_display_core.h"
+ #include "intel_display_power_map.h"
+ #include "intel_display_power_well.h"
+diff --git a/drivers/gpu/drm/i915/display/intel_wm.c b/drivers/gpu/drm/i915/display/intel_wm.c
+index 97458a3efdbeb..66fcfa7a89bf6 100644
+--- a/drivers/gpu/drm/i915/display/intel_wm.c
++++ b/drivers/gpu/drm/i915/display/intel_wm.c
+@@ -8,6 +8,11 @@
+ #include <drm/drm_print.h>
+ 
+ #include "i915_drv.h"
++
++/* xe builds i915 display code with compat headers; avoid pulling i915 SR-IOV. */
++#ifndef _XE_I915_DRV_H_
++#include "i915_sriov.h"
++#endif
+ #include "i9xx_wm.h"
+ #include "intel_display_core.h"
+ #include "intel_display_types.h"
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_relay.c b/drivers/gpu/drm/i915/gt/iov/intel_iov_relay.c
+index 339391fc1c5ef..a3e11e0dcdbaa 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_relay.c
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_relay.c
+@@ -4,6 +4,7 @@
+  */
+ 
+ #include <linux/bitfield.h>
++#include <linux/slab.h>
+ 
+ #include "abi/iov_actions_abi.h"
+ #include "abi/iov_actions_selftest_abi.h"
+@@ -91,13 +92,7 @@ struct pending_relay {
+ static int pf_relay_send(struct intel_iov_relay *relay, u32 target,
+ 			 u32 relay_id, const u32 *msg, u32 len)
+ {
+-	u32 request[PF2GUC_RELAY_TO_VF_REQUEST_MSG_MAX_LEN] = {
+-		FIELD_PREP(GUC_HXG_MSG_0_ORIGIN, GUC_HXG_ORIGIN_HOST) |
+-		FIELD_PREP(GUC_HXG_MSG_0_TYPE, GUC_HXG_TYPE_REQUEST) |
+-		FIELD_PREP(GUC_HXG_REQUEST_MSG_0_ACTION, GUC_ACTION_PF2GUC_RELAY_TO_VF),
+-		FIELD_PREP(PF2GUC_RELAY_TO_VF_REQUEST_MSG_1_VFID, target),
+-		FIELD_PREP(PF2GUC_RELAY_TO_VF_REQUEST_MSG_2_RELAY_ID, relay_id),
+-	};
++	u32 *request;
+ 	int err;
+ 
+ 	GEM_BUG_ON(!IS_SRIOV_PF(relay_to_i915(relay)) &&
+@@ -107,6 +102,17 @@ static int pf_relay_send(struct intel_iov_relay *relay, u32 target,
+ 	GEM_BUG_ON(len + PF2GUC_RELAY_TO_VF_REQUEST_MSG_MIN_LEN >
+ 		   PF2GUC_RELAY_TO_VF_REQUEST_MSG_MAX_LEN);
+ 
++	request = kcalloc(PF2GUC_RELAY_TO_VF_REQUEST_MSG_MAX_LEN, sizeof(*request),
++			 GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request[0] = FIELD_PREP(GUC_HXG_MSG_0_ORIGIN, GUC_HXG_ORIGIN_HOST) |
++		    FIELD_PREP(GUC_HXG_MSG_0_TYPE, GUC_HXG_TYPE_REQUEST) |
++		    FIELD_PREP(GUC_HXG_REQUEST_MSG_0_ACTION, GUC_ACTION_PF2GUC_RELAY_TO_VF);
++	request[1] = FIELD_PREP(PF2GUC_RELAY_TO_VF_REQUEST_MSG_1_VFID, target);
++	request[2] = FIELD_PREP(PF2GUC_RELAY_TO_VF_REQUEST_MSG_2_RELAY_ID, relay_id);
++
+ 	memcpy(&request[PF2GUC_RELAY_TO_VF_REQUEST_MSG_MIN_LEN], msg, 4 * len);
+ 
+ retry:
+@@ -115,18 +121,14 @@ static int pf_relay_send(struct intel_iov_relay *relay, u32 target,
+ 	if (unlikely(err == -EBUSY))
+ 		goto retry;
+ 
++	kfree(request);
+ 	return err;
+ }
+ 
+ static int vf_relay_send(struct intel_iov_relay *relay,
+ 			 u32 relay_id, const u32 *msg, u32 len)
+ {
+-	u32 request[VF2GUC_RELAY_TO_PF_REQUEST_MSG_MAX_LEN] = {
+-		FIELD_PREP(GUC_HXG_MSG_0_ORIGIN, GUC_HXG_ORIGIN_HOST) |
+-		FIELD_PREP(GUC_HXG_MSG_0_TYPE, GUC_HXG_TYPE_REQUEST) |
+-		FIELD_PREP(GUC_HXG_REQUEST_MSG_0_ACTION, GUC_ACTION_VF2GUC_RELAY_TO_PF),
+-		FIELD_PREP(VF2GUC_RELAY_TO_PF_REQUEST_MSG_1_RELAY_ID, relay_id),
+-	};
++	u32 *request;
+ 	int err;
+ 
+ 	GEM_BUG_ON(!IS_SRIOV_VF(relay_to_i915(relay)) &&
+@@ -135,6 +137,16 @@ static int vf_relay_send(struct intel_iov_relay *relay,
+ 	GEM_BUG_ON(len + VF2GUC_RELAY_TO_PF_REQUEST_MSG_MIN_LEN >
+ 		   VF2GUC_RELAY_TO_PF_REQUEST_MSG_MAX_LEN);
+ 
++	request = kcalloc(VF2GUC_RELAY_TO_PF_REQUEST_MSG_MAX_LEN, sizeof(*request),
++			 GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++
++	request[0] = FIELD_PREP(GUC_HXG_MSG_0_ORIGIN, GUC_HXG_ORIGIN_HOST) |
++		    FIELD_PREP(GUC_HXG_MSG_0_TYPE, GUC_HXG_TYPE_REQUEST) |
++		    FIELD_PREP(GUC_HXG_REQUEST_MSG_0_ACTION, GUC_ACTION_VF2GUC_RELAY_TO_PF);
++	request[1] = FIELD_PREP(VF2GUC_RELAY_TO_PF_REQUEST_MSG_1_RELAY_ID, relay_id);
++
+ 	memcpy(&request[VF2GUC_RELAY_TO_PF_REQUEST_MSG_MIN_LEN], msg, 4 * len);
+ 
+ retry:
+@@ -143,6 +155,7 @@ static int vf_relay_send(struct intel_iov_relay *relay,
+ 	if (unlikely(err == -EBUSY))
+ 		goto retry;
+ 
++	kfree(request);
+ 	return err;
+ }
+ 
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c b/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
+index bfe424369e0d2..2be89d9a41304 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_state.c
+@@ -4,7 +4,7 @@
+  */
+ 
+ #include "i915_pci.h"
+-#include "i915_wait_util.h"
++#include "i915_utils.h"
+ #include "intel_iov.h"
+ #include "intel_iov_event.h"
+ #include "intel_iov_ggtt.h"
+@@ -13,6 +13,8 @@
+ #include "gt/intel_gt.h"
+ #include "gt/uc/abi/guc_actions_pf_abi.h"
+ 
++#include "i915_wait_util.h"
++
+ static void pf_state_worker_func(struct work_struct *w);
+ 
+ /**
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_utils.h b/drivers/gpu/drm/i915/gt/iov/intel_iov_utils.h
+index 78c8e5a1d04c5..0d1017ae1c997 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_utils.h
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_utils.h
+@@ -8,6 +8,7 @@
+ 
+ #include "i915_drv.h"
+ #include "gt/intel_gt_print.h"
++#include "gt/iov/intel_iov_types.h"
+ 
+ static inline struct intel_gt *iov_to_gt(struct intel_iov *iov)
+ {
+diff --git a/drivers/gpu/drm/i915/gt/iov/selftests/selftest_live_iov_relay.c b/drivers/gpu/drm/i915/gt/iov/selftests/selftest_live_iov_relay.c
+index 991609deff4c8..8c551ea4a0709 100644
+--- a/drivers/gpu/drm/i915/gt/iov/selftests/selftest_live_iov_relay.c
++++ b/drivers/gpu/drm/i915/gt/iov/selftests/selftest_live_iov_relay.c
+@@ -5,8 +5,6 @@
+ 
+ #include "gt/iov/intel_iov_provisioning.h"
+ 
+-u32 buf[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA];
+-
+ static int guc2vf_payload_checker(struct intel_iov_relay *relay, const u32 *msg, u32 len)
+ {
+ 	struct payload_params *expected = relay->selftest.data;
+@@ -69,14 +67,17 @@ static int guc2pf_payload_checker(struct intel_iov_relay *relay, const u32 *msg,
+ static int pf_guc_loopback_to_vf(struct intel_iov *iov, bool fast, u32 len_min, u32 len_max)
+ {
+ 	struct intel_guc_ct *ct = &iov_to_guc(iov)->ct;
+-	u32 request[PF2GUC_RELAY_TO_VF_REQUEST_MSG_MAX_LEN] = {
+-		MSG_PF2GUC_RELAY_TO_VF(0), /* loopback */
+-		/* ... */
+-	};
++	u32 *request;
+ 	struct payload_params params;
+ 	u32 n, len;
+ 	int ret = 0;
+ 
++	request = kcalloc(PF2GUC_RELAY_TO_VF_REQUEST_MSG_MAX_LEN, sizeof(*request),
++			 GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++	request[0] = MSG_PF2GUC_RELAY_TO_VF(0); /* loopback */
++
+ 	GEM_BUG_ON(len_min > len_max);
+ 	GEM_BUG_ON(len_max > PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA);
+ 
+@@ -122,6 +123,7 @@ static int pf_guc_loopback_to_vf(struct intel_iov *iov, bool fast, u32 len_min,
+ 	WRITE_ONCE(iov->relay.selftest.guc2vf, NULL);
+ 	WRITE_ONCE(iov->relay.selftest.data, NULL);
+ 
++	kfree(request);
+ 	return ret;
+ }
+ 
+@@ -197,14 +199,17 @@ static int pf_guc_rejects_invalid_to_vf(void *arg)
+ static int pf_guc_loopback_to_pf(struct intel_iov *iov, bool fast, u32 len_min, u32 len_max)
+ {
+ 	struct intel_guc_ct *ct = &iov_to_guc(iov)->ct;
+-	u32 request[VF2GUC_RELAY_TO_PF_REQUEST_MSG_MAX_LEN] = {
+-		MSG_VF2GUC_RELAY_TO_PF,
+-		/* ... */
+-	};
++	u32 *request;
+ 	struct payload_params params;
+ 	u32 n, len;
+ 	int ret = 0;
+ 
++	request = kcalloc(VF2GUC_RELAY_TO_PF_REQUEST_MSG_MAX_LEN, sizeof(*request),
++			 GFP_KERNEL);
++	if (!request)
++		return -ENOMEM;
++	request[0] = MSG_VF2GUC_RELAY_TO_PF;
++
+ 	GEM_BUG_ON(len_min > len_max);
+ 	GEM_BUG_ON(len_max > VF2GUC_RELAY_TO_PF_REQUEST_MSG_NUM_RELAY_DATA);
+ 
+@@ -251,6 +256,7 @@ static int pf_guc_loopback_to_pf(struct intel_iov *iov, bool fast, u32 len_min,
+ 	WRITE_ONCE(iov->relay.selftest.guc2pf, NULL);
+ 	WRITE_ONCE(iov->relay.selftest.data, NULL);
+ 
++	kfree(request);
+ 	return ret;
+ }
+ 
+@@ -301,18 +307,21 @@ static int pf_guc_rejects_incomplete_to_pf(void *arg)
+ static int pf_loopback_one_way_to_vf(void *arg)
+ {
+ 	struct intel_iov *iov = arg;
+-	u32 msg[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA] = {
+-		MSG_IOV_SELFTEST_RELAY_EVENT(SELFTEST_RELAY_OPCODE_NOP),
+-		FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA),
+-		/* ... */
+-	};
++	u32 *msg;
++	const u32 msg_len = PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA;
+ 	struct payload_params params;
+ 	unsigned int n;
+ 	int ret = 0;
+ 
++	msg = kcalloc(msg_len, sizeof(*msg), GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++	msg[0] = MSG_IOV_SELFTEST_RELAY_EVENT(SELFTEST_RELAY_OPCODE_NOP);
++	msg[1] = FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA);
++
+ 	iov->relay.selftest.enable_loopback = 1;
+ 
+-	for (n = GUC_HXG_MSG_MIN_LEN; n <= ARRAY_SIZE(msg); n++) {
++	for (n = GUC_HXG_MSG_MIN_LEN; n <= msg_len; n++) {
+ 
+ 		params.relayid = SELFTEST_RELAY_ID + n;
+ 		params.vfid = PFID; /* loopback */
+@@ -347,26 +356,35 @@ static int pf_loopback_one_way_to_vf(void *arg)
+ 	WRITE_ONCE(iov->relay.selftest.guc2vf, NULL);
+ 	WRITE_ONCE(iov->relay.selftest.data, NULL);
+ 
++	kfree(msg);
+ 	return ret;
+ }
+ 
+ static int pf_full_loopback_to_vf(void *arg)
+ {
+ 	struct intel_iov *iov = arg;
+-	u32 msg[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA] = {
+-		MSG_IOV_SELFTEST_RELAY(SELFTEST_RELAY_OPCODE_NOP),
+-		FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA),
+-		/* ... */
+-	};
++	u32 *msg, *buf;
++	const u32 msg_len = PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA;
++	const u32 buf_len = PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA;
+ 	unsigned int n;
+ 	int ret = 0;
+ 
++	msg = kcalloc(msg_len, sizeof(*msg), GFP_KERNEL);
++	buf = kcalloc(buf_len, sizeof(*buf), GFP_KERNEL);
++	if (!msg || !buf) {
++		kfree(msg);
++		kfree(buf);
++		return -ENOMEM;
++	}
++	msg[0] = MSG_IOV_SELFTEST_RELAY(SELFTEST_RELAY_OPCODE_NOP);
++	msg[1] = FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA);
++
+ 	iov->relay.selftest.enable_loopback = 1;
+ 
+-	for (n = GUC_HXG_MSG_MIN_LEN; n <= ARRAY_SIZE(msg); n++) {
++	for (n = GUC_HXG_MSG_MIN_LEN; n <= msg_len; n++) {
+ 
+ 		ret = intel_iov_relay_send_to_vf(&iov->relay, PFID, msg, n,
+-						 buf, ARRAY_SIZE(buf));
++					 buf, buf_len);
+ 
+ 		if (ret < 0) {
+ 			IOV_SELFTEST_ERROR(iov, "failed to send msg len=%u, %d\n", n, ret);
+@@ -384,24 +402,29 @@ static int pf_full_loopback_to_vf(void *arg)
+ 
+ 	iov->relay.selftest.enable_loopback = 0;
+ 
++	kfree(msg);
++	kfree(buf);
+ 	return ret;
+ }
+ 
+ static int pf_loopback_one_way_to_pf(void *arg)
+ {
+ 	struct intel_iov *iov = arg;
+-	u32 msg[VF2GUC_RELAY_TO_PF_REQUEST_MSG_NUM_RELAY_DATA] = {
+-		MSG_IOV_SELFTEST_RELAY_EVENT(SELFTEST_RELAY_OPCODE_NOP),
+-		FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA),
+-		/* ... */
+-	};
++	u32 *msg;
++	const u32 msg_len = VF2GUC_RELAY_TO_PF_REQUEST_MSG_NUM_RELAY_DATA;
+ 	struct payload_params params;
+ 	unsigned int n;
+ 	int ret = 0;
+ 
++	msg = kcalloc(msg_len, sizeof(*msg), GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++	msg[0] = MSG_IOV_SELFTEST_RELAY_EVENT(SELFTEST_RELAY_OPCODE_NOP);
++	msg[1] = FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA);
++
+ 	iov->relay.selftest.disable_strict = 1;
+ 
+-	for (n = GUC_HXG_MSG_MIN_LEN; n <= ARRAY_SIZE(msg); n++) {
++	for (n = GUC_HXG_MSG_MIN_LEN; n <= msg_len; n++) {
+ 
+ 		params.vfid = PFID;
+ 		params.relayid = SELFTEST_RELAY_ID + n;
+@@ -436,23 +459,32 @@ static int pf_loopback_one_way_to_pf(void *arg)
+ 	WRITE_ONCE(iov->relay.selftest.guc2pf, NULL);
+ 	WRITE_ONCE(iov->relay.selftest.data, NULL);
+ 
++	kfree(msg);
+ 	return ret;
+ }
+ 
+ static int relay_request_to_pf(struct intel_iov *iov)
+ {
+-	u32 msg[VF2GUC_RELAY_TO_PF_REQUEST_MSG_NUM_RELAY_DATA] = {
+-		MSG_IOV_SELFTEST_RELAY(SELFTEST_RELAY_OPCODE_NOP),
+-		FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA),
+-		/* ... */
+-	};
++	u32 *msg, *buf;
++	const u32 msg_len = VF2GUC_RELAY_TO_PF_REQUEST_MSG_NUM_RELAY_DATA;
++	const u32 buf_len = PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA;
+ 	unsigned int n;
+ 	int ret = 0;
+ 
+-	for (n = GUC_HXG_MSG_MIN_LEN; n <= ARRAY_SIZE(msg); n++) {
++	msg = kcalloc(msg_len, sizeof(*msg), GFP_KERNEL);
++	buf = kcalloc(buf_len, sizeof(*buf), GFP_KERNEL);
++	if (!msg || !buf) {
++		kfree(msg);
++		kfree(buf);
++		return -ENOMEM;
++	}
++	msg[0] = MSG_IOV_SELFTEST_RELAY(SELFTEST_RELAY_OPCODE_NOP);
++	msg[1] = FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA);
++
++	for (n = GUC_HXG_MSG_MIN_LEN; n <= msg_len; n++) {
+ 
+ 		ret = intel_iov_relay_send_to_pf(&iov->relay, msg, n,
+-						 buf, ARRAY_SIZE(buf));
++					 buf, buf_len);
+ 
+ 		if (ret < 0) {
+ 			IOV_SELFTEST_ERROR(iov, "failed to send len=%u, %d\n", n, ret);
+@@ -468,6 +500,8 @@ static int relay_request_to_pf(struct intel_iov *iov)
+ 		ret = 0;
+ 	}
+ 
++	kfree(msg);
++	kfree(buf);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/gpu/drm/i915/gt/iov/selftests/selftest_mock_iov_relay.c b/drivers/gpu/drm/i915/gt/iov/selftests/selftest_mock_iov_relay.c
+index 55f79201838dd..94cbdeb8d32bd 100644
+--- a/drivers/gpu/drm/i915/gt/iov/selftests/selftest_mock_iov_relay.c
++++ b/drivers/gpu/drm/i915/gt/iov/selftests/selftest_mock_iov_relay.c
+@@ -109,7 +109,8 @@ static int mock_drops_malformed_guc2pf(void *arg)
+ 	u32 msg_unexpected_vfid[GUC2PF_RELAY_FROM_VF_EVENT_MSG_MIN_LEN] = {
+ 		MSG_GUC2PF_RELAY_FROM_VF(0),
+ 	};
+-	u32 msg_too_long[GUC2PF_RELAY_FROM_VF_EVENT_MSG_MAX_LEN + 1] = {
++	u32 *msg_too_long;
++	u32 msg_too_long_header[] = {
+ 		MSG_GUC2PF_RELAY_FROM_VF(1),
+ 	};
+ 	struct {
+@@ -122,12 +123,22 @@ static int mock_drops_malformed_guc2pf(void *arg)
+ 		TC(msg_no_relayid),
+ 		TC(msg_unexpected_subaction),
+ 		TC(msg_unexpected_vfid),
+-		TC(msg_too_long),
++		{ "msg_too_long", NULL, GUC2PF_RELAY_FROM_VF_EVENT_MSG_MAX_LEN + 1 },
+ #undef TC
+ 		{ }
+ 	}, *tc = testcases;
+ 	int err, ret = 0;
+ 
++	msg_too_long = kcalloc(GUC2PF_RELAY_FROM_VF_EVENT_MSG_MAX_LEN + 1,
++			       sizeof(*msg_too_long), GFP_KERNEL);
++	if (!msg_too_long)
++		return -ENOMEM;
++	memcpy(msg_too_long, msg_too_long_header, sizeof(msg_too_long_header));
++	for (tc = testcases; tc->name; tc++)
++		if (!strcmp(tc->name, "msg_too_long"))
++			tc->msg = msg_too_long;
++	tc = testcases;
++
+ 	iov->relay.selftest.disable_strict = 1;
+ 	iov->relay.selftest.host2guc = host2guc_success;
+ 
+@@ -145,6 +156,8 @@ static int mock_drops_malformed_guc2pf(void *arg)
+ 	iov->relay.selftest.disable_strict = 0;
+ 	iov->relay.selftest.host2guc = NULL;
+ 
++	kfree(msg_too_long);
++
+ 	return ret;
+ }
+ 
+@@ -163,7 +176,8 @@ static int mock_drops_malformed_guc2vf(void *arg)
+ 		FIELD_PREP(GUC_HXG_EVENT_MSG_0_ACTION, GUC_ACTION_GUC2VF_RELAY_FROM_PF),
+ 		FIELD_PREP(GUC2VF_RELAY_FROM_PF_EVENT_MSG_1_RELAY_ID, SELFTEST_RELAY_ID),
+ 	};
+-	u32 msg_too_long[GUC2VF_RELAY_FROM_PF_EVENT_MSG_MAX_LEN + 1] = {
++	u32 *msg_too_long;
++	u32 msg_too_long_header[] = {
+ 		MSG_GUC2VF_RELAY_FROM_PF,
+ 	};
+ 	struct {
+@@ -174,12 +188,22 @@ static int mock_drops_malformed_guc2vf(void *arg)
+ #define TC(X) { #X, X, ARRAY_SIZE(X) }
+ 		TC(msg_no_relayid),
+ 		TC(msg_unexpected_subaction),
+-		TC(msg_too_long),
++		{ "msg_too_long", NULL, GUC2VF_RELAY_FROM_PF_EVENT_MSG_MAX_LEN + 1 },
+ #undef TC
+ 		{ }
+ 	}, *tc = testcases;
+ 	int err, ret = 0;
+ 
++	msg_too_long = kcalloc(GUC2VF_RELAY_FROM_PF_EVENT_MSG_MAX_LEN + 1,
++			       sizeof(*msg_too_long), GFP_KERNEL);
++	if (!msg_too_long)
++		return -ENOMEM;
++	memcpy(msg_too_long, msg_too_long_header, sizeof(msg_too_long_header));
++	for (tc = testcases; tc->name; tc++)
++		if (!strcmp(tc->name, "msg_too_long"))
++			tc->msg = msg_too_long;
++	tc = testcases;
++
+ 	iov->relay.selftest.disable_strict = 1;
+ 	iov->relay.selftest.host2guc = host2guc_success;
+ 
+@@ -197,6 +221,8 @@ static int mock_drops_malformed_guc2vf(void *arg)
+ 	iov->relay.selftest.disable_strict = 0;
+ 	iov->relay.selftest.host2guc = NULL;
+ 
++	kfree(msg_too_long);
++
+ 	return ret;
+ }
+ 
+diff --git a/drivers/gpu/drm/i915/gt/iov/selftests/selftest_perf_iov_relay.c b/drivers/gpu/drm/i915/gt/iov/selftests/selftest_perf_iov_relay.c
+index 2416d3389a3d3..843ed5e596780 100644
+--- a/drivers/gpu/drm/i915/gt/iov/selftests/selftest_perf_iov_relay.c
++++ b/drivers/gpu/drm/i915/gt/iov/selftests/selftest_perf_iov_relay.c
+@@ -51,28 +51,31 @@ static int pf_loopback_to_vf_delay(void *arg)
+ static int pf_loopback_to_vf_throughput(void *arg)
+ {
+ 	struct intel_iov *iov = arg;
+-	u32 msg[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA] = {
+-		MSG_IOV_SELFTEST_RELAY(SELFTEST_RELAY_OPCODE_NOP),
+-		FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA),
+-		/* ... */
+-	};
++	u32 *msg;
++	const u32 msg_len = PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA;
+ 	u32 buf[GUC_HXG_MSG_MIN_LEN];
+ 	ktime_t finish;
+ 	u64 throughput = 0;
+ 	u64 counter = 0;
+ 	int ret = 0;
+ 
++	msg = kcalloc(msg_len, sizeof(*msg), GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++	msg[0] = MSG_IOV_SELFTEST_RELAY(SELFTEST_RELAY_OPCODE_NOP);
++	msg[1] = FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA);
++
+ 	iov->relay.selftest.enable_loopback = 1;
+ 	finish = ktime_add_ms(ktime_get(), SELFTEST_RELAY_PERF_TIME_MS);
+ 
+ 	while (ktime_before(ktime_get(), finish)) {
+-		ret = intel_iov_relay_send_to_vf(&iov->relay, PFID, msg, ARRAY_SIZE(msg),
++		ret = intel_iov_relay_send_to_vf(&iov->relay, PFID, msg, msg_len,
+ 						 buf, ARRAY_SIZE(buf));
+ 
+ 		if (ret != GUC_HXG_MSG_MIN_LEN)
+ 			break;
+ 
+-		throughput += ARRAY_SIZE(msg);
++		throughput += msg_len;
+ 		throughput += ret;
+ 		counter++;
+ 	}
+@@ -80,7 +83,11 @@ static int pf_loopback_to_vf_throughput(void *arg)
+ 	iov->relay.selftest.enable_loopback = 0;
+ 
+ 	if (ret != GUC_HXG_MSG_MIN_LEN)
+-		return -ENODATA;
++		ret = -ENODATA;
++
++	kfree(msg);
++	if (ret)
++		return ret;
+ 
+ 	dev_info(iov_to_dev(iov), "throughput %llu bytes/s (%llu relays/s)\n",
+ 		 div_s64(throughput * sizeof(u32) * MSEC_PER_SEC,
+@@ -144,33 +151,40 @@ static int pf_loopback_to_pf_delay(void *arg)
+ 
+ static int relay_to_pf_throughput(struct intel_iov *iov)
+ {
+-	u32 msg[PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA] = {
+-		MSG_IOV_SELFTEST_RELAY(SELFTEST_RELAY_OPCODE_NOP),
+-		FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA),
+-		/* ... */
+-	};
++	u32 *msg;
++	const u32 msg_len = PF2GUC_RELAY_TO_VF_REQUEST_MSG_NUM_RELAY_DATA;
+ 	u32 buf[GUC_HXG_MSG_MIN_LEN];
+ 	ktime_t finish;
+ 	u64 throughput = 0;
+ 	u64 counter = 0;
+ 	int ret = 0;
+ 
++	msg = kcalloc(msg_len, sizeof(*msg), GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++	msg[0] = MSG_IOV_SELFTEST_RELAY(SELFTEST_RELAY_OPCODE_NOP);
++	msg[1] = FIELD_PREP(GUC_HXG_REQUEST_MSG_n_DATAn, SELFTEST_RELAY_DATA);
++
+ 	finish = ktime_add_ms(ktime_get(), SELFTEST_RELAY_PERF_TIME_MS);
+ 
+ 	while (ktime_before(ktime_get(), finish)) {
+-		ret = intel_iov_relay_send_to_pf(&iov->relay, msg, ARRAY_SIZE(msg),
++		ret = intel_iov_relay_send_to_pf(&iov->relay, msg, msg_len,
+ 						 buf, ARRAY_SIZE(buf));
+ 
+ 		if (ret != GUC_HXG_MSG_MIN_LEN)
+ 			break;
+ 
+-		throughput += ARRAY_SIZE(msg);
++		throughput += msg_len;
+ 		throughput += ret;
+ 		counter++;
+ 	}
+ 
+ 	if (ret != GUC_HXG_MSG_MIN_LEN)
+-		return -ENODATA;
++		ret = -ENODATA;
++
++	kfree(msg);
++	if (ret)
++		return ret;
+ 
+ 	dev_info(iov_to_dev(iov), "throughput %llu bytes/s (%llu relays/s)\n",
+ 		 div_s64(throughput * sizeof(u32) * MSEC_PER_SEC,
+diff --git a/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c b/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
+index 08991dad7a04d..6dc9d1abf4ebf 100644
+--- a/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
++++ b/drivers/gpu/drm/i915/gt/uc/intel_guc_submission.c
+@@ -2311,10 +2311,9 @@ static int new_mlrc_guc_id(struct intel_guc *guc, struct intel_context *ce)
+ 
+ static int new_slrc_guc_id(struct intel_guc *guc, struct intel_context *ce)
+ {
+-	unsigned int max;
++	u32 max;
+ 
+ 	GEM_BUG_ON(intel_context_is_parent(ce));
+-
+ 	max = number_slrc_guc_id(guc);
+ 	if (!max)
+ 		return -ENOSPC;
+diff --git a/drivers/gpu/drm/i915/i915_sriov.c b/drivers/gpu/drm/i915/i915_sriov.c
+index b23816838edcb..f8624fda82438 100644
+--- a/drivers/gpu/drm/i915/i915_sriov.c
++++ b/drivers/gpu/drm/i915/i915_sriov.c
+@@ -5,6 +5,10 @@
+ 
+ #include <drm/i915_sriov.h>
+ 
++#ifndef I915_SRIOV_NS
++#define I915_SRIOV_NS "i915_sriov"
++#endif
++
+ #include "i915_sriov.h"
+ #include "i915_sriov_sysfs.h"
+ #include "i915_drv.h"
+-- 
+2.43.0
+

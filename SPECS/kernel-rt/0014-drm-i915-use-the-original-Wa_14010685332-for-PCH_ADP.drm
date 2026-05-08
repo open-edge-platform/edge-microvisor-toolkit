@@ -1,0 +1,60 @@
+From f773808df198a710facc0be9763c162c2ff45bd4 Mon Sep 17 00:00:00 2001
+From: James Xiong <james.xiong@intel.com>
+Date: Wed, 16 Nov 2022 15:29:41 -0800
+Subject: [PATCH 14/69] drm/i915: use the original Wa_14010685332 for PCH_ADP
+
+Bspec: 33450 lists 2 sequences for Wa_14010685332.
+The original sequence was implemented for PCH_ICP+
+commit b896898c7369 ("drm/i915: Tweaked Wa_14010685332 for PCHs
+                      used on gen11 platforms")
+commit b8441b288d60 ("drm/i915: Tweaked Wa_14010685332 for all PCHs")
+removed the original and applied the tweaked one to all PCHs(CNP+),
+and caused regressions on ADP.
+
+Fixes: b8441b288d60 ("drm/i915: Tweaked Wa_14010685332 for all PCHs")
+Signed-off-by: James Xiong <james.xiong@intel.com>
+(cherry picked from commit 1c1782cc21caecc2ed0a4279979fa1ca0cb9dc3c)
+---
+ .../drm/i915/display/intel_display_power.c    | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_display_power.c b/drivers/gpu/drm/i915/display/intel_display_power.c
+index 05f13bad5b7b7..d48c00d92bf94 100644
+--- a/drivers/gpu/drm/i915/display/intel_display_power.c
++++ b/drivers/gpu/drm/i915/display/intel_display_power.c
+@@ -2276,9 +2276,16 @@ void intel_display_power_suspend_late(struct intel_display *display, bool s2idle
+ 		hsw_enable_pc8(display);
+ 	}
+ 
+-	/* Tweaked Wa_14010685332:cnp,icp,jsp,mcc,tgp,adp */
+-	if (INTEL_PCH_TYPE(display) >= PCH_CNP && INTEL_PCH_TYPE(display) < PCH_DG1)
+-		intel_de_rmw(display, SOUTH_CHICKEN1, SBCLK_RUN_REFCLK_DIS, SBCLK_RUN_REFCLK_DIS);
++	/* Tweaked Wa_14010685332:cnp,icp,jsp,mcc,tgp */
++	if (INTEL_PCH_TYPE(display) >= PCH_CNP && INTEL_PCH_TYPE(display) < PCH_DG1) {
++		intel_de_rmw(display, SOUTH_CHICKEN1,
++			    SBCLK_RUN_REFCLK_DIS, SBCLK_RUN_REFCLK_DIS);
++
++		/* Original Wa_14010685332:adp */
++		if (INTEL_PCH_TYPE(display) == PCH_ADP)
++			intel_de_rmw(display, SOUTH_CHICKEN1,
++			    SBCLK_RUN_REFCLK_DIS, 0);
++	}
+ }
+ 
+ void intel_display_power_resume_early(struct intel_display *display)
+@@ -2296,8 +2303,10 @@ void intel_display_power_resume_early(struct intel_display *display)
+ 		hsw_disable_pc8(display);
+ 	}
+ 
+-	/* Tweaked Wa_14010685332:cnp,icp,jsp,mcc,tgp,adp */
+-	if (INTEL_PCH_TYPE(display) >= PCH_CNP && INTEL_PCH_TYPE(display) < PCH_DG1)
++	/* Tweaked Wa_14010685332:cnp,icp,jsp,mcc,tgp */
++	if (INTEL_PCH_TYPE(display) >= PCH_CNP &&
++	    INTEL_PCH_TYPE(display) < PCH_DG1 &&
++	    INTEL_PCH_TYPE(display) != PCH_ADP)
+ 		intel_de_rmw(display, SOUTH_CHICKEN1, SBCLK_RUN_REFCLK_DIS, 0);
+ 
+ 	intel_power_domains_resume(display);
+-- 
+2.43.0
+

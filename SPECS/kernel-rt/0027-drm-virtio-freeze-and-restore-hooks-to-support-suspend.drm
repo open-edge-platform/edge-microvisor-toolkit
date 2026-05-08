@@ -1,0 +1,51 @@
+From 385b807c20fbfe7a9b70d0177cb0778bfc938e43 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Tue, 28 Jun 2022 11:23:10 -0700
+Subject: [PATCH 27/69] drm/virtio: freeze and restore hooks to support suspend
+ and resume
+
+virtio device needs to delete before VM suspend happens
+then reinitialize all virtqueues again upon resume
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+(cherry picked from commit 0b00f4bfbab9938648720d73080c1c5bd302fdde)
+---
+ drivers/gpu/drm/virtio/virtgpu_drv.c | 1 -
+ drivers/gpu/drm/virtio/virtgpu_kms.c | 2 --
+ 2 files changed, 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/virtio/virtgpu_drv.c b/drivers/gpu/drm/virtio/virtgpu_drv.c
+index e0af6aa705c3b..b3dc9ccf4402c 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_drv.c
++++ b/drivers/gpu/drm/virtio/virtgpu_drv.c
+@@ -206,7 +206,6 @@ static int virtgpu_restore(struct virtio_device *vdev)
+ 		DRM_ERROR("Failed to recover objects\n");
+ 		return error;
+ 	}
+-
+ 	error = drm_mode_config_helper_resume(dev);
+ 	if (error) {
+ 		DRM_ERROR("resume error %d\n", error);
+diff --git a/drivers/gpu/drm/virtio/virtgpu_kms.c b/drivers/gpu/drm/virtio/virtgpu_kms.c
+index 3aaf9ad387cab..f05ad5fad41a3 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_kms.c
++++ b/drivers/gpu/drm/virtio/virtgpu_kms.c
+@@ -120,7 +120,6 @@ int virtio_gpu_find_vqs(struct virtio_gpu_device *vgdev)
+ 		{ "control", virtio_gpu_ctrl_ack },
+ 		{ "cursor", virtio_gpu_cursor_ack },
+ 	};
+-
+ 	struct virtqueue *vqs[2];
+ 	int ret;
+ 
+@@ -226,7 +225,6 @@ int virtio_gpu_init(struct virtio_device *vdev, struct drm_device *dev)
+ 		DRM_ERROR("failed to find virt queues\n");
+ 		goto err_vqs;
+ 	}
+-
+ 	ret = virtio_gpu_alloc_vbufs(vgdev);
+ 	if (ret) {
+ 		DRM_ERROR("failed to alloc vbufs\n");
+-- 
+2.43.0
+

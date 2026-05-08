@@ -1,0 +1,34 @@
+From de3befe4c006c6e1009fe117418ff688ee452c5e Mon Sep 17 00:00:00 2001
+From: hepengpx <pengpengx.he@intel.com>
+Date: Thu, 4 Dec 2025 11:19:32 +0800
+Subject: [PATCH 37/52] media: ipu: invalidate MMU TLB in dma buffers creation
+
+This patch ensures that the MMU TLB is properly invalidated during
+the creation and mapping of DMA buffers for IPU devices. Without
+explicit invalidation, stale or incorrect entries in the TLB can cause
+invalid memory access in hardware.
+
+Test Platform:
+PTL CRB FAB B B0 silicon
+
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-dma.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-dma.c b/drivers/staging/media/ipu7/ipu7-dma.c
+index 929161d6af42..3bbd768f03e1 100644
+--- a/drivers/staging/media/ipu7/ipu7-dma.c
++++ b/drivers/staging/media/ipu7/ipu7-dma.c
+@@ -206,6 +206,8 @@ void *ipu7_dma_alloc(struct ipu7_bus_device *sys, size_t size,
+ 		}
+ 	}
+ 
++	mmu->tlb_invalidate(mmu);
++
+ 	info->vaddr = vmap(pages, count, VM_USERMAP, PAGE_KERNEL);
+ 	if (!info->vaddr)
+ 		goto out_unmap;
+-- 
+2.34.1
+

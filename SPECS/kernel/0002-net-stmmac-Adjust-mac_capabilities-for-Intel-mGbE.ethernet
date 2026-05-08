@@ -1,0 +1,70 @@
+From 266b25dc0b2f21f97e6158974504c337ddceebb7 Mon Sep 17 00:00:00 2001
+From: Song Yoong Siang <yoong.siang.song@intel.com>
+Date: Tue, 2 Aug 2022 22:57:40 +0800
+Subject: [PATCH 2/3] net: stmmac: Adjust mac_capabilities for Intel mGbE 2.5G
+ mode
+
+In the case where kernel driver has no access to modify the clock rate
+after it is increased by 2.5 times in the BIOS to support 2.5G mode,
+link speeds other than 2.5Gbps are not supported. Therefore, this commit
+remove 10 Mbps, 100 Mbps, and 1Gbps support from mac_capabilities list.
+
+Signed-off-by: Tan Tee Min <tee.min.tan@linux.intel.com>
+Signed-off-by: Song Yoong Siang <yoong.siang.song@intel.com>
+---
+ drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c | 4 ++++
+ drivers/net/ethernet/stmicro/stmmac/stmmac_main.c | 9 +++++++++
+ include/linux/stmmac.h                            | 1 +
+ 3 files changed, 14 insertions(+)
+
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+index f75057ba3fbf..c304cdc64f34 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-intel.c
+@@ -300,8 +300,12 @@ static void tgl_get_interfaces(struct stmmac_priv *priv, void *bsp_priv,
+ 		dev_info(priv->device, "Link Speed Mode: 2.5Gbps\n");
+ 		priv->plat->mdio_bus_data->default_an_inband = false;
+ 		interface = PHY_INTERFACE_MODE_2500BASEX;
++		priv->plat->max_speed = 2500;
++		priv->plat->fixed_2G5_clock_rate = true;
+ 	} else {
+ 		interface = PHY_INTERFACE_MODE_SGMII;
++		priv->plat->max_speed = 1000;
++		priv->plat->fixed_2G5_clock_rate = false;
+ 	}
+ 
+ 	__set_bit(interface, interfaces);
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 6653d2254d41..c0e8f2a67017 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -1254,6 +1254,15 @@ static int stmmac_phy_setup(struct stmmac_priv *priv)
+ 	if (!fwnode)
+ 		fwnode = dev_fwnode(priv->device);
+ 
++	/* In the case where kernel driver has no access to modify the clock
++	 * rate after it is increased by 2.5 times in the BIOS to support 2.5G
++	 * mode, link speeds other than 2.5Gbps are not supported. Thus, remove
++	 * them from mac_capabilities.
++	 */
++	if (priv->plat->fixed_2G5_clock_rate && priv->plat->max_speed == 2500)
++		priv->phylink_config.mac_capabilities &=
++			~(MAC_10 | MAC_100 | MAC_1000);
++
+ 	phylink = phylink_create(config, fwnode, priv->plat->phy_interface,
+ 				 &stmmac_phylink_mac_ops);
+ 	if (IS_ERR(phylink))
+diff --git a/include/linux/stmmac.h b/include/linux/stmmac.h
+index a36223a02bac..f1d01db0de97 100644
+--- a/include/linux/stmmac.h
++++ b/include/linux/stmmac.h
+@@ -303,5 +303,6 @@ struct plat_stmmacenet_data {
+ 	const struct dwmac4_addrs *dwmac4_addrs;
+ 	unsigned int flags;
+ 	bool skip_reset;
++	bool fixed_2G5_clock_rate;
+ };
+ #endif
+-- 
+2.34.1
+

@@ -1,0 +1,181 @@
+From 68b0fe3bdb67bac2a59f55ee3eb4f3278c4621e1 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 11:40:55 +0800
+Subject: [PATCH 36/52] Update acpi, acpi-pdata and serdes-pdata
+
+Add updated changes to acpi, acpi-pdata
+and serdes-pdata files based on PR61.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ include/media/ipu-acpi-pdata.h | 24 ++++++++++++++++++++----
+ include/media/ipu-acpi.h       | 19 +++++++++++++++----
+ include/media/serdes-pdata.h   | 11 +++++++----
+ 3 files changed, 42 insertions(+), 12 deletions(-)
+
+diff --git a/include/media/ipu-acpi-pdata.h b/include/media/ipu-acpi-pdata.h
+index 4c754e98ded6..ac5b90cf7772 100644
+--- a/include/media/ipu-acpi-pdata.h
++++ b/include/media/ipu-acpi-pdata.h
+@@ -1,5 +1,8 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+-/* Copyright (C) 2023-2025 Intel Corporation */
++/* Copyright (C) 2023-2026 Intel Corporation */
++#ifndef _MEDIA_IPU_ACPI_PDATA_H_
++#define _MEDIA_IPU_ACPI_PDATA_H_
++
+ #include <linux/interrupt.h>
+ #include <media/ipu-acpi.h>
+ #include <media/v4l2-mediabus.h>
+@@ -24,7 +27,10 @@ int get_sensor_pdata(struct device *dev,
+ 			const char *serdes_name,
+ 			const char *hid_name,
+ 			int sensor_physical_addr,
+-			int link_freq);
++			int link_freq,
++			int ser_physical_addr,
++			const struct gpiod_lookup *ser_gpio,
++			unsigned int sensor_dt);
+ 
+ struct ipu_isys_subdev_pdata *get_acpi_subdev_pdata(void);
+ 
+@@ -37,7 +43,7 @@ struct sensor_platform_data {
+ 	char irq_pin_name[IPU_SPDATA_IRQ_PIN_NAME_LEN];
+ 	int reset_pin;
+ 	int detect_pin;
+-	char suffix;
++	char suffix[MAX_SUFFIX_LEN];
+ 	int gpios[IPU_SPDATA_GPIO_NUM];
+ };
+ 
+@@ -51,7 +57,7 @@ struct serdes_module_pdata {
+ 	char gpio_powerup_seq[SERDES_MAX_GPIO_POWERUP_SEQ];
+ 	unsigned int module_flags;
+ 	char module_name[I2C_NAME_SIZE];
+-	char suffix;
++	char suffix[MAX_SUFFIX_LEN];
+ };
+ 
+ struct serdes_local {
+@@ -91,4 +97,14 @@ struct serdes_local {
+ 
+ 	/* counter for total deser connected */
+ 	unsigned int deser_num;
++
++	/* serializer physical addr */
++	unsigned short ser_phys_addr;
++
++	/* serializer gpio */
++	struct gpiod_lookup ser_gpio[MAX_SER_GPIO_NUM];
++
++	/* sensor data type */
++	unsigned int sensor_dt;
+ };
++#endif
+diff --git a/include/media/ipu-acpi.h b/include/media/ipu-acpi.h
+index 11eeeac9c4b7..607bd6292258 100644
+--- a/include/media/ipu-acpi.h
++++ b/include/media/ipu-acpi.h
+@@ -1,6 +1,6 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+ /*
+- * Copyright (c) 2016-2025 Intel Corporation.
++ * Copyright (c) 2016-2026 Intel Corporation.
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License version
+@@ -13,8 +13,8 @@
+  *
+  */
+ 
+-#ifndef MEDIA_INTEL_IPU_ACPI_H
+-#define MEDIA_INTEL_IPU_ACPI_H
++#ifndef _MEDIA_IPU_ACPI_H_
++#define _MEDIA_IPU_ACPI_H_
+ 
+ #include <linux/version.h>
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 10, 0)
+@@ -22,6 +22,7 @@
+ #include "ipu-isys.h"
+ #else
+ #include <linux/clkdev.h>
++#include <linux/gpio/machine.h>
+ #include <linux/i2c.h>
+ 
+ #include <media/v4l2-mediabus.h>
+@@ -60,6 +61,7 @@ struct ipu_isys_subdev_pdata {
+ #define MAX_ACPI_SENSOR_NUM	4
+ #define MAX_ACPI_I2C_NUM	12
+ #define MAX_ACPI_GPIO_NUM	12
++#define MAX_SER_GPIO_NUM	11
+ 
+ #define GPIO_RESET		0x0
+ #define GPIO_POWER_EN		0xb
+@@ -68,6 +70,9 @@ struct ipu_isys_subdev_pdata {
+ 
+ #define IPU_SPDATA_GPIO_NUM	4
+ #define IPU_SPDATA_IRQ_PIN_NAME_LEN 16
++#define MAX_SUFFIX_LEN 5
++
++#define MIPI_CSI2_TYPE_YUV422_8 0x1e
+ 
+ void set_built_in_pdata(struct ipu_isys_subdev_pdata *pdata);
+ 
+@@ -233,13 +238,19 @@ struct ipu_acpi_devices {
+ 				 const char *serdes_name,
+ 				 const char *hid_name,
+ 				 int sensor_physical_addr,
+-				 int link_freq);
++				 int link_freq,
++				 int ser_physical_addr,
++				 const struct gpiod_lookup *ser_gpio,
++				 unsigned int sensor_dt);
+ 	void *priv_data;
+ 	size_t priv_size;
+ 	enum connection_type connect;
+ 	const char *serdes_name;
+ 	int sensor_physical_addr;
+ 	int link_freq; /* in mbps */
++	int ser_physical_addr;
++	struct gpiod_lookup ser_gpio[MAX_SER_GPIO_NUM];
++	unsigned int sensor_dt;
+ };
+ 
+ #endif
+diff --git a/include/media/serdes-pdata.h b/include/media/serdes-pdata.h
+index 829f730140b1..07115a16e74c 100644
+--- a/include/media/serdes-pdata.h
++++ b/include/media/serdes-pdata.h
+@@ -1,22 +1,25 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+-/* Copyright (C) 2023-2025 Intel Corporation */
++/* Copyright (C) 2023-2026 Intel Corporation */
+ 
+-#ifndef MEDIA_SERDES_PDATA_H
+-#define MEDIA_SERDES_PDATA_H
++#ifndef _MEDIA_SERDES_PDATA_H_
++#define _MEDIA_SERDES_PDATA_H_
+ 
+ #if IS_ENABLED(CONFIG_VIDEO_ISX031)
+ #include <media/i2c/isx031.h>
+ #endif
+ 
++#include <media/ipu-acpi.h>
++
+ struct serdes_subdev_info {
+ 	struct i2c_board_info board_info;
+ 	int i2c_adapter_id;
+ 	unsigned short rx_port;
+ 	unsigned short phy_i2c_addr;
+ 	unsigned short ser_alias;
+-	char suffix[5]; /* suffix for subdevs */
++	char suffix[MAX_SUFFIX_LEN]; /* suffix for subdevs */
+ 	unsigned short ser_phys_addr;
+ 	unsigned int sensor_dt;
++	struct gpiod_lookup ser_gpio[MAX_SER_GPIO_NUM];
+ };
+ 
+ struct serdes_platform_data {
+-- 
+2.34.1
+

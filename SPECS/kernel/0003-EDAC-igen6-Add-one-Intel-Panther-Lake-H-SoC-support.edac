@@ -1,0 +1,35 @@
+From 9f2e2fbd112dad75f958ae18c2109561a065e3f2 Mon Sep 17 00:00:00 2001
+From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+Date: Fri, 3 Apr 2026 13:40:29 +0800
+Subject: [PATCH 3/4] EDAC/igen6: Add one Intel Panther Lake-H SoC support
+
+Add one Intel Panther Lake-H SoC compute die ID for EDAC support.
+
+Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
+---
+ drivers/edac/igen6_edac.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/edac/igen6_edac.c b/drivers/edac/igen6_edac.c
+index ec12f3b8dc4e..2ee066cc7fca 100644
+--- a/drivers/edac/igen6_edac.c
++++ b/drivers/edac/igen6_edac.c
+@@ -312,6 +312,7 @@ static struct work_struct ecclog_work;
+ #define DID_PTL_H_SKU11	0xb028
+ #define DID_PTL_H_SKU12	0xb029
+ #define DID_PTL_H_SKU13	0xb02a
++#define DID_PTL_H_SKU14	0xb00a
+ 
+ /* Compute die IDs for Wildcat Lake with IBECC */
+ #define DID_WCL_SKU1	0xfd00
+@@ -857,6 +858,7 @@ static struct pci_device_id igen6_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, DID_PTL_H_SKU11), (kernel_ulong_t)&ptl_h_cfg },
+ 	{ PCI_VDEVICE(INTEL, DID_PTL_H_SKU12), (kernel_ulong_t)&ptl_h_cfg },
+ 	{ PCI_VDEVICE(INTEL, DID_PTL_H_SKU13), (kernel_ulong_t)&ptl_h_cfg },
++	{ PCI_VDEVICE(INTEL, DID_PTL_H_SKU14), (kernel_ulong_t)&ptl_h_cfg },
+ 	{ PCI_VDEVICE(INTEL, DID_WCL_SKU1), (kernel_ulong_t)&wcl_cfg },
+ 	{ },
+ };
+-- 
+2.34.1
+

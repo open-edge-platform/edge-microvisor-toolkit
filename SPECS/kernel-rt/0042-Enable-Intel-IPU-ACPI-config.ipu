@@ -1,0 +1,91 @@
+From 68ac2cabcec2a7b2137a687099c1cf012e48f318 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 12:44:13 +0800
+Subject: [PATCH 42/52] Enable Intel IPU ACPI config
+
+Add and enable the config for
+Intel IPU ACPI for staging
+based on patch v6.18.0 iot.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7.c | 19 +++++++++++++++----
+ drivers/staging/media/ipu7/ipu7.h |  3 +++
+ 2 files changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7.c b/drivers/staging/media/ipu7/ipu7.c
+index fa5a1867626f..dda8a577aab0 100644
+--- a/drivers/staging/media/ipu7/ipu7.c
++++ b/drivers/staging/media/ipu7/ipu7.c
+@@ -35,6 +35,10 @@
+ #include "ipu7-isys-csi2-regs.h"
+ #include "ipu7-mmu.h"
+ #include "ipu7-platform-regs.h"
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++#include <media/ipu-get-acpi.h>
++
++#endif
+ 
+ #define IPU_PCI_BAR		0
+ #define IPU_PCI_PBBAR		4
+@@ -2125,9 +2129,10 @@ static int ipu7_isys_check_fwnode_graph(struct fwnode_handle *fwnode)
+ 
+ static struct ipu7_bus_device *
+ ipu7_isys_init(struct pci_dev *pdev, struct device *parent,
+-	       const struct ipu_buttress_ctrl *ctrl, void __iomem *base,
+-	       const struct ipu_isys_internal_pdata *ipdata,
+-	       unsigned int nr)
++		const struct ipu_buttress_ctrl *ctrl, void __iomem *base,
++		struct ipu7_isys_subdev_pdata *spdata,
++		const struct ipu_isys_internal_pdata *ipdata,
++		unsigned int nr)
+ {
+ 	struct fwnode_handle *fwnode = dev_fwnode(&pdev->dev);
+ 	struct ipu7_bus_device *isys_adev;
+@@ -2156,6 +2161,7 @@ ipu7_isys_init(struct pci_dev *pdev, struct device *parent,
+ 
+ 	pdata->base = base;
+ 	pdata->ipdata = ipdata;
++	pdata->spdata = spdata;
+ 
+ 	isys_adev = ipu7_bus_initialize_device(pdev, parent, pdata, ctrl,
+ 					       IPU_ISYS_NAME);
+@@ -2535,8 +2541,13 @@ static int ipu7_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_ipu_bus_del_devices;
+ 	}
+ 
++#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
++	ipu_get_acpi_devices_new(&dev->platform_data);
++#endif
++
+ 	isp->isys = ipu7_isys_init(pdev, dev, isys_ctrl, isys_base,
+-				   isys_ipdata, 0);
++					dev->platform_data,
++					isys_ipdata, 0);
+ 	if (IS_ERR(isp->isys)) {
+ 		ret = PTR_ERR(isp->isys);
+ 		goto out_ipu_bus_del_devices;
+diff --git a/drivers/staging/media/ipu7/ipu7.h b/drivers/staging/media/ipu7/ipu7.h
+index ac8ac0689468..2b07b9c9f38d 100644
+--- a/drivers/staging/media/ipu7/ipu7.h
++++ b/drivers/staging/media/ipu7/ipu7.h
+@@ -141,6 +141,8 @@ struct ipu7_device {
+ /* Currently chosen arbitration mechanism for VC1 */
+ #define IPU_BTRS_ARB_STALL_MODE_VC1	IPU_BTRS_ARB_MODE_TYPE_REARB
+ 
++struct ipu7_isys_subdev_pdata;
++
+ /* One L2 entry maps 1024 L1 entries and one L1 entry per page */
+ #define IPU_MMUV2_L2_RANGE		(1024 * PAGE_SIZE)
+ /* Max L2 blocks per stream */
+@@ -223,6 +225,7 @@ struct ipu_isys_internal_pdata {
+ struct ipu7_isys_pdata {
+ 	void __iomem *base;
+ 	const struct ipu_isys_internal_pdata *ipdata;
++	struct ipu7_isys_subdev_pdata *spdata;
+ };
+ 
+ struct ipu_psys_internal_pdata {
+-- 
+2.34.1
+

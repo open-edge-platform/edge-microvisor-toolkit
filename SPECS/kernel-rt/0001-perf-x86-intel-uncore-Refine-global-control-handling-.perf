@@ -1,0 +1,68 @@
+From c4a5db2ee06c887a03c6504901febe3554cb168b Mon Sep 17 00:00:00 2001
+From: Zide Chen <zide.chen@intel.com>
+Date: Mon, 23 Feb 2026 13:40:27 -0800
+Subject: [PATCH] perf/x86/intel/uncore: Refine global control handling in ADL
+ driver
+
+On some Raptor Cove CPUs, enabling uncore PMON globally may noticeably
+increase power consumption.  adl_uncore_msr_init_box() runs when the
+uncore driver is initialized, even when no uncore PMON boxes will be
+used.  Drop this callback and defer programming the global control
+register to the enable_box() callback.
+
+The adl_uncore_msr_disable_box() callback for indivitual PMU device
+should not clear the global uncore enable bit, as this affects all
+uncore PMON devices controlled by this register.  Since there is no
+box-specific action is needed, this callback can be safely removed.
+
+Keep adl_uncore_msr_enable_box() and adl_uncore_msr_exit_box() intact,
+which are sufficient to control the global uncore enable state.
+
+IMC and IMC freerunning counters are not impacted by these changes.
+
+Signed-off-by: Zide Chen <zide.chen@intel.com>
+---
+ arch/x86/events/intel/uncore_snb.c | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+diff --git a/arch/x86/events/intel/uncore_snb.c b/arch/x86/events/intel/uncore_snb.c
+index c663b00b68fe..7068b2f4a4f9 100644
+--- a/arch/x86/events/intel/uncore_snb.c
++++ b/arch/x86/events/intel/uncore_snb.c
+@@ -550,23 +550,11 @@ void tgl_uncore_cpu_init(void)
+ 	skl_uncore_msr_ops.init_box = rkl_uncore_msr_init_box;
+ }
+ 
+-static void adl_uncore_msr_init_box(struct intel_uncore_box *box)
+-{
+-	if (box->pmu->pmu_idx == 0)
+-		wrmsrq(ADL_UNC_PERF_GLOBAL_CTL, SNB_UNC_GLOBAL_CTL_EN);
+-}
+-
+ static void adl_uncore_msr_enable_box(struct intel_uncore_box *box)
+ {
+ 	wrmsrq(ADL_UNC_PERF_GLOBAL_CTL, SNB_UNC_GLOBAL_CTL_EN);
+ }
+ 
+-static void adl_uncore_msr_disable_box(struct intel_uncore_box *box)
+-{
+-	if (box->pmu->pmu_idx == 0)
+-		wrmsrq(ADL_UNC_PERF_GLOBAL_CTL, 0);
+-}
+-
+ static void adl_uncore_msr_exit_box(struct intel_uncore_box *box)
+ {
+ 	if (box->pmu->pmu_idx == 0)
+@@ -574,9 +562,7 @@ static void adl_uncore_msr_exit_box(struct intel_uncore_box *box)
+ }
+ 
+ static struct intel_uncore_ops adl_uncore_msr_ops = {
+-	.init_box	= adl_uncore_msr_init_box,
+ 	.enable_box	= adl_uncore_msr_enable_box,
+-	.disable_box	= adl_uncore_msr_disable_box,
+ 	.exit_box	= adl_uncore_msr_exit_box,
+ 	.disable_event	= snb_uncore_msr_disable_event,
+ 	.enable_event	= snb_uncore_msr_enable_event,
+-- 
+2.34.1
+

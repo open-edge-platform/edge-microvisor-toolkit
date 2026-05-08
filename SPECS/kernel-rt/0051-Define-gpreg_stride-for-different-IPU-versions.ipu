@@ -1,0 +1,352 @@
+From 102f3e9f651300ba61ac43e573a1f10fda48f03d Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 14:05:31 +0800
+Subject: [PATCH 51/52] Define gpreg_stride for different IPU versions
+
+For different IPU versions, define gpreg_stride
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/pci/intel/ipu6/ipu6-isys.h      |  2 --
+ drivers/media/pci/intel/ipu6/ipu6.c           | 16 ++++++++++----
+ drivers/media/pci/intel/ipu6/ipu6.h           |  6 ++++++
+ drivers/staging/media/ipu7/ipu7-dma.c         |  2 --
+ drivers/staging/media/ipu7/ipu7-fw-isys.c     | 21 ++++++++++++++++---
+ .../staging/media/ipu7/ipu7-isys-csi-phy.c    | 19 +++++++++++------
+ drivers/staging/media/ipu7/ipu7-isys-queue.c  |  1 +
+ drivers/staging/media/ipu7/ipu7-isys-queue.h  |  3 +++
+ drivers/staging/media/ipu7/ipu7.c             | 11 ++++++++++
+ drivers/staging/media/ipu7/ipu7.h             |  7 +++++++
+ 10 files changed, 71 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu6/ipu6-isys.h b/drivers/media/pci/intel/ipu6/ipu6-isys.h
+index a5987bbfe3bb..a3589f6a38f0 100644
+--- a/drivers/media/pci/intel/ipu6/ipu6-isys.h
++++ b/drivers/media/pci/intel/ipu6/ipu6-isys.h
+@@ -10,9 +10,7 @@
+ #include <linux/pm_qos.h>
+ #include <linux/spinlock_types.h>
+ #include <linux/types.h>
+-#if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
+ #include <linux/clkdev.h>
+-#endif
+ #include <media/media-device.h>
+ #include <media/v4l2-async.h>
+ #include <media/v4l2-device.h>
+diff --git a/drivers/media/pci/intel/ipu6/ipu6.c b/drivers/media/pci/intel/ipu6/ipu6.c
+index 248e33a5ca31..5304b25a59b1 100644
+--- a/drivers/media/pci/intel/ipu6/ipu6.c
++++ b/drivers/media/pci/intel/ipu6/ipu6.c
+@@ -5,6 +5,7 @@
+ 
+ #include <linux/bitfield.h>
+ #include <linux/bits.h>
++#include <linux/debugfs.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/err.h>
+ #include <linux/firmware.h>
+@@ -389,9 +390,9 @@ static void ipu6_internal_pdata_init(struct ipu6_device *isp)
+ static struct ipu6_bus_device *
+ ipu6_isys_init(struct pci_dev *pdev, struct device *parent,
+ 	       struct ipu6_buttress_ctrl *ctrl, void __iomem *base,
+-	       const struct ipu6_isys_internal_pdata *ipdata,
++	       const struct ipu6_isys_internal_pdata *ipdata
+ #if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
+-	       struct ipu_isys_subdev_pdata *spdata
++	       , struct ipu_isys_subdev_pdata *spdata
+ #endif
+ 			)
+ {
+@@ -591,6 +592,11 @@ static int ipu6_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	pci_set_drvdata(pdev, isp);
+ 	pci_set_master(pdev);
+ 
++#ifdef CONFIG_DEBUG_FS
++	isp->ipu_dir = debugfs_create_dir(dev_name(dev), NULL);
++	if (IS_ERR(isp->ipu_dir))
++		isp->ipu_dir = NULL;
++#endif
+ 	isp->cpd_metadata_cmpnt_size = sizeof(struct ipu6_cpd_metadata_cmpnt);
+ 	switch (id->device) {
+ 	case PCI_DEVICE_ID_INTEL_IPU6:
+@@ -665,9 +671,9 @@ static int ipu6_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 
+ 	isp->isys = ipu6_isys_init(pdev, dev, isys_ctrl, isys_base,
+-				   &isys_ipdata,
++				   &isys_ipdata
+ #if IS_ENABLED(CONFIG_INTEL_IPU_ACPI)
+-				  pdev->dev.platform_data
++				   , pdev->dev.platform_data
+ #endif
+ 					);
+ 	if (IS_ERR(isp->isys)) {
+@@ -762,6 +768,7 @@ static int ipu6_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (!IS_ERR_OR_NULL(isp->isys) && !IS_ERR_OR_NULL(isp->isys->mmu))
+ 		ipu6_mmu_cleanup(isp->isys->mmu);
+ 	ipu6_bus_del_devices(pdev);
++	debugfs_remove_recursive(isp->ipu_dir);
+ 	release_firmware(isp->cpd_fw);
+ buttress_exit:
+ 	ipu6_buttress_exit(isp);
+@@ -782,6 +789,7 @@ static void ipu6_pci_remove(struct pci_dev *pdev)
+ 	ipu6_buttress_exit(isp);
+ 
+ 	ipu6_bus_del_devices(pdev);
++	debugfs_remove_recursive(isp->ipu_dir);
+ 
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+diff --git a/drivers/media/pci/intel/ipu6/ipu6.h b/drivers/media/pci/intel/ipu6/ipu6.h
+index 2d7f69990faa..a560ba37b44a 100644
+--- a/drivers/media/pci/intel/ipu6/ipu6.h
++++ b/drivers/media/pci/intel/ipu6/ipu6.h
+@@ -13,6 +13,9 @@
+ struct firmware;
+ struct pci_dev;
+ struct ipu6_bus_device;
++#ifdef CONFIG_DEBUG_FS
++struct dentry;
++#endif
+ 
+ #define IPU6_NAME			"intel-ipu6"
+ #define IPU6_MEDIA_DEV_MODEL_NAME	"ipu6"
+@@ -77,6 +80,9 @@ struct ipu6_device {
+ 	struct ipu6_bus_device *psys;
+ 	struct ipu6_buttress buttress;
+ 
++#ifdef CONFIG_DEBUG_FS
++	struct dentry *ipu_dir;
++#endif
+ 	const struct firmware *cpd_fw;
+ 	const char *cpd_fw_name;
+ 	u32 cpd_metadata_cmpnt_size;
+diff --git a/drivers/staging/media/ipu7/ipu7-dma.c b/drivers/staging/media/ipu7/ipu7-dma.c
+index 3bbd768f03e1..aa2b7e4cd1c4 100644
+--- a/drivers/staging/media/ipu7/ipu7-dma.c
++++ b/drivers/staging/media/ipu7/ipu7-dma.c
+@@ -258,7 +258,6 @@ void ipu7_dma_free(struct ipu7_bus_device *sys, size_t size, void *vaddr,
+ 		return;
+ 
+ 	iova = find_iova(&mmu->dmap->iovad, PHYS_PFN(dma_handle));
+-
+ 	if (WARN_ON(!iova))
+ 		return;
+ 
+@@ -352,7 +351,6 @@ void ipu7_dma_unmap_sg(struct ipu7_bus_device *sys, struct scatterlist *sglist,
+ 		return;
+ 
+ 	iova = find_iova(&mmu->dmap->iovad, PHYS_PFN(sg_dma_address(sglist)));
+-
+ 	if (WARN_ON(!iova))
+ 		return;
+ 
+diff --git a/drivers/staging/media/ipu7/ipu7-fw-isys.c b/drivers/staging/media/ipu7/ipu7-fw-isys.c
+index a2e0a6675231..2c1e15debcc9 100644
+--- a/drivers/staging/media/ipu7/ipu7-fw-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-fw-isys.c
+@@ -408,6 +408,18 @@ void ipu7_fw_isys_dump_stream_cfg(struct device *dev,
+ 			cfg->output_pins[i].dpcm.type);
+ 		dev_dbg(dev, "\t.dpcm.predictor = %d\n",
+ 			cfg->output_pins[i].dpcm.predictor);
++		dev_dbg(dev, "\t.upipe_enable = %d\n",
++			cfg->output_pins[i].upipe_enable);
++		dev_dbg(dev, "\t.upipe_pin_cfg.opaque_pin_cfg = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.opaque_pin_cfg);
++		dev_dbg(dev, "\t.upipe_pin_cfg.plane_offset_1 = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.plane_offset_1);
++		dev_dbg(dev, "\t.upipe_pin_cfg.plane_offset_2 = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.plane_offset_2);
++		dev_dbg(dev, "\t.upipe_pin_cfg.singel_uob_fifo = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.single_uob_fifo);
++		dev_dbg(dev, "\t.upipe_pin_cfg.shared_uob_fifo = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.shared_uob_fifo);
+ 	}
+ 	dev_dbg(dev, "---------------------------\n");
+ }
+@@ -426,9 +438,12 @@ void ipu7_fw_isys_dump_frame_buff_set(struct device *dev,
+ 
+ 	for (i = 0; i < outputs; i++) {
+ 		dev_dbg(dev, ".output_pin[%d]:\n", i);
+-		dev_dbg(dev, "\t.user_token = %llx\n",
+-			buf->output_pins[i].user_token);
+-		dev_dbg(dev, "\t.addr = 0x%x\n", buf->output_pins[i].addr);
++		dev_dbg(dev, "\t.pin_payload.user_token = %llx\n",
++			buf->output_pins[i].pin_payload.user_token);
++		dev_dbg(dev, "\t.pin_payload.addr = 0x%x\n",
++			buf->output_pins[i].pin_payload.addr);
++		dev_dbg(dev, "\t.pin_payload.upipe_capture_cfg = 0x%x\n",
++			buf->output_pins[i].upipe_capture_cfg);
+ 	}
+ 	dev_dbg(dev, "---------------------------\n");
+ }
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c b/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
+index 97cd47daf614..15076fc20ad2 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
+@@ -167,8 +167,11 @@ static void dwc_csi_write(struct ipu7_isys *isys, u32 id, u32 addr, u32 data)
+ static void gpreg_write(struct ipu7_isys *isys, u32 id, u32 addr, u32 data)
+ {
+ 	void __iomem *isys_base = isys->pdata->base;
+-	u32 gpreg = isys->pdata->ipdata->csi2.gpreg;
+-	void __iomem *base = isys_base + gpreg + 0x1000 * id;
++		u32 gpreg = isys->pdata->ipdata->csi2.gpreg;
++
++	void __iomem *base = isys_base + gpreg +
++		isys->pdata->ipdata->csi2.gpreg_stride * id;
++
+ 	struct device *dev = &isys->adev->auxdev.dev;
+ 
+ 	dev_dbg(dev, "gpreg write: reg 0x%zx = data 0x%08x",
+@@ -344,9 +347,13 @@ static int ipu7_isys_csi_ctrl_dids_config(struct ipu7_isys_csi2 *csi2, u32 id)
+ static int ipu7_isys_phy_ready(struct ipu7_isys *isys, u32 id)
+ {
+ 	void __iomem *isys_base = isys->pdata->base;
+-	u32 gpreg_offset = isys->pdata->ipdata->csi2.gpreg;
+-	void __iomem *gpreg = isys_base + gpreg_offset + 0x1000 * id;
++		u32 gpreg_offset = isys->pdata->ipdata->csi2.gpreg;
++
++	void __iomem *gpreg = isys_base + gpreg_offset +
++		isys->pdata->ipdata->csi2.gpreg_stride * id;
++
+ 	struct device *dev = &isys->adev->auxdev.dev;
++
+ 	unsigned int i;
+ 	u32 phy_ready;
+ 	u32 reg, rext;
+@@ -354,8 +361,8 @@ static int ipu7_isys_phy_ready(struct ipu7_isys *isys, u32 id)
+ 
+ 	dev_dbg(dev, "waiting phy ready...\n");
+ 	ret = readl_poll_timeout(gpreg + PHY_READY, phy_ready,
+-				 phy_ready & BIT(0) && phy_ready != ~0U,
+-				 100, CDPHY_TIMEOUT);
++					phy_ready & BIT(0) && phy_ready != ~0U,
++					100, CDPHY_TIMEOUT);
+ 	dev_dbg(dev, "phy %u ready = 0x%08x\n", id, readl(gpreg + PHY_READY));
+ 	dev_dbg(dev, "csi %u PHY_RX = 0x%08x\n", id,
+ 		dwc_csi_read(isys, id, PHY_RX));
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+index a05a8d5c77c9..6c804f16e73a 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+@@ -1141,6 +1141,7 @@ void ipu7_isys_queue_buf_ready(struct ipu7_isys_stream *stream,
+ 		spin_unlock_irqrestore(&aq->lock, flags);
+ 
+ 		ipu7_isys_buf_calc_sequence_time(ib, time);
++
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+ 		if (!IA_GOFO_MSG_ERR_IS_OK(info->error_info)) {
+ 			vbuf = to_vb2_v4l2_buffer(vb);
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.h b/drivers/staging/media/ipu7/ipu7-isys-queue.h
+index 0cb08a38f756..5a909c3a78d2 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.h
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.h
+@@ -31,6 +31,9 @@ struct ipu7_isys_queue {
+ struct ipu7_isys_buffer {
+ 	struct list_head head;
+ 	atomic_t str2mmio_flag;
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	atomic_t skipframe_flag;
++#endif
+ };
+ 
+ struct ipu7_isys_video_buffer {
+diff --git a/drivers/staging/media/ipu7/ipu7.c b/drivers/staging/media/ipu7/ipu7.c
+index 4ae9d14882b2..ab16b4000c34 100644
+--- a/drivers/staging/media/ipu7/ipu7.c
++++ b/drivers/staging/media/ipu7/ipu7.c
+@@ -7,6 +7,7 @@
+ #include <linux/bitfield.h>
+ #include <linux/bits.h>
+ #include <linux/bug.h>
++#include <linux/debugfs.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/err.h>
+ #include <linux/firmware.h>
+@@ -53,6 +54,7 @@ static const unsigned int ipu7_csi_offsets[] = {
+ static struct ipu_isys_internal_pdata ipu7p5_isys_ipdata = {
+ 	.csi2 = {
+ 		.gpreg = IS_IO_CSI2_GPREGS_BASE,
++		.gpreg_stride = 0x1000,
+ 	},
+ 	.hw_variant = {
+ 		.offset = IPU_UNIFIED_OFFSET,
+@@ -793,6 +795,7 @@ static struct ipu_psys_internal_pdata ipu7p5_psys_ipdata = {
+ static struct ipu_isys_internal_pdata ipu7_isys_ipdata = {
+ 	.csi2 = {
+ 		.gpreg = IS_IO_CSI2_GPREGS_BASE,
++		.gpreg_stride = 0x1000,
+ 	},
+ 	.hw_variant = {
+ 		.offset = IPU_UNIFIED_OFFSET,
+@@ -1310,6 +1313,7 @@ static struct ipu_psys_internal_pdata ipu7_psys_ipdata = {
+ static struct ipu_isys_internal_pdata ipu8_isys_ipdata = {
+ 	.csi2 = {
+ 		.gpreg = IPU8_IS_IO_CSI2_GPREGS_BASE,
++		.gpreg_stride = 0x2000,
+ 	},
+ 	.hw_variant = {
+ 		.offset = IPU_UNIFIED_OFFSET,
+@@ -2466,6 +2470,11 @@ static int ipu7_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	pci_set_drvdata(pdev, isp);
+ 	pci_set_master(pdev);
+ 
++#ifdef CONFIG_DEBUG_FS
++	isp->ipu7_dir = debugfs_create_dir(dev_name(dev), NULL);
++	if (IS_ERR(isp->ipu7_dir))
++		isp->ipu7_dir = NULL;
++#endif
+ 	switch (id->device) {
+ 	case IPU7_PCI_ID:
+ 		isp->hw_ver = IPU_VER_7;
+@@ -2633,6 +2642,7 @@ static int ipu7_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (!IS_ERR_OR_NULL(isp->psys))
+ 		pm_runtime_put_sync(&isp->psys->auxdev.dev);
+ 	ipu7_bus_del_devices(pdev);
++	debugfs_remove_recursive(isp->ipu7_dir);
+ 	release_firmware(isp->cpd_fw);
+ buttress_exit:
+ 	ipu_buttress_exit(isp);
+@@ -2658,6 +2668,7 @@ static void ipu7_pci_remove(struct pci_dev *pdev)
+ 	ipu7_mmu_cleanup(isp->psys->mmu);
+ 
+ 	ipu7_bus_del_devices(pdev);
++	debugfs_remove_recursive(isp->ipu7_dir);
+ 
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+diff --git a/drivers/staging/media/ipu7/ipu7.h b/drivers/staging/media/ipu7/ipu7.h
+index 2b07b9c9f38d..f0a2ff97ec8f 100644
+--- a/drivers/staging/media/ipu7/ipu7.h
++++ b/drivers/staging/media/ipu7/ipu7.h
+@@ -13,6 +13,9 @@
+ #include "ipu7-buttress.h"
+ 
+ struct ipu7_bus_device;
++#ifdef CONFIG_DEBUG_FS
++struct dentry;
++#endif
+ struct pci_dev;
+ struct firmware;
+ 
+@@ -74,6 +77,9 @@ struct ipu7_device {
+ 	struct ipu7_bus_device *psys;
+ 	struct ipu_buttress buttress;
+ 
++#ifdef CONFIG_DEBUG_FS
++	struct dentry *ipu7_dir;
++#endif
+ 	const struct firmware *cpd_fw;
+ 	const char *cpd_fw_name;
+ 	/* Only for non-secure mode. */
+@@ -203,6 +209,7 @@ struct ipu7_isys_internal_csi2_pdata {
+ 	u32 nports;
+ 	u32 const *offsets;
+ 	u32 gpreg;
++	u32 gpreg_stride;
+ };
+ 
+ struct ipu7_hw_variants {
+-- 
+2.34.1
+

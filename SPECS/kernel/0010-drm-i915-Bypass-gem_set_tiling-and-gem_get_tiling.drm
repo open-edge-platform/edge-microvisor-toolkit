@@ -1,0 +1,44 @@
+From 25fea21a59287fd82bc76afc61a516ea8f0f469c Mon Sep 17 00:00:00 2001
+From: "Kooran Paul, Princy" <princy.kooran.paul@intel.com>
+Date: Thu, 16 May 2024 07:51:40 +0800
+Subject: [PATCH 10/69] drm/i915: Bypass gem_set_tiling and gem_get_tiling
+
+gem_set_tiling and gem_get_tiling are deprecated. However this
+check is still required for legacy user space process to avoid
+getting KMS error.
+
+Add SRIOV check to ensure sriov is not getting error on vf.
+
+Signed-off-by: Kooran Paul, Princy <princy.kooran.paul@intel.com>
+Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+(cherry picked from commit 35bab4ef3e3007f578b477155ba02f32de0a2ecc)
+---
+ drivers/gpu/drm/i915/gem/i915_gem_tiling.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_tiling.c b/drivers/gpu/drm/i915/gem/i915_gem_tiling.c
+index 5a296ba3758a4..55e9935a67b0e 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_tiling.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_tiling.c
+@@ -347,7 +347,7 @@ i915_gem_set_tiling_ioctl(struct drm_device *dev, void *data,
+ 	struct drm_i915_gem_object *obj;
+ 	int err;
+ 
+-	if (!to_gt(i915)->ggtt->num_fences)
++	if (!to_gt(i915)->ggtt->num_fences && !IS_SRIOV_VF(i915))
+ 		return -EOPNOTSUPP;
+ 
+ 	obj = i915_gem_object_lookup(file, args->handle);
+@@ -430,7 +430,7 @@ i915_gem_get_tiling_ioctl(struct drm_device *dev, void *data,
+ 	struct drm_i915_gem_object *obj;
+ 	int err = -ENOENT;
+ 
+-	if (!to_gt(i915)->ggtt->num_fences)
++	if (!to_gt(i915)->ggtt->num_fences && !IS_SRIOV_VF(i915))
+ 		return -EOPNOTSUPP;
+ 
+ 	rcu_read_lock();
+-- 
+2.43.0
+

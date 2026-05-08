@@ -1,0 +1,342 @@
+From 3da589f4971287728e1fcee2a0a6933cda585093 Mon Sep 17 00:00:00 2001
+From: Subramanian Mohan <subramanian.mohan@intel.com>
+Date: Tue, 17 Mar 2026 10:45:56 +0530
+Subject: [PATCH 5/5] pps: clients: add support for Intel Timed IO PPS client
+
+Add a PPS client driver for Intel Timed IO (TIO) hardware.
+
+The Intel TIO block captures hardware timestamps in the ART
+(Always Running Timer) domain when a PPS signal is detected.
+On platforms where interrupt delivery is not available for
+PPS capture events, the driver polls the capture register
+using a high-resolution timer.
+
+Captured ART timestamps are converted to timespec64 using kernel
+time correlation mechanisms before being reported to the PPS
+subsystem.
+
+The device is instantiated by the Intel TIO platform driver and
+operates as an auxiliary child device.
+
+This enables PPS support on Intel platforms where TIO provides
+precise timestamp capture but lacks interrupt support.
+
+Co-developed-by: Christopher Hall <christopher.s.hall@intel.com>
+Signed-off-by: Christopher Hall <christopher.s.hall@intel.com>
+Signed-off-by: Subramanian Mohan <subramanian.mohan@intel.com>
+---
+ .../ABI/testing/sysfs-pps-client-tio          |   6 +
+ drivers/pps/clients/Kconfig                   |  17 ++
+ drivers/pps/clients/Makefile                  |   2 +
+ drivers/pps/clients/pps_tio_client.c          | 236 ++++++++++++++++++
+ drivers/pps/intel_pps_tio/Kconfig             |   1 +
+ 5 files changed, 262 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-pps-client-tio
+ create mode 100644 drivers/pps/clients/pps_tio_client.c
+
+diff --git a/Documentation/ABI/testing/sysfs-pps-client-tio b/Documentation/ABI/testing/sysfs-pps-client-tio
+new file mode 100644
+index 000000000000..d35e6daa6382
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-pps-client-tio
+@@ -0,0 +1,6 @@
++What:		/sys/class/pps/ppsx/poll
++Date:		April 2026
++KernelVersion:	7.10
++Contact:	Subramanian Mohan<subramanian.mohan@intel.com>
++Description:
++		Enable or disable PPS TIO client.
+diff --git a/drivers/pps/clients/Kconfig b/drivers/pps/clients/Kconfig
+index 4f3244e17aa1..e7ac6984ce04 100644
+--- a/drivers/pps/clients/Kconfig
++++ b/drivers/pps/clients/Kconfig
+@@ -35,3 +35,20 @@ config PPS_CLIENT_GPIO
+ 	  GPIO. To be useful you must also register a platform device
+ 	  specifying the GPIO pin and other options, usually in your board
+ 	  setup.
++
++config PPS_CLIENT_TIO
++	tristate "PPS client using TIO"
++	depends on INTEL_TIO_PLAT
++	help
++	This driver registers a Pulse-Per-Second (PPS) source using
++	Intel Time I/O (TIO) TGPIO hardware which captures ART
++	(Always Running Timer)timestamps.This hardware is present
++	on 2019 and newer Intel CPUs.The device is instantiated by the
++	Intel TIO platform driver and operates as an auxiliary child device.
++
++	Since the hardware does not provide an interrupt for PPS capture
++	events, the driver polls the hardware using a high-resolution timer
++	and converts ART timestamps to system wall time before reporting
++	them to the PPS subsystem.
++
++	If unsure, say N.
+diff --git a/drivers/pps/clients/Makefile b/drivers/pps/clients/Makefile
+index 7a3807e57832..82b60e12e268 100644
+--- a/drivers/pps/clients/Makefile
++++ b/drivers/pps/clients/Makefile
+@@ -7,5 +7,7 @@ obj-$(CONFIG_PPS_CLIENT_KTIMER)	+= pps-ktimer.o
+ obj-$(CONFIG_PPS_CLIENT_LDISC)	+= pps-ldisc.o
+ obj-$(CONFIG_PPS_CLIENT_PARPORT) += pps_parport.o
+ obj-$(CONFIG_PPS_CLIENT_GPIO)	+= pps-gpio.o
++obj-$(CONFIG_PPS_CLIENT_TIO)	+= pps_tio_client.o
+ 
+ ccflags-$(CONFIG_PPS_DEBUG) := -DDEBUG
++ccflags-y += -I$(srctree)/drivers/pps/intel_pps_tio
+diff --git a/drivers/pps/clients/pps_tio_client.c b/drivers/pps/clients/pps_tio_client.c
+new file mode 100644
+index 000000000000..94ac3b206689
+--- /dev/null
++++ b/drivers/pps/clients/pps_tio_client.c
+@@ -0,0 +1,236 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Intel PPS TIO Client Driver
++ *
++ * Copyright (C) 2026 Intel Corporation
++ */
++
++#include <linux/auxiliary_bus.h>
++#include <linux/container_of.h>
++#include <linux/device.h>
++#include <linux/hrtimer.h>
++#include <linux/mod_devicetable.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/pps_kernel.h>
++#include <linux/spinlock.h>
++#include <linux/timekeeping.h>
++
++#include <asm/cpu_device_id.h>
++
++#include "pps_tio_plat.h"
++
++#define INTERVAL_MS	ms_to_ktime(100)
++
++struct pps_tio_client {
++	struct auxiliary_device *aux_dev;
++	struct pps_source_info client_info;
++	struct pps_tio_plat_data *pdata;
++	struct pps_device *pps;
++	spinlock_t client_lock; /* client lock resource */
++	struct hrtimer timer;
++	u64 prev_count;
++};
++
++static u64 prev_art;
++static struct system_time_snapshot cur_snap, prev_snap;
++
++static inline ktime_t first_event(struct pps_tio_client *tio_cli)
++{
++	return ktime_add(ktime_get_real(), INTERVAL_MS);
++}
++
++static int pps_tio_get_time(ktime_t *device,
++			    struct system_counterval_t *system, void *ctx)
++{
++	u64 *art_cycles = ctx;
++
++	*device = *art_cycles;
++	system->cycles = *art_cycles;
++	system->cs_id  = CSID_X86_ART;
++
++	return 0;
++}
++
++static int pps_tio_convert_cs(struct pps_tio_client *tio_cli, u64 art_cycles,
++			      struct system_time_snapshot snap)
++{
++	struct system_device_crosststamp xts;
++	struct pps_event_time ets;
++	int ret;
++
++	ret = get_device_system_crosststamp(pps_tio_get_time,
++					    &art_cycles, &snap, &xts);
++
++	if (ret)
++		return ret;
++
++	ets.ts_real = ktime_to_timespec64(xts.sys_realtime);
++	pps_event(tio_cli->pps, &ets, PPS_CAPTUREASSERT, NULL);
++
++	return 0;
++}
++
++/*
++ *  To co-relate/convert art to system time, we need to read
++ *  device art cycles and system time snapshot @ same time.
++ *  Due to polling we are ahead of time in reading art cycles.
++ *  we need X-1 snapshot time to interpolate in croststamp api.
++ */
++static enum hrtimer_restart hrtimer_callback(struct hrtimer *timer)
++{
++	struct pps_tio_client *tio_cli = container_of(timer,
++					     struct pps_tio_client, timer);
++	struct auxiliary_device *aux_dev = tio_cli->aux_dev;
++	struct pps_tio_ops_req req;
++	u64 cur_art_cycles, ec_cap;
++	int ret;
++
++	guard(spinlock)(&tio_cli->client_lock);
++
++	ktime_get_snapshot(&cur_snap);
++
++	/* capture device art cycles */
++	req = PPS_TIO_OPS_REQ(READ_REG, tio_cli->pdata->tio_data->regs.tcv, 0, 0);
++	ret = pps_ops_req(tio_cli->pdata, &req);
++	if (ret < 0) {
++		dev_err(&aux_dev->dev, "TCV Read Error %d", ret);
++		goto err;
++	}
++
++	cur_art_cycles = req.value;
++
++	req = PPS_TIO_OPS_REQ(READ_REG, tio_cli->pdata->tio_data->regs.eccv, 0, 0);
++	ret = pps_ops_req(tio_cli->pdata, &req);
++	if (ret < 0) {
++		dev_err(&aux_dev->dev, "ECCV Read Error %d", ret);
++		goto err;
++	}
++
++	ec_cap = req.value;
++
++	if (cur_art_cycles != prev_art)
++		pps_tio_convert_cs(tio_cli, cur_art_cycles, prev_snap);
++
++	tio_cli->prev_count = ec_cap;
++	prev_art = cur_art_cycles;
++	memcpy(&prev_snap, &cur_snap, sizeof(cur_snap));
++
++	hrtimer_forward_now(timer, INTERVAL_MS);
++	return HRTIMER_RESTART;
++err:
++	req = PPS_TIO_OPS_REQ(DISABLE, 0, 0, 0);
++	pps_ops_req(tio_cli->pdata, &req);
++	tio_cli->pps->is_poll_enabled = false;
++	tio_cli->prev_count = 0;
++	return HRTIMER_NORESTART;
++}
++
++static int pps_tio_client_poll(struct pps_device *pps, bool enable)
++{
++	struct pps_tio_client *tio_cli = container_of(pps->info,
++					     struct pps_tio_client, client_info);
++	struct auxiliary_device *aux_dev = tio_cli->aux_dev;
++	struct pps_tio_ops_req req;
++	int ret;
++
++	guard(spinlock)(&tio_cli->client_lock);
++
++	if (enable && !pps->is_poll_enabled) {
++		tio_cli->pps->is_poll_enabled = false;
++		tio_cli->prev_count = 0;
++		req = PPS_TIO_OPS_REQ(CONFIG, 0, 0, TIO_CLIENT);
++		ret = pps_ops_req(tio_cli->pdata, &req);
++		if (ret < 0) {
++			dev_err(&aux_dev->dev, "client functionality not enabled\n");
++			return ret;
++		}
++		tio_cli->pps->is_poll_enabled = true;
++		hrtimer_start(&tio_cli->timer, first_event(tio_cli),
++			      HRTIMER_MODE_ABS_PINNED);
++	} else if (!enable && pps->is_poll_enabled) {
++		hrtimer_cancel(&tio_cli->timer);
++		req = PPS_TIO_OPS_REQ(DISABLE, 0, 0, 0);
++		pps_ops_req(tio_cli->pdata, &req);
++		tio_cli->pps->is_poll_enabled = false;
++		tio_cli->prev_count = 0;
++	}
++
++	return 0;
++}
++
++static int pps_tio_client_probe(struct auxiliary_device *aux_dev,
++				const struct auxiliary_device_id *id)
++{
++	struct pps_tio_client *tio_cli;
++	struct pps_tio_ops_req req;
++
++	tio_cli = devm_kzalloc(&aux_dev->dev, sizeof(*tio_cli), GFP_KERNEL);
++	if (!tio_cli)
++		return -ENOMEM;
++
++	dev_set_drvdata(&aux_dev->dev, tio_cli);
++
++	tio_cli->aux_dev = aux_dev;
++
++	tio_cli->client_info.mode = PPS_CAPTUREASSERT | PPS_CANWAIT |
++				       PPS_CANPOLL | PPS_TSFMT_TSPEC;
++	tio_cli->client_info.owner = THIS_MODULE;
++	tio_cli->client_info.enable_poll = pps_tio_client_poll;
++	strscpy(tio_cli->client_info.name, "intel_tio_client",
++		sizeof(tio_cli->client_info.name));
++	tio_cli->pdata = dev_get_platdata(&aux_dev->dev);
++
++	tio_cli->pps = pps_register_source(&tio_cli->client_info,
++					   tio_cli->client_info.mode);
++
++	if (IS_ERR(tio_cli->pps))
++		return PTR_ERR(tio_cli->pps);
++
++	spin_lock_init(&tio_cli->client_lock);
++
++	req = PPS_TIO_OPS_REQ(DISABLE, 0, 0, 0);
++	pps_ops_req(tio_cli->pdata, &req);
++
++	hrtimer_setup(&tio_cli->timer, hrtimer_callback, CLOCK_REALTIME,
++		      HRTIMER_MODE_ABS_PINNED);
++
++	return 0;
++}
++
++static void pps_tio_client_remove(struct auxiliary_device *aux_dev)
++{
++	struct pps_tio_client *tio_cli;
++	struct pps_tio_ops_req req;
++
++	tio_cli = dev_get_drvdata(&aux_dev->dev);
++
++	hrtimer_cancel(&tio_cli->timer);
++
++	req = PPS_TIO_OPS_REQ(DISABLE, 0, 0, 0);
++	pps_ops_req(tio_cli->pdata, &req);
++	tio_cli->pps->is_poll_enabled = false;
++
++	pps_unregister_source(tio_cli->pps);
++}
++
++static const struct auxiliary_device_id pps_tio_client_id[] = {
++	{ .name = "pps_tio_plat.client" },
++	{ },
++};
++MODULE_DEVICE_TABLE(auxiliary, pps_tio_client_id);
++
++static struct auxiliary_driver pps_tio_client = {
++	.name = "client",
++	.probe = pps_tio_client_probe,
++	.remove = pps_tio_client_remove,
++	.id_table = pps_tio_client_id,
++};
++
++module_auxiliary_driver(pps_tio_client);
++
++MODULE_AUTHOR("Christopher Hall <christopher.s.hall@intel.com>");
++MODULE_AUTHOR("Subramanian Mohan <subramanian.mohan@intel.com>");
++MODULE_DESCRIPTION("Intel PMC Time-Aware IO Client Driver");
++MODULE_LICENSE("GPL");
++MODULE_IMPORT_NS("PPS_TIO");
+diff --git a/drivers/pps/intel_pps_tio/Kconfig b/drivers/pps/intel_pps_tio/Kconfig
+index a168bd4a5848..5fecbbd31e55 100644
+--- a/drivers/pps/intel_pps_tio/Kconfig
++++ b/drivers/pps/intel_pps_tio/Kconfig
+@@ -7,6 +7,7 @@ config INTEL_TIO_PLAT
+ 	tristate "Intel TIO Platform Driver"
+ 	depends on X86 && CPU_SUP_INTEL && AUXILIARY_BUS
+ 	select PPS_GENERATOR_TIO
++	select PPS_CLIENT_TIO
+ 	help
+ 	  If you say yes here you get support for a PPS TIO platform driver.
+ 
+-- 
+2.34.1
+

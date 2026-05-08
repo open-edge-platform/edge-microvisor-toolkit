@@ -1,0 +1,40 @@
+From 11df136ce45f0019b694d8264582f2993e2c76c5 Mon Sep 17 00:00:00 2001
+From: Jie Wang <jie.wang@intel.com>
+Date: Fri, 3 Apr 2026 15:52:12 +0000
+Subject: [PATCH 4/4] EDAC/igen6: Fix runtime field extraction for lts/6.18
+
+Use a local field_get(mask, reg) helper for runtime masks and replace kzalloc_obj() with kzalloc() for 6.18 compatibility.
+
+Signed-off-by: Jie Wang <jie.wang@intel.com>
+---
+ drivers/edac/igen6_edac.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/edac/igen6_edac.c b/drivers/edac/igen6_edac.c
+index 2ee066cc7fca..b6563f4482e5 100644
+--- a/drivers/edac/igen6_edac.c
++++ b/drivers/edac/igen6_edac.c
+@@ -522,6 +522,11 @@ static u64 rpl_p_err_addr(u64 ecclog)
+ 	return ECC_ERROR_LOG_ADDR45(ecclog);
+ }
+ 
++static inline u64 field_get(u64 mask, u64 reg)
++{
++	return (reg & mask) >> __ffs64(mask);
++}
++
+ static enum mem_type ptl_h_get_mem_type(struct igen6_imc *imc)
+ {
+ 	u32 mtype, val;
+@@ -1451,7 +1456,7 @@ static struct igen6_pvt *igen6_pvt_setup(struct pci_dev *pdev)
+ 	u64 mchbar;
+ 	int rc;
+ 
+-	pvt = kzalloc_obj(*igen6_pvt);
++	pvt = kzalloc(sizeof(*pvt), GFP_KERNEL);
+ 	if (!pvt)
+ 		return NULL;
+ 
+-- 
+2.34.1
+
