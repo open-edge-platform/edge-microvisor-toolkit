@@ -46,7 +46,7 @@ and
   a brief walkthrough of Edge Microvisor Toolkit Standalone Node for the 3.0 release, covering various use cases.
 
 You can also try out the
-[OS Image Composer](http://github.com/open-edge-platform/os-image-composer) -
+[Image Composer Tool](http://github.com/open-edge-platform/image-composer-tool) -
 a *new* project in the Open Edge platform family that allows you to compose
 custom OS images from popular distributions using pre-built artifacts.
 

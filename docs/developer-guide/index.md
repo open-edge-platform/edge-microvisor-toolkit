@@ -3,10 +3,10 @@
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/README.md">
-     GitHub project
+     GitHub
   </a>
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/next/README.md">
-     GitHub project - Next version
+     GitHub - Next version
   </a>
 </div>
 hide_directive-->
