@@ -234,6 +234,7 @@
                 "libcxx",
                 "libdaemon",
                 "libdecor",
+                "libdisplay-info",
                 "libdnf",
                 "libdrm",
                 "libdwarf",
