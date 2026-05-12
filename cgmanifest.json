@@ -1107,8 +1107,8 @@
         "type": "other",
         "other": {
           "name": "cluster-agent",
-          "version": "1.9.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.9.1.tar.gz"
+          "version": "1.10.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/cluster-agent/v1.10.1.tar.gz"
         }
       }
     },
@@ -3250,8 +3250,8 @@
         "type": "other",
         "other": {
           "name": "hardware-discovery-agent",
-          "version": "1.9.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.9.2.tar.gz"
+          "version": "1.10.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/hardware-discovery-agent/v1.10.2.tar.gz"
         }
       }
     },
@@ -3611,8 +3611,8 @@
         "type": "other",
         "other": {
           "name": "in-band-manageability",
-          "version": "1.2.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.2.1.tar.gz"
+          "version": "1.2.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.2.2.tar.gz"
         }
       }
     },
@@ -7952,8 +7952,8 @@
         "type": "other",
         "other": {
           "name": "node-agent",
-          "version": "1.10.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.10.2.tar.gz"
+          "version": "1.11.3",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/node-agent/v1.11.3.tar.gz"
         }
       }
     },
@@ -10683,8 +10683,8 @@
         "type": "other",
         "other": {
           "name": "platform-manageability-agent",
-          "version": "0.4.7",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.4.7.tar.gz"
+          "version": "0.5.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.5.1.tar.gz"
         }
       }
     },
@@ -10703,8 +10703,8 @@
         "type": "other",
         "other": {
           "name": "platform-telemetry-agent",
-          "version": "1.7.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.7.1.tar.gz"
+          "version": "1.8.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-telemetry-agent/v1.8.1.tar.gz"
         }
       }
     },
@@ -10713,8 +10713,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.10.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.10.1.tar.gz"
+          "version": "1.10.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.10.2.tar.gz"
         }
       }
     },
@@ -13773,8 +13773,8 @@
         "type": "other",
         "other": {
           "name": "reporting-agent",
-          "version": "0.1.2",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.1.2.tar.gz"
+          "version": "0.1.3",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/reporting-agent/v0.1.3.tar.gz"
         }
       }
     },
