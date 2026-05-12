@@ -1,6 +1,6 @@
 Summary:        An agent gathering statistics from Open Edge Platform installations
 Name:           reporting-agent
-Version:        0.1.2
+Version:        0.1.3
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -9,8 +9,8 @@ URL:            https://github.com/open-edge-platform/edge-node-agents
 Source0:        %{url}/archive/refs/tags/%{name}/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source1:        %{name}.conf
 Source2:        edge-node-metrics.cron
-BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang < 1.27
+BuildRequires:  golang >= 1.26.3
 BuildRequires:  systemd-rpm-macros
 
 Requires(pre):  %{_bindir}/systemd-sysusers
@@ -75,6 +75,9 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %sysusers_create_package %{name} %{SOURCE1}
 
 %changelog
+* Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.1.3-1
+- Update to golang 1.26.3
+
 * Fri Feb 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.1.2-1
 - Update to golang 1.25.7
 

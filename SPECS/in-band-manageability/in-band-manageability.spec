@@ -4,7 +4,7 @@
 
 Summary:        An agent to manage systems via in-band connection
 Name:           in-band-manageability
-Version:        1.1.2
+Version:        1.2.2
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -15,8 +15,8 @@ Source1:        intel_manageability.conf
 Source2:        inbm-configuration-replace-FQDN.sh
 Source3:        inbm.te
 Source4:        inbm.fc
-BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang < 1.27
+BuildRequires:  golang >= 1.26.3
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 BuildRequires:  make
@@ -208,6 +208,12 @@ fi
 %systemd_postun inbd.service
 
 %changelog
+* Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.2.2-1
+- Update to golang 1.26.3
+
+* Wed Apr 17 2026 Kishan Mochi <kishan.mochi@intel.com> - 1.2.1-1
+- inbc cmd timeout increase for update
+
 * Wed Feb 25 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.1.2-1
 - Update dependencies
 
