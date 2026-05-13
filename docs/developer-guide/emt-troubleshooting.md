@@ -266,3 +266,20 @@ sudo reboot
 It will prevent a CPU from entering deep idle (C‑states),
 eliminating wake‑up latency, significantly minimizing RT jitter and
 improving determinism.
+
+
+### Kubernetes cluster fails to launch
+
+The Kubernetes cluster fails to launch, due to a fatal error occurring at the
+pre-flight phase. This has been observed under Kubernetes v1.30.14 and go
+v1.26.0 configuration.
+
+Upgrading Kubernetes to the latest version seems to fix the issue, as reported in
+[#135013](https://github.com/kubernetes/kubernetes/issues/135013).
+
+Also, as a workaround to avoid these pre-flight errors, you can specify
+additional flags:
+
+```bash
+sudo -E kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=HTTPProxyCIDR --v=5
+```
