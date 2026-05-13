@@ -77,13 +77,13 @@ COMMON_LDFLAGS="-s -w -extldflags=-static \
 
 # Build the inbc CLI binary
 go build -buildmode=pie -trimpath -mod=vendor \
-    -gcflags "all=-spectre=all -l" -asmflags "all=-spectre=all" \
+    -gcflags "all=-l" \
     -ldflags "${COMMON_LDFLAGS} -X main.Version=${BUILD_VERSION}" \
     -o "${BUILD_DIR}/inbc" cmd/inbc/main.go
 
 # Build the inbd daemon binary
 go build -buildmode=pie -trimpath -mod=vendor \
-    -gcflags "all=-spectre=all -l" -asmflags "all=-spectre=all" \
+    -gcflags "all=-l" \
     -ldflags "${COMMON_LDFLAGS}" \
     -o "${BUILD_DIR}/inbd" cmd/inbd/main.go
 
