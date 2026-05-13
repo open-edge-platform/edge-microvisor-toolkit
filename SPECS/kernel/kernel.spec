@@ -1,7 +1,7 @@
 Summary:        Linux Kernel
 Name:           kernel
 Version:        6.18.20
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -239,7 +239,6 @@ Patch07071: 0064-drm-i915-gt-Isolate-single-sysfs-engine-file-creation.drm
 Patch07072: 0065-drm-i915-gt-Implement-creation-and-removal-routines-fo.drm
 Patch07073: 0066-drm-i915-gt-Allow-the-user-to-change-the-CCS-mode-thro.drm
 Patch07074: 0067-drm-i915-gt-Refactor-CCS-mode-handling-and-improve-app.drm
-Patch07075: 0068-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
 Patch07076: 0069-drm-i915-move-sriov-selftest-buffer-out-of-stack.drm
 Patch07077: 0001-drm-virtio-Wait-until-the-control-and-cursor-queues-ar.drm
 Patch07078: 0002-virtio-gpu-reset-attachment-state-during-resource-rest.drm
@@ -831,6 +830,9 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Wed May 13 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.20-2
+- Remove patch 0068-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
+
 * Wed Apr 29 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.20-1
 - Update kernel to 6.18.20-1
 - lts-v6.18.20-emt-cve-260417T093242Z
