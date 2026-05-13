@@ -23,7 +23,7 @@ BuildRequires:  make
 BuildRequires:  git
 Requires:       systemd
 Requires:       (%{name}-selinux if selinux-policy-targeted)
-Obsoletes:      inbm
+Obsoletes:      inbm < %{version}-%{release}
 
 %description
 The Intel In-Band Manageability Framework is software which enables an
