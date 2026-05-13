@@ -9033,8 +9033,8 @@
         "type": "other",
         "other": {
           "name": "otelcol-contrib",
-          "version": "0.141.0",
-          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.141.0/otelcol-contrib_0.141.0_linux_amd64.tar.gz"
+          "version": "0.151.0",
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.151.0/otelcol-contrib_0.151.0_linux_amd64.tar.gz"
         }
       }
     },
