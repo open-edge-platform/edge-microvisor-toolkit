@@ -211,7 +211,7 @@ fi
 * Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.2.2-1
 - Update to golang 1.26.3
 
-* Wed Apr 17 2026 Kishan Mochi <kishan.mochi@intel.com> - 1.2.1-1
+* Fri Apr 17 2026 Kishan Mochi <kishan.mochi@intel.com> - 1.2.1-1
 - inbc cmd timeout increase for update
 
 * Wed Feb 25 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.1.2-1
