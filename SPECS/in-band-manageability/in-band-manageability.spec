@@ -77,13 +77,15 @@ COMMON_LDFLAGS="-s -w -extldflags=-static \
 
 # Build the inbc CLI binary
 go build -buildmode=pie -trimpath -mod=vendor \
-    -gcflags "all=-l" \
+    -gcflags "all=-l" -gcflags "github.com/open-edge-platform/...=-spectre=all -l" \
+    -asmflags "github.com/open-edge-platform/...=-spectre=all" \
     -ldflags "${COMMON_LDFLAGS} -X main.Version=${BUILD_VERSION}" \
     -o "${BUILD_DIR}/inbc" cmd/inbc/main.go
 
 # Build the inbd daemon binary
 go build -buildmode=pie -trimpath -mod=vendor \
-    -gcflags "all=-l" \
+    -gcflags "all=-l" -gcflags "github.com/open-edge-platform/...=-spectre=all -l" \
+    -asmflags "github.com/open-edge-platform/...=-spectre=all" \
     -ldflags "${COMMON_LDFLAGS}" \
     -o "${BUILD_DIR}/inbd" cmd/inbd/main.go
 
