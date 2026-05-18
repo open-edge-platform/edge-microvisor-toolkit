@@ -1,5 +1,5 @@
-# Series file for v6.12.80 linux kernel
-# 00d7934ffcc35 Linux 6.12.80
+# Series file for v6.12.84 linux kernel
+# c286ea5e62389 Linux 6.12.84
 #sriov
 0001-drm-i915-mtl-Add-C10-table-for-HDMI-Clock-25175.sriov
 0002-drm-i915-mtl-Copy-c10-phy-pll-sw-state-from-master-t.sriov
@@ -393,7 +393,6 @@
 0014-drm-i915-gt-Implement-creation-and-removal-routines-fo.drm
 0015-drm-i915-gt-Allow-the-user-to-change-the-CCS-mode-thro.drm
 0016-drm-i915-gt-Refactor-CCS-mode-handling-and-improve-app.drm
-0017-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
 0001-Remove-unneeded-files.patch
 0001-i915-gt-Upgrade-GuC-70.44.1-70.49.4.drm
 0001-drm-i915-no-force-probe-needed-for-mtl-platform.drm
@@ -404,9 +403,6 @@
 #iommu
 0001-driver-core-add-a-faux-bus-for-use-when-a-simple-dev.iommu
 0002-iommu-io-pgtable-arm-dynamically-allocate-selftest-d.iommu
-#emt-drm
-0001-Revert-drm-xe-mmio-Avoid-double-adjust-in-64-bit-rea.patch
-0002-Revert-drm-xe-Switch-MMIO-interface-to-take-xe_mmio-.patch
 
 #CVE-2025-21817
 CVE-2025-21817.patch
@@ -590,8 +586,6 @@ CVE-2026-23272.patch
 #CVE-2026-23371
 CVE-2026-23371.patch
 
-#CVE-2026-23302
-CVE-2026-23302.patch
 
 #CVE-2026-23259
 CVE-2026-23259.patch
@@ -599,8 +593,6 @@ CVE-2026-23259.patch
 #CVE-2026-23181
 CVE-2026-23181.patch
 
-#CVE-2025-71269
-CVE-2025-71269.patch
 
 #CVE-2025-71227
 CVE-2025-71227_1.patch
@@ -609,14 +601,22 @@ CVE-2025-71227_2.patch
 #CVE-2026-23473
 CVE-2026-23473.patch
 
-#CVE-2026-23442
-CVE-2026-23442.patch
 
 #CVE-2026-23394
 CVE-2026-23394.patch
 
-#CVE-2026-23389
-CVE-2026-23389.patch
+#CVE-2026-31419
+CVE-2026-31419.patch
 
-#CVE-2026-23374
-CVE-2026-23374.patch
+#CVE-2026-31420
+CVE-2026-31420.patch
+
+#CVE-2026-31431
+CVE-2026-31431.patch
+
+#CVE-2026-31435
+CVE-2026-31435.patch
+
+#CVE-2026-31526
+CVE-2026-31526.patch
+
