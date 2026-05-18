@@ -26,8 +26,8 @@ The Device Discovery Agent for Edge Node in order to retrieve the specific confi
 
 
 %prep
-%setup -q -n infra-onboarding-%{name}-%{version}
-cd hook-os/device_discovery
+%setup -q -n edge-node-agents-device-discovery-agent-v%{version}
+cd device-discovery-agent
 tar -xzf %{SOURCE2} -C .
 
 %build
