@@ -32,13 +32,13 @@ tar -xzf %{SOURCE2} -C .
 
 %build
 export GOEXPERIMENT=nosystemcrypto
-cd hook-os/device_discovery
-CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -gcflags=all="-l -B" -o device-discovery
+cd device-discovery-agent
+CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -gcflags=all="-l -B" -o device-discovery ./cmd/device-discovery
 
 %install
 install -d -m 0755 %{buildroot}%{_bindir}/device-discovery 
-install -m 0755 ./hook-os/device_discovery/device-discovery %{buildroot}%{_bindir}/device-discovery/device-discovery
-install -m 0755 ./hook-os/device_discovery/client-auth.sh %{buildroot}%{_bindir}/device-discovery/client-auth.sh
+install -m 0755 ./device-discovery-agent/device-discovery %{buildroot}%{_bindir}/device-discovery/device-discovery
+install -m 0755 ./device-discovery-agent/configs/device-discovery-agent.env %{buildroot}%{_bindir}/device-discovery/device-discovery-agent.env
 
 # systemd units
 install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/device-discovery.service
