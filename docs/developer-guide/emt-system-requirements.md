@@ -22,49 +22,33 @@ and workloads. It has been validated on the following platforms:
 
 ### CPU
 
-Intel® Atom® processor:
-- Intel® Atom® X series processor
-- Intel Atom® x7000RE, x7000C, and x7000FE processor series (code-named Amston Lake)
-
-Intel® Core™  processor:
-- 12th Gen Intel® Core™ processor
-- 13th Gen Intel® Core™ processor
-- Intel® Core™ Ultra (Series 1) processor
-- Intel® processor N150 and N250, and Intel® Core™ 3 processor N355 (code-named Twin Lake)
-- Intel® Core™ Ultra processor series 2 (code-named Arrow Lake-S)
-- Intel® Core™ Ultra 200U and 200H series processors (code-named Arrow Lake U/H)
-- Intel® Core™ processor 200 series
-- Intel® Core™ Ultra processor
-- Intel® Core™ Ultra processor for the Edge (PS Series)
-
-Intel® Xeon® processor:
-- 5th Gen Intel® Xeon® SP
-- 4th Gen Intel® Xeon® SP
-- 3rd Gen Intel® Xeon® SP
+| Atom                  | Core™                         | Xeon®                   |
+| --------------------- | ----------------------------- | ----------------------- |
+| Intel® Atom® X Series | 12th Gen Intel® Core™         | 5th Gen Intel® Xeon® SP |
+|                       | 13th Gen Intel® Core™         | 4th Gen Intel® Xeon® SP |
+|                       | Intel® Core™ Ultra (Series 1) | 3rd Gen Intel® Xeon® SP |
 
 ### Discrete GPU
 
-Intel® GPU:
-- Intel® Arc™ B580 GPU
-
-NVIDIA® GPU:
-- NVIDIA® Tesla® P100 GPU
-- GeForce RTX™ 3090 GPU
+| Intel®           | NVIDIA®             |
+| ---------------- | ------------------- |
+| Intel® Arc™ B580 | NVIDIA® Tesla® P100 |
+|                  | GeForce RTX™ 3090   |
 
 ## Recommended Hardware Configuration
 
 ### Edge Microvisor Toolkit Developer Node
 
-| Component                  | Intel® Atom™ | Core™/Core™ Ultra | Xeon®   |
-|----------------------------|--------------|-------------------|---------|
-| RAM                        | 2 GB         | 2 GB              | 2 GB    |
-| Storage (SSD/NVMe or eMMC) | 32 GB        | 32 GB             | 32 GB   |
-| Networking (Ethernet)      | 1 GbE        | 1 GbE             | 1 GbE   |
+| Component                  | Intel® Atom™ | Core™/Core™ Ultra | Xeon® |
+| -------------------------- | ------------ | ----------------- | ----- |
+| RAM                        | 2 GB         | 2 GB              | 2 GB  |
+| Storage (SSD/NVMe or eMMC) | 32 GB        | 32 GB             | 32 GB |
+| Networking (Ethernet)      | 1 GbE        | 1 GbE             | 1 GbE |
 
 ### Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node)
 
 | Component                  | Intel® Atom™    | Core™/Core™ Ultra | Xeon®           |
-|----------------------------|-----------------|-------------------|-----------------|
+| -------------------------- | --------------- | ----------------- | --------------- |
 | RAM                        | 16 GB           | 64 GB             | 128 GB          |
 | Storage (SSD/NVMe or eMMC) | 64 GB           | 512 GB            | 1 TB            |
 | Networking (Ethernet)      | 1 GbE or higher | 1 GbE or higher   | 1 GbE or higher |
@@ -72,13 +56,13 @@ NVIDIA® GPU:
 ## Software Requirements
 
 | Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node) |
-|------------------|-------------------------|-------------------------|
-| Kernel Version   | Intel® Kernel 6.12      | Intel® Kernel 6.12      |
-| Bootloader       | GRUB                    | Systemd-boot            |
-| Update Mechanism | RPM-based with TDNF     | Image-based A/B updates |
+| ---------------- | -------------------------------------- | ------------------------------------------------------------------------- |
+| Kernel Version   | Intel® Kernel 6.12                     | Intel® Kernel 6.12                                                        |
+| Bootloader       | GRUB                                   | Systemd-boot                                                              |
+| Update Mechanism | RPM-based with TDNF                    | Image-based A/B updates                                                   |
 
 ## Minimum Hardware Configuration for Building OS Image
 
-| CPU | RAM | Storage |
-|---|---|---|
+| CPU                                                            | RAM                     | Storage              |
+| -------------------------------------------------------------- | ----------------------- | -------------------- |
 | 13th, 14th Generation Intel® Core™ (Raptor Lake), <br> 4 cores | 32 GB <br> (25 GB free) | 250 GB (200 GB free) |

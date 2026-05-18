@@ -3,7 +3,7 @@
 Summary:        In-memory Operating System Installation Environment for Executing Tinkerbell Workflows
 Name:           tink-worker
 Version:        1.2.2
-Release:        1%{?dist}
+Release:        3%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
@@ -13,8 +13,8 @@ Source1:        tink-worker.service
 Source2:        tink-worker-v%{version}-vendor.tar.gz
 
 %{?systemd_requires}
-BuildRequires:  golang < 1.26.0
-BuildRequires:  golang >= 1.25.7
+BuildRequires:  golang < 1.27
+BuildRequires:  golang >= 1.26.3
 BuildRequires:  systemd-rpm-macros
 
 %description
@@ -30,7 +30,7 @@ tar -xzf %{SOURCE2} -C .
 %build
 export GOEXPERIMENT=nosystemcrypto
 cd tink-worker
-CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -gcflags="all=-spectre=all -l" -asmflags="all=-spectre=all" -o tink-worker ./cmd/tink-worker
+CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -gcflags="all=-l" -gcflags="%{tinkworkergitpath}/...=-spectre=all" -asmflags="%{tinkworkergitpath}/...=-spectre=all" -o tink-worker ./cmd/tink-worker
 
 %install
 cd tink-worker
@@ -47,6 +47,12 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/tink-worker.service
 %{_unitdir}/tink-worker.service
 
 %changelog
+* Tue May 12 2026 Andy <andy.peng@intel.com> - 1.2.2-3
+- Upgrade golang version to 1.26.3
+
+* Tue May 5 2026 Andy <andy.peng@intel.com> - 1.2.2-2
+- Upgrade golang version to 1.26.2
+
 * Tue Mar 24 2026 Andy <andy.peng@intel.com> - 1.2.2-1
 - Upgrade tink-worker version to 1.2.2 for bug fix
 - limit to build with golang version < 1.26.0

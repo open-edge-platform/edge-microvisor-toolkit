@@ -1,7 +1,7 @@
 Summary:        Fast and Lightweight Log processor and forwarder for Linux, BSD and OSX
 Name:           fluent-bit
 Version:        3.1.10
-Release:        4%{?dist}
+Release:        7%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -22,6 +22,9 @@ Patch8:         CVE-2025-12970.patch
 Patch9:         CVE-2025-12977.patch
 Patch10:        CVE-2025-12969.patch
 Patch11:        CVE-2025-62408.patch
+Patch12:        CVE-2026-27135.patch
+Patch13:        CVE-2025-3277.patch
+Patch14:        CVE-2025-6965.patch
 BuildRequires:  bison
 BuildRequires:  cmake
 BuildRequires:  cyrus-sasl-devel
@@ -191,6 +194,15 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu May 07 2026 Rajesh1X Shanmugam <rajesh1x.shanmugam@intel.com> - 3.1.10-7
+- Patch for CVE-2025-6965
+
+* Tue Apr 28 2026 Rajesh1X Shanmugam <rajesh1x.shanmugam@intel.com> - 3.1.10-6
+- Patch for CVE-2025-3277
+
+* Fri Apr 17 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 3.1.10-5
+- Patch for CVE-2026-27135
+
 * Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 3.1.10-4
 - merge from Azure Linux 3.0.20260107-3.0
 - Patch for CVE-2025-62408

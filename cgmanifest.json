@@ -2910,8 +2910,18 @@
         "type": "other",
         "other": {
           "name": "golang",
-          "version": "1.26.1",
-          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.26.1-1/go1.26.1-20260306.1.src.tar.gz"
+          "version": "1.26.3",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.26.3-1/go1.26.3-20260508.1.src.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "golang",
+          "version": "1.25.10",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.25.10-1/go1.25.10-20260507.2.src.tar.gz"
         }
       }
     },
@@ -3110,8 +3120,8 @@
         "type": "other",
         "other": {
           "name": "gstreamer1",
-          "version": "1.26.5",
-          "downloadUrl": "http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.26.5.tar.xz"
+          "version": "1.28.1",
+          "downloadUrl": "http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.28.1.tar.xz"
         }
       }
     },
@@ -6651,8 +6661,8 @@
         "type": "other",
         "other": {
           "name": "linux-firmware",
-          "version": "20260110",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20260110.tar.xz"
+          "version": "20260309",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20260309.tar.xz"
         }
       }
     },
@@ -8913,8 +8923,8 @@
         "type": "other",
         "other": {
           "name": "otelcol-contrib",
-          "version": "0.141.0",
-          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.141.0/otelcol-contrib_0.141.0_linux_amd64.tar.gz"
+          "version": "0.151.0",
+          "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.151.0/otelcol-contrib_0.151.0_linux_amd64.tar.gz"
         }
       }
     },
