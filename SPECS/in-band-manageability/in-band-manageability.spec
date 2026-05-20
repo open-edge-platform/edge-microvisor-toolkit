@@ -4,7 +4,7 @@
 
 Summary:        An agent to manage systems via in-band connection
 Name:           in-band-manageability
-Version:        1.2.2
+Version:        1.2.3
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -210,6 +210,9 @@ fi
 %systemd_postun inbd.service
 
 %changelog
+* Wed May 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.2.3-1
+- Update x-net to 0.53.0
+
 * Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.2.2-1
 - Update to golang 1.26.3
 

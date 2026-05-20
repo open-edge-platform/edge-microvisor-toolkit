@@ -1,6 +1,6 @@
 {
   "Signatures": {
-    "in-band-manageability-1.2.2.tar.gz": "00580e1edd4ddd57b34fabbcef058bc8dffee53178235743d114a5c2e9447669",
+    "in-band-manageability-1.2.3.tar.gz": "3c2d422677355edc83c79f2001903eaf21ac3dcbda4dc63478d93da2f68a5fe9",
     "intel_manageability.conf": "2f67cf57950a29ee37a21f94383c63c067aac2db94e51356ff279110f3e3e5b6",
     "inbm-configuration-replace-FQDN.sh": "e91bb05cf42b8311cff3d6b554c9f1c0f49ffb66b8df92bc2f185ae449ef4295",
     "inbm.te": "e528ab9808f2c1961cad97e4e616f8a9a8731ea3c1bc5c493c8d0db1243f3044",

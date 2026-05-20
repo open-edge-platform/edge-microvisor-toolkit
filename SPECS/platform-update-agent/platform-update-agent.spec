@@ -3,7 +3,7 @@
 
 Summary:        An agent for updating the OS and bare metal agents packages
 Name:           platform-update-agent
-Version:        1.10.2
+Version:        1.10.3
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -135,6 +135,9 @@ rm -rf %{_var}/edge-node/pua
 echo "Successfully purged platform-update-agent"
 
 %changelog
+* Wed May 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.10.3-1
+- Update x-net to 0.53.0
+
 * Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.10.2-1
 - Update to golang 1.26.3
 
