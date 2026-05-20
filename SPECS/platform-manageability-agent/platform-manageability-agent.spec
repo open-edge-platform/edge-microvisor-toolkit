@@ -1,6 +1,6 @@
 Summary:        Platform managebility agent for out of band opration. 
 Name:           platform-manageability-agent
-Version:        0.5.1
+Version:        0.5.2
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -77,6 +77,9 @@ cp copyright %{buildroot}%{_defaultlicensedir}/%{name}
 %{systemd_postun_with_restart %{name}.service}
 
 %changelog
+* Wed May 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.5.2-1
+- Update x-net to 0.53.0
+
 * Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 0.5.1-1
 - Update to golang 1.26.3
 

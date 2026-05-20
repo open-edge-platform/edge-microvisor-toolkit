@@ -1,6 +1,6 @@
 Summary:        Installs/uninstalls orchestration software on an edge node using command obtained from Cluster Orchestrator.
 Name:           cluster-agent
-Version:        1.10.1
+Version:        1.10.2
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -129,6 +129,9 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Wed May 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.10.2-1
+- Update x-net to 0.53.0
+
 * Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.10.1-1
 - Update to golang 1.26.3
 
