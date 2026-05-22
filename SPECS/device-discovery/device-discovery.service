@@ -6,7 +6,7 @@ Requires=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/device-discovery/device-discovery
+ExecStart=/usr/bin/device-discovery/device-discovery -config /etc/emf/env_config -use-kernel-args
 StandardOutput=journal
 StandardError=journal
 TimeoutSec=0
