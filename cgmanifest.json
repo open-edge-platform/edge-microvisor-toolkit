@@ -896,6 +896,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "cdparanoia",
+          "version": "10.2",
+          "downloadUrl": "https://downloads.xiph.org/releases/cdparanoia/cdparanoia-III-10.2.src.tgz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "cdrkit",
           "version": "1.1.11",
           "downloadUrl": "https://src.fedoraproject.org/repo/pkgs/cdrkit/cdrkit-1.1.11.tar.gz/efe08e2f3ca478486037b053acd512e9/cdrkit-1.1.11.tar.gz"
@@ -2900,6 +2910,16 @@
         "type": "other",
         "other": {
           "name": "golang",
+          "version": "1.22.10",
+          "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.22.10-1/go1.22.10-20241203.4.src.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "golang",
           "version": "1.23.12",
           "downloadUrl": "https://github.com/microsoft/go/releases/download/v1.23.12-1/go1.23.12-20250806.6.src.tar.gz"
         }
@@ -3029,6 +3049,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "graphene",
+          "version": "1.10.8",
+          "downloadUrl": "https://github.com/ebassi/graphene/archive/refs/tags/1.10.8.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "graphviz",
           "version": "2.42.4",
           "downloadUrl": "https://gitlab.com/graphviz/graphviz/-/archive/2.42.4/graphviz-2.42.4.tar.bz2"
@@ -3122,6 +3152,16 @@
           "name": "gstreamer1",
           "version": "1.28.1",
           "downloadUrl": "http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.28.1.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "gstreamer1-plugins-base",
+          "version": "1.28.1",
+          "downloadUrl": "https://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-1.28.1.tar.xz"
         }
       }
     },
@@ -3611,8 +3651,8 @@
         "type": "other",
         "other": {
           "name": "in-band-manageability",
-          "version": "1.2.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.2.1.tar.gz"
+          "version": "1.1.2",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/in-band-manageability/v1.1.2.tar.gz"
         }
       }
     },
@@ -3711,8 +3751,8 @@
         "type": "other",
         "other": {
           "name": "intel-compute-runtime",
-          "version": "25.18.33578.6",
-          "downloadUrl": "https://github.com/intel/compute-runtime/archive/25.18.33578.6/compute-runtime-25.18.33578.6.tar.gz"
+          "version": "25.40.35563.4",
+          "downloadUrl": "https://github.com/intel/compute-runtime/archive/25.40.35563.4/compute-runtime-25.40.35563.4.tar.gz"
         }
       }
     },
@@ -3721,8 +3761,8 @@
         "type": "other",
         "other": {
           "name": "intel-gmmlib",
-          "version": "22.7.1",
-          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.7.1.tar.gz"
+          "version": "22.9.0",
+          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.9.0.tar.gz"
         }
       }
     },
@@ -3771,8 +3811,8 @@
         "type": "other",
         "other": {
           "name": "intel-level-zero",
-          "version": "1.24.2",
-          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.24.2.tar.gz"
+          "version": "1.27.0",
+          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.27.0.tar.gz"
         }
       }
     },
@@ -3791,8 +3831,8 @@
         "type": "other",
         "other": {
           "name": "intel-media-driver",
-          "version": "25.2.3",
-          "downloadUrl": "https://github.com/intel/media-driver/archive/refs/tags/intel-media-25.2.3.tar.gz"
+          "version": "25.4.6",
+          "downloadUrl": "https://github.com/intel/media-driver/archive/refs/tags/intel-media-25.4.6.tar.gz"
         }
       }
     },
@@ -3801,8 +3841,8 @@
         "type": "other",
         "other": {
           "name": "intel-metee",
-          "version": "4.2.1",
-          "downloadUrl": "https://github.com/intel/metee/archive/refs/tags/4.2.1.tar.gz"
+          "version": "5.0.0",
+          "downloadUrl": "https://github.com/intel/metee/archive/5.0.0/metee-5.0.0.tar.gz"
         }
       }
     },
@@ -3811,8 +3851,8 @@
         "type": "other",
         "other": {
           "name": "intel-npu-driver",
-          "version": "1.28.0",
-          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.28.0.tar.gz"
+          "version": "1.32.0",
+          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.32.0.tar.gz"
         }
       }
     },
@@ -3821,8 +3861,8 @@
         "type": "other",
         "other": {
           "name": "intel-npu-firmware",
-          "version": "1.10.1",
-          "downloadUrl": "https://github.com/intel/linux-npu-driver//archive/refs/tags/v1.10.1/linux-npu-driver-1.10.1.tar.gz"
+          "version": "1.32.0",
+          "downloadUrl": "https://github.com/intel/linux-npu-driver//archive/refs/tags/v1.32.0/linux-npu-driver-1.32.0.tar.gz"
         }
       }
     },
@@ -3851,8 +3891,8 @@
         "type": "other",
         "other": {
           "name": "intel-vpl-gpu-rt",
-          "version": "25.2.3",
-          "downloadUrl": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-25.2.3/intel-onevpl-25.2.3.tar.gz"
+          "version": "25.4.6",
+          "downloadUrl": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-25.4.6/intel-onevpl-25.4.6.tar.gz"
         }
       }
     },
@@ -3921,8 +3961,8 @@
         "type": "other",
         "other": {
           "name": "iproute",
-          "version": "6.7.0",
-          "downloadUrl": "https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-6.7.0.tar.xz"
+          "version": "6.14.0",
+          "downloadUrl": "https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-6.14.0.tar.xz"
         }
       }
     },
@@ -4043,6 +4083,16 @@
           "name": "isns-utils",
           "version": "0.102",
           "downloadUrl": "https://github.com/open-iscsi/open-isns/archive/v0.102.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "iso-codes",
+          "version": "4.4",
+          "downloadUrl": "https://salsa.debian.org/iso-codes-team/iso-codes/-/archive/iso-codes-4.4/iso-codes-iso-codes-4.4.tar.gz"
         }
       }
     },
@@ -4411,8 +4461,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.12.80",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.80.tar.gz"
+          "version": "6.18.20",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.20-linux-260417T093242Z.tar.gz"
         }
       }
     },
@@ -4441,8 +4491,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.12.80",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.80.tar.gz"
+          "version": "6.18.20",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.20-linux-260417T093242Z.tar.gz"
         }
       }
     },
@@ -4461,8 +4511,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.12.80",
-          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.12.80.tar.gz"
+          "version": "6.18.20",
+          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.20-linux-260417T093242Z.tar.gz"
         }
       }
     },
@@ -4970,6 +5020,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libdisplay-info",
+          "version": "0.3.0",
+          "downloadUrl": "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.3.0/downloads/libdisplay-info-0.3.0.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libdnet",
           "version": "1.17.0",
           "downloadUrl": "https://github.com/ofalk/libdnet/archive/refs/tags/libdnet-1.17.0.tar.gz"
@@ -5281,8 +5341,8 @@
         "type": "other",
         "other": {
           "name": "libidn2",
-          "version": "2.3.4",
-          "downloadUrl": "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.4.tar.gz"
+          "version": "2.3.8",
+          "downloadUrl": "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.8.tar.gz"
         }
       }
     },
@@ -5670,6 +5730,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libogg",
+          "version": "1.3.4",
+          "downloadUrl": "http://downloads.xiph.org/releases/ogg/libogg-1.3.4.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libpcap",
           "version": "1.10.6",
           "downloadUrl": "https://github.com/the-tcpdump-group/libpcap/archive/libpcap-1.10.6.tar.gz"
@@ -6020,6 +6090,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libtheora",
+          "version": "1.1.1",
+          "downloadUrl": "https://ftp.osuosl.org/pub/xiph/releases/theora/libtheora-1.1.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libtiff",
           "version": "4.6.0",
           "downloadUrl": "https://gitlab.com/libtiff/libtiff/-/archive/v4.6.0/libtiff-v4.6.0.tar.gz"
@@ -6171,8 +6251,8 @@
         "type": "other",
         "other": {
           "name": "libva",
-          "version": "2.22.0",
-          "downloadUrl": "https://github.com/intel/libva/archive/2.22.0.tar.gz"
+          "version": "2.23.0",
+          "downloadUrl": "https://github.com/intel/libva/archive/2.23.0.tar.gz"
         }
       }
     },
@@ -6240,6 +6320,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libvisual",
+          "version": "0.4.0",
+          "downloadUrl": "http://dl.sf.net/libvisual/libvisual-0.4.0.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libvoikko",
           "version": "4.3",
           "downloadUrl": "http://www.puimula.org/voikko-sources/libvoikko/libvoikko-4.3.tar.gz"
@@ -6250,9 +6340,19 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "libvorbis",
+          "version": "1.3.7",
+          "downloadUrl": "https://downloads.xiph.org/releases/vorbis/libvorbis-1.3.7.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "libvpl",
-          "version": "2.14.0",
-          "downloadUrl": "https://github.com/intel/libvpl/archive/v2.14.0/libvpl-2.14.0.tar.gz"
+          "version": "2.16.0",
+          "downloadUrl": "https://github.com/intel/libvpl/archive/v2.16.0/libvpl-2.16.0.tar.gz"
         }
       }
     },
@@ -7311,8 +7411,8 @@
         "type": "other",
         "other": {
           "name": "mesa",
-          "version": "25.0.0",
-          "downloadUrl": "https://archive.mesa3d.org/mesa-25.0.0.tar.xz"
+          "version": "25.3.4",
+          "downloadUrl": "https://archive.mesa3d.org/mesa-25.3.4.tar.xz"
         }
       }
     },
@@ -8132,8 +8232,8 @@
         "type": "other",
         "other": {
           "name": "nvidia-data-center-driver",
-          "version": "570.133.20",
-          "downloadUrl": "https://us.download.nvidia.com/tesla/570.133.20/NVIDIA-Linux-x86_64-570.133.20.run"
+          "version": "580.105.08",
+          "downloadUrl": "https://us.download.nvidia.com/tesla/580.105.08/NVIDIA-Linux-x86_64-580.105.08.run"
         }
       }
     },
@@ -8892,6 +8992,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "orc",
+          "version": "0.4.39",
+          "downloadUrl": "https://gstreamer.freedesktop.org/src/orc/orc-0.4.39.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "ortp",
           "version": "0.23.0",
           "downloadUrl": "https://gitlab.linphone.org/BC/public/ortp/-/archive/0.23.0/ortp-0.23.0.tar.gz"
@@ -8925,6 +9035,16 @@
           "name": "otelcol-contrib",
           "version": "0.151.0",
           "downloadUrl": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.151.0/otelcol-contrib_0.151.0_linux_amd64.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "opus",
+          "version": "1.5.2",
+          "downloadUrl": "https://ftp.osuosl.org/pub/xiph/releases/opus/opus-1.5.2.tar.gz"
         }
       }
     },
@@ -10683,8 +10803,8 @@
         "type": "other",
         "other": {
           "name": "platform-manageability-agent",
-          "version": "0.4.7",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.4.7.tar.gz"
+          "version": "0.4.3",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-manageability-agent/v0.4.3.tar.gz"
         }
       }
     },
@@ -10713,8 +10833,8 @@
         "type": "other",
         "other": {
           "name": "platform-update-agent",
-          "version": "1.10.1",
-          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.10.1.tar.gz"
+          "version": "1.9.1",
+          "downloadUrl": "https://github.com/open-edge-platform/edge-node-agents/archive/refs/tags/platform-update-agent/v1.9.1.tar.gz"
         }
       }
     },
@@ -13844,8 +13964,8 @@
         "type": "other",
         "other": {
           "name": "rpc",
-          "version": "2.48.14",
-          "downloadUrl": "https://github.com/device-management-toolkit/rpc-go/archive/refs/tags/v2.48.14.tar.gz"
+          "version": "2.50.4",
+          "downloadUrl": "https://github.com/device-management-toolkit/rpc-go/archive/refs/tags/v2.50.4.tar.gz"
         }
       }
     },
@@ -15205,8 +15325,28 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "spice",
+          "version": "0.15.2",
+          "downloadUrl": "http://www.spice-space.org/download/releases/spice-0.15.2.tar.bz2"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "spice-protocol",
+          "version": "0.14.3",
+          "downloadUrl": "https://www.spice-space.org/download/releases/spice-protocol-0.14.3.tar.xz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "spirv-headers",
-          "version": "1.5.5",
+          "version": "1.6.1",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Headers//archive/refs/tags/vulkan-sdk-1.4.309.0.tar.gz"
         }
       }
@@ -15316,8 +15456,8 @@
         "type": "other",
         "other": {
           "name": "strace",
-          "version": "6.12",
-          "downloadUrl": "https://strace.io/files/6.12/strace-6.12.tar.xz"
+          "version": "6.18",
+          "downloadUrl": "https://strace.io/files/6.18/strace-6.18.tar.xz"
         }
       }
     },
@@ -16246,8 +16386,8 @@
         "type": "other",
         "other": {
           "name": "wayland-protocols",
-          "version": "1.38",
-          "downloadUrl": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.38/downloads/wayland-protocols-1.38.tar.xz"
+          "version": "1.45",
+          "downloadUrl": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.45/downloads/wayland-protocols-1.45.tar.xz"
         }
       }
     },
@@ -16461,8 +16601,8 @@
         "type": "other",
         "other": {
           "name": "xdp-tools",
-          "version": "1.4.2",
-          "downloadUrl": "https://github.com/xdp-project/xdp-tools/releases/download/v1.4.2/xdp-tools-1.4.2.tar.gz"
+          "version": "1.6.1",
+          "downloadUrl": "https://github.com/xdp-project/xdp-tools/releases/download/v1.6.1/xdp-tools-1.6.1.tar.gz"
         }
       }
     },
@@ -16798,8 +16938,8 @@
         "type": "other",
         "other": {
           "name": "xorg-x11-server",
-          "version": "21.1.11",
-          "downloadUrl": "https://www.x.org/archive/individual/xserver/xorg-server-21.1.11.tar.gz"
+          "version": "21.1.12",
+          "downloadUrl": "https://www.x.org/archive/individual/xserver/xorg-server-21.1.12.tar.gz"
         }
       }
     },
