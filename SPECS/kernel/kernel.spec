@@ -1,13 +1,13 @@
 Summary:        Linux Kernel
 Name:           kernel
-Version:        6.18.20
-Release:        2%{?dist}
+Version:        6.18.23
+Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/pub/linux/kernel
-Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.20.tar.gz
+Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.23.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -15,8 +15,8 @@ Source5:        cpupower
 Source6:        cpupower.service
 
 # Intel Kernel Patches
-# Series file for v6.18.20 linux kernel
-# dd26ea937ef59 Linux 6.18.20
+# Series file for v6.18.23 linux kernel
+# 47a33eea6d514 Linux 6.18.23
 # security
 Patch01001: 0001-Add-security.md-file.security
 Patch01002: 0002-Add-updated-TPR-TXT-Protected-Regions-support-to-.security
@@ -119,6 +119,7 @@ Patch05034: 0018-net-stmmac-intel-Initialize-plat-phy_interfaces-i.ethernet
 Patch05035: 0001-Revert-net-stmmac-Adjust-mac_capabilities-for-Int.ethernet
 Patch05036: 0002-net-stmmac-Adjust-mac_capabilities-for-Intel-mGbE.ethernet
 Patch05037: 0003-net-stmmac-Update-default_an_inband-before-assign.ethernet
+Patch05038: 0001-igc-skip-RX-timestamp-header-for-frame-preemption.ethernet
 # nmi
 Patch06001: 0001-KVM-VMX-Enable-support-for-secondary-VM-exit-controls.nmi
 Patch06002: 0002-KVM-VMX-Initialize-VM-entry-exit-FRED-controls-in-vmcs.nmi
@@ -239,9 +240,9 @@ Patch07071: 0064-drm-i915-gt-Isolate-single-sysfs-engine-file-creation.drm
 Patch07072: 0065-drm-i915-gt-Implement-creation-and-removal-routines-fo.drm
 Patch07073: 0066-drm-i915-gt-Allow-the-user-to-change-the-CCS-mode-thro.drm
 Patch07074: 0067-drm-i915-gt-Refactor-CCS-mode-handling-and-improve-app.drm
-Patch07076: 0069-drm-i915-move-sriov-selftest-buffer-out-of-stack.drm
-Patch07077: 0001-drm-virtio-Wait-until-the-control-and-cursor-queues-ar.drm
-Patch07078: 0002-virtio-gpu-reset-attachment-state-during-resource-rest.drm
+Patch07075: 0069-drm-i915-move-sriov-selftest-buffer-out-of-stack.drm
+Patch07076: 0001-drm-virtio-Wait-until-the-control-and-cursor-queues-ar.drm
+Patch07077: 0002-virtio-gpu-reset-attachment-state-during-resource-rest.drm
 # edac
 Patch08001: 0003-EDAC-igen6-Fix-masks-of-MCHBAR-TOM-TOUUD-registers.edac
 Patch08002: 0001-x86-mce-Add-MCACOD-code-for-generic-I-O-error.edac
@@ -292,6 +293,7 @@ Patch15002: 0002-pps-generators-convert-pps_gen_tio-to-auxiliary-driv.tgpio
 Patch15003: 0003-pps-add-optional-driver-controlled-polling-interface.tgpio
 Patch15004: 0004-pps-store-const-pps_source_info-pointer-in-core-inst.tgpio
 Patch15005: 0005-pps-clients-add-support-for-Intel-Timed-IO-PPS-clien.tgpio
+Patch15006: 0001-pps-clients-pps-ldisc-fix-lifetime-of-pps_source_inf.tgpio
 # ipu
 Patch16001: 0001-Add-IPU6-headers.ipu
 Patch16002: 0002-Add-serdes-drivers.ipu
@@ -345,96 +347,314 @@ Patch16049: 0049-Enable-ipu8-pci-id-support.ipu
 Patch16050: 0050-Add-ipu8-abi-new-version.ipu
 Patch16051: 0051-Define-gpreg_stride-for-different-IPU-versions.ipu
 Patch16052: 0052-Fix-lt6911gxd-enumeration-issue-on-ipu7.ipu
-
-#CVE-2026-23389
-Patch17001: CVE-2026-23389.patch
+Patch16053: 0001-Extending-sleep-period-for-RESET-operation.ipu
+Patch16054: 0002-Add-AR0234-HID.ipu
 
 #CVE-2026-23377
-Patch17002: CVE-2026-23377.patch
+Patch17001: CVE-2026-23377.patch
 
 #CVE-2026-23374
-Patch17003: CVE-2026-23374.patch
-
-#CVE-2026-23394
-Patch17004: CVE-2026-23394.patch
+Patch17002: CVE-2026-23374.patch
 
 #CVE-2026-23371
-Patch17005: CVE-2026-23371.patch
-Patch17006: CVE-2026-23371_2.patch
+Patch17003: CVE-2026-23371.patch
+Patch17004: CVE-2026-23371_2.patch
 
 #CVE-2026-23327
-Patch17007: CVE-2026-23327.patch
-
-#CVE-2026-23401
-Patch17008: CVE-2026-23401.patch
-
-#CVE-2026-23402
-Patch17009: CVE-2026-23402.patch
-
-#CVE-2026-23414
-Patch17010: CVE-2026-23414.patch
-
-#CVE-2026-23415
-Patch17011: CVE-2026-23415.patch
-
-#CVE-2026-23416
-Patch17012: CVE-2026-23416.patch
-Patch17013: CVE-2026-23416_2.patch
-
-#CVE-2026-23417
-Patch17014: CVE-2026-23417.patch
+Patch17005: CVE-2026-23327.patch
 
 #CVE-2026-23442
-Patch17015: CVE-2026-23442.patch
+Patch17006: CVE-2026-23442.patch
 
 #CVE-2026-23459
-Patch17016: CVE-2026-23459.patch
+Patch17007: CVE-2026-23459.patch
 
 #CVE-2026-31407
-Patch17017: CVE-2026-31407.patch
-
-#CVE-2026-31408
-Patch17018: CVE-2026-31408.patch
-
-#CVE-2026-31418
-Patch17019: CVE-2026-31418.patch
-
-#CVE-2026-31415
-Patch17020: CVE-2026-31415.patch
-
-#CVE-2026-31419
-Patch17021: CVE-2026-31419.patch
-
-#CVE-2026-31414
-Patch17022: CVE-2026-31414_1.patch
-Patch17023: CVE-2026-31414_2.patch
-
-#CVE-2026-31424
-Patch17024: CVE-2026-31424.patch
-
-#CVE-2026-31426
-Patch17025: CVE-2026-31426.patch
-
-#CVE-2026-31421
-Patch17026: CVE-2026-31421.patch
-
-#CVE-2026-31422
-Patch17027: CVE-2026-31422.patch
-
-#CVE-2026-31416
-Patch17028: CVE-2026-31416.patch
+Patch17008: CVE-2026-31407.patch
 
 #CVE-2026-31420
-Patch17029: CVE-2026-31420.patch
+Patch17009: CVE-2026-31420.patch
 
-#CVE-2026-31423
-Patch17030: CVE-2026-31423.patch
+#CVE-2026-31685
+Patch17010: CVE-2026-31685.patch
 
-#CVE-2026-31427
-Patch17031: CVE-2026-31427.patch
+#CVE-2026-31684
+Patch17011: CVE-2026-31684.patch
 
-#CVE-2026-31428
-Patch17032: CVE-2026-31428.patch
+#CVE-2026-31681
+Patch17012: CVE-2026-31681.patch
+
+#CVE-2026-31677
+Patch17013: CVE-2026-31677.patch
+
+#CVE-2026-31673
+Patch17014: CVE-2026-31673.patch
+
+#CVE-2026-31560
+Patch17015: CVE-2026-31560_1.patch
+Patch17016: CVE-2026-31560_2.patch
+
+#CVE-2026-31531
+Patch17017: CVE-2026-31531.patch
+
+#CVE-2026-43284
+Patch17018: CVE-2026-43284.patch
+
+#CVE-2026-43500
+Patch17019: CVE-2026-43500_1.patch
+Patch17020: CVE-2026-43500_2.patch
+Patch17021: CVE-2026-43500_3.patch
+Patch17022: CVE-2026-43500_4.patch
+
+#CVE-2026-31532
+Patch17023: CVE-2026-31532.patch
+
+#CVE-2026-31575
+Patch17024: CVE-2026-31575.patch
+
+#CVE-2026-31578
+Patch17025: CVE-2026-31578.patch
+
+#CVE-2026-31579
+Patch17026: CVE-2026-31579.patch
+
+#CVE-2026-31584
+Patch17027: CVE-2026-31584.patch
+
+#CVE-2026-31586
+Patch17028: CVE-2026-31586.patch
+
+#CVE-2026-31588
+Patch17029: CVE-2026-31588.patch
+
+#CVE-2026-31589
+Patch17030: CVE-2026-31589.patch
+
+#CVE-2026-31590
+Patch17031: CVE-2026-31590.patch
+
+#CVE-2026-31591
+Patch17032: CVE-2026-31591_1.patch
+Patch17033: CVE-2026-31591_2.patch
+
+#CVE-2026-31592
+Patch17034: CVE-2026-31592.patch
+
+#CVE-2026-31593
+Patch17035: CVE-2026-31593.patch
+
+#CVE-2026-31599
+Patch17036: CVE-2026-31599.patch
+
+#CVE-2026-31602
+Patch17037: CVE-2026-31602.patch
+
+#CVE-2026-31606
+Patch17038: CVE-2026-31606.patch
+
+#CVE-2026-31607
+Patch17039: CVE-2026-31607.patch
+
+#CVE-2026-31617
+Patch17040: CVE-2026-31617.patch
+
+#CVE-2026-31686
+Patch17041: CVE-2026-31686.patch
+
+#CVE-2026-31688
+Patch17042: CVE-2026-31688.patch
+
+#CVE-2026-31692
+Patch17043: CVE-2026-31692.patch
+
+#CVE-2026-31694
+Patch17044: CVE-2026-31694.patch
+
+#CVE-2026-31700
+Patch17045: CVE-2026-31700.patch
+
+#CVE-2026-31701
+Patch17046: CVE-2026-31701.patch
+
+#CVE-2026-31703
+Patch17047: CVE-2026-31703.patch
+
+#CVE-2026-31713
+Patch17048: CVE-2026-31713.patch
+
+#CVE-2026-31719
+Patch17049: CVE-2026-31719_1.patch
+Patch17050: CVE-2026-31719_2.patch
+
+#CVE-2026-31777
+Patch17051: CVE-2026-31777.patch
+
+#CVE-2026-31786
+Patch17052: CVE-2026-31786.patch
+
+#CVE-2026-43009
+Patch17053: CVE-2026-43009.patch
+
+#CVE-2026-43022
+Patch17054: CVE-2026-43022.patch
+
+#CVE-2026-43071
+Patch17055: CVE-2026-43071.patch
+
+#CVE-2026-43074
+Patch17056: CVE-2026-43074.patch
+
+#CVE-2026-43077
+Patch17057: CVE-2026-43077.patch
+
+#CVE-2026-43078
+Patch17058: CVE-2026-43078.patch
+
+#CVE-2026-43079
+Patch17059: CVE-2026-43079.patch
+
+#CVE-2026-43082
+Patch17060: CVE-2026-43082.patch
+
+#CVE-2026-43083
+Patch17061: CVE-2026-43083.patch
+
+#CVE-2026-43085
+Patch17062: CVE-2026-43085.patch
+
+#CVE-2026-43086
+Patch17063: CVE-2026-43086.patch
+
+#CVE-2026-43088
+Patch17064: CVE-2026-43088.patch
+
+#CVE-2026-43089
+Patch17065: CVE-2026-43089.patch
+
+#CVE-2026-43090
+Patch17066: CVE-2026-43090.patch
+
+#CVE-2026-43091
+Patch17067: CVE-2026-43091.patch
+
+#CVE-2026-43093
+Patch17068: CVE-2026-43093.patch
+
+#CVE-2026-43092
+Patch17069: CVE-2026-43092_1.patch
+Patch17070: CVE-2026-43092_2.patch
+Patch17071: CVE-2026-43092_3.patch
+
+#CVE-2026-43094
+Patch17072: CVE-2026-43094.patch
+
+#CVE-2026-43095
+Patch17073: CVE-2026-43095.patch
+
+#CVE-2026-43099
+Patch17074: CVE-2026-43099.patch
+
+#CVE-2026-43100
+Patch17075: CVE-2026-43100.patch
+
+#CVE-2026-43101
+Patch17076: CVE-2026-43101.patch
+
+#CVE-2026-43102
+Patch17077: CVE-2026-43102.patch
+
+#CVE-2026-43107
+Patch17078: CVE-2026-43107.patch
+
+#CVE-2026-43109
+Patch17079: CVE-2026-43109.patch
+
+#CVE-2026-43112
+Patch17080: CVE-2026-43112.patch
+
+#CVE-2026-31613
+Patch17081: CVE-2026-31613.patch
+
+#CVE-2026-31614
+Patch17082: CVE-2026-31614.patch
+
+#CVE-2026-31718
+Patch17083: CVE-2026-31718.patch
+
+#CVE-2026-31717
+Patch17084: CVE-2026-31717.patch
+
+#CVE-2026-31611
+Patch17085: CVE-2026-31611.patch
+
+#CVE-2026-31612
+Patch17086: CVE-2026-31612.patch
+
+#CVE-2026-31610
+Patch17087: CVE-2026-31610.patch
+
+#CVE-2026-31704
+Patch17088: CVE-2026-31704.patch
+
+#CVE-2026-31705
+Patch17089: CVE-2026-31705.patch
+
+#CVE-2026-31706
+Patch17090: CVE-2026-31706.patch
+
+#CVE-2026-31711
+Patch17091: CVE-2026-31711.patch
+
+#CVE-2026-31712
+Patch17092: CVE-2026-31712.patch
+
+#CVE-2026-31707
+Patch17093: CVE-2026-31707.patch
+
+#CVE-2026-31708
+Patch17094: CVE-2026-31708.patch
+
+#CVE-2026-43350
+Patch17095: CVE-2026-43350.patch
+
+#CVE-2026-43115
+Patch17096: CVE-2026-43115_1.patch
+Patch17097: CVE-2026-43115_2.patch
+
+
+#CVE-2026-43116
+Patch17098: CVE-2026-43116.patch
+
+#CVE-2026-43117
+Patch17099: CVE-2026-43117.patch
+
+#CVE-2026-43118
+Patch17100: CVE-2026-43118.patch
+
+#CVE-2026-43119
+Patch17101: CVE-2026-43119.patch
+
+#CVE-2026-43299
+Patch17102: CVE-2026-43299.patch
+
+#CVE-2026-43308
+Patch17103: CVE-2026-43308.patch
+
+#CVE-2026-43344
+Patch17104: CVE-2026-43344.patch
+
+#CVE-2026-43346
+Patch17105: CVE-2026-43346.patch
+
+#CVE-2026-43391
+Patch17106: CVE-2026-43391.patch
+
+#CVE-2026-43414
+Patch17107: CVE-2026-43414.patch
+
+
+
+
 # End of Patch Section
 
 %global security_hardening none
@@ -584,8 +804,8 @@ manipulation of eBPF programs and maps.
 
 %prep
 %define _default_patch_flags -p1 --fuzz=3 --force
-%setup -q -n linux-6.18.20
-%autosetup -p1 -n linux-6.18.20
+%setup -q -n linux-6.18.23
+%autosetup -p1 -n linux-6.18.23
 # %patch 0 -p1
 make mrproper
 
@@ -830,6 +1050,9 @@ echo "initrd of kernel %{uname_r} removed" >&2
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Fri May 22 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.23-1
+- Update kernel to 6.18.23-1
+
 * Wed May 13 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.20-2
 - Remove patch 0068-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
 

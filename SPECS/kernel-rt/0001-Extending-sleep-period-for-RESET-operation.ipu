@@ -1,0 +1,29 @@
+From 5c18204200cdcf441b9d72587e71bdc920d0ad22 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 22 Apr 2026 17:34:36 +0800
+Subject: [PATCH 1/2] Extending sleep period for RESET operation
+
+Replacing usleep_range API call with msleep.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/i2c/ar0234.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/media/i2c/ar0234.c b/drivers/media/i2c/ar0234.c
+index ab7628c69664..b756e9e2d76f 100644
+--- a/drivers/media/i2c/ar0234.c
++++ b/drivers/media/i2c/ar0234.c
+@@ -651,8 +651,7 @@ static int ar0234_start_streaming(struct ar0234 *ar0234)
+ 		goto err_rpm_put;
+ 	}
+ 
+-	usleep_range(1000, 1500);
+-
++	msleep(10);
+ 	reg_list = &ar0234->cur_mode->reg_list;
+ 	ret = cci_multi_reg_write(ar0234->regmap, reg_list->regs,
+ 				  reg_list->num_of_regs, NULL);
+-- 
+2.34.1
+

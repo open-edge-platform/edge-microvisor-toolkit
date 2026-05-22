@@ -12,8 +12,8 @@
 
 Summary:        Unified Kernel Image
 Name:           kernel-uki
-Version:        6.18.20
-Release:        2%{?dist}
+Version:        6.18.23
+Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -70,6 +70,10 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 /boot/efi/EFI/Linux/vmlinuz-uki-%{kernelver}.efi
 
 %changelog
+* Fri May 22 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.23-1
+- Update kernel to 6.18.23-1
+- lts-v6.18.23-emt-cve-260427T075939Z
+
 * Wed May 13 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.20-2
 - Remove patch 0068-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
 

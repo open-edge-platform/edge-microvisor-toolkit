@@ -4461,8 +4461,8 @@
         "type": "other",
         "other": {
           "name": "kernel",
-          "version": "6.18.20",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.20-linux-260417T093242Z.tar.gz"
+          "version": "6.18.23",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.23.tar.gz"
         }
       }
     },
@@ -4491,8 +4491,8 @@
         "type": "other",
         "other": {
           "name": "kernel-headers",
-          "version": "6.18.20",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.20-linux-260417T093242Z.tar.gz"
+          "version": "6.18.23",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.23.tar.gz"
         }
       }
     },
@@ -4511,8 +4511,8 @@
         "type": "other",
         "other": {
           "name": "kernel-rt",
-          "version": "6.18.20",
-          "downloadUrl": "https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.20-linux-260417T093242Z.tar.gz"
+          "version": "6.18.23",
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.23.tar.gz"
         }
       }
     },
