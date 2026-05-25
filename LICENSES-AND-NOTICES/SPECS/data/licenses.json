@@ -856,6 +856,7 @@
                 "yasm",
                 "yp-tools",
                 "ypbind",
+                "yq",
                 "zerofree",
                 "zfs-fuse",
                 "zipper"
@@ -889,7 +890,6 @@
                 "os-update",
                 "otelcol-contrib",
                 "persistent-mount",
-                "platform-observability-agent",
                 "python-snoop",
                 "rpc",
                 "tink-worker",
