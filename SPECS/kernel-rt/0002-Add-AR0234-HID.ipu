@@ -1,0 +1,28 @@
+From 57818892986364fc15d9f3a175710b0d5b20c0f7 Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 22 Apr 2026 18:30:11 +0800
+Subject: [PATCH 2/2] Add AR0234 HID
+
+Re-add ar0234 HID into ipu-bridge.c .
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/pci/intel/ipu-bridge.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/media/pci/intel/ipu-bridge.c b/drivers/media/pci/intel/ipu-bridge.c
+index 5385663032ca..34f6bb242cb0 100644
+--- a/drivers/media/pci/intel/ipu-bridge.c
++++ b/drivers/media/pci/intel/ipu-bridge.c
+@@ -101,6 +101,8 @@ static const struct ipu_sensor_config ipu_supported_sensors[] = {
+ 	IPU_SENSOR_CONFIG("OVTI8856", 3, 180000000, 360000000, 720000000),
+ 	/* Toshiba T4KA3 */
+ 	IPU_SENSOR_CONFIG("XMCC0003", 1, 321468000),
++	/* OnSemiconductor AR0234 */
++	IPU_SENSOR_CONFIG("INTC10C0", 1, 360000000),
+ 	/* Lontium lt6911gxd */
+ 	IPU_SENSOR_CONFIG("INTC1124", 0),
+ };
+-- 
+2.34.1
+

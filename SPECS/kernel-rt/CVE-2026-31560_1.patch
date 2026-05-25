@@ -1,0 +1,543 @@
+From e200eb3542eb046f98d1a5047cf823d313261e58 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Beno=C3=AEt=20Monin?= <benoit.monin@bootlin.com>
+Date: Thu, 2 Oct 2025 14:14:37 +0200
+Subject: [PATCH 2/8] spi: dw: rename the spi controller to ctlr
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Since the designware SPI controller can act as both a target and a host,
+rename spi_controller member of the dw_spi struct to ctlr instead of host.
+Similarly, rename the functions handling the controller, using controller
+instead of host as the suffix.
+
+No functional changes intended.
+
+Signed-off-by: Benoît Monin <benoit.monin@bootlin.com>
+Link: https://patch.msgid.link/20251002-spi-dw-target-v1-1-993e91c1a712@bootlin.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+---
+ drivers/spi/spi-dw-bt1.c  |   4 +-
+ drivers/spi/spi-dw-core.c | 128 +++++++++++++++++++-------------------
+ drivers/spi/spi-dw-dma.c  |  22 +++----
+ drivers/spi/spi-dw-mmio.c |   4 +-
+ drivers/spi/spi-dw-pci.c  |   8 +--
+ drivers/spi/spi-dw.h      |  12 ++--
+ 6 files changed, 89 insertions(+), 89 deletions(-)
+
+diff --git a/drivers/spi/spi-dw-bt1.c b/drivers/spi/spi-dw-bt1.c
+index 4a5be813efa75..91642e05ac607 100644
+--- a/drivers/spi/spi-dw-bt1.c
++++ b/drivers/spi/spi-dw-bt1.c
+@@ -288,7 +288,7 @@ static int dw_spi_bt1_probe(struct platform_device *pdev)
+ 
+ 	pm_runtime_enable(&pdev->dev);
+ 
+-	ret = dw_spi_add_host(&pdev->dev, dws);
++	ret = dw_spi_add_controller(&pdev->dev, dws);
+ 	if (ret) {
+ 		pm_runtime_disable(&pdev->dev);
+ 		return ret;
+@@ -303,7 +303,7 @@ static void dw_spi_bt1_remove(struct platform_device *pdev)
+ {
+ 	struct dw_spi_bt1 *dwsbt1 = platform_get_drvdata(pdev);
+ 
+-	dw_spi_remove_host(&dwsbt1->dws);
++	dw_spi_remove_controller(&dwsbt1->dws);
+ 
+ 	pm_runtime_disable(&pdev->dev);
+ }
+diff --git a/drivers/spi/spi-dw-core.c b/drivers/spi/spi-dw-core.c
+index b3b883cb95410..90dea6f9b3dab 100644
+--- a/drivers/spi/spi-dw-core.c
++++ b/drivers/spi/spi-dw-core.c
+@@ -63,7 +63,7 @@ static void dw_spi_debugfs_init(struct dw_spi *dws)
+ {
+ 	char name[32];
+ 
+-	snprintf(name, 32, "dw_spi%d", dws->host->bus_num);
++	snprintf(name, 32, "dw_spi%d", dws->ctlr->bus_num);
+ 	dws->debugfs = debugfs_create_dir(name, NULL);
+ 
+ 	dws->regset.regs = dw_spi_dbgfs_regs;
+@@ -185,25 +185,25 @@ int dw_spi_check_status(struct dw_spi *dws, bool raw)
+ 		irq_status = dw_readl(dws, DW_SPI_ISR);
+ 
+ 	if (irq_status & DW_SPI_INT_RXOI) {
+-		dev_err(&dws->host->dev, "RX FIFO overflow detected\n");
++		dev_err(&dws->ctlr->dev, "RX FIFO overflow detected\n");
+ 		ret = -EIO;
+ 	}
+ 
+ 	if (irq_status & DW_SPI_INT_RXUI) {
+-		dev_err(&dws->host->dev, "RX FIFO underflow detected\n");
++		dev_err(&dws->ctlr->dev, "RX FIFO underflow detected\n");
+ 		ret = -EIO;
+ 	}
+ 
+ 	if (irq_status & DW_SPI_INT_TXOI) {
+-		dev_err(&dws->host->dev, "TX FIFO overflow detected\n");
++		dev_err(&dws->ctlr->dev, "TX FIFO overflow detected\n");
+ 		ret = -EIO;
+ 	}
+ 
+ 	/* Generically handle the erroneous situation */
+ 	if (ret) {
+ 		dw_spi_reset_chip(dws);
+-		if (dws->host->cur_msg)
+-			dws->host->cur_msg->status = ret;
++		if (dws->ctlr->cur_msg)
++			dws->ctlr->cur_msg->status = ret;
+ 	}
+ 
+ 	return ret;
+@@ -215,7 +215,7 @@ static irqreturn_t dw_spi_transfer_handler(struct dw_spi *dws)
+ 	u16 irq_status = dw_readl(dws, DW_SPI_ISR);
+ 
+ 	if (dw_spi_check_status(dws, false)) {
+-		spi_finalize_current_transfer(dws->host);
++		spi_finalize_current_transfer(dws->ctlr);
+ 		return IRQ_HANDLED;
+ 	}
+ 
+@@ -229,7 +229,7 @@ static irqreturn_t dw_spi_transfer_handler(struct dw_spi *dws)
+ 	dw_reader(dws);
+ 	if (!dws->rx_len) {
+ 		dw_spi_mask_intr(dws, 0xff);
+-		spi_finalize_current_transfer(dws->host);
++		spi_finalize_current_transfer(dws->ctlr);
+ 	} else if (dws->rx_len <= dw_readl(dws, DW_SPI_RXFTLR)) {
+ 		dw_writel(dws, DW_SPI_RXFTLR, dws->rx_len - 1);
+ 	}
+@@ -250,14 +250,14 @@ static irqreturn_t dw_spi_transfer_handler(struct dw_spi *dws)
+ 
+ static irqreturn_t dw_spi_irq(int irq, void *dev_id)
+ {
+-	struct spi_controller *host = dev_id;
+-	struct dw_spi *dws = spi_controller_get_devdata(host);
++	struct spi_controller *ctlr = dev_id;
++	struct dw_spi *dws = spi_controller_get_devdata(ctlr);
+ 	u16 irq_status = dw_readl(dws, DW_SPI_ISR) & DW_SPI_INT_MASK;
+ 
+ 	if (!irq_status)
+ 		return IRQ_NONE;
+ 
+-	if (!host->cur_msg) {
++	if (!ctlr->cur_msg) {
+ 		dw_spi_mask_intr(dws, 0xff);
+ 		return IRQ_HANDLED;
+ 	}
+@@ -410,11 +410,11 @@ static int dw_spi_poll_transfer(struct dw_spi *dws,
+ 	return 0;
+ }
+ 
+-static int dw_spi_transfer_one(struct spi_controller *host,
++static int dw_spi_transfer_one(struct spi_controller *ctlr,
+ 			       struct spi_device *spi,
+ 			       struct spi_transfer *transfer)
+ {
+-	struct dw_spi *dws = spi_controller_get_devdata(host);
++	struct dw_spi *dws = spi_controller_get_devdata(ctlr);
+ 	struct dw_spi_cfg cfg = {
+ 		.tmode = DW_SPI_CTRLR0_TMOD_TR,
+ 		.dfs = transfer->bits_per_word,
+@@ -439,7 +439,7 @@ static int dw_spi_transfer_one(struct spi_controller *host,
+ 	transfer->effective_speed_hz = dws->current_freq;
+ 
+ 	/* Check if current transfer is a DMA transaction */
+-	dws->dma_mapped = spi_xfer_is_dma_mapped(host, spi, transfer);
++	dws->dma_mapped = spi_xfer_is_dma_mapped(ctlr, spi, transfer);
+ 
+ 	/* For poll mode just disable all interrupts */
+ 	dw_spi_mask_intr(dws, 0xff);
+@@ -462,10 +462,10 @@ static int dw_spi_transfer_one(struct spi_controller *host,
+ 	return 1;
+ }
+ 
+-static void dw_spi_handle_err(struct spi_controller *host,
++static void dw_spi_handle_err(struct spi_controller *ctlr,
+ 			      struct spi_message *msg)
+ {
+-	struct dw_spi *dws = spi_controller_get_devdata(host);
++	struct dw_spi *dws = spi_controller_get_devdata(ctlr);
+ 
+ 	if (dws->dma_mapped)
+ 		dws->dma_ops->dma_stop(dws);
+@@ -574,7 +574,7 @@ static int dw_spi_write_then_read(struct dw_spi *dws, struct spi_device *spi)
+ 	while (len) {
+ 		entries = readl_relaxed(dws->regs + DW_SPI_TXFLR);
+ 		if (!entries) {
+-			dev_err(&dws->host->dev, "CS de-assertion on Tx\n");
++			dev_err(&dws->ctlr->dev, "CS de-assertion on Tx\n");
+ 			return -EIO;
+ 		}
+ 		room = min(dws->fifo_len - entries, len);
+@@ -594,7 +594,7 @@ static int dw_spi_write_then_read(struct dw_spi *dws, struct spi_device *spi)
+ 		if (!entries) {
+ 			sts = readl_relaxed(dws->regs + DW_SPI_RISR);
+ 			if (sts & DW_SPI_INT_RXOI) {
+-				dev_err(&dws->host->dev, "FIFO overflow on Rx\n");
++				dev_err(&dws->ctlr->dev, "FIFO overflow on Rx\n");
+ 				return -EIO;
+ 			}
+ 			continue;
+@@ -635,7 +635,7 @@ static int dw_spi_wait_mem_op_done(struct dw_spi *dws)
+ 		spi_delay_exec(&delay, NULL);
+ 
+ 	if (retry < 0) {
+-		dev_err(&dws->host->dev, "Mem op hanged up\n");
++		dev_err(&dws->ctlr->dev, "Mem op hanged up\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -898,60 +898,60 @@ static const struct spi_controller_mem_caps dw_spi_mem_caps = {
+ 	.per_op_freq = true,
+ };
+ 
+-int dw_spi_add_host(struct device *dev, struct dw_spi *dws)
++int dw_spi_add_controller(struct device *dev, struct dw_spi *dws)
+ {
+-	struct spi_controller *host;
++	struct spi_controller *ctlr;
+ 	int ret;
+ 
+ 	if (!dws)
+ 		return -EINVAL;
+ 
+-	host = spi_alloc_host(dev, 0);
+-	if (!host)
++	ctlr = spi_alloc_host(dev, 0);
++	if (!ctlr)
+ 		return -ENOMEM;
+ 
+-	device_set_node(&host->dev, dev_fwnode(dev));
++	device_set_node(&ctlr->dev, dev_fwnode(dev));
+ 
+-	dws->host = host;
++	dws->ctlr = ctlr;
+ 	dws->dma_addr = (dma_addr_t)(dws->paddr + DW_SPI_DR);
+ 
+-	spi_controller_set_devdata(host, dws);
++	spi_controller_set_devdata(ctlr, dws);
+ 
+ 	/* Basic HW init */
+ 	dw_spi_hw_init(dev, dws);
+ 
+ 	ret = request_irq(dws->irq, dw_spi_irq, IRQF_SHARED, dev_name(dev),
+-			  host);
++			  ctlr);
+ 	if (ret < 0 && ret != -ENOTCONN) {
+ 		dev_err(dev, "can not get IRQ\n");
+-		goto err_free_host;
++		goto err_free_ctlr;
+ 	}
+ 
+ 	dw_spi_init_mem_ops(dws);
+ 
+-	host->use_gpio_descriptors = true;
+-	host->mode_bits = SPI_CPOL | SPI_CPHA | SPI_LOOP;
++	ctlr->use_gpio_descriptors = true;
++	ctlr->mode_bits = SPI_CPOL | SPI_CPHA | SPI_LOOP;
+ 	if (dws->caps & DW_SPI_CAP_DFS32)
+-		host->bits_per_word_mask = SPI_BPW_RANGE_MASK(4, 32);
++		ctlr->bits_per_word_mask = SPI_BPW_RANGE_MASK(4, 32);
+ 	else
+-		host->bits_per_word_mask = SPI_BPW_RANGE_MASK(4, 16);
+-	host->bus_num = dws->bus_num;
+-	host->num_chipselect = dws->num_cs;
+-	host->setup = dw_spi_setup;
+-	host->cleanup = dw_spi_cleanup;
++		ctlr->bits_per_word_mask = SPI_BPW_RANGE_MASK(4, 16);
++	ctlr->bus_num = dws->bus_num;
++	ctlr->num_chipselect = dws->num_cs;
++	ctlr->setup = dw_spi_setup;
++	ctlr->cleanup = dw_spi_cleanup;
+ 	if (dws->set_cs)
+-		host->set_cs = dws->set_cs;
++		ctlr->set_cs = dws->set_cs;
+ 	else
+-		host->set_cs = dw_spi_set_cs;
+-	host->transfer_one = dw_spi_transfer_one;
+-	host->handle_err = dw_spi_handle_err;
++		ctlr->set_cs = dw_spi_set_cs;
++	ctlr->transfer_one = dw_spi_transfer_one;
++	ctlr->handle_err = dw_spi_handle_err;
+ 	if (dws->mem_ops.exec_op) {
+-		host->mem_ops = &dws->mem_ops;
+-		host->mem_caps = &dw_spi_mem_caps;
++		ctlr->mem_ops = &dws->mem_ops;
++		ctlr->mem_caps = &dw_spi_mem_caps;
+ 	}
+-	host->max_speed_hz = dws->max_freq;
+-	host->flags = SPI_CONTROLLER_GPIO_SS;
+-	host->auto_runtime_pm = true;
++	ctlr->max_speed_hz = dws->max_freq;
++	ctlr->flags = SPI_CONTROLLER_GPIO_SS;
++	ctlr->auto_runtime_pm = true;
+ 
+ 	/* Get default rx sample delay */
+ 	device_property_read_u32(dev, "rx-sample-delay-ns",
+@@ -964,14 +964,14 @@ int dw_spi_add_host(struct device *dev, struct dw_spi *dws)
+ 		} else if (ret) {
+ 			dev_warn(dev, "DMA init failed\n");
+ 		} else {
+-			host->can_dma = dws->dma_ops->can_dma;
+-			host->flags |= SPI_CONTROLLER_MUST_TX;
++			ctlr->can_dma = dws->dma_ops->can_dma;
++			ctlr->flags |= SPI_CONTROLLER_MUST_TX;
+ 		}
+ 	}
+ 
+-	ret = spi_register_controller(host);
++	ret = spi_register_controller(ctlr);
+ 	if (ret) {
+-		dev_err_probe(dev, ret, "problem registering spi host\n");
++		dev_err_probe(dev, ret, "problem registering spi controller\n");
+ 		goto err_dma_exit;
+ 	}
+ 
+@@ -983,47 +983,47 @@ int dw_spi_add_host(struct device *dev, struct dw_spi *dws)
+ 		dws->dma_ops->dma_exit(dws);
+ 	dw_spi_enable_chip(dws, 0);
+ err_free_irq:
+-	free_irq(dws->irq, host);
+-err_free_host:
+-	spi_controller_put(host);
++	free_irq(dws->irq, ctlr);
++err_free_ctlr:
++	spi_controller_put(ctlr);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_NS_GPL(dw_spi_add_host, "SPI_DW_CORE");
++EXPORT_SYMBOL_NS_GPL(dw_spi_add_controller, "SPI_DW_CORE");
+ 
+-void dw_spi_remove_host(struct dw_spi *dws)
++void dw_spi_remove_controller(struct dw_spi *dws)
+ {
+ 	dw_spi_debugfs_remove(dws);
+ 
+-	spi_unregister_controller(dws->host);
++	spi_unregister_controller(dws->ctlr);
+ 
+ 	if (dws->dma_ops && dws->dma_ops->dma_exit)
+ 		dws->dma_ops->dma_exit(dws);
+ 
+ 	dw_spi_shutdown_chip(dws);
+ 
+-	free_irq(dws->irq, dws->host);
++	free_irq(dws->irq, dws->ctlr);
+ }
+-EXPORT_SYMBOL_NS_GPL(dw_spi_remove_host, "SPI_DW_CORE");
++EXPORT_SYMBOL_NS_GPL(dw_spi_remove_controller, "SPI_DW_CORE");
+ 
+-int dw_spi_suspend_host(struct dw_spi *dws)
++int dw_spi_suspend_controller(struct dw_spi *dws)
+ {
+ 	int ret;
+ 
+-	ret = spi_controller_suspend(dws->host);
++	ret = spi_controller_suspend(dws->ctlr);
+ 	if (ret)
+ 		return ret;
+ 
+ 	dw_spi_shutdown_chip(dws);
+ 	return 0;
+ }
+-EXPORT_SYMBOL_NS_GPL(dw_spi_suspend_host, "SPI_DW_CORE");
++EXPORT_SYMBOL_NS_GPL(dw_spi_suspend_controller, "SPI_DW_CORE");
+ 
+-int dw_spi_resume_host(struct dw_spi *dws)
++int dw_spi_resume_controller(struct dw_spi *dws)
+ {
+-	dw_spi_hw_init(&dws->host->dev, dws);
+-	return spi_controller_resume(dws->host);
++	dw_spi_hw_init(&dws->ctlr->dev, dws);
++	return spi_controller_resume(dws->ctlr);
+ }
+-EXPORT_SYMBOL_NS_GPL(dw_spi_resume_host, "SPI_DW_CORE");
++EXPORT_SYMBOL_NS_GPL(dw_spi_resume_controller, "SPI_DW_CORE");
+ 
+ MODULE_AUTHOR("Feng Tang <feng.tang@intel.com>");
+ MODULE_DESCRIPTION("Driver for DesignWare SPI controller core");
+diff --git a/drivers/spi/spi-dw-dma.c b/drivers/spi/spi-dw-dma.c
+index b5bed02b7e500..65adec7c7524b 100644
+--- a/drivers/spi/spi-dw-dma.c
++++ b/drivers/spi/spi-dw-dma.c
+@@ -139,8 +139,8 @@ static int dw_spi_dma_init_mfld(struct device *dev, struct dw_spi *dws)
+ 	if (!dws->txchan)
+ 		goto free_rxchan;
+ 
+-	dws->host->dma_rx = dws->rxchan;
+-	dws->host->dma_tx = dws->txchan;
++	dws->ctlr->dma_rx = dws->rxchan;
++	dws->ctlr->dma_tx = dws->txchan;
+ 
+ 	init_completion(&dws->dma_completion);
+ 
+@@ -183,8 +183,8 @@ static int dw_spi_dma_init_generic(struct device *dev, struct dw_spi *dws)
+ 		goto free_rxchan;
+ 	}
+ 
+-	dws->host->dma_rx = dws->rxchan;
+-	dws->host->dma_tx = dws->txchan;
++	dws->ctlr->dma_rx = dws->rxchan;
++	dws->ctlr->dma_tx = dws->txchan;
+ 
+ 	init_completion(&dws->dma_completion);
+ 
+@@ -242,10 +242,10 @@ static enum dma_slave_buswidth dw_spi_dma_convert_width(u8 n_bytes)
+ 	}
+ }
+ 
+-static bool dw_spi_can_dma(struct spi_controller *host,
++static bool dw_spi_can_dma(struct spi_controller *ctlr,
+ 			   struct spi_device *spi, struct spi_transfer *xfer)
+ {
+-	struct dw_spi *dws = spi_controller_get_devdata(host);
++	struct dw_spi *dws = spi_controller_get_devdata(ctlr);
+ 	enum dma_slave_buswidth dma_bus_width;
+ 
+ 	if (xfer->len <= dws->fifo_len)
+@@ -271,7 +271,7 @@ static int dw_spi_dma_wait(struct dw_spi *dws, unsigned int len, u32 speed)
+ 					 msecs_to_jiffies(ms));
+ 
+ 	if (ms == 0) {
+-		dev_err(&dws->host->cur_msg->spi->dev,
++		dev_err(&dws->ctlr->cur_msg->spi->dev,
+ 			"DMA transaction timed out\n");
+ 		return -ETIMEDOUT;
+ 	}
+@@ -299,7 +299,7 @@ static int dw_spi_dma_wait_tx_done(struct dw_spi *dws,
+ 		spi_delay_exec(&delay, xfer);
+ 
+ 	if (retry < 0) {
+-		dev_err(&dws->host->dev, "Tx hanged up\n");
++		dev_err(&dws->ctlr->dev, "Tx hanged up\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -400,7 +400,7 @@ static int dw_spi_dma_wait_rx_done(struct dw_spi *dws)
+ 		spi_delay_exec(&delay, NULL);
+ 
+ 	if (retry < 0) {
+-		dev_err(&dws->host->dev, "Rx hanged up\n");
++		dev_err(&dws->ctlr->dev, "Rx hanged up\n");
+ 		return -EIO;
+ 	}
+ 
+@@ -656,13 +656,13 @@ static int dw_spi_dma_transfer(struct dw_spi *dws, struct spi_transfer *xfer)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (dws->host->cur_msg->status == -EINPROGRESS) {
++	if (dws->ctlr->cur_msg->status == -EINPROGRESS) {
+ 		ret = dw_spi_dma_wait_tx_done(dws, xfer);
+ 		if (ret)
+ 			return ret;
+ 	}
+ 
+-	if (xfer->rx_buf && dws->host->cur_msg->status == -EINPROGRESS)
++	if (xfer->rx_buf && dws->ctlr->cur_msg->status == -EINPROGRESS)
+ 		ret = dw_spi_dma_wait_rx_done(dws);
+ 
+ 	return ret;
+diff --git a/drivers/spi/spi-dw-mmio.c b/drivers/spi/spi-dw-mmio.c
+index 7a5197586919c..a33f246560d80 100644
+--- a/drivers/spi/spi-dw-mmio.c
++++ b/drivers/spi/spi-dw-mmio.c
+@@ -382,7 +382,7 @@ static int dw_spi_mmio_probe(struct platform_device *pdev)
+ 
+ 	pm_runtime_enable(&pdev->dev);
+ 
+-	ret = dw_spi_add_host(&pdev->dev, dws);
++	ret = dw_spi_add_controller(&pdev->dev, dws);
+ 	if (ret)
+ 		goto out;
+ 
+@@ -401,7 +401,7 @@ static void dw_spi_mmio_remove(struct platform_device *pdev)
+ {
+ 	struct dw_spi_mmio *dwsmmio = platform_get_drvdata(pdev);
+ 
+-	dw_spi_remove_host(&dwsmmio->dws);
++	dw_spi_remove_controller(&dwsmmio->dws);
+ 	pm_runtime_disable(&pdev->dev);
+ 	reset_control_assert(dwsmmio->rstc);
+ }
+diff --git a/drivers/spi/spi-dw-pci.c b/drivers/spi/spi-dw-pci.c
+index b32d6648a32ea..72d9f5bc87f75 100644
+--- a/drivers/spi/spi-dw-pci.c
++++ b/drivers/spi/spi-dw-pci.c
+@@ -127,7 +127,7 @@ static int dw_spi_pci_probe(struct pci_dev *pdev, const struct pci_device_id *en
+ 		goto err_free_irq_vectors;
+ 	}
+ 
+-	ret = dw_spi_add_host(&pdev->dev, dws);
++	ret = dw_spi_add_controller(&pdev->dev, dws);
+ 	if (ret)
+ 		goto err_free_irq_vectors;
+ 
+@@ -156,7 +156,7 @@ static void dw_spi_pci_remove(struct pci_dev *pdev)
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+ 
+-	dw_spi_remove_host(dws);
++	dw_spi_remove_controller(dws);
+ 	pci_free_irq_vectors(pdev);
+ }
+ 
+@@ -165,14 +165,14 @@ static int dw_spi_pci_suspend(struct device *dev)
+ {
+ 	struct dw_spi *dws = dev_get_drvdata(dev);
+ 
+-	return dw_spi_suspend_host(dws);
++	return dw_spi_suspend_controller(dws);
+ }
+ 
+ static int dw_spi_pci_resume(struct device *dev)
+ {
+ 	struct dw_spi *dws = dev_get_drvdata(dev);
+ 
+-	return dw_spi_resume_host(dws);
++	return dw_spi_resume_controller(dws);
+ }
+ #endif
+ 
+diff --git a/drivers/spi/spi-dw.h b/drivers/spi/spi-dw.h
+index fc267c6437ae0..9cc79c566a70c 100644
+--- a/drivers/spi/spi-dw.h
++++ b/drivers/spi/spi-dw.h
+@@ -142,14 +142,14 @@ struct dw_spi_dma_ops {
+ 	int (*dma_init)(struct device *dev, struct dw_spi *dws);
+ 	void (*dma_exit)(struct dw_spi *dws);
+ 	int (*dma_setup)(struct dw_spi *dws, struct spi_transfer *xfer);
+-	bool (*can_dma)(struct spi_controller *host, struct spi_device *spi,
++	bool (*can_dma)(struct spi_controller *ctlr, struct spi_device *spi,
+ 			struct spi_transfer *xfer);
+ 	int (*dma_transfer)(struct dw_spi *dws, struct spi_transfer *xfer);
+ 	void (*dma_stop)(struct dw_spi *dws);
+ };
+ 
+ struct dw_spi {
+-	struct spi_controller	*host;
++	struct spi_controller	*ctlr;
+ 
+ 	u32			ip;		/* Synopsys DW SSI IP-core ID */
+ 	u32			ver;		/* Synopsys component version */
+@@ -288,10 +288,10 @@ extern void dw_spi_set_cs(struct spi_device *spi, bool enable);
+ extern void dw_spi_update_config(struct dw_spi *dws, struct spi_device *spi,
+ 				 struct dw_spi_cfg *cfg);
+ extern int dw_spi_check_status(struct dw_spi *dws, bool raw);
+-extern int dw_spi_add_host(struct device *dev, struct dw_spi *dws);
+-extern void dw_spi_remove_host(struct dw_spi *dws);
+-extern int dw_spi_suspend_host(struct dw_spi *dws);
+-extern int dw_spi_resume_host(struct dw_spi *dws);
++extern int dw_spi_add_controller(struct device *dev, struct dw_spi *dws);
++extern void dw_spi_remove_controller(struct dw_spi *dws);
++extern int dw_spi_suspend_controller(struct dw_spi *dws);
++extern int dw_spi_resume_controller(struct dw_spi *dws);
+ 
+ #ifdef CONFIG_SPI_DW_DMA
+ 
+-- 
+2.43.0
+

@@ -1,5 +1,5 @@
 filesystem-1.1-21.emt26.x86_64.rpm
-kernel-headers-6.18.20-2.emt26.noarch.rpm
+kernel-headers-6.18.23-1.emt26.noarch.rpm
 glibc-2.38-18.emt26.x86_64.rpm
 glibc-devel-2.38-18.emt26.x86_64.rpm
 glibc-i18n-2.38-18.emt26.x86_64.rpm
