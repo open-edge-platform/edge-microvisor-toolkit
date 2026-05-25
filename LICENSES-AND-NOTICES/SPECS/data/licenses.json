@@ -845,6 +845,7 @@
                 "yasm",
                 "yp-tools",
                 "ypbind",
+                "yq",
                 "zerofree",
                 "zfs-fuse",
                 "zipper"
@@ -1690,7 +1691,8 @@
         "Source project": {
             "license": "Same as the source project.",
             "specs": [
-                "python-nocaselist"
+                "python-nocaselist",
+                "yq"
             ]
         },
         "Sysbench source": {
