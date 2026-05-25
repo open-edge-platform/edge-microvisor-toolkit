@@ -1,6 +1,5 @@
 {
     "packages": [
-      "platform-manageability-agent",
       "rpc",
       "intel-lms"
     ]
