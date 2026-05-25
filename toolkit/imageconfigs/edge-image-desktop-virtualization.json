@@ -71,7 +71,6 @@
                 "packagelists/virtualization-host-full-packages.json",
                 "packagelists/qemu-guest-packages.json",
                 "packagelists/xorg-x11-packages.json",
-                "packagelists/agents-packages.json",
                 "packagelists/tools-tinker.json",
                 "packagelists/persistent-mount-package.json",
                 "packagelists/fde-verity-package.json",

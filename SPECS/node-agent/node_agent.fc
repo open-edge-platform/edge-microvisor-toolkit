@@ -1,5 +1,0 @@
-/etc/edge-node/node/confs/node-agent           -- system_u:object_r:node_agent_exec_t:s0
-/usr/bin/node-agent                            -- system_u:object_r:node_agent_exec_t:s0
-
-/etc/intel_edge_node/client-credentials        -- system_u:object_r:node_agent_conf_t:s0
-/etc/edge-node/node/confs/node-agent.yaml      -- system_u:object_r:node_agent_conf_t:s0

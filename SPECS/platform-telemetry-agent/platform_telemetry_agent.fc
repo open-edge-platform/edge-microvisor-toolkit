@@ -1,7 +1,0 @@
-/etc/edge-node/node/confs/platform-telemetry-agent      -- system_u:object_r:platform_telemetry_agent_exec_t:s0
-
-/usr/bin/platform-telemetry-agent      -- system_u:object_r:platform_telemetry_agent_exec_t:s0
-
-/etc/edge-node/node/confs/platform-telemetry-agent.yaml -- system_u:object_r:platform_telemetry_agent_conf_rw_t:s0
-
-/etc/intel_edge_node/tokens/platform-telemetry-agent/access_token -- system_u:object_r:platform_telemetry_agent_conf_r_t:s0

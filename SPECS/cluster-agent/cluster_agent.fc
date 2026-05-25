@@ -1,4 +1,0 @@
-/etc/edge-node/node/confs/cluster-agent        -- system_u:object_r:cluster_agent_exec_t:s0
-/usr/bin/cluster-agent                         -- system_u:object_r:cluster_agent_exec_t:s0
-
-/etc/edge-node/node/confs/cluster-agent.yaml   -- system_u:object_r:cluster_agent_conf_t:s0

@@ -67,7 +67,6 @@
                 "packagelists/core-packages-image-systemd-boot.json",
                 "packagelists/ssh-server.json",
                 "packagelists/virtualization-host-packages.json",
-                "packagelists/agents-packages.json",
                 "packagelists/tools-tinker.json",
                 "packagelists/persistent-mount-package.json",
                 "packagelists/fde-verity-package.json",
