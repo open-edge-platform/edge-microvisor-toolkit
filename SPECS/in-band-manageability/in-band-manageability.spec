@@ -4,7 +4,7 @@
 
 Summary:        An agent to manage systems via in-band connection
 Name:           in-band-manageability
-Version:        1.2.1
+Version:        1.2.3
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -16,14 +16,14 @@ Source2:        inbm-configuration-replace-FQDN.sh
 Source3:        inbm.te
 Source4:        inbm.fc
 BuildRequires:  golang < 1.27
-BuildRequires:  golang >= 1.26.1
+BuildRequires:  golang >= 1.26.3
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  selinux-policy-devel
 BuildRequires:  make
 BuildRequires:  git
 Requires:       systemd
 Requires:       (%{name}-selinux if selinux-policy-targeted)
-Obsoletes:      inbm
+Obsoletes:      inbm < %{version}-%{release}
 
 %description
 The Intel In-Band Manageability Framework is software which enables an
@@ -77,13 +77,13 @@ COMMON_LDFLAGS="-s -w -extldflags=-static \
 
 # Build the inbc CLI binary
 go build -buildmode=pie -trimpath -mod=vendor \
-    -gcflags "all=-l" -gcflags "github.com/open-edge-platform/...=-spectre=all -l" -asmflags "github.com/open-edge-platform/...=-spectre=all" \
+    -gcflags "all=-l" \
     -ldflags "${COMMON_LDFLAGS} -X main.Version=${BUILD_VERSION}" \
     -o "${BUILD_DIR}/inbc" cmd/inbc/main.go
 
 # Build the inbd daemon binary
 go build -buildmode=pie -trimpath -mod=vendor \
-    -gcflags "all=-l" -gcflags "github.com/open-edge-platform/...=-spectre=all -l" -asmflags "github.com/open-edge-platform/...=-spectre=all" \
+    -gcflags "all=-l" \
     -ldflags "${COMMON_LDFLAGS}" \
     -o "${BUILD_DIR}/inbd" cmd/inbd/main.go
 
@@ -208,7 +208,13 @@ fi
 %systemd_postun inbd.service
 
 %changelog
-* Wed Apr 17 2026 Kishan Mochi <kishan.mochi@intel.com> - 1.2.1-1
+* Wed May 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.2.3-1
+- Update x-net to 0.53.0
+
+* Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.2.2-1
+- Update to golang 1.26.3
+
+* Fri Apr 17 2026 Kishan Mochi <kishan.mochi@intel.com> - 1.2.1-1
 - inbc cmd timeout increase for update
 
 * Wed Feb 25 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.1.2-1

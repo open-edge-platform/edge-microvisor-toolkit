@@ -3,8 +3,8 @@
 Summary:        Device Discovery Agent for Edge Node
 Name:           device-discovery
 Epoch:          1
-Version:        0.0.4
-Release:        4%{?dist}
+Version:        1.0.4
+Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 License:        Apache-2.0
@@ -26,19 +26,19 @@ The Device Discovery Agent for Edge Node in order to retrieve the specific confi
 
 
 %prep
-%setup -q -n infra-onboarding-%{name}-%{version}
-cd hook-os/device_discovery
+%setup -q -n edge-node-agents-device-discovery-agent-v%{version}
+cd device-discovery-agent
 tar -xzf %{SOURCE2} -C .
 
 %build
 export GOEXPERIMENT=nosystemcrypto
-cd hook-os/device_discovery
-CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -gcflags=all="-l -B" -o device-discovery
+cd device-discovery-agent
+CGO_ENABLED=0 go build -buildmode=pie -mod=vendor -trimpath -ldflags '-extldflags "-static"' -gcflags=all="-l -B" -o device-discovery ./cmd/device-discovery
 
 %install
 install -d -m 0755 %{buildroot}%{_bindir}/device-discovery 
-install -m 0755 ./hook-os/device_discovery/device-discovery %{buildroot}%{_bindir}/device-discovery/device-discovery
-install -m 0755 ./hook-os/device_discovery/client-auth.sh %{buildroot}%{_bindir}/device-discovery/client-auth.sh
+install -m 0755 ./device-discovery-agent/device-discovery %{buildroot}%{_bindir}/device-discovery/device-discovery
+install -m 0755 ./device-discovery-agent/configs/device-discovery-agent.env %{buildroot}%{_bindir}/device-discovery/device-discovery-agent.env
 
 # systemd units
 install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/device-discovery.service
@@ -51,6 +51,9 @@ install -Dp -m0644 %{SOURCE1} %{buildroot}%{_unitdir}/device-discovery.service
 %{_unitdir}/device-discovery.service
 
 %changelog
+* Mon May 18 2026 Andy <andy.peng@intel.com> - 1:1.0.4-1
+- Upgrade device-discovery version to 1.0.4 for bug fix
+
 * Tue May 12 2026 Andy <andy.peng@intel.com> - 1:0.0.4-4
 - Upgrade golang version to 1.26.3
 
