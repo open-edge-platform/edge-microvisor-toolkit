@@ -24,6 +24,9 @@ You can either build Edge Microvisor Toolkit by following step-by-step instructi
 download it directly. Both the build system and Edge Microvisor Toolkit are available as open
 source.
 
+> Intel strongly recommends you to use the latest version of 3.0 branch [here](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases).\
+> Intel will not provide any support for previous versions including but not limited to, maintenance or bug fixes. Previous versions have been identified as having known security issues.
+
 ## Get Started
 
 To find out how to deploy and work with Edge Microvisor Toolkit, see the
