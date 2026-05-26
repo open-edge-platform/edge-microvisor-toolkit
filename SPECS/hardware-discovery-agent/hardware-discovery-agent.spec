@@ -1,6 +1,6 @@
 Summary:        Edge node hardware information reporting
 Name:           hardware-discovery-agent
-Version:        1.9.2
+Version:        1.10.3
 Release:        1%{?dist}
 License:        Apache-2.0
 Vendor:         Intel Corporation
@@ -12,8 +12,8 @@ Source2:        %{name}.service
 Source3:        env_wrapper.sh
 Source4:        hd_agent.te
 Source5:        hd_agent.fc
-BuildRequires:  golang < 1.26
-BuildRequires:  golang >= 1.25.5
+BuildRequires:  golang < 1.27
+BuildRequires:  golang >= 1.26.3
 BuildRequires:  systemd-rpm-macros
 Requires(pre):  %{_bindir}/systemd-sysusers
 Requires:       dmidecode
@@ -116,6 +116,12 @@ install -m 644 %{modulename}.pp %{buildroot}%{_datadir}/selinux/packages/%{modul
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Wed May 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.10.3-1
+- Update x-net to 0.53.0
+
+* Tue May 12 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.10.2-1
+- Update to golang 1.26.3
+
 * Fri Feb 20 2026 Rajeev Ranjan <rajeev2.ranjan@intel.com> - 1.9.2-1
 - Update to golang 1.25.7
 
