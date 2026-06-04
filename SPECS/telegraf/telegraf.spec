@@ -1,7 +1,7 @@
 Summary:        agent for collecting, processing, aggregating, and writing metrics.
 Name:           telegraf
 Version:        1.31.0
-Release:        26%{?dist}
+Release:        27%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -32,7 +32,10 @@ Patch16:        CVE-2025-47911.patch
 Patch17:        CVE-2025-58190.patch
 Patch18:        CVE-2026-2303.patch
 Patch19:        CVE-2026-26014.patch
-
+Patch20:        CVE-2026-4645.patch
+# Patch added based on customer request https://microsoft.visualstudio.com/OS/_workitems/edit/61041768
+# Fix was introduced 1.37.2, this patch can be removed once we update to 1.37.2 or later
+Patch21:        cisco_telegraf_bug61041768.patch
 
 BuildRequires:  golang < 1.26.0
 BuildRequires:  systemd-devel
@@ -137,6 +140,12 @@ fi
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-27
+- merge from Azure Linux 3.0.20260401-3.0
+- Added patch to fix the issue reported in https://microsoft.visualstudio.com/OS/_workitems/edit/61041768
+  Fix in telegraf to support cisco telemetry plugin that collects telemetry data from cisco NXOS switches.
+- Patch for CVE-2026-4645
+
 * Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-26
 - merge from Azure Linux 3.0.20260304-3.0
 - Patch for CVE-2025-10543
