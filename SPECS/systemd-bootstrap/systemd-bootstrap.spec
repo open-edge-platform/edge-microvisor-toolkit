@@ -1,7 +1,7 @@
 Summary:        Bootstrap version of systemd. Workaround for systemd circular dependency.
 Name:           systemd-bootstrap
 Version:        250.3
-Release:        19%{?dist}
+Release:        20%{?dist}
 License:        LGPLv2+ AND GPLv2+ AND MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -33,8 +33,6 @@ Patch4:         CVE-2022-45873.patch
 Patch5:         backport-helper-util-macros.patch
 Patch6:         CVE-2022-4415.patch
 Patch7:         update-cifs-for-kernel-headers-6.1.patch
-Patch8:         add-pidfs-magic.patch
-Patch9:         add-bcachefs-magic.patch
 
 # Directions for refreshing systemd macros:
 #    1. Update Source21->24 from main systemd directory, currently they are taken un-modified.
@@ -49,8 +47,13 @@ Patch9:         add-bcachefs-magic.patch
 #    4. Update patch, then rebuild to validate changes
 #    5. Repeat from 2. as needed until it builds
 #    6. Build both systemd and systemd-bootstrap, validate the contents of systemd-rpm-macros and system-bootstrap-rpm-macros are identical
-Patch10:         use-255-macros.patch
-Patch11:         CVE-2023-7008.patch
+Patch8:         use-255-macros.patch
+Patch9:         CVE-2023-7008.patch
+Patch10:        CVE-2026-29111.patch
+
+Patch100:         add-pidfs-magic.patch
+Patch101:         add-bcachefs-magic.patch
+
 BuildRequires:  docbook-dtd-xml
 BuildRequires:  docbook-style-xsl
 BuildRequires:  gettext
@@ -288,6 +291,11 @@ fi
 %{_datadir}/pkgconfig/udev.pc
 
 %changelog
+* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 250.3-20
+- reorder patches
+- merge from Azure Linux 3.0.20260401-3.0
+- Patch for CVE-2026-29111
+
 * Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 250.3-19
 - merge from Azure Linux 3.0.20250910-3.0.
 - Patch CVE-2023-7008
