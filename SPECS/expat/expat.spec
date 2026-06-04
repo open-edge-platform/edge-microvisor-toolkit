@@ -2,7 +2,7 @@
 Summary:        An XML parser library
 Name:           expat
 Version:        2.6.4
-Release:        4%{?dist}
+Release:        5%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -13,6 +13,7 @@ Patch0:         CVE-2024-8176.patch
 Patch1:         CVE-2025-59375.patch
 Patch2:         CVE-2026-24515.patch
 Patch3:         CVE-2026-25210.patch
+Patch4:         CVE-2026-32778.patch
 Requires:       %{name}-libs = %{version}-%{release}
 
 BuildRequires: autoconf, libtool, xmlto, gcc-c++
@@ -74,6 +75,9 @@ rm -rf %{buildroot}/%{_docdir}/%{name}
 %{_libdir}/libexpat.so.1*
 
 %changelog
+* Mon May 11 2026 Shalini Singhal <shalinix.singhal@intel.com> - 2.6.4-5
++ Fix CVE-2026-32778 with a patch
+
 * Thu Jan 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.6.4-3
 - add BuildRequires
 - Patch for CVE-2026-25210
