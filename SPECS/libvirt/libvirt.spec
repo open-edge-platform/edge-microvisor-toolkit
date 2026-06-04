@@ -185,7 +185,7 @@
 Summary:        Library providing a simple virtualization API
 Name:           libvirt
 Version:        10.10.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND OFL-1.1
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -198,6 +198,9 @@ Source:         https://download.libvirt.org/%{?mainturl}libvirt-%{version}.tar.
 Patch0:         libvirt-conf.patch
 Patch1:         CVE-2025-13193.patch
 Patch2:         CVE-2025-12748.patch
+Patch3:         libvirt-qemu-tpm-do-not-update-profile-name-for-transient-domains.patch
+Patch4:         libvirt-qemu-Rename-outgoingMigration-parameter-in-various-TPM-functions.patch
+Patch5:         libvirt-qemu-Properly-propagate-migration-state-to-TPM-cleanup-code.patch
 
 # emt specific patches
 Patch99:         0001-PATCH-After-iptables.service.patch
@@ -2197,6 +2200,11 @@ exit 0
 %endif
 
 %changelog
+* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 10.10.0-2
+- merge from Azure Linux 3.0.20260401-3.0
+- Add patches from https://gitlab.com/redhat/centos-stream/rpms/libvirt
+  to fix TPM handling in QEMU migrations.
+
 * Thu Mar 12 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 10.10.0-1
 - merge from Azure Linux 3.0.20260304-3.0
 - Patch for CVE-2025-13193
