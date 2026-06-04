@@ -32,6 +32,8 @@ Patch13: CVE-2024-51744.patch
 Patch14: CVE-2025-58183.patch
 #This can be removed when upgraded to v25.0.15
 Patch15: fix-multiarch-image-push-tag.patch
+Patch16: CVE-2026-39882.patch
+Patch17: CVE-2026-32288.patch
 
 %{?systemd_requires}
 
@@ -135,7 +137,9 @@ chmod 0700 /opt/docker-data
 
 %changelog
 * Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.3-17
-- merge from Azure Linux 3.0.20260401-3.0
+- merge from Azure Linux 3.0.20260506-3.0
+- Patch for CVE-2026-32288
+- Patch for CVE-2026-39882
 - Fix multiarch image push tag
 
 * Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.3-16
