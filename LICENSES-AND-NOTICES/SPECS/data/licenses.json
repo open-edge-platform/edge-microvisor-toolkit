@@ -876,7 +876,6 @@
         "Intel": {
             "license": "[MIT License](/LICENSES-AND-NOTICES/LICENSE.md)",
             "specs": [
-                "device-discovery",
                 "edge-release",
                 "edge-repos",
                 "edge-rpm-macros",
@@ -891,7 +890,6 @@
                 "persistent-mount",
                 "python-snoop",
                 "rpc",
-                "tink-worker",
                 "tpm-cryptsetup",
                 "tpm2-initramfs-tool"
             ]
