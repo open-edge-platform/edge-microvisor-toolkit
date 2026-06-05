@@ -67,5 +67,6 @@ emt-contribution
 emt-troubleshooting
 emt-system-requirements
 emt-tutorials
+Release Notes <emt-release-notes>
 :::
 hide_directive-->
