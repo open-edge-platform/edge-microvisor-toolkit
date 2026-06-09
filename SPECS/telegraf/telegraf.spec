@@ -39,6 +39,19 @@ Patch21:        cisco_telegraf_bug61041768.patch
 Patch22:        CVE-2026-29785.patch
 Patch23:        CVE-2026-33216.patch
 Patch24:        CVE-2026-5160.patch
+Patch25:        CVE-2026-41602.patch
+Patch26:        CVE-2026-42154.patch
+Patch27:        CVE-2026-39821.patch
+Patch28:        CVE-2026-39829.patch
+Patch29:        CVE-2026-39830.patch
+Patch30:        CVE-2026-39832.patch
+Patch31:        CVE-2026-39834.patch
+Patch32:        CVE-2026-42506.patch
+Patch33:        CVE-2026-42508.patch
+Patch34:        CVE-2026-46597.patch
+Patch35:        CVE-2026-27136.patch
+Patch36:        CVE-2026-41889.patch
+Patch37:        CVE-2026-42151.patch
 
 BuildRequires:  golang < 1.26.0
 BuildRequires:  systemd-devel
@@ -144,7 +157,10 @@ fi
 
 %changelog
 * Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-27
-- merge from Azure Linux 3.0.20260506-3.0
+- merge from Azure Linux 3.0.20260602-3.0
+- Patch for CVE-2026-41889, CVE-2026-42151
+- Patch for CVE-2026-46597, CVE-2026-42508, CVE-2026-42506, CVE-2026-39834, CVE-2026-39832, CVE-2026-39830, CVE-2026-39829, CVE-2026-39821, CVE-2026-27136
+- Patch for CVE-2026-41602, CVE-2026-42154
 - Patch for CVE-2026-5160
 - Patch for CVE-2026-33216, CVE-2026-29785
 - Added patch to fix the issue reported in https://microsoft.visualstudio.com/OS/_workitems/edit/61041768
