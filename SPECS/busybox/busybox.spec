@@ -1,7 +1,7 @@
 Summary:        Statically linked binary providing simplified versions of system commands
 Name:           busybox
 Version:        1.36.1
-Release:        23%{?dist}
+Release:        24%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -21,7 +21,7 @@ Patch7:         CVE-2022-48174.patch
 Patch8:         CVE-2026-26157.patch
 Patch99:        no-cbq.patch
 BuildRequires:  gcc
-BuildRequires:  glibc-static >= 2.38-19%{?dist}
+BuildRequires:  glibc-static >= 2.38-20%{?dist}
 BuildRequires:  libselinux-devel >= 1.27.7-2
 BuildRequires:  libsepol-devel
 %if 0%{?with_check}
@@ -111,8 +111,8 @@ cd testsuite
 %{_mandir}/man1/busybox.petitboot.1.gz
 
 %changelog
-* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.36.1-23
-- merge from Azure Linux 3.0.20260401-3.0
+* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.36.1-24
+- merge from Azure Linux 3.0.20260602-3.0
 - Bump to rebuild with updated glibc
 
 * Thu Mar 12 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.36.1-22

@@ -9,7 +9,7 @@ URL:            https://github.com/intel/xpumanager
 Source0:        https://github.com/intel/xpumanager/archive/refs/tags/V%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Patch0:         system-installed-spdlog.patch
 BuildRequires:  cmake
-BuildRequires:  glibc-static >= 2.38-19%{?dist}
+BuildRequires:  glibc-static >= 2.38-20%{?dist}
 BuildRequires:  libpciaccess-devel
 BuildRequires:  intel-level-zero-devel
 BuildRequires:  intel-metee-devel
