@@ -221,6 +221,7 @@ fuse3
 gawk
 gbenchmark
 gc
+gcab
 gcc
 gcovr
 gd
@@ -1380,6 +1381,7 @@ vnstat
 vsftpd
 vulkan-headers
 vulkan-loader
+walinuxagent-acl-config
 websocketpp
 wget
 which
