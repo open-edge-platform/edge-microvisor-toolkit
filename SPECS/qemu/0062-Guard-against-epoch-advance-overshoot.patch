@@ -1,0 +1,95 @@
+From 4ba3a87725996571d2acebd66fab322b6237353d Mon Sep 17 00:00:00 2001
+From: "Chew, Tong Liang" <tong.liang.chew@intel.com>
+Date: Thu, 11 Jun 2026 00:12:06 +0800
+Subject: [PATCH] Guard against epoch-advance overshoot
+
+Signed-off-by: Chew, Tong Liang
+---
+ hw/usb/hcd-xhci.c   | 44 +++++++++++++++++++++++++++++++++++++++++---
+ hw/usb/trace-events |  4 ++++
+ 2 files changed, 45 insertions(+), 3 deletions(-)
+
+diff --git a/hw/usb/hcd-xhci.c b/hw/usb/hcd-xhci.c
+index b6411f0bda..1703af793c 100644
+--- a/hw/usb/hcd-xhci.c
++++ b/hw/usb/hcd-xhci.c
+@@ -1749,12 +1749,46 @@ static void xhci_calc_iso_kick(XHCIState *xhci, XHCITransfer *xfer,
+             xfer->mfindex_kick = asap;
+         }
+     } else {
+-        xfer->mfindex_kick = ((xfer->trbs[0].control >> TRB_TR_FRAMEID_SHIFT)
+-                              & TRB_TR_FRAMEID_MASK) << 3;
++        uint32_t frame_id = (xfer->trbs[0].control >> TRB_TR_FRAMEID_SHIFT)
++                            & TRB_TR_FRAMEID_MASK;
++        xfer->mfindex_kick = (uint64_t)frame_id << 3;
+         xfer->mfindex_kick |= mfindex & ~0x3fff;
+         if (xfer->mfindex_kick + 0x100 < mfindex) {
++            /*
++             * The IO thread fell >32ms behind: mfindex advanced past the
++             * target frame by more than the lookahead threshold.  Log this
++             * so the operator can see the delay that triggered the epoch
++             * advance (enable with --trace 'usb_xhci_iso*').
++             */
++            uint64_t late_mf = mfindex - xfer->mfindex_kick;
++            trace_usb_xhci_iso_kick_io_delay(epctx->slotid, epctx->epid,
++                                             frame_id,
++                                             xfer->mfindex_kick & 0x3fff,
++                                             mfindex,
++                                             late_mf, late_mf >> 3);
+             xfer->mfindex_kick += 0x4000;
+         }
++        /*
++         * Guard against epoch-advance overshoot: when the IO thread is briefly
++         * delayed, mfindex can advance past frame_kick by more than the 0x100
++         * lookahead threshold above.  Adding 0x4000 then places mfindex_kick
++         * ~2 seconds into the future, stalling all isochronous transfers until
++         * the kick timer fires (observed as periodic ~2.1 s USB audio/video
++         * stalls).
++         *
++         * Per xHCI spec Â§4.11.2.5 a Frame ID is only valid within Â±895 ms
++         * (0x1BF8 microframes) of the current MFINDEX.  If the result exceeds
++         * that window the epoch selection was wrong; clamp to now so the
++         * missed frame is dispatched immediately instead of stalling.
++         */
++        if (xfer->mfindex_kick > mfindex + 0x1BF8) {
++            uint64_t future_mf = xfer->mfindex_kick - mfindex;
++            trace_usb_xhci_iso_kick_epoch_clamp(epctx->slotid, epctx->epid,
++                                                frame_id, mfindex,
++                                                xfer->mfindex_kick,
++                                                future_mf, future_mf >> 3);
++            xfer->mfindex_kick = mfindex;
++        }
+     }
+ }
+ 
+@@ -1762,8 +1796,12 @@ static void xhci_check_intr_iso_kick(XHCIState *xhci, XHCITransfer *xfer,
+                                      XHCIEPContext *epctx, uint64_t mfindex)
+ {
+     if (xfer->mfindex_kick > mfindex) {
++        uint64_t delay_mf = xfer->mfindex_kick - mfindex;
++        trace_usb_xhci_iso_kick_timer_arm(epctx->slotid, epctx->epid,
++                                         xfer->mfindex_kick, mfindex,
++                                         delay_mf, delay_mf * 125);
+         timer_mod(epctx->kick_timer, qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL) +
+-                       (xfer->mfindex_kick - mfindex) * 125000);
++                       delay_mf * 125000);
+         xfer->running_retry = 1;
+     } else {
+         epctx->mfindex_last = xfer->mfindex_kick;
+diff --git a/hw/usb/trace-events b/hw/usb/trace-events
+index dd04f14add..a4511ca6b0 100644
+--- a/hw/usb/trace-events
++++ b/hw/usb/trace-events
+@@ -183,6 +183,10 @@ usb_xhci_xfer_success(void *xfer, uint32_t bytes) "%p: len %d"
+ usb_xhci_xfer_error(void *xfer, uint32_t ret) "%p: ret %d"
+ usb_xhci_unimplemented(const char *item, int nr) "%s (0x%x)"
+ usb_xhci_enforced_limit(const char *item) "%s"
++# ISO isochronous kick profiling (enable with --trace 'usb_xhci_iso*')
++usb_xhci_iso_kick_io_delay(uint32_t slotid, uint32_t epid, uint32_t frame_id, uint64_t frame_kick, uint64_t mfindex, uint64_t late_mf, uint64_t late_ms) "slotid %d epid %d frame_id 0x%03x frame_kick 0x%"PRIx64" mfindex 0x%"PRIx64" late %"PRIu64" mf (%"PRIu64" ms) [IO thread delayed >32ms -- epoch advance triggered]"
++usb_xhci_iso_kick_epoch_clamp(uint32_t slotid, uint32_t epid, uint32_t frame_id, uint64_t mfindex, uint64_t bad_kick, uint64_t future_mf, uint64_t future_ms) "slotid %d epid %d frame_id 0x%03x mfindex 0x%"PRIx64" bad_kick 0x%"PRIx64" would_stall %"PRIu64" mf (%"PRIu64" ms) -> clamped to now [STALL AVERTED]"
++usb_xhci_iso_kick_timer_arm(uint32_t slotid, uint32_t epid, uint64_t mfindex_kick, uint64_t mfindex, uint64_t delay_mf, uint64_t delay_us) "slotid %d epid %d mfindex_kick 0x%"PRIx64" mfindex 0x%"PRIx64" delay %"PRIu64" mf (%"PRIu64" us)"
+ 
+ # hcd-dwc2.c
+ usb_dwc2_update_irq(uint32_t level) "level=%d"
+-- 
+2.43.0
