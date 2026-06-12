@@ -5,6 +5,7 @@
         "pulseaudio",
         "qemu-kvm",
         "qemu-with-ui",
+        "qemu-guest-agent",
         "qemu-audio-pa"
     ]
 }
