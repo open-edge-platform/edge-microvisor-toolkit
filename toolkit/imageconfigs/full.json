@@ -5,7 +5,7 @@
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
-                "packagelists/virtualization-host-packages.json",
+                "packagelists/virtualization-host-full-packages.json",
                 "packagelists/core-packages-image.json",
                 "packagelists/core-tools-packages.json",
                 "packagelists/ssh-server.json",
@@ -42,7 +42,7 @@
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
-                "packagelists/virtualization-host-packages.json",
+                "packagelists/virtualization-host-full-packages.json",
                 "packagelists/core-packages-image.json",
                 "packagelists/core-tools-packages.json",
                 "packagelists/ssh-server.json",
@@ -78,7 +78,7 @@
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
-                "packagelists/virtualization-host-packages.json",
+                "packagelists/virtualization-host-full-packages.json",
                 "packagelists/core-packages-image.json",
                 "packagelists/core-tools-packages.json",
                 "packagelists/ssh-server.json",
@@ -114,7 +114,7 @@
             "PackageLists": [
                 "packagelists/grub2-mkconfig.json",
                 "packagelists/developer-packages.json",
-                "packagelists/virtualization-host-packages.json",
+                "packagelists/virtualization-host-full-packages.json",
                 "packagelists/core-packages-image.json",
                 "packagelists/core-tools-packages.json",
                 "packagelists/ssh-server.json",
