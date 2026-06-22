@@ -52,8 +52,8 @@ jobs:
       - name: Main branch checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5    #v4
         with:
-          ref: '3.0'
-          path: '3.0-checkout'
+          ref: '26.06'
+          path: '26.06-checkout'
           persist-credentials: false
 
       # Our linter is based on the spec-cleaner tool from the folks at openSUSE
@@ -77,7 +77,7 @@ jobs:
       - name: Patch spec-cleaner with specific lints requirement
         run: |
           pushd spec-cleaner
-          git apply ../3.0-checkout/.github/workflows/azurelinux-spec-cleaner.patch
+          git apply ../26.06-checkout/.github/workflows/azurelinux-spec-cleaner.patch
           popd
         shell: bash
 

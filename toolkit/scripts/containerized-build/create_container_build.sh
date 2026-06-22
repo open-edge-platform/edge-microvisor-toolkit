@@ -25,7 +25,7 @@ print_error() {
 help() {
 echo "
 Usage:
-sudo make containerized-rpmbuild [REPO_PATH=/path/to/azurelinux] [MODE=test|build] [VERSION=2.0|3.0] [MOUNTS=/path/in/host:/path/in/container ...] [BUILD_MOUNT=/path/to/build/chroot/mount] [EXTRA_PACKAGES=pkg ...] [ENABLE_REPO=y] [KEEP_CONTAINER=y] [QUIET=y] [EXTRA_ARGS=arg ...]
+sudo make containerized-rpmbuild [REPO_PATH=/path/to/azurelinux] [MODE=test|build] [VERSION=2.0|26.06] [MOUNTS=/path/in/host:/path/in/container ...] [BUILD_MOUNT=/path/to/build/chroot/mount] [EXTRA_PACKAGES=pkg ...] [ENABLE_REPO=y] [KEEP_CONTAINER=y] [QUIET=y] [EXTRA_ARGS=arg ...]
 
 Starts a docker container with the specified version of Azure Linux
 
@@ -34,7 +34,7 @@ Optional arguments:
     MODE            build or test. default:"build"
                         In 'test' mode it will use a pre-built azl chroot image
                         In 'build' mode it will use the latest published container
-    VERSION         2.0 or 3.0. default: "3.0"
+    VERSION         2.0 or 26.06. default: "26.06"
     MOUNTS          Mount a host directory into container. Should be of form '/host/dir:/container/dir'. For multiple mounts, please use space (\" \") as delimiter
                         e.g. MOUNTS=\"/host/dir1:/container/dir1 /host/dir2:/container/dir2\"
     BUILD_MOUNT     path to folder to create mountpoints for container's BUILD and BUILDROOT directories
@@ -108,7 +108,7 @@ done
 [[ -z "${repo_path}" ]] && repo_path=${script_dir} && repo_path=${repo_path%'/toolkit'*}
 [[ ! -d "${repo_path}" ]] && { print_error " Directory ${repo_path} does not exist"; exit 1; }
 [[ -z "${mode}" ]] && mode="build"
-[[ -z "${version}" ]] && version="3.0"
+[[ -z "${version}" ]] && version="26.06"
 
 # Set relevant folder definitions using Azure Linux Makefile that can be overriden by user
 # Default values are populated from toolkit/Makefile
@@ -137,17 +137,17 @@ if [[ ( ! -d "${TOOLCHAIN_RPMS_DIR}" ) || ( -z "$(ls -A ${TOOLCHAIN_RPMS_DIR}/${
     exit 1
 fi
 
-# TODO: Remove when PMC is available for 3.0
-lkg_url="https://mariner3dailydevrepo.blob.core.windows.net/lkg/lkg-3.0-dev.json"
-lkg_file="${tmp_dir}/lkg-3.0-dev.json"
-if [[ "${version}" == "3.0" ]]; then
+# TODO: Remove when PMC is available for 26.06
+lkg_url="https://mariner3dailydevrepo.blob.core.windows.net/lkg/lkg-26.06-dev.json"
+lkg_file="${tmp_dir}/lkg-26.06-dev.json"
+if [[ "${version}" == "26.06" ]]; then
     if [[ -z "${DAILY_BUILD_ID}" ]]; then
         echo "Downloading latest daily-repo-id ..."
         rm -f ${lkg_file}*
         wget -nv -P ${tmp_dir} ${lkg_url}
         DAILY_BUILD_ID=$(cat ${lkg_file} | jq -r .date | tr -d '-')
         [[ "$DAILY_BUILD_ID" = "null" ]] && { print_error "Unable to fetch latest daily-repo-id, please provide DAILY_REPO_ID"; exit 1; }
-        DAILY_BUILD_ID="3-0-"$DAILY_BUILD_ID
+        DAILY_BUILD_ID="26-06-"$DAILY_BUILD_ID
     fi
     echo "Using Daily Build $DAILY_BUILD_ID"
 fi
