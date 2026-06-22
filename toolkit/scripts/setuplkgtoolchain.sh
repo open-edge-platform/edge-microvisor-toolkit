@@ -12,7 +12,7 @@ trap cleanup EXIT
 usage() {
     echo "./setuplkgtoolchain.sh"
     echo " Syncs toolchain manifests to match LKG build"
-    echo " Optional daily build id in the form 'YYYY-MM-DD-<branch>' (like 2024-05-28-26.06-dev), which will use that daily build instead of LKG"
+    echo " Optional daily build id in the form 'YYYY-MM-DD-<branch>' (like 2024-05-28-3.0-dev), which will use that daily build instead of LKG"
     echo " WARNING: can overwrite local changes to 'toolkit/resources/manifests/package/pkggen_core_${ARCHITECTURE}.txt' or 'toolchain_${ARCHITECTURE}.txt'"
     exit 1
 }
