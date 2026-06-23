@@ -11,7 +11,15 @@
         "rsyslog",
         "tpm2-initramfs-tool",
         "veritysetup",
-        "python3-pyserial"
+        "python3-pyserial",
+        "dmidecode",
+        "usbutils",
+        "ipmitool",
+        "lsb-release",
+        "lshw",
+        "pciutils",
+        "udev",
+        "jq"
     ],
-    "_comment": "Tools for Tinker agent and workflow."
+    "_comment": "Tools for user space."
 }
