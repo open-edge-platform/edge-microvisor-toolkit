@@ -13,10 +13,10 @@ builds. It runs in RAM memory and installs the Edge Microvisor Toolkit operating
 
 Edge Microvisor Bootkit is built from the same baseline as other microvisor OS images
 and is generated as a set of `initramfs` and `vmlinuz` image files. The characteristics of
-the resulting image are defined in [edge-image-bootkit.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-bootkit.json) configuration file. The OS includes
-[base OS packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/packagelists/minimal-os-packages.json),
+the resulting image are defined in [edge-image-bootkit.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/edge-image-bootkit.json) configuration file. The OS includes
+[base OS packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/packagelists/minimal-os-packages.json),
 as well as
-[Bootkit specific packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/packagelists/bootkit-packages.json).
+[Bootkit specific packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/packagelists/bootkit-packages.json).
 
 Before you can build the image, make sure you have [installed prerequisites and built the toolchain](./get-started/emt-building-howto.md).
 To build the Bootkit OS image, run the following command:
@@ -29,7 +29,7 @@ The build results in a compressed `emt-bootkit.tar.gz` file.
 
 The `initramfs` and `vmlinuz` images are required to run entirely in RAM memory, so first
 they need to be extracted from the generated tar file. It can be done by running
-the [generate-bootkit-initramfs.sh](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/scripts/generate-bootkit-initramfs.sh) bash script. See the usage example:
+the [generate-bootkit-initramfs.sh](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/scripts/generate-bootkit-initramfs.sh) bash script. See the usage example:
 
 ```bash
 sudo toolkit/imageconfigs/scripts/generate-bootkit-initramfs.sh \
@@ -41,7 +41,7 @@ sudo toolkit/imageconfigs/scripts/generate-bootkit-initramfs.sh \
 
 Then, the "rootfs.tar.gz" file is added into the extracted `initramfs` image, which in turn is extracted to
 `tmpfs` by the
-[90tmpfsroot dracut module](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/SPECS/dracut/90tmpfsroot).
+[90tmpfsroot dracut module](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/26.06/SPECS/dracut/90tmpfsroot).
 The dracut module decompresses the tar file to `tmpfs` to run as root during boot stage
 of `initramfs`.
 
@@ -94,17 +94,8 @@ containers in a docker-in-docker scenario.
 
 ### Orchestrator Build with Bootkit (new workflow)
 
-When using Edge Microvisor Bootkit in the build workflow, the following RPM
-packages are run as native systemd services in the Edge Microvisor Toolkit OS:
-
-* Caddy and Fluent Bit are existing RPM packages which are included in Bootkit OS.
-* [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery/device-discovery.spec)
-  - from [Edge Infrastructure Manager](https://github.com/open-edge-platform/infra-onboarding)
-  of the Edge Manageability Framework is built as an RPM package to run as systemd service
-  and is included in the OS image.
-* [Tinkerbell tink-worker](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/tink-worker/tink-worker.spec)
-  - patched to directly run containers via containerd only, without
-  dependency on docker and avoiding a docker-in-docker use case.
+When using Edge Microvisor Bootkit in the build workflow, Caddy and Fluent Bit
+RPM packages are run as native systemd services in the Edge Microvisor Toolkit OS.
 
 Bootkit provides `vmlinuz` and `initramfs` images for use in installer builds of Edge
 Manageability Framework (orchestrator) and Edge Microvisor Toolkit Standalone Node (microvisor).
@@ -134,17 +125,9 @@ ISO for the USB installer of
 
 ### Microvisor Build with Bootkit (new workflow)
 
-When using Edge Microvisor Bootkit in the build workflow, the following
-components are added to run as native systemd services in the `initramfs` image:
-
-- The [installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/provisioning_scripts/install-os.sh) from Edge Microvisor Toolkit Standalone Node
-- Bootkit specific RPM packages:
-
-  - [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery/device-discovery.spec)
-  - [Tinkerbell tink-worker](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/tink-worker/tink-worker.spec) -
-    is a modified version of open source [Tink](https://github.com/tinkerbell/tink) and is maintained in
-    [Edge Infrastructure Manager](https://github.com/open-edge-platform/infra-onboarding/tree/main/tink-worker)
-    repository.
+When using Edge Microvisor Bootkit in the build workflow, the
+[installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/provisioning_scripts/install-os.sh) from Edge Microvisor Toolkit Standalone Node
+are added to run as native systemd services in the `initramfs` image:
 
 Bootkit also includes efibootmgr, gawk, lvm2, net-tools, and parted packages to support creation of
 Standalone Node build.

@@ -10,7 +10,7 @@ You can [build the kernel](#build-custom-intel-kernel) either on an Ubuntu 22.04
 or in an Ubuntu 22.04 docker container on an Ubuntu host.
 
 > **Note:** You can learn more about specific kernel patches related to VM hosting and
-> SR-IOV implementation in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> SR-IOV implementation in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 ## Required Host BIOS Settings
 
