@@ -21,7 +21,7 @@ CALLING_USER=${SUDO_USER:-$USER}
 echo "Running update_manifest.sh as $CALLING_USER"
 
 # Convert build_id to the associated filename on the LKG blob
-# "3-0-YYYYMMDD" -> "YYYY-MM-DD-3.0-dev"
+# "26-06-YYYYMMDD" -> "YYYY-MM-DD-26.06-dev"
 convert_id() {
     branch=$(echo "$1" | cut -d- -f1-2)
     date=$(echo "$1" | cut -d- -f3)

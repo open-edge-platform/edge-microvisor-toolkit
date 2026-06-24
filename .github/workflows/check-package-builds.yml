@@ -3,7 +3,7 @@
 
 # This check verifies basic package build success and failure cases.
 # It should only be dependent on toolkit changes, not on the specs.
-# This is why each build uses the 3.0-stable version of the specs and manifests.
+# This is why each build uses the 26.06-stable version of the specs and manifests.
 
 name: Package build checks
 
