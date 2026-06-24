@@ -5,13 +5,10 @@ RAW images.
 
 ## Requirements
 
-- OS image of Edge Microvisor Toolkit Developer Node 3.1:
-  - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum)
+- OS image of Edge Microvisor Toolkit Developer Node 26.06:
+  - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso)
+    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso.sha256sum)
 
-    The image above was created from the
-    [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718)
-    release.\
     For weekly builds, see
     [Announcements in GitHub Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
 - USB flash drive (min. 8GB)
@@ -23,7 +20,7 @@ RAW images.
 ### Flash the ISO
 
 Download the
-[ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
+[ISO image](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso)
 and insert a USB drive.
 
 #### On Linux OS
@@ -65,7 +62,7 @@ the instructions below:
 1. Insert the USB drive (8GB or more).
 2. Launch Rufus.
 3. Select the USB drive from the dropdown list.
-4. Boot selection: Select your EMT 3.0 ISO file.
+4. Boot selection: Select your EMT 26.06 ISO file.
 5. Image option: Leave default or choose *Standard Installation*.
 6. Partition scheme: MBR (for legacy BIOS) or GPT (for UEFI).
 7. File system: FAT32 (recommended).
@@ -80,9 +77,9 @@ Next, set up the target machine to [boot from the USB drive](#boot-from-usb) to
 
 You can [Build](../emt-building-howto.md#build-the-edge-microvisor-toolkit-image) a custom
 immutable RAW image from a chosen version of Edge Microvisor Toolkit.
-You can use any [imageconfig JSON file](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0-dev/toolkit/imageconfigs/)
+You can use any [imageconfig JSON file](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/26.06/toolkit/imageconfigs/)
 that matches the **"edge-image\*.json"** file name pattern.
-Make sure to [add user credentials](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0-dev/docs/developer-guide/get-started/emt-building-howto.md#example-3-generating-user-passwords) to the JSON file before building
+Make sure to [add user credentials](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/docs/developer-guide/get-started/emt-building-howto.md#example-3-generating-user-passwords) to the JSON file before building
 the image, so your custom system can operate correctly when booted.
 
 Once you have built the image, flash it on a USB drive.

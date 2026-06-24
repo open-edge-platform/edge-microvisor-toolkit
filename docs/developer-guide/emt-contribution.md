@@ -13,32 +13,31 @@ There are many areas in which you can contribute, such as:
 
 New feature requests should always be made by opening an Architecture Decision Record (ADR)
 GitHub issue, regardless of whether you want to contribute directly or just file a request.
-To do so, use the [Design Proposal](/design-proposals/design-propsal-template.md) template
-and provide as much information as possible. This helps maintainers and stakeholders to
+To do so, use the
+[Design Proposal](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/design-proposals/design-proposal-template.md)
+template and provide as much information as possible. This helps maintainers and stakeholders to
 review, better understand, and prioritize the request.
 
 ## Contribution Flow
 
-All contributing Pull Requests should target the `3.0-dev` branch. This branch is used for
-development, testing, and validation. It is merged to the `3.0` release branch by project
-maintainers, at their discretion. The `3.0` branch is used for publishing official releases
+All contributing Pull Requests should target the `26.06-dev` branch. This branch is used for
+development, testing, and validation. It is merged to the `26.06` release branch by project
+maintainers, at their discretion. The `26.06` branch is used for publishing official releases
 of the EMT images.
 
 All contributed changes are published with the following release, according to the
-[release policy](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/RELEASE_POLICY.md).
+[release policy](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/RELEASE_POLICY.md).
 Both issues and feature requests (also raised as issues) are evaluated and
 prioritized by product maintainers. This means they may or may not be included in the
 next release.
 
 Following the [Azure Linux](https://github.com/microsoft/azurelinux/blob/3.0/CONTRIBUTING.md#packages)
-scheme for packages, Edge Microvisor Toolkit maintains two directories:
-* [SPECS](../../SPECS) - fully supported and published,
-* [SPECS-EXTENDED](../../SPECS-EXTENDED) - experimental, if you want to use these packages,
-  you will need to [run your own build](./get-started/emt-building-howto.md).
+scheme for packages, Edge Microvisor Toolkit maintains the [SPECS](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/26.06/SPECS)
+directory.
 
 When raising a PR, make sure that:
 
-* The [cgmanifest file](./cgmanifest.json) is up-to-date and alphabetically sorted.
+* The [cgmanifest file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/cgmanifest.json) is up-to-date and alphabetically sorted.
   It is used to record all package sources. To validate it, run:
 
   ```bash
@@ -52,7 +51,7 @@ When raising a PR, make sure that:
   cd toolkit
   sudo make input-srpms REBUILD_TOOLS=y SRPM_FILE_SIGNATURE_HANDLING=update
 
-* The baseline branch for the pull request is set to `3.0-dev`.
+* The baseline branch for the pull request is set to `26.06-dev`.
 
 
 ## Contribution license
