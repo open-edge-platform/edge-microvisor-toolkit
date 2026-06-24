@@ -75,7 +75,7 @@ If quick responses to critical events are crucial for
 your use case, you can use the [kernel with real-time extensions](#preempt-rt-kernel).
 
 > **Note:** You can learn more about specific kernel patches and the features they address in the relevant
-> [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 ### Standalone Node immutable RAW images
 
@@ -106,7 +106,7 @@ Desktop Virtualization) services for launching the virtual machines with SR-IOV 
 This image uses the standard linux kernel.
 
 > **Note:** You can learn more about specific kernel patches related to Kubevirt and Intel IDV
-> in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 ## Edge Microvisor Toolkit Real Time
 
@@ -185,7 +185,7 @@ including, Cache Monitoring Technology (CMT), Memory Bandwidth Monitoring
 and isolating specific CPU cores, assigning them to specified tasks.
 
 > **Note:** You can learn more about specific kernel patches related to Resource Director
-> Technology in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> Technology in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 ### cpupower
 
@@ -473,8 +473,8 @@ for deployment instructions and full source code.
 ## Time-Sensitive Networking support
 
 EMT supports time-sensitive networking through custom patches and optimizations in
-[linuxptp](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/linuxptp/linuxptp.spec), [ethtool](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/ethtool/ethtool.spec)
-and [xdp-tools](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/xdp-tools/xdp-tools.spec). Click on any of the names to go to
+[linuxptp](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/linuxptp/linuxptp.spec), [ethtool](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/ethtool/ethtool.spec)
+and [xdp-tools](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/xdp-tools/xdp-tools.spec). Click on any of the names to go to
 their SPEC files and learn about specific patches related to TSN optimizations.
 
 <!--hide_directive

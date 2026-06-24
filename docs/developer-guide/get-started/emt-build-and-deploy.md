@@ -105,7 +105,7 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
 ### 1B. Build from a release tag
 
 > **IMPORTANT**: To create an image from an older tag, for example the
-> [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718),
+> [26.06-20260526](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/26.06-20260526),
 > release, make sure to build it **without** the `REBUILD_PACKAGES=n` option to
 > perform a full local rebuild.
 >
@@ -115,10 +115,10 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
 
    Check the [tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
    the `<release_tag_name>`. For example,
-   [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718).
+   [26.06-20260526](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/26.06-20260526).
 
    ```bash
-   git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=3.0.20250718
+   git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=26.06-20260526
    ```
 
 2. Navigate to the `edge-microvisor-toolkit` directory:
@@ -188,7 +188,7 @@ For example, to build a RAW image without real-time extensions, use `edge-image.
 
 The built image will be located in its separate directory under  `edge-microvisor-toolkit/out/images/`.
 
-For more information about specific building parameters, refer to [this article](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables).
+For more information about specific building parameters, refer to [this article](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/docs/building/building.md#local-build-variables).
 
 ## 2. Create a bootable USB installer
 
@@ -373,7 +373,7 @@ Replace `/dev/sdX` with the device name of your USB drive.
       Copy your custom build image from its directory under `edge-microvisor-toolkit/out/images/` to the 5th partition:
 
       ```bash
-      sudo cp ~/edge-microvisor-toolkit/out/images/edge-image/edge-readonly-3.0.20250717.0840.raw ./
+      sudo cp ~/edge-microvisor-toolkit/out/images/edge-image/edge-readonly-26.06.20260526.0123.raw ./
       ```
 
       If you decided to use the toolkit image with desktop virtualization features,
@@ -381,7 +381,7 @@ Replace `/dev/sdX` with the device name of your USB drive.
 
       ```bash
 
-      sudo wget <https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/dv/edge-readonly-dv-3.0.20250717.0840.raw.gz> -O edge-readonly-dv-3.0.20250717.0840.raw.gz
+      sudo wget <https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/dv/edge-readonly-dv-26.06.20260413.0405.raw.gz> -O edge-readonly-dv-26.06.20260413.0405.raw.gz
       ```
 
    3. Unmount the partition:
