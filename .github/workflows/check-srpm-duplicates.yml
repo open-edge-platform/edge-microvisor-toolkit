@@ -28,6 +28,8 @@ jobs:
       # Checkout the branch of our repo that triggered this action
       - name: Workflow trigger checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5    #v4
+        with:
+          persist-credentials: false
 
       # For consistency, we use the same major/minor version of Python that Azure Linux ships
       - name: Setup Python 3.12
