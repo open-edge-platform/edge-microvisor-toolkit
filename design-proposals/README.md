@@ -141,8 +141,5 @@ request or the Feature Request is closed.
 
 ## Help
 
-If you need help with this process, please contact the Project's maintainers and
-contributors by posting to the [Discussions](https://github.com/open-edge-platform/edge-manageability-framework/discussions).
-
 To learn about contributing to Edge Microvisor Toolkit in general, see the
 [contribution guidelines](https://docs.openedgeplatform.intel.com/2026.1/edge-microvisor-toolkit/emt-contribution.html).
