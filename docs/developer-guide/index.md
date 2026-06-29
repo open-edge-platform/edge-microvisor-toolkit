@@ -9,7 +9,6 @@ Here are the published versions of the toolkit:
 
 * [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
 * [Edge Microvisor Toolkit Developer Node with or without real-time extensions (mutable)](./emt-architecture-overview.md)
-* [Edge Microvisor Toolkit (immutable or mutable) for deploying with Edge Manageability Framework](./emt-deployment-edge-orchestrator.md)
 * [Edge Microvisor Bootkit](./emt-bootkit.md)
 
 ## Demonstrating the Capabilities of Intel Technology
@@ -60,7 +59,6 @@ document.
 
 emt-get-started
 emt-architecture-overview
-emt-deployment-edge-orchestrator
 emt-bootkit
 emt-security-considerations
 emt-contribution
