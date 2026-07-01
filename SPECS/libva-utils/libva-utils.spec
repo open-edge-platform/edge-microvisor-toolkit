@@ -1,10 +1,10 @@
 #global pre_release .pre1
 
 Name:		libva-utils
-Version:	2.22.0
-Release:	5%{?dist}
+Version:	2.23.0
+Release:	1%{?dist}
 Summary:	Tools for VAAPI (including vainfo)
-License:	MIT
+License:	LicenseRef-Callaway-MIT AND LicenseRef-Callaway-BSD
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
 URL:		https://github.com/intel/libva-utils
@@ -76,6 +76,9 @@ libva support is available on a system.
 
 
 %changelog
+* Wed Jul 1 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.23.0-1
+- upgrade to 2.23.0
+
 * Mon Aug 18 2025 Rajesh Shanmugam <rajesh1x.shanmugam@intel.com> - 2.22.0-5
 - Initial Edge Microvisor Toolkit import from Fedora 42 (license: MIT)
 - License verified

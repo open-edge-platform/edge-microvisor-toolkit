@@ -6271,8 +6271,8 @@
         "type": "other",
         "other": {
           "name": "libva-utils",
-          "version": "2.22.0",
-          "downloadUrl": "https://github.com/intel/libva-utils/archive/2.22.0/libva-utils-2.22.0.tar.gz"
+          "version": "2.23.0",
+          "downloadUrl": "https://github.com/intel/libva-utils/archive/2.23.0/libva-utils-2.23.0.tar.gz"
         }
       }
     },
