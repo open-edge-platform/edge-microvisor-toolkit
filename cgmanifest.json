@@ -7431,8 +7431,8 @@
         "type": "other",
         "other": {
           "name": "mesa",
-          "version": "25.3.4",
-          "downloadUrl": "https://archive.mesa3d.org/mesa-25.3.4.tar.xz"
+          "version": "26.0.3",
+          "downloadUrl": "https://archive.mesa3d.org/mesa-26.0.3.tar.xz"
         }
       }
     },
