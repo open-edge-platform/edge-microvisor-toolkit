@@ -52,19 +52,10 @@ When a new update is available, the following steps occur:
 This comprehensive update mechanism ensures that Edge Microvisor Toolkit remains stable,
 secure, and easy to maintain, even in environments where reliability is paramount.
 
-## Updating Edge Manageability Framework vs. Standalone
+## Standalone Updates
 
-Edge Microvisor Toolkit updates are well integrated when using the
-[Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework).
-The maintenance manager enables the administrator to configure when to run updates to edge
-nodes. While the update will only occur during these maintenance windows, new images will be
-downloaded in the background as soon as they become available. The diagram below shows the
-overall update flow and state transitions.
-
-![update flow and state transitions](../assets/emt-architecture-update-flow.drawio.svg)
-
-The Edge Microvisor Toolkit may also be updated as a standalone solution, through a manual
-update procedure, without the automation offered by Edge Manageability Framework. You can download the
+The Edge Microvisor Toolkit can be updated as a standalone solution through a manual
+update procedure. You can download the
 new version of the microvisor and run the update by invoking the `os-update-script` and
 providing the path to the downloaded image. Plans for future versions of Edge Microvisor
 Toolkit may include implementing automatic image validation, update checks, and releases.

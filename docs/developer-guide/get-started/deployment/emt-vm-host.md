@@ -25,7 +25,7 @@ sudo grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
 ```
 
 > **Note:** You can learn more about specific kernel patches related to VM hosting and
-> SR-IOV implementation in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> SR-IOV implementation in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 ## Hosting Guest VMs under EMT
 

@@ -75,8 +75,7 @@ runtime and rest.
 
 ### Application Deployment and Data Persistence
 
-Applications are deployed dynamically via the terminal or the
-[Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework).
+Applications are deployed dynamically via the terminal.
 All necessary software, tools, and packages are contained within the immutable image.
 To meet persistence requirements, application data is stored on a dedicated partition that
 handles both static and dynamic storage needs.
@@ -111,9 +110,7 @@ confidential data, such as medical records, financial transactions, and operatio
 ### How FDE is Implemented
 
 All storage on edge nodes is encrypted using the Linux Unified Key Setup (LUKS), specifically
-using the LUKS-2 standard. The encryption is enabled during the provisioning process of the
-device by [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework),
-before any sensitive applications or data are deployed. Once
+using the LUKS-2 standard. The encryption is enabled during the provisioning process before any sensitive applications or data are deployed. Once
 configured, data written to storage is automatically encrypted, and it is seamlessly decrypted
 when read by applications. This transparent process extends to the Linux swap partition,
 ensuring that cached data remains protected.

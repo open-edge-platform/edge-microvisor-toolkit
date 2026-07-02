@@ -7,7 +7,7 @@
 Summary:        GRand Unified Bootloader
 Name:           grub2
 Version:        2.06
-Release:        26%{?dist}
+Release:        27%{?dist}
 License:        GPLv3+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -131,6 +131,7 @@ Patch:          CVE-2024-45780.patch
 Patch:          CVE-2025-61661.patch
 Patch:          CVE-2025-61662.patch
 Patch:          CVE-2025-61663.patch
+Patch:          CVE-2025-0622.patch
 # Following are included as part of above CVEs and kept here as nopatch
 # and commented out, because from patch command perspective, these files
 # have garbage content.
@@ -468,6 +469,11 @@ cp $GRUB_PXE_MODULE_SOURCE $EFI_BOOT_DIR/$GRUB_PXE_MODULE_NAME
 %config(noreplace) %{_sysconfdir}/grub.d/41_custom
 
 %changelog
+* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.06-27
+- merge from Azure Linux 3.0.20260401-3.0
+- Patch CVE-2025-0622
+- Bump SBAT to grub,5
+
 * Mon Feb 23 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.06-26
 - merge from Azure Linux 3.0.20260107-3.0
 - Patch CVE-2025-61661, CVE-2025-61662 & CVE-2025-61663

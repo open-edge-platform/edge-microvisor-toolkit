@@ -17,7 +17,6 @@ Here are the published versions:
 
 * [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
 * [Edge Microvisor Toolkit Developer Node with or without real-time extensions (mutable)](./docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image)
-* [Edge Microvisor Toolkit (mutuable or immutable) for use with Edge Manageability Framework](./docs/developer-guide/emt-deployment-edge-orchestrator.md)
 * [Edge Microvisor Bootkit](./docs/developer-guide/emt-bootkit.md)
 
 Edge Microvisor Toolkit has undergone extensive validation across the Intel® Xeon®,
@@ -33,11 +32,11 @@ source.
 ## Get Started
 
 To find out how to deploy and work with Edge Microvisor Toolkit, see the
-[Get Started guide](https://docs.openedgeplatform.intel.com/2025.1/edge-microvisor-toolkit/emt-get-started.html).
+[Get Started guide](https://docs.openedgeplatform.intel.com/2026.1/edge-microvisor-toolkit/emt-get-started.html).
 
 For a quick start, get the current
-[ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-\ [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum).
+[ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso)
+\ [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso.sha256sum).
 
 If you're interested in most up-to-date versions, check out the
 [weekly Immutable Raw Images](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements+weekly+build)
@@ -49,8 +48,8 @@ and
 
 * [Standalone Edge Microvisor Toolkit (EMT-S) integration with Edge Microvisor Bootkit](https://www.youtube.com/watch?v=rmgmWYi6OpE):
   USB Device Preparation, Provisioning Process, System Readiness, and Final Boot with the cluster starting successfully.
-* [Edge Microvisor Toolkit Standalone Node 3.0](https://www.youtube.com/watch?v=j_4EX_wggSI):
-  a brief walkthrough of Edge Microvisor Toolkit Standalone Node for the 3.0 release, covering various use cases.
+* [Edge Microvisor Toolkit Standalone Node](https://www.youtube.com/watch?v=j_4EX_wggSI):
+  a brief walkthrough of Edge Microvisor Toolkit Standalone Node, covering various use cases.
 
 ## Get Help or Contribute
 
@@ -62,9 +61,9 @@ To learn more, check out the following resources:
 
 - [Open an issue](https://github.com/open-edge-platform/edge-microvisor-toolkit/issues)
 - [Submit a pull request](https://github.com/open-edge-platform/edge-microvisor-toolkit/pulls)
-- [Read the Contribution Guide](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/emt-contribution.md)
+- [Read the Contribution Guide](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/docs/developer-guide/emt-contribution.md)
 - [View the Azure Linux documentation](toolkit/docs/), a copy of which is included in the Edge Microvisor Toolkit repository for ease of access.
-- [Report a security vulnerability](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SECURITY.md)
+- [Report a security vulnerability](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SECURITY.md)
 - [Read and respond to blog posts](https://medium.com/open-edge-platform/subpage/5f0ac5579c60)
 - [Download the latest weekly release](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements)
 - [Participate in discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions)

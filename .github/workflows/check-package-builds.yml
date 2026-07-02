@@ -3,7 +3,7 @@
 
 # This check verifies basic package build success and failure cases.
 # It should only be dependent on toolkit changes, not on the specs.
-# This is why each build uses the 3.0-stable version of the specs and manifests.
+# This is why each build uses the 26.06-stable version of the specs and manifests.
 
 name: Package build checks
 
@@ -123,6 +123,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5    #v4
+        with:
+          persist-credentials: false
 
       - name: Checkout a stable version of the specs
         uses: ./.github/actions/checkout-with-stable-pkgs

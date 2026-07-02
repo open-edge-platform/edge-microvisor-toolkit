@@ -8,30 +8,30 @@ of the resulting image, such as:
 
 - Type and size of partitioning table.
 - [Partitions](../emt-architecture-overview.md#packaging), their types (such as EFI, rootfs, etc.), settings, file system, and size.
-- Reference to [packagelists](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/formats/imageconfig.md#packagelists) which defines what packages (i.e. `rpms`) should be included in
+- Reference to [packagelists](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/docs/formats/imageconfig.md#packagelists) which defines what packages (i.e. `rpms`) should be included in
   the image.
 - Additional configuration files that should be embedded in the image (e.g. network-, systemd
   configurations).
 - Any required post-installation scripts that should be executed once the image has been
   generated.
 - [Kernel and command line options](../../developer-guide/emt-architecture-overview.md#kernel-command-line).
-- Final [configuration properties](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/formats/imageconfig.md) that should be applied (e.g. enable full disc encryption,
+- Final [configuration properties](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/docs/formats/imageconfig.md) that should be applied (e.g. enable full disc encryption,
   immutable image, second stage bootloader provider, purge documentation etc.).
 
 ## Build the Toolchain
 
 Before you can build OS images you need to build the toolchain and make sure to
-[**install pre-requisites (Ubuntu)**](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/prerequisites-ubuntu.md).
+[**install pre-requisites (Ubuntu)**](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/docs/building/prerequisites-ubuntu.md).
 
 ### Clone the Edge Microvisor Toolkit repository
 
 Checkout the release tag of the repository. See the
 [tags](https://github.com/open-edge-platform/edge-microvisor-toolkit/tags) for
 `<release_tag_name>`. For example,
-[3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718).
+[26.06-20260526](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/26.06-20260526).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=3.0.20250718
+git clone https://github.com/open-edge-platform/edge-microvisor-toolkit --branch=26.06-20260526
 ```
 
 ### Build the tools
@@ -100,10 +100,10 @@ microvisor/
 ```
 
 Different image types can be built by using different JSON config files and parameters.
-You can find more information about specific parameters in the [build variables](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/docs/building/building.md#local-build-variables) section.
+You can find more information about specific parameters in the [build variables](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/docs/building/building.md#local-build-variables) section.
 
 **IMPORTANT**: To create an image from an older tag, for example the
-[3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718)
+[26.06-20260526](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/26.06-20260526)
 release tag, make sure to build it **without** the `REBUILD_PACKAGES=n` option.
 Otherwise, the build process will download the latest available RPMs,
 which do not match those included in the older tag. It will cause a mismatch
@@ -172,8 +172,7 @@ alternative text editor to the image:
      "packagelists/core-packages-image-systemd-boot.json",
      "packagelists/ssh-server.json",
      "packagelists/virtualization-host-packages.json",
-     "packagelists/agents-packages.json",
-     "packagelists/tools-tinker.json",
+     "packagelists/common-tools.json",
      "packagelists/persistent-mount-package.json",
      "packagelists/fde-verity-package.json",
      "packagelists/selinux-full.json",
@@ -391,7 +390,7 @@ It is the default and recommended security solution in the toolkit.
    but recommended, as it provides a more complex and unique password.
 
 2. Edit the main config JSON file, for example
-   [edge-image-dev.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-dev.json),
+   [edge-image-dev.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/edge-image-dev.json),
    and add the `Users` section if it is not present, providing necessary credentials:
 
    ```bash

@@ -14,4 +14,4 @@ runs:
 
     - name: Checkout stable specs and manifests
       shell: bash
-      run: git checkout origin/3.0 -- SPECS/ toolkit/resources/manifests/package/*.txt
+      run: git checkout origin/26.06 -- SPECS/ toolkit/resources/manifests/package/*.txt

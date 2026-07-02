@@ -5,7 +5,7 @@ orphan: true
 # Edge Microvisor Bootkit
 
 Edge Microvisor Bootkit is a custom, minimal build of Edge Microvisor Toolkit.
-It is intended for use in the workflows of Edge Manageability Framework and Edge Microvisor
+It is intended for use in the Edge Microvisor
 Toolkit Standalone Node. Bootkit has been introduced to replace previously used HookOS in
 builds. It runs in RAM memory and installs the Edge Microvisor Toolkit operating system.
 
@@ -13,10 +13,10 @@ builds. It runs in RAM memory and installs the Edge Microvisor Toolkit operating
 
 Edge Microvisor Bootkit is built from the same baseline as other microvisor OS images
 and is generated as a set of `initramfs` and `vmlinuz` image files. The characteristics of
-the resulting image are defined in [edge-image-bootkit.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-bootkit.json) configuration file. The OS includes
-[base OS packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/packagelists/minimal-os-packages.json),
+the resulting image are defined in [edge-image-bootkit.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/edge-image-bootkit.json) configuration file. The OS includes
+[base OS packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/packagelists/minimal-os-packages.json),
 as well as
-[Bootkit specific packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/packagelists/bootkit-packages.json).
+[Bootkit specific packages](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/packagelists/bootkit-packages.json).
 
 Before you can build the image, make sure you have [installed prerequisites and built the toolchain](./get-started/emt-building-howto.md).
 To build the Bootkit OS image, run the following command:
@@ -29,7 +29,7 @@ The build results in a compressed `emt-bootkit.tar.gz` file.
 
 The `initramfs` and `vmlinuz` images are required to run entirely in RAM memory, so first
 they need to be extracted from the generated tar file. It can be done by running
-the [generate-bootkit-initramfs.sh](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/scripts/generate-bootkit-initramfs.sh) bash script. See the usage example:
+the [generate-bootkit-initramfs.sh](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/scripts/generate-bootkit-initramfs.sh) bash script. See the usage example:
 
 ```bash
 sudo toolkit/imageconfigs/scripts/generate-bootkit-initramfs.sh \
@@ -41,7 +41,7 @@ sudo toolkit/imageconfigs/scripts/generate-bootkit-initramfs.sh \
 
 Then, the "rootfs.tar.gz" file is added into the extracted `initramfs` image, which in turn is extracted to
 `tmpfs` by the
-[90tmpfsroot dracut module](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/SPECS/dracut/90tmpfsroot).
+[90tmpfsroot dracut module](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/26.06/SPECS/dracut/90tmpfsroot).
 The dracut module decompresses the tar file to `tmpfs` to run as root during boot stage
 of `initramfs`.
 
@@ -53,76 +53,30 @@ root=tmpfs rootflags=mode=0755 rd.skipfsck noresume modules-load=nbd
 ```
 
 The generated `initramfs` and `vmlinuz` images can be used for implementing required
-customizations in [Edge Manageability Framework](#orchestrator-build-with-bootkit-new-workflow)
-or [Edge Microvisor Toolkit Standalone Node](#microvisor-build-with-bootkit-new-workflow) builds.
+customizations in [Edge Microvisor Toolkit Standalone Node](#microvisor-build-with-bootkit-new-workflow) builds.
 
-## Integration with Edge Manageability Framework and Edge Microvisor Toolkit Standalone Node
+## Integration with Edge Microvisor Toolkit Standalone Node
 
 The primary components in Edge Microvisor Bootkit, that is *device-discovery*,
-*tink-worker* are required for provisioning of Edge Manageability Framework (orchestrator)
-and are built as RPMs (from open source) and included in an output *emt-bootkit.tar.gz* image file by
+*tink-worker* are built as RPMs (from open source) and included in an output *emt-bootkit.tar.gz* image file by
 standard image build process of Edge Microvisor Toolkit (microvisor).
 
 The output image file can then be transformed into `initramfs` and `vmlinuz` images required
-to boot as a transitionary OS during provisioning workflows of Edge Manageability Framework
-and Standalone Node. Then, the generated `initramfs` and `vmlinuz` images are used in
-Edge Manageability Framework and Standalone Node image build processes, where specific
+to boot as a transitionary OS during provisioning workflows of Standalone Node. Then, the generated `initramfs` and `vmlinuz` images are used in Standalone Node image build processes, where specific
 customizations for an edge node are also included. In result, the final signed images are
-generated and can be used in provisioning of the orchestrator (Edge Manageability Framework) and
+generated and can be used in provisioning of
 the microvisor (Edge Microvisor Toolkit Standalone Node).
 
 See the diagram for more details:
 
 ![build-workflow](./assets/emf-emt-s-build-workflow.drawio.svg)
 
-## Edge Manageability Framework (orchestrator) Specific Builds
-
-### Orchestrator Build with HookOS (previous workflow)
-
-In the 3.0 release, in the build workflow of Edge Manageability Framework (orchestrator),
-to generate customized `initramfs` and `vmlinuz` images, the following were implemented
-directly into the HookOS image:
-
-- [Caddy Docker image + Caddy configuration for HookOS](https://github.com/open-edge-platform/infra-onboarding/blob/69402c21b34eefa430f3d0eb2540f1949a1b8a33/hook-os/hook.yaml#L276https://github.com/open-edge-platform/infra-onboarding/blob/69402c21b34eefa430f3d0eb2540f1949a1b8a33/hook-os/hook.yaml#L275)
-- [Device discovery agent Docker image](https://github.com/open-edge-platform/infra-onboarding/tree/main/hook-os/device_discovery)
-- [Fluent Bit Docker image + Fluent Bit configuration for HookOS](https://github.com/open-edge-platform/infra-onboarding/tree/main/hook-os/fluent-bit)
-
-Generated customized HookOS `initramfs` and `vmlinuz` images were then downloaded to an edge
-node over PXE boot. HookOS pulled tink-worker container image after booting to start the
-Tinkerbell workflow. In case of HookOS, tink-worker was a container which ran other
-containers in a docker-in-docker scenario.
-
-### Orchestrator Build with Bootkit (new workflow)
-
-When using Edge Microvisor Bootkit in the build workflow, the following RPM
-packages are run as native systemd services in the Edge Microvisor Toolkit OS:
-
-* Caddy and Fluent Bit are existing RPM packages which are included in Bootkit OS.
-* [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery/device-discovery.spec)
-  - from [Edge Infrastructure Manager](https://github.com/open-edge-platform/infra-onboarding)
-  of the Edge Manageability Framework is built as an RPM package to run as systemd service
-  and is included in the OS image.
-* [Tinkerbell tink-worker](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/tink-worker/tink-worker.spec)
-  - patched to directly run containers via containerd only, without
-  dependency on docker and avoiding a docker-in-docker use case.
-
-Bootkit provides `vmlinuz` and `initramfs` images for use in installer builds of Edge
-Manageability Framework (orchestrator) and Edge Microvisor Toolkit Standalone Node (microvisor).
-The orchestrator build requires additional configuration to create a customized `initramfs`
-file during the building process:
-
-- Configuration files for:
-  - Caddy for Edge Manageability Framework
-  - Fluent Bit configuration files
-  - Environment configuration file
-- Cert files
-
 ## Edge Microvisor Toolkit Standalone Node Specific Builds
 
 ### Microvisor Build with HookOS (previous workflow)
 
 In [Edge Microvisor Toolkit Standalone Node](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node),
-HookOS sources, separate from the ones in Edge Manageability Framework, were implemented to
+HookOS sources were implemented to
 generate required HookOS images to be used in the installer. The
 [installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/hook_os/files/install-os.sh)
 from Edge Microvisor Toolkit Standalone Node were built into the OS image and set up to run
@@ -134,17 +88,9 @@ ISO for the USB installer of
 
 ### Microvisor Build with Bootkit (new workflow)
 
-When using Edge Microvisor Bootkit in the build workflow, the following
-components are added to run as native systemd services in the `initramfs` image:
-
-- The [installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/provisioning_scripts/install-os.sh) from Edge Microvisor Toolkit Standalone Node
-- Bootkit specific RPM packages:
-
-  - [Device discovery agent](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/device-discovery/device-discovery.spec)
-  - [Tinkerbell tink-worker](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/tink-worker/tink-worker.spec) -
-    is a modified version of open source [Tink](https://github.com/tinkerbell/tink) and is maintained in
-    [Edge Infrastructure Manager](https://github.com/open-edge-platform/infra-onboarding/tree/main/tink-worker)
-    repository.
+When using Edge Microvisor Bootkit in the build workflow, the
+[installer scripts](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/provisioning_scripts/install-os.sh) from Edge Microvisor Toolkit Standalone Node
+are added to run as native systemd services in the `initramfs` image:
 
 Bootkit also includes efibootmgr, gawk, lvm2, net-tools, and parted packages to support creation of
 Standalone Node build.

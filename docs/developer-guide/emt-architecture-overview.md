@@ -16,9 +16,6 @@ platforms in order to demonstrate the full capabilities of Intel silicon for var
 - RAW and VHD/X: immutable image using systemd-boot as the second-stage bootloader.
 - RAW and VHD/X: immutable image using systemd-boot as the second-stage bootloader, with the Preempt_RT kernel patches to support real-time computing.
 
-The two immutable image versions integrate the Intel® kernel and
-enable the software and features offered by
-[Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework).
 Here's an overview of key software components:
 
 ![overview of key software components](./assets/emt-architecture-key-components.drawio.svg)
@@ -29,10 +26,10 @@ The toolkit comes pre-configured to produce different images; the following tabl
 
 |  Feature         | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit Standalone Node & Orchestrated                                   |
 | -----------------| -------------------- | ------------------------------------------------- |
-| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with a toolkit to build an image with opt-in data integrity and security features.</li></ul> | <ul><li>Designed for [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework) and can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare metal or as a guest OS.</li><li>Fast atomic updates and rollback support with a small image footprint and short boot time.|
+| Capabilities | <ul><li>Easy to install, bootable ISO image with precompiled packages for developer evaluation.</li> <li> Includes installable rpms with TDNF for extending baseline functionality.</li> <li>Complete with a toolkit to build an image with opt-in data integrity and security features.</li></ul> | <ul><li>Can be used to onboard and provision edge nodes at scale.</li><li>Can be used independently on bare metal or as a guest OS.</li><li>Fast atomic updates and rollback support with a small image footprint and short boot time.|
 | Image Type       | Mutable ISO          | Immutable RAW + VHD                               |
 | Update Mechanism | RPM package updates with TDNF | Image based A/B updates + Rollback       |
-| Linux Kernel     | Intel® “Next” Kernel 6.17   | Intel® “Next” Kernel 6.17                                |
+| Linux Kernel     | Intel® Kernel 6.18   | Intel® Kernel 6.18                                |
 | Real time        | Available for opt-in | Image variants with standard and RT kernel provided |
 | Desktop Virtualization | Available      | Dedicated non-RT image variant provided                                    |
 | Add-on packages  | Available for opt-in: Docker + K3s | Downloaded during installation: K3s and extensions    |
@@ -75,7 +72,7 @@ If quick responses to critical events are crucial for
 your use case, you can use the [kernel with real-time extensions](#preempt-rt-kernel).
 
 > **Note:** You can learn more about specific kernel patches and the features they address in the relevant
-> [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 ### Standalone Node immutable RAW images
 
@@ -106,7 +103,7 @@ Desktop Virtualization) services for launching the virtual machines with SR-IOV 
 This image uses the standard linux kernel.
 
 > **Note:** You can learn more about specific kernel patches related to Kubevirt and Intel IDV
-> in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 ## Edge Microvisor Toolkit Real Time
 
@@ -185,7 +182,7 @@ including, Cache Monitoring Technology (CMT), Memory Bandwidth Monitoring
 and isolating specific CPU cores, assigning them to specified tasks.
 
 > **Note:** You can learn more about specific kernel patches related to Resource Director
-> Technology in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> Technology in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 ### cpupower
 
@@ -397,10 +394,7 @@ a snapshot of the key directories for `tmpfs` and bind mounts:
 ```bash
   /var
   /etc/lp
-  /etc/node-agent
-  /etc/cluster-agent
   /etc/fluent-bit
-  /etc/health-check
   /etc/telegraf
   /etc/caddy
   /etc/otelcol
@@ -409,10 +403,7 @@ a snapshot of the key directories for `tmpfs` and bind mounts:
 - The `/var` directory requires to be writable as its content changes during normal operation
   (logs, cache, OS runtime data, persistent application data and temporary files).
 - The `/etc/lp` holds assets and configuration for the system's printing subsystem.
-- The `/etc/node-agent`, `/etc/cluster-agent` and `/etc/health-check` are required for the
-  [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)'s bare-metal agents for configuration data.
-- The `/etc/telegraf` and `/etc/otelcol` are used for telemetry data and configuration for
-  the `telemetry-agent` and `observability-agent`, required by the Edge Manageability Framework.
+- The `/etc/telegraf` and `/etc/otelcol` are used for telemetry data.
 - `/etc/caddy` is the ephemeral data required by the reverse-proxy required by the Open Edge
   Platform to communicate with the backend service(s).
 
@@ -443,9 +434,7 @@ PERSISTENT_BIND_PATHS="
 - Several key directories required for the OS to be writable for normal system operations are
   kept as persistent bind paths, such as `/etc/fstab`, `/etc/environemnt`, `/etc/hosts`,
   `/etc/pki`, `/etc/ssh`, `/etc/systemd`, `/etc/udev`, `/etc/sysconfig`, `/etc/netplan`.
-- The Kubernetes distribution used for
-  [Edge Manageability Framework](https://github.com/open-edge-platform/edge-manageability-framework)
-  uses Rancher's RKE2 and requires
+- The Kubernetes distribution uses Rancher's RKE2 and requires
   additional bind mounts such as `/etc/rancher`, `/etc/cni`, `/etc/kubernetes`,
   `/var/lib/rancher`.
 
@@ -473,15 +462,14 @@ for deployment instructions and full source code.
 ## Time-Sensitive Networking support
 
 EMT supports time-sensitive networking through custom patches and optimizations in
-[linuxptp](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/linuxptp/linuxptp.spec), [ethtool](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/ethtool/ethtool.spec)
-and [xdp-tools](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/xdp-tools/xdp-tools.spec). Click on any of the names to go to
+[linuxptp](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/linuxptp/linuxptp.spec), [ethtool](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/ethtool/ethtool.spec)
+and [xdp-tools](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/xdp-tools/xdp-tools.spec). Click on any of the names to go to
 their SPEC files and learn about specific patches related to TSN optimizations.
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-architecture/emt-bare-metal-agents
 architecture/emt-updates
 :::
 hide_directive-->
