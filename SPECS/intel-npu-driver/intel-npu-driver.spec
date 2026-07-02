@@ -1,6 +1,6 @@
 Summary:	    Intel Neural Processing Unit Driver
 Name:		    intel-npu-driver
-Version:	    1.32.0
+Version:	    1.33.0
 Release:	    1%{?dist}
 License:	    MIT AND Apache-2.0
 Vendor:         Intel Corporation
@@ -69,6 +69,9 @@ rm -rf %{buildroot}%{_libdir}/lib64
 %{_libdir}/libze_intel_npu.so*
 
 %changelog
+* Thu Jul 2 2026 Andy <andy.peng@intel.com> - 1.33.0-1
+- Update version to v1.33.0
+
 * Tue Apr 14 2026 Andy <andy.peng@intel.com> - 1.32.0-1
 - Upgrade version to 1.32.0.
 
