@@ -71,7 +71,7 @@
 
 Name:           mesa
 Summary:        Mesa graphics libraries
-Version:        25.3.4
+Version:        26.0.3
 Release:        1%{?dist}
 License:        BSD
 Vendor:         Intel Corporation
@@ -88,19 +88,15 @@ Source2:        LICENSE.PTR
 
 Patch10:        gnome-shell-glthread-disable.patch
 
-
 # Intel and backport patches
-Patch20:        0001-intel-dev-Add-INTEL_PLATFORM_NVL_U-platform-enum.patch
-Patch21:        0002-intel-dev-Add-NVL-S-U-device-info.patch
-Patch22:        0003-intel-dev-Add-NVL-S-U-PCI-IDs-with-FORCE_PROBE-requi.patch
-Patch23:        0004-iris-Add-renderonly-support.patch
-Patch24:        0005-kmsro-Add-iris-renderonly-support.patch
-Patch25:        0006-kmsro-Add-xekmd-support.patch
-Patch26:        0007-iris-Included-resource-scannout-as-pre-condition-che.patch
-Patch27:        0008-meson-version-update.patch
-Patch28:        0009-Revert-Auto-enable-TLSDESC-support.patch
-Patch29:        0010-meson-Enable-kmsro-options-in-gallium-driver.patch
-Patch30:        0011-intel-dev-Remove-force_probe-for-NVL-S-Hx-enablement.patch
+Patch20:	0001-iris-Add-renderonly-support.patch
+Patch21:	0002-kmsro-Add-iris-renderonly-support.patch
+Patch22:	0003-kmsro-Add-xekmd-support.patch
+Patch23:	0004-iris-Included-resource-scannout-as-pre-condition-che.patch
+Patch24:	0005-meson-version-update.patch
+Patch25:	0006-Revert-Auto-enable-TLSDESC-support.patch
+Patch26:	0007-intel-dev-Remove-force_probe-for-NVL-S-Hx-enablement.patch
+Patch27:	0008-meson-Enable-kmsro-options-in-gallium-driver.patch
 
 BuildRequires:  meson >= 1.3.0
 BuildRequires:  gcc
@@ -742,6 +738,9 @@ popd
 %endif
 
 %changelog
+* Wed Jul 1 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.0.3-1
+- upgrade to 26.0.3
+
 * Thu Apr 2 2025 Lishan Liu <lishan.liu@intel.com> - 25.3.4-1
 - Upgraded to 25.3.4
 

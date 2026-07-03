@@ -3751,8 +3751,8 @@
         "type": "other",
         "other": {
           "name": "intel-gmmlib",
-          "version": "22.9.0",
-          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.9.0.tar.gz"
+          "version": "22.10.0",
+          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.10.0.tar.gz"
         }
       }
     },
@@ -3881,8 +3881,8 @@
         "type": "other",
         "other": {
           "name": "intel-vpl-gpu-rt",
-          "version": "25.4.6",
-          "downloadUrl": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-25.4.6/intel-onevpl-25.4.6.tar.gz"
+          "version": "26.2.2",
+          "downloadUrl": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-26.2.2/intel-onevpl-26.2.2.tar.gz"
         }
       }
     },
@@ -6271,8 +6271,8 @@
         "type": "other",
         "other": {
           "name": "libva-utils",
-          "version": "2.22.0",
-          "downloadUrl": "https://github.com/intel/libva-utils/archive/2.22.0/libva-utils-2.22.0.tar.gz"
+          "version": "2.23.0",
+          "downloadUrl": "https://github.com/intel/libva-utils/archive/2.23.0/libva-utils-2.23.0.tar.gz"
         }
       }
     },
@@ -7431,8 +7431,8 @@
         "type": "other",
         "other": {
           "name": "mesa",
-          "version": "25.3.4",
-          "downloadUrl": "https://archive.mesa3d.org/mesa-25.3.4.tar.xz"
+          "version": "26.0.3",
+          "downloadUrl": "https://archive.mesa3d.org/mesa-26.0.3.tar.xz"
         }
       }
     },
