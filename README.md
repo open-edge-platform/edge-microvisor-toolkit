@@ -65,7 +65,7 @@ To learn more, check out the following resources:
 - [View the Azure Linux documentation](toolkit/docs/), a copy of which is included in the Edge Microvisor Toolkit repository for ease of access.
 - [Report a security vulnerability](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SECURITY.md)
 - [Read and respond to blog posts](https://medium.com/open-edge-platform/subpage/5f0ac5579c60)
-- [Download the latest weekly release](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements)
+- [Download the latest release](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements?discussions_q=is%3Aopen+category%3AAnnouncements)
 - [Participate in discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions)
 
 Before submitting a new report, check the existing issues to see if a similar one has not

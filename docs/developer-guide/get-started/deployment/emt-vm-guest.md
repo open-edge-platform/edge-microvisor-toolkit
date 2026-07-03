@@ -14,7 +14,7 @@ published as RAW or ISO:
 - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso)
   \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso.sha256sum)
 
-For weekly builds, see [Announcements in GitHub discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
+For latest builds, see [Announcements in GitHub discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
 
 If you want to start virtual machines using
 **"non-dev"** images, built with

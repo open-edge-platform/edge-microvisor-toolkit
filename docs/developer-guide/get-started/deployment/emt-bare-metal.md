@@ -9,7 +9,7 @@ RAW images.
   - [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso)
     \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso.sha256sum)
 
-    For weekly builds, see
+    For latest builds, see
     [Announcements in GitHub Discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
 - USB flash drive (min. 8GB)
 - Access to the target machine
