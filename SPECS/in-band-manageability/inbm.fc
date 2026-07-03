@@ -1,3 +1,0 @@
-/usr/bin/inbd              -- system_u:object_r:inbm_exec_t:s0
-
-/etc/intel_manageability.conf -- system_u:object_r:inbm_conf_rw_t:s0

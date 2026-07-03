@@ -18,7 +18,7 @@ to enroll your certificate into the firmware’s trusted key database.
 
 ### Step 1: Verify your Certificate File
 
-Make sure you have the certificate file, for example, `edge-readonly-3.0.20250401.0515-signed.der`,
+Make sure you have the certificate file, for example, `edge-readonly-26.06.20260526.0123-signed.der`,
 which contains your public key. Many systems accept DER format, but some firmware might
 require PEM.
 

@@ -3,7 +3,7 @@
 Summary: The open-source application container engine
 Name:    moby-engine
 Version: 25.0.3
-Release: 16%{?dist}
+Release: 18%{?dist}
 License: ASL 2.0
 Group:   Tools/Container
 URL: https://mobyproject.org
@@ -30,6 +30,17 @@ Patch11: CVE-2025-22869.patch
 Patch12: CVE-2025-30204.patch
 Patch13: CVE-2024-51744.patch
 Patch14: CVE-2025-58183.patch
+#This can be removed when upgraded to v25.0.15
+Patch15: fix-multiarch-image-push-tag.patch
+Patch16: CVE-2026-39882.patch
+Patch17: CVE-2026-32288.patch
+Patch18: CVE-2026-39821.patch
+Patch19: CVE-2026-39829.patch
+Patch20: CVE-2026-39830.patch
+Patch21: CVE-2026-39834.patch
+Patch22: CVE-2026-46597.patch
+Patch23: CVE-2026-39827.patch
+Patch24: CVE-2026-39835.patch
 
 %{?systemd_requires}
 
@@ -132,6 +143,13 @@ chmod 0700 /opt/docker-data
 %{_unitdir}/*
 
 %changelog
+* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.3-18
+- merge from Azure Linux 3.0.20260602-3.0
+- Patch for CVE-2026-46597, CVE-2026-39834, CVE-2026-39830, CVE-2026-39829, CVE-2026-39821, CVE-2026-39835, CVE-2026-39827
+- Patch for CVE-2026-32288
+- Patch for CVE-2026-39882
+- Fix multiarch image push tag
+
 * Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.3-16
 - merge from Azure Linux 3.0.20251206-3.0
 - Patch for CVE-2025-58183

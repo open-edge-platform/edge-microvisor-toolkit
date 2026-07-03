@@ -3,7 +3,6 @@
         "caddy",
         "containerd2-core",
         "cryptsetup",
-        "device-discovery",
         "dracut-tmpfsroot",
         "efibootmgr",
         "fluent-bit",
@@ -13,7 +12,7 @@
         "parted",
         "rng-tools",
         "tar",
-        "tink-worker",
-        "veritysetup"
+        "veritysetup",
+        "yq"
     ]
 }

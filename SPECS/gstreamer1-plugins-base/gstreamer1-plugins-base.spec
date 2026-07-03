@@ -428,7 +428,7 @@ rm %{_libexecdir}/gstreamer-%{majorminor}/gst-plugin-scanner
 %{_libdir}/pkgconfig/*.pc
 
 %changelog
-* Tue Apr 28 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 1.28.1-1
+* Tue Apr 14 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 1.28.1-1
 - Upgrade to gstreamer1 version.
 
 * Thu Mar 26 2026 Lishan Liu<lishan.liu@intel.com> - 1.26.10-1

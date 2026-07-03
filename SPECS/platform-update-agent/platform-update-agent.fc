@@ -1,4 +1,0 @@
-/usr/bin/platform-update-agent              -- system_u:object_r:platform_update_agent_exec_t:s0
-
-/etc/edge-node/node/confs/platform-update-agent.yaml -- system_u:object_r:platform_update_agent_conf_rw_t:s0
-/etc/intel_edge_node/tokens/platform-update-agent/access_token -- system_u:object_r:platform_update_agent_conf_r_t:s0

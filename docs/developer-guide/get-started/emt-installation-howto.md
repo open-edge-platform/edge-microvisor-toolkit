@@ -22,5 +22,9 @@ deployment environment.
 ./deployment/emt-serial-over-lan.md
 ./deployment/emt-vm-guest.md
 ./deployment/emt-vm-host.md
+./deployment/emt-vm-host-setup.md
+./deployment/emt-vm-host-win-guest.md
+./deployment/emt-vm-host-ubuntu-guest.md
+
 :::
 hide_directive-->

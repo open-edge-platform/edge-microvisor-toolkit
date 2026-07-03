@@ -3,7 +3,7 @@
 Summary:        Free version of the SSH connectivity tools
 Name:           openssh
 Version:        %{openssh_ver}
-Release:        7%{?dist}
+Release:        8%{?dist}
 License:        BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -42,6 +42,9 @@ Patch403:       CVE-2025-61985.patch
 # The tests fail with the following error:
 #   dlsym(sk_api_version) failed: (...)/sk-dummy.so: undefined symbol: sk_api_version
 Patch965: openssh-8.2p1-visibility.patch
+Patch966: CVE-2026-35385.patch
+Patch967: CVE-2026-35386.patch
+Patch968: CVE-2026-35388.patch
 
 BuildRequires:  audit-devel
 BuildRequires:  autoconf
@@ -284,6 +287,10 @@ fi
 %{_mandir}/man8/ssh-sk-helper.8.gz
 
 %changelog
+* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 9.8p1-8
+- merge from Azure Linux 3.0.20260506-3.0
+- Patch CVE-2026-35385, CVE-2026-35386, CVE-2026-35388
+
 * Tue Jan 6 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 9.8p1-7
 - merge from Azure Linux 3.0.20251206-3.0
 - Patch CVE-2025-61985, CVE-2025-61984

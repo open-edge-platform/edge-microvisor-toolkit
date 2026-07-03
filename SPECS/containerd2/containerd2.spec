@@ -1,11 +1,11 @@
 %global debug_package %{nil}
 %define upstream_name containerd
-%define commit_hash 207ad711eabd375a01713109a8a197d197ff6542
+%define commit_hash 193637f7ee8ae5f5aa5248f49e7baa3e6164966e
 
 Summary: Industry-standard container runtime
 Name: %{upstream_name}2
-Version: 2.0.0
-Release: 18%{?dist}
+Version: 2.2.4
+Release: 2%{?dist}
 License: ASL 2.0
 Group: Tools/Container
 URL: https://www.containerd.io
@@ -16,24 +16,23 @@ Source0: https://github.com/containerd/containerd/archive/v%{version}.tar.gz#/%{
 Source1: containerd.service
 Source2: containerd.toml
 
-Patch0:	CVE-2024-45338.patch
-Patch1:	CVE-2025-27144.patch
-Patch2:	CVE-2024-40635.patch
-Patch3:	CVE-2025-22872.patch
-Patch4:	CVE-2025-47291.patch
-Patch5:	multi-snapshotters-support.patch
-Patch6:	tardev-support.patch
-Patch7: CVE-2024-25621.patch
-Patch8: CVE-2025-64329.patch
-Patch9: fix-credential-leak-in-cri-errors.patch
-Patch10:CVE-2025-47911.patch
-Patch11:CVE-2025-58190.patch
+Patch0:	multi-snapshotters-support.patch
+Patch1:	tardev-support.patch
+Patch2:	CVE-2026-39882.patch
+Patch3:	CVE-2026-33814.patch
+Patch4:	fix-TestCgroupNamespace-cgroupv1.patch
+Patch5:	CVE-2026-39821.patch
+Patch6:	CVE-2026-42506.patch
+Patch7:	CVE-2026-27136.patch
+
 %{?systemd_requires}
 
 BuildRequires: golang < 1.25
 BuildRequires: go-md2man
 BuildRequires: make
 BuildRequires: systemd-rpm-macros
+
+Requires: runc >= 1.2.2
 
 # This package replaces the old name of containerd
 Provides: containerd = %{version}-%{release}
@@ -137,6 +136,31 @@ fi
 %{_bindir}/containerd-stress
 
 %changelog
+* Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.2.4-2
+- merge from Azure Linux 3.0.20260602-3.0
+- Resolve merge from fasttrack, bring patches for CVE-2026-42506, CVE-2026-39821, CVE-2026-27136 forward to 2.2.4 version of containerd2.
+- Upgrade to 2.2.4
+- Pulls in CVE-2026-46680 fix (PR #13448 / 0a8f65bef)
+- Remove CVE-2026-34986.patch (in v2.2.4: go-jose/v4 v4.1.4, PR #13292 / 4413816ce)
+- Remove CVE-2026-35469.patch (in v2.2.3: spdystream v0.5.1 / 31bd34a06)
+- Remove fix-credential-leak-in-cri-errors.patch (in v2.2.2: PR #12491 / cb3ae2119)
+- Retain CVE-2026-39882.patch (otel v1.35.0 lacks PR #8108)
+- Retain CVE-2026-33814.patch (x/net v0.47.0 lacks 1e71bd86e)
+- Add fix-TestCgroupNamespace-cgroupv1.patch (PR #13240; allows %check on cgroup-v1 build hosts)
+- Regenerate multi-snapshotters-support.patch against v2.2.4 (upstream absorbed runtimeHandler plumbing in v2.2.3)
+- Patch for CVE-2026-33814
+- Patch for CVE-2026-39882
+- Patch for CVE-2026-42506, CVE-2026-39821, CVE-2026-27136
+- Modify CVE-2026-35469 patch for 2.1.6
+- Patch for CVE-2026-34986
+- Upgrade to 2.1.6
+- Remove CVE patches fixed in upstream: CVE-2024-25621, CVE-2024-40635,
+  CVE-2024-45338, CVE-2025-22872, CVE-2025-27144, CVE-2025-47291,
+  CVE-2025-47911, CVE-2025-58190, CVE-2025-64329
+- Modify fix-credential-leak-in-cri-errors patch to keep only 2/2 not yet merged in upstream
+- Rebase multi-snapshotters-support patch for 2.1.6
+- Patch CVE-2026-35469
+
 * Thu Mar 12 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.0.0-18
 - merge from Azure Linux 3.0.20260304-3.0
 - Patch for CVE-2025-64329

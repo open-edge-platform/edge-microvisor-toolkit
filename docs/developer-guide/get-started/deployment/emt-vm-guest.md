@@ -8,20 +8,18 @@ published as RAW or ISO:
 
 - RAW:
 
-  - [Non-Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250717.0734.raw.gz)
-    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/edge-readonly-3.0.20250717.0734.raw.gz.sha256sum)
-  - [Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/rt/edge-readonly-rt-3.0.20250717.0732.raw.gz)
-    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/rt/edge-readonly-rt-3.0.20250717.0732.raw.gz.sha256sum)
+  - [Non-Real-Time](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/26.06/edge-readonly-26.06.20260526.0123.raw.gz)
+    \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/repository/microvisor/non_rt/26.06/edge-readonly-26.06.20260526.0123.raw.gz.sha256sum)
 
-- [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso)
-  \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/EdgeMicrovisorToolkit-3.1.iso.sha256sum)
+- [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso)
+  \- [SHA256](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso.sha256sum)
 
-All of the images above were created from the [3.0.20250718](https://github.com/open-edge-platform/edge-microvisor-toolkit/releases/tag/3.0.20250718) release. For weekly builds, see [Announcements in GitHub discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
+For weekly builds, see [Announcements in GitHub discussions](https://github.com/open-edge-platform/edge-microvisor-toolkit/discussions/categories/announcements).
 
 If you want to start virtual machines using
 **"non-dev"** images, built with
-[edge-image-json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image.json)
-or [edge-image-rt.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/toolkit/imageconfigs/edge-image-rt.json)
+[edge-image-json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/edge-image.json)
+or [edge-image-rt.json](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/toolkit/imageconfigs/edge-image-rt.json)
 , you need to unseal disk encryption key with TPM, or
 [rebuild them](../emt-building-howto.md#build-the-edge-microvisor-toolkit-image)
 with the `"EMTEncryptionEnabled": false` parameter in the corresponding JSON config file.
@@ -213,7 +211,7 @@ firmware (OVMF). The path may vary depending on your OS and the version of Qemu.
       -drive if=pflash,format=raw,readonly=on,file=/usr/share/ovmf/OVMF.fd \
       -drive id=disk,file=/path/to/emt_rootfs.img,if=none,format=qcow2 \
       -device virtio-blk-pci,drive=disk,bootindex=1 \
-      -drive id=cdrom,file=/path/to/EdgeMicrovisorToolkit-3.0.iso,if=none,media=cdrom \
+      -drive id=cdrom,file=/path/to/EdgeMicrovisorToolkit-26.06.iso,if=none,media=cdrom \
       -device ide-cd,drive=cdrom,bootindex=2
    ```
 
@@ -229,7 +227,7 @@ firmware (OVMF). The path may vary depending on your OS and the version of Qemu.
      -vga std \
      -nic user \
      -drive if=pflash,format=raw,readonly=on,file=/usr/share/ovmf/OVMF.fd \
-     -drive id=disk1,file=/path/to/EdgeMicrovisorToolkit-3.0.raw,if=none,format=raw,cache=none \
+     -drive id=disk1,file=/path/to/EdgeMicrovisorToolkit-26.06.raw,if=none,format=raw,cache=none \
      -device virtio-blk-pci,drive=disk1,bootindex=1
   ```
 
@@ -243,6 +241,6 @@ firmware (OVMF). The path may vary depending on your OS and the version of Qemu.
      -vga std \
      -nic user \
      -drive if=pflash,format=raw,readonly=on,file=/usr/share/ovmf/OVMF.fd \
-     -drive id=disk1,file=/path/to/EdgeMicrovisorToolkit-3.0.vhd,if=none,format=vpc,cache=none \
+     -drive id=disk1,file=/path/to/EdgeMicrovisorToolkit-26.06.vhd,if=none,format=vpc,cache=none \
      -device virtio-blk-pci,drive=disk1,bootindex=1
   ```

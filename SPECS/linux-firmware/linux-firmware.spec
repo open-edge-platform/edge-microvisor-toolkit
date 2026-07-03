@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20260309
-Release:        2%{?dist}
+Release:        3%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -79,18 +79,37 @@ Firmware for Intel QAT controller.
 %build
 
 %install
+# Use upstream copy-firmware.sh to install all firmware files and symlinks from WHENCE
 mkdir -p %{buildroot}%{_firmwarepath}
-cp -r bnx2x %{buildroot}%{_firmwarepath}
-cp -r qed %{buildroot}%{_firmwarepath}
-cp -r brcm %{buildroot}%{_firmwarepath}
-cp -r rsi %{buildroot}%{_firmwarepath}
-cp rsi_91x.fw %{buildroot}%{_firmwarepath}
-cp -r ath10k %{buildroot}%{_firmwarepath}
-cp -r i915 %{buildroot}%{_firmwarepath}
-cp -r xe %{buildroot}%{_firmwarepath}
-cp -r intel %{buildroot}%{_firmwarepath}
-# While upgrading, check the ice version and update accordingly
-ln -sf ice-1.3.43.0.pkg %{buildroot}%{_firmwarepath}/intel/ice/ddp/ice.pkg
+./copy-firmware.sh %{buildroot}%{_firmwarepath}
+
+# Remove firmware we don't package to keep the RPM size down
+# Keep only: bnx2x brcm qed rsi ath10k i915 xe intel
+find %{buildroot}%{_firmwarepath} -maxdepth 1 \
+    ! -name firmware \
+    ! -name bnx2x ! -name brcm ! -name qed ! -name rsi ! -name rsi_91x.fw \
+    ! -name ath10k ! -name i915 ! -name xe ! -name intel \
+    -exec rm -rf {} +
+
+# Re-create root-level compat symlinks for firmware the kernel loads by legacy name.
+# copy-firmware.sh creates these from WHENCE, but the cleanup above removes them.
+# Only create symlinks for firmware prefixes listed in our %files sections.
+for pattern in iwlwifi-8000C iwlwifi-so-a0-gf-a0 iwlwifi-ma-b0-gf-a0 \
+               iwlwifi-sc-a0-wh-b0 iwlwifi-ty-a0-gf-a0 iwlwifi-9000 \
+               iwlwifi-9260 iwlwifi-bz-b0-gf-a0 iwlwifi-gl-c0-fm-c0; do
+    for f in %{buildroot}%{_firmwarepath}/intel/iwlwifi/${pattern}*; do
+        [ -f "$f" ] || continue
+        base=$(basename "$f")
+        ln -s "intel/iwlwifi/$base" "%{buildroot}%{_firmwarepath}/$base"
+    done
+done
+
+# QAT root-level compat symlinks (kernel modules request e.g. "qat_4xxx.bin")
+for f in %{buildroot}%{_firmwarepath}/intel/qat/qat_*.bin; do
+    [ -f "$f" ] || continue
+    base=$(basename "$f")
+    ln -s "intel/qat/$base" "%{buildroot}%{_firmwarepath}/$base"
+done
 
 %post qat
 dracut --force
@@ -102,6 +121,7 @@ dracut --force
 %{_firmwarepath}/rsi
 %{_firmwarepath}/rsi_91x.fw
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-8000C-*.ucode
+%{_firmwarepath}/iwlwifi-8000C-*
 
 %files broadcom
 %defattr(-,root,root)
@@ -172,6 +192,20 @@ dracut --force
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-9260-*.ucode
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-bz-b0-gf-a0-100.ucode
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-gl-c0-fm-c0-100.ucode
+# Root-level compat symlinks for kernel firmware loader
+%{_firmwarepath}/iwlwifi-so-a0-gf-a0-*
+%{_firmwarepath}/iwlwifi-so-a0-gf-a0.pnvm
+%{_firmwarepath}/iwlwifi-ma-b0-gf-a0-*
+%{_firmwarepath}/iwlwifi-ma-b0-gf-a0.pnvm
+%{_firmwarepath}/iwlwifi-sc-a0-wh-b0-*
+%{_firmwarepath}/iwlwifi-ty-a0-gf-a0-*
+%{_firmwarepath}/iwlwifi-ty-a0-gf-a0.pnvm
+%{_firmwarepath}/iwlwifi-9000-*
+%{_firmwarepath}/iwlwifi-9260-*
+%{_firmwarepath}/iwlwifi-bz-b0-gf-a0-*
+%{_firmwarepath}/iwlwifi-bz-b0-gf-a0.pnvm
+%{_firmwarepath}/iwlwifi-gl-c0-fm-c0-*
+%{_firmwarepath}/iwlwifi-gl-c0-fm-c0.pnvm
 
 %files ice
 %defattr(-,root,root)
@@ -193,8 +227,15 @@ dracut --force
 %{_firmwarepath}/intel/qat/qat_c3xxx_mmp.bin
 %{_firmwarepath}/intel/qat/qat_c62x.bin
 %{_firmwarepath}/intel/qat/qat_c62x_mmp.bin
+# Root-level compat symlinks for kernel firmware loader
+%{_firmwarepath}/qat_*.bin
 
 %changelog
+* Wed Apr 15 2026 Andy <andy.peng@intel.com> - 20260309-3
+- Use upstream copy-firmware.sh to install firmware with proper symlinks.
+- Fixes missing ibt-19-* Bluetooth firmware symlinks.
+- Add root-level iwlwifi-* and qat_* compat symlinks so kernel can find firmware.
+
 * Fri Apr 3 2026 Andy <andy.peng@intel.com> - 20260309-2
 - Include more i915 xe file from firmware.
 

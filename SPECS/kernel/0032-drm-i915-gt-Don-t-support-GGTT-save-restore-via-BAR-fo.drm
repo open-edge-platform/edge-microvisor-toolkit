@@ -1,0 +1,64 @@
+From b81ed5ca1946c7615038a7eaad50c3b09f55731e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Piotr=20Pi=C3=B3rkowski?= <piotr.piorkowski@intel.com>
+Date: Fri, 26 Apr 2024 09:19:58 +0200
+Subject: [PATCH 32/69] drm/i915/gt: Don't support GGTT save/restore via BAR
+ for Media gen13
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+For platforms with Media gen13, we should not access GGTT through BAR.
+Let's return a relevant error when trying to use GGTT save/restore via
+BAR0 on platforms with Media gen13.
+
+Signed-off-by: Piotr Piórkowski <piotr.piorkowski@intel.com>
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+(cherry picked from commit c0151db545491bb0cd36b5b399dc68c93f14d304)
+---
+ drivers/gpu/drm/i915/gt/intel_ggtt.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/intel_ggtt.c b/drivers/gpu/drm/i915/gt/intel_ggtt.c
+index 40acf4c184b89..1a57800396ee4 100644
+--- a/drivers/gpu/drm/i915/gt/intel_ggtt.c
++++ b/drivers/gpu/drm/i915/gt/intel_ggtt.c
+@@ -2038,13 +2038,16 @@ void ggtt_pte_clear_vfid(void *buf, u64 size)
+  *         - #I915_GGTT_SAVE_PTES_NO_VFID BIT - save PTEs without VFID
+  *
+  * Returns: size of the buffer used (or needed if both @buf and @size are (0)) to store all PTEs
+- *          for a given node, -EINVAL if one of @buf or @size is 0.
++ *          for a given node, -EINVAL if one of @buf or @size is 0, -EOPNOTSUPP when not supported.
+  */
+ int i915_ggtt_save_ptes(struct i915_ggtt *ggtt, const struct drm_mm_node *node, void *buf,
+ 			unsigned int size, unsigned int flags)
+ {
+ 	gen8_pte_t __iomem *gtt_entries = ggtt->gsm;
+ 
++	if (i915_ggtt_require_binder(ggtt->vm.i915))
++		return -EOPNOTSUPP;
++
+ 	if (!buf && !size)
+ 		return ggtt_size_to_ptes_size(node->size);
+ 
+@@ -2080,7 +2083,7 @@ int i915_ggtt_save_ptes(struct i915_ggtt *ggtt, const struct drm_mm_node *node,
+  *         - #I915_GGTT_RESTORE_PTES_NEW_VFID - restore PTEs with new VFID
+  *           (from #I915_GGTT_RESTORE_PTES_VFID_MASK)
+  *
+- * Returns: 0 on success, -ENOSPC if @node->size is less than size.
++ * Returns: 0 on success, -ENOSPC if @node->size is less than size, -EOPNOTSUPP when not supported.
+  */
+ int i915_ggtt_restore_ptes(struct i915_ggtt *ggtt, const struct drm_mm_node *node, const void *buf,
+ 			   unsigned int size, unsigned int flags)
+@@ -2089,6 +2092,9 @@ int i915_ggtt_restore_ptes(struct i915_ggtt *ggtt, const struct drm_mm_node *nod
+ 	u32 vfid = FIELD_GET(I915_GGTT_RESTORE_PTES_VFID_MASK, flags);
+ 	gen8_pte_t pte;
+ 
++	if (i915_ggtt_require_binder(ggtt->vm.i915))
++		return -EOPNOTSUPP;
++
+ 	GEM_BUG_ON(!size);
+ 	GEM_BUG_ON(!IS_ALIGNED(size, sizeof(gen8_pte_t)));
+ 
+-- 
+2.43.0
+

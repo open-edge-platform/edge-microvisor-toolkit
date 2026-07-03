@@ -234,6 +234,7 @@
                 "libcxx",
                 "libdaemon",
                 "libdecor",
+                "libdisplay-info",
                 "libdnf",
                 "libdrm",
                 "libdwarf",
@@ -875,31 +876,20 @@
         "Intel": {
             "license": "[MIT License](/LICENSES-AND-NOTICES/LICENSE.md)",
             "specs": [
-                "cluster-agent",
-                "device-discovery",
                 "edge-release",
                 "edge-repos",
                 "edge-rpm-macros",
-                "hardware-discovery-agent",
-                "in-band-manageability",
                 "intel-idv-services",
                 "intel-igsc",
                 "intel-lms",
                 "intel-npu-firmware",
                 "intel-xpu-smi",
-                "node-agent",
                 "nvidia-data-center-driver",
                 "os-update",
                 "otelcol-contrib",
                 "persistent-mount",
-                "platform-manageability-agent",
-                "platform-observability-agent",
-                "platform-telemetry-agent",
-                "platform-update-agent",
                 "python-snoop",
-                "reporting-agent",
                 "rpc",
-                "tink-worker",
                 "tpm-cryptsetup",
                 "tpm2-initramfs-tool"
             ]
@@ -1700,7 +1690,8 @@
         "Source project": {
             "license": "Same as the source project.",
             "specs": [
-                "python-nocaselist"
+                "python-nocaselist",
+                "yq"
             ]
         },
         "Sysbench source": {

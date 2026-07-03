@@ -15,11 +15,11 @@ Signed-off-by: Aravindhan Gunasekaran <aravindhan.gunasekaran@intel.com>
  kernel/bpf/btf.c    | 90 +++++++++++++++++++++++++++++++++++++++++++++
  2 files changed, 98 insertions(+)
 
-diff --git a/include/linux/btf.h b/include/linux/btf.h
-index f06976ffb63f9..96d6d07ea5a91 100644
+Index: b/include/linux/btf.h
+===================================================================
 --- a/include/linux/btf.h
 +++ b/include/linux/btf.h
-@@ -604,6 +604,8 @@ static inline bool btf_type_is_struct_ptr(struct btf *btf, const struct btf_type
+@@ -604,6 +604,8 @@ static inline bool btf_type_is_struct_pt
  
  	return btf_type_is_struct(t);
  }
@@ -28,7 +28,7 @@ index f06976ffb63f9..96d6d07ea5a91 100644
  #else
  static inline const struct btf_type *btf_type_by_id(const struct btf *btf,
  						    u32 type_id)
-@@ -682,5 +684,11 @@ static inline int btf_check_iter_arg(struct btf *btf, const struct btf_type *fun
+@@ -682,5 +684,11 @@ static inline int btf_check_iter_arg(str
  {
  	return -EOPNOTSUPP;
  }
@@ -40,11 +40,11 @@ index f06976ffb63f9..96d6d07ea5a91 100644
 +static inline void btf_unregister(struct btf *btf) { }
  #endif
  #endif
-diff --git a/kernel/bpf/btf.c b/kernel/bpf/btf.c
-index 0de8fc8a0e0b3..2abbd84dc7afe 100644
+Index: b/kernel/bpf/btf.c
+===================================================================
 --- a/kernel/bpf/btf.c
 +++ b/kernel/bpf/btf.c
-@@ -6380,6 +6380,95 @@ static struct btf *btf_parse_module(const char *module_name, const void *data,
+@@ -6389,6 +6389,95 @@ errout:
  
  #endif /* CONFIG_DEBUG_INFO_BTF_MODULES */
  
@@ -140,14 +140,11 @@ index 0de8fc8a0e0b3..2abbd84dc7afe 100644
  struct btf *bpf_prog_get_target_btf(const struct bpf_prog *prog)
  {
  	struct bpf_prog *tgt_prog = prog->aux->dst_prog;
-@@ -8142,6 +8231,7 @@ u32 btf_obj_id(const struct btf *btf)
+@@ -8151,6 +8240,7 @@ u32 btf_obj_id(const struct btf *btf)
  {
- 	return btf->id;
+ 	return READ_ONCE(btf->id);
  }
 +EXPORT_SYMBOL(btf_obj_id);
  
  bool btf_is_kernel(const struct btf *btf)
  {
--- 
-2.43.0
-

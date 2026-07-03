@@ -1,0 +1,30 @@
+From 5c3b96cefec6a7ee663d95a9f3884adc9029c38a Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 13:03:34 +0800
+Subject: [PATCH 45/52] Enable Lontium sensor for ipu7 in IPU bridge
+
+Add Lontium sensor LT6911GXD for IPU7 in IPU bridge
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/pci/intel/ipu-bridge.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-bridge.c b/drivers/media/pci/intel/ipu-bridge.c
+index d0c5df30aa4e..64d1f9736ad1 100644
+--- a/drivers/media/pci/intel/ipu-bridge.c
++++ b/drivers/media/pci/intel/ipu-bridge.c
+@@ -99,8 +99,8 @@ static const struct ipu_sensor_config ipu_supported_sensors[] = {
+ 	IPU_SENSOR_CONFIG("OVTI8856", 3, 180000000, 360000000, 720000000),
+ 	/* Toshiba T4KA3 */
+ 	IPU_SENSOR_CONFIG("XMCC0003", 1, 321468000),
+-	/* OnSemiconductor ar0234 */
+-	IPU_SENSOR_CONFIG("INTC10C0", 1, 360000000),
++	/* Lontium lt6911gxd */
++	IPU_SENSOR_CONFIG("INTC1124", 0),
+ };
+ 
+ static const struct ipu_property_names prop_names = {
+-- 
+2.34.1
+

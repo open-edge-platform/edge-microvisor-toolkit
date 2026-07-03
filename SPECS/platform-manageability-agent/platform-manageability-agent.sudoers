@@ -1,1 +1,0 @@
-pm-agent  ALL=(root) NOPASSWD:SETENV:/usr/bin/rpc,/usr/bin/systemctl,/usr/sbin/modprobe,/usr/bin/cat

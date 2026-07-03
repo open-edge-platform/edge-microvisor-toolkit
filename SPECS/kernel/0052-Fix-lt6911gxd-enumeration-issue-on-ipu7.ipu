@@ -1,0 +1,28 @@
+From 8605aae9e271d709446409e419340add6504c26a Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Fri, 17 Apr 2026 11:13:05 +0800
+Subject: [PATCH 52/52] Fix lt6911gxd enumeration issue on ipu7
+
+Remove the u8 reserved2[5] in ipu bridge
+header file.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ include/media/ipu-bridge.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/include/media/ipu-bridge.h b/include/media/ipu-bridge.h
+index fd429257c78e..0b8639bd95a5 100644
+--- a/include/media/ipu-bridge.h
++++ b/include/media/ipu-bridge.h
+@@ -96,7 +96,6 @@ struct ipu_sensor_ssdb {
+ 	u8 pprval;
+ 	u8 pprunit;
+ 	u8 flashid;
+-	u8 reserved2[5];
+ 	u8 phyconfig;
+ 	u8 reserved3[7];
+ } __packed;
+-- 
+2.34.1
+

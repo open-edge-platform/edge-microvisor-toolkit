@@ -1,0 +1,64 @@
+From cb2be71259259950cf3008ca84aa1d20139aed40 Mon Sep 17 00:00:00 2001
+From: Daniele Ceraolo Spurio <daniele.ceraolospurio@intel.com>
+Date: Thu, 6 Apr 2023 13:47:47 -0700
+Subject: [PATCH 04/69] drm/i915: call taint_for_CI on FLR failure
+
+FLR is our biggest reset hammer, so an FLR failure is unrecoverable and
+any CI result after it occurs can't be trusted.
+
+Signed-off-by: Daniele Ceraolo Spurio <daniele.ceraolospurio@intel.com>
+Cc: Alan Previn <alan.previn.teres.alexis@intel.com>
+Cc: John Harrison <John.C.Harrison@Intel.com>
+Reviewed-by: John Harrison <John.C.Harrison@Intel.com>
+(cherry picked from commit 80eaf1945451aa289c721db0b9fb7b17c52c5243)
+---
+ drivers/gpu/drm/i915/intel_uncore.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_uncore.c b/drivers/gpu/drm/i915/intel_uncore.c
+index 8cb59f8d1f4c7..9582f4fbe5b36 100644
+--- a/drivers/gpu/drm/i915/intel_uncore.c
++++ b/drivers/gpu/drm/i915/intel_uncore.c
+@@ -2651,7 +2651,7 @@ static void driver_initiated_flr(struct intel_uncore *uncore)
+ 		drm_err(&i915->drm,
+ 			"Failed to wait for Driver-FLR bit to clear! %d\n",
+ 			ret);
+-		return;
++		goto flr_failure;
+ 	}
+ 	intel_uncore_write_fw(uncore, GU_DEBUG, DRIVERFLR_STATUS);
+ 
+@@ -2664,7 +2664,7 @@ static void driver_initiated_flr(struct intel_uncore *uncore)
+ 					 flr_timeout_ms, NULL);
+ 	if (ret) {
+ 		drm_err(&i915->drm, "Driver-FLR-teardown wait completion failed! %d\n", ret);
+-		return;
++		goto flr_failure;
+ 	}
+ 
+ 	/* Wait for hardware/firmware re-init to complete */
+@@ -2673,11 +2673,20 @@ static void driver_initiated_flr(struct intel_uncore *uncore)
+ 					 flr_timeout_ms, NULL);
+ 	if (ret) {
+ 		drm_err(&i915->drm, "Driver-FLR-reinit wait completion failed! %d\n", ret);
+-		return;
++		goto flr_failure;
+ 	}
+ 
+ 	/* Clear sticky completion status */
+ 	intel_uncore_write_fw(uncore, GU_DEBUG, DRIVERFLR_STATUS);
++
++	return;
++
++flr_failure:
++	/*
++	 * The FLR is the biggest hammer we have to reset and re-init the GPU,
++	 * so it that fails it means that we've hit an unrecoverable condition.
++	 */
++	add_taint_for_CI(i915, TAINT_WARN);
+ }
+ 
+ /* Called via drm-managed action */
+-- 
+2.43.0
+

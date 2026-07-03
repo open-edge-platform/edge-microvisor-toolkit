@@ -9,7 +9,6 @@ Here are the published versions of the toolkit:
 
 * [Edge Microvisor Toolkit Standalone Node (immutable)](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node)
 * [Edge Microvisor Toolkit Developer Node with or without real-time extensions (mutable)](./emt-architecture-overview.md)
-* [Edge Microvisor Toolkit (immutable or mutable) for deploying with Edge Manageability Framework](./emt-deployment-edge-orchestrator.md)
 * [Edge Microvisor Bootkit](./emt-bootkit.md)
 
 ## Demonstrating the Capabilities of Intel Technology
@@ -30,7 +29,7 @@ systems and improves security, especially when combined with Secure Boot.
 Edge Microvisor Toolkit has undergone extensive validation across the Intel Xeon®, Intel® Core Ultra™, Intel Core™, and Intel® Atom® processor families. The toolkit provides robust support for integrated and Intel discrete GPU cards as well as an integrated NPU. There are pre-tuned drivers and acceleration libraries for Intel® CPUs and GPUs.
 
 > **Note:** You can learn more about specific kernel patches related to GPU and NPU support
-> in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/SPECS/kernel/kernel.spec)
+> in the relevant [SPEC file](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/SPECS/kernel/kernel.spec)
 
 The kernel used in the developer node of Edge Microvisor Toolkit, for example, includes the following: iGPU, dGPU (Intel® Arc™), SR-IOV, WiFi, Ethernet, Bluetooth, GPIO, UART, I2C, CAN, USB, PCIe, PWM, SATA, NVMe, MMC/SD, TPM, Manageability Engine, Power Management, Watchdog, and RAS.
 
@@ -48,7 +47,7 @@ Based on [Azure Linux](https://github.com/microsoft/azurelinux), Edge Microvisor
 [MIT](https://github.com/microsoft/azurelinux/blob/3.0/LICENSE).
 
 See the
-[LICENSE](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/LICENSE)
+[LICENSE](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/26.06/LICENSE)
 document.
 
 ## Next Steps
@@ -60,12 +59,12 @@ document.
 
 emt-get-started
 emt-architecture-overview
-emt-deployment-edge-orchestrator
 emt-bootkit
 emt-security-considerations
 emt-contribution
 emt-troubleshooting
 emt-system-requirements
 emt-tutorials
+Release Notes <emt-release-notes>
 :::
 hide_directive-->

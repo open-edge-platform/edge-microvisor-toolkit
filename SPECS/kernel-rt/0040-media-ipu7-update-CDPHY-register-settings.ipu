@@ -1,0 +1,38 @@
+From c709182f8cd0793057546ba54c0534bd2f3c189e Mon Sep 17 00:00:00 2001
+From: hepengpx <pengpengx.he@intel.com>
+Date: Fri, 19 Dec 2025 15:29:00 +0800
+Subject: [PATCH 40/52] media: ipu7: update CDPHY register settings
+
+Some CPHY settings are copied from Wins code, but some of
+them aren't correct and need to be fixed.
+
+Program 45ohm for tuning resistance to fix CPHY problem and
+update the ITMINRX and GMODE for CPHY high data rate.
+
+Test Platform:
+PTLRVP
+LNLRVP
+
+Signed-off-by: Bingbu Cao <bingbu.cao@intel.com>
+Signed-off-by: linya14x <linx.yang@intel.com>
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys-csi-phy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c b/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
+index d8f3592ad620..97cd47daf614 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
+@@ -731,7 +731,7 @@ static void ipu7_isys_cphy_config(struct ipu7_isys *isys, u8 id, u8 lanes,
+ 	u16 deass_thresh;
+ 	u16 delay_thresh;
+ 	u16 reset_thresh;
+-	u16 cap_prog = 6U;
++	u16 cap_prog;
+ 	u16 reg;
+ 	u16 val;
+ 	u32 i;
+-- 
+2.34.1
+

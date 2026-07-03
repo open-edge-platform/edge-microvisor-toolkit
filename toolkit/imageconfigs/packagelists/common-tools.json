@@ -1,0 +1,25 @@
+{
+    "packages": [
+        "gptfdisk",
+        "cloud-init",
+        "cloud-utils-growpart",
+        "tpm2-tools",
+        "lvm2",
+        "netplan",
+        "efibootmgr",
+        "unzip",
+        "rsyslog",
+        "tpm2-initramfs-tool",
+        "veritysetup",
+        "python3-pyserial",
+        "dmidecode",
+        "usbutils",
+        "ipmitool",
+        "lsb-release",
+        "lshw",
+        "pciutils",
+        "udev",
+        "jq"
+    ],
+    "_comment": "Tools for user space."
+}

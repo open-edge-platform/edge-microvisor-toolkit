@@ -1,0 +1,317 @@
+From 6e6aefa2d1fba10ddbfa66f5d4c4f835b9f7a8bc Mon Sep 17 00:00:00 2001
+From: "Shahidan, Muhammad Shahmil" <muhammad.shahmil.shahidan@intel.com>
+Date: Wed, 15 Apr 2026 11:35:09 +0800
+Subject: [PATCH 33/52] Add ISX301 and MAX9X sensor
+
+Port over existing ISX301 and
+all MAX9X sensors from PR.
+
+Signed-off-by: Shahidan, Muhammad Shahmil <muhammad.shahmil.shahidan@intel.com>
+---
+ drivers/media/i2c/Kconfig              | 37 ++++++++++++++++++------
+ drivers/media/i2c/max9x/max9295.c      | 40 +++++++++++++-------------
+ drivers/media/i2c/max9x/max9295.h      |  5 ++--
+ drivers/media/i2c/max9x/max9296.c      |  5 ++--
+ drivers/media/i2c/max9x/max9296.h      |  5 ++--
+ drivers/media/i2c/max9x/max96717.c     |  5 ++--
+ drivers/media/i2c/max9x/max96717.h     |  5 ++--
+ drivers/media/i2c/max9x/max96724.c     |  5 ++--
+ drivers/media/i2c/max9x/max96724.h     |  5 ++--
+ drivers/media/i2c/max9x/max9x_pdata.h  |  5 ++--
+ drivers/media/i2c/max9x/regmap-retry.h |  4 +--
+ drivers/media/i2c/max9x/serdes.c       |  5 ++--
+ drivers/media/i2c/max9x/serdes.h       |  5 ++--
+ 13 files changed, 71 insertions(+), 60 deletions(-)
+
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index 2f19e784c112..abfa8c67afb8 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -1236,16 +1236,37 @@ config VIDEO_ISL7998X
+ 	  Support for Intersil ISL7998x analog to MIPI-CSI2 or
+ 	  BT.656 decoder.
+ 
++config VIDEO_ISX031
++    tristate "ISX031 sensor support"
++	depends on VIDEO_DEV && I2C
++	select VIDEO_V4L2_SUBDEV_API
++	depends on MEDIA_CAMERA_SUPPORT
++	help
++		This is a Video4Linux2 sensor-level driver for
++		Sony ISX031 camera with a MIPI CSI-2 interface.
++
++		To compile this driver as a module, choose M here: the
++		module will be called isx031.
++
++config VIDEO_MAX9X
++	tristate "MAX9X serdes support"
++	depends on VIDEO_DEV && I2C
++	select VIDEO_V4L2_SUBDEV_API
++	depends on MEDIA_CAMERA_SUPPORT
++	help
++		This is a Video4Linux2 sensor-level driver
++		for MAX9X serdes.
++
+ config VIDEO_LT6911UXC
+ 	tristate "Lontium LT6911UXC decoder"
+ 	depends on ACPI || COMPILE_TEST
+ 	select V4L2_CCI_I2C
+ 	help
+-	  This is a Video4Linux2 sensor-level driver for the Lontium
+-	  LT6911UXC HDMI to MIPI CSI-2 bridge.
++		This is a Video4Linux2 sensor-level driver for the Lontium
++		LT6911UXC HDMI to MIPI CSI-2 bridge.
+ 
+-	  To compile this driver as a module, choose M here: the
+-	  module will be called lt6911uxc.
++		To compile this driver as a module, choose M here: the
++		module will be called lt6911uxc.
+ 
+ config VIDEO_LT6911UXE
+ 	tristate "Lontium LT6911UXE decoder"
+@@ -1255,11 +1276,11 @@ config VIDEO_LT6911UXE
+ 	select MEDIA_CONTROLLER
+ 	select VIDEO_V4L2_SUBDEV_API
+ 	help
+-	  This is a Video4Linux2 sensor-level driver for the Lontium
+-	  LT6911UXE HDMI to MIPI CSI-2 bridge.
++		This is a Video4Linux2 sensor-level driver for the Lontium
++		LT6911UXE HDMI to MIPI CSI-2 bridge.
+ 
+-	  To compile this driver as a module, choose M here: the
+-	  module will be called lt6911uxe.
++		To compile this driver as a module, choose M here: the
++		module will be called lt6911uxe.
+ 
+ config VIDEO_KS0127
+ 	tristate "KS0127 video decoder"
+diff --git a/drivers/media/i2c/max9x/max9295.c b/drivers/media/i2c/max9x/max9295.c
+index e40dacdf1d45..120d87cf2a4c 100644
+--- a/drivers/media/i2c/max9x/max9295.c
++++ b/drivers/media/i2c/max9x/max9295.c
+@@ -1,24 +1,24 @@
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
++
+ /*
+- * max9295_main.c - Maxim MAX9295 CSI-2 to GMSL2/GMSL1 Serializer
+- *
+- * Copyright (c) 2020, D3 Engineering.  All rights reserved.
+- * Copyright (c) 2023-2024, Define Design Deploy Corp.  All rights reserved.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+- */
++* max9295_main.c - Maxim MAX9295 CSI-2 to GMSL2/GMSL1 Serializer
++*
++* Copyright (c) 2020, D3 Engineering.  All rights reserved.
++* Copyright (c) 2023-2024, Define Design Deploy Corp.  All rights reserved.
++*
++* This program is free software; you can redistribute it and/or modify it
++* under the terms and conditions of the GNU General Public License,
++* version 2, as published by the Free Software Foundation.
++*
++* This program is distributed in the hope it will be useful, but WITHOUT
++* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++* more details.
++*
++* You should have received a copy of the GNU General Public License
++* along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
+ 
+ #include <linux/delay.h>
+ #include <linux/init.h>
+diff --git a/drivers/media/i2c/max9x/max9295.h b/drivers/media/i2c/max9x/max9295.h
+index 94e52b61efee..de4505639dec 100644
+--- a/drivers/media/i2c/max9x/max9295.h
++++ b/drivers/media/i2c/max9x/max9295.h
+@@ -15,10 +15,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #ifndef _MAX9295_H_
+ #define _MAX9295_H_
+diff --git a/drivers/media/i2c/max9x/max9296.c b/drivers/media/i2c/max9x/max9296.c
+index 3380694b63e8..be144f188de0 100644
+--- a/drivers/media/i2c/max9x/max9296.c
++++ b/drivers/media/i2c/max9x/max9296.c
+@@ -14,10 +14,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #include <linux/delay.h>
+ #include <linux/init.h>
+diff --git a/drivers/media/i2c/max9x/max9296.h b/drivers/media/i2c/max9x/max9296.h
+index 4000d986386f..acc6bb03405b 100644
+--- a/drivers/media/i2c/max9x/max9296.h
++++ b/drivers/media/i2c/max9x/max9296.h
+@@ -14,10 +14,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #ifndef _MAX9296_H_
+ #define _MAX9296_H_
+diff --git a/drivers/media/i2c/max9x/max96717.c b/drivers/media/i2c/max9x/max96717.c
+index 1910ac04e555..dab70eb6de42 100644
+--- a/drivers/media/i2c/max9x/max96717.c
++++ b/drivers/media/i2c/max9x/max96717.c
+@@ -15,10 +15,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #include <linux/delay.h>
+ #include <linux/init.h>
+diff --git a/drivers/media/i2c/max9x/max96717.h b/drivers/media/i2c/max9x/max96717.h
+index 91cae60fa4ec..022340a7eba9 100644
+--- a/drivers/media/i2c/max9x/max96717.h
++++ b/drivers/media/i2c/max9x/max96717.h
+@@ -14,10 +14,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #ifndef _MAX96717_H_
+ #define _MAX96717_H_
+diff --git a/drivers/media/i2c/max9x/max96724.c b/drivers/media/i2c/max9x/max96724.c
+index 6b6273265691..1d253a6faf71 100644
+--- a/drivers/media/i2c/max9x/max96724.c
++++ b/drivers/media/i2c/max9x/max96724.c
+@@ -14,10 +14,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #include <linux/delay.h>
+ #include <linux/init.h>
+diff --git a/drivers/media/i2c/max9x/max96724.h b/drivers/media/i2c/max9x/max96724.h
+index 9a840fdc769a..5cd1bd289b1f 100644
+--- a/drivers/media/i2c/max9x/max96724.h
++++ b/drivers/media/i2c/max9x/max96724.h
+@@ -14,10 +14,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #ifndef _MAX96724_H_
+ #define _MAX96724_H_
+diff --git a/drivers/media/i2c/max9x/max9x_pdata.h b/drivers/media/i2c/max9x/max9x_pdata.h
+index 3e93b7971638..04da75fc7d54 100644
+--- a/drivers/media/i2c/max9x/max9x_pdata.h
++++ b/drivers/media/i2c/max9x/max9x_pdata.h
+@@ -1,6 +1,5 @@
+-/* SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+- */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #ifndef _MAX9X_PDATA_H_
+ #define _MAX9X_PDATA_H_
+diff --git a/drivers/media/i2c/max9x/regmap-retry.h b/drivers/media/i2c/max9x/regmap-retry.h
+index 7a6a248da6c6..47630a377430 100644
+--- a/drivers/media/i2c/max9x/regmap-retry.h
++++ b/drivers/media/i2c/max9x/regmap-retry.h
+@@ -1,5 +1,5 @@
+-/* SPDX-License-Identifier: GPL-2.0-only
+- *
++// SPDX-License-Identifier: GPL-2.0-only
++/*
+  * Copyright (C) 2025 Intel Corporation
+  */
+ 
+diff --git a/drivers/media/i2c/max9x/serdes.c b/drivers/media/i2c/max9x/serdes.c
+index 0da77ac06bd4..84a130bb0251 100644
+--- a/drivers/media/i2c/max9x/serdes.c
++++ b/drivers/media/i2c/max9x/serdes.c
+@@ -15,10 +15,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (C) 2025 Intel Corporation
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (C) 2025 Intel Corporation
+ 
+ #include <linux/kernel.h>
+ #include <linux/i2c.h>
+diff --git a/drivers/media/i2c/max9x/serdes.h b/drivers/media/i2c/max9x/serdes.h
+index 6dee80ce654c..3ea4ba4d7e66 100644
+--- a/drivers/media/i2c/max9x/serdes.h
++++ b/drivers/media/i2c/max9x/serdes.h
+@@ -14,10 +14,9 @@
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * SPDX-License-Identifier: GPL-2.0
+- * Copyright (c) 2025 Intel Corporation.
+  */
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (c) 2025 Intel Corporation.
+ 
+ #ifndef _SERDES_H_
+ #define _SERDES_H_
+-- 
+2.34.1
+

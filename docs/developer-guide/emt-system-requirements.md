@@ -61,7 +61,7 @@ NVIDIA® GPU:
 | Storage (SSD/NVMe or eMMC) | 32 GB        | 32 GB             | 32 GB   |
 | Networking (Ethernet)      | 1 GbE        | 1 GbE             | 1 GbE   |
 
-### Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node)
+### Edge Microvisor Toolkit (Standalone Node)
 
 | Component                  | Intel® Atom™    | Core™/Core™ Ultra | Xeon®           |
 |----------------------------|-----------------|-------------------|-----------------|
@@ -72,8 +72,8 @@ NVIDIA® GPU:
 
 ## Software Requirements
 
-| Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Edge Manageability Framework or Standalone Node) |
+| Component        | Edge Microvisor Toolkit Developer Node | Edge Microvisor Toolkit (Standalone Node) |
 |------------------|----------------------------------------|---------------------------------------------------------------------------|
-| Kernel Version   | Intel® “Next” Kernel 6.18              | Intel® “Next” Kernel 6.18                                                 |
+| Kernel Version   | Intel® Kernel 6.18                     | Intel® Kernel 6.18                                                        |
 | Bootloader       | GRUB                                   | Systemd-boot                                                              |
 | Update Mechanism | RPM-based with TDNF                    | Image-based A/B updates                                                   |

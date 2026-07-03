@@ -1,4 +1,0 @@
-/etc/edge-node/node/confs/hd-agent         -- system_u:object_r:hd_agent_exec_t:s0
-/usr/bin/hd-agent                          -- system_u:object_r:hd_agent_exec_t:s0
-
-/etc/edge-node/node/confs/hd-agent.yaml    -- system_u:object_r:hd_agent_conf_t:s0

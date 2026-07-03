@@ -170,8 +170,8 @@ install -m0644 -D %{SOURCE2} $RPM_BUILD_ROOT%{_rpmconfigdir}/fileattrs/gstreamer
 %{_datadir}/cmake/FindGStreamer.cmake
 
 %changelog
-* Tue Apr 28 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 1.28.1-1
-- Upgrade to fix CVE-2026-3083 and CVE-2026-3085
+* Tue Apr 14 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 1.28.1-1
+- Upgrade version to fix CVE-2026-3083 and CVE-2026-3085.
 
 * Wed Mar 25 2026 Lishan Liu<lishan.liu@intel.com> - 1.26.10-1
 - Upgraded version 1.26.10

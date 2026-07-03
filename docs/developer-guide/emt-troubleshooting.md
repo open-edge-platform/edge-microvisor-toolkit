@@ -244,42 +244,5 @@ instability for real-time workloads using RAW/ISO toolkit images with RT kernel.
 
  Platform | Processor family | Operating System | RT kernel
 --- | --- | --- | ---
- Intel Corporation Panther Lake Client Platform | Intel(R) Core(TM) Ultra X7 358H | Edge Microvisor Toolkit | 6.18 Next
+ Intel Corporation Panther Lake Client Platform | Intel(R) Core(TM) Ultra X7 358H | Edge Microvisor Toolkit | 6.17 Next
 
-#### Minimize real-time jitter
-
-High scheduling jitter can occur due to CPU idle power state on
-Edge Microvisor Toolkit built from the ISO image. As the toolkit is optimized
-for power efficiency and general workloads, the `idle=poll` kernel parameter is
-disabled by default.
-
-To target optimization of real‑time or latency‑sensitive workloads you can
-enable `idle=poll` by running the following commands:
-
-```bash
-sudo vi /etc/default/grub 
-GRUB_CMDLINE_LINUX="security=selinux selinux=1 rd.auto=1 net.ifnames=0 lockdown=integrity quiet idle=poll"
-sudo grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
-sudo reboot
-```
-
-It will prevent a CPU from entering deep idle (C‑states),
-eliminating wake‑up latency, significantly minimizing RT jitter and
-improving determinism.
-
-
-### Kubernetes cluster fails to launch
-
-The Kubernetes cluster fails to launch, due to a fatal error occurring at the
-pre-flight phase. This has been observed under Kubernetes v1.30.14 and go
-v1.26.0 configuration.
-
-Upgrading Kubernetes to the latest version seems to fix the issue, as reported in
-[#135013](https://github.com/kubernetes/kubernetes/issues/135013).
-
-Also, as a workaround to avoid these pre-flight errors, you can specify
-additional flags:
-
-```bash
-sudo -E kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=HTTPProxyCIDR --v=5
-```

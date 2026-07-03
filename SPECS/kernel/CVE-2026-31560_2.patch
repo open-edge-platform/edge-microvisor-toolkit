@@ -1,0 +1,34 @@
+From 716f2f913e78775783b44b9ac5d61e248d09d611 Mon Sep 17 00:00:00 2001
+From: Vladimir Yakovlev <vovchkir@gmail.com>
+Date: Tue, 3 Mar 2026 01:20:17 +0300
+Subject: [PATCH 3/8] spi: spi-dw-dma: fix print error log when wait finish
+ transaction
+
+If an error occurs, the device may not have a current message. In this
+case, the system will crash.
+
+In this case, it's better to use dev from the struct ctlr (struct spi_controller*).
+
+Signed-off-by: Vladimir Yakovlev <vovchkir@gmail.com>
+Link: https://patch.msgid.link/20260302222017.992228-2-vovchkir@gmail.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+---
+ drivers/spi/spi-dw-dma.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-dw-dma.c b/drivers/spi/spi-dw-dma.c
+index 65adec7c7524b..fe726b9b1780d 100644
+--- a/drivers/spi/spi-dw-dma.c
++++ b/drivers/spi/spi-dw-dma.c
+@@ -271,7 +271,7 @@ static int dw_spi_dma_wait(struct dw_spi *dws, unsigned int len, u32 speed)
+ 					 msecs_to_jiffies(ms));
+ 
+ 	if (ms == 0) {
+-		dev_err(&dws->ctlr->cur_msg->spi->dev,
++		dev_err(&dws->ctlr->dev,
+ 			"DMA transaction timed out\n");
+ 		return -ETIMEDOUT;
+ 	}
+-- 
+2.43.0
+

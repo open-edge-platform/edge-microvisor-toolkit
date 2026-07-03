@@ -1,0 +1,58 @@
+From 7de55ab060670434a5823596e2e028ce6752e27b Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 18 Aug 2022 16:19:33 -0700
+Subject: [PATCH 28/69] drm/virtio: save and restore virtio_gpu_objects
+
+Host KVM/QEMU loses all graphic resourses submitted by guest OS upon
+resumption from sleep or hibernation. This will cause invalid resource
+errors when the guest OS makes any request to the host regarding those
+resources. One way to prevent this problem is to let virtio-gpu driver
+resubmit all existing resources upon resumption. A linked-list for
+keeping references of all created virtio_gpu_object and its params is
+added for this save and restore mechanism. Virtio-gpu objects are added
+to the list whenever a new object is created and sent to the host.
+All backed-up objects will then be re-sent to the host in .resume
+function with 'create resource' virtio gpu command.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+(cherry picked from commit b54b3178e5e10e36d1d58b92ac4b100f1c588320)
+---
+ drivers/gpu/drm/virtio/virtgpu_drv.c    | 1 -
+ drivers/gpu/drm/virtio/virtgpu_object.c | 4 ++--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/virtio/virtgpu_drv.c b/drivers/gpu/drm/virtio/virtgpu_drv.c
+index b3dc9ccf4402c..de19a2ed93f12 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_drv.c
++++ b/drivers/gpu/drm/virtio/virtgpu_drv.c
+@@ -201,7 +201,6 @@ static int virtgpu_restore(struct virtio_device *vdev)
+ 	virtio_device_ready(vdev);
+ 
+ 	error = virtio_gpu_object_restore_all(vgdev);
+-
+ 	if (error) {
+ 		DRM_ERROR("Failed to recover objects\n");
+ 		return error;
+diff --git a/drivers/gpu/drm/virtio/virtgpu_object.c b/drivers/gpu/drm/virtio/virtgpu_object.c
+index f3d70c417c4b3..b2da5a94be455 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_object.c
++++ b/drivers/gpu/drm/virtio/virtgpu_object.c
+@@ -313,7 +313,7 @@ int virtio_gpu_object_restore_all(struct virtio_gpu_device *vgdev)
+ 	struct virtio_gpu_object_restore *curr, *tmp;
+ 	struct virtio_gpu_mem_entry *ents;
+ 	unsigned int nents;
+-	int ret;
++	int ret = 0;
+ 
+ 	list_for_each_entry_safe(curr, tmp, &vgdev->obj_rec, node) {
+ 		ret = virtio_gpu_object_shmem_init(vgdev, curr->bo, &ents, &nents);
+@@ -335,4 +335,4 @@ int virtio_gpu_object_restore_all(struct virtio_gpu_device *vgdev)
+ 	}
+ 
+ 	return ret;
+-}
+\ No newline at end of file
++}
+-- 
+2.43.0
+

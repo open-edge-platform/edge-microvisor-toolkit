@@ -1,7 +1,0 @@
-{
-  "Signatures": {
-    "device-discovery-0.0.4.tar.gz": "c065f2e59d653a064062196d72933eb4f38c0fe79473294de76d39c6eb99f78b",
-    "device-discovery-0.0.4-vendor.tar.gz": "ab524c54d7213bc530765ae67609d13da10862911ca8aa8fc5462b1332055988",
-    "device-discovery.service": "0ad29109cbe7cd7abf839408a538b4049875c925bdaa76d1ddc1476a0d13c289"
-  }
-}
