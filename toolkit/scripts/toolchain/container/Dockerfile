@@ -63,7 +63,16 @@ RUN wget -nv --no-clobber --timeout=30 --continue --input-file=$LFS/tools/toolch
 # Disable downloading from remote sources by default. The 'toolchain-local-wget-list' generated for the above line will download from $(SOURCE_URL)
 # The 'toolchain-remote-wget-list' is still available and can be used as an alternate to $(SOURCE_URL) if desired.
 #RUN wget -nv --no-clobber --timeout=30 --continue --input-file=$LFS/tools/toolchain-remote-wget-list --directory-prefix=$LFS/sources; exit 0
-RUN wget -nv --no-clobber --timeout=30 --continue https://github.com/intel/linux-intel-lts/archive/refs/tags/lts-v6.18.23-emt-260427T075939Z.tar.gz -O lts-v6.18.23-emt-260427T075939Z.tar.gz --directory-prefix=$LFS/sources; exit 0
+# RUN wget -nv --no-clobber --timeout=30 --continue https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz -O mainline-preprod-v7.0-linux-260617T095128Z.tar.gz --directory-prefix=$LFS/sources; exit 0
+
+RUN rm -f $LFS/sources/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz && \
+    wget -v --timeout=300 --tries=3 \
+    https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz \
+    -O $LFS/sources/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz && \
+    test -s $LFS/sources/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz || \
+    (echo "ERROR: kernel tarball is empty after download" && exit 1)
+
+
 USER root
 
 RUN mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin} && \

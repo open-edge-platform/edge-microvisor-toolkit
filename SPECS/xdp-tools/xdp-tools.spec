@@ -2,7 +2,7 @@
 Vendor:           Intel Corporation
 Distribution:     Edge Microvisor Toolkit
 Name:             xdp-tools
-Version:          1.6.1
+Version:          1.6.3
 Release:          1%{?dist}
 Summary:          Utilities and example programs for use with XDP
 License:          GPL-2.0-only
@@ -149,6 +149,9 @@ make install V=1
 %{_libdir}/pkgconfig/libxdp.pc
 
 %changelog
+* Thu July 9 2026 Lishan Liu <lishan.liu@intel.com> 1.6.3-1
+- Version upgrade to 1.6.3
+
 * Wed Mar 11 2026 Andy <andy.peng@intel.com> 1.6.1-1
 - Version upgrade of xdp-tools from 1.5.8 to 1.6.1
 
