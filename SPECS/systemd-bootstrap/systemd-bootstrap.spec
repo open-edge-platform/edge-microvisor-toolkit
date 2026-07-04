@@ -1,7 +1,7 @@
 Summary:        Bootstrap version of systemd. Workaround for systemd circular dependency.
 Name:           systemd-bootstrap
 Version:        250.3
-Release:        20%{?dist}
+Release:        21%{?dist}
 License:        LGPLv2+ AND GPLv2+ AND MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -124,7 +124,17 @@ sed -i "s#\#DefaultTasksMax=512#DefaultTasksMax=infinity#g" src/core/system.conf
 %build
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-CFLAGS="%{build_cflags} -Wno-error=format-overflow="                        \
+
+# Workaround: demote unknown-filesystem check from error to warning
+# so new kernel magic numbers (GUEST_MEMFD_MAGIC, NULL_FS_MAGIC) don't abort the build
+
+# Old (wrong pattern - nver matched  sed -i "s/error('Problem encountered: found unknown filesystem/warning('Problem encountered: found unknown filesystem/" \
+sed -i "s/error('found unknown filesystem/warning('found unknown filesystem/" src/basic/meson.build
+
+grep -q "warning('found unknown filesystem" src/basic/meson.build || \
+    (echo "ERROR: sed patch did not apply to meson.build" && exit 1)
+
+CFLAGS="%{build_cflags} -Wno-error=format-overflow= -Wno-error=override-init" \
 meson  --prefix %{_prefix}                                            \
        --sysconfdir %{_sysconfdir}                                    \
        --localstatedir %{_var}                                        \
