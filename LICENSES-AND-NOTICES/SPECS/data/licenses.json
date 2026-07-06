@@ -138,6 +138,7 @@
                 "fuse3",
                 "future",
                 "gbenchmark",
+                "gcab",
                 "gcovr",
                 "gdk-pixbuf2",
                 "geos",
@@ -980,7 +981,6 @@
                 "ltp",
                 "lttng-consume",
                 "mm-common",
-                "moby-containerd-cc",
                 "moby-engine",
                 "msgpack",
                 "ncompress",
@@ -1111,6 +1111,7 @@
                 "vala",
                 "valkey",
                 "vnstat",
+                "walinuxagent-acl-config",
                 "zstd"
             ]
         },
