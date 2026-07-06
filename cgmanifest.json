@@ -3741,8 +3741,8 @@
         "type": "other",
         "other": {
           "name": "intel-compute-runtime",
-          "version": "25.40.35563.4",
-          "downloadUrl": "https://github.com/intel/compute-runtime/archive/25.40.35563.4/compute-runtime-25.40.35563.4.tar.gz"
+          "version": "26.18.38308.1",
+          "downloadUrl": "https://github.com/intel/compute-runtime/archive/26.18.38308.1/compute-runtime-26.18.38308.1.tar.gz"
         }
       }
     },
