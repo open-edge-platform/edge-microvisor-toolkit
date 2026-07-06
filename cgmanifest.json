@@ -3801,8 +3801,8 @@
         "type": "other",
         "other": {
           "name": "intel-level-zero",
-          "version": "1.27.0",
-          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.27.0.tar.gz"
+          "version": "1.28.2",
+          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.28.2.tar.gz"
         }
       }
     },
