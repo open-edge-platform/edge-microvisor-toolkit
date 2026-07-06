@@ -6866,6 +6866,16 @@
         }
       }
     },
+    {     
+      "component": { 
+        "type": "other", 
+        "other": {
+          "name": "llvm16",
+          "version": "16.0.6",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.6.tar.gz"
+        }
+      } 
+    },
     {
       "component": {
         "type": "other",
