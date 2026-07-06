@@ -1,7 +1,7 @@
-%global sdkver 1.4.309.0
+%global sdkver 1.4.350.1
 
 Name:           spirv-tools
-Version:        2025.1
+Version:        2026.2
 Release:        1%{?dist}
 Summary:        API and commands for processing SPIR-V modules
 
@@ -11,7 +11,7 @@ Distribution:   Edge Microvisor Toolkit
 URL:            https://github.com/KhronosGroup/SPIRV-Tools
 Source0:        %url/archive/vulkan-sdk-%{sdkver}.tar.gz#/%{name}-sdk-%{sdkver}.tar.gz
 
-Patch0: fix-gcc12-build.patch
+#Patch0: fix-gcc12-build.patch
 
 BuildRequires:  cmake3
 BuildRequires:  gcc-c++
@@ -68,6 +68,7 @@ popd
 %{_bindir}/spirv-as
 %{_bindir}/spirv-cfg
 %{_bindir}/spirv-dis
+%{_bindir}/spirv-diff
 %{_bindir}/spirv-lesspipe.sh
 %{_bindir}/spirv-link
 %{_bindir}/spirv-lint
@@ -93,8 +94,12 @@ popd
 %{_libdir}/pkgconfig/SPIRV-Tools.pc
 
 %changelog
+* Mon Jul 6 2026 Chee Yang Lee <chee.yang.lee@intel.com> - 2026.2-1
+- upgrade to 2026.2
+
 * Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 2025.1-1
 - Promote and upgrade to 2025.1 based on Fedora 41.
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
 
 * Thu Feb 29 2024 Vince Perri <viperri@microsoft.com> - 2023.2-1
 - Promote and upgrade to 2023.2 based on Fedora 40.
