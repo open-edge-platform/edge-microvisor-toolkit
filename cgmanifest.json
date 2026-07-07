@@ -6820,6 +6820,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "lld16",
+          "version": "16.0.6",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.6.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "lldb",
           "version": "18.1.8",
           "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-18.1.8.tar.gz"
