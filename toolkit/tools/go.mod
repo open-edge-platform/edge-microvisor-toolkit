@@ -1,6 +1,6 @@
 module github.com/microsoft/azurelinux/toolkit/tools
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.6.0
