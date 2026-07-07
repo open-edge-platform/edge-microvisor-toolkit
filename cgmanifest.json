@@ -15345,6 +15345,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "spirv-llvm16-translator",
+          "version": "16.0.23",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v16.0.23/spirv-llvm-translator-v16.0.23.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "spirv-tools",
           "version": "2025.1",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Tools/archive/vulkan-sdk-1.4.309.0.tar.gz"

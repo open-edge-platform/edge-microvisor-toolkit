@@ -783,6 +783,7 @@
                 "spirv-headers",
                 "spirv-llvm-translator",
                 "spirv-llvm15-translator",
+                "spirv-llvm16-translator",
                 "spirv-tools",
                 "squashfs-tools",
                 "squid",
