@@ -42,12 +42,6 @@ Source0:        https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-%
 
 
 
-# %if %{with compat_build}
-# # Ensure that clang looks for LLVMgold.so in the directory the compat build
-# # uses.
-# Patch100:   fix-lto-path.patch
-# %endif
-
 BuildRequires:  cmake
 BuildRequires:  libxml2-devel
 %if %{with compat_build}

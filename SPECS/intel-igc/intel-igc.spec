@@ -1,8 +1,8 @@
-%global llvm_compat 15
+%global llvm_compat 16
 
 Name:           intel-igc
-Version:        2.11.7
-Release:        2%{?dist}
+Version:        2.34.4
+Release:        1%{?dist}
 Summary:        Intel Graphics Compiler for OpenCL
 License:        MIT
 Vendor:         Intel Corporation
@@ -114,6 +114,9 @@ Library files for Intel Graphics Compiler for OpenCL.
 %{_libdir}/pkgconfig/igc-opencl.pc
 
 %changelog
+- Tue Jul 7 2026 Andy <andy.peng@intel.com> - 2.34.4-1
+- Update version to 2.34.4.
+
 * Fri Jul 25 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 2.11.7-1
 - Update version to 2.11.7.
 
