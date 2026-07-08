@@ -114,7 +114,7 @@ Library files for Intel Graphics Compiler for OpenCL.
 %{_libdir}/pkgconfig/igc-opencl.pc
 
 %changelog
-- Tue Jul 7 2026 Andy <andy.peng@intel.com> - 2.34.4-1
+* Tue Jul 7 2026 Andy <andy.peng@intel.com> - 2.34.4-1
 - Update version to 2.34.4.
 
 * Fri Jul 25 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 2.11.7-1
