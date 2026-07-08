@@ -228,7 +228,7 @@ ln -s clang++ %{buildroot}%{_bindir}/clang++-%{maj_ver}
 
 # Create sub-directories in the clang resource directory that will be
 # populated by other packages
-mkdir -p %{buildroot}%{pkg_libdir}/clang/%{version}/{include,lib,share}/
+mkdir -p %{buildroot}%{pkg_libdir}/clang/%{maj_ver}/{include,lib,share}/
 
 
 %if %{without compat_build}
@@ -267,11 +267,11 @@ make clang-check
 
 %files libs
 %if %{without compat_build}
-%{_libdir}/clang/%{version}/include/*
+%{_libdir}/clang/%{maj_ver}/include/*
 %{_libdir}/*.so.*
 %else
 %{pkg_libdir}/*.so.*
-%{pkg_libdir}/clang/%{version}/include/*
+%{pkg_libdir}/clang/%{maj_ver}/include/*
 %endif
 
 %files devel
@@ -292,10 +292,10 @@ make clang-check
 %endif
 
 %dir %{pkg_libdir}/clang/
-%dir %{pkg_libdir}/clang/%{version}/
-%dir %{pkg_libdir}/clang/%{version}/include/
-%dir %{pkg_libdir}/clang/%{version}/lib/
-%dir %{pkg_libdir}/clang/%{version}/share/
+%dir %{pkg_libdir}/clang/%{maj_ver}/
+%dir %{pkg_libdir}/clang/%{maj_ver}/include/
+%dir %{pkg_libdir}/clang/%{maj_ver}/lib/
+%dir %{pkg_libdir}/clang/%{maj_ver}/share/
 %if %{without compat_build}
 %{pkg_libdir}/clang/%{maj_ver}
 %endif
