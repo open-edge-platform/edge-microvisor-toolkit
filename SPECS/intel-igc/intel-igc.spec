@@ -105,8 +105,11 @@ Library files for Intel Graphics Compiler for OpenCL.
 %{_libdir}/libigdfcl.so.2.*
 
 %files devel
+%{_libdir}/libiga{32,64}.so
 %{_libdir}/libiga{32,64}.so.2
+%{_libdir}/libigc.so
 %{_libdir}/libigc.so.2
+%{_libdir}/libigdfcl.so
 %{_libdir}/libigdfcl.so.2
 %{_includedir}/igc
 %{_includedir}/iga
