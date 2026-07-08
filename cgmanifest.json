@@ -1076,6 +1076,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "clang16",
+          "version": "16.0.6",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.6.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "clinfo",
           "version": "3.0.23.01.25",
           "downloadUrl": "https://github.com/Oblomov/clinfo/archive/3.0.23.01.25/clinfo-3.0.23.01.25.tar.gz"
