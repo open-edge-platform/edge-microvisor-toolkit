@@ -52,7 +52,8 @@ sed -i '/add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLi
 cmake \
 	-B build -S . \
 	-DENABLE_VALIDATION_BUILD=OFF \
-	-DENABLE_NPU_COMPILER_BUILD=OFF
+	-DENABLE_NPU_COMPILER_BUILD=OFF \
+	-DENABLE_NPU_COMPILER_DOWNLOAD=OFF
 
 cmake --build build --target ze_intel_npu
 
