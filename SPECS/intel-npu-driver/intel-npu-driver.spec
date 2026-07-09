@@ -1,14 +1,14 @@
 Summary:	    Intel Neural Processing Unit Driver
 Name:		    intel-npu-driver
-Version:	    1.33.0
+Version:	    1.34.0
 Release:	    1%{?dist}
 License:	    MIT AND Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:		    https://github.com/intel/linux-npu-driver
 Source0:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
-Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/c7cb5d218ca14f6a81b3ef0bb89e718e9fcdba8e/level-zero-npu-extensions-c7cb5d2.tar.gz
-Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/82c444bcb9feb0f55fa33e18fbd711ec35426fba/npu_compiler_elf-82c444b.tar.gz
+Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/f9ad3bf89c2418d714aef2e6b96a5aafb12a1971/level-zero-npu-extensions-f9ad3bf.tar.gz
+Source2:	    https://github.com/intel-innersource/libraries.ai.npu.elf/archive/eca361b16892e3035f95c03bfb7f8d53ad2c8ef7/libraries.ai.npu.elf-eca361b.tar.gz
 
 ExclusiveArch:	x86_64
 
@@ -39,11 +39,11 @@ It enables energy-efficient execution of artificial neural network tasks.
 
 # thirdparty deps
 rm -rf thirdparty/googletest thirdparty/level-zero third_party/level-zero-npu-extensions \
-   thirdparty/perfetto thirdparty/yaml-cpp third_party/npu_compiler_elf
+   thirdparty/perfetto thirdparty/yaml-cpp third_party/npu_elf
 tar xf %{SOURCE1}
 mv level-zero-npu-extensions-* third_party/level-zero-npu-extensions
 tar xf %{SOURCE2}
-mv npu_compiler_elf-* third_party/npu_compiler_elf
+mv libraries.ai.npu.elf-* third_party/npu_elf
 
 sed -i '/add_subdirectory(googletest EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
