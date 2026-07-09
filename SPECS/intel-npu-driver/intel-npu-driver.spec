@@ -23,7 +23,7 @@ BuildRequires:	glibc-devel
 BuildRequires:	gmock-devel
 BuildRequires:	gtest-devel
 BuildRequires:	libudev-devel
-BuildRequires:	intel-level-zero-devel >= 1.27.0
+BuildRequires:	intel-level-zero-devel >= 1.28.2
 BuildRequires:	openssl-devel
 BuildRequires:	yaml-cpp-devel
 
