@@ -35,7 +35,7 @@ It enables energy-efficient execution of artificial neural network tasks.
 
 
 %prep
-%setup -q -n linux-npu-driver-%{version}
+%setup -q -n drivers.vpu.linux.client-npu-1.34.0-release_ttl_presilicon-20260619-27819362393
 
 # thirdparty deps
 rm -rf thirdparty/googletest thirdparty/level-zero third_party/level-zero-npu-extensions \
