@@ -45,9 +45,9 @@ mv level-zero-npu-extensions-* third_party/level-zero-npu-extensions
 tar xf %{SOURCE2}
 mv libraries.ai.npu.elf-* third_party/npu_elf
 
-sed -i '/add_subdirectory(googletest EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
-sed -i '/add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
-sed -i '/movi-scripts/s/^/#/' third_party/CMakeLists.txt
+sed -i '/include(cmake\/googletest.cmake)/s/^/#/' third_party/CMakeLists.txt
+sed -i '/include(cmake\/yaml-cpp.cmake)/s/^/#/' third_party/CMakeLists.txt
+sed -i '/include(cmake\/movi-scripts.cmake)/s/^/#/' third_party/CMakeLists.txt
 
 # Fix system yaml-cpp cmake config referencing non-existent static library
 sed -i 's|/usr/lib/libyaml-cpp.a|/usr/lib64/libyaml-cpp.so|' /usr/lib/cmake/yaml-cpp/yaml-cpp-targets.cmake
