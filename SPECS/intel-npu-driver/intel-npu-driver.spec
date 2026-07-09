@@ -47,6 +47,7 @@ mv libraries.ai.npu.elf-* third_party/npu_elf
 
 sed -i '/add_subdirectory(googletest EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
+sed -i '/include(movi-scripts.cmake)/s/^/#/' third_party/CMakeLists.txt
 
 %build
 cmake \
@@ -54,7 +55,8 @@ cmake \
 	-DENABLE_VALIDATION_BUILD=OFF \
 	-DENABLE_NPU_COMPILER_BUILD=OFF \
 	-DENABLE_NPU_COMPILER_DOWNLOAD=OFF \
-	-DENABLE_NPU_FIRMWARE_API_DOWNLOAD=OFF
+	-DENABLE_NPU_FIRMWARE_API_DOWNLOAD=OFF \
+	-DYAML_CPP_SHARED_LIBS=ON
 
 cmake --build build --target ze_intel_npu
 
