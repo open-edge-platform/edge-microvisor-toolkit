@@ -1,0 +1,241 @@
+From 4ddb5bcf7593f8c08077774d2ac7e18a4c8b862b Mon Sep 17 00:00:00 2001
+From: "Li, Hongli" <hongli.li@intel.com>
+Date: Tue, 21 Apr 2026 15:01:18 +0800
+Subject: [PATCH 1/5] selftests/pps: add common test framework for Intel TIO
+ PPS
+
+Add a shared test framework (pps_tio_common.sh) for the Intel Timed IO
+(TIO) PPS self-tests, providing:
+
+  - kselftest return code constants (KSFT_PASS/FAIL/SKIP)
+  - Logging and result summary functions
+  - Cleanup and early-exit helpers
+  - Device discovery utilities
+  - Module info check helper
+
+Update the Makefile to install the common file via TEST_FILES and
+update README to mention the shared framework.
+
+Signed-off-by: Li, Hongli <hongli.li@intel.com>
+---
+ .../drivers/platform/x86/intel/pps/Makefile   |   7 ++
+ .../drivers/platform/x86/intel/pps/README.rst |  63 ++++++++++
+ .../drivers/platform/x86/intel/pps/config     |   1 +
+ .../platform/x86/intel/pps/pps_tio_common.sh  | 113 ++++++++++++++++++
+ 4 files changed, 184 insertions(+)
+ create mode 100644 tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
+ create mode 100644 tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
+ create mode 100644 tools/testing/selftests/drivers/platform/x86/intel/pps/config
+ create mode 100755 tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
+
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile b/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
+new file mode 100644
+index 000000000000..69ec7a758c6a
+--- /dev/null
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
+@@ -0,0 +1,7 @@
++# SPDX-License-Identifier: GPL-2.0
++# Makefile for Intel Timed IO (TIO) PPS selftests
++
++TEST_PROGS :=
++TEST_FILES := pps_tio_common.sh
++
++include ../../../../../lib.mk
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst b/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
+new file mode 100644
+index 000000000000..6b0726de5b43
+--- /dev/null
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
+@@ -0,0 +1,63 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++==========================================
++Intel Timed IO (TIO) PPS Self-Tests
++==========================================
++
++Overview
++========
++
++This directory contains self-tests for the Intel Timed IO (TIO) PPS drivers.
++The common test framework is provided by ``pps_tio_common.sh``.
++
++Prerequisites
++=============
++
++Hardware
++--------
++
++Intel platform with Timed GPIO (TGPIO) support.
++
++BIOS Configuration
++------------------
++
++To enable TGPIO, configure the following BIOS options:
++
++- ``Intel Advanced Menu > PCH-IO Configuration > Enable Timed GPIO0`` → **Enabled**
++- ``Intel Advanced Menu > PCH-IO Configuration > Enable Timed GPIO1`` → **Enabled**
++
++Kernel Configuration
++--------------------
++
++The following kernel configuration options must be enabled (as modules or
++built-in)::
++
++  CONFIG_PPS=m
++
++Running the Tests
++=================
++
++Run individual tests as root using the kselftest framework::
++
++  $ cd tools/testing/selftests/drivers/platform/x86/intel/pps
++  $ sudo ./<test_script>.sh
++
++Or using the kselftest runner from the kernel tree::
++
++  $ make -C tools/testing/selftests TARGETS=drivers/platform/x86/intel/pps run_tests
++
++Output
++======
++
++Test results are printed to stdout with the following prefixes:
++
++- ``[PASS]`` - Test passed
++- ``[FAIL]`` - Test failed
++- ``[SKIP]`` - Test skipped (e.g., hardware not present)
++- ``[INFO]`` - Informational message
++
++The script exits with the kselftest return codes:
++
++- ``0`` (KSFT_PASS) - All tests passed
++- ``1`` (KSFT_FAIL) - One or more tests failed
++- ``4`` (KSFT_SKIP) - All tests were skipped
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/config b/tools/testing/selftests/drivers/platform/x86/intel/pps/config
+new file mode 100644
+index 000000000000..f2a107935eda
+--- /dev/null
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/config
+@@ -0,0 +1 @@
++CONFIG_PPS=m
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh b/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
+new file mode 100755
+index 000000000000..6de9dde77f3a
+--- /dev/null
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
+@@ -0,0 +1,113 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++#
++# Common test framework for Intel Timed IO (TIO) PPS self-tests.
++#
++# Provides shared constants, logging, result summary, cleanup helpers,
++# and device discovery utilities used by all TIO PPS test scripts.
++#
++# Copyright (C) 2026 Intel Corporation
++
++# kselftest return codes
++readonly KSFT_PASS=0
++readonly KSFT_FAIL=1
++readonly KSFT_SKIP=4
++
++# Log level tags
++readonly PASS="PASS"
++readonly FAIL="FAIL"
++readonly SKIP="SKIP"
++readonly INFO="INFO"
++
++# ACPI device IDs for Intel TIO
++readonly ACPI_IDS="INTC1023 INTC1024"
++
++# Global state - must be set by each test script before calling common functions:
++#   PPS_LOG_FILE  - path to the test log file
++#   PPS_TEST_NAME - human-readable test name for messages
++RESULT=$KSFT_PASS
++
++# Append a message to the test log and stdout
++append_log()
++{
++	echo -e "$1" | tee -a "$PPS_LOG_FILE"
++}
++
++# Print result summary from the log file
++pps_result_summary()
++{
++	local fail_num pass_num skip_num
++
++	if [ -e "$PPS_LOG_FILE" ]; then
++		fail_num=$(grep -c "^\[${FAIL}\]" "$PPS_LOG_FILE")
++		pass_num=$(grep -c "^\[${PASS}\]" "$PPS_LOG_FILE")
++		skip_num=$(grep -c "^\[${SKIP}\]" "$PPS_LOG_FILE")
++
++		if [ "$fail_num" -ne 0 ]; then
++			RESULT=$KSFT_FAIL
++			echo "[$INFO] $PPS_TEST_NAME test failure summary:"
++			grep "^\[${FAIL}\]" "$PPS_LOG_FILE"
++		elif [ "$skip_num" -ne 0 ] && [ "$pass_num" -eq 0 ]; then
++			RESULT=$KSFT_SKIP
++		fi
++		echo "[$INFO] $PPS_TEST_NAME test pass:$pass_num, skip:$skip_num, fail:$fail_num"
++	fi
++}
++
++# Common cleanup finish: print summary, remove log file, and exit.
++# Each test script should define pps_cleanup() that performs test-specific
++# teardown and then calls this function.
++pps_cleanup_finish()
++{
++	pps_result_summary
++	[ -e "$PPS_LOG_FILE" ] && rm -rf "$PPS_LOG_FILE"
++
++	echo "[RESULT] $PPS_TEST_NAME test exit with $RESULT"
++	exit "$RESULT"
++}
++
++# Exit early with SKIP and invoke cleanup.
++# Requires pps_cleanup() to be defined by the test script.
++test_exit()
++{
++	local info=$1
++	RESULT=$2
++	append_log "[$SKIP] $info"
++	pps_cleanup
++}
++
++
++# Find a PPS device whose name matches a pattern
++find_pps_by_name()
++{
++	local pattern="$1"
++	local pps_class="$2"
++	local pps_dev name
++
++	for pps_dev in ${pps_class}/pps*; do
++		[ -d "$pps_dev" ] || continue
++		[ -f "$pps_dev/name" ] || continue
++		name=$(cat "$pps_dev/name" 2>/dev/null)
++		if echo "$name" | grep -qi "$pattern"; then
++			basename "$pps_dev"
++			return 0
++		fi
++	done
++	return 1
++}
++
++# Check module info for a given module
++check_modinfo()
++{
++	local mod="$1"
++	local desc
++
++	desc=$(modinfo "$mod" 2>/dev/null | grep "^description:" | head -1)
++	if [ -n "$desc" ]; then
++		append_log "[$PASS] modinfo $mod: $desc"
++		return 0
++	else
++		append_log "[$SKIP] modinfo $mod: module not available"
++		return 1
++	fi
++}
+-- 
+2.34.1
+

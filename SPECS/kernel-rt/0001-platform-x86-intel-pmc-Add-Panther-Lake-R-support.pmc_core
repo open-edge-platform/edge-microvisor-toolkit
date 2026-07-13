@@ -1,0 +1,32 @@
+From fa322c59c8deecef68cbc86c30fae2770b46f556 Mon Sep 17 00:00:00 2001
+From: gaojianf <jianfeng.gao@intel.com>
+Date: Fri, 12 Jun 2026 11:20:55 +0800
+Subject: [PATCH] platform/x86/intel/pmc: Add Panther Lake R support to
+ intel_pmc_core
+
+Add Panther Lake R support to intel_pmc_core driver by matching
+it to the existing Panther Lake PMC device description.
+
+Panther Lake R uses the same PMC support as the current Panther
+Lake platform entry, so wire its CPU ID to ptl_pmc_dev.
+
+Signed-off-by: gaojianf <jianfeng.gao@intel.com>
+---
+ drivers/platform/x86/intel/pmc/core.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/platform/x86/intel/pmc/core.c b/drivers/platform/x86/intel/pmc/core.c
+index 7d7ae8a40b0e..441df383d8af 100644
+--- a/drivers/platform/x86/intel/pmc/core.c
++++ b/drivers/platform/x86/intel/pmc/core.c
+@@ -1743,6 +1743,7 @@ static const struct x86_cpu_id intel_pmc_core_ids[] = {
+ 	X86_MATCH_VFM(INTEL_ARROWLAKE_U,	&arl_h_pmc_dev),
+ 	X86_MATCH_VFM(INTEL_LUNARLAKE_M,	&lnl_pmc_dev),
+ 	X86_MATCH_VFM(INTEL_PANTHERLAKE_L,	&ptl_pmc_dev),
++	X86_MATCH_VFM(INTEL_PANTHERLAKE_R,      &ptl_pmc_dev),
+ 	X86_MATCH_VFM(INTEL_WILDCATLAKE_L,	&wcl_pmc_dev),
+ 	{}
+ };
+-- 
+2.34.1
+

@@ -13,14 +13,14 @@
 
 Summary:        Linux API header files
 Name:           kernel-headers
-Version:        6.18.23
+Version:        6.18.33
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/pub/linux/kernel
-Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.23.tar.gz
+Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.33.tar.gz
 # Historical name shipped by other distros
 Provides:       glibc-kernheaders = %{version}-%{release}
 BuildArch:      noarch
@@ -41,7 +41,7 @@ cross-glibc package.
 %endif
 
 %prep
-%setup -q -n linux-6.18.23
+%setup -q -n linux-6.18.33
 
 %build
 make mrproper
@@ -76,6 +76,10 @@ done
 %endif
 
 %changelog
+* Mon Jul 13 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.33-1
+- Update kernel to 6.18.33-1
+- lts-v6.18.33-emt-cve-260623T022223Z
+
 * Fri May 22 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.23-1
 - Update kernel to 6.18.23-1
 - lts-v6.18.23-emt-cve-260427T075939Z

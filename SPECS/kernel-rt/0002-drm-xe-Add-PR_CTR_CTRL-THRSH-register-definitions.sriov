@@ -1,0 +1,43 @@
+From 6344d57207af69f4574ab0cc2ce3f9670b3a7ba9 Mon Sep 17 00:00:00 2001
+From: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Date: Tue, 3 Mar 2026 21:13:52 +0100
+Subject: [PATCH 2/3] drm/xe: Add PR_CTR_CTRL/THRSH register definitions
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The Watchdog Counter Control and Watchdog Counter Threshold
+registers are needed for watchdog programming. This watchdog
+will generate the "Media Hang Notify" interrupt.
+
+Bspec: 45999, 46000
+Bspec: 60373, 60374
+Signed-off-by: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Reviewed-by: Michał Winiarski <michal.winiarski@intel.com>
+Link: https://patch.msgid.link/20260303201354.17948-2-michal.wajdeczko@intel.com
+---
+ drivers/gpu/drm/xe/regs/xe_engine_regs.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/regs/xe_engine_regs.h b/drivers/gpu/drm/xe/regs/xe_engine_regs.h
+index 27fba92301c4..391d603a40ea 100644
+--- a/drivers/gpu/drm/xe/regs/xe_engine_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_engine_regs.h
+@@ -132,6 +132,14 @@
+ #define RING_BBADDR(base)			XE_REG((base) + 0x140)
+ #define RING_BBADDR_UDW(base)			XE_REG((base) + 0x168)
+ 
++#define PR_CTR_CTRL(base)			XE_REG((base) + 0x178)
++#define   CTR_COUNT_SELECT_FF			REG_BIT(31)
++#define   CTR_LOGIC_OP_MASK			REG_GENMASK(30, 0)
++#define     CTR_START				0
++#define     CTR_STOP				1
++#define   CTR_LOGIC_OP(OP)			REG_FIELD_PREP(CTR_LOGIC_OP_MASK, CTR_##OP)
++#define PR_CTR_THRSH(base)			XE_REG((base) + 0x17c)
++
+ #define BCS_SWCTRL(base)			XE_REG((base) + 0x200, XE_REG_OPTION_MASKED)
+ #define   BCS_SWCTRL_DISABLE_256B		REG_BIT(2)
+ 
+-- 
+2.34.1
+

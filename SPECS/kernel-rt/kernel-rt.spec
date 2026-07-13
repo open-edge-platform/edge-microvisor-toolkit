@@ -1,13 +1,13 @@
 Summary:        Preempt RT Linux Kernel
 Name:           kernel-rt
-Version:        6.18.23
+Version:        6.18.33
 Release:        1%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/pub/linux/kernel
-Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.23.tar.gz
+Source0:        https://www.kernel.org/pub/linux/kernel/v6.x/linux-6.18.33.tar.gz
 Source1:        config
 Source3:        sha512hmac-openssl.sh
 Source4:        emt-ca-20211013.pem
@@ -15,8 +15,8 @@ Source5:        cpupower
 Source6:        cpupower.service
 
 # Intel Kernel Patches
-# Series file for v6.18.23 linux kernel
-# 47a33eea6d514 Linux 6.18.23
+# Series file for v6.18.33 linux kernel
+# 83657f4189612 Linux 6.18.33
 # security
 Patch01001: 0001-Add-security.md-file.security
 Patch01002: 0002-Add-updated-TPR-TXT-Protected-Regions-support-to-.security
@@ -36,6 +36,7 @@ Patch01015: 0005-issei-update-MAINTAINERS-file.security
 Patch01016: 0006-issei-host_client-add-dma-allocation-support.security
 Patch01017: 0007-issei-add-driver-to-driver-interface.security
 Patch01018: 0001-tpm-restore-timeout-for-key-creation-commands.security
+Patch01019: 0001-iommu-vt-d-cache-TPR-mappings-at-boot-to-fix-S3-r.security
 # preempt-rt
 Patch02001: 0001-drm-i915-Use-preempt_disable-enable_rt-where-recommende.rt
 Patch02002: 0002-drm-i915-Don-t-disable-interrupts-on-PREEMPT_RT-during-.rt
@@ -46,6 +47,11 @@ Patch02006: 0006-drm-i915-guc-Consider-also-RCU-depth-in-busy-loop.rt
 Patch02007: 0007-drm-i915-Consider-RCU-read-section-as-atomic.rt
 Patch02008: 0008-Revert-drm-i915-Depend-on-PREEMPT_RT.rt
 Patch02009: 0009-sysfs-Add-sys-kernel-realtime-entry.rt
+Patch02010: 0001-drm-i915-adding-i915-parameter-to-disable-stolen-memory.rt
+Patch02011: 0001-sched-adding-option-to-disable-timer-migration-in-isola.rt
+Patch02012: 0002-drm-xe-adding-parameter-to-disable-stolen-memory.rt
+Patch02013: 0002-efi-adding-dynamic-enable-efi-service-interface.rt
+Patch02014: 0003-drm-i915-add-i915-perf-event-capacity.rt
 # rapl
 Patch03001: 0003-cpuidle-Add-sanity-check-for-exit-latency-and-target-.rapl
 Patch03002: 0004-cpuidle-teo-Use-this_cpu_ptr-where-possible.rapl
@@ -240,9 +246,24 @@ Patch07071: 0064-drm-i915-gt-Isolate-single-sysfs-engine-file-creation.drm
 Patch07072: 0065-drm-i915-gt-Implement-creation-and-removal-routines-fo.drm
 Patch07073: 0066-drm-i915-gt-Allow-the-user-to-change-the-CCS-mode-thro.drm
 Patch07074: 0067-drm-i915-gt-Refactor-CCS-mode-handling-and-improve-app.drm
-Patch07075: 0069-drm-i915-move-sriov-selftest-buffer-out-of-stack.drm
-Patch07076: 0001-drm-virtio-Wait-until-the-control-and-cursor-queues-ar.drm
-Patch07077: 0002-virtio-gpu-reset-attachment-state-during-resource-rest.drm
+Patch07075: 0068-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
+Patch07076: 0069-drm-i915-move-sriov-selftest-buffer-out-of-stack.drm
+Patch07077: 0001-drm-virtio-Wait-until-the-control-and-cursor-queues-ar.drm
+Patch07078: 0002-virtio-gpu-reset-attachment-state-during-resource-rest.drm
+Patch07079: 0001-Add-display-error-fatal-masking-to-earlier-stage-and-a.drm
+Patch07080: 0001-Revert-drm-i915-no-waiting-for-page-flip-in-vpp-case.drm
+Patch07081: 0001-drm-i915-bios-Update-reading-panel-rotation-from-VBT.drm
+Patch07082: 0001-drm-xe-display-Always-use-system-memory-on-PREEMPT_RT-.drm
+Patch07083: 0002-drm-xe-display-Prefer-not-to-allocate-a-framebuffers-i.drm
+Patch07084: 0003-drm-vblank_work-Add-methods-to-schedule-vblank_work-in.drm
+Patch07085: 0004-drm-vblank-Add-a-2-stage-version-of-drm_crtc_arm_vblan.drm
+Patch07086: 0005-drm-intel-display-Make-intel_crtc_arm_vblank_event-sta.drm
+Patch07087: 0006-drm-intel-display-Convert-vblank-event-handling-to-2-s.drm
+Patch07088: 0007-drm-i915-display-Move-vblank-put-until-after-critical-.drm
+Patch07089: 0008-drm-i915-display-Remove-locking-from-intel_vblank_evad.drm
+Patch07090: 0009-drm-i915-display-Handle-vlv-dsi-workaround-in-scanline.drm
+Patch07091: 0010-drm-i915-gt-Add-a-spinlock-to-prevent-starvation-of-ir.drm
+Patch07092: 0011-drm-i915-disable-PMU-events-on-PREEMPT_RT.drm
 # edac
 Patch08001: 0003-EDAC-igen6-Fix-masks-of-MCHBAR-TOM-TOUUD-registers.edac
 Patch08002: 0001-x86-mce-Add-MCACOD-code-for-generic-I-O-error.edac
@@ -254,6 +275,7 @@ Patch08007: 0001-EDAC-igen6-Fix-call-trace-due-to-missing-release.edac
 Patch08008: 0002-EDAC-igen6-Fix-memory-topology-parsing-for-Panther-La.edac
 Patch08009: 0003-EDAC-igen6-Add-one-Intel-Panther-Lake-H-SoC-support.edac
 Patch08010: 0004-EDAC-igen6-Fix-runtime-field-extraction-for-lts-6.18.edac
+Patch08011: 0001-EDAC-igen6-Add-Intel-Starfire-SoCs-support.edac
 # perf
 Patch09001: 0001-perf-x86-intel-cstate-Add-Pantherlake-support.perf
 Patch09002: 0002-perf-x86-intel-uncore-Move-uncore-discovery-init-stru.perf
@@ -269,6 +291,47 @@ Patch09011: 0011-perf-x86-intel-uncore-Update-DMR-uncore-constraints-p.perf
 Patch09012: 0012-perf-pmu-Relax-uncore-wildcard-matching-to-allow-nume.perf
 Patch09013: 0013-perf-x86-intel-uncore-Add-missing-PMON-units-for-Pant.perf
 Patch09014: 0001-perf-x86-intel-uncore-Refine-global-control-handling-.perf
+Patch09015: 0001-perf-x86-intel-Initialize-architectural-PEBS.perf
+Patch09016: 0002-perf-x86-intel-ds-Factor-out-PEBS-record-processing-c.perf
+Patch09017: 0003-perf-x86-intel-ds-Factor-out-PEBS-group-processing-co.perf
+Patch09018: 0004-perf-x86-intel-Process-arch-PEBS-records-or-record-fr.perf
+Patch09019: 0005-perf-x86-intel-Allocate-arch-PEBS-buffer-and-initiali.perf
+Patch09020: 0006-perf-x86-intel-Update-dyn_constraint-base-on-PEBS-eve.perf
+Patch09021: 0007-perf-x86-intel-Setup-PEBS-data-configuration-and-enab.perf
+Patch09022: 0008-perf-x86-intel-Add-counter-group-support-for-arch-PEB.perf
+Patch09023: 0009-perf-x86-intel-Check-PEBS-dyn_constraints.perf
+Patch09024: 0010-perf-x86-intel-Optimize-PEBS-extended-config.perf
+Patch09025: 0011-perf-x86-intel-Fix-and-clean-up-intel_pmu_drain_arch_.perf
+Patch09026: 0012-perf-x86-intel-Enable-large-PEBS-sampling-for-XMMs.perf
+Patch09027: 0013-perf-x86-intel-Convert-x86_perf_regs-to-per-cpu-varia.perf
+Patch09028: 0014-perf-Eliminate-duplicate-arch-specific-functions-defi.perf
+Patch09029: 0015-perf-x86-Use-x86_perf_regs-in-the-x86-nmi-handler.perf
+Patch09030: 0016-x86-fpu-Ensure-TIF_NEED_FPU_LOAD-is-set-after-saving-.perf
+Patch09031: 0017-x86-fpu-xstate-Add-xsaves_nmi-helper.perf
+Patch09032: 0018-perf-Move-and-rename-has_extended_regs-for-arch-speci.perf
+Patch09033: 0019-perf-x86-Enable-XMM-Register-Sampling-for-Non-PEBS-Ev.perf
+Patch09034: 0020-perf-x86-Enable-XMM-register-sampling-for-REGS_USER-c.perf
+Patch09035: 0021-perf-Add-perf_event_attr-config4.perf
+Patch09036: 0022-perf-Add-sampling-support-for-SIMD-registers.perf
+Patch09037: 0023-perf-x86-Support-XMM-sampling-using-sample_simd_vec_r.perf
+Patch09038: 0024-perf-x86-Support-YMM-sampling-using-sample_simd_vec_r.perf
+Patch09039: 0025-perf-x86-Support-ZMM-sampling-using-sample_simd_vec_r.perf
+Patch09040: 0026-perf-x86-Support-OPMASK-sampling-using-sample_simd_pr.perf
+Patch09041: 0027-perf-Enhance-perf_reg_validate-with-simd_enabled-argu.perf
+Patch09042: 0028-perf-x86-Support-eGPRs-sampling-using-sample_regs_-fi.perf
+Patch09043: 0029-perf-x86-Support-SSP-sampling-using-sample_regs_-fiel.perf
+Patch09044: 0030-perf-x86-intel-Support-arch-PEBS-based-SIMD-eGPRs-SSP.perf
+Patch09045: 0031-perf-x86-intel-Enable-PERF_PMU_CAP_SIMD_REGS-capabili.perf
+Patch09046: 0032-perf-perf_regs-Switch-from-arch-string-to-int-e_machi.perf
+Patch09047: 0033-perf-regs-Refactor-use-of-arch__sample_reg_masks-to-p.perf
+Patch09048: 0034-perf-perf_regs-Accurately-compute-register-names-for-.perf
+Patch09049: 0035-perf-arch-Update-arch-headers-to-use-relative-UAPI-pa.perf
+Patch09050: 0036-perf-regs-Remove-__weak-attributive-arch__xxx_reg_mas.perf
+Patch09051: 0037-perf-regs-Remove-__weak-attributive-arch_sdt_arg_pars.perf
+Patch09052: 0038-perf-regs-Support-x86-eGPRs-SSP-sampling.perf
+Patch09053: 0039-perf-regs-Support-x86-SIMD-registers-sampling.perf
+Patch09054: 0040-perf-regs-Enable-dumping-of-SIMD-registers.perf
+Patch09055: 0041-tools-headers-Sync-UAPI-headers-and-fix-perf-build-fo.perf
 # pmt
 Patch10001: 0001-platform-x86-intel-vsec-Add-support-for-Wildcat-Lake.pmt
 Patch10002: 0001-platform-x86-intel-pmc-Add-support-for-multiple-DMU-GU.pmt
@@ -281,10 +344,20 @@ Patch10007: 0006-platform-x86-intel-pmc-Enable-SSRAM-support-for-Wildca.pmt
 Patch11001: 0001-ASoC-Intel-sof_rt5682-Add-quirk-override-support.audio
 Patch11002: 0002-ASoC-SOF-Intel-hda-Only-check-SSP-MCLK-mask-in-case-.audio
 Patch11003: 0001-soundwire-fix-bug-in-sdw_add_element_group_count-fou.audio
+Patch11004: 0001-ASoC-SOF-Don-t-print-the-monolithic-topology-name-if.audio
+Patch11005: 0002-ASoC-soc-acpi-make-some-variables-of-acpi-adr-and-li.audio
+Patch11006: 0003-ASoC-soc_sdw_utils-add-name_prefix-to-asoc_sdw_codec.audio
+Patch11007: 0004-ASoC-Intel-export-sof_sdw_get_tplg_files.audio
+Patch11008: 0005-ASoC-soc_sdw_utils-export-asoc_sdw_get_dai_type.audio
+Patch11009: 0006-ASoC-SOF-add-platform-name-into-sof_intel_dsp_desc.audio
+Patch11010: 0007-ASoC-SOF-don-t-check-the-existence-of-dummy-topology.audio
+Patch11011: 0008-ASoC-SOF-Intel-use-sof_sdw-as-default-SDW-machine-dr.audio
+Patch11012: 0009-ASoC-sof-function-topology-lib-escalate-the-log-when.audio
 # lpss
 Patch12001: 0001-Added-spi_set_cs-for-more-stable-r-w-operations-in.lpss
 # cpuidle
 Patch13001: 0001-intel_idle-Add-Panther-Lake-C-states-table.cpuidle
+Patch13002: 0001-x86-cpu-Add-Intel-CPU-model-number-for-rugged-Pant.cpuidle
 # kvm
 Patch14001: 0001-Revert-x86-fred-Enable-FRED-by-default.kvm
 # tgpio
@@ -349,310 +422,138 @@ Patch16051: 0051-Define-gpreg_stride-for-different-IPU-versions.ipu
 Patch16052: 0052-Fix-lt6911gxd-enumeration-issue-on-ipu7.ipu
 Patch16053: 0001-Extending-sleep-period-for-RESET-operation.ipu
 Patch16054: 0002-Add-AR0234-HID.ipu
-
+Patch16055: 0001-IPU7-release-for-iot-I2C-sensors-update.ipu
+Patch16056: 0002-IPU7-release-for-iot-Update-IPU-camera-enumeration.ipu
+Patch16057: 0001-media-i2c-max96724-Enable-clk-on-PHY0-for-2x4-D-PHY.ipu
+# selftests
+Patch17001: 0001-selftests-pps-add-common-test-framework-for-Inte.selftests
+Patch17002: 0002-selftests-pps-self-tests-for-the-Intel-Timed-IO-.selftests
+Patch17003: 0003-selftests-pps-self-tests-for-the-Intel-Timed-IO-.selftests
+Patch17004: 0004-selftests-pps-self-tests-for-the-Intel-Timed-IO-.selftests
+Patch17005: 0005-selftests-pps-skip-remaining-tests-when-Module-V.selftests
+# sriov
+Patch18001: 0001-vfio-i915-Add-default-handler-for-.match_token_uuid.sriov
+Patch18002: 0001-drm-xe-vf-Improve-getting-clean-NULL-context.sriov
+Patch18003: 0002-drm-xe-Add-PR_CTR_CTRL-THRSH-register-definitions.sriov
+Patch18004: 0003-drm-xe-Add-MI_SEMAPHORE_WAIT-command-definition.sriov
+Patch18005: 0001-drm-i915-vf-Remove-prelim-IOV-state-sysfs-nodes.sriov
+# pmc_core
+Patch19001: 0001-cpufreq-intel_pstate-Use-HYBRID_SCALING_FACTOR_AD.pmc_core
+Patch19002: 0001-cpufreq-intel_pstate-Add-and-use-hybrid_get_cpu_t.pmc_core
+Patch19003: 0002-cpufreq-intel_pstate-Use-correct-scaling-factor-o.pmc_core
+Patch19004: 0001-platform-x86-intel-pmc-Add-Panther-Lake-R-support.pmc_core
 #CVE-2026-23377
-Patch17001: CVE-2026-23377.patch
+Patch20001: CVE-2026-23377.patch
 
 #CVE-2026-23374
-Patch17002: CVE-2026-23374.patch
+Patch20002: CVE-2026-23374.patch
 
 #CVE-2026-23371
-Patch17003: CVE-2026-23371.patch
-Patch17004: CVE-2026-23371_2.patch
+Patch20003: CVE-2026-23371.patch
+Patch20004: CVE-2026-23371_2.patch
 
 #CVE-2026-23327
-Patch17005: CVE-2026-23327.patch
-
-#CVE-2026-23442
-Patch17006: CVE-2026-23442.patch
+Patch20005: CVE-2026-23327.patch
 
 #CVE-2026-23459
-Patch17007: CVE-2026-23459.patch
-
-#CVE-2026-31407
-Patch17008: CVE-2026-31407.patch
+Patch20006: CVE-2026-23459.patch
 
 #CVE-2026-31420
-Patch17009: CVE-2026-31420.patch
-
-#CVE-2026-31685
-Patch17010: CVE-2026-31685.patch
-
-#CVE-2026-31684
-Patch17011: CVE-2026-31684.patch
-
-#CVE-2026-31681
-Patch17012: CVE-2026-31681.patch
-
-#CVE-2026-31677
-Patch17013: CVE-2026-31677.patch
-
-#CVE-2026-31673
-Patch17014: CVE-2026-31673.patch
+Patch20007: CVE-2026-31420.patch
 
 #CVE-2026-31560
-Patch17015: CVE-2026-31560_1.patch
-Patch17016: CVE-2026-31560_2.patch
-
-#CVE-2026-31531
-Patch17017: CVE-2026-31531.patch
-
-#CVE-2026-43284
-Patch17018: CVE-2026-43284.patch
-
-#CVE-2026-43500
-Patch17019: CVE-2026-43500_1.patch
-Patch17020: CVE-2026-43500_2.patch
-Patch17021: CVE-2026-43500_3.patch
-Patch17022: CVE-2026-43500_4.patch
-
-#CVE-2026-31532
-Patch17023: CVE-2026-31532.patch
-
-#CVE-2026-31575
-Patch17024: CVE-2026-31575.patch
-
-#CVE-2026-31578
-Patch17025: CVE-2026-31578.patch
-
-#CVE-2026-31579
-Patch17026: CVE-2026-31579.patch
-
-#CVE-2026-31584
-Patch17027: CVE-2026-31584.patch
-
-#CVE-2026-31586
-Patch17028: CVE-2026-31586.patch
-
-#CVE-2026-31588
-Patch17029: CVE-2026-31588.patch
-
-#CVE-2026-31589
-Patch17030: CVE-2026-31589.patch
-
-#CVE-2026-31590
-Patch17031: CVE-2026-31590.patch
-
-#CVE-2026-31591
-Patch17032: CVE-2026-31591_1.patch
-Patch17033: CVE-2026-31591_2.patch
-
-#CVE-2026-31592
-Patch17034: CVE-2026-31592.patch
-
-#CVE-2026-31593
-Patch17035: CVE-2026-31593.patch
-
-#CVE-2026-31599
-Patch17036: CVE-2026-31599.patch
-
-#CVE-2026-31602
-Patch17037: CVE-2026-31602.patch
-
-#CVE-2026-31606
-Patch17038: CVE-2026-31606.patch
-
-#CVE-2026-31607
-Patch17039: CVE-2026-31607.patch
-
-#CVE-2026-31617
-Patch17040: CVE-2026-31617.patch
-
-#CVE-2026-31686
-Patch17041: CVE-2026-31686.patch
+Patch20008: CVE-2026-31560_1.patch
+Patch20009: CVE-2026-31560_2.patch
 
 #CVE-2026-31688
-Patch17042: CVE-2026-31688.patch
-
-#CVE-2026-31692
-Patch17043: CVE-2026-31692.patch
-
-#CVE-2026-31694
-Patch17044: CVE-2026-31694.patch
-
-#CVE-2026-31700
-Patch17045: CVE-2026-31700.patch
-
-#CVE-2026-31701
-Patch17046: CVE-2026-31701.patch
-
-#CVE-2026-31703
-Patch17047: CVE-2026-31703.patch
-
-#CVE-2026-31713
-Patch17048: CVE-2026-31713.patch
-
-#CVE-2026-31719
-Patch17049: CVE-2026-31719_1.patch
-Patch17050: CVE-2026-31719_2.patch
+Patch20010: CVE-2026-31688.patch
 
 #CVE-2026-31777
-Patch17051: CVE-2026-31777.patch
-
-#CVE-2026-31786
-Patch17052: CVE-2026-31786.patch
+Patch20011: CVE-2026-31777.patch
 
 #CVE-2026-43009
-Patch17053: CVE-2026-43009.patch
+Patch20012: CVE-2026-43009.patch
 
 #CVE-2026-43022
-Patch17054: CVE-2026-43022.patch
-
-#CVE-2026-43071
-Patch17055: CVE-2026-43071.patch
-
-#CVE-2026-43074
-Patch17056: CVE-2026-43074.patch
-
-#CVE-2026-43077
-Patch17057: CVE-2026-43077.patch
-
-#CVE-2026-43078
-Patch17058: CVE-2026-43078.patch
-
-#CVE-2026-43079
-Patch17059: CVE-2026-43079.patch
-
-#CVE-2026-43082
-Patch17060: CVE-2026-43082.patch
-
-#CVE-2026-43083
-Patch17061: CVE-2026-43083.patch
-
-#CVE-2026-43085
-Patch17062: CVE-2026-43085.patch
-
-#CVE-2026-43086
-Patch17063: CVE-2026-43086.patch
-
-#CVE-2026-43088
-Patch17064: CVE-2026-43088.patch
-
-#CVE-2026-43089
-Patch17065: CVE-2026-43089.patch
-
-#CVE-2026-43090
-Patch17066: CVE-2026-43090.patch
-
-#CVE-2026-43091
-Patch17067: CVE-2026-43091.patch
-
-#CVE-2026-43093
-Patch17068: CVE-2026-43093.patch
-
-#CVE-2026-43092
-Patch17069: CVE-2026-43092_1.patch
-Patch17070: CVE-2026-43092_2.patch
-Patch17071: CVE-2026-43092_3.patch
-
-#CVE-2026-43094
-Patch17072: CVE-2026-43094.patch
+Patch20013: CVE-2026-43022.patch
 
 #CVE-2026-43095
-Patch17073: CVE-2026-43095.patch
-
-#CVE-2026-43099
-Patch17074: CVE-2026-43099.patch
-
-#CVE-2026-43100
-Patch17075: CVE-2026-43100.patch
-
-#CVE-2026-43101
-Patch17076: CVE-2026-43101.patch
-
-#CVE-2026-43102
-Patch17077: CVE-2026-43102.patch
-
-#CVE-2026-43107
-Patch17078: CVE-2026-43107.patch
-
-#CVE-2026-43109
-Patch17079: CVE-2026-43109.patch
-
-#CVE-2026-43112
-Patch17080: CVE-2026-43112.patch
-
-#CVE-2026-31613
-Patch17081: CVE-2026-31613.patch
-
-#CVE-2026-31614
-Patch17082: CVE-2026-31614.patch
-
-#CVE-2026-31718
-Patch17083: CVE-2026-31718.patch
-
-#CVE-2026-31717
-Patch17084: CVE-2026-31717.patch
-
-#CVE-2026-31611
-Patch17085: CVE-2026-31611.patch
-
-#CVE-2026-31612
-Patch17086: CVE-2026-31612.patch
-
-#CVE-2026-31610
-Patch17087: CVE-2026-31610.patch
-
-#CVE-2026-31704
-Patch17088: CVE-2026-31704.patch
-
-#CVE-2026-31705
-Patch17089: CVE-2026-31705.patch
-
-#CVE-2026-31706
-Patch17090: CVE-2026-31706.patch
-
-#CVE-2026-31711
-Patch17091: CVE-2026-31711.patch
-
-#CVE-2026-31712
-Patch17092: CVE-2026-31712.patch
-
-#CVE-2026-31707
-Patch17093: CVE-2026-31707.patch
-
-#CVE-2026-31708
-Patch17094: CVE-2026-31708.patch
-
-#CVE-2026-43350
-Patch17095: CVE-2026-43350.patch
+Patch20014: CVE-2026-43095.patch
 
 #CVE-2026-43115
-Patch17096: CVE-2026-43115_1.patch
-Patch17097: CVE-2026-43115_2.patch
-
-
-#CVE-2026-43116
-Patch17098: CVE-2026-43116.patch
-
-#CVE-2026-43117
-Patch17099: CVE-2026-43117.patch
-
-#CVE-2026-43118
-Patch17100: CVE-2026-43118.patch
-
-#CVE-2026-43119
-Patch17101: CVE-2026-43119.patch
+Patch20015: CVE-2026-43115_1.patch
+Patch20016: CVE-2026-43115_2.patch
 
 #CVE-2026-43299
-Patch17102: CVE-2026-43299.patch
+Patch20017: CVE-2026-43299.patch
 
 #CVE-2026-43308
-Patch17103: CVE-2026-43308.patch
+Patch20018: CVE-2026-43308.patch
 
 #CVE-2026-43344
-Patch17104: CVE-2026-43344.patch
-
-#CVE-2026-43346
-Patch17105: CVE-2026-43346.patch
+Patch20019: CVE-2026-43344.patch
 
 #CVE-2026-43391
-Patch17106: CVE-2026-43391.patch
+Patch20020: CVE-2026-43391.patch
 
 #CVE-2026-43414
-Patch17107: CVE-2026-43414.patch
+Patch20021: CVE-2026-43414.patch
 
+#CVE-2026-46252
+Patch20022: CVE-2026-46252.patch
 
+#CVE-2026-46244
+Patch20023: CVE-2026-46244.patch
+
+#CVE-2026-46243
+Patch20024: CVE-2026-46243.patch
+
+#CVE-2026-46216
+Patch20025: CVE-2026-46216.patch
+
+#CVE-2026-46203
+Patch20026: CVE-2026-46203.patch
+
+#CVE-2026-46153
+Patch20027: CVE-2026-46153_1.patch
+Patch20028: CVE-2026-46153_2.patch
+
+#CVE-2026-46017
+Patch20029: CVE-2026-46017.patch
+
+#CVE-2026-46008
+Patch20030: CVE-2026-46008.patch
+
+#CVE-2026-45963
+Patch20031: CVE-2026-45963.patch
+
+#CVE-2026-45961
+Patch20032: CVE-2026-45961.patch
+
+#CVE-2026-45945
+Patch20033: CVE-2026-45945.patch
+
+#CVE-2025-71313
+Patch20034: CVE-2025-71313.patch
+
+#CVE-2026-46130
+Patch20035: CVE-2026-46130.patch
+
+#CVE-2026-45901
+Patch20036: CVE-2026-45901.patch
+
+#CVE-2026-45897
+Patch20037: CVE-2026-45897.patch
+
+#CVE-2025-71306
+Patch20038: CVE-2025-71306_1.patch
+Patch20039: CVE-2025-71306_2.patch
+
+#CVE-2026-45850
+Patch20040: CVE-2026-45850.patch
+
+#CVE-2026-45930
+Patch20041: CVE-2026-45930.patch
 
 
 # End of Patch Section
@@ -803,8 +704,8 @@ manipulation of eBPF programs and maps.
 
 %prep
 %define _default_patch_flags -p1 --fuzz=3 --force
-%setup -q -n linux-6.18.23
-%autosetup -p1 -n linux-6.18.23
+%setup -q -n linux-6.18.33
+%autosetup -p1 -n linux-6.18.33
 # %patch 0 -p1
 make mrproper
 
@@ -1075,6 +976,9 @@ ln -sf linux-%{uname_r}.cfg /boot/mariner.cfg
 %{_sysconfdir}/bash_completion.d/bpftool
 
 %changelog
+* Mon Jul 13 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.33-1
+- Update kernel to 6.18.33-1
+
 * Fri May 22 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.23-1
 - Update kernel to 6.18.23-1
 

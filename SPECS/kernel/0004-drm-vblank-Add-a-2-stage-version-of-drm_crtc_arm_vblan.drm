@@ -1,0 +1,147 @@
+From b258089351eff789c1b1337e4553c70292f59ba5 Mon Sep 17 00:00:00 2001
+From: Maarten Lankhorst <dev@lankhorst.se>
+Date: Mon, 15 Jun 2026 22:18:20 +0200
+Subject: [PATCH 04/11] drm/vblank: Add a 2-stage version of
+ drm_crtc_arm_vblank_event
+
+When trying to fix the hardware programming in intel/display, I had
+to take all the vblank locks with local_irqs_disabled(). This
+required converting the entire vblank code to raw spinlocks.
+
+In the alternative approach, do all preparations in advance, and only
+enable the vblank_event with interrupts disabled, this requires only
+a simple write and prevents a complete re-architecture of the code.
+
+Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
+---
+ drivers/gpu/drm/drm_vblank.c | 61 +++++++++++++++++++++++++++++++++++-
+ include/drm/drm_vblank.h     | 14 ++++++++-
+ 2 files changed, 73 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_vblank.c b/drivers/gpu/drm/drm_vblank.c
+index 46f59883183d..571cff0ba177 100644
+--- a/drivers/gpu/drm/drm_vblank.c
++++ b/drivers/gpu/drm/drm_vblank.c
+@@ -1104,12 +1104,68 @@ void drm_crtc_arm_vblank_event(struct drm_crtc *crtc,
+ 
+ 	assert_spin_locked(&dev->event_lock);
+ 
++	WARN_ON(e->postponed);
+ 	e->pipe = pipe;
+ 	e->sequence = drm_crtc_accurate_vblank_count(crtc) + 1;
+ 	list_add_tail(&e->base.link, &dev->vblank_event_list);
+ }
+ EXPORT_SYMBOL(drm_crtc_arm_vblank_event);
+ 
++/**
++ * drm_crtc_prepare_arm_vblank_event - arm vblank event *before* pageflip.
++ * @crtc: the source CRTC of the vblank event
++ * @e: the event to send
++ *
++ * See drm_crtc_arm_vblank_event(). This function is a 2-stage version of
++ * that call. This function is called *BEFORE* programming the hardware.
++ *
++ * After programming, call drm_crtc_arm_prepared_vblank_event() and the
++ * event will be scheduled on the next vblank.
++ *
++ * This is mainly useful for code that has to run on PREEMPT_RT kernels,
++ * with interrupts disabled, since all vblank spinlocks are converted to
++ * rtmutexes, and code running with irqs disabled cannot take any vblank lock.
++ *
++ * It also increases determinism for any hardware
++ * programming, since no vblank related locks are taking when arming.
++ */
++void drm_crtc_prepare_arm_vblank_event(struct drm_crtc *crtc,
++				       struct drm_pending_vblank_event *e)
++{
++	drm_crtc_arm_vblank_event(crtc, e);
++
++	/* Set the flag, so that the event is not fired yet */
++	e->postponed = true;
++}
++EXPORT_SYMBOL(drm_crtc_prepare_arm_vblank_event);
++
++/**
++ * drm_crtc_arm_prepared_vblank_event - arm prepared vblank event *after* pageflip.
++ * @crtc: the source CRTC of the vblank event
++ * @e: the event to send
++ *
++ * See drm_crtc_prepare_arm_vblank_event(). This function is a 2-stage version of
++ * that call. This function is called directly *AFTER* programming the hardware.
++ *
++ * Before this function is called, drm_crtc_prepare_arm_vblank_event() should be
++ * called instead.
++ *
++ * This is mainly useful for code that has to run on PREEMPT_RT kernels,
++ * with interrupts disabled, since all vblank spinlocks are converted to
++ * rtmutexes, and code running with irqs disabled cannot take any vblank lock.
++ *
++ * It also increases determinism for any hardware
++ * programming, since no vblank related locks are taking when arming.
++ */
++void drm_crtc_arm_prepared_vblank_event(struct drm_pending_vblank_event *e)
++{
++	WARN_ON(!e->postponed);
++
++	/* remove the flag to be processed as a normal event */
++	WRITE_ONCE(e->postponed, false);
++}
++EXPORT_SYMBOL(drm_crtc_arm_prepared_vblank_event);
++
+ /**
+  * drm_crtc_send_vblank_event - helper to send vblank event after pageflip
+  * @crtc: the source CRTC of the vblank event
+@@ -1381,6 +1437,8 @@ void drm_crtc_vblank_off(struct drm_crtc *crtc)
+ 	list_for_each_entry_safe(e, t, &dev->vblank_event_list, base.link) {
+ 		if (e->pipe != pipe)
+ 			continue;
++
++		WARN_ON(e->postponed);
+ 		drm_dbg_core(dev, "Sending premature vblank event on disable: "
+ 			     "wanted %llu, current %llu\n",
+ 			     e->sequence, seq);
+@@ -1886,7 +1944,8 @@ static void drm_handle_vblank_events(struct drm_device *dev, unsigned int pipe)
+ 	seq = drm_vblank_count_and_time(dev, pipe, &now);
+ 
+ 	list_for_each_entry_safe(e, t, &dev->vblank_event_list, base.link) {
+-		if (e->pipe != pipe)
++		/* Matches WRITE_ONCE in drm_crtc_arm_prepared_vblank_event() */
++		if (e->pipe != pipe || READ_ONCE(e->postponed))
+ 			continue;
+ 		if (!drm_vblank_passed(seq, e->sequence))
+ 			continue;
+diff --git a/include/drm/drm_vblank.h b/include/drm/drm_vblank.h
+index 151ab1e85b1b..4f0424e28cf9 100644
+--- a/include/drm/drm_vblank.h
++++ b/include/drm/drm_vblank.h
+@@ -52,6 +52,13 @@ struct drm_pending_vblank_event {
+ 	 * @sequence: frame event should be triggered at
+ 	 */
+ 	u64 sequence;
++
++	/**
++	 * @postponed: whether drm_crtc_prepare_arm_vblank_event() is called,
++	 * and drm_crtc_arm_prepared_vblank_event has yet to be called to arm.
++	 */
++	bool postponed;
++
+ 	/**
+ 	 * @event: Actual event which will be sent to userspace.
+ 	 */
+@@ -266,7 +273,12 @@ int drm_crtc_next_vblank_start(struct drm_crtc *crtc, ktime_t *vblanktime);
+ void drm_crtc_send_vblank_event(struct drm_crtc *crtc,
+ 			       struct drm_pending_vblank_event *e);
+ void drm_crtc_arm_vblank_event(struct drm_crtc *crtc,
+-			      struct drm_pending_vblank_event *e);
++			       struct drm_pending_vblank_event *e);
++
++void drm_crtc_prepare_arm_vblank_event(struct drm_crtc *crtc,
++				       struct drm_pending_vblank_event *e);
++void drm_crtc_arm_prepared_vblank_event(struct drm_pending_vblank_event *e);
++
+ void drm_vblank_set_event(struct drm_pending_vblank_event *e,
+ 			  u64 *seq,
+ 			  ktime_t *now);
+-- 
+2.34.1
+

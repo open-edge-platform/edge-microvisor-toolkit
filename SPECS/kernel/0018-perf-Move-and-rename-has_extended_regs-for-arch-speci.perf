@@ -1,0 +1,69 @@
+From 69de664dc249e192d5afec61afd32fa3f2fc9c5b Mon Sep 17 00:00:00 2001
+From: Kan Liang <kan.liang@linux.intel.com>
+Date: Mon, 9 Feb 2026 15:20:34 +0800
+Subject: [PATCH 18/41] perf: Move and rename has_extended_regs() for
+ arch-specific use
+
+Move has_extended_regs() to include/linux/perf_event.h so it can be used
+by arch-specific code.
+
+While moving it, tighten the check logic and rename it to
+event_has_extended_regs() to match existing perf event helper naming.
+
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ include/linux/perf_event.h | 10 ++++++++++
+ kernel/events/core.c       |  8 +-------
+ 2 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/perf_event.h b/include/linux/perf_event.h
+index fd1d91017b99..396d05b607ed 100644
+--- a/include/linux/perf_event.h
++++ b/include/linux/perf_event.h
+@@ -1526,6 +1526,16 @@ perf_event__output_id_sample(struct perf_event *event,
+ extern void
+ perf_log_lost_samples(struct perf_event *event, u64 lost);
+ 
++static inline bool event_has_extended_regs(struct perf_event *event)
++{
++	struct perf_event_attr *attr = &event->attr;
++
++	return ((attr->sample_type & PERF_SAMPLE_REGS_USER) &&
++		(attr->sample_regs_user & PERF_REG_EXTENDED_MASK)) ||
++	       ((attr->sample_type & PERF_SAMPLE_REGS_INTR) &&
++		(attr->sample_regs_intr & PERF_REG_EXTENDED_MASK));
++}
++
+ static inline bool event_has_any_exclude_flag(struct perf_event *event)
+ {
+ 	struct perf_event_attr *attr = &event->attr;
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index 1ed2183f241c..79192cf1ef1a 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -12667,12 +12667,6 @@ int perf_pmu_unregister(struct pmu *pmu)
+ }
+ EXPORT_SYMBOL_GPL(perf_pmu_unregister);
+ 
+-static inline bool has_extended_regs(struct perf_event *event)
+-{
+-	return (event->attr.sample_regs_user & PERF_REG_EXTENDED_MASK) ||
+-	       (event->attr.sample_regs_intr & PERF_REG_EXTENDED_MASK);
+-}
+-
+ static int perf_try_init_event(struct pmu *pmu, struct perf_event *event)
+ {
+ 	struct perf_event_context *ctx = NULL;
+@@ -12707,7 +12701,7 @@ static int perf_try_init_event(struct pmu *pmu, struct perf_event *event)
+ 		goto err_pmu;
+ 
+ 	if (!(pmu->capabilities & PERF_PMU_CAP_EXTENDED_REGS) &&
+-	    has_extended_regs(event)) {
++	    event_has_extended_regs(event)) {
+ 		ret = -EOPNOTSUPP;
+ 		goto err_destroy;
+ 	}
+-- 
+2.34.1
+

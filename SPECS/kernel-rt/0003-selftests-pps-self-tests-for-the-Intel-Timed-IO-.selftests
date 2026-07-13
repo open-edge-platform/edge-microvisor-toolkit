@@ -1,0 +1,325 @@
+From 34a4551c2216cbec1a4190cbd52c808056decd00 Mon Sep 17 00:00:00 2001
+From: "Li, Hongli" <hongli.li@intel.com>
+Date: Wed, 22 Apr 2026 03:06:32 +0000
+Subject: [PATCH 3/5] selftests/pps: self-tests for the Intel Timed IO (TIO)
+ PPS Platform
+
+Add PPS Platform self-test script (test_pps_platform_tio.sh) that
+verifies the Intel Timed IO PPS Platform driver (pps_tio_plat):
+
+  - Module verification (modinfo) and loading
+  - Platform device discovery (INTC1023/INTC1024 ACPI devices)
+  - tio_mode sysfs attribute: default value, switching, invalid values
+
+The test sources pps_tio_common.sh for shared framework utilities.
+
+Signed-off-by: Li, Hongli <hongli.li@intel.com>
+---
+ .../drivers/platform/x86/intel/pps/Makefile   |   2 +-
+ .../drivers/platform/x86/intel/pps/README.rst |  26 +++
+ .../drivers/platform/x86/intel/pps/config     |   1 +
+ .../platform/x86/intel/pps/pps_tio_common.sh  |  17 ++
+ .../x86/intel/pps/test_pps_platform_tio.sh    | 183 ++++++++++++++++++
+ 5 files changed, 228 insertions(+), 1 deletion(-)
+ create mode 100755 tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_platform_tio.sh
+
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile b/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
+index e0502cca06be..a25d372f7e5c 100644
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ # Makefile for Intel Timed IO (TIO) PPS selftests
+ 
+-TEST_PROGS := test_pps_gen_tio.sh
++TEST_PROGS := test_pps_gen_tio.sh test_pps_platform_tio.sh
+ TEST_FILES := pps_tio_common.sh
+ 
+ include ../../../../../lib.mk
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst b/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
+index 4afb991fc42c..43f234c888eb 100644
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
+@@ -14,6 +14,12 @@ The common test framework is provided by ``pps_tio_common.sh``.
+   verifies the PPS generator functionality including module loading, sysfs
+   attribute validation, time readback, and enable/disable operations.
+ 
++- **PPS Platform** (``pps_tio_plat``) - The test script
++  ``test_pps_platform_tio.sh`` verifies the PPS platform driver functionality
++  including module loading, platform device discovery (INTC1023/INTC1024), and
++  ``tio_mode`` sysfs attribute validation (default value, mode switching, and
++  invalid value rejection).
++
+ Prerequisites
+ =============
+ 
+@@ -39,6 +45,7 @@ built-in)::
+   CONFIG_PPS=m
+   CONFIG_PPS_GENERATOR=m
+   CONFIG_PPS_GENERATOR_TIO=m
++  CONFIG_INTEL_TIO_PLAT=m
+ 
+ Running the Tests
+ =================
+@@ -47,6 +54,7 @@ Run individual tests as root using the kselftest framework::
+ 
+   $ cd tools/testing/selftests/drivers/platform/x86/intel/pps
+   $ sudo ./test_pps_gen_tio.sh
++  $ sudo ./test_pps_platform_tio.sh
+ 
+ Or using the kselftest runner from the kernel tree::
+ 
+@@ -72,6 +80,24 @@ The script runs the following test cases:
+ 7. **Enable PPS generation** - Writes ``1`` to the ``enable`` attribute.
+ 8. **Disable PPS generation** - Writes ``0`` to the ``enable`` attribute.
+ 
++PPS Platform Tests (test_pps_platform_tio.sh)
++----------------------------------------------
++
++The script runs the following test cases:
++
++1. **Module info verification** - Checks ``modinfo pps_tio_plat`` is available.
++2. **Module loading** - Loads the ``pps_tio_plat`` module if not already loaded.
++3. **Platform device discovery** - Verifies an Intel TIO platform device
++   (INTC1023/INTC1024) exists in sysfs.
++4. **tio_mode default value** - Reads the ``tio_mode`` sysfs attribute and
++   verifies the default value is ``generator``.
++5. **Switch tio_mode to client** - Writes ``1`` to ``tio_mode`` and verifies
++   the mode switches to ``client``.
++6. **Switch tio_mode to generator** - Writes ``0`` to ``tio_mode`` and verifies
++   the mode switches back to ``generator``.
++7. **Reject invalid tio_mode** - Writes an invalid value (``2``) to ``tio_mode``
++   and verifies it is rejected.
++
+ Output
+ ======
+ 
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/config b/tools/testing/selftests/drivers/platform/x86/intel/pps/config
+index fca92d956926..2b7310b5628a 100644
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/config
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/config
+@@ -1,3 +1,4 @@
+ CONFIG_PPS=m
+ CONFIG_PPS_GENERATOR=m
+ CONFIG_PPS_GENERATOR_TIO=m
++CONFIG_INTEL_TIO_PLAT=m
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh b/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
+index 40dfa6f0c37a..9d328d2bd15a 100755
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
+@@ -90,6 +90,23 @@ find_pps_gen_device()
+ 	return 1
+ }
+ 
++# Find the Intel TIO platform device sysfs path
++find_tio_platform_device()
++{
++	local acpi_id dev_path
++
++	for acpi_id in $ACPI_IDS; do
++		for dev_path in /sys/devices/platform/${acpi_id}*/; do
++			if [ -d "$dev_path" ]; then
++				echo "$dev_path"
++				return 0
++			fi
++		done
++	done
++	return 1
++}
++
++
+ # Find a PPS device whose name matches a pattern
+ find_pps_by_name()
+ {
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_platform_tio.sh b/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_platform_tio.sh
+new file mode 100755
+index 000000000000..23f360112d12
+--- /dev/null
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_platform_tio.sh
+@@ -0,0 +1,183 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++#
++# Test the functionality of the Intel Timed IO (TIO) platform driver.
++#
++# Tests include:
++#   - Module verification for pps_tio_plat
++#   - Platform device discovery (INTC1023/INTC1024)
++#   - tio_mode sysfs attribute: default value, switching, invalid values
++#
++# Copyright (C) 2026 Intel Corporation
++
++source "$(dirname "$0")/pps_tio_common.sh"
++
++# Module names
++readonly MOD_PLAT="pps_tio_plat"
++
++PPS_LOG_FILE="/tmp/pps_platform_tio_test_logs.$$"
++PPS_TEST_NAME="PPS platform"
++TIO_PLAT_PATH=""
++TIO_MODE_PATH=""
++ORIGIN_PLAT_LOADED=""
++
++pps_cleanup()
++{
++	append_log "[$INFO] Restore environment after PPS platform test"
++
++	# If we switched mode, try to restore to generator (default)
++	if [ -n "$TIO_MODE_PATH" ] && [ -f "$TIO_MODE_PATH" ]; then
++		echo 0 > "$TIO_MODE_PATH" 2>/dev/null
++	fi
++
++	# Unload module if we loaded it
++	if [ "$ORIGIN_PLAT_LOADED" = "false" ]; then
++		lsmod | grep -q "$MOD_PLAT" && modprobe -r "$MOD_PLAT" 2>/dev/null
++	fi
++
++	pps_cleanup_finish
++}
++
++# ===================== Test Cases =====================
++
++# Test: Load Intel TIO platform module
++test_load_module()
++{
++	if lsmod | grep -q "$MOD_PLAT"; then
++		append_log "[$INFO] Module $MOD_PLAT is already loaded"
++		ORIGIN_PLAT_LOADED="true"
++	else
++		ORIGIN_PLAT_LOADED="false"
++		modprobe "$MOD_PLAT" 2>/dev/null
++		if lsmod | grep -q "$MOD_PLAT"; then
++			append_log "[$PASS] Loaded module $MOD_PLAT"
++		else
++			append_log "[$SKIP] Cannot load module $MOD_PLAT (no hardware?)"
++		fi
++	fi
++}
++
++# Test: Verify Intel TIO platform device exists in sysfs
++test_tio_platform_device()
++{
++	TIO_PLAT_PATH=$(find_tio_platform_device 2>/dev/null)
++	if [ -n "$TIO_PLAT_PATH" ] && [ -d "$TIO_PLAT_PATH" ]; then
++		append_log "[$PASS] Intel TIO platform device found: $TIO_PLAT_PATH"
++	else
++		test_exit "Intel TIO platform device not found (no INTC1023/INTC1024 ACPI device). \
++Requires Intel TIO hardware." "$KSFT_SKIP"
++	fi
++}
++
++# Test: Read tio_mode sysfs attribute (default should be 'generator')
++test_tio_mode_read_default()
++{
++	local mode_val
++
++	TIO_MODE_PATH="${TIO_PLAT_PATH}/tio_mode"
++	if [ ! -f "$TIO_MODE_PATH" ]; then
++		append_log "[$FAIL] tio_mode sysfs attribute not found at $TIO_MODE_PATH"
++		return
++	fi
++
++	mode_val=$(cat "$TIO_MODE_PATH" 2>/dev/null)
++	if [ "$mode_val" = "generator" ]; then
++		append_log "[$PASS] tio_mode default is 'generator' (as documented)"
++	else
++		append_log "[$FAIL] tio_mode default is '$mode_val', expected 'generator'"
++	fi
++}
++
++# Test: Switch tio_mode from generator to client (echo 1 > tio_mode)
++test_tio_mode_switch_to_client()
++{
++	local mode_val
++
++	if [ ! -f "$TIO_MODE_PATH" ]; then
++		append_log "[$FAIL] tio_mode path not found"
++		return
++	fi
++
++	echo 1 > "$TIO_MODE_PATH" 2>/dev/null
++	if [ $? -ne 0 ]; then
++		append_log "[$FAIL] Failed to switch tio_mode to client (echo 1)"
++		return
++	fi
++
++	mode_val=$(cat "$TIO_MODE_PATH" 2>/dev/null)
++	if [ "$mode_val" = "client" ]; then
++		append_log "[$PASS] tio_mode switched to 'client' successfully"
++	else
++		append_log "[$FAIL] tio_mode is '$mode_val' after switch, expected 'client'"
++	fi
++}
++
++# Test: Switch tio_mode back from client to generator (echo 0 > tio_mode)
++test_tio_mode_switch_to_generator()
++{
++	local mode_val
++
++	if [ ! -f "$TIO_MODE_PATH" ]; then
++		append_log "[$FAIL] tio_mode path not found"
++		return
++	fi
++
++	echo 0 > "$TIO_MODE_PATH" 2>/dev/null
++	if [ $? -ne 0 ]; then
++		append_log "[$FAIL] Failed to switch tio_mode to generator (echo 0)"
++		return
++	fi
++
++	mode_val=$(cat "$TIO_MODE_PATH" 2>/dev/null)
++	if [ "$mode_val" = "generator" ]; then
++		append_log "[$PASS] tio_mode switched back to 'generator' successfully"
++	else
++		append_log "[$FAIL] tio_mode is '$mode_val' after switch, expected 'generator'"
++	fi
++}
++
++# Test: Verify tio_mode rejects invalid mode values
++test_tio_mode_invalid()
++{
++	if [ ! -f "$TIO_MODE_PATH" ]; then
++		append_log "[$FAIL] tio_mode path not found"
++		return
++	fi
++
++	echo 2 > "$TIO_MODE_PATH" 2>/dev/null
++	if [ $? -ne 0 ]; then
++		append_log "[$PASS] tio_mode correctly rejected invalid value 2"
++	else
++		append_log "[$FAIL] tio_mode accepted invalid value 2"
++	fi
++}
++
++# ===================== Main Test Sequence =====================
++
++test_pps_platform_tio()
++{
++	append_log "[$INFO] === Intel Timed IO (TIO) PPS Platform Test ==="
++	append_log "[$INFO] Test started at $(date)"
++
++	# Phase 1: Module verification
++	append_log "[$INFO] --- Phase 1: Module Verification ---"
++	check_modinfo "$MOD_PLAT"
++	test_load_module
++
++	# Phase 2: Platform device tests
++	append_log "[$INFO] --- Phase 2: Platform Device Tests ---"
++	test_tio_platform_device
++	test_tio_mode_read_default
++
++	# Phase 3: Mode switching tests
++	append_log "[$INFO] --- Phase 3: Mode Switching Tests ---"
++	test_tio_mode_switch_to_client
++	test_tio_mode_switch_to_generator
++	test_tio_mode_invalid
++
++	append_log "[$INFO] === Test Complete ==="
++}
++
++trap pps_cleanup SIGTERM SIGINT
++test_pps_platform_tio
++pps_cleanup
+-- 
+2.34.1
+

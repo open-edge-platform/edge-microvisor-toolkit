@@ -1,0 +1,49 @@
+From 8f576e8170dc347c8afe4e707f438f30e7130db7 Mon Sep 17 00:00:00 2001
+From: Kan Liang <kan.liang@linux.intel.com>
+Date: Mon, 9 Feb 2026 15:20:45 +0800
+Subject: [PATCH 31/41] perf/x86/intel: Enable PERF_PMU_CAP_SIMD_REGS
+ capability
+
+Enable the PERF_PMU_CAP_SIMD_REGS capability if XSAVES support is
+available for YMM, ZMM, OPMASK, eGPRs, or SSP.
+
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/intel/core.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 6be46d0a8309..529067a0d905 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -5757,6 +5757,26 @@ static void intel_extended_regs_init(struct pmu *pmu)
+ 	 */
+ 	x86_pmu.ext_regs_mask |= XFEATURE_MASK_SSE;
+ 	dest_pmu->capabilities |= PERF_PMU_CAP_EXTENDED_REGS;
++
++	if (boot_cpu_has(X86_FEATURE_AVX) &&
++	    cpu_has_xfeatures(XFEATURE_MASK_YMM, NULL))
++		x86_pmu.ext_regs_mask |= XFEATURE_MASK_YMM;
++	if (boot_cpu_has(X86_FEATURE_APX) &&
++	    cpu_has_xfeatures(XFEATURE_MASK_APX, NULL))
++		x86_pmu.ext_regs_mask |= XFEATURE_MASK_APX;
++	if (boot_cpu_has(X86_FEATURE_AVX512F)) {
++		if (cpu_has_xfeatures(XFEATURE_MASK_OPMASK, NULL))
++			x86_pmu.ext_regs_mask |= XFEATURE_MASK_OPMASK;
++		if (cpu_has_xfeatures(XFEATURE_MASK_ZMM_Hi256, NULL))
++			x86_pmu.ext_regs_mask |= XFEATURE_MASK_ZMM_Hi256;
++		if (cpu_has_xfeatures(XFEATURE_MASK_Hi16_ZMM, NULL))
++			x86_pmu.ext_regs_mask |= XFEATURE_MASK_Hi16_ZMM;
++	}
++	if (cpu_feature_enabled(X86_FEATURE_USER_SHSTK))
++		x86_pmu.ext_regs_mask |= XFEATURE_MASK_CET_USER;
++
++	if (x86_pmu.ext_regs_mask != XFEATURE_MASK_SSE)
++		dest_pmu->capabilities |= PERF_PMU_CAP_SIMD_REGS;
+ }
+ 
+ #define counter_mask(_gp, _fixed) ((_gp) | ((u64)(_fixed) << INTEL_PMC_IDX_FIXED))
+-- 
+2.34.1
+

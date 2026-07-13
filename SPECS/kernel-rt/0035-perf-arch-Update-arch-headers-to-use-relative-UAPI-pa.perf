@@ -1,0 +1,173 @@
+From 121fce31df1e5375639c5858cf5e69dc57958d17 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Tue, 3 Feb 2026 10:43:54 +0800
+Subject: [PATCH 35/41] perf arch: Update arch headers to use relative UAPI
+ paths
+
+The architectural specific headers perf_regs.h currently rely on the
+host architecture's 'asm/perf_regs.h'.
+
+This can lead to compilation inconsistencies or failures when including
+and building perf for a target architecture that differs from the host's
+architecture.
+
+Explicitly point to the UAPI headers within the tools source tree using
+relative paths.
+
+This ensures that perf is always built against the intended
+architecture.
+
+No functional changes are intended.
+
+Reviewed-by: Ian Rogers <irogers@google.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Albert Ou <aou@eecs.berkeley.edu>
+Cc: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+Cc: Alexandre Ghiti <alex@ghiti.fr>
+Cc: Guo Ren <guoren@kernel.org>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: James Clark <james.clark@linaro.org>
+Cc: John Garry <john.g.garry@oracle.com>
+Cc: Mike Leach <mike.leach@linaro.org>
+Cc: Namhyung Kim <namhyung@kernel.org>
+Cc: Palmer Dabbelt <palmer@dabbelt.com>
+Cc: Paul Walmsley <pjw@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Falcon <thomas.falcon@intel.com>
+Cc: Will Deacon <will@kernel.org>
+Cc: Xudong Hao <xudong.hao@intel.com>
+Cc: Zide Chen <zide.chen@intel.com>
+Signed-off-by: Arnaldo Carvalho de Melo <acme@redhat.com>
+---
+ tools/perf/arch/arm/include/perf_regs.h       | 2 +-
+ tools/perf/arch/arm64/include/perf_regs.h     | 2 +-
+ tools/perf/arch/csky/include/perf_regs.h      | 2 +-
+ tools/perf/arch/loongarch/include/perf_regs.h | 2 +-
+ tools/perf/arch/mips/include/perf_regs.h      | 2 +-
+ tools/perf/arch/powerpc/include/perf_regs.h   | 2 +-
+ tools/perf/arch/riscv/include/perf_regs.h     | 2 +-
+ tools/perf/arch/s390/include/perf_regs.h      | 2 +-
+ tools/perf/arch/x86/include/perf_regs.h       | 2 +-
+ 9 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/tools/perf/arch/arm/include/perf_regs.h b/tools/perf/arch/arm/include/perf_regs.h
+index 75ce1c370114..20c54766e3a0 100644
+--- a/tools/perf/arch/arm/include/perf_regs.h
++++ b/tools/perf/arch/arm/include/perf_regs.h
+@@ -4,7 +4,7 @@
+ 
+ #include <stdlib.h>
+ #include <linux/types.h>
+-#include <asm/perf_regs.h>
++#include "../../../../arch/arm/include/uapi/asm/perf_regs.h"
+ 
+ void perf_regs_load(u64 *regs);
+ 
+diff --git a/tools/perf/arch/arm64/include/perf_regs.h b/tools/perf/arch/arm64/include/perf_regs.h
+index 58639ee9f7ea..372f2565a9dd 100644
+--- a/tools/perf/arch/arm64/include/perf_regs.h
++++ b/tools/perf/arch/arm64/include/perf_regs.h
+@@ -5,7 +5,7 @@
+ #include <stdlib.h>
+ #include <linux/types.h>
+ #define perf_event_arm_regs perf_event_arm64_regs
+-#include <asm/perf_regs.h>
++#include "../../../../arch/arm64/include/uapi/asm/perf_regs.h"
+ #undef perf_event_arm_regs
+ 
+ void perf_regs_load(u64 *regs);
+diff --git a/tools/perf/arch/csky/include/perf_regs.h b/tools/perf/arch/csky/include/perf_regs.h
+index 076c7746c8a2..0bf7b963909c 100644
+--- a/tools/perf/arch/csky/include/perf_regs.h
++++ b/tools/perf/arch/csky/include/perf_regs.h
+@@ -6,7 +6,7 @@
+ 
+ #include <stdlib.h>
+ #include <linux/types.h>
+-#include <asm/perf_regs.h>
++#include "../../../../arch/csky/include/uapi/asm/perf_regs.h"
+ 
+ #define PERF_REGS_MASK	((1ULL << PERF_REG_CSKY_MAX) - 1)
+ #define PERF_REGS_MAX	PERF_REG_CSKY_MAX
+diff --git a/tools/perf/arch/loongarch/include/perf_regs.h b/tools/perf/arch/loongarch/include/perf_regs.h
+index 45c799fa5330..b86078a55e90 100644
+--- a/tools/perf/arch/loongarch/include/perf_regs.h
++++ b/tools/perf/arch/loongarch/include/perf_regs.h
+@@ -4,7 +4,7 @@
+ 
+ #include <stdlib.h>
+ #include <linux/types.h>
+-#include <asm/perf_regs.h>
++#include "../../../../arch/loongarch/include/uapi/asm/perf_regs.h"
+ 
+ #define PERF_REGS_MAX PERF_REG_LOONGARCH_MAX
+ 
+diff --git a/tools/perf/arch/mips/include/perf_regs.h b/tools/perf/arch/mips/include/perf_regs.h
+index 7082e91e0ed1..66655f0c4fea 100644
+--- a/tools/perf/arch/mips/include/perf_regs.h
++++ b/tools/perf/arch/mips/include/perf_regs.h
+@@ -4,7 +4,7 @@
+ 
+ #include <stdlib.h>
+ #include <linux/types.h>
+-#include <asm/perf_regs.h>
++#include "../../../../arch/mips/include/uapi/asm/perf_regs.h"
+ 
+ #define PERF_REGS_MAX PERF_REG_MIPS_MAX
+ 
+diff --git a/tools/perf/arch/powerpc/include/perf_regs.h b/tools/perf/arch/powerpc/include/perf_regs.h
+index 1c66f6ba6773..22b492a3dd58 100644
+--- a/tools/perf/arch/powerpc/include/perf_regs.h
++++ b/tools/perf/arch/powerpc/include/perf_regs.h
+@@ -4,7 +4,7 @@
+ 
+ #include <stdlib.h>
+ #include <linux/types.h>
+-#include <asm/perf_regs.h>
++#include "../../../../arch/powerpc/include/uapi/asm/perf_regs.h"
+ 
+ void perf_regs_load(u64 *regs);
+ 
+diff --git a/tools/perf/arch/riscv/include/perf_regs.h b/tools/perf/arch/riscv/include/perf_regs.h
+index d482edb413e5..89d5bbb8d2b8 100644
+--- a/tools/perf/arch/riscv/include/perf_regs.h
++++ b/tools/perf/arch/riscv/include/perf_regs.h
+@@ -6,7 +6,7 @@
+ 
+ #include <stdlib.h>
+ #include <linux/types.h>
+-#include <asm/perf_regs.h>
++#include "../../../../arch/riscv/include/uapi/asm/perf_regs.h"
+ 
+ #define PERF_REGS_MASK	((1ULL << PERF_REG_RISCV_MAX) - 1)
+ #define PERF_REGS_MAX	PERF_REG_RISCV_MAX
+diff --git a/tools/perf/arch/s390/include/perf_regs.h b/tools/perf/arch/s390/include/perf_regs.h
+index 130dfad2b96a..9c95589965fe 100644
+--- a/tools/perf/arch/s390/include/perf_regs.h
++++ b/tools/perf/arch/s390/include/perf_regs.h
+@@ -3,7 +3,7 @@
+ 
+ #include <stdlib.h>
+ #include <linux/types.h>
+-#include <asm/perf_regs.h>
++#include "../../../../arch/s390/include/uapi/asm/perf_regs.h"
+ 
+ void perf_regs_load(u64 *regs);
+ 
+diff --git a/tools/perf/arch/x86/include/perf_regs.h b/tools/perf/arch/x86/include/perf_regs.h
+index f209ce2c1dd9..5495e5ca7cdc 100644
+--- a/tools/perf/arch/x86/include/perf_regs.h
++++ b/tools/perf/arch/x86/include/perf_regs.h
+@@ -4,7 +4,7 @@
+ 
+ #include <stdlib.h>
+ #include <linux/types.h>
+-#include <asm/perf_regs.h>
++#include "../../../../arch/x86/include/uapi/asm/perf_regs.h"
+ 
+ void perf_regs_load(u64 *regs);
+ 
+-- 
+2.34.1
+

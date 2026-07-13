@@ -1,0 +1,75 @@
+From 78bfc04de5e93ee36b3a3f827115ec3ff2105260 Mon Sep 17 00:00:00 2001
+From: pandithn <pandith.n@intel.com>
+Date: Fri, 5 Jun 2026 14:35:27 +0530
+Subject: [PATCH] drm/i915/bios: Update reading panel rotation from VBT
+
+Update VBT parsing to read panel rotation from Block 40.
+From VBT version 228, panel rotation is
+specified in BDB Block 40 (LFP Panel data).
+
+Signed-off-by: pandithn <pandith.n@intel.com>
+---
+ drivers/gpu/drm/i915/display/intel_bios.c | 33 ++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_bios.c b/drivers/gpu/drm/i915/display/intel_bios.c
+index 3596dce84c286..40fed19a30a00 100644
+--- a/drivers/gpu/drm/i915/display/intel_bios.c
++++ b/drivers/gpu/drm/i915/display/intel_bios.c
+@@ -798,6 +798,7 @@ parse_panel_options(struct intel_display *display,
+ 	const struct bdb_lfp_options *lfp_options;
+ 	int panel_type = panel->vbt.panel_type;
+ 	int drrs_mode;
++	int rotation;
+ 
+ 	lfp_options = bdb_find_section(display, BDB_LFP_OPTIONS);
+ 	if (!lfp_options)
+@@ -836,6 +837,35 @@ parse_panel_options(struct intel_display *display,
+ 			    "DRRS not supported (VBT input)\n");
+ 		break;
+ 	}
++
++	/* From VBT version 228, panel rotation is in Block 40 */
++	if (display->vbt.version >= 228) {
++		rotation = panel_bits(lfp_options->rotation,
++				panel_type, 2);
++
++		switch (rotation) {
++		case ENABLE_ROTATION_0:
++			display->vbt.orientation =
++				DRM_MODE_PANEL_ORIENTATION_NORMAL;
++			break;
++		case ENABLE_ROTATION_90:
++			display->vbt.orientation =
++				DRM_MODE_PANEL_ORIENTATION_RIGHT_UP;
++			break;
++		case ENABLE_ROTATION_180:
++			display->vbt.orientation =
++				DRM_MODE_PANEL_ORIENTATION_BOTTOM_UP;
++			break;
++		case ENABLE_ROTATION_270:
++			display->vbt.orientation =
++				DRM_MODE_PANEL_ORIENTATION_LEFT_UP;
++			break;
++		default:
++			display->vbt.orientation =
++				DRM_MODE_PANEL_ORIENTATION_UNKNOWN;
++		drm_dbg_kms(display->drm, "Panel rotation is invalid\n");
++		}
++	}
+ }
+ 
+ static void
+@@ -1188,7 +1218,8 @@ parse_general_features(struct intel_display *display)
+ 		intel_bios_ssc_frequency(display, general->ssc_freq);
+ 	display->vbt.display_clock_mode = general->display_clock_mode;
+ 	display->vbt.fdi_rx_polarity_inverted = general->fdi_rx_polarity_inverted;
+-	if (display->vbt.version >= 181) {
++	if ((display->vbt.version >= 181) &&
++			(display->vbt.version < 228)) {
+ 		display->vbt.orientation = general->rotate_180 ?
+ 			DRM_MODE_PANEL_ORIENTATION_BOTTOM_UP :
+ 			DRM_MODE_PANEL_ORIENTATION_NORMAL;
+-- 
+2.43.0
+

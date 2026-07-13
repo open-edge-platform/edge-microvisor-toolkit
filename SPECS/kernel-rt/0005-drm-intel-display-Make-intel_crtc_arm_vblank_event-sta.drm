@@ -1,0 +1,42 @@
+From e08c9c83b78924b4191341942060157b65a509f8 Mon Sep 17 00:00:00 2001
+From: Maarten Lankhorst <dev@lankhorst.se>
+Date: Mon, 15 Jun 2026 22:18:21 +0200
+Subject: [PATCH 05/11] drm/intel/display: Make intel_crtc_arm_vblank_event
+ static
+
+Only used inside intel_crtc.c now, so no need to export it any more.
+
+Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
+---
+ drivers/gpu/drm/i915/display/intel_crtc.c | 2 +-
+ drivers/gpu/drm/i915/display/intel_crtc.h | 1 -
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_crtc.c b/drivers/gpu/drm/i915/display/intel_crtc.c
+index dbdc4d9b2a33..c82151dd7207 100644
+--- a/drivers/gpu/drm/i915/display/intel_crtc.c
++++ b/drivers/gpu/drm/i915/display/intel_crtc.c
+@@ -615,7 +615,7 @@ static void dbg_vblank_evade(struct intel_crtc *crtc, ktime_t end)
+ static void dbg_vblank_evade(struct intel_crtc *crtc, ktime_t end) {}
+ #endif
+ 
+-void intel_crtc_arm_vblank_event(struct intel_crtc_state *crtc_state)
++static void intel_crtc_arm_vblank_event(struct intel_crtc_state *crtc_state)
+ {
+ 	struct intel_crtc *crtc = to_intel_crtc(crtc_state->uapi.crtc);
+ 	unsigned long irqflags;
+diff --git a/drivers/gpu/drm/i915/display/intel_crtc.h b/drivers/gpu/drm/i915/display/intel_crtc.h
+index 8c14ff8b391e..48e80cea5c55 100644
+--- a/drivers/gpu/drm/i915/display/intel_crtc.h
++++ b/drivers/gpu/drm/i915/display/intel_crtc.h
+@@ -33,7 +33,6 @@ int intel_usecs_to_scanlines(const struct drm_display_mode *adjusted_mode,
+ 			     int usecs);
+ int intel_scanlines_to_usecs(const struct drm_display_mode *adjusted_mode,
+ 			     int scanlines);
+-void intel_crtc_arm_vblank_event(struct intel_crtc_state *crtc_state);
+ void intel_crtc_prepare_vblank_event(struct intel_crtc_state *crtc_state,
+ 				     struct drm_pending_vblank_event **event);
+ u32 intel_crtc_max_vblank_count(const struct intel_crtc_state *crtc_state);
+-- 
+2.34.1
+
