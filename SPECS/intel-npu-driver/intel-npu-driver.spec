@@ -57,6 +57,7 @@ sed -i '/include(cmake\/movi-scripts.cmake)/s/^/#/' third_party/CMakeLists.txt
 sed -i 's|/usr/lib/libyaml-cpp.a|/usr/lib64/libyaml-cpp.so|' /usr/lib/cmake/yaml-cpp/yaml-cpp-targets.cmake
 
 %build
+export CXXFLAGS="${CXXFLAGS} -I$(pwd)/firmware/include"
 cmake \
 	-B build -S . \
 	-DENABLE_VALIDATION_BUILD=OFF \
