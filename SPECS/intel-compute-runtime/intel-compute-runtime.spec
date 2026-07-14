@@ -1,11 +1,12 @@
-%global neo_major 25
-%global neo_minor 40
-%global neo_build 35563.4
+%global neo_major 26
+%global neo_minor 18
+%global neo_build 38308
+%global neo_hotfix 1
 
 %global optflags %{optflags} -Wno-error=maybe-uninitialized
 
 Name:           intel-compute-runtime
-Version:        %{neo_major}.%{neo_minor}.%{neo_build}
+Version:        %{neo_major}.%{neo_minor}.%{neo_build}.%{neo_hotfix}
 Release:        1%{?dist}
 Summary: Intel Graphics Compute Runtime for oneAPI Level Zero and OpenCL
 
@@ -29,9 +30,12 @@ BuildRequires:  intel-gmmlib-devel >= 22.7.0
 BuildRequires:  libva-devel >= 2.2.0
 BuildRequires:  libdrm-devel
 BuildRequires:  intel-igc-devel >= 2.11.7
+BuildRequires:  intel-opencl-clang
 BuildRequires:  ninja-build
+BuildRequires:  libnl3-devel
 BuildRequires:  ocl-icd-devel
 BuildRequires:  opencl-headers
+BuildRequires:  spirv-tools-devel
 BuildRequires:  intel-level-zero-devel >= 1.21.9
 BuildRequires:  intel-igsc-devel >= 0.9.5
 
@@ -54,6 +58,7 @@ hardware architectures using oneAPI Level Zero and Open Computing Language
 
 %package -n    intel-ocloc
 Summary:       Tool for managing Intel Compute GPU device binary format
+Requires:      intel-igc-libs%{?_isa}
 
 %description -n intel-ocloc
 ocloc is a tool for managing Intel Compute GPU device binary format (a format
@@ -115,10 +120,12 @@ rm -rv third_party/sse2neon
     -DNEO_OCL_VERSION_MAJOR=%{neo_major} \
     -DNEO_OCL_VERSION_MINOR=%{neo_minor} \
     -DNEO_VERSION_BUILD=%{neo_build} \
+    -DNEO_VERSION_HOTFIX=%{neo_hotfix} \
     -DSKIP_UNIT_TESTS=1 \
     -DNEO_DISABLE_LD_GOLD=1 \
     -DNEO_ENABLE_I915_PRELIM_DETECTION=TRUE \
-    -DNEO_ENABLE_XE_PRELIM_DETECTION=TRUE
+    -DNEO_ENABLE_XE_PRELIM_DETECTION=TRUE \
+    -G Ninja
 
 %cmake_build
 
@@ -156,6 +163,9 @@ popd
 
 %doc
 %changelog
+* Mon Jul 6 2026 Andy <andy.peng@intel.com> - 26.18.38308.1-1
+- Update version to 26.18.38308.1.
+
 * Mon Mar 9 2026 Andy <andy.peng@intel.com> - 25.40.35563.4-1
 - Update version to 25.40.35563.4.
 
