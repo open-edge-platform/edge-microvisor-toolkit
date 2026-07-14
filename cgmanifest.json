@@ -3881,6 +3881,16 @@
         "type": "other",
         "other": {
           "name": "intel-opencl-clang",
+          "version": "150",
+          "downloadUrl": "https://github.com/intel/opencl-clang/archive/58242977b4092cf5eb94a10dd144691c12c87001/intel-opencl-clang-58242977.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-opencl-clang",
           "version": "160",
           "downloadUrl": "https://github.com/intel/opencl-clang/archive/07e7c931d8bdb38549a907cf04fd06a278f7cdce/intel-opencl-clang-07e7c931.tar.gz"
         }
@@ -16268,6 +16278,16 @@
           "name": "varnish-modules",
           "version": "0.16.0",
           "downloadUrl": "https://github.com/varnish/varnish-modules/releases/download/varnish-modules-0.16.0/varnish-modules-0.16.0.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "vc-intrinsics",
+          "version": "0.22.1",
+          "downloadUrl": "https://github.com/intel/vc-intrinsics/archive/v0.22.1/vc-intrinsics-v0.22.1.tar.gz"
         }
       }
     },

@@ -1,10 +1,10 @@
-%global llvm_compat 15
-%global commit 58242977b4092cf5eb94a10dd144691c12c87001
+%global llvm_compat 16
+%global commit 07e7c931d8bdb38549a907cf04fd06a278f7cdce
 %global shortcommit %(c=%{commit}; echo ${c:0:8})
 
 Name:           intel-opencl-clang
-Version:        150
-Release:        2%{?dist}
+Version:        160
+Release:        1%{?dist}
 Summary:        Library to compile OpenCL C kernels to SPIR-V modules
 License:        Apache-2.0 WITH LLVM-exception OR NCSA
 Vendor:         Intel Corporation
@@ -54,12 +54,15 @@ sed -i 's/$<TARGET_FILE:clang>/$<TARGET_FILE:clang%{?llvm_compat}>/' cl_headers/
 
 %files devel
 %{_libdir}/libopencl-clang.so
-%{_includedir}/cclang/common_clang.h
+%{_includedir}/cclang/opencl_clang.h
 %{_includedir}/cclang/opencl-c.h
 %{_includedir}/cclang/opencl-c-base.h
 %{_includedir}/cclang/module.modulemap
 
 %changelog
+* Mon Jul 6 2026 Andy <andy.peng@intel.com> - 160-1
+- Upgrade to 160 and link to llvm16
+
 * Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 150-1
 - Upgrade to 150 and link to llvm15
 

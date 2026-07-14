@@ -1,8 +1,8 @@
-%global llvm_compat 15
+%global llvm_compat 16
 %global debug_package %{nil}
 
 Name:           vc-intrinsics
-Version:        0.22.1
+Version:        0.25.0
 Release:        1%{?dist}
 Summary:        New intrinsics on top of core LLVM %{?llvm_compat} IR instructions
 License:        MIT
@@ -51,6 +51,9 @@ developing against %{upstream_name} built against LLVM %{?llvm_compat}.
 
 %doc
 %changelog
+* Tue Jul 7 2026 Andy <andy.peng@intel.com> - 0.25.0-1
+- Update version to 0.25.0.
+
 * Thu Jul 24 2025 Swee Yee Fonn <swee.yee.fonn@intel.com> - 0.22.1-1
 - Update to v0.22.1 and upgrade to build against llvm15.
 
