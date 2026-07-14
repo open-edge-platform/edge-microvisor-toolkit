@@ -82,6 +82,8 @@ mkdir -p %{buildroot}%{_libdir}
 cmake --install build --prefix=%{buildroot}%{_libdir}
 cp -a %{buildroot}%{_libdir}/lib64/libze_intel_npu.so.* %{buildroot}%{_libdir}
 rm -rf %{buildroot}%{_libdir}/lib64
+rm -rf %{buildroot}%{_libdir}/bin
+rm -rf %{buildroot}%{_libdir}/share
 
 %files
 %defattr(-,root,root)
