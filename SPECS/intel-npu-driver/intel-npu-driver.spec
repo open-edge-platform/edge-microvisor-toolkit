@@ -53,11 +53,14 @@ sed -i '/include(cmake\/googletest.cmake)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/include(cmake\/yaml-cpp.cmake)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/include(cmake\/movi-scripts.cmake)/s/^/#/' third_party/CMakeLists.txt
 
+# Fix npu_elf not linking against fw_vpu_api_headers - vpux_elf.cmake uses
+# include_directories(SYSTEM) which doesn't propagate to the npu_elf target
+sed -i '/add_subdirectory(npu_elf)/a target_link_libraries(npu_elf PUBLIC fw_vpu_api_headers)' third_party/cmake/vpux_elf.cmake
+
 # Fix system yaml-cpp cmake config referencing non-existent static library
 sed -i 's|/usr/lib/libyaml-cpp.a|/usr/lib64/libyaml-cpp.so|' /usr/lib/cmake/yaml-cpp/yaml-cpp-targets.cmake
 
 %build
-export CXXFLAGS="${CXXFLAGS} -I$(pwd)/firmware/include"
 cmake \
 	-B build -S . \
 	-DENABLE_VALIDATION_BUILD=OFF \
