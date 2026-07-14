@@ -1,6 +1,7 @@
 {
   "Signatures": {
     "libraries.ai.npu.elf-eca361b.tar.gz": "62627a2fc5bec87f74d97583029f2bccd80dcc466b25d8fe2a1afb2ad3f3c7af",
+    "intel-npu-driver-v1.34.0-firmware.tar.gz": "ad6d081e73e40379988de5ce92b2c1cec58bf5b4af6af3ff326b1177ac06b408",
     "level-zero-npu-extensions-f9ad3bf.tar.gz": "3255ea26d1d530a57a6558573cc233b717ecd34bf7adafd9401887ee4ddf5d6b",
     "intel-npu-driver-v1.34.0.tar.gz": "b76f015e06eab66ec0d7f884fded3378232e01904a8473d9057a87b6da7de0d4"
   }

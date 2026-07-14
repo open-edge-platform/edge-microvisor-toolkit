@@ -9,6 +9,7 @@ URL:		    https://github.com/intel/linux-npu-driver
 Source0:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
 Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/f9ad3bf89c2418d714aef2e6b96a5aafb12a1971/level-zero-npu-extensions-f9ad3bf.tar.gz
 Source2:	    https://github.com/intel-innersource/libraries.ai.npu.elf/archive/eca361b16892e3035f95c03bfb7f8d53ad2c8ef7/libraries.ai.npu.elf-eca361b.tar.gz
+Source3:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}-firmware.tar.gz
 
 ExclusiveArch:	x86_64
 
@@ -44,6 +45,9 @@ tar xf %{SOURCE1}
 mv level-zero-npu-extensions-* third_party/level-zero-npu-extensions
 tar xf %{SOURCE2}
 mv libraries.ai.npu.elf-* third_party/npu_elf
+mkdir -p firmware/include
+tar xf %{SOURCE3} -C firmware/include --strip-components=1
+
 
 sed -i '/include(cmake\/googletest.cmake)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/include(cmake\/yaml-cpp.cmake)/s/^/#/' third_party/CMakeLists.txt
