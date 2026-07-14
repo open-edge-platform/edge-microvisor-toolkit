@@ -85,7 +85,6 @@ rm -rf %{buildroot}%{_libdir}/lib64
 
 %files
 %defattr(-,root,root)
-%license LICENSE.md
 %doc README.md
 %{_libdir}/libze_intel_npu.so*
 
