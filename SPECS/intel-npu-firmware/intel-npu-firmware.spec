@@ -23,7 +23,7 @@ This package includes Intel NPU(VPU) firmware files required for some devices to
 
 %install
 mkdir -p %{buildroot}%{_firmwarepath}
-cp -a firmware/bin/* %{buildroot}%{_firmwarepath}
+cp -a bin/* %{buildroot}%{_firmwarepath}
 
 %files
 %defattr(-,root,root)
