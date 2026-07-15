@@ -130,9 +130,15 @@ jobs:
         uses: ./.github/actions/checkout-with-stable-pkgs
 
       - name: Prepare the build environment
-        if: ${{ matrix.build-prep != '' }}
         run: |
           toolkit/scripts/toolchain/toolchain_update_git_submodule.sh
+          sudo make -C toolkit install-prereqs-and-configure
+
+
+      - name: Prepare the build environment by matrix
+        if: ${{ matrix.build-prep != '' }}
+        run: |
+
           set -euo pipefail
 
           ${{ matrix.build-prep }}
