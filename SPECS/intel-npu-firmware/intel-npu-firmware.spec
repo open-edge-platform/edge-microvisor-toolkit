@@ -12,7 +12,7 @@ Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/linux-npu-driver/
-Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}-firmware.tar.gz
+Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/intel-npu-driver-v%{version}-firmware.tar.gz
 BuildArch:      noarch
 
 %description
