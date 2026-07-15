@@ -52,18 +52,12 @@ sed -i '/include(cmake\/googletest.cmake)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/include(cmake\/yaml-cpp.cmake)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/include(cmake\/movi-scripts.cmake)/s/^/#/' third_party/CMakeLists.txt
 
-# Fix firmware include path - use absolute path in fw_vpu_api_headers target
-# so that all consumers (npu_elf, umd) get the correct include directory.
 sed -i 's|target_include_directories(${PROJECT_NAME} INTERFACE include)|target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)|' firmware/CMakeLists.txt
 
-# Fix npu_elf firmware include path - the get_target_property + include_directories(SYSTEM)
-# mechanism in vpux_elf.cmake doesn't reliably propagate the firmware include path.
-# Replace it with a direct absolute path and add explicit target_include_directories.
 sed -i 's|get_target_property(FIRMWARE_INCLUDES fw_vpu_api_headers INTERFACE_INCLUDE_DIRECTORIES)|#get_target_property(FIRMWARE_INCLUDES fw_vpu_api_headers INTERFACE_INCLUDE_DIRECTORIES)|' third_party/cmake/vpux_elf.cmake
 sed -i 's|include_directories(SYSTEM ${FIRMWARE_INCLUDES})|include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/firmware/include)|' third_party/cmake/vpux_elf.cmake
 sed -i '/add_subdirectory(npu_elf)/a target_include_directories(npu_elf SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/firmware/include)' third_party/cmake/vpux_elf.cmake
 
-# Fix system yaml-cpp cmake config referencing non-existent static library
 sed -i 's|/usr/lib/libyaml-cpp.a|/usr/lib64/libyaml-cpp.so|' /usr/lib/cmake/yaml-cpp/yaml-cpp-targets.cmake
 
 %build
@@ -91,6 +85,9 @@ rm -rf %{buildroot}%{_libdir}/share
 %{_libdir}/libze_intel_npu.so*
 
 %changelog
+* Thu Jul 16 2026 Andy <andy.peng@intel.com> - 1.34.0-1
+- Update version to v1.34.0
+
 * Thu Jul 2 2026 Andy <andy.peng@intel.com> - 1.33.0-1
 - Update version to v1.33.0
 
