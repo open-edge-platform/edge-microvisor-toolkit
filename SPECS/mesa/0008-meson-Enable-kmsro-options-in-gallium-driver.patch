@@ -1,0 +1,64 @@
+From 038b0e17850c88c8ab2c5f3c5012939a1447ec29 Mon Sep 17 00:00:00 2001
+From: "Saravanan, Thineshkumar" <thineshkumar.saravanan@intel.com>
+Date: Thu, 12 Mar 2026 16:16:01 +0800
+Subject: [PATCH 8/8] meson: Enable kmsro options in gallium driver
+
+Upstream URL: NA
+Upstream-status: Innapropriate
+
+OSV: https://jira.devtools.intel.com/browse/PKT-19622
+
+Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
+
+---
+ .gitlab-ci/build/gitlab-ci.yml | 6 +++---
+ meson.options                  | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.gitlab-ci/build/gitlab-ci.yml b/.gitlab-ci/build/gitlab-ci.yml
+index 8827a5e151b..b4716c68b1a 100644
+--- a/.gitlab-ci/build/gitlab-ci.yml
++++ b/.gitlab-ci/build/gitlab-ci.yml
+@@ -36,7 +36,7 @@ debian-x86_64:
+     GALLIUM_ST: >
+       -D gallium-rusticl=true
+       -D gallium-va=enabled
+-    GALLIUM_DRIVERS: "llvmpipe,softpipe,virgl,radeonsi,zink,iris,svga"
++    GALLIUM_DRIVERS: "llvmpipe,softpipe,virgl,radeonsi,zink,iris,kmsro,svga"
+     VULKAN_DRIVERS: "swrast,amd,intel,virtio"
+     BUILDTYPE: "debugoptimized"
+     EXTRA_OPTION: >
+@@ -196,7 +196,7 @@ debian-build-x86_64:
+       -D gallium-va=enabled
+       -D gallium-rusticl=false
+       -D legacy-wayland=bind-wayland-display
+-    GALLIUM_DRIVERS: "i915,iris,nouveau,r300,r600,freedreno,llvmpipe,softpipe,svga,v3d,vc4,virgl,etnaviv,panfrost,lima,zink,d3d12,asahi,crocus,radeonsi"
++    GALLIUM_DRIVERS: "i915,iris,kmsro,nouveau,r300,r600,freedreno,llvmpipe,softpipe,svga,v3d,vc4,virgl,etnaviv,panfrost,lima,zink,d3d12,asahi,crocus,radeonsi"
+     VULKAN_DRIVERS: "intel_hasvk,imagination,microsoft-experimental,nouveau,swrast"
+     BUILDTYPE: "debugoptimized"
+     EXTRA_OPTION: >
+@@ -228,7 +228,7 @@ debian-release:
+       -D gallium-va=enabled
+       -D gallium-rusticl=false
+       -D llvm=enabled
+-    GALLIUM_DRIVERS: "i915,iris,nouveau,r300,freedreno,llvmpipe,softpipe,svga,v3d,vc4,virgl,etnaviv,panfrost,lima,zink,d3d12,asahi,crocus"
++    GALLIUM_DRIVERS: "i915,iris,kmsro,nouveau,r300,freedreno,llvmpipe,softpipe,svga,v3d,vc4,virgl,etnaviv,panfrost,lima,zink,d3d12,asahi,crocus"
+     VULKAN_DRIVERS: "swrast,intel_hasvk,imagination,microsoft-experimental"
+     EXTRA_OPTION: >
+       -D spirv-to-dxil=true
+diff --git a/meson.options b/meson.options
+index 9a132f802c3..571c75ceb88 100644
+--- a/meson.options
++++ b/meson.options
+@@ -85,7 +85,7 @@ option(
+   type : 'array',
+   value : ['auto'],
+   choices : [
+-    'all', 'auto',
++    'all', 'auto', 'kmsro',
+     'asahi', 'crocus', 'd3d12', 'ethosu', 'etnaviv', 'freedreno', 'i915', 'iris',
+     'lima', 'llvmpipe', 'nouveau', 'panfrost', 'r300', 'r600', 'radeonsi',
+     'rocket', 'softpipe', 'svga', 'tegra', 'v3d', 'vc4', 'virgl', 'zink',
+-- 
+2.43.0
+

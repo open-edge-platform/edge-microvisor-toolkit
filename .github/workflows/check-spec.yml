@@ -65,8 +65,8 @@ jobs:
       - name: Main branch checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5    #v4
         with:
-          ref: '3.0'
-          path: '3.0-checkout'
+          ref: '26.06'
+          path: '26.06-checkout'
           persist-credentials: false
 
       - name: Verify .spec files

@@ -221,6 +221,7 @@ fuse3
 gawk
 gbenchmark
 gc
+gcab
 gcc
 gcovr
 gd
@@ -622,6 +623,7 @@ mlnx-tools
 mlocate
 mlx-steering-dump
 mm-common
+moby-containerd-cc
 mokutil
 mpfr
 msgpack
@@ -1379,6 +1381,7 @@ vnstat
 vsftpd
 vulkan-headers
 vulkan-loader
+walinuxagent-acl-config
 websocketpp
 wget
 which

@@ -50,7 +50,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        33%{?dist}
+Release:        34%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -162,6 +162,11 @@ Patch0905:      ipc-call-0001-path-util-add-flavour-of-path_startswith-that-leav
 Patch0906:      ipc-call-0003-core-cgroup-avoid-one-unnecessary-strjoina.patch
 Patch0907:      ipc-call-0002-path-util-invert-PATH_STARTSWITH_ACCEPT_DOT_DOT-flag.patch
 Patch0908:      ipc-call-0004-core-validate-input-cgroup-path-more-prudently.patch
+Patch0909:      fix-pcrlock-hyperv-hash-algorithm-ordering.patch
+Patch0910:      CVE-2026-40226.patch
+Patch0911:      CVE-2026-40225.patch
+Patch0912:      networkd-address-skip-firewall-init.patch
+Patch0913:      network-also-check-ID_NET_MANAGED_BY-property-on-rec.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global want_bootloader 1
@@ -1262,6 +1267,17 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+* Tue Jun 9 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-34
+- merge from Azure Linux 3.0.20260602-3.0
+- Backport upstream commit 78f8d5e: network: also check ID_NET_MANAGED_BY
+  property on reconfigure.
+- Fix unwanted nftables initialization in systemd-networkd by backporting
+  upstream commit 58c6e75 from systemd v256 (PR #30318).
+- Patch CVE-2026-40226, CVE-2026-40225
+- Fix pcrlock failure on Hyper-V/Azure VMs with vTPM by backporting upstream
+  commit e90a255 from systemd v256 (PR #31429).
+- Apply patches for ipc issue.
+
 * Tue Mar 17 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-33
 - merge from Azure Linux 3.0.20260304-3.0
 - Add fix-stackoverflow-when-dropping-tclass-or-qdisc.patch
