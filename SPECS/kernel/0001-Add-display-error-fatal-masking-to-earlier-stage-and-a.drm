@@ -1,0 +1,54 @@
+From 4e6d89bd8ccb53efb8b63f3bd169a2730a351a18 Mon Sep 17 00:00:00 2001
+From: "Wong, Chee Yin" <chee.yin.wong.com>
+Date: Fri, 15 May 2026 17:48:34 +0800
+Subject: [PATCH] Add display error fatal masking to earlier stage and add
+ WA_14011503117 for PTL
+
+Signed-off-by: Wong, Chee Yin <chee.yin.wong@intel.com>
+---
+ drivers/gpu/drm/i915/display/intel_display_power.c | 8 ++++----
+ drivers/gpu/drm/i915/display/intel_display_wa.c    | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_display_power.c b/drivers/gpu/drm/i915/display/intel_display_power.c
+index d48c00d92bf9..56842fb66b82 100644
+--- a/drivers/gpu/drm/i915/display/intel_display_power.c
++++ b/drivers/gpu/drm/i915/display/intel_display_power.c
+@@ -1664,6 +1664,10 @@ static void icl_display_core_init(struct intel_display *display,
+ 
+ 	gen9_set_dc_state(display, DC_STATE_DISABLE);
+ 
++	/* Wa_14011503030:xelpd */
++	if (DISPLAY_VER(display) == 13 || DISPLAY_VER(display) >= 30)
++		intel_de_write(display, XELPD_DISPLAY_ERR_FATAL_MASK, ~0);
++
+ 	/* Wa_14011294188:ehl,jsl,tgl,rkl,adl-s */
+ 	if (INTEL_PCH_TYPE(display) >= PCH_TGP &&
+ 	    INTEL_PCH_TYPE(display) < PCH_DG1)
+@@ -1725,10 +1729,6 @@ static void icl_display_core_init(struct intel_display *display,
+ 			     DCPR_CLEAR_MEMSTAT_DIS | DCPR_SEND_RESP_IMM |
+ 			     DCPR_MASK_LPMODE | DCPR_MASK_MAXLATENCY_MEMUP_CLR);
+ 
+-	/* Wa_14011503030:xelpd */
+-	if (DISPLAY_VER(display) == 13)
+-		intel_de_write(display, XELPD_DISPLAY_ERR_FATAL_MASK, ~0);
+-
+ 	/* Wa_15013987218 */
+ 	if (DISPLAY_VER(display) == 20) {
+ 		intel_de_rmw(display, SOUTH_DSPCLK_GATE_D,
+diff --git a/drivers/gpu/drm/i915/display/intel_display_wa.c b/drivers/gpu/drm/i915/display/intel_display_wa.c
+index 31cd2c9cd488..a086ff1e1c8e 100644
+--- a/drivers/gpu/drm/i915/display/intel_display_wa.c
++++ b/drivers/gpu/drm/i915/display/intel_display_wa.c
+@@ -66,7 +66,7 @@ bool __intel_display_wa(struct intel_display *display, enum intel_display_wa wa,
+ 	case INTEL_DISPLAY_WA_16025573575:
+ 		return intel_display_needs_wa_16025573575(display);
+ 	case INTEL_DISPLAY_WA_14011503117:
+-		return DISPLAY_VER(display) == 13;
++		return (DISPLAY_VER(display) == 13 || DISPLAY_VER(display) >= 30);
+ 	default:
+ 		drm_WARN(display->drm, 1, "Missing Wa number: %s\n", name);
+ 		break;
+-- 
+2.34.1
+

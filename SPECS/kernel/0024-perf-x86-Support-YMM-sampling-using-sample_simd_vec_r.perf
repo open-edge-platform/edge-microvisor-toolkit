@@ -1,0 +1,167 @@
+From 274150a979992855b7e1927ce9285d9e2ffdc54c Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Mon, 9 Feb 2026 15:20:39 +0800
+Subject: [PATCH 24/41] perf/x86: Support YMM sampling using
+ sample_simd_vec_reg_* fields
+
+This patch introduces support for sampling YMM registers via the
+sample_simd_vec_reg_* fields.
+
+Each YMM register consists of 4 u64 words, assembled from two halves:
+XMM (the lower 2 u64 words) and YMMH (the upper 2 u64 words). Although
+both XMM and YMMH data can be retrieved with a single xsaves instruction,
+they are stored in separate locations. The perf_simd_reg_value() function
+is responsible for assembling these halves into a complete YMM register
+for output to userspace.
+
+Additionally, sample_simd_vec_reg_qwords should be set to 4 to indicate
+YMM sampling.
+
+Co-developed-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/core.c                |  8 ++++++++
+ arch/x86/events/perf_event.h          |  9 +++++++++
+ arch/x86/include/asm/perf_event.h     |  4 ++++
+ arch/x86/include/uapi/asm/perf_regs.h |  6 ++++--
+ arch/x86/kernel/perf_regs.c           | 10 +++++++++-
+ 5 files changed, 34 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/events/core.c b/arch/x86/events/core.c
+index 030459ecc578..0eed13ad816d 100644
+--- a/arch/x86/events/core.c
++++ b/arch/x86/events/core.c
+@@ -727,6 +727,9 @@ int x86_pmu_hw_config(struct perf_event *event)
+ 			if (event_needs_xmm(event) &&
+ 			    !(x86_pmu.ext_regs_mask & XFEATURE_MASK_SSE))
+ 				return -EINVAL;
++			if (event_needs_ymm(event) &&
++			    !(x86_pmu.ext_regs_mask & XFEATURE_MASK_YMM))
++				return -EINVAL;
+ 		}
+ 	}
+ 
+@@ -1771,6 +1774,7 @@ void x86_pmu_clear_perf_regs(struct pt_regs *regs)
+ 
+ 	perf_regs->abi = PERF_SAMPLE_REGS_ABI_NONE;
+ 	perf_regs->xmm_regs = NULL;
++	perf_regs->ymmh_regs = NULL;
+ }
+ 
+ static void update_perf_regs(struct x86_perf_regs *perf_regs,
+@@ -1786,6 +1790,8 @@ static void update_perf_regs(struct x86_perf_regs *perf_regs,
+ 
+ 	if (mask & XFEATURE_MASK_SSE)
+ 		perf_regs->xmm_space = xsave->i387.xmm_space;
++	if (mask & XFEATURE_MASK_YMM)
++		perf_regs->ymmh = get_xsave_addr(xsave, XFEATURE_YMM);
+ }
+ 
+ /*
+@@ -1962,6 +1968,8 @@ static void x86_pmu_sample_xregs(struct perf_event *event,
+ 
+ 	if (event_needs_xmm(event))
+ 		mask |= XFEATURE_MASK_SSE;
++	if (event_needs_ymm(event))
++		mask |= XFEATURE_MASK_YMM;
+ 
+ 	mask &= x86_pmu.ext_regs_mask;
+ 	if (sample_type & PERF_SAMPLE_REGS_USER) {
+diff --git a/arch/x86/events/perf_event.h b/arch/x86/events/perf_event.h
+index 869fbcd3a53a..6906d6e27097 100644
+--- a/arch/x86/events/perf_event.h
++++ b/arch/x86/events/perf_event.h
+@@ -155,6 +155,15 @@ static inline bool event_needs_xmm(struct perf_event *event)
+ 	return false;
+ }
+ 
++static inline bool event_needs_ymm(struct perf_event *event)
++{
++	if (event->attr.sample_simd_regs_enabled &&
++	    event->attr.sample_simd_vec_reg_qwords >= PERF_X86_YMM_QWORDS)
++		return true;
++
++	return false;
++}
++
+ struct amd_nb {
+ 	int nb_id;  /* NorthBridge id */
+ 	int refcnt; /* reference count */
+diff --git a/arch/x86/include/asm/perf_event.h b/arch/x86/include/asm/perf_event.h
+index 5d623805bf87..25f5ae60f72f 100644
+--- a/arch/x86/include/asm/perf_event.h
++++ b/arch/x86/include/asm/perf_event.h
+@@ -709,6 +709,10 @@ struct x86_perf_regs {
+ 		u64	*xmm_regs;
+ 		u32	*xmm_space;	/* for xsaves */
+ 	};
++	union {
++		u64	*ymmh_regs;
++		struct ymmh_struct *ymmh;
++	};
+ };
+ 
+ extern unsigned long perf_arch_instruction_pointer(struct pt_regs *regs);
+diff --git a/arch/x86/include/uapi/asm/perf_regs.h b/arch/x86/include/uapi/asm/perf_regs.h
+index 5b7d5216f0bd..8f513229fbb8 100644
+--- a/arch/x86/include/uapi/asm/perf_regs.h
++++ b/arch/x86/include/uapi/asm/perf_regs.h
+@@ -57,7 +57,8 @@ enum perf_event_x86_regs {
+ 
+ enum {
+ 	PERF_X86_SIMD_XMM_REGS      = 16,
+-	PERF_X86_SIMD_VEC_REGS_MAX  = PERF_X86_SIMD_XMM_REGS,
++	PERF_X86_SIMD_YMM_REGS      = 16,
++	PERF_X86_SIMD_VEC_REGS_MAX  = PERF_X86_SIMD_YMM_REGS,
+ };
+ 
+ #define PERF_X86_SIMD_VEC_MASK	__GENMASK_ULL(PERF_X86_SIMD_VEC_REGS_MAX - 1, 0)
+@@ -65,7 +66,8 @@ enum {
+ enum {
+ 	/* 1 qword = 8 bytes */
+ 	PERF_X86_XMM_QWORDS      = 2,
+-	PERF_X86_SIMD_QWORDS_MAX = PERF_X86_XMM_QWORDS,
++	PERF_X86_YMM_QWORDS      = 4,
++	PERF_X86_SIMD_QWORDS_MAX = PERF_X86_YMM_QWORDS,
+ };
+ 
+ #endif /* _ASM_X86_PERF_REGS_H */
+diff --git a/arch/x86/kernel/perf_regs.c b/arch/x86/kernel/perf_regs.c
+index b9a3c4057c42..8f237eefb093 100644
+--- a/arch/x86/kernel/perf_regs.c
++++ b/arch/x86/kernel/perf_regs.c
+@@ -77,6 +77,8 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 	return regs_get_register(regs, pt_regs_offset[idx]);
+ }
+ 
++#define PERF_X86_YMMH_QWORDS	(PERF_X86_YMM_QWORDS / 2)
++
+ u64 perf_simd_reg_value(struct pt_regs *regs, int idx,
+ 			u16 qwords_idx, bool pred)
+ {
+@@ -98,6 +100,11 @@ u64 perf_simd_reg_value(struct pt_regs *regs, int idx,
+ 			return 0;
+ 		return perf_regs->xmm_regs[idx * PERF_X86_XMM_QWORDS +
+ 					   qwords_idx];
++	} else if (qwords_idx < PERF_X86_YMM_QWORDS) {
++		if (!perf_regs->ymmh_regs)
++			return 0;
++		return perf_regs->ymmh_regs[idx * PERF_X86_YMMH_QWORDS +
++					    qwords_idx - PERF_X86_XMM_QWORDS];
+ 	}
+ 
+ 	return 0;
+@@ -118,7 +125,8 @@ int perf_simd_reg_validate(u16 vec_qwords, u64 vec_mask_intr,
+ 		if (vec_mask_intr || vec_mask_user)
+ 			return -EINVAL;
+ 	} else {
+-		if (vec_qwords != PERF_X86_XMM_QWORDS)
++		if (vec_qwords != PERF_X86_XMM_QWORDS &&
++		    vec_qwords != PERF_X86_YMM_QWORDS)
+ 			return -EINVAL;
+ 		if ((!vec_mask_intr && !vec_mask_user) ||
+ 		    (vec_mask_intr & ~PERF_X86_SIMD_VEC_MASK) ||
+-- 
+2.34.1
+

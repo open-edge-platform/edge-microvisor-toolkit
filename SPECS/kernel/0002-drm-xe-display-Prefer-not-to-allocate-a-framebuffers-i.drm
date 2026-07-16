@@ -1,0 +1,70 @@
+From 0328baaca4057aea3fa88fb4ce6f3dac869a6ac1 Mon Sep 17 00:00:00 2001
+From: Maarten Lankhorst <dev@lankhorst.se>
+Date: Mon, 15 Jun 2026 22:18:45 +0200
+Subject: [PATCH 02/11] drm/xe/display: Prefer not to allocate a framebuffers
+ in stolen memory
+
+For the same reasons as using stolen memory for DPT, it's also a bad
+idea for framebuffers. Allocate new framebuffers always in system memory
+when we don't inherit them, and prohibit inheriting stolen framebuffers
+when CONFIG_PREEMPT_RT is enabled.
+
+Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ drivers/gpu/drm/xe/display/intel_fbdev_fb.c   | 23 ++++---------------
+ drivers/gpu/drm/xe/display/xe_plane_initial.c |  3 +++
+ 2 files changed, 7 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/display/intel_fbdev_fb.c b/drivers/gpu/drm/xe/display/intel_fbdev_fb.c
+index 8eaf1cc7fdf9..b7f943a78f07 100644
+--- a/drivers/gpu/drm/xe/display/intel_fbdev_fb.c
++++ b/drivers/gpu/drm/xe/display/intel_fbdev_fb.c
+@@ -25,26 +25,11 @@ struct intel_framebuffer *intel_fbdev_fb_alloc(struct drm_device *drm,
+ 
+ 	size = mode_cmd->pitches[0] * mode_cmd->height;
+ 	size = PAGE_ALIGN(size);
+-	obj = ERR_PTR(-ENODEV);
+-
+-	if (!IS_DGFX(xe) && !XE_GT_WA(xe_root_mmio_gt(xe), 22019338487_display)) {
+-		obj = xe_bo_create_pin_map_novm(xe, xe_device_get_root_tile(xe),
+-						size,
+-						ttm_bo_type_kernel, XE_BO_FLAG_SCANOUT |
+-						XE_BO_FLAG_STOLEN |
+-						XE_BO_FLAG_GGTT, false);
+-		if (!IS_ERR(obj))
+-			drm_info(&xe->drm, "Allocated fbdev into stolen\n");
+-		else
+-			drm_info(&xe->drm, "Allocated fbdev into stolen failed: %li\n", PTR_ERR(obj));
+-	}
+ 
+-	if (IS_ERR(obj)) {
+-		obj = xe_bo_create_pin_map_novm(xe, xe_device_get_root_tile(xe), size,
+-						ttm_bo_type_kernel, XE_BO_FLAG_SCANOUT |
+-						XE_BO_FLAG_VRAM_IF_DGFX(xe_device_get_root_tile(xe)) |
+-						XE_BO_FLAG_GGTT, false);
+-	}
++	obj = xe_bo_create_pin_map_novm(xe, xe_device_get_root_tile(xe), size,
++					ttm_bo_type_kernel, XE_BO_FLAG_SCANOUT |
++					XE_BO_FLAG_VRAM_IF_DGFX(xe_device_get_root_tile(xe)) |
++					XE_BO_FLAG_GGTT, false);
+ 
+ 	if (IS_ERR(obj)) {
+ 		drm_err(&xe->drm, "failed to allocate framebuffer (%pe)\n", obj);
+diff --git a/drivers/gpu/drm/xe/display/xe_plane_initial.c b/drivers/gpu/drm/xe/display/xe_plane_initial.c
+index 94f00def811b..f100fa8b9151 100644
+--- a/drivers/gpu/drm/xe/display/xe_plane_initial.c
++++ b/drivers/gpu/drm/xe/display/xe_plane_initial.c
+@@ -126,6 +126,9 @@ initial_plane_bo(struct xe_device *xe,
+ 		if (XE_GT_WA(xe_root_mmio_gt(xe), 22019338487_display))
+ 			return NULL;
+ 
++		if (IS_ENABLED(CONFIG_PREEMPT_RT))
++			return NULL;
++
+ 		/*
+ 		 * If the FB is too big, just don't use it since fbdev is not very
+ 		 * important and we should probably use that space with FBC or other
+-- 
+2.34.1
+

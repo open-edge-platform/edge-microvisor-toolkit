@@ -1,0 +1,56 @@
+From 9fe20f6d33aa52eb78944a3b98b3e3796bf8183e Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Fri, 19 Jun 2026 14:59:23 +0800
+Subject: [PATCH 11/11] drm/i915: disable PMU events on PREEMPT_RT
+
+Running perf with i915 PMU events on PREEMPT_RT kernels can trigger
+warnings such as "schedule while atomic" or "BUG: sleeping function
+called from invalid context".
+
+The call trace is:
+
+rt_spin_lock+0x63/0x200
+i915_pmu_enable+0x48/0x390 [i915]
+i915_pmu_event_add+0x71/0x90 [i915]
+event_sched_in+0x105/0x270
+merge_sched_in+0x2db/0x4e0
+perf_event_sched_in+0x83/0xa0
+remote_function+0x4f/0x70
+__flush_smp_call_function_queue+0xca/0x6e0
+
+Perf events may be scheduled from a CPU different from the target CPU.
+In this case, perf uses smp_call_function_single() to execute the event
+handler remotely while preemption is disabled.
+
+The i915 PMU event path acquires a spinlock for synchronization.
+On PREEMPT_RT kernels, spinlocks become sleeping locks, which can lead
+to scheduling from an atomic context and trigger the warnings above.
+
+As a workaround, disable i915 PMU event support when PREEMPT_RT is
+enabled.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ drivers/gpu/drm/i915/i915_pmu.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_pmu.c b/drivers/gpu/drm/i915/i915_pmu.c
+index 96392f470cfe..671194d63073 100644
+--- a/drivers/gpu/drm/i915/i915_pmu.c
++++ b/drivers/gpu/drm/i915/i915_pmu.c
+@@ -1164,6 +1164,12 @@ void i915_pmu_register(struct drm_i915_private *i915)
+ 	};
+ 	int ret = -ENOMEM;
+ 
++	if (IS_ENABLED(CONFIG_PREEMPT_RT)) {
++		/* Workaround: disable i915 PMU support on PREEMPT_RT kernels */
++		drm_info_once(&i915->drm, "i915 PMU is disabled on PREEMPT_RT kernels\n");
++		return;
++	}
++
+ 	if (IS_SRIOV_VF(i915)) {
+ 		drm_info(&i915->drm, "PMU not supported for this GPU.");
+ 		return;
+-- 
+2.34.1
+

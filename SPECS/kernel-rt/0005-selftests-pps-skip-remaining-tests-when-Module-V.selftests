@@ -1,0 +1,84 @@
+From 905619dc42d10824c2ed112686d8e63a44f8dece Mon Sep 17 00:00:00 2001
+From: "Li, Hongli" <hongli.li@intel.com>
+Date: Wed, 22 Apr 2026 07:16:07 +0000
+Subject: [PATCH 5/5] selftests/pps: skip remaining tests when Module
+ Verification fails
+
+For all PPS test cases, if Module Verification (Phase 1) fails -- both
+modinfo and module load fail -- skip all subsequent test phases.
+
+Signed-off-by: Li, Hongli <hongli.li@intel.com>
+---
+ .../x86/intel/pps/test_pps_client_tio.sh         | 16 +++++++++++++---
+ .../x86/intel/pps/test_pps_platform_tio.sh       | 13 +++++++++++--
+ 2 files changed, 24 insertions(+), 5 deletions(-)
+
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_client_tio.sh b/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_client_tio.sh
+index 5811d8e52eab..3cd65c118118 100755
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_client_tio.sh
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_client_tio.sh
+@@ -71,6 +71,7 @@ setup_load_modules()
+ 				append_log "[$INFO] Loaded module $mod"
+ 			else
+ 				append_log "[$SKIP] Cannot load module $mod (no hardware?)"
++				return 1
+ 			fi
+ 		fi
+ 	done
+@@ -321,9 +322,18 @@ test_pps_client_tio()
+ 	append_log "[$INFO] Test started at $(date)"
+ 
+ 	# Prerequisites: module verification, load modules, switch to client mode
+-	append_log "[$INFO] --- Prerequisites ---"
+-	check_modinfo "$MOD_CLIENT"
+-	setup_load_modules
++	local modinfo_failed=0 load_failed=0
++
++	append_log "[$INFO] --- Prerequisites: Module Verification ---"
++	check_modinfo "$MOD_CLIENT" || modinfo_failed=1
++	setup_load_modules || load_failed=1
++
++	if [ "$modinfo_failed" -ne 0 ] && [ "$load_failed" -ne 0 ]; then
++		append_log "[$SKIP] Module verification failed: module not available and cannot be loaded, skipping remaining tests"
++		return
++	fi
++
++	append_log "[$INFO] --- Prerequisites: Client Mode Setup ---"
+ 	setup_client_mode
+ 
+ 	# Phase 1: Client device tests
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_platform_tio.sh b/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_platform_tio.sh
+index 23f360112d12..409c99b43ad2 100755
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_platform_tio.sh
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_platform_tio.sh
+@@ -53,6 +53,7 @@ test_load_module()
+ 			append_log "[$PASS] Loaded module $MOD_PLAT"
+ 		else
+ 			append_log "[$SKIP] Cannot load module $MOD_PLAT (no hardware?)"
++			return 1
+ 		fi
+ 	fi
+ }
+@@ -160,9 +161,17 @@ test_pps_platform_tio()
+ 	append_log "[$INFO] Test started at $(date)"
+ 
+ 	# Phase 1: Module verification
++	# Remaining phases are skipped when both modinfo and module load fail.
++	local modinfo_failed=0 load_failed=0
++
+ 	append_log "[$INFO] --- Phase 1: Module Verification ---"
+-	check_modinfo "$MOD_PLAT"
+-	test_load_module
++	check_modinfo "$MOD_PLAT" || modinfo_failed=1
++	test_load_module || load_failed=1
++
++	if [ "$modinfo_failed" -ne 0 ] && [ "$load_failed" -ne 0 ]; then
++		append_log "[$SKIP] Phase 1 failed: module not available and cannot be loaded, skipping remaining tests"
++		return
++	fi
+ 
+ 	# Phase 2: Platform device tests
+ 	append_log "[$INFO] --- Phase 2: Platform Device Tests ---"
+-- 
+2.34.1
+

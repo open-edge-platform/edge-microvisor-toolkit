@@ -1,0 +1,111 @@
+From 4bf78746b241cd0a63f7c07ba917bd1f9d78e16b Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Mon, 9 Feb 2026 15:20:33 +0800
+Subject: [PATCH 16/41] x86/fpu: Ensure TIF_NEED_FPU_LOAD is set after saving
+ FPU state
+
+Following Peter and Dave's suggestion, Ensure that the TIF_NEED_FPU_LOAD
+flag is always set after saving the FPU state. This guarantees that the
+user space FPU state has been saved whenever the TIF_NEED_FPU_LOAD flag
+is set.
+
+A subsequent patch will verify if the user space FPU state can be
+retrieved from the saved task FPU state in the NMI context by checking
+the TIF_NEED_FPU_LOAD flag.
+
+Please check the below link to get more background about the suggestion.
+
+Suggested-by: Peter Zijlstra <peterz@infradead.org>
+Link: https://lore.kernel.org/all/20251204154721.GB2619703@noisy.programming.kicks-ass.net/
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/include/asm/fpu/sched.h |  5 +++--
+ arch/x86/kernel/fpu/core.c       | 27 ++++++++++++++++++++-------
+ 2 files changed, 23 insertions(+), 9 deletions(-)
+
+diff --git a/arch/x86/include/asm/fpu/sched.h b/arch/x86/include/asm/fpu/sched.h
+index 89004f4ca208..dcb2fa5f06d6 100644
+--- a/arch/x86/include/asm/fpu/sched.h
++++ b/arch/x86/include/asm/fpu/sched.h
+@@ -10,6 +10,8 @@
+ #include <asm/trace/fpu.h>
+ 
+ extern void save_fpregs_to_fpstate(struct fpu *fpu);
++extern void update_fpu_state_and_flag(struct fpu *fpu,
++				      struct task_struct *task);
+ extern void fpu__drop(struct task_struct *tsk);
+ extern int  fpu_clone(struct task_struct *dst, u64 clone_flags, bool minimal,
+ 		      unsigned long shstk_addr);
+@@ -36,8 +38,7 @@ static inline void switch_fpu(struct task_struct *old, int cpu)
+ 	    !(old->flags & (PF_KTHREAD | PF_USER_WORKER))) {
+ 		struct fpu *old_fpu = x86_task_fpu(old);
+ 
+-		set_tsk_thread_flag(old, TIF_NEED_FPU_LOAD);
+-		save_fpregs_to_fpstate(old_fpu);
++		update_fpu_state_and_flag(old_fpu, old);
+ 		/*
+ 		 * The save operation preserved register state, so the
+ 		 * fpu_fpregs_owner_ctx is still @old_fpu. Store the
+diff --git a/arch/x86/kernel/fpu/core.c b/arch/x86/kernel/fpu/core.c
+index 9badb21e5a5b..f999981fcaaa 100644
+--- a/arch/x86/kernel/fpu/core.c
++++ b/arch/x86/kernel/fpu/core.c
+@@ -212,6 +212,19 @@ void restore_fpregs_from_fpstate(struct fpstate *fpstate, u64 mask)
+ 	}
+ }
+ 
++/*
++ * Save the FPU register state in fpu->fpstate->regs and set
++ * TIF_NEED_FPU_LOAD subsequently.
++ *
++ * Must be called with fpregs_lock() held, ensuring flag
++ * TIF_NEED_FPU_LOAD is set last.
++ */
++void update_fpu_state_and_flag(struct fpu *fpu, struct task_struct *task)
++{
++	save_fpregs_to_fpstate(fpu);
++	set_tsk_thread_flag(task, TIF_NEED_FPU_LOAD);
++}
++
+ void fpu_reset_from_exception_fixup(void)
+ {
+ 	restore_fpregs_from_fpstate(&init_fpstate, XFEATURE_MASK_FPSTATE);
+@@ -378,17 +391,19 @@ int fpu_swap_kvm_fpstate(struct fpu_guest *guest_fpu, bool enter_guest)
+ 
+ 	fpregs_lock();
+ 	if (!cur_fps->is_confidential && !test_thread_flag(TIF_NEED_FPU_LOAD))
+-		save_fpregs_to_fpstate(fpu);
++		update_fpu_state_and_flag(fpu, current);
+ 
+ 	/* Swap fpstate */
+ 	if (enter_guest) {
+-		fpu->__task_fpstate = cur_fps;
++		WRITE_ONCE(fpu->__task_fpstate, cur_fps);
++		barrier();
+ 		fpu->fpstate = guest_fps;
+ 		guest_fps->in_use = true;
+ 	} else {
+ 		guest_fps->in_use = false;
+ 		fpu->fpstate = fpu->__task_fpstate;
+-		fpu->__task_fpstate = NULL;
++		barrier();
++		WRITE_ONCE(fpu->__task_fpstate, NULL);
+ 	}
+ 
+ 	cur_fps = fpu->fpstate;
+@@ -480,10 +495,8 @@ void kernel_fpu_begin_mask(unsigned int kfpu_mask)
+ 	this_cpu_write(kernel_fpu_allowed, false);
+ 
+ 	if (!(current->flags & (PF_KTHREAD | PF_USER_WORKER)) &&
+-	    !test_thread_flag(TIF_NEED_FPU_LOAD)) {
+-		set_thread_flag(TIF_NEED_FPU_LOAD);
+-		save_fpregs_to_fpstate(x86_task_fpu(current));
+-	}
++	    !test_thread_flag(TIF_NEED_FPU_LOAD))
++		update_fpu_state_and_flag(x86_task_fpu(current), current);
+ 	__cpu_invalidate_fpregs_state();
+ 
+ 	/* Put sane initial values into the control registers. */
+-- 
+2.34.1
+

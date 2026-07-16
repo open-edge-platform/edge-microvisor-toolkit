@@ -1,0 +1,364 @@
+From 8bef9aeaeb1ba672f8225bdd769f101d926efb89 Mon Sep 17 00:00:00 2001
+From: "Li, Hongli" <hongli.li@intel.com>
+Date: Wed, 22 Apr 2026 03:06:32 +0000
+Subject: [PATCH 2/5] selftests/pps: self-tests for the Intel Timed IO (TIO)
+ PPS Generator
+
+Add PPS Generator self-test script (test_pps_gen_tio.sh) that verifies
+the Intel Timed IO PPS Generator driver (pps_gen_tio) functionality:
+
+  - Module verification (modinfo) and loading
+  - PPS generator device discovery under /sys/class/pps-gen/
+  - Sysfs attribute verification (dev, enable, system, time, uevent)
+  - System clock usage check
+  - Time readback validation
+  - Enable/disable PPS generation via sysfs
+
+The test sources pps_tio_common.sh for shared framework utilities.
+
+Signed-off-by: Li, Hongli <hongli.li@intel.com>
+---
+ .../drivers/platform/x86/intel/pps/Makefile   |   2 +-
+ .../drivers/platform/x86/intel/pps/README.rst |  28 ++-
+ .../drivers/platform/x86/intel/pps/config     |   2 +
+ .../platform/x86/intel/pps/pps_tio_common.sh  |  13 +
+ .../x86/intel/pps/test_pps_gen_tio.sh         | 224 ++++++++++++++++++
+ 5 files changed, 267 insertions(+), 2 deletions(-)
+ create mode 100755 tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_gen_tio.sh
+
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile b/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
+index 69ec7a758c6a..e0502cca06be 100644
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ # Makefile for Intel Timed IO (TIO) PPS selftests
+ 
+-TEST_PROGS :=
++TEST_PROGS := test_pps_gen_tio.sh
+ TEST_FILES := pps_tio_common.sh
+ 
+ include ../../../../../lib.mk
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst b/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
+index 6b0726de5b43..4afb991fc42c 100644
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/README.rst
+@@ -10,6 +10,10 @@ Overview
+ This directory contains self-tests for the Intel Timed IO (TIO) PPS drivers.
+ The common test framework is provided by ``pps_tio_common.sh``.
+ 
++- **PPS Generator** (``pps_gen_tio``) - The test script ``test_pps_gen_tio.sh``
++  verifies the PPS generator functionality including module loading, sysfs
++  attribute validation, time readback, and enable/disable operations.
++
+ Prerequisites
+ =============
+ 
+@@ -33,6 +37,8 @@ The following kernel configuration options must be enabled (as modules or
+ built-in)::
+ 
+   CONFIG_PPS=m
++  CONFIG_PPS_GENERATOR=m
++  CONFIG_PPS_GENERATOR_TIO=m
+ 
+ Running the Tests
+ =================
+@@ -40,12 +46,32 @@ Running the Tests
+ Run individual tests as root using the kselftest framework::
+ 
+   $ cd tools/testing/selftests/drivers/platform/x86/intel/pps
+-  $ sudo ./<test_script>.sh
++  $ sudo ./test_pps_gen_tio.sh
+ 
+ Or using the kselftest runner from the kernel tree::
+ 
+   $ make -C tools/testing/selftests TARGETS=drivers/platform/x86/intel/pps run_tests
+ 
++Test Cases
++==========
++
++PPS Generator Tests (test_pps_gen_tio.sh)
++------------------------------------------
++
++The script runs the following test cases:
++
++1. **Module info verification** - Checks ``modinfo pps_gen_tio`` is available.
++2. **Module loading** - Loads the ``pps_gen_tio`` module if not already loaded.
++3. **PPS generator device existence** - Verifies a ``pps-gen*`` device appears
++   under ``/sys/class/pps-gen/``.
++4. **Sysfs attribute verification** - Checks for expected attributes: ``dev``,
++   ``enable``, ``system``, ``time``, ``uevent``.
++5. **System clock check** - Reads the ``system`` attribute to verify clock
++   configuration.
++6. **Time readback** - Reads the ``time`` attribute and validates the timestamp.
++7. **Enable PPS generation** - Writes ``1`` to the ``enable`` attribute.
++8. **Disable PPS generation** - Writes ``0`` to the ``enable`` attribute.
++
+ Output
+ ======
+ 
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/config b/tools/testing/selftests/drivers/platform/x86/intel/pps/config
+index f2a107935eda..fca92d956926 100644
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/config
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/config
+@@ -1 +1,3 @@
+ CONFIG_PPS=m
++CONFIG_PPS_GENERATOR=m
++CONFIG_PPS_GENERATOR_TIO=m
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh b/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
+index 6de9dde77f3a..40dfa6f0c37a 100755
+--- a/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/pps_tio_common.sh
+@@ -76,6 +76,19 @@ test_exit()
+ 	pps_cleanup
+ }
+ 
++# Find the first PPS generator device under the given class path
++find_pps_gen_device()
++{
++	local pps_gen_class="$1"
++	local gen_dev
++
++	for gen_dev in ${pps_gen_class}/pps-gen*; do
++		[ -d "$gen_dev" ] || continue
++		basename "$gen_dev"
++		return 0
++	done
++	return 1
++}
+ 
+ # Find a PPS device whose name matches a pattern
+ find_pps_by_name()
+diff --git a/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_gen_tio.sh b/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_gen_tio.sh
+new file mode 100755
+index 000000000000..3f419e69be42
+--- /dev/null
++++ b/tools/testing/selftests/drivers/platform/x86/intel/pps/test_pps_gen_tio.sh
+@@ -0,0 +1,224 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++#
++# Test the functionality of the Intel Timed IO (TIO) PPS Generator driver.
++#
++# This script covers the following:
++#   - Module verification for pps_gen_tio
++#   - PPS generator device discovery under /sys/class/pps-gen/
++#   - Sysfs attribute verification (dev, enable, system, time, uevent)
++#   - System clock usage check
++#   - Time readback validation
++#   - Enable/disable generation via sysfs
++#
++# Copyright (C) 2026 Intel Corporation
++
++source "$(dirname "$0")/pps_tio_common.sh"
++
++# Module name
++readonly MOD_GEN="pps_gen_tio"
++
++# Sysfs paths
++readonly PPS_GEN_CLASS="/sys/class/pps-gen"
++
++PPS_LOG_FILE="/tmp/pps_gen_tio_test_logs.$$"
++PPS_TEST_NAME="PPS generator"
++GEN_DEV=""
++ORIGIN_GEN_LOADED=""
++
++pps_cleanup()
++{
++	append_log "[$INFO] Restore environment after PPS generator test"
++
++	# Disable generator if we enabled it
++	if [ -n "$GEN_DEV" ] && [ -f "${PPS_GEN_CLASS}/${GEN_DEV}/enable" ]; then
++		echo 0 > "${PPS_GEN_CLASS}/${GEN_DEV}/enable" 2>/dev/null
++	fi
++
++	# Unload module if we loaded it
++	if [ "$ORIGIN_GEN_LOADED" = "false" ]; then
++		lsmod | grep -q "$MOD_GEN" && modprobe -r "$MOD_GEN" 2>/dev/null
++	fi
++
++	pps_cleanup_finish
++}
++
++# ===================== Test Cases =====================
++
++# Test: Load Intel TIO PPS generator module
++test_load_modules()
++{
++	if lsmod | grep -q "$MOD_GEN"; then
++		append_log "[$INFO] Module $MOD_GEN is already loaded"
++		ORIGIN_GEN_LOADED="true"
++	else
++		ORIGIN_GEN_LOADED="false"
++		modprobe "$MOD_GEN" 2>/dev/null
++		if lsmod | grep -q "$MOD_GEN"; then
++			append_log "[$PASS] Loaded module $MOD_GEN"
++		else
++			append_log "[$SKIP] Cannot load module $MOD_GEN (no hardware?)"
++			return 1
++		fi
++	fi
++}
++
++# Test: PPS generator class exists and pps-gen device is created
++test_pps_gen_device_exists()
++{
++	if [ ! -d "$PPS_GEN_CLASS" ]; then
++		append_log "[$FAIL] PPS generator class $PPS_GEN_CLASS not found"
++		return
++	fi
++
++	GEN_DEV=$(find_pps_gen_device "$PPS_GEN_CLASS" 2>/dev/null)
++	if [ -n "$GEN_DEV" ]; then
++		append_log "[$PASS] PPS generator device found: $GEN_DEV"
++	else
++		append_log "[$SKIP] No PPS generator device found under $PPS_GEN_CLASS"
++	fi
++}
++
++# Test: Verify PPS generator sysfs attributes (enable, time, system)
++test_pps_gen_sysfs_attrs()
++{
++	local attr missing=""
++
++	if [ -z "$GEN_DEV" ]; then
++		append_log "[$SKIP] No generator device, skipping sysfs attr check"
++		return
++	fi
++
++	for attr in dev enable system time uevent; do
++		if [ ! -e "${PPS_GEN_CLASS}/${GEN_DEV}/${attr}" ]; then
++			missing="$missing $attr"
++		fi
++	done
++
++	if [ -z "$missing" ]; then
++		append_log "[$PASS] PPS generator sysfs attributes present (dev, enable, system, time, uevent)"
++	else
++		append_log "[$FAIL] PPS generator missing sysfs attributes:$missing"
++	fi
++}
++
++# Test: Read PPS generator 'system' attribute (TIO sets use_system_clock=true)
++test_pps_gen_system_clock()
++{
++	local val
++
++	if [ -z "$GEN_DEV" ]; then
++		append_log "[$SKIP] No generator device, skipping system clock check"
++		return
++	fi
++
++	val=$(cat "${PPS_GEN_CLASS}/${GEN_DEV}/system" 2>/dev/null)
++	if [ "$val" = "1" ]; then
++		append_log "[$PASS] PPS generator use_system_clock=1 (expected for TIO)"
++	elif [ "$val" = "0" ]; then
++		append_log "[$PASS] PPS generator use_system_clock=0"
++	else
++		append_log "[$FAIL] PPS generator system attribute unexpected value: '$val'"
++	fi
++}
++
++# Test: Read PPS generator 'time' attribute
++test_pps_gen_time()
++{
++	local val sec nsec
++
++	if [ -z "$GEN_DEV" ]; then
++		append_log "[$SKIP] No generator device, skipping time check"
++		return
++	fi
++
++	val=$(cat "${PPS_GEN_CLASS}/${GEN_DEV}/time" 2>/dev/null)
++	if echo "$val" | grep -qE '^[0-9]+ [0-9]+$'; then
++		sec=$(echo "$val" | awk '{print $1}')
++		nsec=$(echo "$val" | awk '{print $2}')
++		# Sanity: time should be after year 2000 (946684800)
++		if [ "$sec" -gt 946684800 ]; then
++			append_log "[$PASS] PPS generator time=${sec}.${nsec} (valid)"
++		else
++			append_log "[$FAIL] PPS generator time=${sec}.${nsec} (too old)"
++		fi
++	else
++		append_log "[$FAIL] PPS generator time format invalid: '$val'"
++	fi
++}
++
++# Test: Enable PPS generation via sysfs
++test_pps_gen_enable()
++{
++	local ret
++
++	if [ -z "$GEN_DEV" ]; then
++		append_log "[$SKIP] No generator device, skipping enable test"
++		return
++	fi
++
++	echo 1 > "${PPS_GEN_CLASS}/${GEN_DEV}/enable" 2>/dev/null
++	ret=$?
++	if [ $ret -eq 0 ]; then
++		append_log "[$PASS] PPS generator enabled (echo 1 > enable)"
++		# Wait briefly to let generation start
++		sleep 2
++	else
++		append_log "[$FAIL] PPS generator enable failed with ret=$ret"
++	fi
++}
++
++# Test: Disable PPS generation via sysfs
++test_pps_gen_disable()
++{
++	local ret
++
++	if [ -z "$GEN_DEV" ]; then
++		append_log "[$SKIP] No generator device, skipping disable test"
++		return
++	fi
++
++	echo 0 > "${PPS_GEN_CLASS}/${GEN_DEV}/enable" 2>/dev/null
++	ret=$?
++	if [ $ret -eq 0 ]; then
++		append_log "[$PASS] PPS generator disabled (echo 0 > enable)"
++	else
++		append_log "[$FAIL] PPS generator disable failed with ret=$ret"
++	fi
++}
++
++# ===================== Main Test Sequence =====================
++
++test_pps_gen_tio()
++{
++	append_log "[$INFO] === Intel Timed IO (TIO) PPS Generator Test ==="
++	append_log "[$INFO] Test started at $(date)"
++
++	# Phase 1: Module verification
++	# Phase 2 is skipped only when both modinfo and module load fail.
++	local modinfo_failed=0 load_failed=0
++
++	append_log "[$INFO] --- Phase 1: Module Verification ---"
++	check_modinfo "$MOD_GEN" || modinfo_failed=1
++	test_load_modules || load_failed=1
++
++	if [ "$modinfo_failed" -ne 0 ] && [ "$load_failed" -ne 0 ]; then
++		append_log "[$SKIP] Phase 1 failed: module not available and cannot be loaded, skipping Phase 2"
++		return
++	fi
++
++	# Phase 2: PPS Generator tests
++	append_log "[$INFO] --- Phase 2: PPS Generator Tests ---"
++	test_pps_gen_device_exists
++	test_pps_gen_sysfs_attrs
++	test_pps_gen_system_clock
++	test_pps_gen_time
++	test_pps_gen_enable
++	test_pps_gen_disable
++
++	append_log "[$INFO] === Test Complete ==="
++}
++
++trap pps_cleanup SIGTERM SIGINT
++test_pps_gen_tio
++pps_cleanup
+-- 
+2.34.1
+

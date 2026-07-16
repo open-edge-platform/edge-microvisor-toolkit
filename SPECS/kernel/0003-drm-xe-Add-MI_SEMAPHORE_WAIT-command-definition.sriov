@@ -1,0 +1,48 @@
+From 5daad62fec184c463ba0116eab5f06e8aad957ad Mon Sep 17 00:00:00 2001
+From: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Date: Tue, 3 Mar 2026 21:13:53 +0100
+Subject: [PATCH 3/3] drm/xe: Add MI_SEMAPHORE_WAIT command definition
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This command supports memory based Semaphore WAIT. Memory based
+semaphores will be used for synchronization between the Producer
+and the Consumer contexts. Producer and Consumer Contexts could
+be running on different engines or on the same engine inside GT.
+
+Bspec: 45749, 60244
+Signed-off-by: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Reviewed-by: Michał Winiarski <michal.winiarski@intel.com>
+Link: https://patch.msgid.link/20260303201354.17948-3-michal.wajdeczko@intel.com
+---
+ drivers/gpu/drm/xe/instructions/xe_mi_commands.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/instructions/xe_mi_commands.h b/drivers/gpu/drm/xe/instructions/xe_mi_commands.h
+index c47b290e0e9f..29569eff1af3 100644
+--- a/drivers/gpu/drm/xe/instructions/xe_mi_commands.h
++++ b/drivers/gpu/drm/xe/instructions/xe_mi_commands.h
+@@ -34,6 +34,19 @@
+ #define MI_FORCE_WAKEUP			__MI_INSTR(0x1D)
+ #define MI_MATH(n)			(__MI_INSTR(0x1A) | XE_INSTR_NUM_DW((n) + 1))
+ 
++#define MI_SEMAPHORE_WAIT		(__MI_INSTR(0x1c) | XE_INSTR_NUM_DW(5))
++#define   MI_SEMW_GGTT			REG_BIT(22)
++#define   MI_SEMW_POLL			REG_BIT(15)
++#define   MI_SEMW_COMPARE_OP_MASK	REG_GENMASK(14, 12)
++#define     COMPARE_OP_SAD_GT_SDD	0
++#define     COMPARE_OP_SAD_GTE_SDD	1
++#define     COMPARE_OP_SAD_LT_SDD	2
++#define     COMPARE_OP_SAD_LTE_SDD	3
++#define     COMPARE_OP_SAD_EQ_SDD	4
++#define     COMPARE_OP_SAD_NEQ_SDD	5
++#define   MI_SEMW_COMPARE(OP)		REG_FIELD_PREP(MI_SEMW_COMPARE_OP_MASK, COMPARE_OP_##OP)
++#define   MI_SEMW_TOKEN(token)		REG_FIELD_PREP(REG_GENMASK(9, 2), (token))
++
+ #define MI_STORE_DATA_IMM		__MI_INSTR(0x20)
+ #define   MI_SDI_GGTT			REG_BIT(22)
+ #define   MI_SDI_LEN_DW			GENMASK(9, 0)
+-- 
+2.34.1
+

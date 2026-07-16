@@ -1,0 +1,98 @@
+From 70980a9a7f50e49661a2b784854c8257cc92b336 Mon Sep 17 00:00:00 2001
+From: "Yew, Chang Ching" <chang.ching.yew@intel.com>
+Date: Mon, 16 Mar 2026 10:54:04 +0800
+Subject: [PATCH] media: i2c: max96724: Enable clk on PHY0 for 2x4 D-PHY
+
+IPU6 D-PHY MIPI clock lanes on the Arrow Lake CRB are
+routed to CKCP on PHY0 and CKCP is not the default clock
+or clock master lane of port A in max96724 2x4 D-PHY mode
+
+This patch enable CKCP as altenate clock on PHY0 for
+ARL camera 1 in 2x4 D-PHY mode
+
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/max9x/max96724.c | 18 ++++++++++++------
+ drivers/media/i2c/max9x/max96724.h |  3 +++
+ 2 files changed, 15 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/i2c/max9x/max96724.c b/drivers/media/i2c/max9x/max96724.c
+index c4cc810e82e26..5852bc78ccc68 100644
+--- a/drivers/media/i2c/max9x/max96724.c
++++ b/drivers/media/i2c/max9x/max96724.c
+@@ -38,7 +38,7 @@ module_param(max96724_serial_link_timeout_ms, int, S_IRUSR | S_IWUSR | S_IRGRP |
+ MODULE_PARM_DESC(max96724_serial_link_timeout_ms, "Timeout for serial link in milliseconds");
+ 
+ // Declarations
+-static int max96724_set_phy_mode(struct max9x_common *common, unsigned int phy_mode);
++static int max96724_set_phy_mode(struct max9x_common *common, unsigned int phy_mode, unsigned int phy_clk);
+ static int max96724_set_phy_enabled(struct max9x_common *common, unsigned int csi_id, bool enable);
+ static int max96724_set_phy_lane_map(struct max9x_common *common, unsigned int csi_id, unsigned int phy_lane_map);
+ static int max96724_set_phy_dpll_freq(struct max9x_common *common, unsigned int csi_id, unsigned int freq_mhz);
+@@ -71,16 +71,18 @@ static int max96724_set_line_fault(struct max9x_common *common, unsigned int lin
+ static int max96724_get_line_fault(struct max9x_common *common, unsigned int line);
+ 
+ // Functions
+-static int max96724_set_phy_mode(struct max9x_common *common, unsigned int phy_mode)
++static int max96724_set_phy_mode(struct max9x_common *common, unsigned int phy_mode, unsigned int phy_clk)
+ {
+ 	struct device *dev = common->dev;
+ 	struct regmap *map = common->map;
+ 
+-	dev_dbg(dev, "CSI: phy_mode=%d", phy_mode);
++	dev_dbg(dev, "CSI: phy_mode=%d, phy_clk=0x%02x", phy_mode, phy_clk);
+ 
+ 	return regmap_update_bits(map, MAX96724_MIPI_PHY0,
+-		MAX96724_MIPI_PHY0_MODE_FIELD,
+-		MAX9X_FIELD_PREP(MAX96724_MIPI_PHY0_MODE_FIELD, phy_mode));
++		MAX96724_MIPI_PHY0_MODE_FIELD |
++		MAX96724_MIPI_PHY0_CLK_PHY0 | MAX96724_MIPI_PHY0_CLK_PHY3,
++		MAX9X_FIELD_PREP(MAX96724_MIPI_PHY0_MODE_FIELD, phy_mode) |
++		(phy_clk & (MAX96724_MIPI_PHY0_CLK_PHY0 | MAX96724_MIPI_PHY0_CLK_PHY3)));
+ }
+ 
+ static int max96724_set_phy_enabled(struct max9x_common *common,
+@@ -237,6 +239,7 @@ static int max96724_configure_csi_dphy(struct max9x_common *common)
+ 	struct device *dev = common->dev;
+ 	unsigned int phy_mode;
+ 	unsigned int phy_lane_map[MAX96724_NUM_CSI_LINKS];
++	unsigned int phy_clk = 0;
+ 	unsigned int csi_id;
+ 	int ret;
+ 
+@@ -300,6 +303,9 @@ static int max96724_configure_csi_dphy(struct max9x_common *common)
+ 		phy_lane_map[3] = MAX9X_FIELD_PREP(MAX96724_MIPI_PHY_LANE_MAP_FIELD(3, 0), 0)
+ 				| MAX9X_FIELD_PREP(MAX96724_MIPI_PHY_LANE_MAP_FIELD(3, 1), 1);
+ 
++		/* Use CKCP/N alternate CLK on PHY0 */
++		phy_clk = MAX96724_MIPI_PHY0_CLK_PHY0;
++
+ 	} else if (common->csi_link[0].config.num_lanes <= 2
+ 		   && common->csi_link[1].config.num_lanes <= 2
+ 		   && common->csi_link[2].config.num_lanes >= 3
+@@ -321,7 +327,7 @@ static int max96724_configure_csi_dphy(struct max9x_common *common)
+ 		return -EINVAL;
+ 	}
+ 
+-	ret = max96724_set_phy_mode(common, phy_mode);
++	ret = max96724_set_phy_mode(common, phy_mode, phy_clk);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/media/i2c/max9x/max96724.h b/drivers/media/i2c/max9x/max96724.h
+index e84b12d7e5cc3..f6eb877cd80bc 100644
+--- a/drivers/media/i2c/max9x/max96724.h
++++ b/drivers/media/i2c/max9x/max96724.h
+@@ -149,6 +149,9 @@ enum max96724_virtual_channel_size {
+ 
+ #define MAX96724_MIPI_PHY0 0x8A0
+ #define MAX96724_MIPI_PHY0_MODE_FIELD GENMASK(4, 0)
++#define MAX96724_MIPI_PHY0_CLK_PHY3 BIT(6)
++#define MAX96724_MIPI_PHY0_CLK_PHY0 BIT(5)
++
+ #define MAX96724_MIPI_PHY_ENABLE 0x8A2
+ #define MAX96724_MIPI_PHY_ENABLE_FIELD(csi) BIT((csi) + 4)
+ #define MAX96724_MIPI_PHY_LANE_MAP(csi) (0x8A3 + (csi) / 2)
+-- 
+2.43.0
+
