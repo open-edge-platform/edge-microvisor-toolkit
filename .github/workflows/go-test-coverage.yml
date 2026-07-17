@@ -6,9 +6,9 @@ name: Go Test Coverage
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - .github/workflows/go-test-coverage.yml
-      - '**.go'
+      #paths:
+      #- .github/workflows/go-test-coverage.yml
+      #- '**.go'
 
 permissions: read-all
 
