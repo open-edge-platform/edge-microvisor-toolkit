@@ -75,12 +75,12 @@ else
     echo "Skipping installation of prerequisite packages..."
 fi
 
-# Fix go 1.23 links if requested
+# Fix go 1.26 links if requested
 if [ "$FIX_GO_LINKS" = true ]; then
     echo "Download Go Binaries from https://go.dev/ ..."
-    wget https://go.dev/dl/go1.24.12.linux-amd64.tar.gz && echo "bddf8e653c82429aea7aec2520774e79925d4bb929fe20e67ecc00dd5af44c50 go1.24.12.linux-amd64.tar.gz" | sha256sum -c
+    wget https://go.dev/dl/go1.26.3.linux-amd64.tar.gz && echo "2b2cfc7148493da5e73981bffbf3353af381d5f93e789c82c79aff64962eb556 go1.26.3.linux-amd64.tar.gz" | sha256sum -c
     sudo rm -rf /usr/local/go
-    sudo tar -C /usr/local -xzf go1.24.12.linux-amd64.tar.gz
+    sudo tar -C /usr/local -xzf go1.26.3.linux-amd64.tar.gz
 
     echo "Creating Go symlinks..."
     ln -vsf /usr/local/go/bin/go /usr/bin/go

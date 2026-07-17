@@ -1,0 +1,397 @@
+From f4e54b581968ad4cf308e6aff67443d2818e5c11 Mon Sep 17 00:00:00 2001
+From: Peter Zijlstra <peterz@infradead.org>
+Date: Fri, 7 Nov 2025 14:50:16 +0100
+Subject: [PATCH 09/41] perf/x86/intel: Check PEBS dyn_constraints
+
+Handle the interaction between ("perf/x86/intel: Update dyn_constraint
+base on PEBS event precise level") and ("perf/x86/intel: Add a check
+for dynamic constraints").
+
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+---
+ arch/x86/events/intel/core.c | 256 +++++++++++++++++++++++++----------
+ 1 file changed, 186 insertions(+), 70 deletions(-)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 82191f06ffd8..eb8ba12f79be 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -2908,9 +2908,9 @@ static void intel_pmu_enable_fixed(struct perf_event *event)
+ 	intel_set_masks(event, idx);
+ 
+ 	/*
+-	 * Enable IRQ generation (0x8), if not PEBS or self-reloaded
+-	 * ACR event, and enable ring-3 counting (0x2) and ring-0
+-	 * counting (0x1) if requested:
++	 * Enable IRQ generation (0x8), if not PEBS,
++	 * and enable ring-3 counting (0x2) and ring-0 counting (0x1)
++	 * if requested:
+ 	 */
+ 	if (!event->attr.precise_ip && !is_acr_self_reload_event(event))
+ 		bits |= INTEL_FIXED_0_ENABLE_PMI;
+@@ -3107,41 +3107,23 @@ static void intel_pmu_enable_event(struct perf_event *event)
+ static void intel_pmu_acr_late_setup(struct cpu_hw_events *cpuc)
+ {
+ 	struct perf_event *event, *leader;
+-	int i, j, k, bit, idx;
++	int i, j, idx;
+ 
+-	/*
+-	 * FIXME: ACR mask parsing relies on cpuc->event_list[] (active events only).
+-	 * Disabling an ACR event causes bit-shifting errors in the acr_mask of
+-	 * remaining group members. As ACR sampling requires all events to be active,
+-	 * this limitation is acceptable for now. Revisit if independent event toggling
+-	 * is required.
+-	 */
+ 	for (i = 0; i < cpuc->n_events; i++) {
+ 		leader = cpuc->event_list[i];
+ 		if (!is_acr_event_group(leader))
+ 			continue;
+ 
+-		/* Find the last event of the ACR group. */
++		/* The ACR events must be contiguous. */
+ 		for (j = i; j < cpuc->n_events; j++) {
+ 			event = cpuc->event_list[j];
+ 			if (event->group_leader != leader->group_leader)
+ 				break;
+-		}
+-
+-		/*
+-		 * Translate the user-space ACR mask (attr.config2) into the physical
+-		 * counter bitmask (hw.config1) for each ACR event in the group.
+-		 * NOTE: ACR event contiguity is guaranteed by intel_pmu_hw_config().
+-		 */
+-		for (k = i; k < j; k++) {
+-			event = cpuc->event_list[k];
+-			event->hw.config1 = 0;
+-			for_each_set_bit(bit, (unsigned long *)&event->attr.config2, X86_PMC_IDX_MAX) {
+-				idx = i + bit;
+-				/* Event index of ACR group must locate in [i, j). */
+-				if (idx >= j || !is_acr_event_group(cpuc->event_list[idx]))
+-					continue;
+-				__set_bit(cpuc->assign[idx], (unsigned long *)&event->hw.config1);
++			for_each_set_bit(idx, (unsigned long *)&event->attr.config2, X86_PMC_IDX_MAX) {
++				if (i + idx >= cpuc->n_events ||
++				    !is_acr_event_group(cpuc->event_list[i + idx]))
++					return;
++				__set_bit(cpuc->assign[i + idx], (unsigned long *)&event->hw.config1);
+ 			}
+ 		}
+ 		i = j - 1;
+@@ -3407,9 +3389,6 @@ static int handle_pmi_common(struct pt_regs *regs, u64 status)
+ 
+ 		if (!test_bit(bit, cpuc->active_mask))
+ 			continue;
+-		/* Event may have already been cleared: */
+-		if (!event)
+-			continue;
+ 
+ 		/*
+ 		 * There may be unprocessed PEBS records in the PEBS buffer,
+@@ -3430,7 +3409,7 @@ static int handle_pmi_common(struct pt_regs *regs, u64 status)
+ 		 * The PEBS buffer has to be drained before handling the A-PMI
+ 		 */
+ 		if (is_pebs_counter_event_group(event))
+-			x86_pmu.drain_pebs(regs, &data);
++			static_call(x86_pmu_drain_pebs)(regs, &data);
+ 
+ 		last_period = event->hw.last_period;
+ 
+@@ -3476,7 +3455,7 @@ static int intel_pmu_handle_irq(struct pt_regs *regs)
+ 	 * NMI handler.
+ 	 */
+ 	if (!late_ack && !mid_ack)
+-		apic_write(APIC_LVTPC, PERF_NMI);
++		apic_write(APIC_LVTPC, APIC_DM_NMI);
+ 	intel_bts_disable_local();
+ 	cpuc->enabled = 0;
+ 	__intel_pmu_disable_all(true);
+@@ -3513,7 +3492,7 @@ static int intel_pmu_handle_irq(struct pt_regs *regs)
+ 
+ done:
+ 	if (mid_ack)
+-		apic_write(APIC_LVTPC, PERF_NMI);
++		apic_write(APIC_LVTPC, APIC_DM_NMI);
+ 	/* Only restore PMU state when it's active. See x86_pmu_disable(). */
+ 	cpuc->enabled = pmu_enabled;
+ 	if (pmu_enabled)
+@@ -3526,7 +3505,7 @@ static int intel_pmu_handle_irq(struct pt_regs *regs)
+ 	 * Haswell CPUs.
+ 	 */
+ 	if (late_ack)
+-		apic_write(APIC_LVTPC, PERF_NMI);
++		apic_write(APIC_LVTPC, APIC_DM_NMI);
+ 	return handled;
+ }
+ 
+@@ -4396,19 +4375,6 @@ static inline void intel_pmu_set_acr_caused_constr(struct perf_event *event,
+ 		event->hw.dyn_constraint &= hybrid(event->pmu, acr_cause_mask64);
+ }
+ 
+-static inline int intel_set_branch_counter_constr(struct perf_event *event,
+-						  int *num)
+-{
+-	if (branch_sample_call_stack(event))
+-		return -EINVAL;
+-	if (branch_sample_counters(event)) {
+-		(*num)++;
+-		event->hw.dyn_constraint &= x86_pmu.lbr_counters;
+-	}
+-
+-	return 0;
+-}
+-
+ static int intel_pmu_hw_config(struct perf_event *event)
+ {
+ 	int ret = x86_pmu_hw_config(event);
+@@ -4479,19 +4445,21 @@ static int intel_pmu_hw_config(struct perf_event *event)
+ 		 * group, which requires the extra space to store the counters.
+ 		 */
+ 		leader = event->group_leader;
+-		if (intel_set_branch_counter_constr(leader, &num))
++		if (branch_sample_call_stack(leader))
+ 			return -EINVAL;
++		if (branch_sample_counters(leader)) {
++			num++;
++			leader->hw.dyn_constraint &= x86_pmu.lbr_counters;
++		}
+ 		leader->hw.flags |= PERF_X86_EVENT_BRANCH_COUNTERS;
+ 
+ 		for_each_sibling_event(sibling, leader) {
+-			if (intel_set_branch_counter_constr(sibling, &num))
+-				return -EINVAL;
+-		}
+-
+-		/* event isn't installed as a sibling yet. */
+-		if (event != leader) {
+-			if (intel_set_branch_counter_constr(event, &num))
++			if (branch_sample_call_stack(sibling))
+ 				return -EINVAL;
++			if (branch_sample_counters(sibling)) {
++				num++;
++				sibling->hw.dyn_constraint &= x86_pmu.lbr_counters;
++			}
+ 		}
+ 
+ 		if (num > fls(x86_pmu.lbr_counters))
+@@ -4623,10 +4591,8 @@ static int intel_pmu_hw_config(struct perf_event *event)
+ 		intel_pmu_set_acr_caused_constr(leader, idx++, cause_mask);
+ 
+ 		if (leader->nr_siblings) {
+-			for_each_sibling_event(sibling, leader) {
+-				if (is_x86_event(sibling))
+-					intel_pmu_set_acr_caused_constr(sibling, idx++, cause_mask);
+-			}
++			for_each_sibling_event(sibling, leader)
++				intel_pmu_set_acr_caused_constr(sibling, idx++, cause_mask);
+ 		}
+ 
+ 		if (leader != event)
+@@ -5463,6 +5429,163 @@ static void intel_pmu_check_event_constraints(struct event_constraint *event_con
+ 					      u64 fixed_cntr_mask,
+ 					      u64 intel_ctrl);
+ 
++enum dyn_constr_type {
++	DYN_CONSTR_NONE,
++	DYN_CONSTR_BR_CNTR,
++	DYN_CONSTR_ACR_CNTR,
++	DYN_CONSTR_ACR_CAUSE,
++	DYN_CONSTR_PEBS,
++	DYN_CONSTR_PDIST,
++
++	DYN_CONSTR_MAX,
++};
++
++static const char * const dyn_constr_type_name[] = {
++	[DYN_CONSTR_NONE] = "a normal event",
++	[DYN_CONSTR_BR_CNTR] = "a branch counter logging event",
++	[DYN_CONSTR_ACR_CNTR] = "an auto-counter reload event",
++	[DYN_CONSTR_ACR_CAUSE] = "an auto-counter reload cause event",
++	[DYN_CONSTR_PEBS] = "a PEBS event",
++	[DYN_CONSTR_PDIST] = "a PEBS PDIST event",
++};
++
++static void __intel_pmu_check_dyn_constr(struct event_constraint *constr,
++					 enum dyn_constr_type type, u64 mask)
++{
++	struct event_constraint *c1, *c2;
++	int new_weight, check_weight;
++	u64 new_mask, check_mask;
++
++	for_each_event_constraint(c1, constr) {
++		new_mask = c1->idxmsk64 & mask;
++		new_weight = hweight64(new_mask);
++
++		/* ignore topdown perf metrics event */
++		if (c1->idxmsk64 & INTEL_PMC_MSK_TOPDOWN)
++			continue;
++
++		if (!new_weight && fls64(c1->idxmsk64) < INTEL_PMC_IDX_FIXED) {
++			pr_info("The event 0x%llx is not supported as %s.\n",
++				c1->code, dyn_constr_type_name[type]);
++		}
++
++		if (new_weight <= 1)
++			continue;
++
++		for_each_event_constraint(c2, c1 + 1) {
++			bool check_fail = false;
++
++			check_mask = c2->idxmsk64 & mask;
++			check_weight = hweight64(check_mask);
++
++			if (c2->idxmsk64 & INTEL_PMC_MSK_TOPDOWN ||
++			    !check_weight)
++				continue;
++
++			/* The same constraints or no overlap */
++			if (new_mask == check_mask ||
++			    (new_mask ^ check_mask) == (new_mask | check_mask))
++				continue;
++
++			/*
++			 * A scheduler issue may be triggered in the following cases.
++			 * - Two overlap constraints have the same weight.
++			 *   E.g., A constraints: 0x3, B constraints: 0x6
++			 *   event	counter		failure case
++			 *   B		PMC[2:1]	1
++			 *   A		PMC[1:0]	0
++			 *   A		PMC[1:0]	FAIL
++			 * - Two overlap constraints have different weight.
++			 *   The constraint has a low weight, but has high last bit.
++			 *   E.g., A constraints: 0x7, B constraints: 0xC
++			 *   event	counter		failure case
++			 *   B		PMC[3:2]	2
++			 *   A		PMC[2:0]	0
++			 *   A		PMC[2:0]	1
++			 *   A		PMC[2:0]	FAIL
++			 */
++			if (new_weight == check_weight) {
++				check_fail = true;
++			} else if (new_weight < check_weight) {
++				if ((new_mask | check_mask) != check_mask &&
++				    fls64(new_mask) > fls64(check_mask))
++					check_fail = true;
++			} else {
++				if ((new_mask | check_mask) != new_mask &&
++				    fls64(new_mask) < fls64(check_mask))
++					check_fail = true;
++			}
++
++			if (check_fail) {
++				pr_info("The two events 0x%llx and 0x%llx may not be "
++					"fully scheduled under some circumstances as "
++					"%s.\n",
++					c1->code, c2->code, dyn_constr_type_name[type]);
++			}
++		}
++	}
++}
++
++static void intel_pmu_check_dyn_constr(struct pmu *pmu,
++				       struct event_constraint *constr,
++				       u64 cntr_mask)
++{
++	enum dyn_constr_type i;
++	u64 mask;
++
++	for (i = DYN_CONSTR_NONE; i < DYN_CONSTR_MAX; i++) {
++		mask = 0;
++		switch (i) {
++		case DYN_CONSTR_NONE:
++			mask = cntr_mask;
++			break;
++		case DYN_CONSTR_BR_CNTR:
++			if (x86_pmu.flags & PMU_FL_BR_CNTR)
++				mask = x86_pmu.lbr_counters;
++			break;
++		case DYN_CONSTR_ACR_CNTR:
++			mask = hybrid(pmu, acr_cntr_mask64) & GENMASK_ULL(INTEL_PMC_MAX_GENERIC - 1, 0);
++			break;
++		case DYN_CONSTR_ACR_CAUSE:
++			if (hybrid(pmu, acr_cntr_mask64) == hybrid(pmu, acr_cause_mask64))
++				continue;
++			mask = hybrid(pmu, acr_cause_mask64) & GENMASK_ULL(INTEL_PMC_MAX_GENERIC - 1, 0);
++			break;
++		case DYN_CONSTR_PEBS:
++			if (x86_pmu.arch_pebs)
++				mask = hybrid(pmu, arch_pebs_cap).counters;
++			break;
++		case DYN_CONSTR_PDIST:
++			if (x86_pmu.arch_pebs)
++				mask = hybrid(pmu, arch_pebs_cap).pdists;
++			break;
++		default:
++			pr_warn("Unsupported dynamic constraint type %d\n", i);
++		}
++
++		if (mask)
++			__intel_pmu_check_dyn_constr(constr, i, mask);
++	}
++}
++
++static void intel_pmu_check_event_constraints_all(struct pmu *pmu)
++{
++	struct event_constraint *event_constraints = hybrid(pmu, event_constraints);
++	struct event_constraint *pebs_constraints = hybrid(pmu, pebs_constraints);
++	u64 cntr_mask = hybrid(pmu, cntr_mask64);
++	u64 fixed_cntr_mask = hybrid(pmu, fixed_cntr_mask64);
++	u64 intel_ctrl = hybrid(pmu, intel_ctrl);
++
++	intel_pmu_check_event_constraints(event_constraints, cntr_mask,
++					  fixed_cntr_mask, intel_ctrl);
++
++	if (event_constraints)
++		intel_pmu_check_dyn_constr(pmu, event_constraints, cntr_mask);
++
++	if (pebs_constraints)
++		intel_pmu_check_dyn_constr(pmu, pebs_constraints, cntr_mask);
++}
++
+ static void intel_pmu_check_extra_regs(struct extra_reg *extra_regs);
+ 
+ static inline bool intel_pmu_broken_perf_cap(void)
+@@ -5580,10 +5703,7 @@ static void intel_pmu_check_hybrid_pmus(struct x86_hybrid_pmu *pmu)
+ 	else
+ 		pmu->intel_ctrl &= ~GLOBAL_CTRL_EN_PERF_METRICS;
+ 
+-	intel_pmu_check_event_constraints(pmu->event_constraints,
+-					  pmu->cntr_mask64,
+-					  pmu->fixed_cntr_mask64,
+-					  pmu->intel_ctrl);
++	intel_pmu_check_event_constraints_all(&pmu->pmu);
+ 
+ 	intel_pmu_check_extra_regs(pmu->extra_regs);
+ }
+@@ -7293,7 +7413,6 @@ __init int intel_pmu_init(void)
+ 	case INTEL_ATOM_SILVERMONT_D:
+ 	case INTEL_ATOM_SILVERMONT_MID:
+ 	case INTEL_ATOM_AIRMONT:
+-	case INTEL_ATOM_AIRMONT_NP:
+ 	case INTEL_ATOM_SILVERMONT_MID2:
+ 		memcpy(hw_cache_event_ids, slm_hw_cache_event_ids,
+ 			sizeof(hw_cache_event_ids));
+@@ -7866,7 +7985,6 @@ __init int intel_pmu_init(void)
+ 		break;
+ 
+ 	case INTEL_PANTHERLAKE_L:
+-	case INTEL_WILDCATLAKE_L:
+ 		pr_cont("Pantherlake Hybrid events, ");
+ 		name = "pantherlake_hybrid";
+ 		goto lnl_common;
+@@ -8008,10 +8126,8 @@ __init int intel_pmu_init(void)
+ 	if (x86_pmu.intel_cap.anythread_deprecated)
+ 		x86_pmu.format_attrs = intel_arch_formats_attr;
+ 
+-	intel_pmu_check_event_constraints(x86_pmu.event_constraints,
+-					  x86_pmu.cntr_mask64,
+-					  x86_pmu.fixed_cntr_mask64,
+-					  x86_pmu.intel_ctrl);
++	intel_pmu_check_event_constraints_all(NULL);
++
+ 	/*
+ 	 * Access LBR MSR may cause #GP under certain circumstances.
+ 	 * Check all LBR MSR here.
+-- 
+2.34.1
+

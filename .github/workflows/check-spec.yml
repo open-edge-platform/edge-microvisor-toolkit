@@ -21,7 +21,7 @@ jobs:
     steps:
       # Checkout the branch of our repo that triggered this action
       - name: Workflow trigger checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5    #v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -63,7 +63,7 @@ jobs:
           echo "toolchain-spec-list=$(make --no-print-directory -sC toolkit printvar-toolchain_spec_list)" >> "$GITHUB_ENV"
 
       - name: Main branch checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5    #v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           ref: '26.06'
           path: '26.06-checkout'

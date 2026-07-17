@@ -1,0 +1,43 @@
+From 742eff89d592e3f91ea5652f13cb6461a400ca8b Mon Sep 17 00:00:00 2001
+From: kalyan alle <kalyan.alle@intel.com>
+Date: Wed, 13 May 2026 08:50:51 +0530
+Subject: [PATCH] vfio/i915: Add default handler for .match_token_uuid
+
+Commit 86624ba3b522 ("vfio/pci: Do vf_token checks for
+VFIO_DEVICE_BIND_IOMMUFD") split VF-token validation out of
+vfio_pci_core_match() into a new .match_token_uuid device op, which
+vfio_pci_core_match() now calls unconditionally. All in-tree vfio-pci
+variants were updated; the out-of-tree i915-vfio-pci variant was missed.
+
+Opening an i915 SR-IOV VF from QEMU therefore hits a NULL function
+pointer in vfio_pci_core_match() and Oopses the host, freezing the guest:
+
+  BUG: kernel NULL pointer dereference, address: 0000000000000000
+  RIP: 0010:0x0
+   vfio_pci_core_match+0x133/0x1a0 [vfio_pci_core]
+   vfio_group_fops_unl_ioctl+0x15c/0x7d0 [vfio]
+
+Wire up the standard helper vfio_pci_core_match_token_uuid in
+i915_vfio_pci_ops, matching every other in-tree vfio-pci driver.
+
+Fixes: 86624ba3b522 ("vfio/pci: Do vf_token checks for VFIO_DEVICE_BIND_IOMMUFD")
+Signed-off-by: kalyan alle <kalyan.alle@intel.com>
+---
+ drivers/vfio/pci/i915/main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/vfio/pci/i915/main.c b/drivers/vfio/pci/i915/main.c
+index b56f9b1f47b1..e5914a5bd9ba 100644
+--- a/drivers/vfio/pci/i915/main.c
++++ b/drivers/vfio/pci/i915/main.c
+@@ -346,6 +346,7 @@ static const struct vfio_device_ops i915_vfio_pci_ops = {
+ 	.mmap		= vfio_pci_core_mmap,
+ 	.request	= vfio_pci_core_request,
+ 	.match		= vfio_pci_core_match,
++	.match_token_uuid = vfio_pci_core_match_token_uuid,
+ 	.bind_iommufd	= vfio_iommufd_physical_bind,
+ 	.unbind_iommufd = vfio_iommufd_physical_unbind,
+ 	.attach_ioas	= vfio_iommufd_physical_attach_ioas,
+-- 
+2.34.1
+

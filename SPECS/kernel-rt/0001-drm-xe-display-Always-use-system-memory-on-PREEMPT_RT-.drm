@@ -1,0 +1,38 @@
+From 2bb29861f0bf600f3fb33026d5dfbb9accdf4808 Mon Sep 17 00:00:00 2001
+From: Maarten Lankhorst <dev@lankhorst.se>
+Date: Mon, 15 Jun 2026 22:18:44 +0200
+Subject: [PATCH 01/11] drm/xe/display: Always use system memory on PREEMPT_RT
+ for DPT.
+
+We were using stolen memory because it was unused memory, but
+on recent platforms this adds extra latency when waking from
+RC6, because memory accesses go through the media IP.
+
+Reported-by: Alexander B Slota <alexander.b.slota@intel.com>
+Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
+---
+ drivers/gpu/drm/xe/display/xe_fb_pin.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/display/xe_fb_pin.c b/drivers/gpu/drm/xe/display/xe_fb_pin.c
+index b18d15cc3c53..773900942dec 100644
+--- a/drivers/gpu/drm/xe/display/xe_fb_pin.c
++++ b/drivers/gpu/drm/xe/display/xe_fb_pin.c
+@@ -110,14 +110,6 @@ static int __xe_pin_fb_vma_dpt(const struct intel_framebuffer *fb,
+ 						   XE_BO_FLAG_PAGETABLE,
+ 						   alignment, false);
+ 	else
+-		dpt = xe_bo_create_pin_map_at_novm(xe, tile0,
+-						   dpt_size,  ~0ull,
+-						   ttm_bo_type_kernel,
+-						   XE_BO_FLAG_STOLEN |
+-						   XE_BO_FLAG_GGTT |
+-						   XE_BO_FLAG_PAGETABLE,
+-						   alignment, false);
+-	if (IS_ERR(dpt))
+ 		dpt = xe_bo_create_pin_map_at_novm(xe, tile0,
+ 						   dpt_size,  ~0ull,
+ 						   ttm_bo_type_kernel,
+-- 
+2.34.1
+

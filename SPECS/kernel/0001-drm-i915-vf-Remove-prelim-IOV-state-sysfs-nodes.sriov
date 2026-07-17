@@ -1,0 +1,79 @@
+From 9bc7d9b31dc93e0358732da632c9491c4e039d43 Mon Sep 17 00:00:00 2001
+From: "Zawawi, Muhammad Zul Husni" <muhammad.zul.husni.zawawi@intel.com>
+Date: Wed, 10 Jun 2026 09:46:49 +0800
+Subject: [PATCH] drm/i915/vf: Remove prelim IOV state sysfs nodes
+
+The IOV prelim sysfs node "state" was used to simulate save and restore
+of VF state during VF save/restore enablement phase which is not needed
+in the production builds.
+
+Jira: VLK-89353
+
+Signed-off-by: Satyanarayana K V P <satyanarayana.k.v.p@intel.com>
+Cc: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+---
+ drivers/gpu/drm/i915/gt/iov/intel_iov_sysfs.c | 44 -------------------
+ 1 file changed, 44 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_sysfs.c b/drivers/gpu/drm/i915/gt/iov/intel_iov_sysfs.c
+index 8b81454171fa..f634faa43a19 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_sysfs.c
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_sysfs.c
+@@ -486,53 +486,9 @@ static umode_t vf_attr_is_visible(struct kobject *kobj,
+ 	return attr->mode;
+ }
+ 
+-static ssize_t bin_attr_state_read(struct file *filp, struct kobject *kobj,
+-			   const struct bin_attribute *bin_attr, char *buf,
+-			   loff_t off, size_t count)
+-{
+-	struct intel_iov *iov = kobj_to_iov(kobj);
+-	unsigned int id = kobj_to_id(kobj);
+-	int err;
+-
+-	if (off > 0)
+-		return -EINVAL;
+-
+-	err = intel_iov_state_save_vf(iov, id, buf, count);
+-	if (unlikely(err))
+-		return err;
+-
+-	return SZ_4K;
+-}
+-
+-static ssize_t bin_attr_state_write(struct file *filp, struct kobject *kobj,
+-			    const struct bin_attribute *bin_attr, char *buf,
+-			    loff_t off, size_t count)
+-{
+-	struct intel_iov *iov = kobj_to_iov(kobj);
+-	unsigned int id = kobj_to_id(kobj);
+-	int err;
+-
+-	if (off > 0)
+-		return -EINVAL;
+-
+-	err = intel_iov_state_restore_vf(iov, id, buf, count);
+-	if (unlikely(err))
+-		return err;
+-
+-	return count;
+-}
+-
+-static BIN_ATTR(state, 0600, bin_attr_state_read, bin_attr_state_write, SZ_4K);
+-
+-static const struct bin_attribute * const vf_bin_attrs[] = {
+-	&bin_attr_state,
+-	NULL
+-};
+-
+ static const struct attribute_group vf_attr_group = {
+ 	.attrs = vf_attrs,
+ 	.is_visible = vf_attr_is_visible,
+-	.bin_attrs = vf_bin_attrs,
+ };
+ 
+ static const struct attribute_group vf_threshold_attr_group = {
+-- 
+2.34.1
+

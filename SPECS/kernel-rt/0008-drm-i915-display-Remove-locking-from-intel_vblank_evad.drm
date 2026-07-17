@@ -1,0 +1,121 @@
+From b393bb566b38c5317bee3c34db0f8785a56af882 Mon Sep 17 00:00:00 2001
+From: Maarten Lankhorst <dev@lankhorst.se>
+Date: Mon, 15 Jun 2026 22:18:24 +0200
+Subject: [PATCH 08/11] drm/i915/display: Remove locking from
+ intel_vblank_evade critical section
+
+finish_wait() may take a lock, which means that it can take any amount
+of time. On PREEMPT-RT we should not be taking any lock after disabling
+preemption, so ensure that the completion is done before disabling
+interrupts.
+
+This also has the benefit of making vblank evasion more deterministic,
+by performing the final vblank check after all locking is done.
+
+Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
+---
+ drivers/gpu/drm/i915/display/intel_crtc.c   |  2 +-
+ drivers/gpu/drm/i915/display/intel_vblank.c | 30 +++++++++------------
+ drivers/gpu/drm/i915/display/intel_vblank.h |  1 +
+ 3 files changed, 15 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_crtc.c b/drivers/gpu/drm/i915/display/intel_crtc.c
+index f8ab8b0198d8..1392b16b7bc0 100644
+--- a/drivers/gpu/drm/i915/display/intel_crtc.c
++++ b/drivers/gpu/drm/i915/display/intel_crtc.c
+@@ -665,7 +665,7 @@ void intel_pipe_update_end(struct intel_atomic_state *state,
+ 	struct intel_crtc_state *new_crtc_state =
+ 		intel_atomic_get_new_crtc_state(state, crtc);
+ 	enum pipe pipe = crtc->pipe;
+-	int scanline_end = intel_get_crtc_scanline(crtc);
++	int scanline_end = __intel_get_crtc_scanline(crtc);
+ 	u32 end_vbl_count = intel_crtc_get_vblank_counter(crtc);
+ 	ktime_t end_vbl_time = ktime_get();
+ 	struct drm_i915_private *dev_priv = to_i915(crtc->base.dev);
+diff --git a/drivers/gpu/drm/i915/display/intel_vblank.c b/drivers/gpu/drm/i915/display/intel_vblank.c
+index 28070df507a4..5f1ca48c87bd 100644
+--- a/drivers/gpu/drm/i915/display/intel_vblank.c
++++ b/drivers/gpu/drm/i915/display/intel_vblank.c
+@@ -240,7 +240,7 @@ int intel_crtc_scanline_offset(const struct intel_crtc_state *crtc_state)
+  * intel_de_read_fw(), only for fast reads of display block, no need for
+  * forcewake etc.
+  */
+-static int __intel_get_crtc_scanline(struct intel_crtc *crtc)
++int __intel_get_crtc_scanline(struct intel_crtc *crtc)
+ {
+ 	struct intel_display *display = to_intel_display(crtc);
+ 	struct drm_vblank_crtc *vblank = drm_crtc_vblank_crtc(&crtc->base);
+@@ -759,6 +759,16 @@ void intel_vblank_evade_init(const struct intel_crtc_state *old_crtc_state,
+ 		evade->min -= vblank_delay;
+ }
+ 
++static bool scanline_in_safe_range(struct intel_vblank_evade_ctx *evade, int *scanline, bool unlocked)
++{
++	if (unlocked)
++		*scanline = intel_get_crtc_scanline(evade->crtc);
++	else
++		*scanline = __intel_get_crtc_scanline(evade->crtc);
++
++	return *scanline < evade->min || *scanline > evade->max;
++}
++
+ /* must be called with vblank interrupt already enabled! */
+ int intel_vblank_evade(struct intel_vblank_evade_ctx *evade)
+ {
+@@ -766,24 +776,12 @@ int intel_vblank_evade(struct intel_vblank_evade_ctx *evade)
+ 	struct intel_display *display = to_intel_display(crtc);
+ 	long timeout = msecs_to_jiffies_timeout(1);
+ 	wait_queue_head_t *wq = drm_crtc_vblank_waitqueue(&crtc->base);
+-	DEFINE_WAIT(wait);
+ 	int scanline;
+ 
+ 	if (evade->min <= 0 || evade->max <= 0)
+ 		return 0;
+ 
+-	for (;;) {
+-		/*
+-		 * prepare_to_wait() has a memory barrier, which guarantees
+-		 * other CPUs can see the task state update by the time we
+-		 * read the scanline.
+-		 */
+-		prepare_to_wait(wq, &wait, TASK_UNINTERRUPTIBLE);
+-
+-		scanline = intel_get_crtc_scanline(crtc);
+-		if (scanline < evade->min || scanline > evade->max)
+-			break;
+-
++	while (!scanline_in_safe_range(evade, &scanline, false)) {
+ 		if (!timeout) {
+ 			drm_dbg_kms(display->drm,
+ 				    "Potential atomic update failure on pipe %c\n",
+@@ -794,14 +792,12 @@ int intel_vblank_evade(struct intel_vblank_evade_ctx *evade)
+ 		if (!IS_ENABLED(CONFIG_PREEMPT_RT))
+ 			local_irq_enable();
+ 
+-		timeout = schedule_timeout(timeout);
++		timeout = wait_event_timeout(*wq, scanline_in_safe_range(evade, &scanline, true), timeout);
+ 
+ 		if (!IS_ENABLED(CONFIG_PREEMPT_RT))
+ 			local_irq_disable();
+ 	}
+ 
+-	finish_wait(wq, &wait);
+-
+ 	/*
+ 	 * On VLV/CHV DSI the scanline counter would appear to
+ 	 * increment approx. 1/3 of a scanline before start of vblank.
+diff --git a/drivers/gpu/drm/i915/display/intel_vblank.h b/drivers/gpu/drm/i915/display/intel_vblank.h
+index 21fbb08d61d5..7d3f967820c1 100644
+--- a/drivers/gpu/drm/i915/display/intel_vblank.h
++++ b/drivers/gpu/drm/i915/display/intel_vblank.h
+@@ -38,6 +38,7 @@ u32 g4x_get_vblank_counter(struct drm_crtc *crtc);
+ bool intel_crtc_get_vblank_timestamp(struct drm_crtc *crtc, int *max_error,
+ 				     ktime_t *vblank_time, bool in_vblank_irq);
+ int intel_get_crtc_scanline(struct intel_crtc *crtc);
++int __intel_get_crtc_scanline(struct intel_crtc *crtc);
+ void intel_wait_for_pipe_scanline_stopped(struct intel_crtc *crtc);
+ void intel_wait_for_pipe_scanline_moving(struct intel_crtc *crtc);
+ void intel_crtc_update_active_timings(const struct intel_crtc_state *crtc_state,
+-- 
+2.34.1
+

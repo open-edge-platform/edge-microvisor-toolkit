@@ -1,9 +1,9 @@
-%global sdkver 1.4.309.0
+%global sdkver 1.4.350.1
 
 
 Name:           spirv-headers
 Version:        1.6.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Header files from the SPIR-V registry
 
 License:        MIT
@@ -62,6 +62,9 @@ chmod a-x include/spirv/1.2/spirv.py
 %{_datadir}/pkgconfig/SPIRV-Headers.pc
 
 %changelog
+* Mon Jul 6 2026 Chee Yang Lee <chee.yang.lee@intel.com> - 1.6.1-2
+- bump sdk version.
+
 * Tue Mar 10 2026 Andy Peng <andy.peng@intel.com> - 1.6.1-1
 - Updating Spec to version 1.6.1.
 

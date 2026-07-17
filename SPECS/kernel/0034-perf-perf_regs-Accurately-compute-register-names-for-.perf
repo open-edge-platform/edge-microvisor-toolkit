@@ -1,0 +1,381 @@
+From dda112de0bc5ac0190dfb4bf0b65094d8ea27cfe Mon Sep 17 00:00:00 2001
+From: Ian Rogers <irogers@google.com>
+Date: Fri, 23 Jan 2026 14:22:08 -0800
+Subject: [PATCH 34/41] perf perf_regs: Accurately compute register names for
+ CSKY
+
+CSKY needs the e_flags to determine the ABI level and know whether
+additional registers are encoded or not. Wire this up now that the
+e_flags for a thread can be determined.
+
+Signed-off-by: Ian Rogers <irogers@google.com>
+Cc: Aditya Bodkhe <aditya.b1@linux.ibm.com>
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+Cc: Athira Rajeev <atrajeev@linux.ibm.com>
+Cc: Chun-Tse Shao <ctshao@google.com>
+Cc: Guo Ren <guoren@kernel.org>
+Cc: Howard Chu <howardchu95@gmail.com>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: James Clark <james.clark@linaro.org>
+Cc: Jiri Olsa <jolsa@kernel.org>
+Cc: Namhyung Kim <namhyung@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Sergei Trofimovich <slyich@gmail.com>
+Cc: Shimin Guo <shimin.guo@skydio.com>
+Cc: Stephen Brennan <stephen.s.brennan@oracle.com>
+Cc: Swapnil Sapkal <swapnil.sapkal@amd.com>
+Cc: Tianyou Li <tianyou.li@intel.com>
+[ Conditionally define EF_CSKY_ABIMASK and EF_CSKY_ABIV2 for older distros ]
+Signed-off-by: Arnaldo Carvalho de Melo <acme@redhat.com>
+---
+ tools/perf/builtin-script.c                   | 22 ++++++++++++++-----
+ tools/perf/util/parse-regs-options.c          |  4 ++--
+ .../perf/util/perf-regs-arch/perf_regs_csky.c | 19 +++++++++++-----
+ tools/perf/util/perf_regs.c                   |  4 ++--
+ tools/perf/util/perf_regs.h                   |  4 ++--
+ .../scripting-engines/trace-event-python.c    | 15 ++++++++-----
+ tools/perf/util/session.c                     | 22 ++++++++++---------
+ 7 files changed, 56 insertions(+), 34 deletions(-)
+
+diff --git a/tools/perf/builtin-script.c b/tools/perf/builtin-script.c
+index 3ff6c2685d57..12f333451133 100644
+--- a/tools/perf/builtin-script.c
++++ b/tools/perf/builtin-script.c
+@@ -724,7 +724,8 @@ static int perf_session__check_output_opt(struct perf_session *session)
+ 	return 0;
+ }
+ 
+-static int perf_sample__fprintf_regs(struct regs_dump *regs, uint64_t mask, uint16_t e_machine,
++static int perf_sample__fprintf_regs(struct regs_dump *regs, uint64_t mask,
++				     uint16_t e_machine, uint32_t e_flags,
+ 				     FILE *fp)
+ {
+ 	unsigned i = 0, r;
+@@ -737,7 +738,9 @@ static int perf_sample__fprintf_regs(struct regs_dump *regs, uint64_t mask, uint
+ 
+ 	for_each_set_bit(r, (unsigned long *) &mask, sizeof(mask) * 8) {
+ 		u64 val = regs->regs[i++];
+-		printed += fprintf(fp, "%5s:0x%"PRIx64" ", perf_reg_name(r, e_machine), val);
++		printed += fprintf(fp, "%5s:0x%"PRIx64" ",
++				   perf_reg_name(r, e_machine, e_flags),
++				   val);
+ 	}
+ 
+ 	return printed;
+@@ -794,23 +797,29 @@ tod_scnprintf(struct perf_script *script, char *buf, int buflen,
+ }
+ 
+ static int perf_sample__fprintf_iregs(struct perf_sample *sample,
+-				      struct perf_event_attr *attr, uint16_t e_machine, FILE *fp)
++				      struct perf_event_attr *attr,
++				      uint16_t e_machine,
++				      uint32_t e_flags,
++				      FILE *fp)
+ {
+ 	if (!sample->intr_regs)
+ 		return 0;
+ 
+ 	return perf_sample__fprintf_regs(perf_sample__intr_regs(sample),
+-					 attr->sample_regs_intr, e_machine, fp);
++					 attr->sample_regs_intr, e_machine, e_flags, fp);
+ }
+ 
+ static int perf_sample__fprintf_uregs(struct perf_sample *sample,
+-				      struct perf_event_attr *attr, uint16_t e_machine, FILE *fp)
++				      struct perf_event_attr *attr,
++				      uint16_t e_machine,
++				      uint32_t e_flags,
++				      FILE *fp)
+ {
+ 	if (!sample->user_regs)
+ 		return 0;
+ 
+ 	return perf_sample__fprintf_regs(perf_sample__user_regs(sample),
+-					 attr->sample_regs_user, e_machine, fp);
++					 attr->sample_regs_user, e_machine, e_flags, fp);
+ }
+ 
+ static int perf_sample__fprintf_start(struct perf_script *script,
+@@ -2224,6 +2233,7 @@ static void process_event(struct perf_script *script,
+ 	struct evsel_script *es = evsel->priv;
+ 	FILE *fp = es->fp;
+ 	char str[PAGE_SIZE_NAME_LEN];
++	uint32_t e_flags;
+ 
+ 	if (output[type].fields == 0)
+ 		return;
+diff --git a/tools/perf/util/parse-regs-options.c b/tools/perf/util/parse-regs-options.c
+index c0d0ef9fd495..8dd35f50f644 100644
+--- a/tools/perf/util/parse-regs-options.c
++++ b/tools/perf/util/parse-regs-options.c
+@@ -21,7 +21,7 @@ static void list_perf_regs(FILE *fp, uint64_t mask)
+ 		if (((1ULL << reg) & mask) == 0)
+ 			continue;
+ 
+-		name = perf_reg_name(reg, EM_HOST);
++		name = perf_reg_name(reg, EM_HOST, EF_HOST);
+ 		if (name && (!last_name || strcmp(last_name, name)))
+ 			fprintf(fp, "%s%s", reg > 0 ? " " : "", name);
+ 		last_name = name;
+@@ -39,7 +39,7 @@ static uint64_t name_to_perf_reg_mask(const char *to_match, uint64_t mask)
+ 		if (((1ULL << reg) & mask) == 0)
+ 			continue;
+ 
+-		name = perf_reg_name(reg, EM_HOST);
++		name = perf_reg_name(reg, EM_HOST, EF_HOST);
+ 		if (!name)
+ 			continue;
+ 
+diff --git a/tools/perf/util/perf-regs-arch/perf_regs_csky.c b/tools/perf/util/perf-regs-arch/perf_regs_csky.c
+index 75b461ef2eba..95808f93d45b 100644
+--- a/tools/perf/util/perf-regs-arch/perf_regs_csky.c
++++ b/tools/perf/util/perf-regs-arch/perf_regs_csky.c
+@@ -1,10 +1,21 @@
+ // SPDX-License-Identifier: GPL-2.0
+-
++#include <elf.h>
++#ifndef EF_CSKY_ABIMASK
++#define EF_CSKY_ABIMASK	0XF0000000
++#endif
++#ifndef EF_CSKY_ABIV2
++#define EF_CSKY_ABIV2	0X20000000
++#endif
+ #include "../perf_regs.h"
++#undef __CSKYABIV2__
++#define __CSKYABIV2__ 1  // Always want the V2 register definitions.
+ #include "../../arch/csky/include/uapi/asm/perf_regs.h"
+ 
+-const char *__perf_reg_name_csky(int id)
++const char *__perf_reg_name_csky(int id, uint32_t e_flags)
+ {
++	if (id >= PERF_REG_CSKY_EXREGS0 && (e_flags & EF_CSKY_ABIMASK) == EF_CSKY_ABIV2)
++		return NULL;
++
+ 	switch (id) {
+ 	case PERF_REG_CSKY_A0:
+ 		return "a0";
+@@ -40,7 +51,6 @@ const char *__perf_reg_name_csky(int id)
+ 		return "lr";
+ 	case PERF_REG_CSKY_PC:
+ 		return "pc";
+-#if defined(__CSKYABIV2__)
+ 	case PERF_REG_CSKY_EXREGS0:
+ 		return "exregs0";
+ 	case PERF_REG_CSKY_EXREGS1:
+@@ -77,12 +87,9 @@ const char *__perf_reg_name_csky(int id)
+ 		return "hi";
+ 	case PERF_REG_CSKY_LO:
+ 		return "lo";
+-#endif
+ 	default:
+ 		return NULL;
+ 	}
+-
+-	return NULL;
+ }
+ 
+ uint64_t __perf_reg_ip_csky(void)
+diff --git a/tools/perf/util/perf_regs.c b/tools/perf/util/perf_regs.c
+index cd5acee3dc62..14b7be30ab20 100644
+--- a/tools/perf/util/perf_regs.c
++++ b/tools/perf/util/perf_regs.c
+@@ -23,7 +23,7 @@ uint64_t __weak arch__user_reg_mask(void)
+ 	return 0;
+ }
+ 
+-const char *perf_reg_name(int id, uint16_t e_machine)
++const char *perf_reg_name(int id, uint16_t e_machine, uint32_t e_flags)
+ {
+ 	const char *reg_name = NULL;
+ 
+@@ -35,7 +35,7 @@ const char *perf_reg_name(int id, uint16_t e_machine)
+ 		reg_name = __perf_reg_name_arm64(id);
+ 		break;
+ 	case EM_CSKY:
+-		reg_name = __perf_reg_name_csky(id);
++		reg_name = __perf_reg_name_csky(id, e_flags);
+ 		break;
+ 	case EM_LOONGARCH:
+ 		reg_name = __perf_reg_name_loongarch(id);
+diff --git a/tools/perf/util/perf_regs.h b/tools/perf/util/perf_regs.h
+index 2c2a8de6912d..ed7c1b1358fa 100644
+--- a/tools/perf/util/perf_regs.h
++++ b/tools/perf/util/perf_regs.h
+@@ -16,7 +16,7 @@ int arch_sdt_arg_parse_op(char *old_op, char **new_op);
+ uint64_t arch__intr_reg_mask(void);
+ uint64_t arch__user_reg_mask(void);
+ 
+-const char *perf_reg_name(int id, uint16_t e_machine);
++const char *perf_reg_name(int id, uint16_t e_machine, uint32_t e_flags);
+ int perf_reg_value(u64 *valp, struct regs_dump *regs, int id);
+ uint64_t perf_arch_reg_ip(uint16_t e_machine);
+ uint64_t perf_arch_reg_sp(uint16_t e_machine);
+@@ -26,7 +26,7 @@ uint64_t __perf_reg_sp_arm64(void);
+ const char *__perf_reg_name_arm(int id);
+ uint64_t __perf_reg_ip_arm(void);
+ uint64_t __perf_reg_sp_arm(void);
+-const char *__perf_reg_name_csky(int id);
++const char *__perf_reg_name_csky(int id, uint32_t e_flags);
+ uint64_t __perf_reg_ip_csky(void);
+ uint64_t __perf_reg_sp_csky(void);
+ const char *__perf_reg_name_loongarch(int id);
+diff --git a/tools/perf/util/scripting-engines/trace-event-python.c b/tools/perf/util/scripting-engines/trace-event-python.c
+index b90edc147796..645e734235ae 100644
+--- a/tools/perf/util/scripting-engines/trace-event-python.c
++++ b/tools/perf/util/scripting-engines/trace-event-python.c
+@@ -714,7 +714,8 @@ static void set_sample_datasrc_in_dict(PyObject *dict,
+ 			_PyUnicode_FromString(decode));
+ }
+ 
+-static void regs_map(struct regs_dump *regs, uint64_t mask, uint16_t e_machine, char *bf, int size)
++static void regs_map(struct regs_dump *regs, uint64_t mask, uint16_t e_machine, uint32_t e_flags,
++		     char *bf, int size)
+ {
+ 	unsigned int i = 0, r;
+ 	int printed = 0;
+@@ -732,7 +733,7 @@ static void regs_map(struct regs_dump *regs, uint64_t mask, uint16_t e_machine,
+ 
+ 		printed += scnprintf(bf + printed, size - printed,
+ 				     "%5s:0x%" PRIx64 " ",
+-				     perf_reg_name(r, e_machine), val);
++				     perf_reg_name(r, e_machine, e_flags), val);
+ 	}
+ }
+ 
+@@ -741,7 +742,8 @@ static void regs_map(struct regs_dump *regs, uint64_t mask, uint16_t e_machine,
+ static int set_regs_in_dict(PyObject *dict,
+ 			     struct perf_sample *sample,
+ 			     struct evsel *evsel,
+-			     uint16_t e_machine)
++			     uint16_t e_machine,
++			     uint32_t e_flags)
+ {
+ 	struct perf_event_attr *attr = &evsel->core.attr;
+ 
+@@ -753,7 +755,7 @@ static int set_regs_in_dict(PyObject *dict,
+ 		if (!bf)
+ 			return -1;
+ 
+-		regs_map(sample->intr_regs, attr->sample_regs_intr, e_machine, bf, size);
++		regs_map(sample->intr_regs, attr->sample_regs_intr, e_machine, e_flags, bf, size);
+ 
+ 		pydict_set_item_string_decref(dict, "iregs",
+ 					_PyUnicode_FromString(bf));
+@@ -765,7 +767,7 @@ static int set_regs_in_dict(PyObject *dict,
+ 			if (!bf)
+ 				return -1;
+ 		}
+-		regs_map(sample->user_regs, attr->sample_regs_user, e_machine, bf, size);
++		regs_map(sample->user_regs, attr->sample_regs_user, e_machine, e_flags, bf, size);
+ 
+ 		pydict_set_item_string_decref(dict, "uregs",
+ 					_PyUnicode_FromString(bf));
+@@ -837,6 +839,7 @@ static PyObject *get_perf_sample_dict(struct perf_sample *sample,
+ 	PyObject *dict, *dict_sample, *brstack, *brstacksym;
+ 	struct machine *machine;
+ 	uint16_t e_machine = EM_HOST;
++	uint32_t e_flags = EF_HOST;
+ 
+ 	dict = PyDict_New();
+ 	if (!dict)
+@@ -927,7 +930,7 @@ static PyObject *get_perf_sample_dict(struct perf_sample *sample,
+ 		machine = maps__machine(thread__maps(al->thread));
+ 		e_machine = thread__e_machine(al->thread, machine);
+ 	}
+-	if (set_regs_in_dict(dict, sample, evsel, e_machine))
++	if (set_regs_in_dict(dict, sample, evsel, e_machine, e_flags))
+ 		Py_FatalError("Failed to setting regs in dict");
+ 
+ 	return dict;
+diff --git a/tools/perf/util/session.c b/tools/perf/util/session.c
+index e6b7ba646843..4299c8a9778b 100644
+--- a/tools/perf/util/session.c
++++ b/tools/perf/util/session.c
+@@ -916,7 +916,7 @@ static void branch_stack__printf(struct perf_sample *sample,
+ 	}
+ }
+ 
+-static void regs_dump__printf(u64 mask, u64 *regs, uint16_t e_machine)
++static void regs_dump__printf(u64 mask, u64 *regs, uint16_t e_machine, uint32_t e_flags)
+ {
+ 	unsigned rid, i = 0;
+ 
+@@ -924,7 +924,7 @@ static void regs_dump__printf(u64 mask, u64 *regs, uint16_t e_machine)
+ 		u64 val = regs[i++];
+ 
+ 		printf(".... %-5s 0x%016" PRIx64 "\n",
+-		       perf_reg_name(rid, e_machine), val);
++		       perf_reg_name(rid, e_machine, e_flags), val);
+ 	}
+ }
+ 
+@@ -942,7 +942,8 @@ static inline const char *regs_dump_abi(struct regs_dump *d)
+ 	return regs_abi[d->abi];
+ }
+ 
+-static void regs__printf(const char *type, struct regs_dump *regs, uint16_t e_machine)
++static void regs__printf(const char *type, struct regs_dump *regs,
++			 uint16_t e_machine, uint32_t e_flags)
+ {
+ 	u64 mask = regs->mask;
+ 
+@@ -951,10 +952,10 @@ static void regs__printf(const char *type, struct regs_dump *regs, uint16_t e_ma
+ 	       mask,
+ 	       regs_dump_abi(regs));
+ 
+-	regs_dump__printf(mask, regs->regs, e_machine);
++	regs_dump__printf(mask, regs->regs, e_machine, e_flags);
+ }
+ 
+-static void regs_user__printf(struct perf_sample *sample, uint16_t e_machine)
++static void regs_user__printf(struct perf_sample *sample, uint16_t e_machine, uint32_t e_flags)
+ {
+ 	struct regs_dump *user_regs;
+ 
+@@ -964,10 +965,10 @@ static void regs_user__printf(struct perf_sample *sample, uint16_t e_machine)
+ 	user_regs = perf_sample__user_regs(sample);
+ 
+ 	if (user_regs->regs)
+-		regs__printf("user", user_regs, e_machine);
++		regs__printf("user", user_regs, e_machine, e_flags);
+ }
+ 
+-static void regs_intr__printf(struct perf_sample *sample, uint16_t e_machine)
++static void regs_intr__printf(struct perf_sample *sample, uint16_t e_machine, uint32_t e_flags)
+ {
+ 	struct regs_dump *intr_regs;
+ 
+@@ -977,7 +978,7 @@ static void regs_intr__printf(struct perf_sample *sample, uint16_t e_machine)
+ 	intr_regs = perf_sample__intr_regs(sample);
+ 
+ 	if (intr_regs->regs)
+-		regs__printf("intr", intr_regs, e_machine);
++		regs__printf("intr", intr_regs, e_machine, e_flags);
+ }
+ 
+ static void stack_user__printf(struct stack_dump *dump)
+@@ -1072,6 +1073,7 @@ static void dump_sample(struct machine *machine, struct evsel *evsel, union perf
+ 	u64 sample_type;
+ 	char str[PAGE_SIZE_NAME_LEN];
+ 	uint16_t e_machine = EM_NONE;
++	uint32_t e_flags = 0;
+ 
+ 	if (!dump_trace)
+ 		return;
+@@ -1095,10 +1097,10 @@ static void dump_sample(struct machine *machine, struct evsel *evsel, union perf
+ 		branch_stack__printf(sample, evsel);
+ 
+ 	if (sample_type & PERF_SAMPLE_REGS_USER)
+-		regs_user__printf(sample, e_machine);
++		regs_user__printf(sample, e_machine, e_flags);
+ 
+ 	if (sample_type & PERF_SAMPLE_REGS_INTR)
+-		regs_intr__printf(sample, e_machine);
++		regs_intr__printf(sample, e_machine, e_flags);
+ 
+ 	if (sample_type & PERF_SAMPLE_STACK_USER)
+ 		stack_user__printf(&sample->user_stack);
+-- 
+2.34.1
+

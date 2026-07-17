@@ -1,0 +1,112 @@
+From 3aa4d7104f0e6df960eb377b718fa50e935892ac Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Thu, 7 May 2026 15:34:17 +0800
+Subject: [PATCH 2/2] efi: adding dynamic enable efi service interface
+
+It is to enable/disable efi runtime service in dynamic. By
+default, EFI runtime service is enabled. It could be disabled
+via this interface to improve real time response.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ .../admin-guide/kernel-parameters.txt         |  5 ++-
+ drivers/firmware/efi/efi.c                    | 39 +++++++++++++++++++
+ 2 files changed, 43 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index f183745f2cb6..2b6d41fdcf75 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -1515,7 +1515,8 @@
+ 	efi=		[EFI,EARLY]
+ 			Format: { "debug", "disable_early_pci_dma",
+ 				  "nochunk", "noruntime", "nosoftreserve",
+-				  "novamap", "no_disable_early_pci_dma" }
++				  "novamap", "no_disable_early_pci_dma",
++				  "dynamic" }
+ 			debug: enable misc debug output.
+ 			disable_early_pci_dma: disable the busmaster bit on all
+ 			PCI bridges while in the EFI boot stub.
+@@ -1532,6 +1533,8 @@
+ 			novamap: do not call SetVirtualAddressMap().
+ 			no_disable_early_pci_dma: Leave the busmaster bit set
+ 			on all PCI bridges while in the EFI boot stub
++			dynamic: enable EFI runtime services, which can be
++			disabled via /sys/firmware/efi/dynamic_enable.
+ 
+ 	efi_no_storage_paranoia [EFI,X86,EARLY]
+ 			Using this parameter you can use more than 50% of
+diff --git a/drivers/firmware/efi/efi.c b/drivers/firmware/efi/efi.c
+index c3cf5541ed68..387ac1eb441b 100644
+--- a/drivers/firmware/efi/efi.c
++++ b/drivers/firmware/efi/efi.c
+@@ -81,6 +81,7 @@ struct mm_struct efi_mm = {
+ 
+ struct workqueue_struct *efi_rts_wq;
+ 
++static bool __initdata efi_in_dynamic;
+ static bool disable_runtime = IS_ENABLED(CONFIG_EFI_DISABLE_RUNTIME);
+ static int __init setup_noefi(char *arg)
+ {
+@@ -115,6 +116,11 @@ static int __init parse_efi_cmdline(char *str)
+ 	if (parse_option_str(str, "runtime"))
+ 		disable_runtime = false;
+ 
++	if (parse_option_str(str, "dynamic")) {
++		disable_runtime = false;
++		efi_in_dynamic = true;
++	}
++
+ 	if (parse_option_str(str, "nosoftreserve"))
+ 		set_bit(EFI_MEM_NO_SOFT_RESERVE, &efi.flags);
+ 
+@@ -401,6 +407,34 @@ static void __init efi_debugfs_init(void)
+ static inline void efi_debugfs_init(void) {}
+ #endif
+ 
++static ssize_t efi_dynamic_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	return sprintf(buf, "%d\n", efi_enabled(EFI_RUNTIME_SERVICES));
++}
++
++static ssize_t efi_dynamic_store(struct kobject *kobj, struct kobj_attribute *attr,
++				 const char *buf, size_t count)
++{
++	int ret;
++	bool enable;
++
++	ret = kstrtobool(buf, &enable);
++	if (ret)
++		return ret;
++
++	if (enable)
++		set_bit(EFI_RUNTIME_SERVICES, &efi.flags);
++	else {
++		if (efi_rts_wq)
++			flush_workqueue(efi_rts_wq);
++		clear_bit(EFI_RUNTIME_SERVICES, &efi.flags);
++	}
++
++	return count;
++}
++static struct kobj_attribute efi_dynamic_attr =
++	__ATTR(dynamic_enable, 0644, efi_dynamic_show, efi_dynamic_store);
++
+ /*
+  * We register the efi subsystem with the firmware subsystem and the
+  * efivars subsystem with the efi subsystem, if the system was booted with
+@@ -442,6 +476,11 @@ static int __init efisubsys_init(void)
+ 		goto err_destroy_wq;
+ 	}
+ 
++	if (efi_in_dynamic && efi.runtime_supported_mask) {
++		if (sysfs_create_file(efi_kobj, &efi_dynamic_attr.attr))
++			pr_warn("unable to register efi dynamic sysfs interface\n");
++	}
++
+ 	if (efi_rt_services_supported(EFI_RT_SUPPORTED_GET_VARIABLE |
+ 				      EFI_RT_SUPPORTED_GET_NEXT_VARIABLE_NAME)) {
+ 		error = generic_ops_register();
+-- 
+2.34.1
+

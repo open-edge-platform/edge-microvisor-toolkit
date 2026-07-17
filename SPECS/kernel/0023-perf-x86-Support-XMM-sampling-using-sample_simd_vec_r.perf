@@ -1,0 +1,341 @@
+From f385ae685ffe4709c864f96840e51d15ec9e49af Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Mon, 9 Feb 2026 15:20:38 +0800
+Subject: [PATCH 23/41] perf/x86: Support XMM sampling using
+ sample_simd_vec_reg_* fields
+
+This patch adds support for sampling XMM registers using the
+sample_simd_vec_reg_* fields.
+
+When sample_simd_regs_enabled is set, the original XMM space in the
+sample_regs_* field is treated as reserved. An INVAL error will be
+reported to user space if any bit is set in the original XMM space while
+sample_simd_regs_enabled is set.
+
+The perf_reg_value function requires ABI information to understand the
+layout of sample_regs. To accommodate this, a new abi field is introduced
+in the struct x86_perf_regs to represent ABI information.
+
+Additionally, the X86-specific perf_simd_reg_value function is implemented
+to retrieve the XMM register values.
+
+Co-developed-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/core.c                | 47 ++++++++++++++++++--
+ arch/x86/events/intel/ds.c            |  2 +-
+ arch/x86/events/perf_event.h          | 12 +++++
+ arch/x86/include/asm/perf_event.h     |  1 +
+ arch/x86/include/uapi/asm/perf_regs.h | 13 ++++++
+ arch/x86/kernel/perf_regs.c           | 64 ++++++++++++++++++++++++++-
+ include/linux/perf_event.h            |  1 +
+ kernel/events/core.c                  |  2 +-
+ 8 files changed, 134 insertions(+), 8 deletions(-)
+
+diff --git a/arch/x86/events/core.c b/arch/x86/events/core.c
+index 1a8ab0660b92..030459ecc578 100644
+--- a/arch/x86/events/core.c
++++ b/arch/x86/events/core.c
+@@ -714,6 +714,19 @@ int x86_pmu_hw_config(struct perf_event *event)
+ 			if (is_sampling_event(event) && !event->attr.precise_ip &&
+ 			    !this_cpu_has(X86_FEATURE_XSAVES))
+ 				return -EINVAL;
++			if (event->attr.sample_simd_regs_enabled)
++				return -EINVAL;
++		}
++
++		if (event_has_simd_regs(event)) {
++			if (!(event->pmu->capabilities & PERF_PMU_CAP_SIMD_REGS))
++				return -EINVAL;
++			if (is_sampling_event(event) && !this_cpu_has(X86_FEATURE_XSAVES))
++				return -EINVAL;
++			/* The vector registers set is not supported */
++			if (event_needs_xmm(event) &&
++			    !(x86_pmu.ext_regs_mask & XFEATURE_MASK_SSE))
++				return -EINVAL;
+ 		}
+ 	}
+ 
+@@ -1756,6 +1769,7 @@ void x86_pmu_clear_perf_regs(struct pt_regs *regs)
+ {
+ 	struct x86_perf_regs *perf_regs = container_of(regs, struct x86_perf_regs, regs);
+ 
++	perf_regs->abi = PERF_SAMPLE_REGS_ABI_NONE;
+ 	perf_regs->xmm_regs = NULL;
+ }
+ 
+@@ -1776,13 +1790,14 @@ static void update_perf_regs(struct x86_perf_regs *perf_regs,
+ 
+ /*
+  * The x86 specific variant of perf_sample_regs_intr().
+- * It would be extended to add SIMD registers sampling support in
+- * later patches.
++ * Update data->regs_intr fields for extended registers (e.g., SIMD).
+  */
+ static void x86_pmu_update_regs_intr(struct perf_event *event,
+ 				     struct perf_sample_data *data,
+ 				     struct pt_regs *regs)
+ {
++	struct x86_perf_regs *perf_regs;
++
+ 	data->regs_intr.regs = regs;
+ 	data->regs_intr.abi  = perf_reg_abi(current);
+ 
+@@ -1792,6 +1807,17 @@ static void x86_pmu_update_regs_intr(struct perf_event *event,
+ 				  sizeof(u64);
+ 	}
+ 
++	if (data->regs_intr.abi && event_has_simd_regs(event)) {
++		data->dyn_size += perf_update_xregs_size(event, true);
++		data->regs_intr.abi |= PERF_SAMPLE_REGS_ABI_SIMD;
++	}
++
++	if (data->regs_intr.abi) {
++		perf_regs = container_of(data->regs_intr.regs,
++					 struct x86_perf_regs, regs);
++		perf_regs->abi = data->regs_intr.abi;
++	}
++
+ 	/*
+ 	 * Set PERF_SAMPLE_REGS_INTR to bypass perf_sample_regs_intr() call
+ 	 * in perf_prepare_sample() function.
+@@ -1832,6 +1858,7 @@ static void x86_pmu_update_regs_user(struct perf_event *event,
+ 				     struct pt_regs *regs)
+ {
+ 	struct perf_event_attr *attr = &event->attr;
++	struct x86_perf_regs *perf_regs;
+ 
+ 	if (user_mode(regs)) {
+ 		data->regs_user.abi = perf_reg_abi(current);
+@@ -1854,6 +1881,17 @@ static void x86_pmu_update_regs_user(struct perf_event *event,
+ 	if (data->regs_user.regs)
+ 		data->dyn_size += hweight64(attr->sample_regs_user) * sizeof(u64);
+ 
++	if (data->regs_user.abi && event_has_simd_regs(event)) {
++		data->dyn_size += perf_update_xregs_size(event, false);
++		data->regs_user.abi |= PERF_SAMPLE_REGS_ABI_SIMD;
++	}
++
++	if (data->regs_user.abi) {
++		perf_regs = container_of(data->regs_user.regs,
++					 struct x86_perf_regs, regs);
++		perf_regs->abi = data->regs_user.abi;
++	}
++
+ 	/*
+ 	 * Set PERF_SAMPLE_REGS_USER to bypass perf_sample_regs_user() call
+ 	 * in perf_prepare_sample() function.
+@@ -1922,7 +1960,7 @@ static void x86_pmu_sample_xregs(struct perf_event *event,
+ 	if (WARN_ON_ONCE(!xsave))
+ 		return;
+ 
+-	if (event_has_extended_regs(event))
++	if (event_needs_xmm(event))
+ 		mask |= XFEATURE_MASK_SSE;
+ 
+ 	mask &= x86_pmu.ext_regs_mask;
+@@ -1959,7 +1997,8 @@ void x86_pmu_update_perf_regs(struct perf_event *event,
+ {
+ 	u64 sample_type = event->attr.sample_type;
+ 
+-	if (!event_has_extended_regs(event))
++	if (!event_needs_xmm(event) &&
++	    !event_has_simd_regs(event))
+ 		return;
+ 
+ 	if (sample_type & PERF_SAMPLE_REGS_INTR)
+diff --git a/arch/x86/events/intel/ds.c b/arch/x86/events/intel/ds.c
+index dfff0b6967f0..09b620196cfb 100644
+--- a/arch/x86/events/intel/ds.c
++++ b/arch/x86/events/intel/ds.c
+@@ -1474,7 +1474,7 @@ static u64 pebs_update_adaptive_cfg(struct perf_event *event)
+ 	if (gprs || (attr->precise_ip < 2) || tsx_weight)
+ 		pebs_data_cfg |= PEBS_DATACFG_GP;
+ 
+-	if (event_has_extended_regs(event))
++	if (event_needs_xmm(event))
+ 		pebs_data_cfg |= PEBS_DATACFG_XMMS;
+ 
+ 	if (sample_type & PERF_SAMPLE_BRANCH_STACK) {
+diff --git a/arch/x86/events/perf_event.h b/arch/x86/events/perf_event.h
+index 558838cf5f0f..869fbcd3a53a 100644
+--- a/arch/x86/events/perf_event.h
++++ b/arch/x86/events/perf_event.h
+@@ -143,6 +143,18 @@ static inline bool is_acr_self_reload_event(struct perf_event *event)
+ 	return test_bit(hwc->idx, (unsigned long *)&hwc->config1);
+ }
+ 
++static inline bool event_needs_xmm(struct perf_event *event)
++{
++	if (event->attr.sample_simd_regs_enabled &&
++	    event->attr.sample_simd_vec_reg_qwords >= PERF_X86_XMM_QWORDS)
++		return true;
++
++	if (!event->attr.sample_simd_regs_enabled &&
++	    event_has_extended_regs(event))
++		return true;
++	return false;
++}
++
+ struct amd_nb {
+ 	int nb_id;  /* NorthBridge id */
+ 	int refcnt; /* reference count */
+diff --git a/arch/x86/include/asm/perf_event.h b/arch/x86/include/asm/perf_event.h
+index 3b368de9f803..5d623805bf87 100644
+--- a/arch/x86/include/asm/perf_event.h
++++ b/arch/x86/include/asm/perf_event.h
+@@ -704,6 +704,7 @@ extern void perf_events_lapic_init(void);
+ struct pt_regs;
+ struct x86_perf_regs {
+ 	struct pt_regs	regs;
++	u64		abi;
+ 	union {
+ 		u64	*xmm_regs;
+ 		u32	*xmm_space;	/* for xsaves */
+diff --git a/arch/x86/include/uapi/asm/perf_regs.h b/arch/x86/include/uapi/asm/perf_regs.h
+index 7c9d2bb3833b..5b7d5216f0bd 100644
+--- a/arch/x86/include/uapi/asm/perf_regs.h
++++ b/arch/x86/include/uapi/asm/perf_regs.h
+@@ -55,4 +55,17 @@ enum perf_event_x86_regs {
+ 
+ #define PERF_REG_EXTENDED_MASK	(~((1ULL << PERF_REG_X86_XMM0) - 1))
+ 
++enum {
++	PERF_X86_SIMD_XMM_REGS      = 16,
++	PERF_X86_SIMD_VEC_REGS_MAX  = PERF_X86_SIMD_XMM_REGS,
++};
++
++#define PERF_X86_SIMD_VEC_MASK	__GENMASK_ULL(PERF_X86_SIMD_VEC_REGS_MAX - 1, 0)
++
++enum {
++	/* 1 qword = 8 bytes */
++	PERF_X86_XMM_QWORDS      = 2,
++	PERF_X86_SIMD_QWORDS_MAX = PERF_X86_XMM_QWORDS,
++};
++
+ #endif /* _ASM_X86_PERF_REGS_H */
+diff --git a/arch/x86/kernel/perf_regs.c b/arch/x86/kernel/perf_regs.c
+index 81204cb7f723..b9a3c4057c42 100644
+--- a/arch/x86/kernel/perf_regs.c
++++ b/arch/x86/kernel/perf_regs.c
+@@ -63,6 +63,9 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 
+ 	if (idx >= PERF_REG_X86_XMM0 && idx < PERF_REG_X86_XMM_MAX) {
+ 		perf_regs = container_of(regs, struct x86_perf_regs, regs);
++		/* SIMD registers are moved to dedicated sample_simd_vec_reg */
++		if (perf_regs->abi & PERF_SAMPLE_REGS_ABI_SIMD)
++			return 0;
+ 		if (!perf_regs->xmm_regs)
+ 			return 0;
+ 		return perf_regs->xmm_regs[idx - PERF_REG_X86_XMM0];
+@@ -74,6 +77,61 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 	return regs_get_register(regs, pt_regs_offset[idx]);
+ }
+ 
++u64 perf_simd_reg_value(struct pt_regs *regs, int idx,
++			u16 qwords_idx, bool pred)
++{
++	struct x86_perf_regs *perf_regs =
++			container_of(regs, struct x86_perf_regs, regs);
++
++	if (!(perf_regs->abi & PERF_SAMPLE_REGS_ABI_SIMD))
++		return 0;
++
++	if (pred)
++		return 0;
++
++	if (WARN_ON_ONCE(idx >= PERF_X86_SIMD_VEC_REGS_MAX ||
++			 qwords_idx >= PERF_X86_SIMD_QWORDS_MAX))
++		return 0;
++
++	if (qwords_idx < PERF_X86_XMM_QWORDS) {
++		if (!perf_regs->xmm_regs)
++			return 0;
++		return perf_regs->xmm_regs[idx * PERF_X86_XMM_QWORDS +
++					   qwords_idx];
++	}
++
++	return 0;
++}
++
++int perf_simd_reg_validate(u16 vec_qwords, u64 vec_mask_intr,
++			   u64 vec_mask_user, u16 pred_qwords,
++			   u32 pred_mask_intr, u32 pred_mask_user)
++{
++	if (!pred_qwords) {
++		if (vec_qwords || vec_mask_intr || vec_mask_user ||
++		    pred_mask_intr || pred_mask_user)
++			return -EINVAL;
++		return 0;
++	}
++
++	if (!vec_qwords) {
++		if (vec_mask_intr || vec_mask_user)
++			return -EINVAL;
++	} else {
++		if (vec_qwords != PERF_X86_XMM_QWORDS)
++			return -EINVAL;
++		if ((!vec_mask_intr && !vec_mask_user) ||
++		    (vec_mask_intr & ~PERF_X86_SIMD_VEC_MASK) ||
++		    (vec_mask_user & ~PERF_X86_SIMD_VEC_MASK))
++			return -EINVAL;
++	}
++
++	if (pred_mask_intr || pred_mask_user)
++		return -EINVAL;
++
++	return 0;
++}
++
+ #define PERF_REG_X86_RESERVED	(((1ULL << PERF_REG_X86_XMM0) - 1) & \
+ 				 ~((1ULL << PERF_REG_X86_MAX) - 1))
+ 
+@@ -89,7 +147,8 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 
+ int perf_reg_validate(u64 mask)
+ {
+-	if (!mask || (mask & (REG_NOSUPPORT | PERF_REG_X86_RESERVED)))
++	/* The mask could be 0 if only the SIMD registers are interested */
++	if (mask & (REG_NOSUPPORT | PERF_REG_X86_RESERVED))
+ 		return -EINVAL;
+ 
+ 	return 0;
+@@ -108,7 +167,8 @@ u64 perf_reg_abi(struct task_struct *task)
+ 
+ int perf_reg_validate(u64 mask)
+ {
+-	if (!mask || (mask & (REG_NOSUPPORT | PERF_REG_X86_RESERVED)))
++	/* The mask could be 0 if only the SIMD registers are interested */
++	if (mask & (REG_NOSUPPORT | PERF_REG_X86_RESERVED))
+ 		return -EINVAL;
+ 
+ 	return 0;
+diff --git a/include/linux/perf_event.h b/include/linux/perf_event.h
+index 0c7d7c3ab815..319bdda7756c 100644
+--- a/include/linux/perf_event.h
++++ b/include/linux/perf_event.h
+@@ -1477,6 +1477,7 @@ static inline void perf_clear_branch_entry_bitfields(struct perf_branch_entry *b
+ 	br->reserved	= 0;
+ }
+ 
++extern u64 perf_update_xregs_size(struct perf_event *event, bool intr);
+ extern void perf_output_sample(struct perf_output_handle *handle,
+ 			       struct perf_event_header *header,
+ 			       struct perf_sample_data *data,
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index 516ed1d360d1..2044ea57436c 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -8333,7 +8333,7 @@ static __always_inline u64 __cond_set(u64 flags, u64 s, u64 d)
+ 	return d * !!(flags & s);
+ }
+ 
+-static u64 perf_update_xregs_size(struct perf_event *event, bool intr)
++u64 perf_update_xregs_size(struct perf_event *event, bool intr)
+ {
+ 	u16 pred_qwords = event->attr.sample_simd_pred_reg_qwords;
+ 	u16 vec_qwords = event->attr.sample_simd_vec_reg_qwords;
+-- 
+2.34.1
+

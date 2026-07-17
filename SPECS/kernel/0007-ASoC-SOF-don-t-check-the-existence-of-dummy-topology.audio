@@ -1,0 +1,56 @@
+From dc2f28a032086a4d7db44b5970857a5fdfec1f33 Mon Sep 17 00:00:00 2001
+From: Bard Liao <yung-chuan.liao@linux.intel.com>
+Date: Thu, 9 Oct 2025 17:40:21 +0800
+Subject: [PATCH 7/9] ASoC: SOF: don't check the existence of dummy topology
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Monolithic topology is not needed if function topology is used. Instead
+of creating a dummy topology in the file system, we can skip the
+existence check in the kernel.
+
+Signed-off-by: Bard Liao <yung-chuan.liao@linux.intel.com>
+Reviewed-by: Péter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Reviewed-by: Simon Trimmer <simont@opensource.cirrus.com>
+Link: https://patch.msgid.link/20251009094023.3474895-8-yung-chuan.liao@linux.intel.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+---
+ sound/soc/sof/fw-file-profile.c | 4 ++++
+ sound/soc/sof/topology.c        | 5 +++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/sound/soc/sof/fw-file-profile.c b/sound/soc/sof/fw-file-profile.c
+index d2b232860091..4a2afc04f338 100644
+--- a/sound/soc/sof/fw-file-profile.c
++++ b/sound/soc/sof/fw-file-profile.c
+@@ -73,6 +73,10 @@ static int sof_test_topology_file(struct device *dev,
+ 	if (!profile->tplg_path || !profile->tplg_name)
+ 		return 0;
+ 
++	/* Dummy topology does not exist and should not be used */
++	if (strstr(profile->tplg_name, "dummy"))
++		return 0;
++
+ 	tplg_filename = kasprintf(GFP_KERNEL, "%s/%s", profile->tplg_path,
+ 				  profile->tplg_name);
+ 	if (!tplg_filename)
+diff --git a/sound/soc/sof/topology.c b/sound/soc/sof/topology.c
+index 34cdad7598c1..6edb60176072 100644
+--- a/sound/soc/sof/topology.c
++++ b/sound/soc/sof/topology.c
+@@ -2523,6 +2523,11 @@ int snd_sof_load_topology(struct snd_soc_component *scomp, const char *file)
+ 	 * callback or the callback returns 0.
+ 	 */
+ 	if (!tplg_cnt) {
++		if (strstr(file, "dummy")) {
++			dev_err(scomp->dev,
++				"Function topology is required, please upgrade sof-firmware\n");
++			return -EINVAL;
++		}
+ 		tplg_files[0] = file;
+ 		tplg_cnt = 1;
+ 		dev_info(scomp->dev, "loading topology: %s\n", file);
+-- 
+2.34.1
+
