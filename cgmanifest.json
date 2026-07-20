@@ -7130,16 +7130,6 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "lxc",
-          "version": "5.0.3",
-          "downloadUrl": "https://linuxcontainers.org/downloads/lxc/lxc-5.0.3.tar.gz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
           "name": "lxcfs",
           "version": "5.0.4",
           "downloadUrl": "https://linuxcontainers.org/downloads/lxcfs/lxcfs-5.0.4.tar.gz"
