@@ -1,8 +1,0 @@
-{
-  "Signatures": {
-    "lxc-2.0.7-fix-init.patch": "58301873973e86e707a2e8d7e9c98615c16bf30fdbccaff6c8674235bb1121aa",
-    "lxc-4.0.1-fix-lxc-net.patch": "10cd91195df473e8587fd43b5e666e6baa0cf2bcfff20a9d21e8a3c05eea7e07",
-    "lxc-net": "a399cb124a5919db6f2006ea2de52f55adee4ea169284c4ff25153480b27ec5d",
-    "lxc-5.0.3.tar.gz": "2693a4c654dcfdafb3aa95c262051d8122afa1b6f5cef1920221ebbdee934d07"
-  }
-}
