@@ -1,0 +1,99 @@
+From 08472b848a8e663a7a36994875e321f04a96cb92 Mon Sep 17 00:00:00 2001
+From: "Yew, Chang Ching" <chang.ching.yew@intel.com>
+Date: Mon, 30 Mar 2026 05:53:23 +0800
+Subject: [PATCH 20/65] maxim-serdes: max_des: Add bus_handle of child fwnode
+ in atr init
+
+During i2c atr initialization of deserializer, find the child fwnode
+by reg property and pass as bus_handle in struct i2c_atr_adap_desc
+
+This requires the channel, serializer and camera sensor ACPI name
+objects to be specified as child objects of deserializer name object
+
+Device (DES0)
+{
+    Method (_HID, 0, NotSerialized)
+    {
+    }
+
+    Name (_CRS, ResourceTemplate ()
+    {
+    })
+
+    // ATR channel 0
+    Device (CH00)
+    {
+        Name (_DSD, Package ()
+        {
+            ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+            Package ()
+            {
+                Package () { "reg", 0 },
+            }
+        })
+
+        Device (SER0)
+        {
+            Method (_HID, 0, NotSerialized)
+            {
+            }
+
+            Name(_CRS, ResourceTemplate ()
+            {
+            })
+
+            Device (CAM0)
+            {
+            }
+         }
+     }
+}
+
+Signed-off-by: Mokhtar, Mohamad Nor Syahid <mohamad.nor.syahid.mokhtar@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max_des.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max_des.c b/drivers/media/i2c/maxim-serdes/max_des.c
+index 019b7c0d622c..6daf01fa5cba 100644
+--- a/drivers/media/i2c/maxim-serdes/max_des.c
++++ b/drivers/media/i2c/maxim-serdes/max_des.c
+@@ -1643,6 +1643,7 @@ static int max_des_i2c_atr_init(struct max_des_priv *priv)
+ 
+ 	for (i = 0; i < des->ops->num_links; i++) {
+ 		struct max_des_link *link = &des->links[i];
++		struct fwnode_handle *child, *chan_fwnode = NULL;
+ 		struct i2c_atr_adap_desc desc = {
+ 			.chan_id = i,
+ 		};
+@@ -1650,9 +1651,25 @@ static int max_des_i2c_atr_init(struct max_des_priv *priv)
+ 		if (!link->enabled)
+ 			continue;
+ 
++		/* Find the channel fwnode child matching this link index */
++		fwnode_for_each_child_node(dev_fwnode(priv->dev), child) {
++			u32 reg;
++
++			if (fwnode_property_read_u32(child, "reg", &reg))
++				continue;
++			if (reg == i) {
++				chan_fwnode = child;
++				break;
++			}
++		}
++
++		desc.bus_handle = chan_fwnode;
++
+ 		ret = i2c_atr_add_adapter(priv->atr, &desc);
+-		if (ret)
++		if (ret) {
++			fwnode_handle_put(chan_fwnode);
+ 			goto err_add_adapters;
++		}
+ 	}
+ 
+ 	for (i = 0; i < des->ops->num_links; i++) {
+-- 
+2.43.0
+

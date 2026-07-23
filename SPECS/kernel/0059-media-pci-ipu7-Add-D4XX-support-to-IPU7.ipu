@@ -1,0 +1,103 @@
+From 144badc25f170ec3e26053127c4aa65341fd9d61 Mon Sep 17 00:00:00 2001
+From: "Mokhtar, Mohamad Nor Syahid" <mohamad.nor.syahid.mokhtar@intel.com>
+Date: Wed, 10 Jun 2026 13:46:37 +0800
+Subject: [PATCH 59/65] media: pci: ipu7: Add D4XX support to IPU7
+
+Signed-off-by: Mokhtar, Mohamad Nor Syahid <mohamad.nor.syahid.mokhtar@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys-csi2.c   |  2 ++
+ drivers/staging/media/ipu7/ipu7-isys-csi2.h   |  2 +-
+ drivers/staging/media/ipu7/ipu7-isys-subdev.c |  3 +++
+ drivers/staging/media/ipu7/ipu7-isys-video.c  | 11 ++++++++++-
+ drivers/staging/media/ipu7/ipu7-isys.h        |  2 +-
+ 5 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-csi2.c b/drivers/staging/media/ipu7/ipu7-isys-csi2.c
+index f34eabfe8a98..fb7320afdae7 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-csi2.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-csi2.c
+@@ -45,6 +45,8 @@ static const u32 csi2_supported_codes[] = {
+ 	MEDIA_BUS_FMT_SGBRG8_1X8,
+ 	MEDIA_BUS_FMT_SGRBG8_1X8,
+ 	MEDIA_BUS_FMT_SRGGB8_1X8,
++	MEDIA_BUS_FMT_VYUY8_1X16, /* D4XX specific */
++	MEDIA_BUS_FMT_Y8_1X8,  /* D4XX specific */
+ 	0,
+ };
+ 
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-csi2.h b/drivers/staging/media/ipu7/ipu7-isys-csi2.h
+index 6c23b80f92a2..f72ee2a5197b 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-csi2.h
++++ b/drivers/staging/media/ipu7/ipu7-isys-csi2.h
+@@ -20,7 +20,7 @@ struct ipu7_isys_stream;
+ #define INVALID_VC_ID			-1
+ #define IPU7_NR_OF_CSI2_SINK_PADS	1U
+ #define IPU7_CSI2_PAD_SINK		0U
+-#define IPU7_NR_OF_CSI2_SRC_PADS	8U
++#define IPU7_NR_OF_CSI2_SRC_PADS	16U  /* D4XX specific */
+ #define IPU7_CSI2_PAD_SRC		1U
+ #define IPU7_NR_OF_CSI2_PADS		(IPU7_NR_OF_CSI2_SINK_PADS + \
+ 					 IPU7_NR_OF_CSI2_SRC_PADS)
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-subdev.c b/drivers/staging/media/ipu7/ipu7-isys-subdev.c
+index 67a776033d5b..e5b92e2300ec 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-subdev.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-subdev.c
+@@ -28,6 +28,8 @@ unsigned int ipu7_isys_mbus_code_to_mipi(u32 code)
+ 		return MIPI_CSI2_DT_RGB888;
+ 	case MEDIA_BUS_FMT_YUYV10_1X20:
+ 		return MIPI_CSI2_DT_YUV422_10B;
++	case MEDIA_BUS_FMT_VYUY8_1X16:  /* D4XX specific */
++		return MIPI_CSI2_DT_YUV422_8B;
+ 	case MEDIA_BUS_FMT_UYVY8_1X16:
+ 	case MEDIA_BUS_FMT_YUYV8_1X16:
+ 		return MIPI_CSI2_DT_YUV422_8B;
+@@ -46,6 +48,7 @@ unsigned int ipu7_isys_mbus_code_to_mipi(u32 code)
+ 	case MEDIA_BUS_FMT_SGBRG8_1X8:
+ 	case MEDIA_BUS_FMT_SGRBG8_1X8:
+ 	case MEDIA_BUS_FMT_SRGGB8_1X8:
++	case MEDIA_BUS_FMT_Y8_1X8:  /* D4XX specific */
+ 		return MIPI_CSI2_DT_RAW8;
+ 	default:
+ 		WARN_ON(1);
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-video.c b/drivers/staging/media/ipu7/ipu7-isys-video.c
+index da1afb79a605..f778bee3049f 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-video.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-video.c
+@@ -84,11 +84,20 @@ const struct ipu7_isys_pixelformat ipu7_isys_pfmts[] = {
+ 	{V4L2_PIX_FMT_UYVY, 16, 16, MEDIA_BUS_FMT_UYVY8_1X16,
+ 	 IPU_INSYS_FRAME_FORMAT_UYVY},
+ 	{V4L2_PIX_FMT_YUYV, 16, 16, MEDIA_BUS_FMT_YUYV8_1X16,
+-	 IPU_INSYS_FRAME_FORMAT_YUYV},
++	 IPU_INSYS_FRAME_FORMAT_UYVY}, /* D4XX fix for incorrect RGB stream */
+ 	{V4L2_PIX_FMT_RGB565, 16, 16, MEDIA_BUS_FMT_RGB565_1X16,
+ 	 IPU_INSYS_FRAME_FORMAT_RGB565},
+ 	{V4L2_PIX_FMT_BGR24, 24, 24, MEDIA_BUS_FMT_RGB888_1X24,
+ 	 IPU_INSYS_FRAME_FORMAT_RGBA888},
++	/* D4XX specific */
++	{V4L2_PIX_FMT_Z16, 16, 16, MEDIA_BUS_FMT_UYVY8_1X16,
++	 IPU_INSYS_FRAME_FORMAT_UYVY},
++	{V4L2_PIX_FMT_Y8I, 16, 16, MEDIA_BUS_FMT_VYUY8_1X16,
++	 IPU_INSYS_FRAME_FORMAT_UYVY},
++	{V4L2_PIX_FMT_Y12I, 32, 24, MEDIA_BUS_FMT_RGB888_1X24,
++	 IPU_INSYS_FRAME_FORMAT_RGBA888},
++	{V4L2_PIX_FMT_GREY, 8, 8, MEDIA_BUS_FMT_Y8_1X8,
++	 IPU_INSYS_FRAME_FORMAT_RAW8},
+ };
+ 
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
+index 87d30afbd872..69796ecf7c6b 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.h
++++ b/drivers/staging/media/ipu7/ipu7-isys.h
+@@ -44,7 +44,7 @@ struct dentry;
+ #define IPU_ISYS_NUM_RECV_QUEUE		1U
+ 
+ #define IPU_ISYS_MIN_WIDTH		2U
+-#define IPU_ISYS_MIN_HEIGHT		2U
++#define IPU_ISYS_MIN_HEIGHT		1U  /* D4XX specific */
+ #define IPU_ISYS_MAX_WIDTH		8160U
+ #define IPU_ISYS_MAX_HEIGHT		8190U
+ 
+-- 
+2.43.0
+

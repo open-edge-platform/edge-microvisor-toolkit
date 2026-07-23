@@ -1,0 +1,26 @@
+From e3a94387aaafdb00d8c2fc6df975f43c3e0e61f2 Mon Sep 17 00:00:00 2001
+From: sys-pkt <sys_pkt@intel.com>
+Date: Mon, 9 Mar 2026 09:55:43 +0800
+Subject: [PATCH] [v7.0-rc3] Add SECURITY.md file
+
+Signed-off-by: Lili Li <lili.li@intel.com>
+---
+ SECURITY.md | 6 ++++++
+ 1 file changed, 6 insertions(+)
+ create mode 100644 SECURITY.md
+
+diff --git a/SECURITY.md b/SECURITY.md
+new file mode 100644
+index 000000000000..c17865c0065e
+--- /dev/null
++++ b/SECURITY.md
+@@ -0,0 +1,6 @@
++# Security Policy
++
++Intel is committed to rapidly addressing security vulnerabilities affecting our customers and providing clear guidance on the solution, impact, severity and mitigation.
++
++## Reporting a Vulnerability
++Please report any security vulnerabilities in this project [utilizing the guidelines here](https://www.intel.com/content/www/us/en/security-center/vulnerability-handling-guidelines.html).
+-- 
+2.43.0
+

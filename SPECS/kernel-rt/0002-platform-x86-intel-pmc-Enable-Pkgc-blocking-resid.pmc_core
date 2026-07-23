@@ -1,0 +1,126 @@
+From 4e0ba90fc8b0cd077bbd8bda9fee915f4c1c293f Mon Sep 17 00:00:00 2001
+From: Xi Pardee <xi.pardee@linux.intel.com>
+Date: Mon, 2 Mar 2026 14:32:04 -0800
+Subject: [PATCH 2/7] platform/x86/intel/pmc: Enable Pkgc blocking residency
+ counter
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Enable the Package C-state blocking counter in the PMT telemetry
+region. This counter reports the number of 10 µs intervals during
+which a Package C-state 10.2/3 entry was blocked for the specified
+reasons.
+
+Signed-off-by: Xi Pardee <xi.pardee@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmc/core.c | 27 +++++++++++++++++++++++++++
+ drivers/platform/x86/intel/pmc/core.h |  8 ++++++++
+ 2 files changed, 35 insertions(+)
+
+diff --git a/drivers/platform/x86/intel/pmc/core.c b/drivers/platform/x86/intel/pmc/core.c
+index b0da0e7b632b..9c27144f411b 100644
+--- a/drivers/platform/x86/intel/pmc/core.c
++++ b/drivers/platform/x86/intel/pmc/core.c
+@@ -1093,6 +1093,28 @@ static int pmc_core_pkgc_ltr_blocker_show(struct seq_file *s, void *unused)
+ }
+ DEFINE_SHOW_ATTRIBUTE(pmc_core_pkgc_ltr_blocker);
+ 
++static int pmc_core_pkgc_blocker_residency_show(struct seq_file *s, void *unused)
++{
++	struct pmc_dev *pmcdev = s->private;
++	const char **pkgc_blocker_counters;
++	u32 counter, offset;
++	unsigned int i;
++	int ret;
++
++	offset = pmcdev->pkgc_blocker_offset;
++	pkgc_blocker_counters = pmcdev->pkgc_blocker_counters;
++	for (i = 0; pkgc_blocker_counters[i]; i++, offset++) {
++		ret = pmt_telem_read32(pmcdev->pc_ep, offset,
++				       &counter, 1);
++		if (ret)
++			return ret;
++		seq_printf(s, "%-30s %-30u\n", pkgc_blocker_counters[i], counter);
++	}
++
++	return 0;
++}
++DEFINE_SHOW_ATTRIBUTE(pmc_core_pkgc_blocker_residency);
++
+ static int pmc_core_lpm_latch_mode_show(struct seq_file *s, void *unused)
+ {
+ 	struct pmc_dev *pmcdev = s->private;
+@@ -1380,6 +1402,8 @@ void pmc_core_punit_pmt_init(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_de
+ 		pmcdev->pc_ep = ep;
+ 		pmcdev->pkgc_ltr_blocker_counters = pmc_dev_info->pkgc_ltr_blocker_counters;
+ 		pmcdev->pkgc_ltr_blocker_offset = pmc_dev_info->pkgc_ltr_blocker_offset;
++		pmcdev->pkgc_blocker_counters = pmc_dev_info->pkgc_blocker_counters;
++		pmcdev->pkgc_blocker_offset = pmc_dev_info->pkgc_blocker_offset;
+ 	}
+ 
+ release_dev:
+@@ -1512,6 +1536,9 @@ static void pmc_core_dbgfs_register(struct pmc_dev *pmcdev, struct pmc_dev_info
+ 		debugfs_create_file("pkgc_ltr_blocker_show", 0444,
+ 				    pmcdev->dbgfs_dir, pmcdev,
+ 				    &pmc_core_pkgc_ltr_blocker_fops);
++		debugfs_create_file("pkgc_blocker_residency_show", 0444,
++				    pmcdev->dbgfs_dir, pmcdev,
++				    &pmc_core_pkgc_blocker_residency_fops);
+ 	}
+ 
+ }
+diff --git a/drivers/platform/x86/intel/pmc/core.h b/drivers/platform/x86/intel/pmc/core.h
+index 0fc7e6211180..ed93ef97eae6 100644
+--- a/drivers/platform/x86/intel/pmc/core.h
++++ b/drivers/platform/x86/intel/pmc/core.h
+@@ -460,6 +460,8 @@ struct pmc {
+  *
+  * @pkgc_ltr_blocker_counters: Array of PKGC LTR blocker counters
+  * @pkgc_ltr_blocker_offset: Offset to PKGC LTR blockers in telemetry region
++ * @pkgc_blocker_counters: Array of PKGC blocker counters
++ * @pkgc_blocker_offset: Offset to PKGC blocker in telemetry region
+  *
+  * pmc_dev contains info about power management controller device.
+  */
+@@ -485,6 +487,8 @@ struct pmc_dev {
+ 
+ 	const char **pkgc_ltr_blocker_counters;
+ 	u32 pkgc_ltr_blocker_offset;
++	const char **pkgc_blocker_counters;
++	u32 pkgc_blocker_offset;
+ };
+ 
+ enum pmc_index {
+@@ -500,6 +504,7 @@ enum pmc_index {
+  * @dmu_guids:		List of Die Management Unit GUID
+  * @pc_guid:		GUID for telemetry region to read PKGC blocker info
+  * @pkgc_ltr_blocker_offset: Offset to PKGC LTR blockers in telemetry region
++ * @pkgc_blocker_offset:Offset to PKGC blocker in telemetry region
+  * @regmap_list:	Pointer to a list of pmc_info structure that could be
+  *			available for the platform. When set, this field implies
+  *			SSRAM support.
+@@ -507,6 +512,7 @@ enum pmc_index {
+  *			specific attributes of the primary PMC
+  * @sub_req_show:	File operations to show substate requirements
+  * @pkgc_ltr_blocker_counters: Array of PKGC LTR blocker counters
++ * @pkgc_blocker_counters: Array of PKGC blocker counters
+  * @suspend:		Function to perform platform specific suspend
+  * @resume:		Function to perform platform specific resume
+  * @init:		Function to perform platform specific init action
+@@ -517,10 +523,12 @@ struct pmc_dev_info {
+ 	u32 *dmu_guids;
+ 	u32 pc_guid;
+ 	u32 pkgc_ltr_blocker_offset;
++	u32 pkgc_blocker_offset;
+ 	struct pmc_info *regmap_list;
+ 	const struct pmc_reg_map *map;
+ 	const struct file_operations *sub_req_show;
+ 	const char **pkgc_ltr_blocker_counters;
++	const char **pkgc_blocker_counters;
+ 	void (*suspend)(struct pmc_dev *pmcdev);
+ 	int (*resume)(struct pmc_dev *pmcdev);
+ 	int (*init)(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_dev_info);
+-- 
+2.43.0
+

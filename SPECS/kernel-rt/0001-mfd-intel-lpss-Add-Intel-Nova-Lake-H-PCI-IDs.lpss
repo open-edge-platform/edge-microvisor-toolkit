@@ -1,0 +1,44 @@
+From 5ddee5c7aa566b9719139e7e9aaf4712fc8b6eef Mon Sep 17 00:00:00 2001
+From: Saranya Gopal <saranya.gopal@intel.com>
+Date: Fri, 13 Mar 2026 12:03:37 +0200
+Subject: [PATCH] mfd: intel-lpss: Add Intel Nova Lake-H PCI IDs
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add Intel Nova Lake-H LPSS PCI IDs.
+
+Signed-off-by: Saranya Gopal <saranya.gopal@intel.com>
+Co-developed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/mfd/intel-lpss-pci.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/mfd/intel-lpss-pci.c b/drivers/mfd/intel-lpss-pci.c
+index 713a5bfb1a3c..a9452ac92fb2 100644
+--- a/drivers/mfd/intel-lpss-pci.c
++++ b/drivers/mfd/intel-lpss-pci.c
+@@ -633,6 +633,19 @@ static const struct pci_device_id intel_lpss_pci_ids[] = {
+ 	{ PCI_VDEVICE(INTEL, 0xa879), (kernel_ulong_t)&ehl_i2c_info },
+ 	{ PCI_VDEVICE(INTEL, 0xa87a), (kernel_ulong_t)&ehl_i2c_info },
+ 	{ PCI_VDEVICE(INTEL, 0xa87b), (kernel_ulong_t)&ehl_i2c_info },
++	/* NVL-H */
++	{ PCI_VDEVICE(INTEL, 0xd325), (kernel_ulong_t)&bxt_uart_info },
++	{ PCI_VDEVICE(INTEL, 0xd326), (kernel_ulong_t)&bxt_uart_info },
++	{ PCI_VDEVICE(INTEL, 0xd327), (kernel_ulong_t)&tgl_spi_info },
++	{ PCI_VDEVICE(INTEL, 0xd330), (kernel_ulong_t)&tgl_spi_info },
++	{ PCI_VDEVICE(INTEL, 0xd347), (kernel_ulong_t)&tgl_spi_info },
++	{ PCI_VDEVICE(INTEL, 0xd350), (kernel_ulong_t)&ehl_i2c_info },
++	{ PCI_VDEVICE(INTEL, 0xd351), (kernel_ulong_t)&ehl_i2c_info },
++	{ PCI_VDEVICE(INTEL, 0xd352), (kernel_ulong_t)&bxt_uart_info },
++	{ PCI_VDEVICE(INTEL, 0xd378), (kernel_ulong_t)&ehl_i2c_info },
++	{ PCI_VDEVICE(INTEL, 0xd379), (kernel_ulong_t)&ehl_i2c_info },
++	{ PCI_VDEVICE(INTEL, 0xd37a), (kernel_ulong_t)&ehl_i2c_info },
++	{ PCI_VDEVICE(INTEL, 0xd37b), (kernel_ulong_t)&ehl_i2c_info },
+ 	/* PTL-H */
+ 	{ PCI_VDEVICE(INTEL, 0xe325), (kernel_ulong_t)&bxt_uart_info },
+ 	{ PCI_VDEVICE(INTEL, 0xe326), (kernel_ulong_t)&bxt_uart_info },
+-- 
+2.43.0
+

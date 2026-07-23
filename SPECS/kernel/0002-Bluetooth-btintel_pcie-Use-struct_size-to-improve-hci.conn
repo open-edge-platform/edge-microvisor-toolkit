@@ -1,0 +1,40 @@
+From 684f1a7de4ed6759063d309dc5aa750bd3f8607f Mon Sep 17 00:00:00 2001
+From: Thorsten Blum <thorsten.blum@linux.dev>
+Date: Tue, 24 Feb 2026 00:33:42 +0100
+Subject: [PATCH 02/18] Bluetooth: btintel_pcie: Use struct_size to improve
+ hci_drv_read_info
+
+Use struct_size(), which provides additional compile-time checks for
+structures with flexible array members (e.g., __must_be_array()), to
+determine the allocation size for a new 'struct hci_drv_rp_read_info'.
+
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+Signed-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+---
+ drivers/bluetooth/btintel_pcie.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index eda243988cfd..473b2115e637 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -9,6 +9,7 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/firmware.h>
++#include <linux/overflow.h>
+ #include <linux/pci.h>
+ #include <linux/string.h>
+ #include <linux/wait.h>
+@@ -2373,7 +2374,7 @@ static int btintel_pcie_hci_drv_read_info(struct hci_dev *hdev, void *data,
+ 	u16 opcode, num_supported_commands =
+ 		ARRAY_SIZE(btintel_pcie_hci_drv_supported_commands);
+ 
+-	rp_size = sizeof(*rp) + num_supported_commands * 2;
++	rp_size = struct_size(rp, supported_commands, num_supported_commands);
+ 
+ 	rp = kmalloc(rp_size, GFP_KERNEL);
+ 	if (!rp)
+-- 
+2.43.0
+

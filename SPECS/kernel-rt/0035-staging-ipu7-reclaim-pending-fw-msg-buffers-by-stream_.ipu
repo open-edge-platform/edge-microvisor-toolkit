@@ -1,0 +1,126 @@
+From eede30f8c7e31d65d867f5df582b8458fe85adc8 Mon Sep 17 00:00:00 2001
+From: hepengpx <pengpengx.he@intel.com>
+Date: Fri, 5 Jun 2026 10:50:07 +0800
+Subject: [PATCH 35/65] staging: ipu7: reclaim pending fw msg buffers by
+ stream_id
+
+When one stream stops, firmware stops that stream immediately.
+Some fw msg bufs may still remain in framebuflist_fw and should be
+reclaimed.
+
+A stream_id is added to isys_fw_msgs to indicate which stream each
+message belongs to.
+
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys-queue.c |  2 ++
+ drivers/staging/media/ipu7/ipu7-isys-video.c |  4 ++++
+ drivers/staging/media/ipu7/ipu7-isys.c       | 14 ++++++++++++++
+ drivers/staging/media/ipu7/ipu7-isys.h       |  3 +++
+ 4 files changed, 23 insertions(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+index 434d9d9c7158..02466f883675 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+@@ -314,6 +314,7 @@ static int ipu7_isys_stream_start(struct ipu7_isys_video *av,
+ 		if (!msg)
+ 			return -ENOMEM;
+ 
++		msg->stream_id = stream->stream_handle;
+ 		buf = &msg->fw_msg.frame;
+ 
+ 		ipu7_isys_buffer_to_fw_frame_buff(buf, stream, bl);
+@@ -403,6 +404,7 @@ static void buf_queue(struct vb2_buffer *vb)
+ 		goto out;
+ 	}
+ 
++	msg->stream_id = stream->stream_handle;
+ 	buf = &msg->fw_msg.frame;
+ 
+ 	ipu7_isys_buffer_to_fw_frame_buff(buf, stream, &bl);
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-video.c b/drivers/staging/media/ipu7/ipu7-isys-video.c
+index 8c6730833f24..9953d4aa3a38 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-video.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-video.c
+@@ -452,6 +452,7 @@ static int start_stream_firmware(struct ipu7_isys_video *av,
+ 	if (!msg)
+ 		return -ENOMEM;
+ 
++	msg->stream_id = stream->stream_handle;
+ 	stream_cfg = &msg->fw_msg.stream;
+ 	stream_cfg->port_id = stream->stream_source;
+ 	stream_cfg->vc = stream->vc;
+@@ -508,6 +509,7 @@ static int start_stream_firmware(struct ipu7_isys_video *av,
+ 		ret = -ENOMEM;
+ 		goto out_put_stream_opened;
+ 	}
++	msg->stream_id = stream->stream_handle;
+ 	buf = &msg->fw_msg.frame;
+ 
+ 	ipu7_isys_buffer_to_fw_frame_buff(buf, stream, bl);
+@@ -782,6 +784,7 @@ int ipu7_isys_video_set_streaming(struct ipu7_isys_video *av, int state,
+ 	struct media_pad *r_pad;
+ 	struct v4l2_subdev *sd;
+ 	u32 r_stream = 0;
++	u16 stream_id = stream->stream_handle;
+ 	int ret = 0;
+ 
+ 	dev_dbg(dev, "set stream: %d\n", state);
+@@ -806,6 +809,7 @@ int ipu7_isys_video_set_streaming(struct ipu7_isys_video *av, int state,
+ 		}
+ 
+ 		close_streaming_firmware(av);
++		ipu7_cleanup_fw_msg_bufs_by_stream_id(av->isys, stream_id);
+ 	} else {
+ 		ret = start_stream_firmware(av, bl);
+ 		if (ret) {
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
+index 6c89eab60023..e2e6e6f6b092 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-isys.c
+@@ -683,6 +683,20 @@ void ipu7_cleanup_fw_msg_bufs(struct ipu7_isys *isys)
+ 	spin_unlock_irqrestore(&isys->listlock, flags);
+ }
+ 
++void ipu7_cleanup_fw_msg_bufs_by_stream_id(struct ipu7_isys *isys,
++					   u16 stream_id)
++{
++	struct isys_fw_msgs *fwmsg, *fwmsg0;
++	unsigned long flags;
++
++	spin_lock_irqsave(&isys->listlock, flags);
++	list_for_each_entry_safe(fwmsg, fwmsg0, &isys->framebuflist_fw, head) {
++		if (fwmsg->stream_id == stream_id)
++			list_move(&fwmsg->head, &isys->framebuflist);
++	}
++	spin_unlock_irqrestore(&isys->listlock, flags);
++}
++
+ void ipu7_put_fw_msg_buf(struct ipu7_isys *isys, uintptr_t data)
+ {
+ 	struct isys_fw_msgs *msg;
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
+index 29abb9a2d375..c6a3d4f22a25 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.h
++++ b/drivers/staging/media/ipu7/ipu7-isys.h
+@@ -121,6 +121,7 @@ struct isys_fw_msgs {
+ 	} fw_msg;
+ 	struct list_head head;
+ 	dma_addr_t dma_addr;
++	u16 stream_id;
+ };
+ 
+ struct ipu7_isys_csi2_config {
+@@ -137,6 +138,8 @@ struct sensor_async_sd {
+ struct isys_fw_msgs *ipu7_get_fw_msg_buf(struct ipu7_isys_stream *stream);
+ void ipu7_put_fw_msg_buf(struct ipu7_isys *isys, uintptr_t data);
+ void ipu7_cleanup_fw_msg_bufs(struct ipu7_isys *isys);
++void ipu7_cleanup_fw_msg_bufs_by_stream_id(struct ipu7_isys *isys,
++					   u16 stream_id);
+ int isys_isr_one(struct ipu7_bus_device *adev);
+ void ipu7_isys_setup_hw(struct ipu7_isys *isys);
+ #endif /* IPU7_ISYS_H */
+-- 
+2.43.0
+

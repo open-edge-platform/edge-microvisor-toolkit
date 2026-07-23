@@ -1,0 +1,80 @@
+From 5914a622c29f68f51e7645f07d3a28e19621e89a Mon Sep 17 00:00:00 2001
+From: Hao Yao <hao.yao@intel.com>
+Date: Mon, 26 Jan 2026 18:10:20 +0800
+Subject: [PATCH 53/65] staging: ipu7: Define gpreg_stride for different IPU
+ versions
+
+Signed-off-by: Hao Yao <hao.yao@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys-csi-phy.c | 6 ++++--
+ drivers/staging/media/ipu7/ipu7.c              | 3 +++
+ drivers/staging/media/ipu7/ipu7.h              | 1 +
+ 3 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c b/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
+index 3f15af3b4c79..0886a78def6e 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-csi-phy.c
+@@ -168,7 +168,8 @@ static void gpreg_write(struct ipu7_isys *isys, u32 id, u32 addr, u32 data)
+ {
+ 	void __iomem *isys_base = isys->pdata->base;
+ 	u32 gpreg = isys->pdata->ipdata->csi2.gpreg;
+-	void __iomem *base = isys_base + gpreg + 0x1000 * id;
++	void __iomem *base = isys_base + gpreg +
++			     isys->pdata->ipdata->csi2.gpreg_stride * id;
+ 	struct device *dev = &isys->adev->auxdev.dev;
+ 
+ 	dev_dbg(dev, "gpreg write: reg 0x%zx = data 0x%08x",
+@@ -345,7 +346,8 @@ static int ipu7_isys_phy_ready(struct ipu7_isys *isys, u32 id)
+ {
+ 	void __iomem *isys_base = isys->pdata->base;
+ 	u32 gpreg_offset = isys->pdata->ipdata->csi2.gpreg;
+-	void __iomem *gpreg = isys_base + gpreg_offset + 0x1000 * id;
++	void __iomem *gpreg = isys_base + gpreg_offset +
++			      isys->pdata->ipdata->csi2.gpreg_stride * id;
+ 	struct device *dev = &isys->adev->auxdev.dev;
+ 	unsigned int i;
+ 	u32 phy_ready;
+diff --git a/drivers/staging/media/ipu7/ipu7.c b/drivers/staging/media/ipu7/ipu7.c
+index adaf9a9324d1..df53a6523b39 100644
+--- a/drivers/staging/media/ipu7/ipu7.c
++++ b/drivers/staging/media/ipu7/ipu7.c
+@@ -56,6 +56,7 @@ static const unsigned int ipu7_csi_offsets[] = {
+ static struct ipu_isys_internal_pdata ipu7p5_isys_ipdata = {
+ 	.csi2 = {
+ 		.gpreg = IS_IO_CSI2_GPREGS_BASE,
++		.gpreg_stride = 0x1000,
+ 	},
+ 	.hw_variant = {
+ 		.offset = IPU_UNIFIED_OFFSET,
+@@ -796,6 +797,7 @@ static struct ipu_psys_internal_pdata ipu7p5_psys_ipdata = {
+ static struct ipu_isys_internal_pdata ipu7_isys_ipdata = {
+ 	.csi2 = {
+ 		.gpreg = IS_IO_CSI2_GPREGS_BASE,
++		.gpreg_stride = 0x1000,
+ 	},
+ 	.hw_variant = {
+ 		.offset = IPU_UNIFIED_OFFSET,
+@@ -1313,6 +1315,7 @@ static struct ipu_psys_internal_pdata ipu7_psys_ipdata = {
+ static struct ipu_isys_internal_pdata ipu8_isys_ipdata = {
+ 	.csi2 = {
+ 		.gpreg = IPU8_IS_IO_CSI2_GPREGS_BASE,
++		.gpreg_stride = 0x2000,
+ 	},
+ 	.hw_variant = {
+ 		.offset = IPU_UNIFIED_OFFSET,
+diff --git a/drivers/staging/media/ipu7/ipu7.h b/drivers/staging/media/ipu7/ipu7.h
+index 21988ce41acf..41f3efded9cb 100644
+--- a/drivers/staging/media/ipu7/ipu7.h
++++ b/drivers/staging/media/ipu7/ipu7.h
+@@ -206,6 +206,7 @@ struct ipu7_isys_internal_csi2_pdata {
+ 	u32 nports;
+ 	u32 const *offsets;
+ 	u32 gpreg;
++	u32 gpreg_stride;
+ };
+ 
+ struct ipu7_hw_variants {
+-- 
+2.43.0
+

@@ -86,9 +86,9 @@ rm -rf gcc-13.2.0
 
 touch $LFS/logs/temptoolchain/status_gcc_pass1_complete
 
-KERNEL_VERSION="6.18.23"
+KERNEL_VERSION="7.0"
 echo Linux-${KERNEL_VERSION} API Headers
-tar xf linux-6.18.23.tar.gz
+tar xf linux-7.0.tar.gz
 pushd linux-${KERNEL_VERSION}
 make mrproper
 make headers
@@ -119,7 +119,8 @@ echo "rootsbindir=/usr/sbin" > configparms
       --build=$(../scripts/config.guess) \
       --enable-kernel=4.14               \
       --with-headers=$LFS/usr/include    \
-      libc_cv_slibdir=/usr/lib
+      libc_cv_slibdir=/usr/lib           \
+      --disable-werror
 make -j$(nproc)
 make DESTDIR=$LFS install
 # Fix a hard coded path to the executable loader in the ldd script:

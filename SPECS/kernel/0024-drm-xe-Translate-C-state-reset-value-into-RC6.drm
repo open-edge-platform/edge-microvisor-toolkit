@@ -1,0 +1,52 @@
+From bca1374f4881fd32dd037aa75984ced01b15f8e0 Mon Sep 17 00:00:00 2001
+From: Gustavo Sousa <gustavo.sousa@intel.com>
+Date: Mon, 9 Mar 2026 21:42:12 -0300
+Subject: [PATCH 24/43] drm/xe: Translate C-state "reset value" into RC6
+
+There are higher level sleep states that will cause RC6 state readout to
+come back with an "in-reset" value. That is the case with NVL-P. As
+those states are only possible if the GT is already in C6, let's just
+translate the "reset value" into C6 when doing the readout.
+
+Bspec: 67651
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/regs/xe_gt_regs.h | 1 +
+ drivers/gpu/drm/xe/xe_guc_pc.c       | 8 ++++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/regs/xe_gt_regs.h b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+index 31aebd6566d8..85b170cc6831 100644
+--- a/drivers/gpu/drm/xe/regs/xe_gt_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+@@ -20,6 +20,7 @@
+ #define MTL_MIRROR_TARGET_WP1				XE_REG(0xc60)
+ #define   MTL_CAGF_MASK					REG_GENMASK(8, 0)
+ #define   MTL_CC_MASK					REG_GENMASK(12, 9)
++#define   MTL_CRST					0xf
+ 
+ /* RPM unit config (Gen8+) */
+ #define RPM_CONFIG0					XE_REG(0xd00)
+diff --git a/drivers/gpu/drm/xe/xe_guc_pc.c b/drivers/gpu/drm/xe/xe_guc_pc.c
+index 5e5495a39a3c..f4276bb6eede 100644
+--- a/drivers/gpu/drm/xe/xe_guc_pc.c
++++ b/drivers/gpu/drm/xe/xe_guc_pc.c
+@@ -730,6 +730,14 @@ enum xe_gt_idle_state xe_guc_pc_c_status(struct xe_guc_pc *pc)
+ 	if (GRAPHICS_VERx100(gt_to_xe(gt)) >= 1270) {
+ 		reg = xe_mmio_read32(&gt->mmio, MTL_MIRROR_TARGET_WP1);
+ 		gt_c_state = REG_FIELD_GET(MTL_CC_MASK, reg);
++
++		/*
++		 * There are higher level sleep states that will cause this
++		 * field to read out as its reset state, and those are only
++		 * possible after the GT is already in C6.
++		 */
++		if (gt_c_state == MTL_CRST)
++			gt_c_state = GT_C6;
+ 	} else {
+ 		reg = xe_mmio_read32(&gt->mmio, GT_CORE_STATUS);
+ 		gt_c_state = REG_FIELD_GET(RCN_MASK, reg);
+-- 
+2.43.0
+

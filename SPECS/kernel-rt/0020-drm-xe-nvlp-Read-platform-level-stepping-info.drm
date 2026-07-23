@@ -1,0 +1,106 @@
+From 67f8ea2bcfeab42548a0ecae29935b3e2be58789 Mon Sep 17 00:00:00 2001
+From: Gustavo Sousa <gustavo.sousa@intel.com>
+Date: Mon, 9 Mar 2026 21:42:08 -0300
+Subject: [PATCH 20/43] drm/xe/nvlp: Read platform-level stepping info
+
+There will be a NVL-P workaround for which we will need to know the
+platform-level stepping information in order to decide whether to apply
+it or not.
+
+While NVL-P has a nice mapping between the PCI revid and our symbolic
+stepping enumeration, not all platforms are like that: (i) Some
+platforms will have a single PCI revid used for a set platform level
+steppings (ii) and some might even require specific mappings.
+
+To make things simpler, let's include stepping information in the device
+info only on demand, for those platforms where it is needed for
+workaround checks.
+
+v2:
+  - Call xe_step_platform_get() very early, to allow device workarounds
+    to use it in early stages of device initialization. (Matt)
+
+Bspec: 74201
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com> # v1
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_pci.c        |  2 ++
+ drivers/gpu/drm/xe/xe_step.c       | 22 ++++++++++++++++++++++
+ drivers/gpu/drm/xe/xe_step.h       |  2 ++
+ drivers/gpu/drm/xe/xe_step_types.h |  1 +
+ 4 files changed, 27 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
+index c84f192d974a..3d0a69002f10 100644
+--- a/drivers/gpu/drm/xe/xe_pci.c
++++ b/drivers/gpu/drm/xe/xe_pci.c
+@@ -754,6 +754,8 @@ static int xe_info_init_early(struct xe_device *xe,
+ 	xe->info.max_gt_per_tile = desc->max_gt_per_tile;
+ 	xe->info.tile_count = 1 + desc->max_remote_tiles;
+ 
++	xe_step_platform_get(xe);
++
+ 	err = xe_tile_init_early(xe_device_get_root_tile(xe), xe, 0);
+ 	if (err)
+ 		return err;
+diff --git a/drivers/gpu/drm/xe/xe_step.c b/drivers/gpu/drm/xe/xe_step.c
+index 064b604b5b94..d0f888c31831 100644
+--- a/drivers/gpu/drm/xe/xe_step.c
++++ b/drivers/gpu/drm/xe/xe_step.c
+@@ -108,6 +108,28 @@ static const int pvc_basedie_subids[] = {
+ 
+ __diag_pop();
+ 
++/**
++ * xe_step_platform_get - Determine platform-level stepping from PCI revid
++ * @xe: Xe device
++ *
++ * Convert the PCI revid into a platform-level stepping value and store that
++ * in the device info.
++ */
++void xe_step_platform_get(struct xe_device *xe)
++{
++	/*
++	 * Not all platforms map PCI revid directly into our symbolic stepping
++	 * enumeration. Some platforms will have a single PCI revid used for a
++	 * range platform level steppings and some might even require specific
++	 * mappings. So prefer to err on the side of caution and include only
++	 * the platforms from which we need the stepping info for workaround
++	 * checks.
++	 */
++
++	if (xe->info.platform == XE_NOVALAKE_P)
++		xe->info.step.platform = STEP_A0 + xe->info.revid;
++}
++
+ /**
+  * xe_step_pre_gmdid_get - Determine IP steppings from PCI revid
+  * @xe: Xe device
+diff --git a/drivers/gpu/drm/xe/xe_step.h b/drivers/gpu/drm/xe/xe_step.h
+index 6febb7fac476..41f1c95c46e5 100644
+--- a/drivers/gpu/drm/xe/xe_step.h
++++ b/drivers/gpu/drm/xe/xe_step.h
+@@ -12,6 +12,8 @@
+ 
+ struct xe_device;
+ 
++void xe_step_platform_get(struct xe_device *xe);
++
+ void xe_step_pre_gmdid_get(struct xe_device *xe);
+ void xe_step_gmdid_get(struct xe_device *xe,
+ 		       u32 graphics_gmdid_revid,
+diff --git a/drivers/gpu/drm/xe/xe_step_types.h b/drivers/gpu/drm/xe/xe_step_types.h
+index d978cc2512f2..43ca73850739 100644
+--- a/drivers/gpu/drm/xe/xe_step_types.h
++++ b/drivers/gpu/drm/xe/xe_step_types.h
+@@ -9,6 +9,7 @@
+ #include <linux/types.h>
+ 
+ struct xe_step_info {
++	u8 platform;
+ 	u8 graphics;
+ 	u8 media;
+ 	u8 basedie;
+-- 
+2.43.0
+

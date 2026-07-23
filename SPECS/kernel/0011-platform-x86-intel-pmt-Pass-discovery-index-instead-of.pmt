@@ -1,0 +1,56 @@
+From 532f0f3949dd27d8df1d77ef346f4b3ae1912757 Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:51:50 -0700
+Subject: [PATCH 11/22] platform/x86/intel/pmt: Pass discovery index instead of
+ resource
+
+Change PMT class code to pass a discovery index rather than a direct struct
+resource when creating entries. This allows the class to identify the
+discovery source generically without assuming PCI BAR resources. For PCI
+devices, the index still resolves to a resource in the intel_vsec_device.
+Other discovery sources, such as ACPI, can use the same index without
+needing a struct resource.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmt/class.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmt/class.c b/drivers/platform/x86/intel/pmt/class.c
+index a4d6ffed2fed..f94f51178043 100644
+--- a/drivers/platform/x86/intel/pmt/class.c
++++ b/drivers/platform/x86/intel/pmt/class.c
+@@ -207,11 +207,12 @@ EXPORT_SYMBOL_GPL(intel_pmt_class);
+ 
+ static int intel_pmt_populate_entry(struct intel_pmt_entry *entry,
+ 				    struct intel_vsec_device *ivdev,
+-				    struct resource *disc_res)
++				    int idx)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(ivdev->dev);
+ 	struct device *dev = &ivdev->auxdev.dev;
+ 	struct intel_pmt_header *header = &entry->header;
++	struct resource *disc_res;
+ 	u8 bir;
+ 
+ 	/*
+@@ -236,6 +237,7 @@ static int intel_pmt_populate_entry(struct intel_pmt_entry *entry,
+ 		 * For access_type LOCAL, the base address is as follows:
+ 		 * base address = end of discovery region + base offset
+ 		 */
++		disc_res = &ivdev->resource[idx];
+ 		entry->base_addr = disc_res->end + 1 + header->base_offset;
+ 
+ 		/*
+@@ -413,7 +415,7 @@ int intel_pmt_dev_create(struct intel_pmt_entry *entry, struct intel_pmt_namespa
+ 			return ret;
+ 	}
+ 
+-	ret = intel_pmt_populate_entry(entry, intel_vsec_dev, &intel_vsec_dev->resource[idx]);
++	ret = intel_pmt_populate_entry(entry, intel_vsec_dev, idx);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.43.0
+

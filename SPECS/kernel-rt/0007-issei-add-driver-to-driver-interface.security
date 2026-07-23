@@ -1,22 +1,36 @@
-From ca7c252c19765c0eacda46f17c347c2318c4733b Mon Sep 17 00:00:00 2001
-From: "Abliyev, Reuven" <reuven.abliyev@intel.com>
+From eb7e295cc7026e32ca15eae515b8c7c2d0cd749d Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
 Date: Thu, 27 Mar 2025 17:55:25 +0200
 Subject: [PATCH 7/7] issei: add driver to driver interface
 
 This enables communication with ISSEI device from the kernel modules
 
-Signed-off-by: Abliyev, Reuven <reuven.abliyev@intel.com>
+Co-developed-by: Reuven Abliyev <reuvenab@gmail.com>
+Signed-off-by: Reuven Abliyev <reuvenab@gmail.com>
 Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
 ---
+ MAINTAINERS                       |   1 +
  drivers/misc/issei/Makefile       |   1 +
- drivers/misc/issei/issei_device.c | 264 ++++++++++++++++++++++++++++++
+ drivers/misc/issei/issei_device.c | 244 ++++++++++++++++++++++++++++++
  include/linux/issei_device.h      |  30 ++++
- 3 files changed, 295 insertions(+)
+ 4 files changed, 276 insertions(+)
  create mode 100644 drivers/misc/issei/issei_device.c
  create mode 100644 include/linux/issei_device.h
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 353ae8bbce62..31b7431c134a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13176,6 +13176,7 @@ S:	Supported
+ F:	Documentation/ABI/testing/sysfs-class-issei
+ F:	Documentation/driver-api/issei/issei.rst
+ F:	drivers/misc/issei/
++F:	include/linux/issei_device.h
+ F:	include/uapi/linux/issei.h
+ 
+ INTEL SGX
 diff --git a/drivers/misc/issei/Makefile b/drivers/misc/issei/Makefile
-index fb904fda39499..e4dc3599342f2 100644
+index 8fac360c3342..cc4cbf195ad1 100644
 --- a/drivers/misc/issei/Makefile
 +++ b/drivers/misc/issei/Makefile
 @@ -9,6 +9,7 @@ issei-objs += fw_client.o
@@ -29,12 +43,12 @@ index fb904fda39499..e4dc3599342f2 100644
  issei-heci-objs := pci_heci.o
 diff --git a/drivers/misc/issei/issei_device.c b/drivers/misc/issei/issei_device.c
 new file mode 100644
-index 0000000000000..33417bd160497
+index 000000000000..b2d7fe9724c4
 --- /dev/null
 +++ b/drivers/misc/issei/issei_device.c
-@@ -0,0 +1,264 @@
+@@ -0,0 +1,244 @@
 +// SPDX-License-Identifier: GPL-2.0
-+/* Copyright (C) 2025 Intel Corporation */
++/* Copyright (C) 2025-2026 Intel Corporation */
 +#include <linux/device.h>
 +#include <linux/dev_printk.h>
 +#include <linux/sched/signal.h>
@@ -43,14 +57,14 @@ index 0000000000000..33417bd160497
 +#include <linux/issei_device.h>
 +#include <linux/string.h>
 +#include <linux/types.h>
-+#include "linux/uuid.h"
-+#include "linux/wait.h"
++#include <linux/uuid.h>
++#include <linux/wait.h>
 +
 +#include "issei_dev.h"
 +#include "host_client.h"
 +
 +/**
-+ * issei_device_open - find create issei device object.
++ * issei_device_open - open issei device context.
 + * @match: pointer to callback that should return non-zero when matching device is found
 + * @data: user data to pass to match callback
 + *
@@ -77,7 +91,7 @@ index 0000000000000..33417bd160497
 +EXPORT_SYMBOL_GPL(issei_device_open);
 +
 +/**
-+ * issei_device_release - release issei device object.
++ * issei_device_release - release issei device context.
 + * @ctx: opaque context
 + */
 +void issei_device_release(void *ctx)
@@ -91,7 +105,7 @@ index 0000000000000..33417bd160497
 +EXPORT_SYMBOL_GPL(issei_device_release);
 +
 +/**
-+ * issei_device_connect - connect to firmware client.
++ * issei_device_connect - connect to the firmware client.
 + * @ctx: opaque context
 + * @client_uuid: UUID of firmware client to connect
 + * @conn: pointer for client data to fill on successful connection
@@ -102,24 +116,18 @@ index 0000000000000..33417bd160497
 +{
 +	struct issei_host_client *cl = (struct issei_host_client *)ctx;
 +	struct issei_device *idev = cl->idev;
-+	int ret;
 +
 +	if (idev->rst_state != ISSEI_RST_STATE_DONE) {
 +		dev_dbg(&idev->dev, "Device is in transition\n");
 +		return -ENODEV;
 +	}
-+	ret = issei_cl_connect(cl, client_uuid, &conn->max_msg_length,
++	return issei_cl_connect(cl, client_uuid, &conn->max_msg_length,
 +			       &conn->protocol_version, &conn->flags);
-+	if (ret) {
-+		dev_info(&idev->dev, "failed to connect ret = %d\n", ret);
-+		return ret;
-+	}
-+	return 0;
 +}
 +EXPORT_SYMBOL_GPL(issei_device_connect);
 +
 +/**
-+ * issei_device_disconnect - disconnect from firmware client.
++ * issei_device_disconnect - disconnect from the firmware client.
 + * @ctx: opaque context
 + *
 + * Return: 0 on success, <0 on error
@@ -128,24 +136,18 @@ index 0000000000000..33417bd160497
 +{
 +	struct issei_host_client *cl = (struct issei_host_client *)ctx;
 +	struct issei_device *idev = cl->idev;
-+	int ret;
 +
 +	if (idev->rst_state != ISSEI_RST_STATE_DONE) {
 +		dev_dbg(&idev->dev, "Device is in transition\n");
 +		return -ENODEV;
 +	}
 +
-+	ret = issei_cl_disconnect(cl);
-+	if (ret) {
-+		dev_info(&idev->dev, "failed to disconnect ret = %d\n", ret);
-+		return ret;
-+	}
-+	return 0;
++	return issei_cl_disconnect(cl);
 +}
 +EXPORT_SYMBOL_GPL(issei_device_disconnect);
 +
 +/**
-+ * issei_device_write - send data to firmware client.
++ * issei_device_write - send data to the firmware client.
 + * @ctx: opaque context
 + * @ubuf: data to send
 + * @length: data length
@@ -156,16 +158,15 @@ index 0000000000000..33417bd160497
 +{
 +	struct issei_host_client *cl = (struct issei_host_client *)ctx;
 +	struct issei_device *idev = cl->idev;
-+	const u8 *buf;
 +	ssize_t ret;
-+
-+	if (!length)
-+		return 0;
 +
 +	if (idev->rst_state != ISSEI_RST_STATE_DONE) {
 +		dev_dbg(&idev->dev, "Device is in transition\n");
 +		return -EBUSY;
 +	}
++
++	if (!length)
++		return 0;
 +
 +	/* sanity check */
 +	if (length > idev->dma.length.h2f) {
@@ -174,21 +175,19 @@ index 0000000000000..33417bd160497
 +		return -EFBIG;
 +	}
 +
-+	buf = kmemdup(ubuf, length, GFP_KERNEL);
-+	if (!buf) {
-+		dev_dbg(&idev->dev, "Failed to allocate buf size %zu\n", length);
++	u8 *buf __free(kfree) = kmemdup(ubuf, length, GFP_KERNEL);
++	if (!buf)
 +		return -ENOMEM;
-+	}
 +
 +	do {
 +		ret = issei_cl_write(cl, buf, length);
-+		if (ret < 0 && ret != -EAGAIN) {
-+			kfree(buf);
-+			dev_dbg(&idev->dev, "failed to write %zd\n", ret);
++		if (ret < 0 && ret != -EAGAIN)
 +			return ret;
-+		}
-+		if (wait_event_interruptible(cl->write_wait,
-+					     (issei_cl_check_write(cl) != 1))) {
++		/* buf is consumed by issei_cl_write on success */
++		if (ret >= 0)
++			retain_and_null_ptr(buf);
++		if (wait_event_interruptible(cl->write_wait, issei_cl_check_write(cl) != 1)) {
++			issei_cl_clean_all_wbuf(cl);
 +			if (signal_pending(current))
 +				return -EINTR;
 +			return -ERESTARTSYS;
@@ -200,7 +199,7 @@ index 0000000000000..33417bd160497
 +EXPORT_SYMBOL_GPL(issei_device_write);
 +
 +/**
-+ * issei_device_read - receive data from firmware client.
++ * issei_device_read - receive data from the firmware client.
 + * @ctx: opaque context
 + * @ubuf: buffer for data
 + * @length: buffer length
@@ -212,16 +211,15 @@ index 0000000000000..33417bd160497
 +	struct issei_host_client *cl = (struct issei_host_client *)ctx;
 +	struct issei_device *idev = cl->idev;
 +	u8 *data = NULL;
-+	size_t data_size = length;
 +	ssize_t ret;
-+
-+	if (!length)
-+		return 0;
 +
 +	if (idev->rst_state != ISSEI_RST_STATE_DONE) {
 +		dev_dbg(&idev->dev, "Device is in transition\n");
 +		return -EBUSY;
 +	}
++
++	if (!length)
++		return 0;
 +
 +	/* sanity check */
 +	if (length > idev->dma.length.f2h) {
@@ -230,26 +228,22 @@ index 0000000000000..33417bd160497
 +		return -EFBIG;
 +	}
 +
-+	ret = issei_cl_read(cl, &data, &data_size);
-+	if (!ret)
-+		goto copy;
-+	if (ret != -ENOENT)
-+		return ret;
++	ret = issei_cl_read(cl, &data, length);
++	if (ret < 0) {
++		if (ret != -ENOENT)
++			return ret;
 +
-+	if (wait_event_interruptible(cl->read_wait,
-+				     (issei_cl_check_read(cl) != 0))) {
-+		if (signal_pending(current))
-+			return -EINTR;
-+		return -ERESTARTSYS;
++		if (wait_event_interruptible(cl->read_wait, issei_cl_check_read(cl) != 0)) {
++			if (signal_pending(current))
++				return -EINTR;
++			return -ERESTARTSYS;
++		}
++		ret = issei_cl_read(cl, &data, length);
++		if (ret < 0)
++			return ret;
 +	}
 +
-+	ret = issei_cl_read(cl, &data, &data_size);
-+	if (ret)
-+		return ret;
-+
-+copy:
-+	memcpy(ubuf, data, data_size);
-+	ret = data_size;
++	memcpy(ubuf, data, ret);
 +	kfree(data);
 +	return ret;
 +}
@@ -299,12 +293,12 @@ index 0000000000000..33417bd160497
 +EXPORT_SYMBOL_GPL(issei_device_register_interface);
 diff --git a/include/linux/issei_device.h b/include/linux/issei_device.h
 new file mode 100644
-index 0000000000000..862abdb004199
+index 000000000000..e8bafb09fd20
 --- /dev/null
 +++ b/include/linux/issei_device.h
 @@ -0,0 +1,30 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
-+/* Copyright (C) 2025 Intel Corporation */
++/* Copyright (C) 2025-2026 Intel Corporation */
 +#ifndef _ISSEI_DEVICE_H_
 +#define _ISSEI_DEVICE_H_
 +

@@ -1,0 +1,47 @@
+From fa53a686612b6bae60340e1420747e931c493238 Mon Sep 17 00:00:00 2001
+From: Kan Liang <kan.liang@linux.intel.com>
+Date: Tue, 9 Sep 2025 14:04:43 -0700
+Subject: [PATCH 08/39] perf/x86: Use x86_perf_regs in the x86 nmi handler
+
+More and more regs will be supported in the overflow, e.g., more vector
+registers, SSP, etc. The generic pt_regs struct cannot store all of
+them. Use a X86 specific x86_perf_regs instead.
+
+The struct pt_regs *regs is still passed to x86_pmu_handle_irq(). There
+is no functional change for the existing code.
+
+AMD IBS's NMI handler doesn't utilize the static call
+x86_pmu_handle_irq(). The x86_perf_regs struct doesn't apply to the AMD
+IBS. It can be added separately later when AMD IBS supports more regs.
+
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/events/core.c b/arch/x86/events/core.c
+index 03ce1bc7ef2e..439c2f3b1623 100644
+--- a/arch/x86/events/core.c
++++ b/arch/x86/events/core.c
+@@ -1785,6 +1785,7 @@ EXPORT_SYMBOL_FOR_KVM(perf_put_guest_lvtpc);
+ static int
+ perf_event_nmi_handler(unsigned int cmd, struct pt_regs *regs)
+ {
++	struct x86_perf_regs x86_regs;
+ 	u64 start_clock;
+ 	u64 finish_clock;
+ 	int ret;
+@@ -1808,7 +1809,8 @@ perf_event_nmi_handler(unsigned int cmd, struct pt_regs *regs)
+ 		return NMI_DONE;
+ 
+ 	start_clock = sched_clock();
+-	ret = static_call(x86_pmu_handle_irq)(regs);
++	x86_regs.regs = *regs;
++	ret = static_call(x86_pmu_handle_irq)(&x86_regs.regs);
+ 	finish_clock = sched_clock();
+ 
+ 	perf_sample_event_took(finish_clock - start_clock);
+-- 
+2.43.0
+

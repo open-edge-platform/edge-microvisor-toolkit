@@ -1,0 +1,100 @@
+From 99eb7d8c22cf4e444ddf4ddaf18dcf25ba7a1de8 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Tue, 2 Dec 2025 09:11:47 +0200
+Subject: [PATCH 07/17] mei: csc: wake device while reading firmware status
+
+The CSC has firmware status registers in MMIO and they may be
+unaccessible while device is suspended.
+Wake device while reading firmware status via sysfs.
+
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/main.c    | 18 ++++++++++++++----
+ drivers/misc/mei/mei_dev.h |  2 ++
+ drivers/misc/mei/pci-csc.c |  2 ++
+ 3 files changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/misc/mei/main.c b/drivers/misc/mei/main.c
+index 6f26d5160788..54f70f513482 100644
+--- a/drivers/misc/mei/main.c
++++ b/drivers/misc/mei/main.c
+@@ -4,6 +4,7 @@
+  * Intel Management Engine Interface (Intel MEI) Linux driver
+  */
+ 
++#include <linux/cleanup.h>
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/kernel.h>
+@@ -13,6 +14,7 @@
+ #include <linux/errno.h>
+ #include <linux/types.h>
+ #include <linux/fcntl.h>
++#include <linux/pm_runtime.h>
+ #include <linux/poll.h>
+ #include <linux/init.h>
+ #include <linux/ioctl.h>
+@@ -982,14 +984,22 @@ static DEVICE_ATTR_RO(trc);
+ static ssize_t fw_status_show(struct device *device,
+ 		struct device_attribute *attr, char *buf)
+ {
+-	struct mei_device *dev = dev_get_drvdata(device);
++	struct mei_device *mdev = dev_get_drvdata(device);
+ 	struct mei_fw_status fw_status;
+ 	int err, i;
+ 	ssize_t cnt = 0;
+ 
+-	mutex_lock(&dev->device_lock);
+-	err = mei_fw_status(dev, &fw_status);
+-	mutex_unlock(&dev->device_lock);
++	if (mdev->read_fws_need_resume) {
++		err = pm_runtime_resume_and_get(mdev->parent);
++		if (err) {
++			dev_err(device, "read fw_status resume error = %d\n", err);
++			return err;
++		}
++	}
++	scoped_guard(mutex, &mdev->device_lock)
++		err = mei_fw_status(mdev, &fw_status);
++	if (mdev->read_fws_need_resume)
++		pm_runtime_put_autosuspend(mdev->parent);
+ 	if (err) {
+ 		dev_err(device, "read fw_status error = %d\n", err);
+ 		return err;
+diff --git a/drivers/misc/mei/mei_dev.h b/drivers/misc/mei/mei_dev.h
+index 1796c6793a94..d8634a726990 100644
+--- a/drivers/misc/mei/mei_dev.h
++++ b/drivers/misc/mei/mei_dev.h
+@@ -491,6 +491,7 @@ struct mei_dev_timeouts {
+  *
+  * @recvd_hw_ready : hw ready message received flag
+  * @pg_blocked  : low power mode is not allowed
++ * @read_fws_need_resume: the FW status handler needs HW woken from sleep
+  *
+  * @wait_hw_ready : wait queue for receive HW ready message form FW
+  * @wait_pg     : wait queue for receive PG message from FW
+@@ -577,6 +578,7 @@ struct mei_device {
+ 
+ 	bool recvd_hw_ready;
+ 	bool pg_blocked;
++	bool read_fws_need_resume;
+ 
+ 	/*
+ 	 * waiting queue for receive message from FW
+diff --git a/drivers/misc/mei/pci-csc.c b/drivers/misc/mei/pci-csc.c
+index 15e170b1e0b6..70792bf9b3c0 100644
+--- a/drivers/misc/mei/pci-csc.c
++++ b/drivers/misc/mei/pci-csc.c
+@@ -67,6 +67,8 @@ static int mei_csc_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!mdev)
+ 		return -ENOMEM;
+ 
++	mdev->read_fws_need_resume = true;
++
+ 	hw = to_me_hw(mdev);
+ 
+ 	/*
+-- 
+2.43.0
+

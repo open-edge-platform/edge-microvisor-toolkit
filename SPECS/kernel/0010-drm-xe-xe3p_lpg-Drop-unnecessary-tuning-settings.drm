@@ -1,0 +1,52 @@
+From 9e35d064439a9005ac9fcc4be3e279ffca845ae3 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 6 Feb 2026 15:36:04 -0300
+Subject: [PATCH 10/43] drm/xe/xe3p_lpg: Drop unnecessary tuning settings
+
+From Xe3p onward, the desired settings are now the hardware's
+default values and the driver does not need to program them explicitly.
+
+Since 35.xx seems to be the starting point for "Xe3p" version numbers;
+we'll adjust the bounds of the old programming to stop at 34.99.  Even
+though there's no platform with version 35.00 at the moment, this is
+simplest in case one does show up in the future.
+
+Bspec: 72161, 59928, 59930
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Matt Atwood <matthew.s.atwood@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_tuning.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_tuning.c b/drivers/gpu/drm/xe/xe_tuning.c
+index a97872b3214b..694385ae75f1 100644
+--- a/drivers/gpu/drm/xe/xe_tuning.c
++++ b/drivers/gpu/drm/xe/xe_tuning.c
+@@ -32,12 +32,12 @@ static const struct xe_rtp_entry_sr gt_tunings[] = {
+ 	/* Xe2 */
+ 
+ 	{ XE_RTP_NAME("Tuning: L3 cache"),
+-	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(2001, XE_RTP_END_VERSION_UNDEFINED)),
++	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(2001, 3499)),
+ 	  XE_RTP_ACTIONS(FIELD_SET(XEHP_L3SQCREG5, L3_PWM_TIMER_INIT_VAL_MASK,
+ 				   REG_FIELD_PREP(L3_PWM_TIMER_INIT_VAL_MASK, 0x7f)))
+ 	},
+ 	{ XE_RTP_NAME("Tuning: L3 cache - media"),
+-	  XE_RTP_RULES(MEDIA_VERSION_RANGE(2000, XE_RTP_END_VERSION_UNDEFINED)),
++	  XE_RTP_RULES(MEDIA_VERSION_RANGE(2000, 3499)),
+ 	  XE_RTP_ACTIONS(FIELD_SET(XE2LPM_L3SQCREG5, L3_PWM_TIMER_INIT_VAL_MASK,
+ 				   REG_FIELD_PREP(L3_PWM_TIMER_INIT_VAL_MASK, 0x7f)))
+ 	},
+@@ -53,7 +53,7 @@ static const struct xe_rtp_entry_sr gt_tunings[] = {
+ 			 SET(XE2LPM_CCCHKNREG1, L3CMPCTRL))
+ 	},
+ 	{ XE_RTP_NAME("Tuning: Enable compressible partial write overfetch in L3"),
+-	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(2001, XE_RTP_END_VERSION_UNDEFINED)),
++	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(2001, 3499)),
+ 	  XE_RTP_ACTIONS(SET(L3SQCREG3, COMPPWOVERFETCHEN))
+ 	},
+ 	{ XE_RTP_NAME("Tuning: Enable compressible partial write overfetch in L3 - media"),
+-- 
+2.43.0
+

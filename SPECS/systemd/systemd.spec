@@ -50,7 +50,7 @@ Version:        255
 # determine the build information from local checkout
 Version:        %(tools/meson-vcs-tag.sh . error | sed -r 's/-([0-9])/.^\1/; s/-g/_g/')
 %endif
-Release:        34%{?dist}
+Release:        35%{?dist}
 
 # FIXME - hardcode to 'stable' for now as that's what we have in our blobstore
 %global stable 1
@@ -669,8 +669,15 @@ package and is meant for use in exitrds.
 %autosetup -n %{?commit:%{name}%[%stable?"-stable":""]-%{commit}}%{!?commit:%{name}%[%stable?"-stable":""]-%{version_no_tilde}} -p1
 
 %build
-export CFLAGS="$CFLAGS -D__counted_by(x)="
+export CFLAGS="$CFLAGS -D__counted_by(x)= -Wno-error=override-init"
 export CXXFLAGS="$CXXFLAGS -D__counted_by(x)="
+
+# Workaround: demote unknown-filesystem check from error to warning
+# so new kernel magic numbers (GUEST_MEMFD_MAGIC, NULL_FS_MAGIC) don't abort the build
+sed -i "s/error('Unknown filesystems/warning('Unknown filesystems/" \
+    src/basic/meson.build
+grep -q "warning('Unknown filesystems" src/basic/meson.build || \
+    (echo "ERROR: sed patch did not apply to meson.build" && exit 1)
 
 CONFIGURE_OPTS=(
         -Dmode=release
@@ -1267,6 +1274,10 @@ rm -f %{name}.lang
 # %autochangelog. So we need to continue manually maintaining the
 # changelog here.
 %changelog
+* Thu 9 July 2026 Lishan Liu <lishan.liu@intel.com> - 255-35
+- Workaround to resolve build error due to
+  unkonw filesystem magic numbers from kernel v7.0
+
 * Tue Jun 9 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-34
 - merge from Azure Linux 3.0.20260602-3.0
 - Backport upstream commit 78f8d5e: network: also check ID_NET_MANAGED_BY

@@ -1,0 +1,40 @@
+From 1d63f1a07f0be00169c712edd8ef7634681b9307 Mon Sep 17 00:00:00 2001
+From: Li Yifan <yifan2.li@intel.com>
+Date: Fri, 3 Apr 2026 16:47:12 +0800
+Subject: [PATCH 7/7] [CONFLICT] Resolve pmt_telem_find_and_register_endpoint
+ conflict
+
+There is pmt_telem_find_and_register_endpoint conflict when apply
+both vsec patch series and pmc enablement patch series. Solve it
+in pmc/core.c
+
+Signed-off-by: Li Yifan <yifan2.li@intel.com>
+---
+ drivers/platform/x86/intel/pmc/core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/core.c b/drivers/platform/x86/intel/pmc/core.c
+index d57571192f92..0cde666e8981 100644
+--- a/drivers/platform/x86/intel/pmc/core.c
++++ b/drivers/platform/x86/intel/pmc/core.c
+@@ -1391,7 +1391,7 @@ void pmc_core_punit_pmt_init(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_de
+ 	}
+ 
+ 	if (pmc_dev_info->pc_guid) {
+-		ep = pmt_telem_find_and_register_endpoint(pcidev, pmc_dev_info->pc_guid, 0);
++		ep = pmt_telem_find_and_register_endpoint(&pcidev->dev, pmc_dev_info->pc_guid, 0);
+ 		if (IS_ERR(ep)) {
+ 			dev_err(&pmcdev->pdev->dev,
+ 				"pmc_core: couldn't get Package C-state telem endpoint %ld",
+@@ -1681,7 +1681,7 @@ static int pmc_core_get_telem_info(struct pmc_dev *pmcdev, struct pmc_dev_info *
+ 		if (!pcidev)
+ 			return -ENODEV;
+ 
+-		ep = pmt_telem_find_and_register_endpoint(&pcidev, pmc->map->lpm_req_guid, 0);
++		ep = pmt_telem_find_and_register_endpoint(&pcidev->dev, pmc->map->lpm_req_guid, 0);
+ 		if (IS_ERR(ep)) {
+ 			dev_dbg(&pmcdev->pdev->dev, "couldn't get telem endpoint %pe", ep);
+ 			return -EPROBE_DEFER;
+-- 
+2.43.0
+

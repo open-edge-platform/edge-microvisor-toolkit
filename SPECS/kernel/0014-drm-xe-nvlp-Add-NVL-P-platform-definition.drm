@@ -1,0 +1,114 @@
+From 4b5391329428e83bbb7ac5a101449ed1bfc4dc0c Mon Sep 17 00:00:00 2001
+From: Shekhar Chauhan <shekhar.chauhan@intel.com>
+Date: Fri, 6 Feb 2026 15:36:08 -0300
+Subject: [PATCH 14/43] drm/xe/nvlp: Add NVL-P platform definition
+
+Add platform definition along with device IDs for NVL-P.  Here is the
+list of device descriptor fields and associated Bspec references:
+
+  .dma_mask_size (Bspec 74198)
+  .has_cached_pt (Bspec 71582)
+  .has_display (Bspec 74196)
+  .has_flat_ccs (Bspec 74110)
+  .has_page_reclaim_hw_assist (Bspec 73451)
+  .max_gt_per_tile (Bspec 74196)
+  .va_bits (Bspec 74198)
+  .vm_max_level (Bspec 59507)
+
+v2:
+  - Add list of descriptor fields and Bspec references. (Matt)
+
+Signed-off-by: Shekhar Chauhan <shekhar.chauhan@intel.com>
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_bo.c             |  4 ++--
+ drivers/gpu/drm/xe/xe_pci.c            | 15 +++++++++++++++
+ drivers/gpu/drm/xe/xe_platform_types.h |  1 +
+ include/drm/intel/pciids.h             | 12 ++++++++++++
+ 4 files changed, 30 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_bo.c b/drivers/gpu/drm/xe/xe_bo.c
+index 29fffc81f240..198d4efdab08 100644
+--- a/drivers/gpu/drm/xe/xe_bo.c
++++ b/drivers/gpu/drm/xe/xe_bo.c
+@@ -512,8 +512,8 @@ static struct ttm_tt *xe_ttm_tt_create(struct ttm_buffer_object *ttm_bo,
+ 		/*
+ 		 * Display scanout is always non-coherent with the CPU cache.
+ 		 *
+-		 * For Xe_LPG and beyond, PPGTT PTE lookups are also
+-		 * non-coherent and require a CPU:WC mapping.
++		 * For Xe_LPG and beyond up to NVL-P (excluding), PPGTT PTE
++		 * lookups are also non-coherent and require a CPU:WC mapping.
+ 		 */
+ 		if ((!bo->cpu_caching && bo->flags & XE_BO_FLAG_SCANOUT) ||
+ 		     (!xe->info.has_cached_pt && bo->flags & XE_BO_FLAG_PAGETABLE))
+diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
+index bb7d89b076a2..8b57b7f5324e 100644
+--- a/drivers/gpu/drm/xe/xe_pci.c
++++ b/drivers/gpu/drm/xe/xe_pci.c
+@@ -449,6 +449,20 @@ static const struct xe_device_desc cri_desc = {
+ 	.vm_max_level = 4,
+ };
+ 
++static const struct xe_device_desc nvlp_desc = {
++	PLATFORM(NOVALAKE_P),
++	.dma_mask_size = 46,
++	.has_cached_pt = true,
++	.has_display = true,
++	.has_flat_ccs = 1,
++	.has_page_reclaim_hw_assist = true,
++	.has_pre_prod_wa = true,
++	.max_gt_per_tile = 2,
++	.require_force_probe = true,
++	.va_bits = 48,
++	.vm_max_level = 4,
++};
++
+ #undef PLATFORM
+ __diag_pop();
+ 
+@@ -478,6 +492,7 @@ static const struct pci_device_id pciidlist[] = {
+ 	INTEL_WCL_IDS(INTEL_VGA_DEVICE, &ptl_desc),
+ 	INTEL_NVLS_IDS(INTEL_VGA_DEVICE, &nvls_desc),
+ 	INTEL_CRI_IDS(INTEL_PCI_DEVICE, &cri_desc),
++	INTEL_NVLP_IDS(INTEL_VGA_DEVICE, &nvlp_desc),
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pciidlist);
+diff --git a/drivers/gpu/drm/xe/xe_platform_types.h b/drivers/gpu/drm/xe/xe_platform_types.h
+index f516dbddfd88..6cff385227ea 100644
+--- a/drivers/gpu/drm/xe/xe_platform_types.h
++++ b/drivers/gpu/drm/xe/xe_platform_types.h
+@@ -26,6 +26,7 @@ enum xe_platform {
+ 	XE_PANTHERLAKE,
+ 	XE_NOVALAKE_S,
+ 	XE_CRESCENTISLAND,
++	XE_NOVALAKE_P,
+ };
+ 
+ enum xe_subplatform {
+diff --git a/include/drm/intel/pciids.h b/include/drm/intel/pciids.h
+index 52520e684ab1..33b91cb2e684 100644
+--- a/include/drm/intel/pciids.h
++++ b/include/drm/intel/pciids.h
+@@ -900,4 +900,16 @@
+ #define INTEL_CRI_IDS(MACRO__, ...) \
+ 	MACRO__(0x674C, ## __VA_ARGS__)
+ 
++/* NVL-P */
++#define INTEL_NVLP_IDS(MACRO__, ...) \
++	MACRO__(0xD750, ## __VA_ARGS__), \
++	MACRO__(0xD751, ## __VA_ARGS__), \
++	MACRO__(0xD752, ## __VA_ARGS__), \
++	MACRO__(0xD753, ## __VA_ARGS__), \
++	MACRO__(0XD754, ## __VA_ARGS__), \
++	MACRO__(0XD755, ## __VA_ARGS__), \
++	MACRO__(0XD756, ## __VA_ARGS__), \
++	MACRO__(0XD757, ## __VA_ARGS__), \
++	MACRO__(0xD75F, ## __VA_ARGS__)
++
+ #endif /* __PCIIDS_H__ */
+-- 
+2.43.0
+

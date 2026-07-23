@@ -1,0 +1,27 @@
+From 652070988b8feafe33eea607724bf9ebbe65e5ab Mon Sep 17 00:00:00 2001
+From: Adrian Hunter <adrian.hunter@intel.com>
+Date: Fri, 15 Nov 2024 12:00:58 +0200
+Subject: [PATCH] scsi: ufs: ufs-pci: Add support for Intel Nova Lake
+
+Add PCI ID to support Intel Nova Lake, same as Intel Meteor Lake (MTL).
+
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
+ drivers/ufs/host/ufshcd-pci.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
+index 5f65dfad1a71..63f6b36b912f 100644
+--- a/drivers/ufs/host/ufshcd-pci.c
++++ b/drivers/ufs/host/ufshcd-pci.c
+@@ -695,6 +695,7 @@ static const struct pci_device_id ufshcd_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x7747), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0xE447), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ PCI_VDEVICE(INTEL, 0x4D47), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
++	{ PCI_VDEVICE(INTEL, 0xD335), (kernel_ulong_t)&ufs_intel_mtl_hba_vops },
+ 	{ }	/* terminate list */
+ };
+ 
+-- 
+2.43.0
+

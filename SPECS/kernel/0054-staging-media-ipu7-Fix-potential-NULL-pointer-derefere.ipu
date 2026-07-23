@@ -1,0 +1,61 @@
+From 0e28acadc552c6ee1ff3c9d6d708f5d60a33b0a8 Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Sat, 28 Feb 2026 17:21:52 +0800
+Subject: [PATCH 54/65] staging: media: ipu7: Fix potential NULL pointer
+ dereference in DMA free/unmap
+
+Check if MMU or dmap is valid before accessing them in ipu7_dma_free()
+and ipu7_dma_unmap_sg(). This prevents potential crashes if these
+functions are called after the MMU has been cleaned up."
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-dma.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-dma.c b/drivers/staging/media/ipu7/ipu7-dma.c
+index 39b9d12f2c68..57734a552aa7 100644
+--- a/drivers/staging/media/ipu7/ipu7-dma.c
++++ b/drivers/staging/media/ipu7/ipu7-dma.c
+@@ -249,12 +249,16 @@ void ipu7_dma_free(struct ipu7_bus_device *sys, size_t size, void *vaddr,
+ {
+ 	struct ipu7_mmu *mmu = sys->mmu;
+ 	struct pci_dev *pdev = sys->isp->pdev;
+-	struct iova *iova = find_iova(&mmu->dmap->iovad, PHYS_PFN(dma_handle));
++	struct iova *iova;
+ 	dma_addr_t pci_dma_addr, ipu7_iova;
+ 	struct vm_info *info;
+ 	struct page **pages;
+ 	unsigned int i;
+ 
++	if (!mmu || !mmu->dmap)
++		return;
++
++	iova = find_iova(&mmu->dmap->iovad, PHYS_PFN(dma_handle));
+ 	if (WARN_ON(!iova))
+ 		return;
+ 
+@@ -336,8 +340,7 @@ void ipu7_dma_unmap_sg(struct ipu7_bus_device *sys, struct scatterlist *sglist,
+ {
+ 	struct device *dev = &sys->auxdev.dev;
+ 	struct ipu7_mmu *mmu = sys->mmu;
+-	struct iova *iova = find_iova(&mmu->dmap->iovad,
+-				      PHYS_PFN(sg_dma_address(sglist)));
++	struct iova *iova;
+ 	struct scatterlist *sg;
+ 	dma_addr_t pci_dma_addr;
+ 	unsigned int i;
+@@ -345,6 +348,10 @@ void ipu7_dma_unmap_sg(struct ipu7_bus_device *sys, struct scatterlist *sglist,
+ 	if (!nents)
+ 		return;
+ 
++	if (!mmu || !mmu->dmap)
++		return;
++
++	iova = find_iova(&mmu->dmap->iovad, PHYS_PFN(sg_dma_address(sglist)));
+ 	if (WARN_ON(!iova))
+ 		return;
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,64 @@
+From 12e3ea5657345b694b0468dad1e1090d34b218af Mon Sep 17 00:00:00 2001
+From: "Yew, Chang Ching" <chang.ching.yew@intel.com>
+Date: Thu, 12 Mar 2026 15:13:58 +0800
+Subject: [PATCH 19/65] media: i2c: maxim-serdes: Add
+ acpi_dev_clear_dependencies()
+
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+Signed-off-by: Mokhtar, Mohamad Nor Syahid <mohamad.nor.syahid.mokhtar@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max_des.c | 6 ++++++
+ drivers/media/i2c/maxim-serdes/max_ser.c | 6 ++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max_des.c b/drivers/media/i2c/maxim-serdes/max_des.c
+index b52a8f5ed53a..019b7c0d622c 100644
+--- a/drivers/media/i2c/maxim-serdes/max_des.c
++++ b/drivers/media/i2c/maxim-serdes/max_des.c
+@@ -6,6 +6,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/acpi.h>
+ #include <linux/i2c-atr.h>
+ #include <linux/i2c-mux.h>
+ #include <linux/module.h>
+@@ -3157,6 +3158,11 @@ int max_des_probe(struct i2c_client *client, struct max_des *des)
+ 	if (ret)
+ 		goto err_disable_pocs;
+ 
++#ifdef CONFIG_ACPI
++	if (!acpi_disabled)
++		acpi_dev_clear_dependencies(ACPI_COMPANION(dev));
++#endif
++
+ 	ret = max_des_v4l2_register(priv);
+ 	if (ret)
+ 		goto err_i2c_adapter_deinit;
+diff --git a/drivers/media/i2c/maxim-serdes/max_ser.c b/drivers/media/i2c/maxim-serdes/max_ser.c
+index d69b8d7731ea..2b1a80952787 100644
+--- a/drivers/media/i2c/maxim-serdes/max_ser.c
++++ b/drivers/media/i2c/maxim-serdes/max_ser.c
+@@ -6,6 +6,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/acpi.h>
+ #include <linux/i2c-atr.h>
+ #include <linux/i2c-mux.h>
+ #include <linux/module.h>
+@@ -1866,6 +1867,11 @@ int max_ser_probe(struct i2c_client *client, struct max_ser *ser)
+ 	if (ret)
+ 		return ret;
+ 
++#ifdef CONFIG_ACPI
++	if (!acpi_disabled)
++		acpi_dev_clear_dependencies(ACPI_COMPANION(dev));
++#endif
++
+ 	ret = max_ser_v4l2_register(priv);
+ 	if (ret)
+ 		goto err_i2c_adapter_deinit;
+-- 
+2.43.0
+

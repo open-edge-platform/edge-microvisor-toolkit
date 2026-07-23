@@ -1,0 +1,54 @@
+From c296f8bd98271599d573f0f3f8d0cdc90376c2fe Mon Sep 17 00:00:00 2001
+From: Balamurugan C <balamurugan.c@intel.com>
+Date: Tue, 16 Jun 2026 12:55:50 +0530
+Subject: [PATCH 1/2] ASoC: Intel: soc-acpi: Add entry for sof_rt5682 in NVL
+ match table.
+
+Adding rt5682 I2S codec support for NVL platforms and entry in match table.
+
+Signed-off-by: Balamurugan C <balamurugan.c@intel.com>
+---
+ sound/soc/intel/common/soc-acpi-intel-nvl-match.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/sound/soc/intel/common/soc-acpi-intel-nvl-match.c b/sound/soc/intel/common/soc-acpi-intel-nvl-match.c
+index 48f576cb7d8f..de5d235f6077 100644
+--- a/sound/soc/intel/common/soc-acpi-intel-nvl-match.c
++++ b/sound/soc/intel/common/soc-acpi-intel-nvl-match.c
+@@ -9,6 +9,7 @@
+ #include <sound/soc-acpi.h>
+ #include <sound/soc-acpi-intel-match.h>
+ #include "soc-acpi-intel-sdw-mockup-match.h"
++#include <sound/soc-acpi-intel-ssp-common.h>
+ 
+ static const struct snd_soc_acpi_codecs nvl_essx_83x6 = {
+ 	.num_codecs = 3,
+@@ -20,6 +21,11 @@ static const struct snd_soc_acpi_codecs nvl_lt6911_hdmi = {
+ 	.codecs = {"INTC10B0"}
+ };
+ 
++static const struct snd_soc_acpi_codecs nvl_rt5682_rt5682s_hp = {
++	.num_codecs = 2,
++	.codecs = {RT5682_ACPI_HID, RT5682S_ACPI_HID},
++};
++
+ struct snd_soc_acpi_mach snd_soc_acpi_intel_nvl_machines[] = {
+ 	{
+ 		.comp_ids = &nvl_essx_83x6,
+@@ -36,6 +42,13 @@ struct snd_soc_acpi_mach snd_soc_acpi_intel_nvl_machines[] = {
+ 					SND_SOC_ACPI_TPLG_INTEL_SSP_MSB |
+ 					SND_SOC_ACPI_TPLG_INTEL_DMIC_NUMBER,
+ 	},
++	{
++		.comp_ids = &nvl_rt5682_rt5682s_hp,
++		.drv_name = "sof_rt5682",
++		.sof_tplg_filename = "sof-nvl", /* the tplg suffix is added at run time */
++		.tplg_quirk_mask = SND_SOC_ACPI_TPLG_INTEL_SSP_NUMBER|
++					SND_SOC_ACPI_TPLG_INTEL_SSP_MSB,
++	},
+ 	{},
+ };
+ EXPORT_SYMBOL_GPL(snd_soc_acpi_intel_nvl_machines);
+-- 
+2.43.0
+

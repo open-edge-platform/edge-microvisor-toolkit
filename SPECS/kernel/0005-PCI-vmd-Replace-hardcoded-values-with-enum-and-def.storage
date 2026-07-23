@@ -1,0 +1,139 @@
+From 029687b6eb8efeb85787aaaa27f68b6681a8840f Mon Sep 17 00:00:00 2001
+From: Szymon Durawa <szymon.durawa@linux.intel.com>
+Date: Wed, 13 May 2026 16:59:01 +0000
+Subject: [PATCH 5/9] PCI: vmd: Replace hardcoded values with enum and defines
+
+Add enum vmd_resource type to replace hardcoded values. Add defines for
+vmd bus start number based on VMD restriction value. No functional
+changes.
+
+Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
+---
+ drivers/pci/controller/vmd.c | 43 ++++++++++++++++++++++++------------
+ 1 file changed, 29 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index c0a953df5f23..9ff82a24e859 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -26,6 +26,11 @@
+ #define VMD_MEMBAR1	2
+ #define VMD_MEMBAR2	4
+ 
++/* VMD restriction value determines secondary start bus number */
++#define VMD_RESTRICT_0_BUS_START 0x0
++#define VMD_RESTRICT_1_BUS_START 0x80
++#define VMD_RESTRICT_2_BUS_START 0xE0
++
+ #define PCI_REG_VMCAP		0x40
+ #define BUS_RESTRICT_CAP(vmcap)	(vmcap & 0x1)
+ #define PCI_REG_VMCONFIG	0x44
+@@ -37,6 +42,13 @@
+ #define MB2_SHADOW_OFFSET	0x2000
+ #define MB2_SHADOW_SIZE		16
+ 
++enum vmd_resource {
++	VMD_RES_CFGBAR = 0, /* VMD Bus0 Config BAR */
++	VMD_RES_MBAR_1, /* VMD Bus0 Resource MemBAR 1 */
++	VMD_RES_MBAR_2, /* VMD Bus0 Resource MemBAR 2 */
++	VMD_RES_COUNT
++};
++
+ enum vmd_features {
+ 	/*
+ 	 * Device may contain registers which hint the physical location of the
+@@ -135,7 +147,7 @@ struct vmd_dev {
+ 	struct vmd_irq_list	*irqs;
+ 
+ 	struct pci_sysdata	sysdata;
+-	struct resource		resources[3];
++	struct resource		resources[VMD_RES_COUNT];
+ 	struct irq_domain	*irq_domain;
+ 	struct pci_bus		*bus;
+ 	u8			busn_start;
+@@ -520,7 +532,7 @@ static inline void vmd_acpi_end(void) { }
+ 
+ static void vmd_domain_reset(struct vmd_dev *vmd)
+ {
+-	u16 bus, max_buses = resource_size(&vmd->resources[0]);
++	u16 bus, max_buses = resource_size(&vmd->resources[VMD_RES_CFGBAR]);
+ 	u8 dev, functions, fn, hdr_type;
+ 	char __iomem *base;
+ 
+@@ -568,8 +580,8 @@ static void vmd_domain_reset(struct vmd_dev *vmd)
+ 
+ static void vmd_attach_resources(struct vmd_dev *vmd)
+ {
+-	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
+-	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[2];
++	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[VMD_RES_MBAR_1];
++	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[VMD_RES_MBAR_2];
+ }
+ 
+ static void vmd_detach_resources(struct vmd_dev *vmd)
+@@ -643,13 +655,13 @@ static int vmd_get_bus_number_start(struct vmd_dev *vmd)
+ 
+ 		switch (BUS_RESTRICT_CFG(reg)) {
+ 		case 0:
+-			vmd->busn_start = 0;
++			vmd->busn_start = VMD_RESTRICT_0_BUS_START;
+ 			break;
+ 		case 1:
+-			vmd->busn_start = 128;
++			vmd->busn_start = VMD_RESTRICT_1_BUS_START;
+ 			break;
+ 		case 2:
+-			vmd->busn_start = 224;
++			vmd->busn_start = VMD_RESTRICT_2_BUS_START;
+ 			break;
+ 		default:
+ 			pci_err(dev, "Unknown Bus Offset Setting (%d)\n",
+@@ -775,7 +787,7 @@ static void vmd_configure_cfgbar(struct vmd_dev *vmd)
+ {
+ 	struct resource *res = &vmd->dev->resource[VMD_CFGBAR];
+ 
+-	vmd->resources[0] = (struct resource){
++	vmd->resources[VMD_RES_CFGBAR] = (struct resource){
+ 		.name = "VMD CFGBAR",
+ 		.start = vmd->busn_start,
+ 		.end = vmd->busn_start + (resource_size(res) >> 20) - 1,
+@@ -794,7 +806,8 @@ static void vmd_configure_cfgbar(struct vmd_dev *vmd)
+  *
+  * Function fills resource buffer inside the VMD structure.
+  */
+-static void vmd_configure_membar(struct vmd_dev *vmd, u8 resource_number,
++static void vmd_configure_membar(struct vmd_dev *vmd,
++				 enum vmd_resource resource_number,
+ 				 u8 membar_number, resource_size_t start_offset,
+ 				 resource_size_t end_offset)
+ {
+@@ -830,9 +843,11 @@ static int vmd_create_bus(struct vmd_dev *vmd, struct pci_sysdata *sd,
+ {
+ 	LIST_HEAD(resources);
+ 
+-	pci_add_resource(&resources, &vmd->resources[0]);
+-	pci_add_resource_offset(&resources, &vmd->resources[1], offset[0]);
+-	pci_add_resource_offset(&resources, &vmd->resources[2], offset[1]);
++	pci_add_resource(&resources, &vmd->resources[VMD_RES_CFGBAR]);
++	pci_add_resource_offset(&resources, &vmd->resources[VMD_RES_MBAR_1],
++				offset[0]);
++	pci_add_resource_offset(&resources, &vmd->resources[VMD_RES_MBAR_2],
++				offset[1]);
+ 
+ 	vmd->bus = pci_create_root_bus(&vmd->dev->dev, vmd->busn_start,
+ 				       &vmd_ops, sd, &resources);
+@@ -1104,8 +1119,8 @@ static void vmd_remove(struct pci_dev *dev)
+ 	pci_remove_root_bus(vmd->bus);
+ 
+ 	/* CFGBAR is static, does not require releasing memory */
+-	kfree(vmd->resources[1].name);
+-	kfree(vmd->resources[2].name);
++	kfree(vmd->resources[VMD_RES_MBAR_1].name);
++	kfree(vmd->resources[VMD_RES_MBAR_2].name);
+ 
+ 	vmd_cleanup_srcu(vmd);
+ 	vmd_detach_resources(vmd);
+-- 
+2.43.0
+

@@ -1,0 +1,147 @@
+From 37b1a891b735a6b887ace89d813a726220f2de90 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Mon, 9 Nov 2020 14:52:42 +0200
+Subject: [PATCH 16/17] mei: bus: [TEST] add client dma test module
+
+Co-developed-by: Tomas Winkler <tomasw@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/Kconfig            |  6 ++
+ drivers/misc/mei/Makefile           |  3 +
+ drivers/misc/mei/mei_bus_dma_test.c | 96 +++++++++++++++++++++++++++++
+ 3 files changed, 105 insertions(+)
+ create mode 100644 drivers/misc/mei/mei_bus_dma_test.c
+
+diff --git a/drivers/misc/mei/Kconfig b/drivers/misc/mei/Kconfig
+index 83921912527b..a12e6c0788df 100644
+--- a/drivers/misc/mei/Kconfig
++++ b/drivers/misc/mei/Kconfig
+@@ -115,6 +115,12 @@ config INTEL_MEI_VIRTIO
+ 	  Enable this if your virtual machine supports virtual mei
+ 	  device over virtio.
+ 
++config INTEL_MEI_BUS_DMA_TEST
++	tristate "Mei bus DMA test"
++	depends on INTEL_MEI
++	help
++	  Help me out
++
+ source "drivers/misc/mei/hdcp/Kconfig"
+ source "drivers/misc/mei/pxp/Kconfig"
+ source "drivers/misc/mei/gsc_proxy/Kconfig"
+diff --git a/drivers/misc/mei/Makefile b/drivers/misc/mei/Makefile
+index 9edc9ae53492..9fcc9ba4eeaf 100644
+--- a/drivers/misc/mei/Makefile
++++ b/drivers/misc/mei/Makefile
+@@ -46,3 +46,6 @@ mei-vsc-hw-y += vsc-fw-loader.o
+ 
+ obj-$(CONFIG_INTEL_MEI_VSC) += mei-vsc.o
+ mei-vsc-y := platform-vsc.o
++
++obj-$(CONFIG_INTEL_MEI_BUS_DMA_TEST) += mei_bus_dma_test.o
++mei_mkhi-objs += mei_bus_dma_test.o
+diff --git a/drivers/misc/mei/mei_bus_dma_test.c b/drivers/misc/mei/mei_bus_dma_test.c
+new file mode 100644
+index 000000000000..04b8d9f8cb03
+--- /dev/null
++++ b/drivers/misc/mei/mei_bus_dma_test.c
+@@ -0,0 +1,96 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (c) 2020, Intel Corporation. All rights reserved
++ * Intel Management Engine Interface (Intel MEI) Linux driver
++ */
++#include <linux/module.h>
++#include <linux/mei_cl_bus.h>
++
++#define HBM_DMA_BUF_ID_WLAN 1
++
++static bool mei_bus_dma_test_mapped;
++
++static int mei_bus_dma_test_probe(struct mei_cl_device *device,
++				  const struct mei_cl_device_id *id)
++{
++	int ret;
++	void *vaddr = NULL;
++
++	ret = mei_cldev_enable(device);
++	if (ret) {
++		dev_err(&device->dev, "probe failed = %d\n", ret);
++		return ret;
++	}
++	dev_err(&device->dev, "probe succeeded\n");
++
++	vaddr = mei_cldev_dma_map(device, HBM_DMA_BUF_ID_WLAN, 16 * 4096);
++	if (IS_ERR(vaddr)) {
++		mei_cldev_disable(device);
++		ret = PTR_ERR(vaddr);
++		dev_err(&device->dev, "mei_cldev_dma_map ret=%d\n", ret);
++	} else {
++		mei_bus_dma_test_mapped = true;
++		dev_err(&device->dev, "mei_cldev_dma_map succeeded\n");
++		ret = 0;
++	}
++
++	return ret;
++}
++
++static void mei_bus_dma_test_remove(struct mei_cl_device *device)
++{
++	int ret;
++	if (mei_bus_dma_test_mapped) {
++		ret = mei_cldev_dma_unmap(device);
++		dev_err(&device->dev, "mei_cldev_dma_unmap ret=%d\n", ret);
++		mei_bus_dma_test_mapped = false;
++	}
++
++	ret = mei_cldev_disable(device);
++	if (ret)
++		dev_err(&device->dev, "remove failed = %d\n", ret);
++
++	dev_err(&device->dev, "remove succeeded\n");
++}
++
++#define MEI_WLAN UUID_LE(0x13280904, 0x7792, 0x4fcb, \
++			 0xa1, 0xaa, 0x5e, 0x70, 0xcb, 0xb1, 0xe8, 0x65)
++
++static struct mei_cl_device_id mei_bus_dma_test_tbl[] = {
++	{ .uuid = MEI_WLAN, .version = MEI_CL_VERSION_ANY},
++	/* required last entry */
++	{ }
++};
++
++MODULE_DEVICE_TABLE(mei, mei_bus_dma_test_tbl);
++
++static struct mei_cl_driver mei_bus_dma_test_driver = {
++	.id_table = mei_bus_dma_test_tbl,
++	.name = "mei_bus_dma_test",
++	.probe = mei_bus_dma_test_probe,
++	.remove = mei_bus_dma_test_remove,
++};
++
++static int mei_bus_dma_test_init(void)
++{
++	int ret;
++
++	ret = mei_cldev_driver_register(&mei_bus_dma_test_driver);
++	if (ret) {
++		pr_err(KBUILD_MODNAME ": driver registration failed\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static void mei_bus_dma_test_exit(void)
++{
++	mei_cldev_driver_unregister(&mei_bus_dma_test_driver);
++}
++
++module_init(mei_bus_dma_test_init);
++module_exit(mei_bus_dma_test_exit);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("mei bus dma test");
+-- 
+2.43.0
+

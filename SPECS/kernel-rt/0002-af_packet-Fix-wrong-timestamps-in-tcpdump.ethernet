@@ -1,7 +1,7 @@
-From 413ce7c231c970971e284e16f9cef2c0e49e04aa Mon Sep 17 00:00:00 2001
+From f3f65b910c6cf74195e1ef4fad10ef231fcb517c Mon Sep 17 00:00:00 2001
 From: Vinicius Costa Gomes <vinicius.gomes@intel.com>
 Date: Wed, 19 Mar 2025 11:17:06 +0500
-Subject: [PATCH 2/4] af_packet: Fix wrong timestamps in tcpdump
+Subject: [PATCH 02/17] af_packet: Fix wrong timestamps in tcpdump
 
 Since commit '97dc7cd ("ptp: Support late timestamp
 determination")', timestamps may need to be retrieved with input from
@@ -19,7 +19,7 @@ Signed-off-by: Vinicius Costa Gomes <vinicius.gomes@intel.com>
  1 file changed, 20 insertions(+), 9 deletions(-)
 
 diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
-index 173e6edda08f8..6904a5a810a80 100644
+index bb2d88205e5a..d672940a7887 100644
 --- a/net/packet/af_packet.c
 +++ b/net/packet/af_packet.c
 @@ -450,15 +450,20 @@ static int __packet_get_status(const struct packet_sock *po, void *frame)

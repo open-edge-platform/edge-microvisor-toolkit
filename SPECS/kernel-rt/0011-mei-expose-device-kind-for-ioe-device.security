@@ -1,0 +1,179 @@
+From 746f5ee70c5efb569962254d34059bf72586d897 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Sun, 4 Jan 2026 10:51:54 +0200
+Subject: [PATCH 11/17] mei: expose device kind for ioe device
+
+Detect IO extender device and set appropriate kind.
+
+Co-developed-by: Reuven Abliyev <reuvenab@gmail.com>
+Signed-off-by: Reuven Abliyev <reuvenab@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/hw-me-regs.h |  4 ++++
+ drivers/misc/mei/hw-me.c      | 35 +++++++++++++++++++++++++++++++----
+ drivers/misc/mei/hw-me.h      |  2 ++
+ drivers/misc/mei/main.c       |  1 +
+ drivers/misc/mei/mei_dev.h    |  2 ++
+ drivers/misc/mei/pci-me.c     |  2 +-
+ 6 files changed, 41 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/misc/mei/hw-me-regs.h b/drivers/misc/mei/hw-me-regs.h
+index 9b1675f98404..232778b7b26b 100644
+--- a/drivers/misc/mei/hw-me-regs.h
++++ b/drivers/misc/mei/hw-me-regs.h
+@@ -6,6 +6,8 @@
+ #ifndef _MEI_HW_MEI_REGS_H_
+ #define _MEI_HW_MEI_REGS_H_
+ 
++#include <linux/bits.h>
++
+ /*
+  * MEI device IDs
+  */
+@@ -141,6 +143,8 @@
+ #  define PCI_CFG_HFS_2_PM_CM_RESET_ERROR     0x5000000 /* CME reset due to exception */
+ #  define PCI_CFG_HFS_2_PM_EVENT_MASK         0xf000000
+ #define PCI_CFG_HFS_3         0x60
++#  define PCI_CFG_HFS_3_EXT_SKU_MSK  GENMASK(3, 0) /* IOE detection bits */
++#  define PCI_CFG_HFS_3_EXT_SKU_IOE  0x00000001
+ #  define PCI_CFG_HFS_3_FW_SKU_MSK   0x00000070
+ #  define PCI_CFG_HFS_3_FW_SKU_IGN   0x00000000
+ #  define PCI_CFG_HFS_3_FW_SKU_SPS   0x00000060
+diff --git a/drivers/misc/mei/hw-me.c b/drivers/misc/mei/hw-me.c
+index 28fbd432d80d..e7fbc02fb70f 100644
+--- a/drivers/misc/mei/hw-me.c
++++ b/drivers/misc/mei/hw-me.c
+@@ -4,13 +4,13 @@
+  * Intel Management Engine Interface (Intel MEI) Linux driver
+  */
+ 
+-#include <linux/pci.h>
+-
+-#include <linux/kthread.h>
++#include <linux/bitfield.h>
++#include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/kthread.h>
++#include <linux/pci.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/sizes.h>
+-#include <linux/delay.h>
+ 
+ #include "mei_dev.h"
+ #include "hbm.h"
+@@ -1619,6 +1619,23 @@ static enum mei_dev_kind mei_cfg_kind_gscfi(const struct device *parent)
+ #define MEI_CFG_KIND_GSCFI                   \
+ 	.get_kind = mei_cfg_kind_gscfi
+ 
++static enum mei_dev_kind mei_cfg_kind_ioe(const struct device *parent)
++{
++	const struct pci_dev *pdev = to_pci_dev(parent);
++	unsigned int devfn;
++	u32 reg;
++	int ret;
++
++	devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), 0);
++	ret = pci_bus_read_config_dword(pdev->bus, devfn, PCI_CFG_HFS_3, &reg);
++	trace_mei_pci_cfg_read(parent, "PCI_CFG_HFS_3", PCI_CFG_HFS_3, reg, ret);
++	return FIELD_GET(PCI_CFG_HFS_3_EXT_SKU_MSK, reg) == PCI_CFG_HFS_3_EXT_SKU_IOE ?
++		MEI_DEV_KIND_IOE : MEI_DEV_KIND_MEI;
++}
++
++#define MEI_CFG_KIND_IOE                     \
++	.get_kind = mei_cfg_kind_ioe
++
+ #define MEI_CFG_FW_VER_SUPP                     \
+ 	.fw_ver_supported = 1
+ 
+@@ -1781,6 +1798,15 @@ static const struct mei_cfg mei_me_csc_cfg = {
+ 	MEI_CFG_FW_VER_SUPP,
+ };
+ 
++/* Nova Lake with possible IOE devices */
++static const struct mei_cfg mei_me_pch22_ioe_cfg = {
++	MEI_CFG_KIND_IOE,
++	MEI_CFG_PCH8_HFS,
++	MEI_CFG_FW_VER_SUPP,
++	MEI_CFG_DMA_128,
++	MEI_CFG_TRC,
++};
++
+ /*
+  * mei_cfg_list - A list of platform platform specific configurations.
+  * Note: has to be synchronized with  enum mei_cfg_idx.
+@@ -1804,6 +1830,7 @@ static const struct mei_cfg *const mei_cfg_list[] = {
+ 	[MEI_ME_GSC_CFG] = &mei_me_gsc_cfg,
+ 	[MEI_ME_GSCFI_CFG] = &mei_me_gscfi_cfg,
+ 	[MEI_ME_CSC_CFG] = &mei_me_csc_cfg,
++	[MEI_ME_PCH22_IOE_CFG] = &mei_me_pch22_ioe_cfg,
+ };
+ 
+ const struct mei_cfg *mei_me_get_cfg(kernel_ulong_t idx)
+diff --git a/drivers/misc/mei/hw-me.h b/drivers/misc/mei/hw-me.h
+index 884736d76fbb..e36f871f323e 100644
+--- a/drivers/misc/mei/hw-me.h
++++ b/drivers/misc/mei/hw-me.h
+@@ -105,6 +105,7 @@ static inline bool mei_me_hw_use_polling(const struct mei_me_hw *hw)
+  * @MEI_ME_GSC_CFG:        Graphics System Controller
+  * @MEI_ME_GSCFI_CFG:      Graphics System Controller Firmware Interface
+  * @MEI_ME_CSC_CFG:        Chassis System Controller Firmware Interface
++ * @MEI_ME_PCH22_IOE_CFG:  Platform Controller Hub Gen22 and newer with IOE detection
+  * @MEI_ME_NUM_CFG:        Upper Sentinel.
+  */
+ enum mei_cfg_idx {
+@@ -126,6 +127,7 @@ enum mei_cfg_idx {
+ 	MEI_ME_GSC_CFG,
+ 	MEI_ME_GSCFI_CFG,
+ 	MEI_ME_CSC_CFG,
++	MEI_ME_PCH22_IOE_CFG,
+ 	MEI_ME_NUM_CFG,
+ };
+ 
+diff --git a/drivers/misc/mei/main.c b/drivers/misc/mei/main.c
+index 43667e5d3708..4fbf0b323616 100644
+--- a/drivers/misc/mei/main.c
++++ b/drivers/misc/mei/main.c
+@@ -1171,6 +1171,7 @@ static const char * const mei_kind_names[] = {
+ 	"gsc",
+ 	"gscfi",
+ 	"ivsc",
++	"ioe",
+ };
+ static_assert(ARRAY_SIZE(mei_kind_names) == MEI_DEV_KIND_MAX);
+ 
+diff --git a/drivers/misc/mei/mei_dev.h b/drivers/misc/mei/mei_dev.h
+index 6d081c496ccc..e651b06704a1 100644
+--- a/drivers/misc/mei/mei_dev.h
++++ b/drivers/misc/mei/mei_dev.h
+@@ -477,6 +477,7 @@ struct mei_dev_timeouts {
+  * @MEI_DEV_KIND_GSC: discete graphics content protection
+  * @MEI_DEV_KIND_GSCFI: discete graphics chassis controller
+  * @MEI_DEV_KIND_IVSC: visual sensing controller
++ * @MEI_DEV_KIND_IOE: IO extender
+  * @MEI_DEV_KIND_MAX: sentinel
+  */
+ enum mei_dev_kind {
+@@ -485,6 +486,7 @@ enum mei_dev_kind {
+ 	MEI_DEV_KIND_GSC,
+ 	MEI_DEV_KIND_GSCFI,
+ 	MEI_DEV_KIND_IVSC,
++	MEI_DEV_KIND_IOE,
+ 	MEI_DEV_KIND_MAX
+ };
+ 
+diff --git a/drivers/misc/mei/pci-me.c b/drivers/misc/mei/pci-me.c
+index 8d16bfa6027c..a4df32e9f596 100644
+--- a/drivers/misc/mei/pci-me.c
++++ b/drivers/misc/mei/pci-me.c
+@@ -130,7 +130,7 @@ static const struct pci_device_id mei_me_pci_tbl[] = {
+ 
+ 	{PCI_DEVICE_DATA(INTEL, MEI_WCL_P, MEI_ME_PCH15_CFG)},
+ 
+-	{PCI_DEVICE_DATA(INTEL, MEI_NVL_S, MEI_ME_PCH15_CFG)},
++	{PCI_DEVICE_DATA(INTEL, MEI_NVL_S, MEI_ME_PCH22_IOE_CFG)},
+ 
+ 	/* required last entry */
+ 	{0, }
+-- 
+2.43.0
+

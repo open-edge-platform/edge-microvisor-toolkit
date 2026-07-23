@@ -1,0 +1,40 @@
+From 90960db22cc62d67d40ff41e556cb8a250d30519 Mon Sep 17 00:00:00 2001
+From: Tejas Upadhyay <tejas.upadhyay@intel.com>
+Date: Thu, 5 Mar 2026 17:49:07 +0530
+Subject: [PATCH 35/43] drm/xe/xe3p: Skip TD flush
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Xe3p has HW ability to do transient display flush so the xe driver can
+enable this HW feature by default and skip the software TD flush.
+
+Bspec: 60002
+Reviewed-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
+Signed-off-by: Tejas Upadhyay <tejas.upadhyay@intel.com>
+---
+ drivers/gpu/drm/xe/xe_device.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_device.c b/drivers/gpu/drm/xe/xe_device.c
+index 4e5fa1583ea6..c0f42e2edca6 100644
+--- a/drivers/gpu/drm/xe/xe_device.c
++++ b/drivers/gpu/drm/xe/xe_device.c
+@@ -1181,6 +1181,14 @@ void xe_device_td_flush(struct xe_device *xe)
+ {
+ 	struct xe_gt *root_gt;
+ 
++	/*
++	 * From Xe3p onward the HW takes care of flush of TD entries also along
++	 * with flushing XA entries, which will be at the usual sync points,
++	 * like at the end of submission, so no manual flush is needed here.
++	 */
++	if (GRAPHICS_VER(xe) >= 35)
++		return;
++
+ 	if (!IS_DGFX(xe) || GRAPHICS_VER(xe) < 20)
+ 		return;
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,259 @@
+From 5fa0b94cd2ed2915c3001ea91ea37e5f665b76b0 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Wed, 22 Oct 2025 12:53:34 +0800
+Subject: [PATCH 25/39] perf/x86: Activate back-to-back NMI detection for
+ arch-PEBS induced NMIs
+
+When two or more identical PEBS events with the same sampling period are
+programmed on a mix of PDIST and non-PDIST counters, multiple
+back-to-back NMIs can be triggered.
+
+The Linux PMI handler processes the first NMI and clears the
+GLOBAL_STATUS MSR. If a second NMI is triggered immediately after
+the first, it is recognized as a "suspicious NMI" because no bits are set
+in the GLOBAL_STATUS MSR (cleared by the first NMI).
+
+This issue does not lead to PEBS data corruption or data loss, but it
+does result in an annoying warning message.
+
+The current NMI handler supports back-to-back NMI detection, but it
+requires the PMI handler to return the count of actually processed events,
+which the PEBS handler does not currently do.
+
+This patch modifies the PEBS handlers to return the count of actually
+processed events, thereby activating back-to-back NMI detection and
+avoiding the "suspicious NMI" warning.
+
+Suggested-by: Andi Kleen <ak@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/intel/core.c |  6 ++----
+ arch/x86/events/intel/ds.c   | 40 ++++++++++++++++++++++++------------
+ arch/x86/events/perf_event.h |  2 +-
+ 3 files changed, 30 insertions(+), 18 deletions(-)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 6a7d6404a811..65fdf091e44b 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -3558,9 +3558,8 @@ static int handle_pmi_common(struct pt_regs *regs, u64 status)
+ 	if (__test_and_clear_bit(GLOBAL_STATUS_BUFFER_OVF_BIT, (unsigned long *)&status)) {
+ 		u64 pebs_enabled = cpuc->pebs_enabled;
+ 
+-		handled++;
+ 		x86_pmu_handle_guest_pebs(regs, &data);
+-		static_call(x86_pmu_drain_pebs)(regs, &data);
++		handled += static_call(x86_pmu_drain_pebs)(regs, &data);
+ 
+ 		/*
+ 		 * PMI throttle may be triggered, which stops the PEBS event.
+@@ -3589,8 +3588,7 @@ static int handle_pmi_common(struct pt_regs *regs, u64 status)
+ 	 */
+ 	if (__test_and_clear_bit(GLOBAL_STATUS_ARCH_PEBS_THRESHOLD_BIT,
+ 				 (unsigned long *)&status)) {
+-		handled++;
+-		static_call(x86_pmu_drain_pebs)(regs, &data);
++		handled += static_call(x86_pmu_drain_pebs)(regs, &data);
+ 
+ 		if (cpuc->events[INTEL_PMC_IDX_FIXED_SLOTS] &&
+ 		    is_pebs_counter_event_group(cpuc->events[INTEL_PMC_IDX_FIXED_SLOTS]))
+diff --git a/arch/x86/events/intel/ds.c b/arch/x86/events/intel/ds.c
+index 2851622fbf0f..94ada08360f1 100644
+--- a/arch/x86/events/intel/ds.c
++++ b/arch/x86/events/intel/ds.c
+@@ -3029,7 +3029,7 @@ __intel_pmu_pebs_events(struct perf_event *event,
+ 	__intel_pmu_pebs_last_event(event, iregs, regs, data, at, count, setup_sample);
+ }
+ 
+-static void intel_pmu_drain_pebs_core(struct pt_regs *iregs, struct perf_sample_data *data)
++static int intel_pmu_drain_pebs_core(struct pt_regs *iregs, struct perf_sample_data *data)
+ {
+ 	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
+ 	struct debug_store *ds = cpuc->ds;
+@@ -3038,7 +3038,7 @@ static void intel_pmu_drain_pebs_core(struct pt_regs *iregs, struct perf_sample_
+ 	int n;
+ 
+ 	if (!x86_pmu.pebs_active)
+-		return;
++		return 0;
+ 
+ 	at  = (struct pebs_record_core *)(unsigned long)ds->pebs_buffer_base;
+ 	top = (struct pebs_record_core *)(unsigned long)ds->pebs_index;
+@@ -3049,22 +3049,24 @@ static void intel_pmu_drain_pebs_core(struct pt_regs *iregs, struct perf_sample_
+ 	ds->pebs_index = ds->pebs_buffer_base;
+ 
+ 	if (!test_bit(0, cpuc->active_mask))
+-		return;
++		return 0;
+ 
+ 	WARN_ON_ONCE(!event);
+ 
+ 	if (!event->attr.precise_ip)
+-		return;
++		return 0;
+ 
+ 	n = top - at;
+ 	if (n <= 0) {
+ 		if (event->hw.flags & PERF_X86_EVENT_AUTO_RELOAD)
+ 			intel_pmu_save_and_restart_reload(event, 0);
+-		return;
++		return 0;
+ 	}
+ 
+ 	__intel_pmu_pebs_events(event, iregs, data, at, top, 0, n,
+ 				setup_pebs_fixed_sample_data);
++
++	return 1; /* PMC0 only*/
+ }
+ 
+ static void intel_pmu_pebs_event_update_no_drain(struct cpu_hw_events *cpuc, u64 mask)
+@@ -3087,7 +3089,7 @@ static void intel_pmu_pebs_event_update_no_drain(struct cpu_hw_events *cpuc, u64
+ 	}
+ }
+ 
+-static void intel_pmu_drain_pebs_nhm(struct pt_regs *iregs, struct perf_sample_data *data)
++static int intel_pmu_drain_pebs_nhm(struct pt_regs *iregs, struct perf_sample_data *data)
+ {
+ 	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
+ 	struct debug_store *ds = cpuc->ds;
+@@ -3096,11 +3098,12 @@ static void intel_pmu_drain_pebs_nhm(struct pt_regs *iregs, struct perf_sample_d
+ 	short counts[INTEL_PMC_IDX_FIXED + MAX_FIXED_PEBS_EVENTS] = {};
+ 	short error[INTEL_PMC_IDX_FIXED + MAX_FIXED_PEBS_EVENTS] = {};
+ 	int max_pebs_events = intel_pmu_max_num_pebs(NULL);
++	u64 events_bitmap = 0;
+ 	int bit, i, size;
+ 	u64 mask;
+ 
+ 	if (!x86_pmu.pebs_active)
+-		return;
++		return 0;
+ 
+ 	base = (struct pebs_record_nhm *)(unsigned long)ds->pebs_buffer_base;
+ 	top = (struct pebs_record_nhm *)(unsigned long)ds->pebs_index;
+@@ -3116,7 +3119,7 @@ static void intel_pmu_drain_pebs_nhm(struct pt_regs *iregs, struct perf_sample_d
+ 
+ 	if (unlikely(base >= top)) {
+ 		intel_pmu_pebs_event_update_no_drain(cpuc, mask);
+-		return;
++		return 0;
+ 	}
+ 
+ 	for (at = base; at < top; at += x86_pmu.pebs_record_size) {
+@@ -3180,6 +3183,7 @@ static void intel_pmu_drain_pebs_nhm(struct pt_regs *iregs, struct perf_sample_d
+ 		if ((counts[bit] == 0) && (error[bit] == 0))
+ 			continue;
+ 
++		events_bitmap |= bit;
+ 		event = cpuc->events[bit];
+ 		if (WARN_ON_ONCE(!event))
+ 			continue;
+@@ -3201,6 +3205,8 @@ static void intel_pmu_drain_pebs_nhm(struct pt_regs *iregs, struct perf_sample_d
+ 						setup_pebs_fixed_sample_data);
+ 		}
+ 	}
++
++	return hweight64(events_bitmap);
+ }
+ 
+ static __always_inline void
+@@ -3256,7 +3262,7 @@ __intel_pmu_handle_last_pebs_record(struct pt_regs *iregs,
+ 
+ DEFINE_PER_CPU(struct x86_perf_regs, pebs_perf_regs);
+ 
+-static void intel_pmu_drain_pebs_icl(struct pt_regs *iregs, struct perf_sample_data *data)
++static int intel_pmu_drain_pebs_icl(struct pt_regs *iregs, struct perf_sample_data *data)
+ {
+ 	short counts[INTEL_PMC_IDX_FIXED + MAX_FIXED_PEBS_EVENTS] = {};
+ 	void *last[INTEL_PMC_IDX_FIXED + MAX_FIXED_PEBS_EVENTS];
+@@ -3266,10 +3272,11 @@ static void intel_pmu_drain_pebs_icl(struct pt_regs *iregs, struct perf_sample_d
+ 	struct pt_regs *regs = &perf_regs->regs;
+ 	struct pebs_basic *basic;
+ 	void *base, *at, *top;
++	u64 events_bitmap = 0;
+ 	u64 mask;
+ 
+ 	if (!x86_pmu.pebs_active)
+-		return;
++		return 0;
+ 
+ 	base = (struct pebs_basic *)(unsigned long)ds->pebs_buffer_base;
+ 	top = (struct pebs_basic *)(unsigned long)ds->pebs_index;
+@@ -3282,7 +3289,7 @@ static void intel_pmu_drain_pebs_icl(struct pt_regs *iregs, struct perf_sample_d
+ 
+ 	if (unlikely(base >= top)) {
+ 		intel_pmu_pebs_event_update_no_drain(cpuc, mask);
+-		return;
++		return 0;
+ 	}
+ 
+ 	if (!iregs)
+@@ -3297,6 +3304,7 @@ static void intel_pmu_drain_pebs_icl(struct pt_regs *iregs, struct perf_sample_d
+ 			continue;
+ 
+ 		pebs_status = mask & basic->applicable_counters;
++		events_bitmap |= pebs_status;
+ 		__intel_pmu_handle_pebs_record(iregs, regs, data, at,
+ 					       pebs_status, counts, last,
+ 					       setup_pebs_adaptive_sample_data);
+@@ -3304,9 +3312,11 @@ static void intel_pmu_drain_pebs_icl(struct pt_regs *iregs, struct perf_sample_d
+ 
+ 	__intel_pmu_handle_last_pebs_record(iregs, regs, data, mask, counts, last,
+ 					    setup_pebs_adaptive_sample_data);
++
++	return hweight64(events_bitmap);
+ }
+ 
+-static void intel_pmu_drain_arch_pebs(struct pt_regs *iregs,
++static int intel_pmu_drain_arch_pebs(struct pt_regs *iregs,
+ 				      struct perf_sample_data *data)
+ {
+ 	short counts[INTEL_PMC_IDX_FIXED + MAX_FIXED_PEBS_EVENTS] = {};
+@@ -3316,13 +3326,14 @@ static void intel_pmu_drain_arch_pebs(struct pt_regs *iregs,
+ 	struct x86_perf_regs *perf_regs = this_cpu_ptr(&pebs_perf_regs);
+ 	struct pt_regs *regs = &perf_regs->regs;
+ 	void *base, *at, *top;
++	u64 events_bitmap = 0;
+ 	u64 mask;
+ 
+ 	rdmsrq(MSR_IA32_PEBS_INDEX, index.whole);
+ 
+ 	if (unlikely(!index.wr)) {
+ 		intel_pmu_pebs_event_update_no_drain(cpuc, X86_PMC_IDX_MAX);
+-		return;
++		return 0;
+ 	}
+ 
+ 	base = cpuc->pebs_vaddr;
+@@ -3361,6 +3372,7 @@ static void intel_pmu_drain_arch_pebs(struct pt_regs *iregs,
+ 
+ 		basic = at + sizeof(struct arch_pebs_header);
+ 		pebs_status = mask & basic->applicable_counters;
++		events_bitmap |= pebs_status;
+ 		__intel_pmu_handle_pebs_record(iregs, regs, data, at,
+ 					       pebs_status, counts, last,
+ 					       setup_arch_pebs_sample_data);
+@@ -3380,6 +3392,8 @@ static void intel_pmu_drain_arch_pebs(struct pt_regs *iregs,
+ 	__intel_pmu_handle_last_pebs_record(iregs, regs, data, mask,
+ 					    counts, last,
+ 					    setup_arch_pebs_sample_data);
++
++	return hweight64(events_bitmap);
+ }
+ 
+ static void __init intel_arch_pebs_init(void)
+diff --git a/arch/x86/events/perf_event.h b/arch/x86/events/perf_event.h
+index 36688d28407f..e6bf786728eb 100644
+--- a/arch/x86/events/perf_event.h
++++ b/arch/x86/events/perf_event.h
+@@ -1014,7 +1014,7 @@ struct x86_pmu {
+ 	int		pebs_record_size;
+ 	int		pebs_buffer_size;
+ 	u64		pebs_events_mask;
+-	void		(*drain_pebs)(struct pt_regs *regs, struct perf_sample_data *data);
++	int		(*drain_pebs)(struct pt_regs *regs, struct perf_sample_data *data);
+ 	struct event_constraint *pebs_constraints;
+ 	void		(*pebs_aliases)(struct perf_event *event);
+ 	u64		(*pebs_latency_data)(struct perf_event *event, u64 status);
+-- 
+2.43.0
+

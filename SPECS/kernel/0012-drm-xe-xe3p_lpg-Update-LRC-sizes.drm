@@ -1,0 +1,57 @@
+From b9cc30796c5ddf015853f6fd40c5a0e516fd7b0e Mon Sep 17 00:00:00 2001
+From: Gustavo Sousa <gustavo.sousa@intel.com>
+Date: Fri, 6 Feb 2026 15:36:06 -0300
+Subject: [PATCH 12/43] drm/xe/xe3p_lpg: Update LRC sizes
+
+Like with previous generations, the engine context images for of both
+RCS and CCS in Xe3p_LPG contain a common layout at the end for the
+context related to the "Compute Pipeline".
+
+The size of the memory area written to such section varies; it depends
+on the type of preemption has taken place during the execution and type
+of command streamer instruction that was used on the pipeline. For
+Xe3p_LPG, the maximum possible size, including NOOPs for cache line
+alignment, is 4368 dwords, which would be the case of a mid-thread
+preemption during the execution of a COMPUTE_WALKER_2 instruction.
+
+The maximum size has increased in such a way that we need to update
+xe_gt_lrc_size() to match the new sizing requirement. When we add that
+to the engine-specific parts, we have:
+
+  - RCS context image: 6672 dwords = 26688 bytes -> 7 pages
+  - CCS context image: 5024 dwords = 20096 bytes -> 5 pages
+
+Bspec: 65182, 55793, 73590
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_lrc.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_lrc.c b/drivers/gpu/drm/xe/xe_lrc.c
+index 0e5e1e0400e5..9b37436ef84f 100644
+--- a/drivers/gpu/drm/xe/xe_lrc.c
++++ b/drivers/gpu/drm/xe/xe_lrc.c
+@@ -113,13 +113,17 @@ size_t xe_gt_lrc_hang_replay_size(struct xe_gt *gt, enum xe_engine_class class)
+ 	/* Engine context image */
+ 	switch (class) {
+ 	case XE_ENGINE_CLASS_RENDER:
+-		if (GRAPHICS_VER(xe) >= 20)
++		if (GRAPHICS_VERx100(xe) >= 3510)
++			size += 7 * SZ_4K;
++		else if (GRAPHICS_VER(xe) >= 20)
+ 			size += 3 * SZ_4K;
+ 		else
+ 			size += 13 * SZ_4K;
+ 		break;
+ 	case XE_ENGINE_CLASS_COMPUTE:
+-		if (GRAPHICS_VER(xe) >= 20)
++		if (GRAPHICS_VERx100(xe) >= 3510)
++			size += 5 * SZ_4K;
++		else if (GRAPHICS_VER(xe) >= 20)
+ 			size += 2 * SZ_4K;
+ 		else
+ 			size += 13 * SZ_4K;
+-- 
+2.43.0
+

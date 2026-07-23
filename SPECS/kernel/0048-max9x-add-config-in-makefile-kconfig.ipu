@@ -1,0 +1,23 @@
+From d7b251230517c262607a009d5c42c0328b440d67 Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Sat, 25 Oct 2025 16:46:35 +0800
+Subject: [PATCH 48/65] max9x: add config in makefile & kconfig
+
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/media/i2c/Makefile | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index b963e813256f..f9c55f931ed1 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -175,4 +175,3 @@ obj-$(CONFIG_VIDEO_WM8739) += wm8739.o
+ obj-$(CONFIG_VIDEO_WM8775) += wm8775.o
+ obj-$(CONFIG_VIDEO_D4XX) += d4xx.o
+ obj-$(CONFIG_VIDEO_MAXIM_SERDES) += maxim-serdes/
+-obj-$(CONFIG_VIDEO_LT6911GXD) += lt6911gxd.o
+-- 
+2.43.0
+

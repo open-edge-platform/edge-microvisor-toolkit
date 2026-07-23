@@ -1,0 +1,38 @@
+From a9f0009dab58232fed1a6eae08e17a933dd59cff Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Tue, 10 Feb 2026 10:25:19 -0800
+Subject: [PATCH 27/43] drm/xe/xe3p_xpc: Add new XeCore fuse registers to VF
+ runtime regs
+
+SRIOV VFs do not automatically have access to the XeCore fuse registers.
+Add the two new registers that show up on Xe3p_XPC to the runtime
+register list to grant VFs access.  Since there's a single runtime
+register list for all Xe3p, this will technically also grant access on
+Xe3p_LPG platforms where the registers don't exist, but that should be
+harmless since even if a VF tries to read a non-existent register on
+those platforms it will just get back a sensible value of 0x0.
+
+Fixes: e8100643ff01 ("drm/xe/xe3p_xpc: XeCore mask spans four registers")
+Cc: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Ngai-Mint Kwan <ngai-mint.kwan@linux.intel.com>
+---
+ drivers/gpu/drm/xe/xe_gt_sriov_pf_service.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_gt_sriov_pf_service.c b/drivers/gpu/drm/xe/xe_gt_sriov_pf_service.c
+index b5e0a5b7723e..6586df2fcb91 100644
+--- a/drivers/gpu/drm/xe/xe_gt_sriov_pf_service.c
++++ b/drivers/gpu/drm/xe/xe_gt_sriov_pf_service.c
+@@ -111,6 +111,8 @@ static const struct xe_reg ver_35_runtime_regs[] = {
+ 	XE2_GT_COMPUTE_DSS_2,		/* _MMIO(0x914c) */
+ 	XE2_GT_GEOMETRY_DSS_1,		/* _MMIO(0x9150) */
+ 	XE2_GT_GEOMETRY_DSS_2,		/* _MMIO(0x9154) */
++	XE3P_XPC_GT_GEOMETRY_DSS_3,	/* _MMIO(0x915c) */
++	XE3P_XPC_GT_COMPUTE_DSS_3,	/* _MMIO(0x9160) */
+ 	SERVICE_COPY_ENABLE,		/* _MMIO(0x9170) */
+ };
+ 
+-- 
+2.43.0
+

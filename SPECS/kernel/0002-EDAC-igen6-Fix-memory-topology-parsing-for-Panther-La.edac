@@ -1,7 +1,7 @@
-From ae82df7a40892ac8fde36aedd45b5fd39a596bc9 Mon Sep 17 00:00:00 2001
+From 3d8b2db20592faf268dfb99821b2302b262525c9 Mon Sep 17 00:00:00 2001
 From: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 Date: Fri, 3 Apr 2026 13:40:28 +0800
-Subject: [PATCH 2/4] EDAC/igen6: Fix memory topology parsing for Panther
+Subject: [PATCH 2/5] EDAC/igen6: Fix memory topology parsing for Panther
  Lake-H SoCs
 
 Panther Lake-H SoC memory controller registers for memory topology have
@@ -16,15 +16,15 @@ Fixes: 0be9f1af3902 ("EDAC/igen6: Add Intel Panther Lake-H SoCs support")
 Fixes: 4c36e6106997 ("EDAC/igen6: Add more Intel Panther Lake-H SoCs support")
 Signed-off-by: Qiuxu Zhuo <qiuxu.zhuo@intel.com>
 ---
- drivers/edac/igen6_edac.c | 375 +++++++++++++++++++++++++++++++-------
+ drivers/edac/igen6_edac.c | 373 +++++++++++++++++++++++++++++++-------
  include/linux/edac.h      |   3 +
- 2 files changed, 309 insertions(+), 69 deletions(-)
+ 2 files changed, 307 insertions(+), 69 deletions(-)
 
 diff --git a/drivers/edac/igen6_edac.c b/drivers/edac/igen6_edac.c
-index da15c2e99898..ec12f3b8dc4e 100644
+index 0bf9cf349d0b..f849e3299593 100644
 --- a/drivers/edac/igen6_edac.c
 +++ b/drivers/edac/igen6_edac.c
-@@ -125,6 +125,20 @@
+@@ -122,6 +122,20 @@
  #define MEM_SLICE_HASH_MASK(v)		(GET_BITFIELD(v, 6, 19) << 6)
  #define MEM_SLICE_HASH_LSB_MASK_BIT(v)	GET_BITFIELD(v, 24, 26)
  
@@ -45,12 +45,10 @@ index da15c2e99898..ec12f3b8dc4e 100644
  static struct res_config {
  	bool machine_check;
  	/* The number of present memory controllers. */
-@@ -135,12 +149,31 @@ static struct res_config {
- 	u64 reg_tom_mask;
- 	/* Top of Upper Usable DRAM */
+@@ -134,12 +148,29 @@ static struct res_config {
  	u64 reg_touud_mask;
-+	/* IBECC error log */
-+	u64 reg_eccerrlog_addr_mask;
+ 	/* IBECC error log */
+ 	u64 reg_eccerrlog_addr_mask;
 +	/* MEMSS_PMA_CR registers. */
 +	u32 reg_mem_config_offset;
 +	u32 reg_mem_config_ddr_type_mask;
@@ -77,7 +75,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  	bool (*ibecc_available)(struct pci_dev *pdev);
  	/* Extract error address logged in IBECC */
  	u64 (*err_addr)(u64 ecclog);
-@@ -150,22 +183,9 @@ static struct res_config {
+@@ -149,22 +180,9 @@ static struct res_config {
  	u64 (*err_addr_to_imc_addr)(u64 eaddr, int mc);
  } *res_cfg;
  
@@ -101,8 +99,8 @@ index da15c2e99898..ec12f3b8dc4e 100644
  	u64 ms_hash;
  	u64 ms_s_size;
  	int ms_l_map;
-@@ -501,6 +521,119 @@ static u64 rpl_p_err_addr(u64 ecclog)
- 	return ECC_ERROR_LOG_ADDR45(ecclog);
+@@ -500,6 +518,119 @@ static u64 rpl_p_err_addr(u64 ecclog)
+ 	return field_get(res_cfg->reg_eccerrlog_addr_mask, ecclog);
  }
  
 +static enum mem_type ptl_h_get_mem_type(struct igen6_imc *imc)
@@ -221,7 +219,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  static struct res_config ehl_cfg = {
  	.num_imc		= 1,
  	.reg_mchbar_mask	= GENMASK_ULL(38, 16),
-@@ -615,6 +748,36 @@ static struct res_config mtl_p_cfg = {
+@@ -622,6 +753,36 @@ static struct res_config mtl_p_cfg = {
  	.err_addr_to_imc_addr	= adl_err_addr_to_imc_addr,
  };
  
@@ -258,7 +256,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  static struct res_config wcl_cfg = {
  	.machine_check		= true,
  	.num_imc		= 1,
-@@ -681,19 +844,19 @@ static struct pci_device_id igen6_pci_tbl[] = {
+@@ -689,46 +850,34 @@ static struct pci_device_id igen6_pci_tbl[] = {
  	{ PCI_VDEVICE(INTEL, DID_ARL_UH_SKU1), (kernel_ulong_t)&mtl_p_cfg },
  	{ PCI_VDEVICE(INTEL, DID_ARL_UH_SKU2), (kernel_ulong_t)&mtl_p_cfg },
  	{ PCI_VDEVICE(INTEL, DID_ARL_UH_SKU3), (kernel_ulong_t)&mtl_p_cfg },
@@ -291,9 +289,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  	{ PCI_VDEVICE(INTEL, DID_WCL_SKU1), (kernel_ulong_t)&wcl_cfg },
  	{ },
  };
-@@ -713,28 +876,16 @@ int ibecc_err_unregister_notifer(struct notifier_block *nb)
- }
- EXPORT_SYMBOL_GPL(ibecc_err_unregister_notifer);
+ MODULE_DEVICE_TABLE(pci, igen6_pci_tbl);
  
 -static enum dev_type get_width(int dimm_l, u32 mad_dimm)
 +static enum mem_type get_mem_type(struct igen6_imc *imc)
@@ -326,7 +322,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  	case 0:
  		return MEM_DDR4;
  	case 1:
-@@ -750,6 +901,73 @@ static enum mem_type get_memory_type(u32 mad_inter)
+@@ -744,6 +893,73 @@ static enum mem_type get_memory_type(u32 mad_inter)
  	}
  }
  
@@ -400,7 +396,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  static int decode_chan_idx(u64 addr, u64 mask, int intlv_bit)
  {
  	u64 hash_addr = addr & mask, hash = 0;
-@@ -1098,7 +1316,6 @@ static bool igen6_check_ecc(struct igen6_imc *imc)
+@@ -1084,7 +1300,6 @@ static bool igen6_check_ecc(struct igen6_imc *imc)
  static int igen6_get_dimm_config(struct mem_ctl_info *mci)
  {
  	struct igen6_imc *imc = mci->pvt_info;
@@ -408,7 +404,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  	int i, j, ndimms, mc = imc->mc;
  	struct dimm_info *dimm;
  	enum mem_type mtype;
-@@ -1108,33 +1325,20 @@ static int igen6_get_dimm_config(struct mem_ctl_info *mci)
+@@ -1094,33 +1309,20 @@ static int igen6_get_dimm_config(struct mem_ctl_info *mci)
  
  	edac_dbg(2, "\n");
  
@@ -447,7 +443,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  
  			if (!dsize)
  				continue;
-@@ -1238,6 +1442,39 @@ static void igen6_debug_setup(void) {}
+@@ -1223,6 +1425,39 @@ static void igen6_debug_setup(void) {}
  static void igen6_debug_teardown(void) {}
  #endif
  
@@ -487,11 +483,11 @@ index da15c2e99898..ec12f3b8dc4e 100644
  static int igen6_pci_setup(struct pci_dev *pdev, u64 *mchbar)
  {
  	union  {
-@@ -1567,12 +1804,12 @@ static int igen6_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1555,12 +1790,12 @@ static int igen6_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  
  	edac_dbg(2, "\n");
  
--	igen6_pvt = kzalloc(sizeof(*igen6_pvt), GFP_KERNEL);
+-	igen6_pvt = kzalloc_obj(*igen6_pvt);
 +	res_cfg = (struct res_config *)ent->driver_data;
 +
 +	igen6_pvt = igen6_pvt_setup(pdev);
@@ -503,7 +499,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  	rc = igen6_pci_setup(pdev, &mchbar);
  	if (rc)
  		goto fail;
-@@ -1621,7 +1858,7 @@ static int igen6_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1609,7 +1844,7 @@ static int igen6_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  fail2:
  	igen6_unregister_mcis();
  fail:
@@ -512,7 +508,7 @@ index da15c2e99898..ec12f3b8dc4e 100644
  	return rc;
  }
  
-@@ -1636,7 +1873,7 @@ static void igen6_remove(struct pci_dev *pdev)
+@@ -1624,7 +1859,7 @@ static void igen6_remove(struct pci_dev *pdev)
  	flush_work(&ecclog_work);
  	gen_pool_destroy(ecclog_pool);
  	igen6_unregister_mcis();
@@ -550,5 +546,5 @@ index fa32f2aca22f..2a3511b0ad1c 100644
  #define MEM_FLAG_WIO2		BIT(MEM_WIO2)
  #define MEM_FLAG_HBM2		BIT(MEM_HBM2)
 -- 
-2.34.1
+2.43.0
 

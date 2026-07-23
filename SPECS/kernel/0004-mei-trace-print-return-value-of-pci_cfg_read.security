@@ -1,0 +1,125 @@
+From d39aac2dee9b289276c78b72a447c34eedf22767 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Thu, 27 Nov 2025 14:48:53 +0200
+Subject: [PATCH 04/17] mei: trace: print return value of pci_cfg_read
+
+Extend debug capabilities.
+Add return value print in the trace_mei_pci_cfg_read().
+
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/hw-me.c     | 15 +++++++++------
+ drivers/misc/mei/hw-txe.c    |  2 +-
+ drivers/misc/mei/mei-trace.h | 10 ++++++----
+ drivers/misc/mei/pci-me.c    |  2 +-
+ 4 files changed, 17 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/misc/mei/hw-me.c b/drivers/misc/mei/hw-me.c
+index 5305e9095686..7e0dbbaf776b 100644
+--- a/drivers/misc/mei/hw-me.c
++++ b/drivers/misc/mei/hw-me.c
+@@ -1499,10 +1499,11 @@ static bool mei_me_fw_type_nm(const struct pci_dev *pdev)
+ {
+ 	u32 reg;
+ 	unsigned int devfn;
++	int ret;
+ 
+ 	devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), 0);
+-	pci_bus_read_config_dword(pdev->bus, devfn, PCI_CFG_HFS_2, &reg);
+-	trace_mei_pci_cfg_read(&pdev->dev, "PCI_CFG_HFS_2", PCI_CFG_HFS_2, reg);
++	ret = pci_bus_read_config_dword(pdev->bus, devfn, PCI_CFG_HFS_2, &reg);
++	trace_mei_pci_cfg_read(&pdev->dev, "PCI_CFG_HFS_2", PCI_CFG_HFS_2, reg, ret);
+ 	/* make sure that bit 9 (NM) is up and bit 10 (DM) is down */
+ 	return (reg & 0x600) == 0x200;
+ }
+@@ -1525,10 +1526,11 @@ static bool mei_me_fw_type_sps_4(const struct pci_dev *pdev)
+ {
+ 	u32 reg;
+ 	unsigned int devfn;
++	int ret;
+ 
+ 	devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), 0);
+-	pci_bus_read_config_dword(pdev->bus, devfn, PCI_CFG_HFS_1, &reg);
+-	trace_mei_pci_cfg_read(&pdev->dev, "PCI_CFG_HFS_1", PCI_CFG_HFS_1, reg);
++	ret = pci_bus_read_config_dword(pdev->bus, devfn, PCI_CFG_HFS_1, &reg);
++	trace_mei_pci_cfg_read(&pdev->dev, "PCI_CFG_HFS_1", PCI_CFG_HFS_1, reg, ret);
+ 	return (reg & PCI_CFG_HFS_1_OPMODE_MSK) == PCI_CFG_HFS_1_OPMODE_SPS;
+ }
+ 
+@@ -1550,10 +1552,11 @@ static bool mei_me_fw_type_sps_ign(const struct pci_dev *pdev)
+ 	u32 reg;
+ 	u32 fw_type;
+ 	unsigned int devfn;
++	int ret;
+ 
+ 	devfn = PCI_DEVFN(PCI_SLOT(pdev->devfn), 0);
+-	pci_bus_read_config_dword(pdev->bus, devfn, PCI_CFG_HFS_3, &reg);
+-	trace_mei_pci_cfg_read(&pdev->dev, "PCI_CFG_HFS_3", PCI_CFG_HFS_3, reg);
++	ret = pci_bus_read_config_dword(pdev->bus, devfn, PCI_CFG_HFS_3, &reg);
++	trace_mei_pci_cfg_read(&pdev->dev, "PCI_CFG_HFS_3", PCI_CFG_HFS_3, reg, ret);
+ 	fw_type = (reg & PCI_CFG_HFS_3_FW_SKU_MSK);
+ 
+ 	dev_dbg(&pdev->dev, "fw type is %d\n", fw_type);
+diff --git a/drivers/misc/mei/hw-txe.c b/drivers/misc/mei/hw-txe.c
+index e4688c391027..008cb1ede56c 100644
+--- a/drivers/misc/mei/hw-txe.c
++++ b/drivers/misc/mei/hw-txe.c
+@@ -651,7 +651,7 @@ static int mei_txe_fw_status(struct mei_device *dev,
+ 					    &fw_status->status[i]);
+ 		trace_mei_pci_cfg_read(&dev->dev, "PCI_CFG_HSF_X",
+ 				       fw_src->status[i],
+-				       fw_status->status[i]);
++				       fw_status->status[i], ret);
+ 		if (ret)
+ 			return ret;
+ 	}
+diff --git a/drivers/misc/mei/mei-trace.h b/drivers/misc/mei/mei-trace.h
+index 24fa321d88bd..fa5224e5353a 100644
+--- a/drivers/misc/mei/mei-trace.h
++++ b/drivers/misc/mei/mei-trace.h
+@@ -55,22 +55,24 @@ TRACE_EVENT(mei_reg_write,
+ );
+ 
+ TRACE_EVENT(mei_pci_cfg_read,
+-	TP_PROTO(const struct device *dev, const char *reg, u32 offs, u32 val),
+-	TP_ARGS(dev, reg, offs, val),
++	TP_PROTO(const struct device *dev, const char *reg, u32 offs, u32 val, int ret),
++	TP_ARGS(dev, reg, offs, val, ret),
+ 	TP_STRUCT__entry(
+ 		__string(dev, dev_name(dev))
+ 		__string(reg, reg)
+ 		__field(u32, offs)
+ 		__field(u32, val)
++		__field(int, ret)
+ 	),
+ 	TP_fast_assign(
+ 		__assign_str(dev);
+ 		__assign_str(reg);
+ 		__entry->offs = offs;
+ 		__entry->val = val;
++		__entry->ret = ret;
+ 	),
+-	TP_printk("[%s] pci cfg read %s:[%#x] = %#x",
+-		  __get_str(dev), __get_str(reg), __entry->offs, __entry->val)
++	TP_printk("[%s] pci cfg read %s:[%#x] = %#x, ret = %d",
++		  __get_str(dev), __get_str(reg), __entry->offs, __entry->val, __entry->ret)
+ );
+ 
+ #endif /* _MEI_TRACE_H_ */
+diff --git a/drivers/misc/mei/pci-me.c b/drivers/misc/mei/pci-me.c
+index b4c9526857bb..a75773cc8fb7 100644
+--- a/drivers/misc/mei/pci-me.c
++++ b/drivers/misc/mei/pci-me.c
+@@ -152,7 +152,7 @@ static int mei_me_read_fws(const struct mei_device *dev, int where, const char *
+ 	int ret;
+ 
+ 	ret = pci_read_config_dword(pdev, where, val);
+-	trace_mei_pci_cfg_read(&dev->dev, name, where, *val);
++	trace_mei_pci_cfg_read(&dev->dev, name, where, *val, ret);
+ 	return ret;
+ }
+ 
+-- 
+2.43.0
+

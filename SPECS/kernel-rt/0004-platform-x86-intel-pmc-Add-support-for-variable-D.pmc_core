@@ -1,0 +1,82 @@
+From 7010d2202bdab80ff488c59b0ae02cce44a2cf89 Mon Sep 17 00:00:00 2001
+From: Xi Pardee <xi.pardee@linux.intel.com>
+Date: Mon, 2 Mar 2026 14:32:06 -0800
+Subject: [PATCH 4/7] platform/x86/intel/pmc: Add support for variable DMU
+ offsets
+
+Add support for handling different DMU Die C6 offsets across platforms.
+The previous implementation assumed a uniform DMU Die C6 offset for all
+platforms, which is no longer valid.
+
+Signed-off-by: Xi Pardee <xi.pardee@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmc/arl.c  | 2 ++
+ drivers/platform/x86/intel/pmc/core.c | 2 +-
+ drivers/platform/x86/intel/pmc/core.h | 2 ++
+ drivers/platform/x86/intel/pmc/mtl.c  | 1 +
+ 4 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/arl.c b/drivers/platform/x86/intel/pmc/arl.c
+index 95372a0807ac..4d91ee010f6d 100644
+--- a/drivers/platform/x86/intel/pmc/arl.c
++++ b/drivers/platform/x86/intel/pmc/arl.c
+@@ -729,6 +729,7 @@ struct pmc_dev_info arl_pmc_dev = {
+ 	.init = arl_core_init,
+ 	.sub_req = pmc_core_pmt_get_lpm_req,
+ 	.ssram_hidden = true,
++	.die_c6_offset = MTL_PMT_DMU_DIE_C6_OFFSET,
+ };
+ 
+ static u32 ARL_H_PMT_DMU_GUIDS[] = {ARL_PMT_DMU_GUID, ARL_H_PMT_DMU_GUID, 0x0};
+@@ -742,4 +743,5 @@ struct pmc_dev_info arl_h_pmc_dev = {
+ 	.init = arl_h_core_init,
+ 	.sub_req = pmc_core_pmt_get_lpm_req,
+ 	.ssram_hidden = true,
++	.die_c6_offset = MTL_PMT_DMU_DIE_C6_OFFSET,
+ };
+diff --git a/drivers/platform/x86/intel/pmc/core.c b/drivers/platform/x86/intel/pmc/core.c
+index 6ca5a6321dbd..49043fb0447e 100644
+--- a/drivers/platform/x86/intel/pmc/core.c
++++ b/drivers/platform/x86/intel/pmc/core.c
+@@ -1387,7 +1387,7 @@ void pmc_core_punit_pmt_init(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_de
+ 		}
+ 
+ 		pmcdev->punit_ep = ep;
+-		pmcdev->die_c6_offset = MTL_PMT_DMU_DIE_C6_OFFSET;
++		pmcdev->die_c6_offset = pmc_dev_info->die_c6_offset;
+ 	}
+ 
+ 	if (pmc_dev_info->pc_guid) {
+diff --git a/drivers/platform/x86/intel/pmc/core.h b/drivers/platform/x86/intel/pmc/core.h
+index 46be836c347d..b0a0c29f0b21 100644
+--- a/drivers/platform/x86/intel/pmc/core.h
++++ b/drivers/platform/x86/intel/pmc/core.h
+@@ -519,6 +519,7 @@ enum pmc_index {
+  * @init:		Function to perform platform specific init action
+  * @sub_req:		Function to achieve low power mode substate requirements
+  * @ssram_hidden:	Flag to indicate whether SSRAM is hidden
++ * @die_c6_offseyt:	Telemetry offset to read Die C6 residency
+  */
+ struct pmc_dev_info {
+ 	u32 *dmu_guids;
+@@ -535,6 +536,7 @@ struct pmc_dev_info {
+ 	int (*init)(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_dev_info);
+ 	int (*sub_req)(struct pmc_dev *pmcdev, struct pmc *pmc, struct telem_endpoint *ep);
+ 	bool ssram_hidden;
++	u32 die_c6_offset;
+ };
+ 
+ extern const struct pmc_bit_map msr_map[];
+diff --git a/drivers/platform/x86/intel/pmc/mtl.c b/drivers/platform/x86/intel/pmc/mtl.c
+index 193ebbe58402..b724dd8c34db 100644
+--- a/drivers/platform/x86/intel/pmc/mtl.c
++++ b/drivers/platform/x86/intel/pmc/mtl.c
+@@ -1003,4 +1003,5 @@ struct pmc_dev_info mtl_pmc_dev = {
+ 	.init = mtl_core_init,
+ 	.sub_req = pmc_core_pmt_get_lpm_req,
+ 	.ssram_hidden = true,
++	.die_c6_offset = MTL_PMT_DMU_DIE_C6_OFFSET,
+ };
+-- 
+2.43.0
+

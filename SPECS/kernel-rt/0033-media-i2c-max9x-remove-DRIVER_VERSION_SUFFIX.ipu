@@ -1,0 +1,25 @@
+From 0adf378c31dfeb76a64b5a693724f75561afe511 Mon Sep 17 00:00:00 2001
+From: "Mokhtar, Mohamad Nor Syahid" <mohamad.nor.syahid.mokhtar@intel.com>
+Date: Wed, 10 Jun 2026 11:32:55 +0800
+Subject: [PATCH 33/65] media: i2c: max9x : remove DRIVER_VERSION_SUFFIX
+
+Signed-off-by: Mokhtar, Mohamad Nor Syahid <mohamad.nor.syahid.mokhtar@intel.com>
+---
+ drivers/media/i2c/max9x/serdes.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/media/i2c/max9x/serdes.c b/drivers/media/i2c/max9x/serdes.c
+index c6347794862e..2c8ea6b6d7fb 100644
+--- a/drivers/media/i2c/max9x/serdes.c
++++ b/drivers/media/i2c/max9x/serdes.c
+@@ -2729,5 +2729,4 @@ module_i2c_driver(max9x_driver);
+ MODULE_LICENSE("GPL v2");
+ MODULE_AUTHOR("Josh Watts <jwatts@d3embedded.com>");
+ MODULE_AUTHOR("Yan, Dongcheng <dongcheng.yan@intel.com>");
+-MODULE_DESCRIPTION("Common logic for Maxim GMSL serializers & deserializers");
+-MODULE_VERSION(DRIVER_VERSION_SUFFIX);
++MODULE_DESCRIPTION("Common logic for Maxim GMSL serializers & deserializers");
+\ No newline at end of file
+-- 
+2.43.0
+

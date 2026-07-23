@@ -1,0 +1,38 @@
+From 992ece614643b7d36b5073adcfa4067429b8b9e1 Mon Sep 17 00:00:00 2001
+From: Khai Wen Ng <khai.wen.ng@intel.com>
+Date: Fri, 12 Sep 2025 03:31:10 +0800
+Subject: [PATCH 15/65] media: i2c: max9296a: Move use_atr flag to deserializer
+ ops
+
+Move the use_atr flag from max9296a_chip_info to max_des_ops
+structure. This better represents that Address Translator (ATR)
+usage is an operational characteristic of the deserializer rather
+than chip-specific information.
+
+Signed-off-by: Khai Wen Ng <khai.wen.ng@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max9296a.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max9296a.c b/drivers/media/i2c/maxim-serdes/max9296a.c
+index af0242a733ae..3f500fff8162 100644
+--- a/drivers/media/i2c/maxim-serdes/max9296a.c
++++ b/drivers/media/i2c/maxim-serdes/max9296a.c
+@@ -1169,12 +1169,12 @@ static const struct max_des_ops max9296a_ops = {
+ 	.num_pipes = 4,
+ 	.num_phys = 2,
+ 	.num_links = 2,
++	.use_atr = true,
+ };
+ 
+ static const struct max9296a_chip_info max9296a_info = {
+ 	.ops = &max9296a_ops,
+ 	.max_register = 0x1f00,
+-	.use_atr = true,
+ 	.phy0_lanes_0_1_on_second_phy = true,
+ 	.pipe_hw_ids = { 0, 1, 2, 3 },
+ 	.phy_hw_ids = { 1, 2 },
+-- 
+2.43.0
+

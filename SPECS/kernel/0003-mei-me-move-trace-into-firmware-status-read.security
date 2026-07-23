@@ -1,0 +1,117 @@
+From 56d0c6745d190427d68468c102642e8a4478ec77 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Tue, 2 Dec 2025 07:45:42 +0200
+Subject: [PATCH 03/17] mei: me: move trace into firmware status read
+
+Move register trace near it actual read in the firmware status callback
+and make it adhere to the actual read type.
+
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/gsc-me.c |  3 ++-
+ drivers/misc/mei/hw-me.c  | 11 +++--------
+ drivers/misc/mei/hw-me.h  |  2 +-
+ drivers/misc/mei/pci-me.c |  8 ++++++--
+ 4 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/misc/mei/gsc-me.c b/drivers/misc/mei/gsc-me.c
+index 93cba090ea08..73d5beeb9c34 100644
+--- a/drivers/misc/mei/gsc-me.c
++++ b/drivers/misc/mei/gsc-me.c
+@@ -23,11 +23,12 @@
+ 
+ #define MEI_GSC_RPM_TIMEOUT 500
+ 
+-static int mei_gsc_read_hfs(const struct mei_device *dev, int where, u32 *val)
++static int mei_gsc_read_hfs(const struct mei_device *dev, int where, const char *name, u32 *val)
+ {
+ 	struct mei_me_hw *hw = to_me_hw(dev);
+ 
+ 	*val = ioread32(hw->mem_addr + where + 0xC00);
++	trace_mei_reg_read(&dev->dev, name, where, *val);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/misc/mei/hw-me.c b/drivers/misc/mei/hw-me.c
+index 1e4a41ac428f..5305e9095686 100644
+--- a/drivers/misc/mei/hw-me.c
++++ b/drivers/misc/mei/hw-me.c
+@@ -215,11 +215,8 @@ static int mei_me_fw_status(struct mei_device *dev,
+ 
+ 	fw_status->count = fw_src->count;
+ 	for (i = 0; i < fw_src->count && i < MEI_FW_STATUS_MAX; i++) {
+-		ret = hw->read_fws(dev, fw_src->status[i],
++		ret = hw->read_fws(dev, fw_src->status[i], "PCI_CFG_HFS_X",
+ 				   &fw_status->status[i]);
+-		trace_mei_pci_cfg_read(&dev->dev, "PCI_CFG_HFS_X",
+-				       fw_src->status[i],
+-				       fw_status->status[i]);
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -250,8 +247,7 @@ static int mei_me_hw_config(struct mei_device *dev)
+ 	hw->hbuf_depth = (hcsr & H_CBD) >> 24;
+ 
+ 	reg = 0;
+-	hw->read_fws(dev, PCI_CFG_HFS_1, &reg);
+-	trace_mei_pci_cfg_read(&dev->dev, "PCI_CFG_HFS_1", PCI_CFG_HFS_1, reg);
++	hw->read_fws(dev, PCI_CFG_HFS_1, "PCI_CFG_HFS_1", &reg);
+ 	hw->d0i3_supported =
+ 		((reg & PCI_CFG_HFS_1_D0I3_MSK) == PCI_CFG_HFS_1_D0I3_MSK);
+ 
+@@ -446,8 +442,7 @@ static void mei_gsc_pxp_check(struct mei_device *dev)
+ 	if (!kind_is_gsc(dev) && !kind_is_gscfi(dev))
+ 		return;
+ 
+-	hw->read_fws(dev, PCI_CFG_HFS_5, &fwsts5);
+-	trace_mei_pci_cfg_read(&dev->dev, "PCI_CFG_HFS_5", PCI_CFG_HFS_5, fwsts5);
++	hw->read_fws(dev, PCI_CFG_HFS_5, "PCI_CFG_HFS_5", &fwsts5);
+ 
+ 	if ((fwsts5 & GSC_CFG_HFS_5_BOOT_TYPE_MSK) == GSC_CFG_HFS_5_BOOT_TYPE_PXP) {
+ 		if (dev->gsc_reset_to_pxp == MEI_DEV_RESET_TO_PXP_DEFAULT)
+diff --git a/drivers/misc/mei/hw-me.h b/drivers/misc/mei/hw-me.h
+index 843ec2497b52..9df5899d2602 100644
+--- a/drivers/misc/mei/hw-me.h
++++ b/drivers/misc/mei/hw-me.h
+@@ -56,7 +56,7 @@ struct mei_me_hw {
+ 	enum mei_pg_state pg_state;
+ 	bool d0i3_supported;
+ 	u8 hbuf_depth;
+-	int (*read_fws)(const struct mei_device *dev, int where, u32 *val);
++	int (*read_fws)(const struct mei_device *dev, int where, const char *name, u32 *val);
+ 	/* polling */
+ 	struct task_struct *polling_thread;
+ 	wait_queue_head_t wait_active;
+diff --git a/drivers/misc/mei/pci-me.c b/drivers/misc/mei/pci-me.c
+index fe5d5aee074c..b4c9526857bb 100644
+--- a/drivers/misc/mei/pci-me.c
++++ b/drivers/misc/mei/pci-me.c
+@@ -23,6 +23,7 @@
+ #include "client.h"
+ #include "hw-me-regs.h"
+ #include "hw-me.h"
++#include "mei-trace.h"
+ 
+ /* mei_pci_tbl - PCI Device ID Table */
+ static const struct pci_device_id mei_me_pci_tbl[] = {
+@@ -145,11 +146,14 @@ static inline void mei_me_set_pm_domain(struct mei_device *dev) {}
+ static inline void mei_me_unset_pm_domain(struct mei_device *dev) {}
+ #endif /* CONFIG_PM */
+ 
+-static int mei_me_read_fws(const struct mei_device *dev, int where, u32 *val)
++static int mei_me_read_fws(const struct mei_device *dev, int where, const char *name, u32 *val)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev->parent);
++	int ret;
+ 
+-	return pci_read_config_dword(pdev, where, val);
++	ret = pci_read_config_dword(pdev, where, val);
++	trace_mei_pci_cfg_read(&dev->dev, name, where, *val);
++	return ret;
+ }
+ 
+ /**
+-- 
+2.43.0
+

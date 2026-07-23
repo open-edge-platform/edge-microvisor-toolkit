@@ -1,0 +1,92 @@
+From b1bdea4404fc6b039fffee2a1e31e3668fbc35c5 Mon Sep 17 00:00:00 2001
+From: Kan Liang <kan.liang@linux.intel.com>
+Date: Tue, 9 Sep 2025 14:04:55 -0700
+Subject: [PATCH 23/39] perf/x86/intel: Enable PERF_PMU_CAP_SIMD_REGS
+ capability
+
+Enable the PERF_PMU_CAP_SIMD_REGS capability if XSAVES support is
+available for YMM, ZMM, OPMASK, eGPRs, or SSP.
+
+Temporarily disable large PEBS sampling for these registers, as the
+current arch-PEBS sampling code does not support them yet. Large PEBS
+sampling for these registers will be enabled in subsequent patches.
+
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/intel/core.c | 52 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 47 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 1118101e5b74..918ce743ee9f 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -4426,11 +4426,33 @@ static unsigned long intel_pmu_large_pebs_flags(struct perf_event *event)
+ 		flags &= ~PERF_SAMPLE_TIME;
+ 	if (!event->attr.exclude_kernel)
+ 		flags &= ~PERF_SAMPLE_REGS_USER;
+-	if (event->attr.sample_regs_user & ~PEBS_GP_REGS)
+-		flags &= ~PERF_SAMPLE_REGS_USER;
+-	if (event->attr.sample_regs_intr &
+-	    ~(PEBS_GP_REGS | PERF_REG_EXTENDED_MASK))
+-		flags &= ~PERF_SAMPLE_REGS_INTR;
++	if (event->attr.sample_simd_regs_enabled) {
++		u64 nolarge = PERF_X86_EGPRS_MASK | BIT_ULL(PERF_REG_X86_SSP);
++
++		/*
++		 * PEBS HW can only collect the XMM0-XMM15 for now.
++		 * Disable large PEBS for other vector registers, predicate
++		 * registers, eGPRs, and SSP.
++		 */
++		if (event->attr.sample_regs_user & nolarge ||
++		    fls64(event->attr.sample_simd_vec_reg_user) > PERF_X86_H16ZMM_BASE ||
++		    event->attr.sample_simd_pred_reg_user)
++			flags &= ~PERF_SAMPLE_REGS_USER;
++
++		if (event->attr.sample_regs_intr & nolarge ||
++		    fls64(event->attr.sample_simd_vec_reg_intr) > PERF_X86_H16ZMM_BASE ||
++		    event->attr.sample_simd_pred_reg_intr)
++			flags &= ~PERF_SAMPLE_REGS_INTR;
++
++		if (event->attr.sample_simd_vec_reg_qwords > PERF_X86_XMM_QWORDS)
++			flags &= ~(PERF_SAMPLE_REGS_USER | PERF_SAMPLE_REGS_INTR);
++	} else {
++		if (event->attr.sample_regs_user & ~PEBS_GP_REGS)
++			flags &= ~PERF_SAMPLE_REGS_USER;
++		if (event->attr.sample_regs_intr &
++		    ~(PEBS_GP_REGS | PERF_REG_EXTENDED_MASK))
++			flags &= ~PERF_SAMPLE_REGS_INTR;
++	}
+ 	return flags;
+ }
+ 
+@@ -5920,6 +5942,26 @@ static void intel_extended_regs_init(struct pmu *pmu)
+ 
+ 	x86_pmu.ext_regs_mask |= XFEATURE_MASK_SSE;
+ 	x86_get_pmu(smp_processor_id())->capabilities |= PERF_PMU_CAP_EXTENDED_REGS;
++
++	if (boot_cpu_has(X86_FEATURE_AVX) &&
++	    cpu_has_xfeatures(XFEATURE_MASK_YMM, NULL))
++		x86_pmu.ext_regs_mask |= XFEATURE_MASK_YMM;
++	if (boot_cpu_has(X86_FEATURE_APX) &&
++	    cpu_has_xfeatures(XFEATURE_MASK_APX, NULL))
++		x86_pmu.ext_regs_mask |= XFEATURE_MASK_APX;
++	if (boot_cpu_has(X86_FEATURE_AVX512F)) {
++		if (cpu_has_xfeatures(XFEATURE_MASK_OPMASK, NULL))
++			x86_pmu.ext_regs_mask |= XFEATURE_MASK_OPMASK;
++		if (cpu_has_xfeatures(XFEATURE_MASK_ZMM_Hi256, NULL))
++			x86_pmu.ext_regs_mask |= XFEATURE_MASK_ZMM_Hi256;
++		if (cpu_has_xfeatures(XFEATURE_MASK_Hi16_ZMM, NULL))
++			x86_pmu.ext_regs_mask |= XFEATURE_MASK_Hi16_ZMM;
++	}
++	if (cpu_feature_enabled(X86_FEATURE_USER_SHSTK))
++		x86_pmu.ext_regs_mask |= XFEATURE_MASK_CET_USER;
++
++	if (x86_pmu.ext_regs_mask != XFEATURE_MASK_SSE)
++		x86_get_pmu(smp_processor_id())->capabilities |= PERF_PMU_CAP_SIMD_REGS;
+ }
+ 
+ #define counter_mask(_gp, _fixed) ((_gp) | ((u64)(_fixed) << INTEL_PMC_IDX_FIXED))
+-- 
+2.43.0
+

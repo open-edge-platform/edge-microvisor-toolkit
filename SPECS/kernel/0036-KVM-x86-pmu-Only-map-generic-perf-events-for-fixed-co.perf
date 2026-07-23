@@ -1,0 +1,56 @@
+From 89b3847fb8f6ca00984d236e32c1dc8cacfc3911 Mon Sep 17 00:00:00 2001
+From: Zide Chen <zide.chen@intel.com>
+Date: Fri, 6 Feb 2026 16:18:55 -0800
+Subject: [PATCH 36/39] KVM: x86/pmu: Only map generic perf events for fixed
+ counters 0-2
+
+Only fixed counters 0..2 have matching generic cross-platform hardware
+perf events (INSTRUCTIONS, CPU_CYCLES, REF_CPU_CYCLES).  Therefore,
+perf_get_hw_event_config() is only applicable to these counters.
+
+KVM does not intend to emulate fixed counters beyond 2 on legacy
+(non-mediated) vPMU and returns 0 for them.
+
+Signed-off-by: Zide Chen <zide.chen@intel.com>
+---
+ arch/x86/kvm/vmx/pmu_intel.c | 19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/arch/x86/kvm/vmx/pmu_intel.c b/arch/x86/kvm/vmx/pmu_intel.c
+index 27eb76e6b6a0..9a53475b1eb7 100644
+--- a/arch/x86/kvm/vmx/pmu_intel.c
++++ b/arch/x86/kvm/vmx/pmu_intel.c
+@@ -465,17 +465,24 @@ static __always_inline u64 intel_get_fixed_pmc_eventsel(unsigned int index)
+ 		[1] = PERF_COUNT_HW_CPU_CYCLES,
+ 		[2] = PERF_COUNT_HW_REF_CPU_CYCLES,
+ 	};
+-	u64 eventsel;
++	u64 eventsel = 0;
+ 
+-	BUILD_BUG_ON(ARRAY_SIZE(fixed_pmc_perf_ids) != KVM_MAX_NR_INTEL_FIXED_COUNTERS);
+ 	BUILD_BUG_ON(index >= KVM_MAX_NR_INTEL_FIXED_COUNTERS);
+ 
+ 	/*
+-	 * Yell if perf reports support for a fixed counter but perf doesn't
+-	 * have a known encoding for the associated general purpose event.
++	 * Fixed counter 3 and up do not have corresponding generic hardware
++	 * perf event, and KVM does not intend to emulate these fixed counters
++	 * on non-mediated vPMU going forward.
+ 	 */
+-	eventsel = perf_get_hw_event_config(fixed_pmc_perf_ids[index]);
+-	WARN_ON_ONCE(!eventsel && index < kvm_pmu_cap.num_counters_fixed);
++	if (index < 3) {
++		/*
++		 * Yell if perf reports support for a fixed counter but perf
++		 * doesn't have a known encoding for the associated general
++		 * purpose event.
++		 */
++		eventsel = perf_get_hw_event_config(fixed_pmc_perf_ids[index]);
++		WARN_ON_ONCE(!eventsel && index < kvm_pmu_cap.num_counters_fixed);
++	}
+ 	return eventsel;
+ }
+ 
+-- 
+2.43.0
+

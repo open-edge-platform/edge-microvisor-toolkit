@@ -1,0 +1,33 @@
+From 269c809139467c511591671bc577dc94b1262bbc Mon Sep 17 00:00:00 2001
+From: SyazwanHalim <mohd.syazwan.abdul.halim@intel.com>
+Date: Tue, 9 Jun 2026 11:36:16 +0800
+Subject: [PATCH 41/43] drm/xe/sriov: Mark NVL as SR-IOV capable
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Jakub Kolakowski <jakub1.kolakowski@intel.com>
+Cc: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Cc: Piotr Piórkowski <piotr.piorkowski@intel.com>
+Cc: Dnyaneshwar Bhadane <dnyaneshwar.bhadane@intel.com>
+Cc: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Tomasz Lis <tomasz.lis@intel.com>
+---
+ drivers/gpu/drm/xe/xe_pci.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
+index d9443bdde055..51399fa53ec4 100644
+--- a/drivers/gpu/drm/xe/xe_pci.c
++++ b/drivers/gpu/drm/xe/xe_pci.c
+@@ -458,6 +458,7 @@ static const struct xe_device_desc nvlp_desc = {
+ 	.has_flat_ccs = 1,
+ 	.has_page_reclaim_hw_assist = true,
+ 	.has_pre_prod_wa = true,
++	.has_sriov = true,
+ 	.max_gt_per_tile = 2,
+ 	.require_force_probe = true,
+ 	.va_bits = 48,
+-- 
+2.43.0
+

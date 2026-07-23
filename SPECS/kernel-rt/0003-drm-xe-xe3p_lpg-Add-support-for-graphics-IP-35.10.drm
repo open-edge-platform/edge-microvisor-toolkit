@@ -1,0 +1,70 @@
+From 2b5969ac939687a200e97580200be26bcd9f442d Mon Sep 17 00:00:00 2001
+From: Shekhar Chauhan <shekhar.chauhan@intel.com>
+Date: Fri, 6 Feb 2026 15:35:57 -0300
+Subject: [PATCH 03/43] drm/xe/xe3p_lpg: Add support for graphics IP 35.10
+
+Add Xe3p_LPG graphics IP version 35.10. Xe3p_LPG supports all features
+described by XE2_GFX_FEATURES and also multi-queue feature on BCS and
+CCS engines.  As such, create a new struct xe_graphics_desc named
+graphics_xe3p_lpg that inherits from XE2_GFX_FEATURES and also includes
+the necessary .multi_queue_engine_class_mask.
+
+Here is a list of fields and associated Bspec references for the members
+of the IP descriptor:
+
+ .hw_engine_mask (Bspec 60149)
+ .multi_queue_engine_class_mask (Bspec 74110)
+ .has_asid (Bspec 71132)
+ .has_atomic_enable_pte_bit (Bspec 59510, 74675)
+ .has_indirect_ring_state (Bspec 67296)
+ .has_range_tlb_inval (Bspec 71126)
+ .has_usm (Bspec 59651)
+ .has_64bit_timestamp (Bspec 60318)
+ .num_geometry_xecore_fuse_regs (Bspec 62566, 67401, 67536)
+ .num_compute_xecore_fuse_regs (Bspec 62565, 62561, 67537)
+
+v2:
+  - Drop non-existing fields from the list in the commit message. (Matt)
+  - Squash patch adding .multi_queue_engine_class_mask here. (Matt)
+  - Rename graphics_xe3p to graphics_xe3p_lpg. (Matt)
+  - Add fields .num_geometry_xecore_fuse_regs and
+    .num_compute_xecore_fuse_regs after rebasing and inheriting
+    commit 6acf3d3ed6c1 ("drm/xe: Move number of XeCore fuse registers to
+    graphics descriptor"). (Gustavo)
+
+Signed-off-by: Shekhar Chauhan <shekhar.chauhan@intel.com>
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_pci.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
+index e189b8e47829..bb7d89b076a2 100644
+--- a/drivers/gpu/drm/xe/xe_pci.c
++++ b/drivers/gpu/drm/xe/xe_pci.c
+@@ -114,6 +114,13 @@ static const struct xe_graphics_desc graphics_xe2 = {
+ 	.num_compute_xecore_fuse_regs = 3,
+ };
+ 
++static const struct xe_graphics_desc graphics_xe3p_lpg = {
++	XE2_GFX_FEATURES,
++	.multi_queue_engine_class_mask = BIT(XE_ENGINE_CLASS_COPY) | BIT(XE_ENGINE_CLASS_COMPUTE),
++	.num_geometry_xecore_fuse_regs = 3,
++	.num_compute_xecore_fuse_regs = 3,
++};
++
+ static const struct xe_graphics_desc graphics_xe3p_xpc = {
+ 	XE2_GFX_FEATURES,
+ 	.has_indirect_ring_state = 1,
+@@ -156,6 +163,7 @@ static const struct xe_ip graphics_ips[] = {
+ 	{ 3003, "Xe3_LPG", &graphics_xe2 },
+ 	{ 3004, "Xe3_LPG", &graphics_xe2 },
+ 	{ 3005, "Xe3_LPG", &graphics_xe2 },
++	{ 3510, "Xe3p_LPG", &graphics_xe3p_lpg },
+ 	{ 3511, "Xe3p_XPC", &graphics_xe3p_xpc },
+ };
+ 
+-- 
+2.43.0
+

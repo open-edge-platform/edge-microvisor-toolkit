@@ -1,0 +1,38 @@
+From 35a0a621320728722e679bc784b57135fe55958f Mon Sep 17 00:00:00 2001
+From: hepengpx <pengpengx.he@intel.com>
+Date: Wed, 17 Dec 2025 15:22:07 +0800
+Subject: [PATCH 61/65] media: ipu7: Clean csi2 fwnode ep when destroying
+ v4l2_async_connection
+
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
+index b73b54647c2e..88b16b102e1c 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-isys.c
+@@ -325,9 +325,18 @@ static int isys_notifier_complete(struct v4l2_async_notifier *notifier)
+ 	return v4l2_device_register_subdev_nodes(&isys->v4l2_dev);
+ }
+ 
++static void isys_notifier_destroy(struct v4l2_async_connection *asc)
++{
++	struct sensor_async_sd *s_asd =
++		container_of(asc, struct sensor_async_sd, asc);
++
++	fwnode_handle_put(s_asd->csi2.ep);
++}
++
+ static const struct v4l2_async_notifier_operations isys_async_ops = {
+ 	.bound = isys_notifier_bound,
+ 	.complete = isys_notifier_complete,
++	.destroy = isys_notifier_destroy,
+ };
+ 
+ static int isys_notifier_init(struct ipu7_isys *isys)
+-- 
+2.43.0
+

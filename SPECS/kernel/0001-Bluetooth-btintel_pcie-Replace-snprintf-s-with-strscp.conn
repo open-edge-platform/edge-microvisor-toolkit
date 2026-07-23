@@ -1,0 +1,38 @@
+From 3bf0772301edde2daf9a3df026d0a897ba0e4c0a Mon Sep 17 00:00:00 2001
+From: Thorsten Blum <thorsten.blum@linux.dev>
+Date: Fri, 20 Feb 2026 09:00:59 +0100
+Subject: [PATCH 01/18] Bluetooth: btintel_pcie: Replace snprintf("%s") with
+ strscpy
+
+Replace snprintf("%s", ...) with the faster and more direct strscpy().
+
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+Signed-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+---
+ drivers/bluetooth/btintel_pcie.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index 37b744e35bc4..eda243988cfd 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -10,6 +10,7 @@
+ #include <linux/module.h>
+ #include <linux/firmware.h>
+ #include <linux/pci.h>
++#include <linux/string.h>
+ #include <linux/wait.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+@@ -268,7 +269,7 @@ static inline void btintel_pcie_dump_debug_registers(struct hci_dev *hdev)
+ 	if (!skb)
+ 		return;
+ 
+-	snprintf(buf, sizeof(buf), "%s", "---- Dump of debug registers ---");
++	strscpy(buf, "---- Dump of debug registers ---");
+ 	bt_dev_dbg(hdev, "%s", buf);
+ 	skb_put_data(skb, buf, strlen(buf));
+ 
+-- 
+2.43.0
+

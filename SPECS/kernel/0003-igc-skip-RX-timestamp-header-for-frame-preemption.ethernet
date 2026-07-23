@@ -1,0 +1,42 @@
+From 37f1283c296613cc3e7b582553add25630e1b32f Mon Sep 17 00:00:00 2001
+From: KhaiWenTan <khai.wen.tan@intel.com>
+Date: Thu, 16 Apr 2026 10:38:51 +0800
+Subject: [PATCH 03/17] igc: skip RX timestamp header for frame preemption
+ verification
+
+When RX hardware timestamping is enabled, a 16-byte inline timestamp header
+is added to the start of the packet buffer, causing FPE handshake
+verification to fail.
+
+Because an incorrect packet buffer is passed to igc_fpe_handle_mpacket(),
+the mem_is_zero() check inspects the timestamp metadata instead of the
+actual mPacket payload. As a result, valid Verify/Response mPackets can be
+missed when inline RX timestamps are present.
+
+Pass pktbuf + pkt_offset to igc_fpe_handle_mpacket() so it inspects the
+actual mPacket payload instead of the timestamp header.
+
+Fixes: 5422570c0010 ("igc: add support for frame preemption verification")
+Co-developed-by: Faizal Rahim <faizal.abdul.rahim@intel.com>
+Signed-off-by: Faizal Rahim <faizal.abdul.rahim@intel.com>
+Signed-off-by: KhaiWenTan <khai.wen.tan@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
+index 72bc5128d8b8..b2836b238140 100644
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -2649,7 +2649,7 @@ static int igc_clean_rx_irq(struct igc_q_vector *q_vector, const int budget)
+ 		}
+ 
+ 		if (igc_fpe_is_pmac_enabled(adapter) &&
+-		    igc_fpe_handle_mpacket(adapter, rx_desc, size, pktbuf)) {
++		    igc_fpe_handle_mpacket(adapter, rx_desc, size, pktbuf + pkt_offset)) {
+ 			/* Advance the ring next-to-clean */
+ 			igc_is_non_eop(rx_ring, rx_desc);
+ 			cleaned_count++;
+-- 
+2.43.0
+

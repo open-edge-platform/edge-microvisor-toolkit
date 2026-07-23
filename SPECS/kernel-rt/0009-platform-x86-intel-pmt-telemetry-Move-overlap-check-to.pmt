@@ -1,0 +1,90 @@
+From 9b484a4344f06381ecece7b808c5322511579eb1 Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:51:48 -0700
+Subject: [PATCH 09/22] platform/x86/intel/pmt/telemetry: Move overlap check to
+ post-decode hook
+
+Update the telemetry namespace to use the new PMT class pre/post decode
+interface. The overlap check, which previously occurred during header
+decode, is now performed in the post-decode hook once header fields are
+populated. This preserves existing behavior while reusing the same header
+decode logic across PMT drivers.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmt/class.h     |  1 +
+ drivers/platform/x86/intel/pmt/telemetry.c | 24 ++++++++++++++--------
+ 2 files changed, 16 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmt/class.h b/drivers/platform/x86/intel/pmt/class.h
+index ff39014b208c..8a0db0ef58c1 100644
+--- a/drivers/platform/x86/intel/pmt/class.h
++++ b/drivers/platform/x86/intel/pmt/class.h
+@@ -37,6 +37,7 @@ struct intel_pmt_header {
+ 	u32	size;
+ 	u32	guid;
+ 	u8	access_type;
++	u8	telem_type;
+ };
+ 
+ struct intel_pmt_entry {
+diff --git a/drivers/platform/x86/intel/pmt/telemetry.c b/drivers/platform/x86/intel/pmt/telemetry.c
+index bdc7c24a3678..d22f633638be 100644
+--- a/drivers/platform/x86/intel/pmt/telemetry.c
++++ b/drivers/platform/x86/intel/pmt/telemetry.c
+@@ -58,14 +58,9 @@ struct pmt_telem_priv {
+ 	struct intel_pmt_entry		entry[];
+ };
+ 
+-static bool pmt_telem_region_overlaps(struct intel_pmt_entry *entry,
+-				      struct device *dev)
++static bool pmt_telem_region_overlaps(struct device *dev, u32 guid, u32 type)
+ {
+-	u32 guid = readl(entry->disc_table + TELEM_GUID_OFFSET);
+-
+ 	if (intel_pmt_is_early_client_hw(dev)) {
+-		u32 type = TELEM_TYPE(readl(entry->disc_table));
+-
+ 		if ((type == TELEM_TYPE_PUNIT_FIXED) ||
+ 		    (guid == TELEM_CLIENT_FIXED_BLOCK_GUID))
+ 			return true;
+@@ -80,15 +75,25 @@ static int pmt_telem_header_decode(struct intel_pmt_entry *entry,
+ 	void __iomem *disc_table = entry->disc_table;
+ 	struct intel_pmt_header *header = &entry->header;
+ 
+-	if (pmt_telem_region_overlaps(entry, dev))
+-		return 1;
+-
+ 	header->access_type = TELEM_ACCESS(readl(disc_table));
+ 	header->guid = readl(disc_table + TELEM_GUID_OFFSET);
+ 	header->base_offset = readl(disc_table + TELEM_BASE_OFFSET);
+ 
+ 	/* Size is measured in DWORDS, but accessor returns bytes */
+ 	header->size = TELEM_SIZE(readl(disc_table));
++	header->telem_type = TELEM_TYPE(readl(entry->disc_table));
++
++	return 0;
++}
++
++static int pmt_telem_post_decode(struct intel_vsec_device *ivdev,
++				 struct intel_pmt_entry *entry)
++{
++	struct intel_pmt_header *header = &entry->header;
++	struct device *dev = &ivdev->auxdev.dev;
++
++	if (pmt_telem_region_overlaps(dev, header->guid, header->telem_type))
++		return 1;
+ 
+ 	/*
+ 	 * Some devices may expose non-functioning entries that are
+@@ -131,6 +136,7 @@ static struct intel_pmt_namespace pmt_telem_ns = {
+ 	.name = "telem",
+ 	.xa = &telem_array,
+ 	.pmt_header_decode = pmt_telem_header_decode,
++	.pmt_post_decode = pmt_telem_post_decode,
+ 	.pmt_add_endpoint = pmt_telem_add_endpoint,
+ };
+ 
+-- 
+2.43.0
+

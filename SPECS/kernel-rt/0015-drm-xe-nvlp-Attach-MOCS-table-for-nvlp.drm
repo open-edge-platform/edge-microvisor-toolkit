@@ -1,0 +1,29 @@
+From d8444265ebd09869d0dda265ed5085a1d7338ed2 Mon Sep 17 00:00:00 2001
+From: Dnyaneshwar Bhadane <dnyaneshwar.bhadane@intel.com>
+Date: Fri, 6 Feb 2026 15:36:09 -0300
+Subject: [PATCH 15/43] drm/xe/nvlp: Attach MOCS table for nvlp
+
+The MOCS table for NVL-P is same as for Xe2/Xe3 platforms.
+
+Signed-off-by: Dnyaneshwar Bhadane <dnyaneshwar.bhadane@intel.com>
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_mocs.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_mocs.c b/drivers/gpu/drm/xe/xe_mocs.c
+index 54822497c21e..1d19df860bea 100644
+--- a/drivers/gpu/drm/xe/xe_mocs.c
++++ b/drivers/gpu/drm/xe/xe_mocs.c
+@@ -600,6 +600,7 @@ static unsigned int get_mocs_settings(struct xe_device *xe,
+ 		info->wb_index = 4;
+ 		info->unused_entries_index = 4;
+ 		break;
++	case XE_NOVALAKE_P:
+ 	case XE_NOVALAKE_S:
+ 	case XE_PANTHERLAKE:
+ 	case XE_LUNARLAKE:
+-- 
+2.43.0
+

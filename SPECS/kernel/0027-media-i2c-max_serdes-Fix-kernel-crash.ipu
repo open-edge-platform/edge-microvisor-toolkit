@@ -1,0 +1,33 @@
+From 50c1acadeb24c35588f3685b31d320c5875b05d9 Mon Sep 17 00:00:00 2001
+From: "Khai Wen, Ng" <khai.wen.ng@intel.com>
+Date: Thu, 9 Apr 2026 15:51:16 +0800
+Subject: [PATCH 27/65] media: i2c: max_serdes: Fix kernel crash
+
+There will be corner cases where double_bpp is not assigned when return.
+
+Signed-off-by: Khai Wen, Ng <khai.wen.ng@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max_serdes.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max_serdes.c b/drivers/media/i2c/maxim-serdes/max_serdes.c
+index c41e44c33f62..1d108dae3088 100644
+--- a/drivers/media/i2c/maxim-serdes/max_serdes.c
++++ b/drivers/media/i2c/maxim-serdes/max_serdes.c
+@@ -118,11 +118,11 @@ int max_serdes_process_bpps(struct device *dev, u32 bpps,
+ 	unsigned int max_bpp;
+ 	bool doubled = false;
+ 
++	*doubled_bpp = 0;
++
+ 	if (!bpps)
+ 		return 0;
+ 
+-	*doubled_bpp = 0;
+-
+ 	/*
+ 	 * Hardware can double bpps 8, 10, 12, and it can pad bpps < 16
+ 	 * to another bpp <= 16:
+-- 
+2.43.0
+

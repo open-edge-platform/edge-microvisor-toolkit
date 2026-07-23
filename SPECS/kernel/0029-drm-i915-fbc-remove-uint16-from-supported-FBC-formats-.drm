@@ -1,0 +1,50 @@
+From 62ccbf1c1d2143b6874fb3971d8362278111d55d Mon Sep 17 00:00:00 2001
+From: Vinod Govindapillai <vinod.govindapillai@intel.com>
+Date: Mon, 23 Feb 2026 15:20:11 +0200
+Subject: [PATCH 29/43] drm/i915/fbc: remove uint16 from supported FBC formats
+ in xe3plpd
+
+As UINT16 pixel formats are not listed as supported formats in any
+of the display versions so far, there is no point is having these
+formats listed as supported for FBC. So remove the UINT16 formats
+from the supported formats for FBC.
+
+v2: removed an unused variable
+
+Signed-off-by: Vinod Govindapillai <vinod.govindapillai@intel.com>
+---
+ drivers/gpu/drm/i915/display/intel_fbc.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_fbc.c b/drivers/gpu/drm/i915/display/intel_fbc.c
+index 91de38379282..33dd2406243c 100644
+--- a/drivers/gpu/drm/i915/display/intel_fbc.c
++++ b/drivers/gpu/drm/i915/display/intel_fbc.c
+@@ -1196,23 +1196,13 @@ xe3p_lpd_fbc_fp16_format_is_valid(const struct intel_plane_state *plane_state)
+ 
+ static bool xe3p_lpd_fbc_pixel_format_is_valid(const struct intel_plane_state *plane_state)
+ {
+-	const struct drm_framebuffer *fb = plane_state->hw.fb;
+-
+ 	if (lnl_fbc_pixel_format_is_valid(plane_state))
+ 		return true;
+ 
+ 	if (xe3p_lpd_fbc_fp16_format_is_valid(plane_state))
+ 		return true;
+ 
+-	switch (fb->format->format) {
+-	case DRM_FORMAT_XRGB16161616:
+-	case DRM_FORMAT_XBGR16161616:
+-	case DRM_FORMAT_ARGB16161616:
+-	case DRM_FORMAT_ABGR16161616:
+-		return true;
+-	default:
+-		return false;
+-	}
++	return false;
+ }
+ 
+ bool intel_fbc_need_pixel_normalizer(const struct intel_plane_state *plane_state)
+-- 
+2.43.0
+

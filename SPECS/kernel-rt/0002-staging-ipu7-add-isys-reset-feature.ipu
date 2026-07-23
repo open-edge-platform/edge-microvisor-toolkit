@@ -1,0 +1,200 @@
+From 06d190f89b630d4aa8f2088f134d92bb5fd3e97b Mon Sep 17 00:00:00 2001
+From: Lin Yang <linx.yang@intel.com>
+Date: Tue, 7 Jul 2026 09:14:22 +0800
+Subject: [PATCH 2/4] staging: ipu7: add isys reset feature
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys-queue.c | 15 ++++++---
+ drivers/staging/media/ipu7/ipu7-isys-video.c | 33 +++-----------------
+ drivers/staging/media/ipu7/ipu7-isys.c       |  2 ++
+ drivers/staging/media/ipu7/ipu7-isys.h       |  4 +--
+ 4 files changed, 17 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+index e5cc4cafb3ea..554c4a51fc42 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+@@ -11,6 +11,7 @@
+ #include <linux/mutex.h>
+ #include <linux/spinlock.h>
+ #include <linux/types.h>
++#include <linux/version.h>
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+ #include <linux/delay.h>
+ #endif
+@@ -437,8 +438,8 @@ static void buf_queue(struct vb2_buffer *vb)
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+-
+ 	msg->stream_id = stream->stream_handle;
++
+ 	buf = &msg->fw_msg.frame;
+ 
+ 	ipu7_isys_buffer_to_fw_frame_buff(buf, stream, &bl);
+@@ -656,11 +657,14 @@ static int start_streaming(struct vb2_queue *q, unsigned int count)
+ static void reset_stop_streaming(struct ipu7_isys_video *av)
+ {
+ 	struct ipu7_isys_queue *aq = &av->aq;
++	struct device *dev = &av->isys->adev->auxdev.dev;
+ 	struct ipu7_isys_stream *stream = av->stream;
+ 	struct ipu7_isys_buffer *ib;
+ 	struct vb2_buffer *vb;
+ 	unsigned long flags;
+ 
++	dev_dbg(dev, "reset stop streams: %s\n", av->vdev.name);
++
+ 	mutex_lock(&av->isys->stream_mutex);
+ 	if (stream->nr_streaming == stream->nr_queues && stream->streaming)
+ 		ipu7_isys_video_set_streaming(av, 0, NULL);
+@@ -831,7 +835,6 @@ static int ipu_isys_reset(struct ipu7_isys_video *self_av,
+ 
+ 	mutex_unlock(&isys->reset_mutex);
+ 
+-	dev_dbg(dev, "reset stop streams\n");
+ 	for (i = 0; i < csi2_pdata->nports; i++) {
+ 		for (j = 0; j < IPU7_NR_OF_CSI2_SRC_PADS; j++) {
+ 			av = &isys->csi2[i].av[j];
+@@ -856,8 +859,6 @@ static int ipu_isys_reset(struct ipu7_isys_video *self_av,
+ 
+ 	ipu7_cleanup_fw_msg_bufs(isys);
+ 
+-	dev_dbg(dev, "reset start streams\n");
+-
+ 	for (j = 0; j < csi2_pdata->nports; j++) {
+ 		for (i = 0; i < IPU7_NR_OF_CSI2_SRC_PADS; i++) {
+ 			av = &isys->csi2[j].av[i];
+@@ -948,7 +949,7 @@ static void stop_streaming(struct vb2_queue *q)
+ 	mutex_unlock(&av->isys->reset_mutex);
+ 
+ 	if (need_reset) {
+-		if (!stream->nr_streaming) {
++		if (av->isys->stream_opened > 0) {
+ 			ipu_isys_reset(av, stream);
+ 		} else {
+ 			mutex_lock(&av->isys->reset_mutex);
+@@ -1159,6 +1160,10 @@ void ipu7_isys_queue_buf_ready(struct ipu7_isys_stream *stream,
+ 
+ static const struct vb2_ops ipu7_isys_queue_ops = {
+ 	.queue_setup = ipu7_isys_queue_setup,
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(6, 12, 255)
++	.wait_prepare = vb2_ops_wait_prepare,
++	.wait_finish = vb2_ops_wait_finish,
++#endif
+ 	.buf_init = ipu7_isys_buf_init,
+ 	.buf_prepare = ipu7_isys_buf_prepare,
+ 	.buf_cleanup = ipu7_isys_buf_cleanup,
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-video.c b/drivers/staging/media/ipu7/ipu7-isys-video.c
+index 0a41aff4dbdb..aab302ae59eb 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-video.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-video.c
+@@ -84,39 +84,14 @@ const struct ipu7_isys_pixelformat ipu7_isys_pfmts[] = {
+ 	{V4L2_PIX_FMT_UYVY, 16, 16, MEDIA_BUS_FMT_UYVY8_1X16,
+ 	 IPU_INSYS_FRAME_FORMAT_UYVY},
+ 	{V4L2_PIX_FMT_YUYV, 16, 16, MEDIA_BUS_FMT_YUYV8_1X16,
+-	 IPU_INSYS_FRAME_FORMAT_UYVY}, /* D4XX fix for incorrect RGB stream */
++	 IPU_INSYS_FRAME_FORMAT_YUYV},
+ 	{V4L2_PIX_FMT_RGB565, 16, 16, MEDIA_BUS_FMT_RGB565_1X16,
+ 	 IPU_INSYS_FRAME_FORMAT_RGB565},
+ 	{V4L2_PIX_FMT_BGR24, 24, 24, MEDIA_BUS_FMT_RGB888_1X24,
+ 	 IPU_INSYS_FRAME_FORMAT_RGBA888},
+-	/* D4XX specific */
+-	{V4L2_PIX_FMT_Z16, 16, 16, MEDIA_BUS_FMT_UYVY8_1X16,
+-	 IPU_INSYS_FRAME_FORMAT_UYVY},
+-	{V4L2_PIX_FMT_Y8I, 16, 16, MEDIA_BUS_FMT_VYUY8_1X16,
+-	 IPU_INSYS_FRAME_FORMAT_UYVY},
+-	{V4L2_PIX_FMT_Y12I, 32, 24, MEDIA_BUS_FMT_RGB888_1X24,
+-	 IPU_INSYS_FRAME_FORMAT_RGBA888},
+-	{V4L2_PIX_FMT_GREY, 8, 8, MEDIA_BUS_FMT_Y8_1X8,
+-	 IPU_INSYS_FRAME_FORMAT_RAW8},
+ };
+ 
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+-static int video_open(struct file *file)
+-{
+-	struct ipu7_isys_video *av = video_drvdata(file);
+-	struct ipu7_isys *isys = av->isys;
+-	struct ipu7_bus_device *adev = isys->adev;
+-
+-	mutex_lock(&isys->reset_mutex);
+-	if (isys->need_reset) {
+-		mutex_unlock(&isys->reset_mutex);
+-		dev_warn(&adev->auxdev.dev, "isys power cycle required\n");
+-		return -EIO;
+-	}
+-	mutex_unlock(&isys->reset_mutex);
+-	return v4l2_fh_open(file);
+-}
+-
+ static int video_release(struct file *file)
+ {
+ 	struct ipu7_isys_video *av = video_drvdata(file);
+@@ -135,7 +110,7 @@ static int video_release(struct file *file)
+ 	return vb2_fop_release(file);
+ }
+ 
+- #endif
++#endif
+ const struct ipu7_isys_pixelformat *ipu7_isys_get_isys_format(u32 pixelformat)
+ {
+ 	unsigned int i;
+@@ -263,6 +238,7 @@ static void __ipu_isys_vidioc_try_fmt_vid_cap(struct ipu7_isys_video *av,
+ 			      &f->fmt.pix.bytesperline, &f->fmt.pix.sizeimage);
+ 
+ 	f->fmt.pix.field = V4L2_FIELD_NONE;
++	f->fmt.pix.colorspace = V4L2_COLORSPACE_RAW;
+ 	f->fmt.pix.ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
+ 	f->fmt.pix.quantization = V4L2_QUANTIZATION_DEFAULT;
+ 	f->fmt.pix.xfer_func = V4L2_XFER_FUNC_DEFAULT;
+@@ -951,11 +927,10 @@ static const struct v4l2_file_operations isys_fops = {
+ 	.poll = vb2_fop_poll,
+ 	.unlocked_ioctl = video_ioctl2,
+ 	.mmap = vb2_fop_mmap,
++	.open = v4l2_fh_open,
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+-	.open = video_open,
+ 	.release = video_release,
+ #else
+-	.open = v4l2_fh_open,
+ 	.release = vb2_fop_release,
+ #endif
+ };
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
+index 44c40fbb38aa..1b42d14354f8 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-isys.c
+@@ -836,6 +836,8 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ 	struct isys_fw_msgs *fwmsg, *safe;
+ 	struct ipu7_bus_device *adev = auxdev_to_adev(auxdev);
+ 
++	adev->get_running_fw_task_count = NULL;
++
+ #ifdef CONFIG_DEBUG_FS
+ 	if (adev->isp->ipu7_dir)
+ 		debugfs_remove_recursive(isys->debugfsdir);
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
+index ba5275434865..30c4c5666311 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.h
++++ b/drivers/staging/media/ipu7/ipu7-isys.h
+@@ -44,7 +44,7 @@ struct dentry;
+ #define IPU_ISYS_NUM_RECV_QUEUE		1U
+ 
+ #define IPU_ISYS_MIN_WIDTH		2U
+-#define IPU_ISYS_MIN_HEIGHT		1U  /* D4XX specific */
++#define IPU_ISYS_MIN_HEIGHT			2U
+ #define IPU_ISYS_MAX_WIDTH		8160U
+ #define IPU_ISYS_MAX_HEIGHT		8190U
+ 
+@@ -136,8 +136,6 @@ struct ipu7_isys {
+ 
+ 	struct ipu7_insys_config *subsys_config;
+ 	dma_addr_t subsys_config_dma_addr;
+-	/* Protect framebuflist when getting fw msg buf. */
+-	struct mutex acquire_fw_msgbuf_lock;
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+ 	struct mutex reset_mutex;
+ 	bool need_reset;
+-- 
+2.43.0
+

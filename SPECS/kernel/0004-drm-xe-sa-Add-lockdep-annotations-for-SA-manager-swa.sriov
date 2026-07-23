@@ -1,0 +1,44 @@
+From 7ec6eebb38edd7ba0ced98413efb6ffb7002a8c7 Mon Sep 17 00:00:00 2001
+From: Satyanarayana K V P <satyanarayana.k.v.p@intel.com>
+Date: Fri, 20 Feb 2026 05:55:23 +0000
+Subject: [PATCH 04/10] drm/xe/sa: Add lockdep annotations for SA manager
+ swap_guard
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Annotate the SA manager init path to model taking swap_guard while under
+reclaim context. This helps lockdep catch potential circular dependencies
+between fs_reclaim and swap_guard in debug builds. Without this annotation,
+lockdep is unaware of this chain until the shrinker runs.
+
+Signed-off-by: Satyanarayana K V P <satyanarayana.k.v.p@intel.com>
+Suggested-by: Matthew Brost <matthew.brost@intel.com>
+Cc: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Cc: Matthew Auld <matthew.auld@intel.com>
+Reviewed-by: Matthew Brost <matthew.brost@intel.com>
+Reviewed-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
+---
+ drivers/gpu/drm/xe/xe_sa.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_sa.c b/drivers/gpu/drm/xe/xe_sa.c
+index c7ee952e8914..f32045f40b7a 100644
+--- a/drivers/gpu/drm/xe/xe_sa.c
++++ b/drivers/gpu/drm/xe/xe_sa.c
+@@ -89,6 +89,12 @@ struct xe_sa_manager *__xe_sa_bo_manager_init(struct xe_tile *tile, u32 size,
+ 		if (ret)
+ 			return ERR_PTR(ret);
+ 
++		if (IS_ENABLED(CONFIG_PROVE_LOCKING)) {
++			fs_reclaim_acquire(GFP_KERNEL);
++			might_lock(&sa_manager->swap_guard);
++			fs_reclaim_release(GFP_KERNEL);
++		}
++
+ 		shadow = xe_managed_bo_create_pin_map(xe, tile, size,
+ 						      XE_BO_FLAG_VRAM_IF_DGFX(tile) |
+ 						      XE_BO_FLAG_GGTT |
+-- 
+2.43.0
+

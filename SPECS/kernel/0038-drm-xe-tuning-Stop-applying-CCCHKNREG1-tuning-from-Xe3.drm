@@ -1,0 +1,35 @@
+From 49b9561d983507d514a7a16120bfd345e5f66a16 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 10 Apr 2026 15:50:28 -0700
+Subject: [PATCH 38/43] drm/xe/tuning: Stop applying CCCHKNREG1 tuning from
+ Xe3p onward
+
+Whereas the tuning guide gave guidance on adjusting various CCCHKNREG1
+on past platforms, starting from Xe3p the guidance is "Leave register at
+HW default settings."  Set a version range upper bound of "34.99" so
+that the current programming will stop being applied on any Xe3p
+platforms that have graphics version 35.
+
+Bspec: 72161
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_tuning.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_tuning.c b/drivers/gpu/drm/xe/xe_tuning.c
+index 9a3ddaf1a072..ca9b5b51db89 100644
+--- a/drivers/gpu/drm/xe/xe_tuning.c
++++ b/drivers/gpu/drm/xe/xe_tuning.c
+@@ -42,7 +42,7 @@ static const struct xe_rtp_entry_sr gt_tunings[] = {
+ 				   REG_FIELD_PREP(L3_PWM_TIMER_INIT_VAL_MASK, 0x7f)))
+ 	},
+ 	{ XE_RTP_NAME("Tuning: Compression Overfetch"),
+-	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(2001, XE_RTP_END_VERSION_UNDEFINED),
++	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(2001, 3499),
+ 		       FUNC(xe_rtp_match_has_flat_ccs)),
+ 	  XE_RTP_ACTIONS(CLR(CCCHKNREG1, ENCOMPPERFFIX),
+ 			 SET(CCCHKNREG1, L3CMPCTRL))
+-- 
+2.43.0
+

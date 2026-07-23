@@ -1,0 +1,46 @@
+From 0377d09364a21e5a4f799de393739bd0fa352f04 Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Wed, 20 May 2026 16:35:32 +0800
+Subject: [PATCH] perf/core: allow trace events to be accessed from any CPU
+
+Using perf to collect trace event statistics may introduce unnecessary
+SMP IPI interrupts. For example:
+
+  perf stat -e i915:i915_context_create -I 1000
+
+In perf_event_read(), an SMP IPI is triggered when the event CPU
+differs from the local CPU.
+
+Allow trace events to be accessed from any CPU so the event CPU can
+be set to the local CPU, eliminating the extra IPI overhead.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ kernel/events/core.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index acdb1f02924d..7dab6c1711ea 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -11362,6 +11362,9 @@ static int perf_tp_event_init(struct perf_event *event)
+ 	if (err)
+ 		return err;
+ 
++	/* Trace event could be read from any CPU */
++	event->event_caps |= PERF_EV_CAP_READ_SCOPE;
++
+ 	event->destroy = tp_perf_event_destroy;
+ 
+ 	return 0;
+@@ -11376,6 +11379,7 @@ static struct pmu perf_tracepoint = {
+ 	.start		= perf_swevent_start,
+ 	.stop		= perf_swevent_stop,
+ 	.read		= perf_swevent_read,
++	.scope		= PERF_PMU_SCOPE_SYS_WIDE,
+ };
+ 
+ static int perf_tp_filter_match(struct perf_event *event,
+-- 
+2.43.0
+
