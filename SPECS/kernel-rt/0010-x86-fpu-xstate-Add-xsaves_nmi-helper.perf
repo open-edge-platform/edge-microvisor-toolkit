@@ -1,0 +1,72 @@
+From 2a1f26b5c9647a129ae0decec0191f4c509a6f15 Mon Sep 17 00:00:00 2001
+From: Kan Liang <kan.liang@linux.intel.com>
+Date: Tue, 9 Sep 2025 14:04:45 -0700
+Subject: [PATCH 10/39] x86/fpu/xstate: Add xsaves_nmi() helper
+
+Add xsaves_nmi() to save supported xsave states in NMI handler.
+
+This function is similar to xsaves(), but should only be called within
+a NMI handler. This function returns the actual register contents at
+the moment the NMI occurs.
+
+Currently the perf subsystem is the sole user of this helper. It uses
+this function to snapshot SIMD (XMM/YMM/ZMM) and APX eGPRs registers
+which would be added in subsequent patches.
+
+Suggested-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/include/asm/fpu/xstate.h |  1 +
+ arch/x86/kernel/fpu/xstate.c      | 23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
+
+diff --git a/arch/x86/include/asm/fpu/xstate.h b/arch/x86/include/asm/fpu/xstate.h
+index 7a7dc9d56027..38fa8ff26559 100644
+--- a/arch/x86/include/asm/fpu/xstate.h
++++ b/arch/x86/include/asm/fpu/xstate.h
+@@ -110,6 +110,7 @@ int xfeature_size(int xfeature_nr);
+ 
+ void xsaves(struct xregs_state *xsave, u64 mask);
+ void xrstors(struct xregs_state *xsave, u64 mask);
++void xsaves_nmi(struct xregs_state *xsave, u64 mask);
+ 
+ int xfd_enable_feature(u64 xfd_err);
+ 
+diff --git a/arch/x86/kernel/fpu/xstate.c b/arch/x86/kernel/fpu/xstate.c
+index 76153dfb58c9..39e5f9e79a4c 100644
+--- a/arch/x86/kernel/fpu/xstate.c
++++ b/arch/x86/kernel/fpu/xstate.c
+@@ -1475,6 +1475,29 @@ void xrstors(struct xregs_state *xstate, u64 mask)
+ 	WARN_ON_ONCE(err);
+ }
+ 
++/**
++ * xsaves_nmi - Save selected components to a kernel xstate buffer in NMI
++ * @xstate:	Pointer to the buffer
++ * @mask:	Feature mask to select the components to save
++ *
++ * This function is similar to xsaves(), but should only be called within
++ * a NMI handler. This function returns the actual register contents at
++ * the moment the NMI occurs.
++ *
++ * Currently, the perf subsystem is the sole user of this helper. It uses
++ * the function to snapshot SIMD (XMM/YMM/ZMM) and APX eGPRs registers.
++ */
++void xsaves_nmi(struct xregs_state *xstate, u64 mask)
++{
++	int err;
++
++	if (!in_nmi())
++		return;
++
++	XSTATE_OP(XSAVES, xstate, (u32)mask, (u32)(mask >> 32), err);
++	WARN_ON_ONCE(err);
++}
++
+ #if IS_ENABLED(CONFIG_KVM)
+ void fpstate_clear_xstate_component(struct fpstate *fpstate, unsigned int xfeature)
+ {
+-- 
+2.43.0
+

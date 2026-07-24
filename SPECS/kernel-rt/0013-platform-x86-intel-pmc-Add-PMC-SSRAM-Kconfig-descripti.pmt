@@ -1,0 +1,35 @@
+From 7fa48240940094b59dfffe80ae4cd2305dfb3b1d Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:51:52 -0700
+Subject: [PATCH 13/22] platform/x86/intel/pmc: Add PMC SSRAM Kconfig
+ description
+
+Add a proper description for the intel_pmc_ssram driver.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmc/Kconfig | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/platform/x86/intel/pmc/Kconfig b/drivers/platform/x86/intel/pmc/Kconfig
+index c6ef0bcf76af..0f19dc7edcf9 100644
+--- a/drivers/platform/x86/intel/pmc/Kconfig
++++ b/drivers/platform/x86/intel/pmc/Kconfig
+@@ -28,3 +28,14 @@ config INTEL_PMC_CORE
+ 
+ config INTEL_PMC_SSRAM_TELEMETRY
+ 	tristate
++	help
++	  This PCI driver discovers PMC SSRAM telemetry regions through the
++	  PMC's MMIO interface and registers them with the Intel VSEC framework
++	  as Intel PMT telemetry devices.
++
++	  It probes the PMC SSRAM device, extracts DVSEC information from MMIO,
++	  reads device IDs and base addresses for multiple PMCs (main, IOE, PCH),
++	  and exposes the discovered telemetry through Intel PMT interfaces
++	  (including sysfs).
++
++	  This option is selected by INTEL_PMC_CORE.
+-- 
+2.43.0
+

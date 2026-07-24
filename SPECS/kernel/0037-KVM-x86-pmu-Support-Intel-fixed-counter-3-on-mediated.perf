@@ -1,0 +1,82 @@
+From 3af543e5262a76e97fdeecff0dca7769cd63dd26 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Fri, 6 Feb 2026 16:23:53 -0800
+Subject: [PATCH 37/39] KVM: x86/pmu: Support Intel fixed counter 3 on mediated
+ vPMU
+
+Starting from Ice Lake, Intel introduces fixed counter 3, which counts
+the number of available slots for an unhalted logical processor and
+serves as the denominator for the top-level metrics of the Top-down
+Microarchitecture Analysis method.
+
+Emulating this counter on legacy vPMU would require introducing a new
+generic perf encoding for the Intel-specific TOPDOWN.SLOTS event in
+order to call perf_get_hw_event_config(). This is not desirable.
+
+In addition, without IA32_PERF_METRICS emulation, this counter has
+little practical value to the guest.
+
+Expose fixed counter 3 to the guest only when mediated vPMU is enabled.
+
+Co-developed-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Zide Chen <zide.chen@intel.com>
+---
+ arch/x86/include/asm/kvm_host.h | 2 +-
+ arch/x86/kvm/pmu.c              | 4 ++++
+ arch/x86/kvm/x86.c              | 4 ++--
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index ff07c45e3c73..4666b2c7988f 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -555,7 +555,7 @@ struct kvm_pmc {
+ #define KVM_MAX_NR_GP_COUNTERS		KVM_MAX(KVM_MAX_NR_INTEL_GP_COUNTERS, \
+ 						KVM_MAX_NR_AMD_GP_COUNTERS)
+ 
+-#define KVM_MAX_NR_INTEL_FIXED_COUNTERS	3
++#define KVM_MAX_NR_INTEL_FIXED_COUNTERS	4
+ #define KVM_MAX_NR_AMD_FIXED_COUNTERS	0
+ #define KVM_MAX_NR_FIXED_COUNTERS	KVM_MAX(KVM_MAX_NR_INTEL_FIXED_COUNTERS, \
+ 						KVM_MAX_NR_AMD_FIXED_COUNTERS)
+diff --git a/arch/x86/kvm/pmu.c b/arch/x86/kvm/pmu.c
+index bd6b785cf261..ee49395bfb82 100644
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -148,6 +148,10 @@ void kvm_init_pmu_capability(struct kvm_pmu_ops *pmu_ops)
+ 	}
+ 
+ 	memcpy(&kvm_pmu_cap, &kvm_host_pmu, sizeof(kvm_host_pmu));
++
++	if (!enable_mediated_pmu && kvm_pmu_cap.num_counters_fixed > 3)
++		kvm_pmu_cap.num_counters_fixed = 3;
++
+ 	kvm_pmu_cap.version = min(kvm_pmu_cap.version, 2);
+ 	kvm_pmu_cap.num_counters_gp = min(kvm_pmu_cap.num_counters_gp,
+ 					  pmu_ops->MAX_NR_GP_COUNTERS);
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index a03530795707..af7dff53c4cf 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -355,7 +355,7 @@ static const u32 msrs_to_save_base[] = {
+ 
+ static const u32 msrs_to_save_pmu[] = {
+ 	MSR_ARCH_PERFMON_FIXED_CTR0, MSR_ARCH_PERFMON_FIXED_CTR1,
+-	MSR_ARCH_PERFMON_FIXED_CTR0 + 2,
++	MSR_ARCH_PERFMON_FIXED_CTR2, MSR_ARCH_PERFMON_FIXED_CTR3,
+ 	MSR_CORE_PERF_FIXED_CTR_CTRL, MSR_CORE_PERF_GLOBAL_STATUS,
+ 	MSR_CORE_PERF_GLOBAL_CTRL,
+ 	MSR_IA32_PEBS_ENABLE, MSR_IA32_DS_AREA, MSR_PEBS_DATA_CFG,
+@@ -7737,7 +7737,7 @@ static void kvm_init_msr_lists(void)
+ {
+ 	unsigned i;
+ 
+-	BUILD_BUG_ON_MSG(KVM_MAX_NR_FIXED_COUNTERS != 3,
++	BUILD_BUG_ON_MSG(KVM_MAX_NR_FIXED_COUNTERS != 4,
+ 			 "Please update the fixed PMCs in msrs_to_save_pmu[]");
+ 
+ 	num_msrs_to_save = 0;
+-- 
+2.43.0
+

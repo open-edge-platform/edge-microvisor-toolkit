@@ -1,0 +1,81 @@
+From 9dbe62434150d042a552a2facb30f3078064ac52 Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:51:56 -0700
+Subject: [PATCH 17/22] platform/x86/intel/pmc/ssram: Refactor DEVID/PWRMBASE
+ extraction into helper
+
+Move DEVID/PWRMBASE extraction into pmc_ssram_get_devid_pwrmbase().
+
+This is a preparatory refactor to place functionality in a common helper
+for reuse by a subsequent patch, while keeping behavior unchanged in this
+step.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ .../platform/x86/intel/pmc/ssram_telemetry.c  | 31 ++++++++++++-------
+ 1 file changed, 19 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/ssram_telemetry.c b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+index 9c3d7ba2fd52..75a80a74a069 100644
+--- a/drivers/platform/x86/intel/pmc/ssram_telemetry.c
++++ b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+@@ -27,6 +27,23 @@ DEFINE_FREE(pmc_ssram_telemetry_iounmap, void __iomem *, if (_T) iounmap(_T))
+ static struct pmc_ssram_telemetry pmc_ssram_telems[3];
+ static bool device_probed;
+ 
++static inline u64 get_base(void __iomem *addr, u32 offset)
++{
++	return lo_hi_readq(addr + offset) & GENMASK_ULL(63, 3);
++}
++
++static void pmc_ssram_get_devid_pwrmbase(void __iomem *ssram, unsigned int pmc_idx)
++{
++	u64 pwrm_base;
++	u16 devid;
++
++	pwrm_base = get_base(ssram, SSRAM_PWRM_OFFSET);
++	devid = readw(ssram + SSRAM_DEVID_OFFSET);
++
++	pmc_ssram_telems[pmc_idx].devid = devid;
++	pmc_ssram_telems[pmc_idx].base_addr = pwrm_base;
++}
++
+ static int
+ pmc_ssram_telemetry_add_pmt(struct pci_dev *pcidev, u64 ssram_base, void __iomem *ssram)
+ {
+@@ -63,18 +80,12 @@ pmc_ssram_telemetry_add_pmt(struct pci_dev *pcidev, u64 ssram_base, void __iomem
+ 	return intel_vsec_register(&pcidev->dev, &info);
+ }
+ 
+-static inline u64 get_base(void __iomem *addr, u32 offset)
+-{
+-	return lo_hi_readq(addr + offset) & GENMASK_ULL(63, 3);
+-}
+-
+ static int
+ pmc_ssram_telemetry_get_pmc(struct pci_dev *pcidev, unsigned int pmc_idx, u32 offset)
+ {
+ 	void __iomem __free(pmc_ssram_telemetry_iounmap) *tmp_ssram = NULL;
+ 	void __iomem __free(pmc_ssram_telemetry_iounmap) *ssram = NULL;
+-	u64 ssram_base, pwrm_base;
+-	u16 devid;
++	u64 ssram_base;
+ 
+ 	ssram_base = pci_resource_start(pcidev, 0);
+ 	tmp_ssram = ioremap(ssram_base, SSRAM_HDR_SIZE);
+@@ -99,11 +110,7 @@ pmc_ssram_telemetry_get_pmc(struct pci_dev *pcidev, unsigned int pmc_idx, u32 of
+ 		ssram = no_free_ptr(tmp_ssram);
+ 	}
+ 
+-	pwrm_base = get_base(ssram, SSRAM_PWRM_OFFSET);
+-	devid = readw(ssram + SSRAM_DEVID_OFFSET);
+-
+-	pmc_ssram_telems[pmc_idx].devid = devid;
+-	pmc_ssram_telems[pmc_idx].base_addr = pwrm_base;
++	pmc_ssram_get_devid_pwrmbase(ssram, pmc_idx);
+ 
+ 	/* Find and register and PMC telemetry entries */
+ 	return pmc_ssram_telemetry_add_pmt(pcidev, ssram_base, ssram);
+-- 
+2.43.0
+

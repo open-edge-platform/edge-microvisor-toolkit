@@ -1,0 +1,25 @@
+From 50e95e7c4f7658a23663abaf2e1c859f28a308f4 Mon Sep 17 00:00:00 2001
+From: "Pan, Kris" <kris.pan@intel.com>
+Date: Wed, 17 Jun 2026 10:28:02 +0800
+Subject: [PATCH 65/65] media: ipu-bridge: add X86 dependency
+
+Signed-off-by: Pan, Kris <kris.pan@intel.com>
+---
+ drivers/media/pci/intel/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/pci/intel/Kconfig b/drivers/media/pci/intel/Kconfig
+index 3f14ca110d06..d0f785e42f2f 100644
+--- a/drivers/media/pci/intel/Kconfig
++++ b/drivers/media/pci/intel/Kconfig
+@@ -8,6 +8,7 @@ config IPU_BRIDGE
+ 	tristate "Intel IPU Bridge"
+ 	depends on ACPI
+ 	depends on I2C
++	depends on X86
+ 	help
+ 	  The IPU bridge is a helper library for Intel IPU drivers to
+ 	  function on systems shipped with Windows.
+-- 
+2.43.0
+

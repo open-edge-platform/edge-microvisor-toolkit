@@ -1,0 +1,60 @@
+From 12b7944d1eb0cee985c1669ec6867f94fe27e2ae Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Wed, 4 Feb 2026 16:47:16 +0800
+Subject: [PATCH 06/39] perf/x86/intel: Convert x86_perf_regs to per-cpu
+ variables
+
+Currently, the intel_pmu_drain_pebs_icl() and intel_pmu_drain_arch_pebs()
+helpers define many temporary variables. Upcoming patches will add new
+fields like *ymm_regs and *zmm_regs to the x86_perf_regs structure to
+support sampling for these SIMD registers. This would increase the stack
+size consumed by these helpers, potentially triggering the warning:
+"the frame size of 1048 bytes is larger than 1024 bytes
+ [-Wframe-larger-than=]".
+
+To eliminate this warning, convert x86_perf_regs to per-cpu variables.
+
+No functional changes are intended.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/intel/ds.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/events/intel/ds.c b/arch/x86/events/intel/ds.c
+index 57805c6ba0c3..87bf8672f5a8 100644
+--- a/arch/x86/events/intel/ds.c
++++ b/arch/x86/events/intel/ds.c
+@@ -3174,14 +3174,16 @@ __intel_pmu_handle_last_pebs_record(struct pt_regs *iregs,
+ 
+ }
+ 
++DEFINE_PER_CPU(struct x86_perf_regs, pebs_perf_regs);
++
+ static void intel_pmu_drain_pebs_icl(struct pt_regs *iregs, struct perf_sample_data *data)
+ {
+ 	short counts[INTEL_PMC_IDX_FIXED + MAX_FIXED_PEBS_EVENTS] = {};
+ 	void *last[INTEL_PMC_IDX_FIXED + MAX_FIXED_PEBS_EVENTS];
+ 	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
+ 	struct debug_store *ds = cpuc->ds;
+-	struct x86_perf_regs perf_regs;
+-	struct pt_regs *regs = &perf_regs.regs;
++	struct x86_perf_regs *perf_regs = this_cpu_ptr(&pebs_perf_regs);
++	struct pt_regs *regs = &perf_regs->regs;
+ 	struct pebs_basic *basic;
+ 	void *base, *at, *top;
+ 	u64 mask;
+@@ -3231,8 +3233,8 @@ static void intel_pmu_drain_arch_pebs(struct pt_regs *iregs,
+ 	void *last[INTEL_PMC_IDX_FIXED + MAX_FIXED_PEBS_EVENTS];
+ 	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
+ 	union arch_pebs_index index;
+-	struct x86_perf_regs perf_regs;
+-	struct pt_regs *regs = &perf_regs.regs;
++	struct x86_perf_regs *perf_regs = this_cpu_ptr(&pebs_perf_regs);
++	struct pt_regs *regs = &perf_regs->regs;
+ 	void *base, *at, *top;
+ 	u64 mask;
+ 
+-- 
+2.43.0
+

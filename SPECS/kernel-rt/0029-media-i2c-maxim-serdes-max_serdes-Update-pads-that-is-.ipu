@@ -1,0 +1,45 @@
+From 1e94aa005d197a6e241262e4166c0bfc863a7745 Mon Sep 17 00:00:00 2001
+From: "Khai Wen, Ng" <khai.wen.ng@intel.com>
+Date: Tue, 14 Apr 2026 17:09:19 +0800
+Subject: [PATCH 29/65] media: i2c: maxim-serdes: max_serdes: Update pads that
+ is affected by stream
+
+Only update pads that is affected by particular stream enable or disable,
+to achieve this, old stream states need to be saved before updating with
+new streams.
+
+Signed-off-by: Khai Wen, Ng <khai.wen.ng@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max_serdes.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max_serdes.c b/drivers/media/i2c/maxim-serdes/max_serdes.c
+index 1d108dae3088..6b6adee52ed0 100644
+--- a/drivers/media/i2c/maxim-serdes/max_serdes.c
++++ b/drivers/media/i2c/maxim-serdes/max_serdes.c
+@@ -260,6 +260,14 @@ int max_serdes_get_streams_masks(struct device *dev,
+ 	if (!streams_masks)
+ 		return -ENOMEM;
+ 
++	/*
++	 * Carry forward old state for all pads, then update only the pads
++	 * affected by this stream enable/disable. Without this, pads
++	 * unrelated to the current update lose their active streams state,
++	 * causing pipes on other links to be incorrectly disabled.
++	 */
++	memcpy(streams_masks, old_streams_masks, num_pads * sizeof(*streams_masks));
++
+ 	for (i = 0; i < num_pads; i++) {
+ 		u64 matched_streams_mask = updated_streams_mask;
+ 		u64 updated_sink_streams_mask;
+@@ -270,7 +278,6 @@ int max_serdes_get_streams_masks(struct device *dev,
+ 		if (!updated_sink_streams_mask)
+ 			continue;
+ 
+-		streams_masks[i] = old_streams_masks[i];
+ 		if (enable)
+ 			streams_masks[i] |= updated_sink_streams_mask;
+ 		else
+-- 
+2.43.0
+

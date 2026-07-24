@@ -1,0 +1,55 @@
+From 84c0d61b1d47cc7d02bff98d2100b29a710ee70c Mon Sep 17 00:00:00 2001
+From: Szymon Durawa <szymon.durawa@linux.intel.com>
+Date: Wed, 13 May 2026 15:25:28 +0000
+Subject: [PATCH 2/9] PCI: vmd: Add vmd_configure_cfgbar() helper function
+
+Move the VMD CFGBAR initialization code to a new helper
+vmd_configure_cfgbar(). No functional changes.
+
+Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
+---
+ drivers/pci/controller/vmd.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index 070b247b3fbb..2c824660cabd 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -771,6 +771,18 @@ static int vmd_pm_enable_quirk(struct pci_dev *pdev, void *userdata)
+ 	return 0;
+ }
+ 
++static void vmd_configure_cfgbar(struct vmd_dev *vmd)
++{
++	struct resource *res = &vmd->dev->resource[VMD_CFGBAR];
++
++	vmd->resources[0] = (struct resource){
++		.name = "VMD CFGBAR",
++		.start = vmd->busn_start,
++		.end = vmd->busn_start + (resource_size(res) >> 20) - 1,
++		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
++	};
++}
++
+ static void vmd_bus_enumeration(struct pci_bus *bus, unsigned long features)
+ {
+ 	struct pci_bus *child;
+@@ -857,13 +869,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 			return ret;
+ 	}
+ 
+-	res = &vmd->dev->resource[VMD_CFGBAR];
+-	vmd->resources[0] = (struct resource) {
+-		.name  = "VMD CFGBAR",
+-		.start = vmd->busn_start,
+-		.end   = vmd->busn_start + (resource_size(res) >> 20) - 1,
+-		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+-	};
++	vmd_configure_cfgbar(vmd);
+ 
+ 	/*
+ 	 * If the window is below 4GB, clear IORESOURCE_MEM_64 so we can
+-- 
+2.43.0
+

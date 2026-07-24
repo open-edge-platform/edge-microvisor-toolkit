@@ -1,0 +1,219 @@
+From b6850524cff71362a161d496fc25fd072b5fd2dd Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Thu, 25 Dec 2025 11:04:26 +0800
+Subject: [PATCH 20/39] perf: Enhance perf_reg_validate() with simd_enabled
+ argument
+
+The upcoming patch will support x86 APX eGPRs sampling by using the
+reclaimed XMM register space to represent eGPRs in sample_regs_* fields.
+
+To differentiate between XMM and eGPRs in sample_regs_* fields, an
+additional argument, simd_enabled, is introduced to the
+perf_reg_validate() helper. If simd_enabled is set to 1, it indicates
+that eGPRs are represented in sample_regs_* fields for the x86 platform;
+otherwise, XMM registers are represented.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/arm/kernel/perf_regs.c       | 2 +-
+ arch/arm64/kernel/perf_regs.c     | 2 +-
+ arch/csky/kernel/perf_regs.c      | 2 +-
+ arch/loongarch/kernel/perf_regs.c | 2 +-
+ arch/mips/kernel/perf_regs.c      | 2 +-
+ arch/parisc/kernel/perf_regs.c    | 2 +-
+ arch/powerpc/perf/perf_regs.c     | 2 +-
+ arch/riscv/kernel/perf_regs.c     | 2 +-
+ arch/s390/kernel/perf_regs.c      | 2 +-
+ arch/x86/kernel/perf_regs.c       | 4 ++--
+ include/linux/perf_regs.h         | 2 +-
+ kernel/events/core.c              | 8 +++++---
+ 12 files changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/arch/arm/kernel/perf_regs.c b/arch/arm/kernel/perf_regs.c
+index d575a4c3ca56..838d701adf4d 100644
+--- a/arch/arm/kernel/perf_regs.c
++++ b/arch/arm/kernel/perf_regs.c
+@@ -18,7 +18,7 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 
+ #define REG_RESERVED (~((1ULL << PERF_REG_ARM_MAX) - 1))
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask || mask & REG_RESERVED)
+ 		return -EINVAL;
+diff --git a/arch/arm64/kernel/perf_regs.c b/arch/arm64/kernel/perf_regs.c
+index 70e2f13f587f..71a3e0238de4 100644
+--- a/arch/arm64/kernel/perf_regs.c
++++ b/arch/arm64/kernel/perf_regs.c
+@@ -77,7 +77,7 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 
+ #define REG_RESERVED (~((1ULL << PERF_REG_ARM64_MAX) - 1))
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	u64 reserved_mask = REG_RESERVED;
+ 
+diff --git a/arch/csky/kernel/perf_regs.c b/arch/csky/kernel/perf_regs.c
+index 94601f37b596..c932a96afc56 100644
+--- a/arch/csky/kernel/perf_regs.c
++++ b/arch/csky/kernel/perf_regs.c
+@@ -18,7 +18,7 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 
+ #define REG_RESERVED (~((1ULL << PERF_REG_CSKY_MAX) - 1))
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask || mask & REG_RESERVED)
+ 		return -EINVAL;
+diff --git a/arch/loongarch/kernel/perf_regs.c b/arch/loongarch/kernel/perf_regs.c
+index 8dd604f01745..164514f40ae0 100644
+--- a/arch/loongarch/kernel/perf_regs.c
++++ b/arch/loongarch/kernel/perf_regs.c
+@@ -25,7 +25,7 @@ u64 perf_reg_abi(struct task_struct *tsk)
+ }
+ #endif /* CONFIG_32BIT */
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask)
+ 		return -EINVAL;
+diff --git a/arch/mips/kernel/perf_regs.c b/arch/mips/kernel/perf_regs.c
+index 7736d3c5ebd2..00a5201dbd5d 100644
+--- a/arch/mips/kernel/perf_regs.c
++++ b/arch/mips/kernel/perf_regs.c
+@@ -28,7 +28,7 @@ u64 perf_reg_abi(struct task_struct *tsk)
+ }
+ #endif /* CONFIG_32BIT */
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask)
+ 		return -EINVAL;
+diff --git a/arch/parisc/kernel/perf_regs.c b/arch/parisc/kernel/perf_regs.c
+index b9fe1f2fcb9b..4f21aab5405c 100644
+--- a/arch/parisc/kernel/perf_regs.c
++++ b/arch/parisc/kernel/perf_regs.c
+@@ -34,7 +34,7 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 
+ #define REG_RESERVED (~((1ULL << PERF_REG_PARISC_MAX) - 1))
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask || mask & REG_RESERVED)
+ 		return -EINVAL;
+diff --git a/arch/powerpc/perf/perf_regs.c b/arch/powerpc/perf/perf_regs.c
+index 350dccb0143c..a01d8a903640 100644
+--- a/arch/powerpc/perf/perf_regs.c
++++ b/arch/powerpc/perf/perf_regs.c
+@@ -125,7 +125,7 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 	return regs_get_register(regs, pt_regs_offset[idx]);
+ }
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask || mask & REG_RESERVED)
+ 		return -EINVAL;
+diff --git a/arch/riscv/kernel/perf_regs.c b/arch/riscv/kernel/perf_regs.c
+index 3bba8deababb..1ecc8760b88b 100644
+--- a/arch/riscv/kernel/perf_regs.c
++++ b/arch/riscv/kernel/perf_regs.c
+@@ -18,7 +18,7 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 
+ #define REG_RESERVED (~((1ULL << PERF_REG_RISCV_MAX) - 1))
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask || mask & REG_RESERVED)
+ 		return -EINVAL;
+diff --git a/arch/s390/kernel/perf_regs.c b/arch/s390/kernel/perf_regs.c
+index 7b305f1456f8..6496fd23c540 100644
+--- a/arch/s390/kernel/perf_regs.c
++++ b/arch/s390/kernel/perf_regs.c
+@@ -34,7 +34,7 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 
+ #define REG_RESERVED (~((1UL << PERF_REG_S390_MAX) - 1))
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask || mask & REG_RESERVED)
+ 		return -EINVAL;
+diff --git a/arch/x86/kernel/perf_regs.c b/arch/x86/kernel/perf_regs.c
+index 2e3c10dffb35..9b3134220b3e 100644
+--- a/arch/x86/kernel/perf_regs.c
++++ b/arch/x86/kernel/perf_regs.c
+@@ -166,7 +166,7 @@ int perf_simd_reg_validate(u16 vec_qwords, u64 vec_mask,
+ 		       (1ULL << PERF_REG_X86_R14) | \
+ 		       (1ULL << PERF_REG_X86_R15))
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	if (!mask || (mask & (REG_NOSUPPORT | PERF_REG_X86_RESERVED)))
+ 		return -EINVAL;
+@@ -185,7 +185,7 @@ u64 perf_reg_abi(struct task_struct *task)
+ 		       (1ULL << PERF_REG_X86_FS) | \
+ 		       (1ULL << PERF_REG_X86_GS))
+ 
+-int perf_reg_validate(u64 mask)
++int perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	/* The mask could be 0 if only the SIMD registers are interested */
+ 	if (mask & (REG_NOSUPPORT | PERF_REG_X86_RESERVED))
+diff --git a/include/linux/perf_regs.h b/include/linux/perf_regs.h
+index 518f28c6a7d4..09dbc2fc3859 100644
+--- a/include/linux/perf_regs.h
++++ b/include/linux/perf_regs.h
+@@ -10,7 +10,7 @@ struct perf_regs {
+ };
+ 
+ u64 perf_reg_value(struct pt_regs *regs, int idx);
+-int perf_reg_validate(u64 mask);
++int perf_reg_validate(u64 mask, bool simd_enabled);
+ u64 perf_reg_abi(struct task_struct *task);
+ void perf_get_regs_user(struct perf_regs *regs_user,
+ 			struct pt_regs *regs);
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index e8b665c3deda..93ecde33a7f2 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -7738,7 +7738,7 @@ u64 __weak perf_reg_value(struct pt_regs *regs, int idx)
+ 	return 0;
+ }
+ 
+-int __weak perf_reg_validate(u64 mask)
++int __weak perf_reg_validate(u64 mask, bool simd_enabled)
+ {
+ 	return mask ? -ENOSYS : 0;
+ }
+@@ -13670,7 +13670,8 @@ static int perf_copy_attr(struct perf_event_attr __user *uattr,
+ 	}
+ 
+ 	if (attr->sample_type & PERF_SAMPLE_REGS_USER) {
+-		ret = perf_reg_validate(attr->sample_regs_user);
++		ret = perf_reg_validate(attr->sample_regs_user,
++					attr->sample_simd_regs_enabled);
+ 		if (ret)
+ 			return ret;
+ 		ret = perf_simd_reg_validate(attr->sample_simd_vec_reg_qwords,
+@@ -13700,7 +13701,8 @@ static int perf_copy_attr(struct perf_event_attr __user *uattr,
+ 		attr->sample_max_stack = sysctl_perf_event_max_stack;
+ 
+ 	if (attr->sample_type & PERF_SAMPLE_REGS_INTR) {
+-		ret = perf_reg_validate(attr->sample_regs_intr);
++		ret = perf_reg_validate(attr->sample_regs_intr,
++					attr->sample_simd_regs_enabled);
+ 		if (ret)
+ 			return ret;
+ 		ret = perf_simd_reg_validate(attr->sample_simd_vec_reg_qwords,
+-- 
+2.43.0
+

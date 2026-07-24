@@ -1,0 +1,92 @@
+From eea8a8f35c3f851daf576efb81a78a07d46280ef Mon Sep 17 00:00:00 2001
+From: "Yew, Chang Ching" <chang.ching.yew@intel.com>
+Date: Thu, 22 Jan 2026 04:37:21 +0800
+Subject: [PATCH 18/65] media: i2c: max_serdes: Check secondary fwnode
+
+Look for secondary fwnode in get_fwnode_pad_1_to_1 in both
+deserializer and serializer
+
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max_des.c    |  2 +-
+ drivers/media/i2c/maxim-serdes/max_ser.c    |  2 +-
+ drivers/media/i2c/maxim-serdes/max_serdes.c | 24 +++++++++++++++++++++
+ drivers/media/i2c/maxim-serdes/max_serdes.h |  3 ++-
+ 4 files changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max_des.c b/drivers/media/i2c/maxim-serdes/max_des.c
+index db8803861074..b52a8f5ed53a 100644
+--- a/drivers/media/i2c/maxim-serdes/max_des.c
++++ b/drivers/media/i2c/maxim-serdes/max_des.c
+@@ -2574,7 +2574,7 @@ static const struct v4l2_subdev_internal_ops max_des_internal_ops = {
+ };
+ 
+ static const struct media_entity_operations max_des_media_ops = {
+-	.get_fwnode_pad = v4l2_subdev_get_fwnode_pad_1_to_1,
++	.get_fwnode_pad = max_serdes_get_fwnode_pad_1_to_1,
+ 	.has_pad_interdep = v4l2_subdev_has_pad_interdep,
+ 	.link_validate = v4l2_subdev_link_validate,
+ };
+diff --git a/drivers/media/i2c/maxim-serdes/max_ser.c b/drivers/media/i2c/maxim-serdes/max_ser.c
+index 2d3944dd19aa..d69b8d7731ea 100644
+--- a/drivers/media/i2c/maxim-serdes/max_ser.c
++++ b/drivers/media/i2c/maxim-serdes/max_ser.c
+@@ -1410,7 +1410,7 @@ static const struct v4l2_subdev_internal_ops max_ser_internal_ops = {
+ };
+ 
+ static const struct media_entity_operations max_ser_media_ops = {
+-	.get_fwnode_pad = v4l2_subdev_get_fwnode_pad_1_to_1,
++	.get_fwnode_pad = max_serdes_get_fwnode_pad_1_to_1,
+ 	.has_pad_interdep = v4l2_subdev_has_pad_interdep,
+ 	.link_validate = v4l2_subdev_link_validate,
+ };
+diff --git a/drivers/media/i2c/maxim-serdes/max_serdes.c b/drivers/media/i2c/maxim-serdes/max_serdes.c
+index bed70b8ce99a..c41e44c33f62 100644
+--- a/drivers/media/i2c/maxim-serdes/max_serdes.c
++++ b/drivers/media/i2c/maxim-serdes/max_serdes.c
+@@ -408,6 +408,30 @@ int max_serdes_validate_tpg_routing(struct v4l2_subdev_krouting *routing)
+ 	return 0;
+ }
+ 
++int max_serdes_get_fwnode_pad_1_to_1(struct media_entity *entity,
++				      struct fwnode_endpoint *endpoint)
++{
++	struct fwnode_handle *fwnode;
++	struct v4l2_subdev *sd;
++
++	if (!is_media_entity_v4l2_subdev(entity))
++		return -EINVAL;
++
++	sd = media_entity_to_v4l2_subdev(entity);
++
++	fwnode = fwnode_graph_get_port_parent(endpoint->local_fwnode);
++	fwnode_handle_put(fwnode);
++
++	if (device_match_fwnode(sd->dev, fwnode))
++		return endpoint->port;
++
++	if (sd->fwnode->secondary == endpoint->local_fwnode || sd->fwnode->secondary == fwnode)
++		return endpoint->port;
++
++	return -ENXIO;
++}
++EXPORT_SYMBOL_NS_GPL(max_serdes_get_fwnode_pad_1_to_1, "MAX_SERDES");
++
+ MODULE_DESCRIPTION("Maxim GMSL2 Serializer/Deserializer Driver");
+ MODULE_AUTHOR("Cosmin Tanislav <cosmin.tanislav@analog.com>");
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/media/i2c/maxim-serdes/max_serdes.h b/drivers/media/i2c/maxim-serdes/max_serdes.h
+index d1d513e464d6..c63d2f482bf4 100644
+--- a/drivers/media/i2c/maxim-serdes/max_serdes.h
++++ b/drivers/media/i2c/maxim-serdes/max_serdes.h
+@@ -179,5 +179,6 @@ int max_serdes_get_tpg_timings(const struct max_serdes_tpg_entry *entry,
+ 			       struct max_serdes_tpg_timings *timings);
+ 
+ int max_serdes_validate_tpg_routing(struct v4l2_subdev_krouting *routing);
+-
++int max_serdes_get_fwnode_pad_1_to_1(struct media_entity *entity,
++				      struct fwnode_endpoint *endpoint);
+ #endif // MAX_SERDES_H
+-- 
+2.43.0
+

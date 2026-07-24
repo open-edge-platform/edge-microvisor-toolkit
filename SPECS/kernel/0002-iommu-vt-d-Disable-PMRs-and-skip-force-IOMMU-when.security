@@ -1,0 +1,85 @@
+From b4cb4458a27e969a4c94d819bd1020eaa38caa9f Mon Sep 17 00:00:00 2001
+From: Michal Camacho Romero <michal.camacho.romero@intel.com>
+Date: Wed, 3 Jun 2026 13:45:00 +0200
+Subject: [PATCH 2/2] iommu/vt-d: Disable PMRs and skip force-IOMMU when TXT
+ TPRs are active
+
+When Intel TXT Protection Regions (TPRs) are present in the DTPR table,
+hardware-level DMA protection is already enforced by the SINIT ACM.
+In this case:
+
+- Skip forcing IOMMU enablement in tboot_force_iommu(), since TPRs
+  already provide DMA protection.
+- Tear down PMRs during intel_iommu_init() when TPRs are active,
+  while PMRs are redundant with TPR-based protection.
+- Call tboot_parse_dtpr_table() from parse_dmar_table() to disable
+  TPR regions early, allowing the kernel to manage DMA protection
+  prior to the OS boot.
+
+Link: https://uefi.org/sites/default/files/resources/633933_Intel_TXT_DMA_Protection_Ranges_rev_0p73.pdf
+Link: https://cdrdv2-public.intel.com/315168/315168_TXT_MLE_DG_rev_017_7.pdf
+Signed-off-by: Michal Camacho Romero <michal.camacho.romero@intel.com>
+---
+ drivers/iommu/intel/dmar.c  | 12 ++++++++++++
+ drivers/iommu/intel/iommu.c |  8 +++++++-
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/iommu/intel/dmar.c b/drivers/iommu/intel/dmar.c
+index 69222dbd2af0..97265591ecf9 100644
+--- a/drivers/iommu/intel/dmar.c
++++ b/drivers/iommu/intel/dmar.c
+@@ -635,6 +635,8 @@ static int __init
+ parse_dmar_table(void)
+ {
+ 	struct acpi_table_dmar *dmar;
++	struct acpi_table_dtpr *dtpr;
++	void                   *txt_heap;
+ 	int drhd_count = 0;
+ 	int ret;
+ 	struct dmar_res_callback cb = {
+@@ -670,6 +672,16 @@ parse_dmar_table(void)
+ 		return -EINVAL;
+ 	}
+ 
++	dtpr = tboot_get_dtpr_table(&txt_heap);
++	if (dtpr) {
++		/* TPR is enabled
++		 * This will also tell not to establish IOMMU PMRs
++		 */
++		tboot_parse_dtpr_table(dtpr);
++		iounmap(txt_heap);
++	}
++
++	txt_heap = NULL;
+ 	pr_info("Host address width %d\n", dmar->width + 1);
+ 	ret = dmar_walk_dmar_table(dmar, &cb);
+ 	if (ret == 0 && drhd_count == 0)
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index 651b6142c3db..438734f0a693 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -2540,6 +2540,12 @@ static __init int tboot_force_iommu(void)
+ 	if (!tboot_enabled())
+ 		return 0;
+ 
++	/* If TPR is enabled we don't need to force IOMMU,
++	 * TPR set by SINIT ACM will take care of DMA protection
++	 */
++	if (tboot_is_tpr_enabled())
++		return 0;
++
+ 	if (no_iommu || dmar_disabled)
+ 		pr_warn("Forcing Intel-IOMMU to enabled\n");
+ 
+@@ -2597,7 +2603,7 @@ int __init intel_iommu_init(void)
+ 		 * calling SENTER, but the kernel is expected to reset/tear
+ 		 * down the PMRs.
+ 		 */
+-		if (intel_iommu_tboot_noforce) {
++		if (intel_iommu_tboot_noforce || tboot_is_tpr_enabled()) {
+ 			for_each_iommu(iommu, drhd)
+ 				iommu_disable_protect_mem_regions(iommu);
+ 		}
+-- 
+2.43.0
+

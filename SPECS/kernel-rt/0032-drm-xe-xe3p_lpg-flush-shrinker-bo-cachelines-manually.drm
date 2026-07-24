@@ -1,0 +1,103 @@
+From 6ebf2659b200acb22a998c81fe2aa0915078aeb8 Mon Sep 17 00:00:00 2001
+From: Tejas Upadhyay <tejas.upadhyay@intel.com>
+Date: Thu, 5 Mar 2026 17:49:04 +0530
+Subject: [PATCH 32/43] drm/xe/xe3p_lpg: flush shrinker bo cachelines manually
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+XA, new pat_index introduced post xe3p_lpg, is memory shared between the
+CPU and GPU is treated differently from other GPU memory when the Media
+engine is power-gated.
+
+XA is *always* flushed, like at the end-of-submssion (and maybe other
+places), just that internally as an optimisation hw doesn't need to make
+that a full flush (which will also include XA) when Media is
+off/powergated, since it doesn't need to worry about GT caches vs Media
+coherency, and only CPU vs GPU coherency, so can make that flush a
+targeted XA flush, since stuff tagged with XA now means it's shared with
+the CPU. The main implication is that we now need to somehow flush non-XA
+before freeing system memory pages, otherwise dirty cachelines could be
+flushed after the free (like if Media suddenly turns on and does a full
+flush)
+
+V4: Add comments for L2 flush path
+V3(Thomas/MattA/MattR): Restrict userptr with non-xa, then no need to
+                        flush manually
+V2(MattA): Expand commit description
+
+Reviewed-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
+Signed-off-by: Tejas Upadhyay <tejas.upadhyay@intel.com>
+---
+ drivers/gpu/drm/xe/xe_bo.c     |  7 ++++++-
+ drivers/gpu/drm/xe/xe_device.c | 23 +++++++++++++++++++++++
+ drivers/gpu/drm/xe/xe_device.h |  1 +
+ 3 files changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_bo.c b/drivers/gpu/drm/xe/xe_bo.c
+index 198d4efdab08..c798ce706f4a 100644
+--- a/drivers/gpu/drm/xe/xe_bo.c
++++ b/drivers/gpu/drm/xe/xe_bo.c
+@@ -689,7 +689,12 @@ static int xe_bo_trigger_rebind(struct xe_device *xe, struct xe_bo *bo,
+ 
+ 		if (!xe_vm_in_fault_mode(vm)) {
+ 			drm_gpuvm_bo_evict(vm_bo, true);
+-			continue;
++			/*
++			 * L2 cache may not be flushed, so ensure that is done in
++			 * xe_vm_invalidate_vma() below
++			 */
++			if (!xe_device_is_l2_flush_optimized(xe))
++				continue;
+ 		}
+ 
+ 		if (!idle) {
+diff --git a/drivers/gpu/drm/xe/xe_device.c b/drivers/gpu/drm/xe/xe_device.c
+index 3eb06b27db7e..4e5fa1583ea6 100644
+--- a/drivers/gpu/drm/xe/xe_device.c
++++ b/drivers/gpu/drm/xe/xe_device.c
+@@ -1112,6 +1112,29 @@ static void tdf_request_sync(struct xe_device *xe)
+ 	}
+ }
+ 
++/**
++ * xe_device_is_l2_flush_optimized - if L2 flush is optimized by HW
++ * @xe: The device to check.
++ *
++ * Return: true if the HW device optimizing L2 flush, false otherwise.
++ */
++bool xe_device_is_l2_flush_optimized(struct xe_device *xe)
++{
++	/* XA is *always* flushed, like at the end-of-submssion (and maybe other
++	 * places), just that internally as an optimisation hw doesn't need to make
++	 * that a full flush (which will also include XA) when Media is
++	 * off/powergated, since it doesn't need to worry about GT caches vs Media
++	 * coherency, and only CPU vs GPU coherency, so can make that flush a
++	 * targeted XA flush, since stuff tagged with XA now means it's shared with
++	 * the CPU. The main implication is that we now need to somehow flush non-XA before
++	 * freeing system memory pages, otherwise dirty cachelines could be flushed after the free
++	 * (like if Media suddenly turns on and does a full flush)
++	 */
++	if (GRAPHICS_VER(xe) >= 35 && !IS_DGFX(xe))
++		return true;
++	return false;
++}
++
+ void xe_device_l2_flush(struct xe_device *xe)
+ {
+ 	struct xe_gt *gt;
+diff --git a/drivers/gpu/drm/xe/xe_device.h b/drivers/gpu/drm/xe/xe_device.h
+index 3740143790db..929a3e890394 100644
+--- a/drivers/gpu/drm/xe/xe_device.h
++++ b/drivers/gpu/drm/xe/xe_device.h
+@@ -184,6 +184,7 @@ void xe_device_snapshot_print(struct xe_device *xe, struct drm_printer *p);
+ u64 xe_device_canonicalize_addr(struct xe_device *xe, u64 address);
+ u64 xe_device_uncanonicalize_addr(struct xe_device *xe, u64 address);
+ 
++bool xe_device_is_l2_flush_optimized(struct xe_device *xe);
+ void xe_device_td_flush(struct xe_device *xe);
+ void xe_device_l2_flush(struct xe_device *xe);
+ 
+-- 
+2.43.0
+

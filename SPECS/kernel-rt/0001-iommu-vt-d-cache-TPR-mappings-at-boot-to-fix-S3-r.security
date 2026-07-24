@@ -1,0 +1,174 @@
+From 482e3b81fa8cf8c3fde6c026bde2dd9d60071801 Mon Sep 17 00:00:00 2001
+From: Michal Camacho Romero <michal.camacho.romero@intel.com>
+Date: Wed, 29 Apr 2026 12:00:00 +0200
+Subject: [PATCH] iommu/vt-d: cache TPR mappings at boot to fix S3 resume DMA
+ failures
+
+After S3 resume via GETSEC[SENTER], the SINIT ACM re-enables TXT
+Protected Ranges (TPR) for DMA protection. The kernel's
+iommu_disable_protect_mem_regions() only handles PMR (PLMR/PHMR),
+not TPR. On platforms where TPR replaces PMR (e.g. Panther Lake),
+the entire DMA access to TPR-protected memory is blocked after resume,
+causing xHCI restore state timeouts (-ETIMEDOUT) and NVMe identify
+controller failures.
+
+The previous fix attempted to call tboot_parse_dtpr_table() from
+init_iommu_hw() during S3 resume. However, tboot_parse_dtpr_table()
+internally calls tboot_get_dtpr_table() which performs multiple
+ioremap() calls (TXT config space + TXT heap). During syscore_resume
+(interrupts disabled), ioremap() requires vmalloc allocation with
+GFP_KERNEL which is unsafe, causing the function to silently fail
+(return NULL) and leaving TPR active.
+
+Fix by:
+1. Caching the ioremapped TPR register virtual addresses at boot
+   time in tboot_parse_dtpr_table() instead of iounmap'ing them.
+2. Adding tboot_disable_tpr() which reuses the cached mappings to
+   set the Disable bit (bit 4) on each TPR_BASE register without
+   any ioremap() calls.
+3. Calling tboot_disable_tpr() from init_iommu_hw() on S3 resume
+   to release TPR DMA protection before device resume begins.
+
+Also fix tboot_parse_dtpr_table() to use proper MMIO accessors
+(writeq/readq) instead of direct pointer dereference for the
+TPR_BASE register write.
+
+Signed-off-by: Michal Camacho Romero <michal.camacho.romero@intel.com>
+---
+ arch/x86/kernel/tboot.c     | 51 ++++++++++++++++++++++++++++++++++---
+ drivers/iommu/intel/iommu.c | 12 +++++++++
+ include/linux/tboot.h       |  2 ++
+ 3 files changed, 61 insertions(+), 4 deletions(-)
+
+diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
+index 89cd23cac955..f117f68a5544 100644
+--- a/arch/x86/kernel/tboot.c
++++ b/arch/x86/kernel/tboot.c
+@@ -586,12 +586,22 @@ struct acpi_table_dtpr *tboot_get_dtpr_table(void **heap_base)
+ }
+ 
+ static bool tboot_tpr_enabled;
++
++/*
++ * Cache TPR register mappings at boot so they can be reused during
++ * S3 resume without calling ioremap() (which is unsafe in syscore
++ * resume context where interrupts are disabled).
++ */
++#define MAX_TPR_REGS 8
++static u8 __iomem *tpr_reg_map[MAX_TPR_REGS];
++static int tpr_reg_count;
++
+ void tboot_parse_dtpr_table(struct acpi_table_dtpr *dtpr)
+ {
+ 	struct acpi_tpr_instance *tpr_inst;
+ 	struct acpi_tpr_array    *tpr_arr;
+ 	u32 *instance_cnt;
+-	u64 *base;
++	u8 __iomem *base;
+ 	u32 i, j;
+ 
+ 	if (!tboot_enabled())
+@@ -608,14 +618,25 @@ void tboot_parse_dtpr_table(struct acpi_table_dtpr *dtpr)
+ 
+ 			base = ioremap(tpr_arr->base, 16);
+ 			if (!base) {
+-				pr_warn("TPR Instance %d, TPR No.%d disabling failure.\n", i, j);
++				pr_err("Mapping TPR array[%d] base address has failed\n", j);
+ 				continue;
+ 			}
+ 
+ 			pr_info("TPR instance %d, TPR %d:base %llx limit %llx\n", i, j,
+-				readq(base), readq(base + 1));
++				readq(base), readq(base + 8));
+ 			writeq(readq(base) | BIT(4), base);
+-			iounmap(base);
++			/*
++			 * Keep mapping for S3 resume. The ioremap function is not
++			 * safe in syscore_resume context.
++			 */
++			if (tpr_reg_count < MAX_TPR_REGS)
++				tpr_reg_map[tpr_reg_count++] = base;
++			else {
++				pr_warn("The maximum number of TPRs (%d) has been"
++					" exceeded.\n", MAX_TPR_REGS);
++				pr_warn("Number of detected TPRs: %d\n", tpr_reg_count);
++				iounmap(base);
++			}
+ 		}
+ 
+ 		tpr_inst = (struct acpi_tpr_instance *)((u8 *)tpr_inst +
+@@ -624,6 +645,28 @@ void tboot_parse_dtpr_table(struct acpi_table_dtpr *dtpr)
+ 
+ 	if (tboot_tpr_enabled)
+ 		pr_debug("TPR protection detected, PMR will be disabled\n");
++	if (tpr_reg_count)
++		pr_info("tboot: cached %d TPR register mapping(s) for"
++			" use during S3 resume\n", tpr_reg_count);
++}
++
++/*
++ * Disable TPR using cached mappings from boot. Safe to call from
++ * syscore_resume (interrupts disabled) since no ioremap is needed.
++ */
++void tboot_disable_tpr(void)
++{
++	int i;
++	u64 val;
++
++	for (i = 0; i < tpr_reg_count; i++) {
++		val = readq(tpr_reg_map[i]);
++		if (!(val & BIT(4))) {
++			writeq(val | BIT(4), tpr_reg_map[i]);
++			pr_info("tboot: TPR %d disabled prior to S3 device resume "
++				"(val %#llx)\n", i, val);
++		}
++	}
+ }
+ 
+ bool tboot_is_tpr_enabled(void)
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index 438734f0a693..11ee9a439cca 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -1781,6 +1781,18 @@ static int init_iommu_hw(void)
+ 	struct intel_iommu *iommu = NULL;
+ 	int ret;
+ 
++	/*
++	 * After S3 resume via GETSEC[SENTER], the SINIT ACM re-enables
++	 * TXT Protected Ranges (TPR) for DMA protection. The kernel's
++	 * iommu_disable_protect_mem_regions() only clears PMR (PLMR/PHMR),
++	 * not TPR. On platforms where TPR replaces PMR (e.g. PTL),
++	 * device DMA (xHCI, NVMe) is blocked after resume unless TPR
++	 * is explicitly disabled. Use cached boot-time mappings to
++	 * avoid ioremap() in syscore_resume context.
++	 */
++	if (tboot_enabled() && tboot_is_tpr_enabled())
++		tboot_disable_tpr();
++
+ 	for_each_active_iommu(iommu, drhd) {
+ 		if (iommu->qi) {
+ 			ret = dmar_reenable_qi(iommu);
+diff --git a/include/linux/tboot.h b/include/linux/tboot.h
+index 39fb2e3ba80b..319d57c635d9 100644
+--- a/include/linux/tboot.h
++++ b/include/linux/tboot.h
+@@ -132,6 +132,7 @@ extern struct acpi_table_header *tboot_get_dmar_table(
+ 				      struct acpi_table_header *dmar_tbl);
+ extern struct acpi_table_dtpr *tboot_get_dtpr_table(void **);
+ extern void tboot_parse_dtpr_table(struct acpi_table_dtpr *);
++extern void tboot_disable_tpr(void);
+ extern bool tboot_is_tpr_enabled(void);
+ 
+ #else
+@@ -144,6 +145,7 @@ extern bool tboot_is_tpr_enabled(void);
+ #define tboot_get_dmar_table(dmar_tbl)	(dmar_tbl)
+ #define tboot_get_dtpr_table(txt_heap) NULL
+ #define tboot_parse_dtpr_table(dtpr) do { } while (0)
++#define tboot_disable_tpr() do { } while (0)
+ #define tboot_is_tpr_enabled() 0
+ 
+ #endif /* !CONFIG_INTEL_TXT */
+-- 
+2.43.0
+

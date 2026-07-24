@@ -1,0 +1,178 @@
+From 270b306d656294826958922848c9ed7bb674a817 Mon Sep 17 00:00:00 2001
+From: Kan Liang <kan.liang@linux.intel.com>
+Date: Tue, 9 Sep 2025 14:04:54 -0700
+Subject: [PATCH 22/39] perf/x86: Enable SSP sampling using sample_regs_*
+ fields
+
+This patch enables sampling of CET SSP register via the sample_regs_*
+fields.
+
+To sample SSP, the sample_simd_regs_enabled field must be set. This
+allows the spare space (reclaimed from the original XMM space) in the
+sample_regs_* fields to be used for representing SSP.
+
+Similar with eGPRs sampling, the perf_reg_value() function needs to
+check if the PERF_SAMPLE_REGS_ABI_SIMD flag is set first, and then
+determine whether to output SSP or legacy XMM registers to userspace.
+
+Additionally, arch-PEBS supports sampling SSP, which is placed into the
+GPRs group. This patch also enables arch-PEBS-based SSP sampling.
+
+Currently, SSP sampling is only supported on the x86_64 architecture, as
+CET is only available on x86_64 platforms.
+
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Co-developed-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/core.c                |  9 +++++++++
+ arch/x86/events/intel/ds.c            |  7 +++++++
+ arch/x86/events/perf_event.h          | 10 ++++++++++
+ arch/x86/include/asm/perf_event.h     |  4 ++++
+ arch/x86/include/uapi/asm/perf_regs.h |  7 ++++---
+ arch/x86/kernel/perf_regs.c           |  5 +++++
+ 6 files changed, 39 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/events/core.c b/arch/x86/events/core.c
+index 1e00800c8443..d198b215cdcb 100644
+--- a/arch/x86/events/core.c
++++ b/arch/x86/events/core.c
+@@ -712,6 +712,10 @@ int x86_pmu_hw_config(struct perf_event *event)
+ 			if (event_needs_egprs(event) &&
+ 			    !(x86_pmu.ext_regs_mask & XFEATURE_MASK_APX))
+ 				return -EINVAL;
++			if (event_needs_ssp(event) &&
++			    !(x86_pmu.ext_regs_mask & XFEATURE_MASK_CET_USER))
++				return -EINVAL;
++
+ 			/* Not require any vector registers but set width */
+ 			if (event->attr.sample_simd_vec_reg_qwords &&
+ 			    !event->attr.sample_simd_vec_reg_intr &&
+@@ -1871,6 +1875,7 @@ inline void x86_pmu_clear_perf_regs(struct pt_regs *regs)
+ 	perf_regs->h16zmm_regs = NULL;
+ 	perf_regs->opmask_regs = NULL;
+ 	perf_regs->egpr_regs = NULL;
++	perf_regs->cet_regs = NULL;
+ }
+ 
+ static inline void __x86_pmu_sample_ext_regs(u64 mask)
+@@ -1906,6 +1911,8 @@ static inline void x86_pmu_update_ext_regs(struct x86_perf_regs *perf_regs,
+ 		perf_regs->opmask = get_xsave_addr(xsave, XFEATURE_OPMASK);
+ 	if (mask & XFEATURE_MASK_APX)
+ 		perf_regs->egpr = get_xsave_addr(xsave, XFEATURE_APX);
++	if (mask & XFEATURE_MASK_CET_USER)
++		perf_regs->cet = get_xsave_addr(xsave, XFEATURE_CET_USER);
+ }
+ 
+ /*
+@@ -1975,6 +1982,8 @@ static void x86_pmu_sample_extended_regs(struct perf_event *event,
+ 		mask |= XFEATURE_MASK_OPMASK;
+ 	if (event_needs_egprs(event))
+ 		mask |= XFEATURE_MASK_APX;
++	if (event_needs_ssp(event))
++		mask |= XFEATURE_MASK_CET_USER;
+ 
+ 	mask &= x86_pmu.ext_regs_mask;
+ 	if (sample_type & PERF_SAMPLE_REGS_USER) {
+diff --git a/arch/x86/events/intel/ds.c b/arch/x86/events/intel/ds.c
+index 272725d749df..ff8707885f74 100644
+--- a/arch/x86/events/intel/ds.c
++++ b/arch/x86/events/intel/ds.c
+@@ -2680,6 +2680,13 @@ static void setup_arch_pebs_sample_data(struct perf_event *event,
+ 		__setup_pebs_gpr_group(event, data, regs,
+ 				       (struct pebs_gprs *)gprs,
+ 				       sample_type);
++
++		/* Currently only user space mode enables SSP. */
++		if (user_mode(regs) && (sample_type &
++		    (PERF_SAMPLE_REGS_INTR | PERF_SAMPLE_REGS_USER))) {
++			perf_regs->cet_regs = &gprs->r15;
++			ignore_mask = XFEATURE_MASK_CET_USER;
++		}
+ 	}
+ 
+ 	if (header->aux) {
+diff --git a/arch/x86/events/perf_event.h b/arch/x86/events/perf_event.h
+index 0974fd8b0e20..36688d28407f 100644
+--- a/arch/x86/events/perf_event.h
++++ b/arch/x86/events/perf_event.h
+@@ -197,6 +197,16 @@ static inline bool event_needs_egprs(struct perf_event *event)
+ 	return false;
+ }
+ 
++static inline bool event_needs_ssp(struct perf_event *event)
++{
++	if (event->attr.sample_simd_regs_enabled &&
++	    (event->attr.sample_regs_user & BIT_ULL(PERF_REG_X86_SSP) ||
++	     event->attr.sample_regs_intr & BIT_ULL(PERF_REG_X86_SSP)))
++		return true;
++
++	return false;
++}
++
+ struct amd_nb {
+ 	int nb_id;  /* NorthBridge id */
+ 	int refcnt; /* reference count */
+diff --git a/arch/x86/include/asm/perf_event.h b/arch/x86/include/asm/perf_event.h
+index cecf1e8d002f..98fef9db0aa3 100644
+--- a/arch/x86/include/asm/perf_event.h
++++ b/arch/x86/include/asm/perf_event.h
+@@ -734,6 +734,10 @@ struct x86_perf_regs {
+ 		u64	*egpr_regs;
+ 		struct apx_state *egpr;
+ 	};
++	union {
++		u64	*cet_regs;
++		struct cet_user_state *cet;
++	};
+ };
+ 
+ extern unsigned long perf_arch_instruction_pointer(struct pt_regs *regs);
+diff --git a/arch/x86/include/uapi/asm/perf_regs.h b/arch/x86/include/uapi/asm/perf_regs.h
+index f9b4086085bc..6da63e1dbb40 100644
+--- a/arch/x86/include/uapi/asm/perf_regs.h
++++ b/arch/x86/include/uapi/asm/perf_regs.h
+@@ -28,9 +28,9 @@ enum perf_event_x86_regs {
+ 	PERF_REG_X86_R14,
+ 	PERF_REG_X86_R15,
+ 	/*
+-	 * The EGPRs and XMM have overlaps. Only one can be used
++	 * The EGPRs/SSP and XMM have overlaps. Only one can be used
+ 	 * at a time. For the ABI type PERF_SAMPLE_REGS_ABI_SIMD,
+-	 * utilize EGPRs. For the other ABI type, XMM is used.
++	 * utilize EGPRs/SSP. For the other ABI type, XMM is used.
+ 	 *
+ 	 * Extended GPRs (EGPRs)
+ 	 */
+@@ -50,10 +50,11 @@ enum perf_event_x86_regs {
+ 	PERF_REG_X86_R29,
+ 	PERF_REG_X86_R30,
+ 	PERF_REG_X86_R31,
++	PERF_REG_X86_SSP,
+ 	/* These are the limits for the GPRs. */
+ 	PERF_REG_X86_32_MAX = PERF_REG_X86_GS + 1,
+ 	PERF_REG_X86_64_MAX = PERF_REG_X86_R15 + 1,
+-	PERF_REG_MISC_MAX = PERF_REG_X86_R31 + 1,
++	PERF_REG_MISC_MAX = PERF_REG_X86_SSP + 1,
+ 
+ 	/* These all need two bits set because they are 128bit */
+ 	PERF_REG_X86_XMM0  = 32,
+diff --git a/arch/x86/kernel/perf_regs.c b/arch/x86/kernel/perf_regs.c
+index 1c2a8c2c7bf1..2e7d83f26cc0 100644
+--- a/arch/x86/kernel/perf_regs.c
++++ b/arch/x86/kernel/perf_regs.c
+@@ -70,6 +70,11 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 					return 0;
+ 				return perf_regs->egpr_regs[idx - PERF_REG_X86_R16];
+ 			}
++			if (idx == PERF_REG_X86_SSP) {
++				if (!perf_regs->cet_regs)
++					return 0;
++				return perf_regs->cet_regs[1];
++			}
+ 		} else {
+ 			if (idx >= PERF_REG_X86_XMM0 && idx < PERF_REG_X86_XMM_MAX) {
+ 				if (!perf_regs->xmm_regs)
+-- 
+2.43.0
+

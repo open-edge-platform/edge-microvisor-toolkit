@@ -1,0 +1,30 @@
+From 9440609a59eb5ef6041c371a2e418a271a36f177 Mon Sep 17 00:00:00 2001
+From: "Yew, Chang Ching" <chang.ching.yew@intel.com>
+Date: Mon, 30 Mar 2026 06:10:13 +0800
+Subject: [PATCH 21/65] maxim-serdes: max_ser: Add bus_handle of child fwnode
+ in atr init
+
+During i2c atr initialization of serializer, add the bus handle
+in struct i2c_atr_adap_desc of the child fwnode
+
+Signed-off-by: Mokhtar, Mohamad Nor Syahid <mohamad.nor.syahid.mokhtar@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max_ser.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max_ser.c b/drivers/media/i2c/maxim-serdes/max_ser.c
+index 2b1a80952787..e1e662f9982c 100644
+--- a/drivers/media/i2c/maxim-serdes/max_ser.c
++++ b/drivers/media/i2c/maxim-serdes/max_ser.c
+@@ -387,6 +387,7 @@ static int max_ser_i2c_atr_init(struct max_ser_priv *priv)
+ {
+ 	struct i2c_atr_adap_desc desc = {
+ 		.chan_id = 0,
++		.bus_handle = dev_fwnode(priv->dev),
+ 	};
+ 
+ 	if (!i2c_check_functionality(priv->client->adapter,
+-- 
+2.43.0
+

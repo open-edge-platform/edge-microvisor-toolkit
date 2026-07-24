@@ -1,0 +1,29 @@
+From 4da6260eea036edfea6878fd28182211c94a831e Mon Sep 17 00:00:00 2001
+From: "Li, Yifan" <yifan2.li@intel.com>
+Date: Mon, 22 Jun 2026 08:31:38 +0800
+Subject: [PATCH] platform/x86/intel/pmc: Update NVL PCDS_LPM_REQ_GUID
+
+IFWI updated the NVL PCDS_LPM_REQ_GUID to 0x01091103, update pmc
+driver side change accordingly.
+
+Signed-off-by: Li, Yifan <yifan2.li@intel.com>
+---
+ drivers/platform/x86/intel/pmc/nvl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/nvl.c b/drivers/platform/x86/intel/pmc/nvl.c
+index ae338a4de225..3c3f2aecb91f 100644
+--- a/drivers/platform/x86/intel/pmc/nvl.c
++++ b/drivers/platform/x86/intel/pmc/nvl.c
+@@ -13,7 +13,7 @@
+ /* PMC SSRAM PMT Telemetry GUIDS */
+ #define PCDH_LPM_REQ_GUID 0x01093101
+ #define PCHS_LPM_REQ_GUID 0x01092101
+-#define PCDS_LPM_REQ_GUID 0x01091102
++#define PCDS_LPM_REQ_GUID 0x01091103
+ 
+ /*
+  * Die Mapping to Product.
+-- 
+2.43.0
+

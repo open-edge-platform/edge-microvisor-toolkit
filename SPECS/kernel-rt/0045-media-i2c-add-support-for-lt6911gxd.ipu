@@ -1,0 +1,22 @@
+From 61601925a0cf558de3507e528a10667fb2ce40b0 Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Sat, 25 Oct 2025 16:30:08 +0800
+Subject: [PATCH 45/65] media: i2c: add support for lt6911gxd
+
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/media/i2c/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index f9c55f931ed1..b963e813256f 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -175,3 +175,4 @@ obj-$(CONFIG_VIDEO_WM8739) += wm8739.o
+ obj-$(CONFIG_VIDEO_WM8775) += wm8775.o
+ obj-$(CONFIG_VIDEO_D4XX) += d4xx.o
+ obj-$(CONFIG_VIDEO_MAXIM_SERDES) += maxim-serdes/
++obj-$(CONFIG_VIDEO_LT6911GXD) += lt6911gxd.o
+-- 
+2.43.0
+

@@ -1,0 +1,79 @@
+From 6e773b020738397c3bb035a416ae8071b441c738 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Wed, 24 Dec 2025 13:27:26 +0800
+Subject: [PATCH 11/39] x86/fpu: Ensure TIF_NEED_FPU_LOAD is set after saving
+ FPU state
+
+Ensure that the TIF_NEED_FPU_LOAD flag is always set after saving the
+FPU state. This guarantees that the user space FPU state has been saved
+whenever the TIF_NEED_FPU_LOAD flag is set.
+
+A subsequent patch will verify if the user space FPU state can be
+retrieved from the saved task FPU state in the NMI context by checking
+the TIF_NEED_FPU_LOAD flag.
+
+Suggested-by: Peter Zijlstra <peterz@infradead.org>
+Suggested-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/include/asm/fpu/sched.h |  2 +-
+ arch/x86/kernel/fpu/core.c       | 12 ++++++++----
+ 2 files changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/arch/x86/include/asm/fpu/sched.h b/arch/x86/include/asm/fpu/sched.h
+index 89004f4ca208..2d57a7bf5406 100644
+--- a/arch/x86/include/asm/fpu/sched.h
++++ b/arch/x86/include/asm/fpu/sched.h
+@@ -36,8 +36,8 @@ static inline void switch_fpu(struct task_struct *old, int cpu)
+ 	    !(old->flags & (PF_KTHREAD | PF_USER_WORKER))) {
+ 		struct fpu *old_fpu = x86_task_fpu(old);
+ 
+-		set_tsk_thread_flag(old, TIF_NEED_FPU_LOAD);
+ 		save_fpregs_to_fpstate(old_fpu);
++		set_tsk_thread_flag(old, TIF_NEED_FPU_LOAD);
+ 		/*
+ 		 * The save operation preserved register state, so the
+ 		 * fpu_fpregs_owner_ctx is still @old_fpu. Store the
+diff --git a/arch/x86/kernel/fpu/core.c b/arch/x86/kernel/fpu/core.c
+index 608983806fd7..a1b5d7913c85 100644
+--- a/arch/x86/kernel/fpu/core.c
++++ b/arch/x86/kernel/fpu/core.c
+@@ -378,18 +378,22 @@ int fpu_swap_kvm_fpstate(struct fpu_guest *guest_fpu, bool enter_guest)
+ 	struct fpstate *cur_fps = fpu->fpstate;
+ 
+ 	fpregs_lock();
+-	if (!cur_fps->is_confidential && !test_thread_flag(TIF_NEED_FPU_LOAD))
++	if (!cur_fps->is_confidential && !test_thread_flag(TIF_NEED_FPU_LOAD)) {
+ 		save_fpregs_to_fpstate(fpu);
++		set_thread_flag(TIF_NEED_FPU_LOAD);
++	}
+ 
+ 	/* Swap fpstate */
+ 	if (enter_guest) {
+-		fpu->__task_fpstate = cur_fps;
++		WRITE_ONCE(fpu->__task_fpstate, cur_fps);
++		barrier();
+ 		fpu->fpstate = guest_fps;
+ 		guest_fps->in_use = true;
+ 	} else {
+ 		guest_fps->in_use = false;
+ 		fpu->fpstate = fpu->__task_fpstate;
+-		fpu->__task_fpstate = NULL;
++		barrier();
++		WRITE_ONCE(fpu->__task_fpstate, NULL);
+ 	}
+ 
+ 	cur_fps = fpu->fpstate;
+@@ -482,8 +486,8 @@ void kernel_fpu_begin_mask(unsigned int kfpu_mask)
+ 
+ 	if (!(current->flags & (PF_KTHREAD | PF_USER_WORKER)) &&
+ 	    !test_thread_flag(TIF_NEED_FPU_LOAD)) {
+-		set_thread_flag(TIF_NEED_FPU_LOAD);
+ 		save_fpregs_to_fpstate(x86_task_fpu(current));
++		set_thread_flag(TIF_NEED_FPU_LOAD);
+ 	}
+ 	__cpu_invalidate_fpregs_state();
+ 
+-- 
+2.43.0
+

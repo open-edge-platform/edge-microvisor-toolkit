@@ -1,0 +1,28 @@
+From 0f8a58cb2b48867393230c98955ca01728024252 Mon Sep 17 00:00:00 2001
+From: "Yew, Chang Ching" <chang.ching.yew@intel.com>
+Date: Wed, 5 Nov 2025 13:50:17 +0800
+Subject: [PATCH 17/65] media: i2c: max96724: Update phy to id mapping
+
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max96724.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max96724.c b/drivers/media/i2c/maxim-serdes/max96724.c
+index c366af733dd3..d5380b1a3cda 100644
+--- a/drivers/media/i2c/maxim-serdes/max96724.c
++++ b/drivers/media/i2c/maxim-serdes/max96724.c
+@@ -304,8 +304,8 @@ static unsigned int max96724_phy_id(struct max_des *des, struct max_des_phy *phy
+ 	if (phy->index == 0 && num_hw_data_lanes == 4)
+ 		return 1;
+ 
+-	if (phy->index == 1 && !des->phys[1].enabled)
+-		return 0;
++	if (phy->index == 3 && num_hw_data_lanes == 4)
++		return 2;
+ 
+ 	return phy->index;
+ }
+-- 
+2.43.0
+

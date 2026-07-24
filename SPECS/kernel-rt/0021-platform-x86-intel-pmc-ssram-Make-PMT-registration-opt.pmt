@@ -1,0 +1,64 @@
+From ca60ff457b7793848708249cd4e7d61c0a09d804 Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:52:00 -0700
+Subject: [PATCH 21/22] platform/x86/intel/pmc/ssram: Make PMT registration
+ optional
+
+The SSRAM telemetry driver extracts essential PMC device ID and power
+management base address information that intel_pmc_core depends on for core
+functionality. PMT registration failure should not prevent this critical
+data from being available, as it would break intel_pmc_core operation
+entirely.
+
+Change the behavior to log a warning when PMT registration fails but
+continue with successful driver initialization, ensuring the primary
+telemetry data remains accessible to dependent drivers.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmc/ssram_telemetry.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/ssram_telemetry.c b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+index b937ebb2322f..12b7c1299c2f 100644
+--- a/drivers/platform/x86/intel/pmc/ssram_telemetry.c
++++ b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+@@ -106,6 +106,7 @@ pmc_ssram_telemetry_get_pmc_pci(struct pci_dev *pcidev, unsigned int pmc_idx, u3
+ 	void __iomem __free(pmc_ssram_telemetry_iounmap) *tmp_ssram = NULL;
+ 	void __iomem __free(pmc_ssram_telemetry_iounmap) *ssram = NULL;
+ 	u64 ssram_base;
++	int ret;
+ 
+ 	ssram_base = pci_resource_start(pcidev, 0);
+ 	tmp_ssram = ioremap(ssram_base, SSRAM_HDR_SIZE);
+@@ -133,7 +134,11 @@ pmc_ssram_telemetry_get_pmc_pci(struct pci_dev *pcidev, unsigned int pmc_idx, u3
+ 	pmc_ssram_get_devid_pwrmbase(ssram, pmc_idx);
+ 
+ 	/* Find and register and PMC telemetry entries */
+-	return pmc_ssram_telemetry_add_pmt(pcidev, ssram_base, ssram);
++	ret = pmc_ssram_telemetry_add_pmt(pcidev, ssram_base, ssram);
++	if (ret)
++		dev_warn(&pcidev->dev, "could not register PMT\n");
++
++	return 0;
+ }
+ 
+ static int pmc_ssram_telemetry_pci_init(struct pci_dev *pcidev)
+@@ -208,12 +213,12 @@ static int pmc_ssram_telemetry_acpi_init(struct pci_dev *pcidev,
+ 
+ 	ret = intel_vsec_register(&pcidev->dev, &info);
+ 	if (ret)
+-		goto cleanup_acpi_disc;
++		dev_warn(&pcidev->dev, "could not register PMT\n");
+ 
+ 	ret = pmc_ssram_telemetry_get_pmc_acpi(pcidev, index);
+ 
+-cleanup_acpi_disc:
+ 	kfree(acpi_disc);
++
+ cleanup_acpi_buf:
+ 	ACPI_FREE(buf.pointer);
+ 
+-- 
+2.43.0
+

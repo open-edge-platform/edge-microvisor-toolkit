@@ -1,0 +1,169 @@
+From ae8d29f15a332a9b679d067e3f793ff340eb5978 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Wed, 17 Dec 2025 09:31:31 +0200
+Subject: [PATCH 6/7] issei: host_client: add dma allocation support
+
+Add functions to allow dedicated DMA buffer allocated on current
+hardware device per host client.
+
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/issei/host_client.c | 65 ++++++++++++++++++++++++++++++++
+ drivers/misc/issei/host_client.h | 13 +++++++
+ drivers/misc/issei/issei_dev.h   |  3 ++
+ 3 files changed, 81 insertions(+)
+
+diff --git a/drivers/misc/issei/host_client.c b/drivers/misc/issei/host_client.c
+index 8584355d4258..d84534e1b4e8 100644
+--- a/drivers/misc/issei/host_client.c
++++ b/drivers/misc/issei/host_client.c
+@@ -111,6 +111,17 @@ static void __issei_cl_disconnect(struct issei_device *idev, struct issei_host_c
+ 	cl_dbg(idev, cl, "Disconnected\n");
+ }
+ 
++static void __issei_cl_dma_unmap(struct issei_host_client *cl)
++{
++	if (!cl->dma_size)
++		return;
++
++	dma_free_coherent(cl->idev->parent, cl->dma_size, cl->dma_vaddr, cl->dma_daddr);
++	cl->dma_size = 0;
++	cl->dma_vaddr = NULL;
++	cl->dma_daddr = 0;
++}
++
+ static void __issei_cl_init(struct issei_host_client *cl, struct issei_device *idev,
+ 			    u16 id, struct file *fp)
+ {
+@@ -184,6 +195,8 @@ void issei_cl_remove(struct issei_host_client *cl)
+ 
+ 	__issei_cl_disconnect(idev, cl);
+ 
++	__issei_cl_dma_unmap(cl);
++
+ 	cl_dbg(idev, cl, "Removed\n");
+ 	kfree(cl);
+ }
+@@ -518,3 +531,55 @@ void issei_cl_clean_all_wbuf(struct issei_host_client *cl)
+ 
+ 	__issei_cl_clean_all_wbuf(idev, cl);
+ }
++
++/**
++ * issei_cl_dma_map - allocate DMA mapping for client
++ *
++ * @cl: host client
++ * @size: memory size to allocate
++ * @daddr: pointer for buffer physical address
++ * @vaddr: pointer for buffer virtual address
++ *
++ * Return: 0 on success, < 0 on error
++ */
++int issei_cl_dma_map(struct issei_host_client *cl, size_t size,
++		     dma_addr_t *daddr, void **vaddr)
++{
++	struct issei_device *idev = cl->idev;
++
++	if (size == 0 || size > ISSEI_HOST_DMA_MAX_SIZE) {
++		cl_err(idev, cl, "The size is out of bounds.");
++		return -EINVAL;
++	}
++
++	guard(mutex)(&idev->client_lock);
++
++	if (cl->dma_size) {
++		cl_err(idev, cl, "DMA already allocated.");
++		return -EALREADY;
++	}
++
++	cl->dma_vaddr = dma_alloc_coherent(cl->idev->parent, size, &cl->dma_daddr, GFP_KERNEL);
++	if (!cl->dma_vaddr)
++		return -ENOMEM;
++
++	cl->dma_size = size;
++
++	*daddr = cl->dma_daddr;
++	*vaddr = cl->dma_vaddr;
++	return 0;
++}
++
++/**
++ * issei_cl_dma_unmap - deallocate DMA mapping for client
++ *
++ * @cl: host client
++ */
++void issei_cl_dma_unmap(struct issei_host_client *cl)
++{
++	struct issei_device *idev = cl->idev;
++
++	guard(mutex)(&idev->client_lock);
++
++	__issei_cl_dma_unmap(cl);
++}
+diff --git a/drivers/misc/issei/host_client.h b/drivers/misc/issei/host_client.h
+index 05e2f4ade9c3..6fc59cbbe9c6 100644
+--- a/drivers/misc/issei/host_client.h
++++ b/drivers/misc/issei/host_client.h
+@@ -3,6 +3,7 @@
+ #ifndef _ISSEI_HOST_CLIENT_H_
+ #define _ISSEI_HOST_CLIENT_H_
+ 
++#include <linux/dma-mapping.h>
+ #include <linux/types.h>
+ #include <linux/uuid.h>
+ #include <linux/wait.h>
+@@ -38,6 +39,10 @@ enum issei_host_client_state {
+  * @read_wait: waitqueue for read object
+  * @read_data: received data pointer
+  * @read_data_size: received data size
++ *
++ * @dma_vaddr: allocated DMA buffer virtual address
++ * @dma_daddr: allocated DMA buffer physical address
++ * @dma_size: allocated DMA buffer size, zero if no buffer allocated
+  */
+ struct issei_host_client {
+ 	struct list_head list;
+@@ -54,6 +59,10 @@ struct issei_host_client {
+ 	wait_queue_head_t read_wait;
+ 	u8 *read_data;
+ 	size_t read_data_size;
++
++	void *dma_vaddr;
++	dma_addr_t dma_daddr;
++	size_t dma_size;
+ };
+ 
+ struct issei_host_client *issei_cl_create(struct issei_device *idev, struct file *fp);
+@@ -72,4 +81,8 @@ int issei_cl_check_read(struct issei_host_client *cl);
+ int issei_cl_check_write(struct issei_host_client *cl);
+ void issei_cl_clean_all_wbuf(struct issei_host_client *cl);
+ 
++int issei_cl_dma_map(struct issei_host_client *cl, size_t size,
++		     dma_addr_t *daddr, void **vaddr);
++void issei_cl_dma_unmap(struct issei_host_client *cl);
++
+ #endif /* ISSEI_HOST_CLIENT_H_ */
+diff --git a/drivers/misc/issei/issei_dev.h b/drivers/misc/issei/issei_dev.h
+index 78dda85d664e..51551ea2eafa 100644
+--- a/drivers/misc/issei/issei_dev.h
++++ b/drivers/misc/issei/issei_dev.h
+@@ -6,6 +6,7 @@
+ #include <linux/device.h>
+ #include <linux/mutex.h>
+ #include <linux/sched.h>
++#include <linux/sizes.h>
+ #include <linux/time64.h>
+ #include <linux/types.h>
+ #include <linux/wait.h>
+@@ -30,6 +31,8 @@ extern struct class *issei_class;
+ #define ISSEI_STOP_TIMEOUT_MSEC         500
+ #define ISSEI_WRITE_TIMEOUT_MSEC        (MSEC_PER_SEC)
+ 
++#define ISSEI_HOST_DMA_MAX_SIZE	        SZ_64M
++
+ /**
+  * struct issei_write_buf - write buffer object
+  * @list: linked list pointer
+-- 
+2.43.0
+

@@ -1,0 +1,38 @@
+From 2768853de769e6edab472fce5d2bd03945d56709 Mon Sep 17 00:00:00 2001
+From: Khai Wen Ng <khai.wen.ng@intel.com>
+Date: Thu, 11 Sep 2025 08:50:52 +0800
+Subject: [PATCH 16/65] media: i2c: max96717: Guard DT pinctrl ops with
+ CONFIG_OF
+
+Conditionally compile dt_node_to_map and dt_free_map pinctrl
+operations only when CONFIG_OF is enabled. The pinconf_generic_dt_*
+functions are only available for Device Tree configurations and
+will cause build failures on ACPI-only systems.
+
+This change enables max96717 to build on non-OF systems while
+maintaining full Device Tree support when CONFIG_OF is enabled.
+
+Signed-off-by: Khai Wen Ng <khai.wen.ng@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max96717.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max96717.c b/drivers/media/i2c/maxim-serdes/max96717.c
+index 7c5cf690a273..364ed0d398b3 100644
+--- a/drivers/media/i2c/maxim-serdes/max96717.c
++++ b/drivers/media/i2c/maxim-serdes/max96717.c
+@@ -1341,8 +1341,10 @@ static const struct pinctrl_ops max96717_ctrl_ops = {
+ 	.get_groups_count = max96717_ctrl_get_groups_count,
+ 	.get_group_name = max96717_ctrl_get_group_name,
+ 	.get_group_pins = max96717_ctrl_get_group_pins,
++#ifdef CONFIG_OF
+ 	.dt_node_to_map = pinconf_generic_dt_node_to_map_pin,
+ 	.dt_free_map = pinconf_generic_dt_free_map,
++#endif
+ };
+ 
+ static const struct pinconf_ops max96717_conf_ops = {
+-- 
+2.43.0
+

@@ -1,0 +1,162 @@
+From 30137d03624167879358b3ed2c0f8af8011d0cfc Mon Sep 17 00:00:00 2001
+From: Kan Liang <kan.liang@linux.intel.com>
+Date: Tue, 9 Sep 2025 14:04:52 -0700
+Subject: [PATCH 19/39] perf/x86: Enable OPMASK sampling using
+ sample_simd_pred_reg_* fields
+
+This patch adds support for sampling OPAMSK registers via the
+sample_simd_pred_reg_* fields.
+
+Each OPMASK register consists of 1 u64 word. Current x86 hardware
+supports 8 OPMASK registers. The perf_simd_reg_value() function is
+responsible for outputting OPMASK value to userspace.
+
+Additionally, sample_simd_pred_reg_qwords should be set to 1 to indicate
+OPMASK sampling.
+
+Signed-off-by: Kan Liang <kan.liang@linux.intel.com>
+Co-developed-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/core.c                |  8 ++++++++
+ arch/x86/events/perf_event.h          | 10 ++++++++++
+ arch/x86/include/asm/perf_event.h     |  4 ++++
+ arch/x86/include/uapi/asm/perf_regs.h |  5 +++++
+ arch/x86/kernel/perf_regs.c           | 15 ++++++++++++---
+ 5 files changed, 39 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/events/core.c b/arch/x86/events/core.c
+index d8e4f49aea5d..9ee07f1e928e 100644
+--- a/arch/x86/events/core.c
++++ b/arch/x86/events/core.c
+@@ -729,6 +729,9 @@ int x86_pmu_hw_config(struct perf_event *event)
+ 			if (event_needs_high16_zmm(event) &&
+ 			    !(x86_pmu.ext_regs_mask & XFEATURE_MASK_Hi16_ZMM))
+ 				return -EINVAL;
++			if (event_needs_opmask(event) &&
++			    !(x86_pmu.ext_regs_mask & XFEATURE_MASK_OPMASK))
++				return -EINVAL;
+ 		}
+ 	}
+ 
+@@ -1856,6 +1859,7 @@ inline void x86_pmu_clear_perf_regs(struct pt_regs *regs)
+ 	perf_regs->ymmh_regs = NULL;
+ 	perf_regs->zmmh_regs = NULL;
+ 	perf_regs->h16zmm_regs = NULL;
++	perf_regs->opmask_regs = NULL;
+ }
+ 
+ static inline void __x86_pmu_sample_ext_regs(u64 mask)
+@@ -1887,6 +1891,8 @@ static inline void x86_pmu_update_ext_regs(struct x86_perf_regs *perf_regs,
+ 		perf_regs->zmmh = get_xsave_addr(xsave, XFEATURE_ZMM_Hi256);
+ 	if (mask & XFEATURE_MASK_Hi16_ZMM)
+ 		perf_regs->h16zmm = get_xsave_addr(xsave, XFEATURE_Hi16_ZMM);
++	if (mask & XFEATURE_MASK_OPMASK)
++		perf_regs->opmask = get_xsave_addr(xsave, XFEATURE_OPMASK);
+ }
+ 
+ /*
+@@ -1952,6 +1958,8 @@ static void x86_pmu_sample_extended_regs(struct perf_event *event,
+ 		mask |= XFEATURE_MASK_ZMM_Hi256;
+ 	if (event_needs_high16_zmm(event))
+ 		mask |= XFEATURE_MASK_Hi16_ZMM;
++	if (event_needs_opmask(event))
++		mask |= XFEATURE_MASK_OPMASK;
+ 
+ 	mask &= x86_pmu.ext_regs_mask;
+ 	if (sample_type & PERF_SAMPLE_REGS_USER) {
+diff --git a/arch/x86/events/perf_event.h b/arch/x86/events/perf_event.h
+index 841c8880e6fd..00f436f5840b 100644
+--- a/arch/x86/events/perf_event.h
++++ b/arch/x86/events/perf_event.h
+@@ -177,6 +177,16 @@ static inline bool event_needs_high16_zmm(struct perf_event *event)
+ 	return false;
+ }
+ 
++static inline bool event_needs_opmask(struct perf_event *event)
++{
++	if (event->attr.sample_simd_regs_enabled &&
++	    (event->attr.sample_simd_pred_reg_intr ||
++	     event->attr.sample_simd_pred_reg_user))
++		return true;
++
++	return false;
++}
++
+ struct amd_nb {
+ 	int nb_id;  /* NorthBridge id */
+ 	int refcnt; /* reference count */
+diff --git a/arch/x86/include/asm/perf_event.h b/arch/x86/include/asm/perf_event.h
+index a57386ae70d9..6c5a34e0dfc8 100644
+--- a/arch/x86/include/asm/perf_event.h
++++ b/arch/x86/include/asm/perf_event.h
+@@ -726,6 +726,10 @@ struct x86_perf_regs {
+ 		u64	*h16zmm_regs;
+ 		struct avx_512_hi16_state *h16zmm;
+ 	};
++	union {
++		u64	*opmask_regs;
++		struct avx_512_opmask_state *opmask;
++	};
+ };
+ 
+ extern unsigned long perf_arch_instruction_pointer(struct pt_regs *regs);
+diff --git a/arch/x86/include/uapi/asm/perf_regs.h b/arch/x86/include/uapi/asm/perf_regs.h
+index d6362bc8d125..dae39df134ec 100644
+--- a/arch/x86/include/uapi/asm/perf_regs.h
++++ b/arch/x86/include/uapi/asm/perf_regs.h
+@@ -60,13 +60,18 @@ enum {
+ 	PERF_X86_SIMD_YMM_REGS      = 16,
+ 	PERF_X86_SIMD_ZMM_REGS      = 32,
+ 	PERF_X86_SIMD_VEC_REGS_MAX  = PERF_X86_SIMD_ZMM_REGS,
++
++	PERF_X86_SIMD_OPMASK_REGS   = 8,
++	PERF_X86_SIMD_PRED_REGS_MAX = PERF_X86_SIMD_OPMASK_REGS,
+ };
+ 
++#define PERF_X86_SIMD_PRED_MASK	GENMASK(PERF_X86_SIMD_PRED_REGS_MAX - 1, 0)
+ #define PERF_X86_SIMD_VEC_MASK	GENMASK_ULL(PERF_X86_SIMD_VEC_REGS_MAX - 1, 0)
+ 
+ #define PERF_X86_H16ZMM_BASE		16
+ 
+ enum {
++	PERF_X86_OPMASK_QWORDS   = 1,
+ 	PERF_X86_XMM_QWORDS      = 2,
+ 	PERF_X86_YMM_QWORDS      = 4,
+ 	PERF_X86_ZMM_QWORDS      = 8,
+diff --git a/arch/x86/kernel/perf_regs.c b/arch/x86/kernel/perf_regs.c
+index fe4ff4d2de88..2e3c10dffb35 100644
+--- a/arch/x86/kernel/perf_regs.c
++++ b/arch/x86/kernel/perf_regs.c
+@@ -86,8 +86,14 @@ u64 perf_simd_reg_value(struct pt_regs *regs, int idx,
+ 	struct x86_perf_regs *perf_regs =
+ 			container_of(regs, struct x86_perf_regs, regs);
+ 
+-	if (pred)
+-		return 0;
++	if (pred) {
++		if (WARN_ON_ONCE(idx >= PERF_X86_SIMD_PRED_REGS_MAX ||
++				 qwords_idx >= PERF_X86_OPMASK_QWORDS))
++			return 0;
++		if (!perf_regs->opmask_regs)
++			return 0;
++		return perf_regs->opmask_regs[idx];
++	}
+ 
+ 	if (WARN_ON_ONCE(idx >= PERF_X86_SIMD_VEC_REGS_MAX ||
+ 			 qwords_idx >= PERF_X86_SIMD_QWORDS_MAX))
+@@ -138,7 +144,10 @@ int perf_simd_reg_validate(u16 vec_qwords, u64 vec_mask,
+ 		if (vec_mask & ~PERF_X86_SIMD_VEC_MASK)
+ 			return -EINVAL;
+ 	}
+-	if (pred_mask)
++
++	if (pred_qwords != PERF_X86_OPMASK_QWORDS)
++		return -EINVAL;
++	if (pred_mask & ~PERF_X86_SIMD_PRED_MASK)
+ 		return -EINVAL;
+ 
+ 	return 0;
+-- 
+2.43.0
+

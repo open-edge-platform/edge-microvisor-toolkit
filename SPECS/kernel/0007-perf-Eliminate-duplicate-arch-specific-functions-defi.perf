@@ -1,0 +1,230 @@
+From 611a0196f8f7932739fa434fb56cad8608485bea Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Mon, 3 Nov 2025 13:26:12 +0800
+Subject: [PATCH 07/39] perf: Eliminate duplicate arch-specific functions
+ definations
+
+Define default common __weak functions for perf_reg_value(),
+perf_reg_validate(), perf_reg_abi() and perf_get_regs_user(). This helps
+to eliminate the duplicated arch-specific definations.
+
+No function changes intended.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/arm/kernel/perf_regs.c       |  6 ------
+ arch/arm64/kernel/perf_regs.c     |  6 ------
+ arch/csky/kernel/perf_regs.c      |  6 ------
+ arch/loongarch/kernel/perf_regs.c |  6 ------
+ arch/mips/kernel/perf_regs.c      |  6 ------
+ arch/parisc/kernel/perf_regs.c    |  6 ------
+ arch/riscv/kernel/perf_regs.c     |  6 ------
+ arch/x86/kernel/perf_regs.c       |  6 ------
+ include/linux/perf_regs.h         | 32 ++++++-------------------------
+ kernel/events/core.c              | 22 +++++++++++++++++++++
+ 10 files changed, 28 insertions(+), 74 deletions(-)
+
+diff --git a/arch/arm/kernel/perf_regs.c b/arch/arm/kernel/perf_regs.c
+index 0529f90395c9..d575a4c3ca56 100644
+--- a/arch/arm/kernel/perf_regs.c
++++ b/arch/arm/kernel/perf_regs.c
+@@ -31,9 +31,3 @@ u64 perf_reg_abi(struct task_struct *task)
+ 	return PERF_SAMPLE_REGS_ABI_32;
+ }
+ 
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+diff --git a/arch/arm64/kernel/perf_regs.c b/arch/arm64/kernel/perf_regs.c
+index b4eece3eb17d..70e2f13f587f 100644
+--- a/arch/arm64/kernel/perf_regs.c
++++ b/arch/arm64/kernel/perf_regs.c
+@@ -98,9 +98,3 @@ u64 perf_reg_abi(struct task_struct *task)
+ 		return PERF_SAMPLE_REGS_ABI_64;
+ }
+ 
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+diff --git a/arch/csky/kernel/perf_regs.c b/arch/csky/kernel/perf_regs.c
+index 09b7f88a2d6a..94601f37b596 100644
+--- a/arch/csky/kernel/perf_regs.c
++++ b/arch/csky/kernel/perf_regs.c
+@@ -31,9 +31,3 @@ u64 perf_reg_abi(struct task_struct *task)
+ 	return PERF_SAMPLE_REGS_ABI_32;
+ }
+ 
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+diff --git a/arch/loongarch/kernel/perf_regs.c b/arch/loongarch/kernel/perf_regs.c
+index 263ac4ab5af6..8dd604f01745 100644
+--- a/arch/loongarch/kernel/perf_regs.c
++++ b/arch/loongarch/kernel/perf_regs.c
+@@ -45,9 +45,3 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 	return regs->regs[idx];
+ }
+ 
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+diff --git a/arch/mips/kernel/perf_regs.c b/arch/mips/kernel/perf_regs.c
+index e686780d1647..7736d3c5ebd2 100644
+--- a/arch/mips/kernel/perf_regs.c
++++ b/arch/mips/kernel/perf_regs.c
+@@ -60,9 +60,3 @@ u64 perf_reg_value(struct pt_regs *regs, int idx)
+ 	return (s64)v; /* Sign extend if 32-bit. */
+ }
+ 
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+diff --git a/arch/parisc/kernel/perf_regs.c b/arch/parisc/kernel/perf_regs.c
+index 10a1a5f06a18..b9fe1f2fcb9b 100644
+--- a/arch/parisc/kernel/perf_regs.c
++++ b/arch/parisc/kernel/perf_regs.c
+@@ -53,9 +53,3 @@ u64 perf_reg_abi(struct task_struct *task)
+ 	return PERF_SAMPLE_REGS_ABI_64;
+ }
+ 
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+diff --git a/arch/riscv/kernel/perf_regs.c b/arch/riscv/kernel/perf_regs.c
+index fd304a248de6..3bba8deababb 100644
+--- a/arch/riscv/kernel/perf_regs.c
++++ b/arch/riscv/kernel/perf_regs.c
+@@ -35,9 +35,3 @@ u64 perf_reg_abi(struct task_struct *task)
+ #endif
+ }
+ 
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+diff --git a/arch/x86/kernel/perf_regs.c b/arch/x86/kernel/perf_regs.c
+index 624703af80a1..81204cb7f723 100644
+--- a/arch/x86/kernel/perf_regs.c
++++ b/arch/x86/kernel/perf_regs.c
+@@ -100,12 +100,6 @@ u64 perf_reg_abi(struct task_struct *task)
+ 	return PERF_SAMPLE_REGS_ABI_32;
+ }
+ 
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+ #else /* CONFIG_X86_64 */
+ #define REG_NOSUPPORT ((1ULL << PERF_REG_X86_DS) | \
+ 		       (1ULL << PERF_REG_X86_ES) | \
+diff --git a/include/linux/perf_regs.h b/include/linux/perf_regs.h
+index f632c5725f16..144bcc3ff19f 100644
+--- a/include/linux/perf_regs.h
++++ b/include/linux/perf_regs.h
+@@ -9,6 +9,12 @@ struct perf_regs {
+ 	struct pt_regs	*regs;
+ };
+ 
++u64 perf_reg_value(struct pt_regs *regs, int idx);
++int perf_reg_validate(u64 mask);
++u64 perf_reg_abi(struct task_struct *task);
++void perf_get_regs_user(struct perf_regs *regs_user,
++			struct pt_regs *regs);
++
+ #ifdef CONFIG_HAVE_PERF_REGS
+ #include <asm/perf_regs.h>
+ 
+@@ -16,35 +22,9 @@ struct perf_regs {
+ #define PERF_REG_EXTENDED_MASK	0
+ #endif
+ 
+-u64 perf_reg_value(struct pt_regs *regs, int idx);
+-int perf_reg_validate(u64 mask);
+-u64 perf_reg_abi(struct task_struct *task);
+-void perf_get_regs_user(struct perf_regs *regs_user,
+-			struct pt_regs *regs);
+ #else
+ 
+ #define PERF_REG_EXTENDED_MASK	0
+ 
+-static inline u64 perf_reg_value(struct pt_regs *regs, int idx)
+-{
+-	return 0;
+-}
+-
+-static inline int perf_reg_validate(u64 mask)
+-{
+-	return mask ? -ENOSYS : 0;
+-}
+-
+-static inline u64 perf_reg_abi(struct task_struct *task)
+-{
+-	return PERF_SAMPLE_REGS_ABI_NONE;
+-}
+-
+-static inline void perf_get_regs_user(struct perf_regs *regs_user,
+-				      struct pt_regs *regs)
+-{
+-	regs_user->regs = task_pt_regs(current);
+-	regs_user->abi = perf_reg_abi(current);
+-}
+ #endif /* CONFIG_HAVE_PERF_REGS */
+ #endif /* _LINUX_PERF_REGS_H */
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index 1f5699b339ec..a1c2844e5eaa 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -7733,6 +7733,28 @@ unsigned long perf_instruction_pointer(struct perf_event *event,
+ 	return perf_arch_instruction_pointer(regs);
+ }
+ 
++u64 __weak perf_reg_value(struct pt_regs *regs, int idx)
++{
++	return 0;
++}
++
++int __weak perf_reg_validate(u64 mask)
++{
++	return mask ? -ENOSYS : 0;
++}
++
++u64 __weak perf_reg_abi(struct task_struct *task)
++{
++	return PERF_SAMPLE_REGS_ABI_NONE;
++}
++
++void __weak perf_get_regs_user(struct perf_regs *regs_user,
++			       struct pt_regs *regs)
++{
++	regs_user->regs = task_pt_regs(current);
++	regs_user->abi = perf_reg_abi(current);
++}
++
+ static void
+ perf_output_sample_regs(struct perf_output_handle *handle,
+ 			struct pt_regs *regs, u64 mask)
+-- 
+2.43.0
+

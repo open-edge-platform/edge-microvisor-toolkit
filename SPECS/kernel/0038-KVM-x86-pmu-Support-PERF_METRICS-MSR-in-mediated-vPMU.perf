@@ -1,0 +1,217 @@
+From 40fa48394c8c51212755d641e75ecda5b2553a48 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Wed, 11 Dec 2024 08:07:12 +0000
+Subject: [PATCH 38/39] KVM: x86/pmu: Support PERF_METRICS MSR in mediated vPMU
+
+Bit 15 in IA32_PERF_CAPABILITIES MSR indicates that the architecture
+provides built-in support for Topdown Microarchitecture Analysis (TMA)
+L1 metrics via the IA32_PERF_METRICS MSR.
+
+Expose this capability only when mediated vPMU is enabled, as emulating
+IA32_PERF_METRICS in the legacy vPMU model is prohibitively complex.
+
+Under the mediated vPMU model, kvm_pmu_{get,set}_msr() limits accesses
+to IA32_PERF_METRICS to the host and rejects guest access.  Passthrough
+this MSR to the guest, and save/restore it on host/guest PMU context
+switches to prevent host PMU activity from clobbering the guest value
+and to avoid leaking guest state into the host.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Signed-off-by: Zide Chen <zide.chen@intel.com>
+---
+ arch/x86/include/asm/kvm_host.h   |  1 +
+ arch/x86/include/asm/msr-index.h  |  1 +
+ arch/x86/include/asm/perf_event.h |  1 +
+ arch/x86/kvm/vmx/pmu_intel.c      | 33 +++++++++++++++++++++++++++++++
+ arch/x86/kvm/vmx/pmu_intel.h      |  5 +++++
+ arch/x86/kvm/vmx/vmx.c            |  6 ++++++
+ arch/x86/kvm/x86.c                |  6 +++++-
+ 7 files changed, 52 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 4666b2c7988f..bf817c613451 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -575,6 +575,7 @@ struct kvm_pmu {
+ 	u64 global_status_rsvd;
+ 	u64 reserved_bits;
+ 	u64 raw_event_mask;
++	u64 perf_metrics;
+ 	struct kvm_pmc gp_counters[KVM_MAX_NR_GP_COUNTERS];
+ 	struct kvm_pmc fixed_counters[KVM_MAX_NR_FIXED_COUNTERS];
+ 
+diff --git a/arch/x86/include/asm/msr-index.h b/arch/x86/include/asm/msr-index.h
+index 9d8598901cf8..6b4847b81645 100644
+--- a/arch/x86/include/asm/msr-index.h
++++ b/arch/x86/include/asm/msr-index.h
+@@ -331,6 +331,7 @@
+ #define PERF_CAP_PEBS_FORMAT		0xf00
+ #define PERF_CAP_FW_WRITES		BIT_ULL(13)
+ #define PERF_CAP_PEBS_BASELINE		BIT_ULL(14)
++#define PERF_CAP_PERF_METRICS		BIT_ULL(15)
+ #define PERF_CAP_PEBS_TIMING_INFO	BIT_ULL(17)
+ #define PERF_CAP_PEBS_MASK		(PERF_CAP_PEBS_TRAP | PERF_CAP_ARCH_REG | \
+ 					 PERF_CAP_PEBS_FORMAT | PERF_CAP_PEBS_BASELINE | \
+diff --git a/arch/x86/include/asm/perf_event.h b/arch/x86/include/asm/perf_event.h
+index 975e0fd95b7a..577f3b2e9668 100644
+--- a/arch/x86/include/asm/perf_event.h
++++ b/arch/x86/include/asm/perf_event.h
+@@ -450,6 +450,7 @@ static inline bool is_topdown_idx(int idx)
+ #define GLOBAL_STATUS_ARCH_PEBS_THRESHOLD_BIT	54
+ #define GLOBAL_STATUS_ARCH_PEBS_THRESHOLD	BIT_ULL(GLOBAL_STATUS_ARCH_PEBS_THRESHOLD_BIT)
+ #define GLOBAL_STATUS_PERF_METRICS_OVF_BIT	48
++#define GLOBAL_STATUS_PERF_METRICS_OVF		BIT_ULL(GLOBAL_STATUS_PERF_METRICS_OVF_BIT)
+ 
+ #define GLOBAL_CTRL_EN_PERF_METRICS		BIT_ULL(48)
+ /*
+diff --git a/arch/x86/kvm/vmx/pmu_intel.c b/arch/x86/kvm/vmx/pmu_intel.c
+index 9a53475b1eb7..c9b2f31fb81b 100644
+--- a/arch/x86/kvm/vmx/pmu_intel.c
++++ b/arch/x86/kvm/vmx/pmu_intel.c
+@@ -180,6 +180,8 @@ static bool intel_is_valid_msr(struct kvm_vcpu *vcpu, u32 msr)
+ 	switch (msr) {
+ 	case MSR_CORE_PERF_FIXED_CTR_CTRL:
+ 		return kvm_pmu_has_perf_global_ctrl(pmu);
++	case MSR_PERF_METRICS:
++		return vcpu_has_perf_metrics(vcpu);
+ 	case MSR_IA32_PEBS_ENABLE:
+ 		ret = vcpu_get_perf_capabilities(vcpu) & PERF_CAP_PEBS_FORMAT;
+ 		break;
+@@ -335,6 +337,9 @@ static int intel_pmu_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 	case MSR_CORE_PERF_FIXED_CTR_CTRL:
+ 		msr_info->data = pmu->fixed_ctr_ctrl;
+ 		break;
++	case MSR_PERF_METRICS:
++		msr_info->data = pmu->perf_metrics;
++		break;
+ 	case MSR_IA32_PEBS_ENABLE:
+ 		msr_info->data = pmu->pebs_enable;
+ 		break;
+@@ -384,6 +389,9 @@ static int intel_pmu_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 		if (pmu->fixed_ctr_ctrl != data)
+ 			reprogram_fixed_counters(pmu, data);
+ 		break;
++	case MSR_PERF_METRICS:
++		pmu->perf_metrics = data;
++		break;
+ 	case MSR_IA32_PEBS_ENABLE:
+ 		if (data & pmu->pebs_enable_rsvd)
+ 			return 1;
+@@ -584,6 +592,11 @@ static void intel_pmu_refresh(struct kvm_vcpu *vcpu)
+ 		pmu->global_status_rsvd &=
+ 				~MSR_CORE_PERF_GLOBAL_OVF_CTRL_TRACE_TOPA_PMI;
+ 
++	if (perf_capabilities & PERF_CAP_PERF_METRICS) {
++		pmu->global_ctrl_rsvd &= ~GLOBAL_CTRL_EN_PERF_METRICS;
++		pmu->global_status_rsvd &= ~GLOBAL_STATUS_PERF_METRICS_OVF;
++	}
++
+ 	if (perf_capabilities & PERF_CAP_PEBS_FORMAT) {
+ 		if (perf_capabilities & PERF_CAP_PEBS_BASELINE) {
+ 			pmu->pebs_enable_rsvd = counter_rsvd;
+@@ -627,6 +640,9 @@ static void intel_pmu_init(struct kvm_vcpu *vcpu)
+ 
+ static void intel_pmu_reset(struct kvm_vcpu *vcpu)
+ {
++	struct kvm_pmu *pmu = vcpu_to_pmu(vcpu);
++
++	pmu->perf_metrics = 0;
+ 	intel_pmu_release_guest_lbr_event(vcpu);
+ }
+ 
+@@ -798,6 +814,13 @@ static void intel_mediated_pmu_load(struct kvm_vcpu *vcpu)
+ 	struct kvm_pmu *pmu = vcpu_to_pmu(vcpu);
+ 	u64 global_status, toggle;
+ 
++	/*
++	 * Restore PERF_METRICS MSR immediately after fixed counter 3 in
++	 * kvm_pmu_load_guest_pmcs().
++	 */
++	if (vcpu_has_perf_metrics(vcpu))
++		wrmsrq(MSR_PERF_METRICS, pmu->perf_metrics);
++
+ 	rdmsrq(MSR_CORE_PERF_GLOBAL_STATUS, global_status);
+ 	toggle = pmu->global_status ^ global_status;
+ 	if (global_status & toggle)
+@@ -826,6 +849,16 @@ static void intel_mediated_pmu_put(struct kvm_vcpu *vcpu)
+ 	 */
+ 	if (pmu->fixed_ctr_ctrl_hw)
+ 		wrmsrq(MSR_CORE_PERF_FIXED_CTR_CTRL, 0);
++
++	if (vcpu_has_perf_metrics(vcpu)) {
++		/*
++		 * Read PERF_METRICS before kvm_pmu_put_guest_pmcs(), since
++		 * clearing fixed counter 3 also clears the PERF_METRICS MSR.
++		 */
++		pmu->perf_metrics = rdpmc(INTEL_PMC_FIXED_RDPMC_METRICS);
++		if (pmu->perf_metrics)
++			wrmsrq(MSR_PERF_METRICS, 0);
++	}
+ }
+ 
+ struct kvm_pmu_ops intel_pmu_ops __initdata = {
+diff --git a/arch/x86/kvm/vmx/pmu_intel.h b/arch/x86/kvm/vmx/pmu_intel.h
+index 5d9357640aa1..2ec547223b09 100644
+--- a/arch/x86/kvm/vmx/pmu_intel.h
++++ b/arch/x86/kvm/vmx/pmu_intel.h
+@@ -40,4 +40,9 @@ struct lbr_desc {
+ 
+ extern struct x86_pmu_lbr vmx_lbr_caps;
+ 
++static inline bool vcpu_has_perf_metrics(struct kvm_vcpu *vcpu)
++{
++	return !!(vcpu_get_perf_capabilities(vcpu) & PERF_CAP_PERF_METRICS);
++}
++
+ #endif /* __KVM_X86_VMX_PMU_INTEL_H */
+diff --git a/arch/x86/kvm/vmx/vmx.c b/arch/x86/kvm/vmx/vmx.c
+index 967b58a8ab9d..4ade1394460a 100644
+--- a/arch/x86/kvm/vmx/vmx.c
++++ b/arch/x86/kvm/vmx/vmx.c
+@@ -4338,6 +4338,9 @@ static void vmx_recalc_pmu_msr_intercepts(struct kvm_vcpu *vcpu)
+ 				  MSR_TYPE_RW, intercept);
+ 	vmx_set_intercept_for_msr(vcpu, MSR_CORE_PERF_GLOBAL_OVF_CTRL,
+ 				  MSR_TYPE_RW, intercept);
++
++	vmx_set_intercept_for_msr(vcpu, MSR_PERF_METRICS, MSR_TYPE_RW,
++				  !vcpu_has_perf_metrics(vcpu));
+ }
+ 
+ static void vmx_recalc_msr_intercepts(struct kvm_vcpu *vcpu)
+@@ -8183,6 +8186,9 @@ static __init u64 vmx_get_perf_capabilities(void)
+ 		perf_cap &= ~PERF_CAP_PEBS_BASELINE;
+ 	}
+ 
++	if (enable_mediated_pmu)
++		perf_cap |= host_perf_cap & PERF_CAP_PERF_METRICS;
++
+ 	return perf_cap;
+ }
+ 
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index af7dff53c4cf..01659fc9a56a 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -357,7 +357,7 @@ static const u32 msrs_to_save_pmu[] = {
+ 	MSR_ARCH_PERFMON_FIXED_CTR0, MSR_ARCH_PERFMON_FIXED_CTR1,
+ 	MSR_ARCH_PERFMON_FIXED_CTR2, MSR_ARCH_PERFMON_FIXED_CTR3,
+ 	MSR_CORE_PERF_FIXED_CTR_CTRL, MSR_CORE_PERF_GLOBAL_STATUS,
+-	MSR_CORE_PERF_GLOBAL_CTRL,
++	MSR_CORE_PERF_GLOBAL_CTRL, MSR_PERF_METRICS,
+ 	MSR_IA32_PEBS_ENABLE, MSR_IA32_DS_AREA, MSR_PEBS_DATA_CFG,
+ 
+ 	/* This part of MSRs should match KVM_MAX_NR_INTEL_GP_COUNTERS. */
+@@ -7674,6 +7674,10 @@ static void kvm_probe_msr_to_save(u32 msr_index)
+ 		     intel_pt_validate_hw_cap(PT_CAP_num_address_ranges) * 2))
+ 			return;
+ 		break;
++	case MSR_PERF_METRICS:
++		if (!(kvm_caps.supported_perf_cap & PERF_CAP_PERF_METRICS))
++			return;
++		break;
+ 	case MSR_ARCH_PERFMON_PERFCTR0 ...
+ 	     MSR_ARCH_PERFMON_PERFCTR0 + KVM_MAX_NR_GP_COUNTERS - 1:
+ 		if (msr_index - MSR_ARCH_PERFMON_PERFCTR0 >=
+-- 
+2.43.0
+

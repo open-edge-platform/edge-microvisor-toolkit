@@ -1,0 +1,137 @@
+From f13b9a06e8baa9637e47d4e685978afd490b2b40 Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:51:57 -0700
+Subject: [PATCH 18/22] platform/x86/intel/pmc/ssram: Add PCI platform data
+
+Add per-device platform data for SSRAM telemetry PCI IDs and route probe
+through a method selector driven by id->driver_data.
+
+This is a preparatory refactor for follow-on discovery methods while
+preserving current behavior: all supported IDs continue to use the PCI
+initialization path.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ .../platform/x86/intel/pmc/ssram_telemetry.c  | 69 +++++++++++++++----
+ 1 file changed, 55 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/ssram_telemetry.c b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+index 75a80a74a069..7db98037c521 100644
+--- a/drivers/platform/x86/intel/pmc/ssram_telemetry.c
++++ b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+@@ -24,6 +24,18 @@
+ 
+ DEFINE_FREE(pmc_ssram_telemetry_iounmap, void __iomem *, if (_T) iounmap(_T))
+ 
++enum resource_method {
++	RES_METHOD_PCI,
++};
++
++struct ssram_type {
++	enum resource_method method;
++};
++
++static const struct ssram_type pci_main = {
++	.method = RES_METHOD_PCI,
++};
++
+ static struct pmc_ssram_telemetry pmc_ssram_telems[3];
+ static bool device_probed;
+ 
+@@ -81,7 +93,7 @@ pmc_ssram_telemetry_add_pmt(struct pci_dev *pcidev, u64 ssram_base, void __iomem
+ }
+ 
+ static int
+-pmc_ssram_telemetry_get_pmc(struct pci_dev *pcidev, unsigned int pmc_idx, u32 offset)
++pmc_ssram_telemetry_get_pmc_pci(struct pci_dev *pcidev, unsigned int pmc_idx, u32 offset)
+ {
+ 	void __iomem __free(pmc_ssram_telemetry_iounmap) *tmp_ssram = NULL;
+ 	void __iomem __free(pmc_ssram_telemetry_iounmap) *ssram = NULL;
+@@ -116,6 +128,20 @@ pmc_ssram_telemetry_get_pmc(struct pci_dev *pcidev, unsigned int pmc_idx, u32 of
+ 	return pmc_ssram_telemetry_add_pmt(pcidev, ssram_base, ssram);
+ }
+ 
++static int pmc_ssram_telemetry_pci_init(struct pci_dev *pcidev)
++{
++	int ret;
++
++	ret = pmc_ssram_telemetry_get_pmc_pci(pcidev, PMC_IDX_MAIN, 0);
++	if (ret)
++		return ret;
++
++	pmc_ssram_telemetry_get_pmc_pci(pcidev, PMC_IDX_IOE, SSRAM_IOE_OFFSET);
++	pmc_ssram_telemetry_get_pmc_pci(pcidev, PMC_IDX_PCH, SSRAM_PCH_OFFSET);
++
++	return ret;
++}
++
+ /**
+  * pmc_ssram_telemetry_get_pmc_info() - Get a PMC devid and base_addr information
+  * @pmc_idx:               Index of the PMC
+@@ -158,8 +184,18 @@ EXPORT_SYMBOL_GPL(pmc_ssram_telemetry_get_pmc_info);
+ 
+ static int pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_device_id *id)
+ {
++	const struct ssram_type *ssram_type;
++	enum resource_method method;
+ 	int ret;
+ 
++	ssram_type = (const struct ssram_type *)id->driver_data;
++	if (!ssram_type) {
++		dev_dbg(&pcidev->dev, "missing driver data\n");
++		ret = -EINVAL;
++		goto probe_finish;
++	}
++
++	method = ssram_type->method;
+ 
+ 	ret = pcim_enable_device(pcidev);
+ 	if (ret) {
+@@ -167,12 +203,10 @@ static int pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_de
+ 		goto probe_finish;
+ 	}
+ 
+-	ret = pmc_ssram_telemetry_get_pmc(pcidev, PMC_IDX_MAIN, 0);
+-	if (ret)
+-		goto probe_finish;
+-
+-	pmc_ssram_telemetry_get_pmc(pcidev, PMC_IDX_IOE, SSRAM_IOE_OFFSET);
+-	pmc_ssram_telemetry_get_pmc(pcidev, PMC_IDX_PCH, SSRAM_PCH_OFFSET);
++	if (method == RES_METHOD_PCI)
++		ret = pmc_ssram_telemetry_pci_init(pcidev);
++	else
++		ret = -EINVAL;
+ 
+ probe_finish:
+ 	/*
+@@ -185,13 +219,20 @@ static int pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_de
+ }
+ 
+ static const struct pci_device_id pmc_ssram_telemetry_pci_ids[] = {
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_MTL_SOCM) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_ARL_SOCS) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_ARL_SOCM) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_LNL_SOCM) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_PTL_PCDH) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_PTL_PCDP) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_WCL_PCDN) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_MTL_SOCM),
++		.driver_data = (kernel_ulong_t)&pci_main },
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_ARL_SOCS),
++		.driver_data = (kernel_ulong_t)&pci_main },
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_ARL_SOCM),
++		.driver_data = (kernel_ulong_t)&pci_main },
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_LNL_SOCM),
++		.driver_data = (kernel_ulong_t)&pci_main },
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_PTL_PCDH),
++		.driver_data = (kernel_ulong_t)&pci_main },
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_PTL_PCDP),
++		.driver_data = (kernel_ulong_t)&pci_main },
++	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_WCL_PCDN),
++		.driver_data = (kernel_ulong_t)&pci_main },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pmc_ssram_telemetry_pci_ids);
+-- 
+2.43.0
+

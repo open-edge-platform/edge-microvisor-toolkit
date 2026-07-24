@@ -1,0 +1,115 @@
+From 5a653dc9821ffaa872adce3d83f9110355cb1800 Mon Sep 17 00:00:00 2001
+From: Tejas Upadhyay <tejas.upadhyay@intel.com>
+Date: Thu, 5 Mar 2026 17:49:05 +0530
+Subject: [PATCH 33/43] drm/xe/pat: define coh_mode 2way
+
+Defining 2way (two-way coherency) is critical for
+Xe3p_LPG (Nova Lake P) platforms to support L2 flush
+optimization safely.
+
+This mode allows the driver to skip certain manual cache
+flushes (L2 flush optimization) without risking memory
+corruption because the hardware ensures the most recent
+data is visible to both entities.
+
+Reviewed-by: Matthew Auld <matthew.auld@intel.com>
+Signed-off-by: Tejas Upadhyay <tejas.upadhyay@intel.com>
+---
+ drivers/gpu/drm/xe/xe_pat.c        | 14 +++++++-------
+ drivers/gpu/drm/xe/xe_pat.h        |  5 +++--
+ drivers/gpu/drm/xe/xe_vm.c         |  2 +-
+ drivers/gpu/drm/xe/xe_vm_madvise.c |  2 +-
+ 4 files changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_pat.c b/drivers/gpu/drm/xe/xe_pat.c
+index 3ba89e80be1f..7c5703ef1253 100644
+--- a/drivers/gpu/drm/xe/xe_pat.c
++++ b/drivers/gpu/drm/xe/xe_pat.c
+@@ -91,7 +91,7 @@ struct xe_pat_ops {
+ };
+ 
+ static const struct xe_pat_table_entry xelp_pat_table[] = {
+-	[0] = { XELP_PAT_WB, XE_COH_AT_LEAST_1WAY },
++	[0] = { XELP_PAT_WB, XE_COH_1WAY },
+ 	[1] = { XELP_PAT_WC, XE_COH_NONE },
+ 	[2] = { XELP_PAT_WT, XE_COH_NONE },
+ 	[3] = { XELP_PAT_UC, XE_COH_NONE },
+@@ -101,19 +101,19 @@ static const struct xe_pat_table_entry xehpc_pat_table[] = {
+ 	[0] = { XELP_PAT_UC, XE_COH_NONE },
+ 	[1] = { XELP_PAT_WC, XE_COH_NONE },
+ 	[2] = { XELP_PAT_WT, XE_COH_NONE },
+-	[3] = { XELP_PAT_WB, XE_COH_AT_LEAST_1WAY },
++	[3] = { XELP_PAT_WB, XE_COH_1WAY },
+ 	[4] = { XEHPC_PAT_CLOS(1) | XELP_PAT_WT, XE_COH_NONE },
+-	[5] = { XEHPC_PAT_CLOS(1) | XELP_PAT_WB, XE_COH_AT_LEAST_1WAY },
++	[5] = { XEHPC_PAT_CLOS(1) | XELP_PAT_WB, XE_COH_1WAY },
+ 	[6] = { XEHPC_PAT_CLOS(2) | XELP_PAT_WT, XE_COH_NONE },
+-	[7] = { XEHPC_PAT_CLOS(2) | XELP_PAT_WB, XE_COH_AT_LEAST_1WAY },
++	[7] = { XEHPC_PAT_CLOS(2) | XELP_PAT_WB, XE_COH_1WAY },
+ };
+ 
+ static const struct xe_pat_table_entry xelpg_pat_table[] = {
+ 	[0] = { XELPG_PAT_0_WB, XE_COH_NONE },
+ 	[1] = { XELPG_PAT_1_WT, XE_COH_NONE },
+ 	[2] = { XELPG_PAT_3_UC, XE_COH_NONE },
+-	[3] = { XELPG_PAT_0_WB | XELPG_2_COH_1W, XE_COH_AT_LEAST_1WAY },
+-	[4] = { XELPG_PAT_0_WB | XELPG_3_COH_2W, XE_COH_AT_LEAST_1WAY },
++	[3] = { XELPG_PAT_0_WB | XELPG_2_COH_1W, XE_COH_1WAY },
++	[4] = { XELPG_PAT_0_WB | XELPG_3_COH_2W, XE_COH_2WAY },
+ };
+ 
+ /*
+@@ -146,7 +146,7 @@ static const struct xe_pat_table_entry xelpg_pat_table[] = {
+ 			REG_FIELD_PREP(XE2_L3_POLICY, l3_policy) | \
+ 			REG_FIELD_PREP(XE2_L4_POLICY, l4_policy) | \
+ 			REG_FIELD_PREP(XE2_COH_MODE, __coh_mode), \
+-		.coh_mode = __coh_mode ? XE_COH_AT_LEAST_1WAY : XE_COH_NONE, \
++		.coh_mode = __coh_mode ? __coh_mode : XE_COH_NONE, \
+ 		.valid = 1 \
+ 	}
+ 
+diff --git a/drivers/gpu/drm/xe/xe_pat.h b/drivers/gpu/drm/xe/xe_pat.h
+index c7e2a53d8cee..a1e287c08f57 100644
+--- a/drivers/gpu/drm/xe/xe_pat.h
++++ b/drivers/gpu/drm/xe/xe_pat.h
+@@ -28,8 +28,9 @@ struct xe_pat_table_entry {
+ 	/**
+ 	 * @coh_mode: The GPU coherency mode that @value maps to.
+ 	 */
+-#define XE_COH_NONE          1
+-#define XE_COH_AT_LEAST_1WAY 2
++#define XE_COH_NONE		1
++#define XE_COH_1WAY		2
++#define XE_COH_2WAY		3
+ 	u16 coh_mode;
+ 
+ 	/**
+diff --git a/drivers/gpu/drm/xe/xe_vm.c b/drivers/gpu/drm/xe/xe_vm.c
+index ffdbab106a58..d405527abc15 100644
+--- a/drivers/gpu/drm/xe/xe_vm.c
++++ b/drivers/gpu/drm/xe/xe_vm.c
+@@ -3440,7 +3440,7 @@ static int vm_bind_ioctl_check_args(struct xe_device *xe, struct xe_vm *vm,
+ 			goto free_bind_ops;
+ 		}
+ 
+-		if (XE_WARN_ON(coh_mode > XE_COH_AT_LEAST_1WAY)) {
++		if (XE_WARN_ON(coh_mode > XE_COH_2WAY)) {
+ 			err = -EINVAL;
+ 			goto free_bind_ops;
+ 		}
+diff --git a/drivers/gpu/drm/xe/xe_vm_madvise.c b/drivers/gpu/drm/xe/xe_vm_madvise.c
+index b4086129a364..ec55ee138b60 100644
+--- a/drivers/gpu/drm/xe/xe_vm_madvise.c
++++ b/drivers/gpu/drm/xe/xe_vm_madvise.c
+@@ -301,7 +301,7 @@ static bool madvise_args_are_sane(struct xe_device *xe, const struct drm_xe_madv
+ 		if (XE_IOCTL_DBG(xe, !coh_mode))
+ 			return false;
+ 
+-		if (XE_WARN_ON(coh_mode > XE_COH_AT_LEAST_1WAY))
++		if (XE_WARN_ON(coh_mode > XE_COH_2WAY))
+ 			return false;
+ 
+ 		if (XE_IOCTL_DBG(xe, args->pat_index.pad))
+-- 
+2.43.0
+

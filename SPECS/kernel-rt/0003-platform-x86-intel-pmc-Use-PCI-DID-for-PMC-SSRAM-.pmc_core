@@ -1,0 +1,229 @@
+From 7c4b6e7a9841bed6ca058aa181408dc5d70c208c Mon Sep 17 00:00:00 2001
+From: Xi Pardee <xi.pardee@linux.intel.com>
+Date: Mon, 2 Mar 2026 14:32:05 -0800
+Subject: [PATCH 3/7] platform/x86/intel/pmc: Use PCI DID for PMC SSRAM device
+ discovery
+
+Update the PMC SSRAM discovery process to identify the device using its
+PCI Device ID rather than relying on a fixed PCI bus location. The
+enumeration of integrated devices on the PCI bus is no longer guaranteed
+to be consistent across CPUs.
+
+On earlier platforms, the IOE and PCH SSRAM devices were hidden from the
+BIOS, and the SOC SSRAM device is associated to telemetry regions from all
+available SSRAM devices. Starting with Nova Lake, the IOE and PCH SSRAM
+devices register their telemetry regions independently, meaning each
+telemetry region is now linked to its corresponding SSRAM device. A new
+ssram_hidden attribute has been added to the pmc_dev_info structure to
+reflect this distinction.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Signed-off-by: Xi Pardee <xi.pardee@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmc/arl.c  |  4 ++--
+ drivers/platform/x86/intel/pmc/core.c | 18 +++++++++++++-----
+ drivers/platform/x86/intel/pmc/core.h |  6 ++++--
+ drivers/platform/x86/intel/pmc/lnl.c  |  2 +-
+ drivers/platform/x86/intel/pmc/mtl.c  |  2 +-
+ drivers/platform/x86/intel/pmc/ptl.c  |  2 +-
+ drivers/platform/x86/intel/pmc/wcl.c  |  2 +-
+ 7 files changed, 23 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/arl.c b/drivers/platform/x86/intel/pmc/arl.c
+index eb23bc68340a..95372a0807ac 100644
+--- a/drivers/platform/x86/intel/pmc/arl.c
++++ b/drivers/platform/x86/intel/pmc/arl.c
+@@ -720,7 +720,6 @@ static int arl_h_core_init(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_dev_
+ 
+ static u32 ARL_PMT_DMU_GUIDS[] = {ARL_PMT_DMU_GUID, 0x0};
+ struct pmc_dev_info arl_pmc_dev = {
+-	.pci_func = 0,
+ 	.dmu_guids = ARL_PMT_DMU_GUIDS,
+ 	.regmap_list = arl_pmc_info_list,
+ 	.map = &arl_socs_reg_map,
+@@ -729,11 +728,11 @@ struct pmc_dev_info arl_pmc_dev = {
+ 	.resume = arl_resume,
+ 	.init = arl_core_init,
+ 	.sub_req = pmc_core_pmt_get_lpm_req,
++	.ssram_hidden = true,
+ };
+ 
+ static u32 ARL_H_PMT_DMU_GUIDS[] = {ARL_PMT_DMU_GUID, ARL_H_PMT_DMU_GUID, 0x0};
+ struct pmc_dev_info arl_h_pmc_dev = {
+-	.pci_func = 2,
+ 	.dmu_guids = ARL_H_PMT_DMU_GUIDS,
+ 	.regmap_list = arl_pmc_info_list,
+ 	.map = &mtl_socm_reg_map,
+@@ -742,4 +741,5 @@ struct pmc_dev_info arl_h_pmc_dev = {
+ 	.resume = arl_h_resume,
+ 	.init = arl_h_core_init,
+ 	.sub_req = pmc_core_pmt_get_lpm_req,
++	.ssram_hidden = true,
+ };
+diff --git a/drivers/platform/x86/intel/pmc/core.c b/drivers/platform/x86/intel/pmc/core.c
+index 9c27144f411b..6ca5a6321dbd 100644
+--- a/drivers/platform/x86/intel/pmc/core.c
++++ b/drivers/platform/x86/intel/pmc/core.c
+@@ -1660,12 +1660,10 @@ static int pmc_core_get_telem_info(struct pmc_dev *pmcdev, struct pmc_dev_info *
+ 	unsigned int pmc_idx;
+ 	int ret;
+ 
+-	pcidev = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(20, pmc_dev_info->pci_func));
+-	if (!pcidev)
+-		return -ENODEV;
+-
+ 	for (pmc_idx = 0; pmc_idx < ARRAY_SIZE(pmcdev->pmcs); ++pmc_idx) {
++		struct pci_dev *pcidev __free(pci_dev_put) = NULL;
+ 		struct pmc *pmc;
++		u16 devid;
+ 
+ 		pmc = pmcdev->pmcs[pmc_idx];
+ 		if (!pmc)
+@@ -1674,7 +1672,16 @@ static int pmc_core_get_telem_info(struct pmc_dev *pmcdev, struct pmc_dev_info *
+ 		if (!pmc->map->lpm_req_guid)
+ 			return -ENXIO;
+ 
+-		ep = pmt_telem_find_and_register_endpoint(&pcidev->dev, pmc->map->lpm_req_guid, 0);
++		if (pmc_dev_info->ssram_hidden)
++			devid = pmcdev->pmcs[PMC_IDX_MAIN]->devid;
++		else
++			devid = pmc->devid;
++
++		pcidev = pci_get_device(PCI_VENDOR_ID_INTEL, devid, NULL);
++		if (!pcidev)
++			return -ENODEV;
++
++		ep = pmt_telem_find_and_register_endpoint(&pcidev, pmc->map->lpm_req_guid, 0);
+ 		if (IS_ERR(ep)) {
+ 			dev_dbg(&pmcdev->pdev->dev, "couldn't get telem endpoint %pe", ep);
+ 			return -EPROBE_DEFER;
+@@ -1724,6 +1731,7 @@ static int pmc_core_pmc_add(struct pmc_dev *pmcdev, unsigned int pmc_idx)
+ 
+ 	pmc->map = map;
+ 	pmc->base_addr = pmc_ssram_telemetry.base_addr;
++	pmc->devid = pmc_ssram_telemetry.devid;
+ 	pmc->regbase = ioremap(pmc->base_addr, pmc->map->regmap_length);
+ 
+ 	if (!pmc->regbase) {
+diff --git a/drivers/platform/x86/intel/pmc/core.h b/drivers/platform/x86/intel/pmc/core.h
+index ed93ef97eae6..46be836c347d 100644
+--- a/drivers/platform/x86/intel/pmc/core.h
++++ b/drivers/platform/x86/intel/pmc/core.h
+@@ -430,6 +430,7 @@ struct pmc_info {
+  * @ltr_ign:		Holds LTR ignore data while suspended
+  * @num_lpm_modes:	Count of enabled modes
+  * @lpm_en_modes:	Array of enabled modes from lowest to highest priority
++ * @devid:		Device ID of the SSRAM device
+  *
+  * pmc contains info about one power management controller device.
+  */
+@@ -441,6 +442,7 @@ struct pmc {
+ 	u32 ltr_ign;
+ 	u8 num_lpm_modes;
+ 	u8 lpm_en_modes[LPM_MAX_NUM_MODES];
++	u16 devid;
+ };
+ 
+ /**
+@@ -500,7 +502,6 @@ enum pmc_index {
+ 
+ /**
+  * struct pmc_dev_info - Structure to keep PMC device info
+- * @pci_func:		Function number of the primary PMC
+  * @dmu_guids:		List of Die Management Unit GUID
+  * @pc_guid:		GUID for telemetry region to read PKGC blocker info
+  * @pkgc_ltr_blocker_offset: Offset to PKGC LTR blockers in telemetry region
+@@ -517,9 +518,9 @@ enum pmc_index {
+  * @resume:		Function to perform platform specific resume
+  * @init:		Function to perform platform specific init action
+  * @sub_req:		Function to achieve low power mode substate requirements
++ * @ssram_hidden:	Flag to indicate whether SSRAM is hidden
+  */
+ struct pmc_dev_info {
+-	u8 pci_func;
+ 	u32 *dmu_guids;
+ 	u32 pc_guid;
+ 	u32 pkgc_ltr_blocker_offset;
+@@ -533,6 +534,7 @@ struct pmc_dev_info {
+ 	int (*resume)(struct pmc_dev *pmcdev);
+ 	int (*init)(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_dev_info);
+ 	int (*sub_req)(struct pmc_dev *pmcdev, struct pmc *pmc, struct telem_endpoint *ep);
++	bool ssram_hidden;
+ };
+ 
+ extern const struct pmc_bit_map msr_map[];
+diff --git a/drivers/platform/x86/intel/pmc/lnl.c b/drivers/platform/x86/intel/pmc/lnl.c
+index 1cd81ee54dcf..18f303af328e 100644
+--- a/drivers/platform/x86/intel/pmc/lnl.c
++++ b/drivers/platform/x86/intel/pmc/lnl.c
+@@ -571,7 +571,6 @@ static int lnl_core_init(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_dev_in
+ }
+ 
+ struct pmc_dev_info lnl_pmc_dev = {
+-	.pci_func = 2,
+ 	.regmap_list = lnl_pmc_info_list,
+ 	.map = &lnl_socm_reg_map,
+ 	.sub_req_show = &pmc_core_substate_req_regs_fops,
+@@ -579,4 +578,5 @@ struct pmc_dev_info lnl_pmc_dev = {
+ 	.resume = lnl_resume,
+ 	.init = lnl_core_init,
+ 	.sub_req = pmc_core_pmt_get_lpm_req,
++	.ssram_hidden = true,
+ };
+diff --git a/drivers/platform/x86/intel/pmc/mtl.c b/drivers/platform/x86/intel/pmc/mtl.c
+index 57508cbf9cd4..193ebbe58402 100644
+--- a/drivers/platform/x86/intel/pmc/mtl.c
++++ b/drivers/platform/x86/intel/pmc/mtl.c
+@@ -994,7 +994,6 @@ static int mtl_core_init(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_dev_in
+ 
+ static u32 MTL_PMT_DMU_GUIDS[] = {MTL_PMT_DMU_GUID, 0x0};
+ struct pmc_dev_info mtl_pmc_dev = {
+-	.pci_func = 2,
+ 	.dmu_guids = MTL_PMT_DMU_GUIDS,
+ 	.regmap_list = mtl_pmc_info_list,
+ 	.map = &mtl_socm_reg_map,
+@@ -1003,4 +1002,5 @@ struct pmc_dev_info mtl_pmc_dev = {
+ 	.resume = mtl_resume,
+ 	.init = mtl_core_init,
+ 	.sub_req = pmc_core_pmt_get_lpm_req,
++	.ssram_hidden = true,
+ };
+diff --git a/drivers/platform/x86/intel/pmc/ptl.c b/drivers/platform/x86/intel/pmc/ptl.c
+index 1f48e2bbc699..6c68772e738c 100644
+--- a/drivers/platform/x86/intel/pmc/ptl.c
++++ b/drivers/platform/x86/intel/pmc/ptl.c
+@@ -569,7 +569,6 @@ static int ptl_core_init(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_dev_in
+ }
+ 
+ struct pmc_dev_info ptl_pmc_dev = {
+-	.pci_func = 2,
+ 	.regmap_list = ptl_pmc_info_list,
+ 	.map = &ptl_pcdp_reg_map,
+ 	.sub_req_show = &pmc_core_substate_blk_req_fops,
+@@ -577,4 +576,5 @@ struct pmc_dev_info ptl_pmc_dev = {
+ 	.resume = ptl_resume,
+ 	.init = ptl_core_init,
+ 	.sub_req = pmc_core_pmt_get_blk_sub_req,
++	.ssram_hidden = true,
+ };
+diff --git a/drivers/platform/x86/intel/pmc/wcl.c b/drivers/platform/x86/intel/pmc/wcl.c
+index a45707e6364f..b55069945e9e 100644
+--- a/drivers/platform/x86/intel/pmc/wcl.c
++++ b/drivers/platform/x86/intel/pmc/wcl.c
+@@ -493,7 +493,6 @@ static int wcl_core_init(struct pmc_dev *pmcdev, struct pmc_dev_info *pmc_dev_in
+ }
+ 
+ struct pmc_dev_info wcl_pmc_dev = {
+-	.pci_func = 2,
+ 	.regmap_list = wcl_pmc_info_list,
+ 	.map = &wcl_pcdn_reg_map,
+ 	.sub_req_show = &pmc_core_substate_blk_req_fops,
+@@ -501,4 +500,5 @@ struct pmc_dev_info wcl_pmc_dev = {
+ 	.resume = wcl_resume,
+ 	.init = wcl_core_init,
+ 	.sub_req = pmc_core_pmt_get_blk_sub_req,
++	.ssram_hidden = true,
+ };
+-- 
+2.43.0
+

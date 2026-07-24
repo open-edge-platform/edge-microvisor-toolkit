@@ -1,0 +1,629 @@
+From a50143397583fb6877a9a735d40216f32aaad7aa Mon Sep 17 00:00:00 2001
+From: hepengpx <pengpengx.he@intel.com>
+Date: Tue, 7 Jul 2026 09:06:02 +0800
+Subject: [PATCH 1/4] ipu7: Wait ipu fw requests to clear
+
+IPU ISYS MMUs run in parallel, and runtime TLB invalidation may
+overlap with ongoing data movement. For fw msg buf expansion,
+invalidating ISYS MMU0 is sufficient.
+
+The goal of acquire_fw_task_buffer_lock is to block subsequent
+getting fw message buffer or task queue while waiting for
+framebuflist_fw to drain.
+
+With "glimagesink sync=false", gstreamer will launch each stream one
+by one. So, when isys message buffer is not enough, just allocating
+max buffer count(10) is enough.
+
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-bus.c  |   4 +-
+ drivers/staging/media/ipu7/ipu7-bus.h  |   6 ++
+ drivers/staging/media/ipu7/ipu7-dma.c  |  41 +++++++-
+ drivers/staging/media/ipu7/ipu7-isys.c | 136 +++++++++++++------------
+ drivers/staging/media/ipu7/ipu7-mmu.c  |  61 +++++------
+ 5 files changed, 144 insertions(+), 104 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-bus.c b/drivers/staging/media/ipu7/ipu7-bus.c
+index 7a1b0744b236..cd0641781c74 100644
+--- a/drivers/staging/media/ipu7/ipu7-bus.c
++++ b/drivers/staging/media/ipu7/ipu7-bus.c
+@@ -75,6 +75,7 @@ static void ipu7_bus_release(struct device *dev)
+ {
+ 	struct ipu7_bus_device *adev = to_ipu7_bus_device(dev);
+ 
++	mutex_destroy(&adev->acquire_fw_task_buffer_lock);
+ 	kfree(adev->pdata);
+ 	kfree(adev);
+ }
+@@ -89,13 +90,14 @@ ipu7_bus_initialize_device(struct pci_dev *pdev, struct device *parent,
+ 	struct ipu7_device *isp = pci_get_drvdata(pdev);
+ 	int ret;
+ 
+-	adev = kzalloc_obj(*adev);
++	adev = kzalloc(sizeof(*adev), GFP_KERNEL);
+ 	if (!adev)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	adev->isp = isp;
+ 	adev->ctrl = ctrl;
+ 	adev->pdata = pdata;
++	mutex_init(&adev->acquire_fw_task_buffer_lock);
+ 	auxdev = &adev->auxdev;
+ 	auxdev->name = name;
+ 	auxdev->id = (pci_domain_nr(pdev->bus) << 16) |
+diff --git a/drivers/staging/media/ipu7/ipu7-bus.h b/drivers/staging/media/ipu7/ipu7-bus.h
+index 45157df16e90..eb9d0c907ddc 100644
+--- a/drivers/staging/media/ipu7/ipu7-bus.h
++++ b/drivers/staging/media/ipu7/ipu7-bus.h
+@@ -46,6 +46,12 @@ struct ipu7_bus_device {
+ 	struct ia_gofo_boot_config *boot_config;
+ 	dma_addr_t boot_config_dma_addr;
+ 	u32 boot_config_size;
++
++	/* Serialize FW message buffer or task queue acquisition against
++	 * TLB invalidation.
++	 */
++	struct mutex acquire_fw_task_buffer_lock;
++	unsigned int (*get_running_fw_task_count)(struct ipu7_bus_device *adev);
+ };
+ 
+ struct ipu7_auxdrv_data {
+diff --git a/drivers/staging/media/ipu7/ipu7-dma.c b/drivers/staging/media/ipu7/ipu7-dma.c
+index 57734a552aa7..e3c62087070c 100644
+--- a/drivers/staging/media/ipu7/ipu7-dma.c
++++ b/drivers/staging/media/ipu7/ipu7-dma.c
+@@ -12,6 +12,7 @@
+ #include <linux/scatterlist.h>
+ #include <linux/slab.h>
+ #include <linux/types.h>
++#include <linux/version.h>
+ 
+ #include "ipu7.h"
+ #include "ipu7-bus.h"
+@@ -130,7 +131,11 @@ void ipu7_dma_sync_single(struct ipu7_bus_device *sys, dma_addr_t dma_handle,
+ 	vaddr = info->vaddr + offset;
+ 	clflush_cache_range(vaddr, size);
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_sync_single, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_sync_single, INTEL_IPU7);
++#endif
+ 
+ void ipu7_dma_sync_sg(struct ipu7_bus_device *sys, struct scatterlist *sglist,
+ 		      unsigned int nents)
+@@ -141,13 +146,21 @@ void ipu7_dma_sync_sg(struct ipu7_bus_device *sys, struct scatterlist *sglist,
+ 	for_each_sg(sglist, sg, nents, i)
+ 		clflush_cache_range(sg_virt(sg), sg->length);
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_sync_sg, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_sync_sg, INTEL_IPU7);
++#endif
+ 
+ void ipu7_dma_sync_sgtable(struct ipu7_bus_device *sys, struct sg_table *sgt)
+ {
+ 	ipu7_dma_sync_sg(sys, sgt->sgl, sgt->orig_nents);
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_sync_sgtable, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_sync_sgtable, INTEL_IPU7);
++#endif
+ 
+ void *ipu7_dma_alloc(struct ipu7_bus_device *sys, size_t size,
+ 		     dma_addr_t *dma_handle, gfp_t gfp,
+@@ -164,7 +177,7 @@ void *ipu7_dma_alloc(struct ipu7_bus_device *sys, size_t size,
+ 	unsigned int i;
+ 	int ret;
+ 
+-	info = kzalloc_obj(*info);
++	info = kzalloc(sizeof(*info), GFP_KERNEL);
+ 	if (!info)
+ 		return NULL;
+ 
+@@ -242,7 +255,11 @@ void *ipu7_dma_alloc(struct ipu7_bus_device *sys, size_t size,
+ 
+ 	return NULL;
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_alloc, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_alloc, INTEL_IPU7);
++#endif
+ 
+ void ipu7_dma_free(struct ipu7_bus_device *sys, size_t size, void *vaddr,
+ 		   dma_addr_t dma_handle, unsigned long attrs)
+@@ -299,7 +316,11 @@ void ipu7_dma_free(struct ipu7_bus_device *sys, size_t size, void *vaddr,
+ 
+ 	kfree(info);
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_free, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_free, INTEL_IPU7);
++#endif
+ 
+ int ipu7_dma_mmap(struct ipu7_bus_device *sys, struct vm_area_struct *vma,
+ 		  void *addr, dma_addr_t iova, size_t size,
+@@ -376,10 +397,16 @@ void ipu7_dma_unmap_sg(struct ipu7_bus_device *sys, struct scatterlist *sglist,
+ 	ipu7_mmu_unmap(mmu->dmap->mmu_info, PFN_PHYS(iova->pfn_lo),
+ 		       PFN_PHYS(iova_size(iova)));
+ 
++	mutex_lock(&sys->acquire_fw_task_buffer_lock);
+ 	mmu->tlb_invalidate(mmu, -1);
++	mutex_unlock(&sys->acquire_fw_task_buffer_lock);
+ 	__free_iova(&mmu->dmap->iovad, iova);
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_unmap_sg, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_unmap_sg, INTEL_IPU7);
++#endif
+ 
+ int ipu7_dma_map_sg(struct ipu7_bus_device *sys, struct scatterlist *sglist,
+ 		    int nents, enum dma_data_direction dir,
+@@ -462,7 +489,11 @@ int ipu7_dma_map_sg(struct ipu7_bus_device *sys, struct scatterlist *sglist,
+ 
+ 	return 0;
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_map_sg, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_map_sg, INTEL_IPU7);
++#endif
+ 
+ int ipu7_dma_map_sgtable(struct ipu7_bus_device *sys, struct sg_table *sgt,
+ 			 enum dma_data_direction dir, unsigned long attrs)
+@@ -477,11 +508,19 @@ int ipu7_dma_map_sgtable(struct ipu7_bus_device *sys, struct sg_table *sgt,
+ 
+ 	return 0;
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_map_sgtable, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_map_sgtable, INTEL_IPU7);
++#endif
+ 
+ void ipu7_dma_unmap_sgtable(struct ipu7_bus_device *sys, struct sg_table *sgt,
+ 			    enum dma_data_direction dir, unsigned long attrs)
+ {
+ 	ipu7_dma_unmap_sg(sys, sgt->sgl, sgt->nents, dir, attrs);
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_dma_unmap_sgtable, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_dma_unmap_sgtable, INTEL_IPU7);
++#endif
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
+index 88b16b102e1c..44c40fbb38aa 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-isys.c
+@@ -27,6 +27,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/types.h>
++#include <linux/version.h>
+ 
+ #include <media/ipu-bridge.h>
+ #include <media/media-entity.h>
+@@ -58,49 +59,23 @@ isys_complete_ext_device_registration(struct ipu7_isys *isys,
+ 				      struct ipu7_isys_csi2_config *csi2)
+ {
+ 	struct device *dev = &isys->adev->auxdev.dev;
+-	int source_pad;
++	unsigned int i;
+ 	int ret;
+ 
+ 	v4l2_set_subdev_hostdata(sd, csi2);
+ 
+-	if (csi2->ep) {
+-		struct fwnode_handle *ep_source;
+-
+-		ep_source = fwnode_graph_get_remote_endpoint(csi2->ep);
+-		if (!ep_source) {
+-			dev_warn(dev, "no remote endpoint for subdev\n");
+-			ret = -ENOENT;
+-			goto skip_unregister_subdev;
+-		}
+-
+-		source_pad = media_entity_get_fwnode_pad(&sd->entity, ep_source,
+-						MEDIA_PAD_FL_SOURCE);
+-		fwnode_handle_put(ep_source);
+-
+-		if (source_pad < 0) {
+-			dev_warn(dev, "error in no acquire source pad in external entity\n");
+-			ret = -ENOENT;
+-			goto skip_unregister_subdev;
+-		}
++	for (i = 0; i < sd->entity.num_pads; i++) {
++		if (sd->entity.pads[i].flags & MEDIA_PAD_FL_SOURCE)
++			break;
++	}
+ 
+-		dev_dbg(&isys->adev->auxdev.dev, "%s: CSI2 ep %pfw\n", __func__,
+-			csi2->ep);
+-		dev_dbg(&isys->adev->auxdev.dev,
+-			"%s: source pad %d for subdev %s\n", __func__, source_pad,
+-			sd->name);
+-	} else {
+-		for (source_pad = 0; source_pad < sd->entity.num_pads; source_pad++) {
+-			if (sd->entity.pads[source_pad].flags & MEDIA_PAD_FL_SOURCE)
+-				break;
+-		}
+-		if (source_pad == sd->entity.num_pads) {
+-			dev_warn(dev, "no source pad in external entity\n");
+-			ret = -ENOENT;
+-			goto skip_unregister_subdev;
+-		}
++	if (i == sd->entity.num_pads) {
++		dev_warn(dev, "no source pad in external entity\n");
++		ret = -ENOENT;
++		goto skip_unregister_subdev;
+ 	}
+ 
+-	ret = media_create_pad_link(&sd->entity, source_pad,
++	ret = media_create_pad_link(&sd->entity, i,
+ 				    &isys->csi2[csi2->port].asd.sd.entity,
+ 				    0, MEDIA_LNK_FL_ENABLED |
+ 				    MEDIA_LNK_FL_IMMUTABLE);
+@@ -325,18 +300,9 @@ static int isys_notifier_complete(struct v4l2_async_notifier *notifier)
+ 	return v4l2_device_register_subdev_nodes(&isys->v4l2_dev);
+ }
+ 
+-static void isys_notifier_destroy(struct v4l2_async_connection *asc)
+-{
+-	struct sensor_async_sd *s_asd =
+-		container_of(asc, struct sensor_async_sd, asc);
+-
+-	fwnode_handle_put(s_asd->csi2.ep);
+-}
+-
+ static const struct v4l2_async_notifier_operations isys_async_ops = {
+ 	.bound = isys_notifier_bound,
+ 	.complete = isys_notifier_complete,
+-	.destroy = isys_notifier_destroy,
+ };
+ 
+ static int isys_notifier_init(struct ipu7_isys *isys)
+@@ -385,7 +351,8 @@ static int isys_notifier_init(struct ipu7_isys *isys)
+ 		s_asd->csi2.port = vep.base.port;
+ 		s_asd->csi2.nlanes = vep.bus.mipi_csi2.num_data_lanes;
+ 		s_asd->csi2.bus_type = vep.bus_type;
+-		s_asd->csi2.ep = ep;
++
++		fwnode_handle_put(ep);
+ 
+ 		continue;
+ 
+@@ -538,6 +505,8 @@ static void isys_v4l2_notify(struct v4l2_subdev *sd, unsigned int notification,
+ 		container_of(sd->v4l2_dev, struct ipu7_isys, v4l2_dev);
+ 	struct device *dev = &isys->adev->auxdev.dev;
+ 	struct v4l2_event *ev = arg;
++	struct ipu7_isys_csi2_config *csi2_cfg;
++	unsigned int i;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&isys->power_lock, flags);
+@@ -550,18 +519,35 @@ static void isys_v4l2_notify(struct v4l2_subdev *sd, unsigned int notification,
+ 	spin_unlock_irqrestore(&isys->power_lock, flags);
+ 
+ 	if (notification == V4L2_DEVICE_NOTIFY_EVENT) {
+-		if ((ev->type == V4L2_EVENT_SOURCE_CHANGE ||
+-		     ev->type == V4L2_EVENT_EOS) &&
+-		    isys->stream_opened > 1) {
+-			dev_dbg(dev, "%s: isys need reset due to notify %u, stream opened %d\n",
+-					sd->name, ev->type, isys->stream_opened);
+-			mutex_lock(&isys->reset_mutex);
+-			isys->need_reset = true;
+-			mutex_unlock(&isys->reset_mutex);
++		if (ev->type == V4L2_EVENT_SOURCE_CHANGE ||
++		    ev->type == V4L2_EVENT_EOS) {
++			csi2_cfg = v4l2_get_subdev_hostdata(sd);
++			if (!csi2_cfg) {
++				dev_warn(dev, "%s: missing csi2 cfg for notify %u\n",
++					 sd->name, ev->type);
++				return;
++			}
++
++			for (i = 0; i < IPU7_NR_OF_CSI2_SRC_PADS; i++) {
++				struct ipu7_isys_video *av =
++					&isys->csi2[csi2_cfg->port].av[i];
++
++				if (READ_ONCE(av->start_streaming)) {
++					dev_info(dev,
++						 "%s: isys need reset due to notify %u on port %u\n",
++						 sd->name, ev->type, csi2_cfg->port);
++					mutex_lock(&isys->reset_mutex);
++					isys->need_reset = true;
++					mutex_unlock(&isys->reset_mutex);
++					return;
++				}
++			}
++			dev_dbg(dev, "%s: notify %u ignored, no AV starting on this port\n",
++				sd->name, notification);
+ 		}
+ 	} else {
+ 		dev_warn(dev, "%s: unknown notification %u\n",
+-				 sd->name, notification);
++			 sd->name, notification);
+ 	}
+ }
+ #endif
+@@ -877,7 +863,6 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+ 	mutex_destroy(&isys->reset_mutex);
+ #endif
+-	mutex_destroy(&isys->acquire_fw_msgbuf_lock);
+ }
+ #else
+ static void isys_remove(struct auxiliary_device *auxdev)
+@@ -886,6 +871,8 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ 	struct isys_fw_msgs *fwmsg, *safe;
+ 	struct ipu7_bus_device *adev = auxdev_to_adev(auxdev);
+ 
++	adev->get_running_fw_task_count = NULL;
++
+ #ifdef CONFIG_DEBUG_FS
+ 	if (adev->isp->ipu7_dir)
+ 		debugfs_remove_recursive(isys->debugfsdir);
+@@ -910,7 +897,6 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+ 	mutex_destroy(&isys->reset_mutex);
+ #endif
+-	mutex_destroy(&isys->acquire_fw_msgbuf_lock);
+ }
+ #endif
+ 
+@@ -1024,6 +1010,23 @@ static int alloc_fw_msg_bufs(struct ipu7_isys *isys, int amount)
+ 	return -ENOMEM;
+ }
+ 
++static unsigned int ipu7_isys_get_running_fw_task_count(
++	struct ipu7_bus_device *adev)
++{
++	struct ipu7_isys *isys = ipu7_bus_get_drvdata(adev);
++	unsigned long flags;
++	unsigned int count;
++
++	if (!isys)
++		return 0;
++
++	spin_lock_irqsave(&isys->listlock, flags);
++	count = list_count_nodes(&isys->framebuflist_fw);
++	spin_unlock_irqrestore(&isys->listlock, flags);
++
++	return count;
++}
++
+ struct isys_fw_msgs *ipu7_get_fw_msg_buf(struct ipu7_isys_stream *stream)
+ {
+ 	struct device *dev = &stream->isys->adev->auxdev.dev;
+@@ -1032,22 +1035,22 @@ struct isys_fw_msgs *ipu7_get_fw_msg_buf(struct ipu7_isys_stream *stream)
+ 	unsigned long flags;
+ 	int ret;
+ 
+-	mutex_lock(&isys->acquire_fw_msgbuf_lock);
++	mutex_lock(&isys->adev->acquire_fw_task_buffer_lock);
+ 	spin_lock_irqsave(&isys->listlock, flags);
+ 	if (list_empty(&isys->framebuflist)) {
+ 		spin_unlock_irqrestore(&isys->listlock, flags);
+ 		dev_dbg(dev, "Frame buffer list empty\n");
+ 
+-		ret = alloc_fw_msg_bufs(isys, 5);
++		ret = alloc_fw_msg_bufs(isys, 10);
+ 		if (ret < 0) {
+-			mutex_unlock(&isys->acquire_fw_msgbuf_lock);
++			mutex_unlock(&isys->adev->acquire_fw_task_buffer_lock);
+ 			return NULL;
+ 		}
+ 
+ 		spin_lock_irqsave(&isys->listlock, flags);
+ 		if (list_empty(&isys->framebuflist)) {
+ 			spin_unlock_irqrestore(&isys->listlock, flags);
+-			mutex_unlock(&isys->acquire_fw_msgbuf_lock);
++			mutex_unlock(&isys->adev->acquire_fw_task_buffer_lock);
+ 			dev_err(dev, "Frame list empty\n");
+ 			return NULL;
+ 		}
+@@ -1055,7 +1058,7 @@ struct isys_fw_msgs *ipu7_get_fw_msg_buf(struct ipu7_isys_stream *stream)
+ 	msg = list_last_entry(&isys->framebuflist, struct isys_fw_msgs, head);
+ 	list_move(&msg->head, &isys->framebuflist_fw);
+ 	spin_unlock_irqrestore(&isys->listlock, flags);
+-	mutex_unlock(&isys->acquire_fw_msgbuf_lock);
++	mutex_unlock(&isys->adev->acquire_fw_task_buffer_lock);
+ 	memset(&msg->fw_msg, 0, sizeof(msg->fw_msg));
+ 
+ 	return msg;
+@@ -1147,7 +1150,6 @@ static int isys_probe(struct auxiliary_device *auxdev,
+ 
+ 	mutex_init(&isys->mutex);
+ 	mutex_init(&isys->stream_mutex);
+-	mutex_init(&isys->acquire_fw_msgbuf_lock);
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+ 	mutex_init(&isys->reset_mutex);
+ 	isys->state = 0;
+@@ -1158,6 +1160,8 @@ static int isys_probe(struct auxiliary_device *auxdev,
+ 	INIT_LIST_HEAD(&isys->framebuflist_fw);
+ 
+ 	dev_set_drvdata(&auxdev->dev, isys);
++	adev->get_running_fw_task_count =
++		ipu7_isys_get_running_fw_task_count;
+ 
+ 	isys->icache_prefetch = 0;
+ 	isys->phy_rext_cal = 0;
+@@ -1199,7 +1203,6 @@ static int isys_probe(struct auxiliary_device *auxdev,
+ #ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
+ 	mutex_destroy(&isys->reset_mutex);
+ #endif
+-	mutex_destroy(&isys->acquire_fw_msgbuf_lock);
+ 	cpu_latency_qos_remove_request(&isys->pm_qos);
+ 
+ 	for (unsigned int i = 0; i < IPU_ISYS_MAX_STREAMS; i++)
+@@ -1589,5 +1592,10 @@ MODULE_AUTHOR("Tianshu Qiu <tian.shu.qiu@intel.com>");
+ MODULE_AUTHOR("Qingwu Zhang <qingwu.zhang@intel.com>");
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Intel ipu7 input system driver");
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ MODULE_IMPORT_NS("INTEL_IPU7");
+ MODULE_IMPORT_NS("INTEL_IPU_BRIDGE");
++#else
++MODULE_IMPORT_NS(INTEL_IPU7);
++MODULE_IMPORT_NS(INTEL_IPU_BRIDGE);
++#endif
+diff --git a/drivers/staging/media/ipu7/ipu7-mmu.c b/drivers/staging/media/ipu7/ipu7-mmu.c
+index 58bd0db39103..3f94bd238b32 100644
+--- a/drivers/staging/media/ipu7/ipu7-mmu.c
++++ b/drivers/staging/media/ipu7/ipu7-mmu.c
+@@ -25,12 +25,13 @@
+ #include <linux/spinlock.h>
+ #include <linux/types.h>
+ #include <linux/vmalloc.h>
++#include <linux/version.h>
+ 
+ #include "ipu7.h"
++#include "ipu7-bus.h"
+ #include "ipu7-dma.h"
+ #include "ipu7-mmu.h"
+ #include "ipu7-platform-regs.h"
+-#include "ipu7-isys.h"
+ 
+ #define ISP_PAGE_SHIFT		12
+ #define ISP_PAGE_SIZE		BIT(ISP_PAGE_SHIFT)
+@@ -76,45 +77,27 @@ static void tlb_invalidate(struct ipu7_mmu *mmu, int mmu_id)
+ 	unsigned int i;
+ 	int ret;
+ 	u32 val;
+-	bool locked_get_fw = false;
+-	struct ipu7_isys *isys = NULL;
+-	unsigned int prev_fw_cnt = UINT_MAX;
+-	unsigned int curr_fw_cnt = UINT_MAX;
++	unsigned int prev_task_cnt = UINT_MAX;
++	unsigned int curr_task_cnt;
+ 	unsigned int not_decreasing_count = 0;
++	struct ipu7_bus_device *adev = to_ipu7_bus_device(mmu->dev);
+ 
+-	if (mmu->mmid == ISYS_MMID) {
+-		isys = dev_get_drvdata(mmu->dev);
+-		if (!isys) {
+-			dev_warn(mmu->dev, "isys drvdata is NULL, skip tlb invalidate wait\n");
+-			return;
+-		}
+-
+-		if (!mutex_is_locked(&isys->acquire_fw_msgbuf_lock)) {
+-			mutex_lock(&isys->acquire_fw_msgbuf_lock);
+-			locked_get_fw = true;
+-		}
+-
++	if (adev->get_running_fw_task_count) {
+ 		while (1) {
+-			spin_lock_irqsave(&isys->listlock, flags);
+-			curr_fw_cnt = list_count_nodes(&isys->framebuflist_fw);
+-			spin_unlock_irqrestore(&isys->listlock, flags);
+-			if (curr_fw_cnt == 0)
++			curr_task_cnt = adev->get_running_fw_task_count(adev);
++			if (curr_task_cnt == 0)
+ 				break;
+ 
+-			if (curr_fw_cnt >= prev_fw_cnt)
++			if (curr_task_cnt >= prev_task_cnt)
+ 				not_decreasing_count++;
+ 			else
+ 				not_decreasing_count = 0;
+-			prev_fw_cnt = curr_fw_cnt;
++			prev_task_cnt = curr_task_cnt;
+ 
+-			/*
+-			 * Timeout after consecutive non-decreasing counts.
+-			 * Continue invalidate to avoid indefinite stall.
+-			 */
+ 			if (not_decreasing_count >
+ 			    WAIT_FW_MSG_BUFS_CLEAR_TIMES) {
+-				dev_warn(&isys->adev->auxdev.dev,
+-					 "wait framebuflist_fw empty timeout");
++				dev_warn(mmu->dev,
++					 "wait running fw tasks clear timeout\n");
+ 				break;
+ 			}
+ 
+@@ -125,8 +108,6 @@ static void tlb_invalidate(struct ipu7_mmu *mmu, int mmu_id)
+ 	spin_lock_irqsave(&mmu->ready_lock, flags);
+ 	if (!mmu->ready) {
+ 		spin_unlock_irqrestore(&mmu->ready_lock, flags);
+-		if (locked_get_fw)
+-			mutex_unlock(&isys->acquire_fw_msgbuf_lock);
+ 		return;
+ 	}
+ 
+@@ -138,8 +119,6 @@ static void tlb_invalidate(struct ipu7_mmu *mmu, int mmu_id)
+ 		dev_warn(mmu->dev, "invalid mmu_id %d, nr_mmus %u\n",
+ 			 mmu_id, mmu->nr_mmus);
+ 		spin_unlock_irqrestore(&mmu->ready_lock, flags);
+-		if (locked_get_fw)
+-			mutex_unlock(&isys->acquire_fw_msgbuf_lock);
+ 		return;
+ 	}
+ 
+@@ -175,8 +154,6 @@ static void tlb_invalidate(struct ipu7_mmu *mmu, int mmu_id)
+ 	}
+ 
+ 	spin_unlock_irqrestore(&mmu->ready_lock, flags);
+-	if (locked_get_fw)
+-		mutex_unlock(&isys->acquire_fw_msgbuf_lock);
+ }
+ 
+ static dma_addr_t map_single(struct ipu7_mmu_info *mmu_info, void *ptr)
+@@ -302,7 +279,7 @@ static u32 *alloc_l2_pt(struct ipu7_mmu_info *mmu_info)
+ 
+ 	dev_dbg(mmu_info->dev, "alloc_l2: get_zeroed_page() = %p\n", pt);
+ 
+-	for (i = 0; i < ISP_L2PT_PTES; i++)
++	for (i = 0; i < ISP_L1PT_PTES; i++)
+ 		pt[i] = mmu_info->dummy_page_pteval;
+ 
+ 	return pt;
+@@ -648,14 +625,18 @@ int ipu7_mmu_hw_init(struct ipu7_mmu *mmu)
+ 
+ 	return 0;
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_mmu_hw_init, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_mmu_hw_init, INTEL_IPU7);
++#endif
+ 
+ static struct ipu7_mmu_info *ipu7_mmu_alloc(struct ipu7_device *isp)
+ {
+ 	struct ipu7_mmu_info *mmu_info;
+ 	int ret;
+ 
+-	mmu_info = kzalloc_obj(*mmu_info);
++	mmu_info = kzalloc(sizeof(*mmu_info), GFP_KERNEL);
+ 	if (!mmu_info)
+ 		return NULL;
+ 
+@@ -718,14 +699,18 @@ void ipu7_mmu_hw_cleanup(struct ipu7_mmu *mmu)
+ 	mmu->ready = false;
+ 	spin_unlock_irqrestore(&mmu->ready_lock, flags);
+ }
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+ EXPORT_SYMBOL_NS_GPL(ipu7_mmu_hw_cleanup, "INTEL_IPU7");
++#else
++EXPORT_SYMBOL_NS_GPL(ipu7_mmu_hw_cleanup, INTEL_IPU7);
++#endif
+ 
+ static struct ipu7_dma_mapping *alloc_dma_mapping(struct ipu7_device *isp)
+ {
+ 	struct ipu7_dma_mapping *dmap;
+ 	unsigned long base_pfn;
+ 
+-	dmap = kzalloc_obj(*dmap);
++	dmap = kzalloc(sizeof(*dmap), GFP_KERNEL);
+ 	if (!dmap)
+ 		return NULL;
+ 
+-- 
+2.43.0
+

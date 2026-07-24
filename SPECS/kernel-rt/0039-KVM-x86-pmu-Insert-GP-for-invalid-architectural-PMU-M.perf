@@ -1,0 +1,155 @@
+From 769b156ded071ba8bef53cf94c61455483a8816c Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Fri, 12 Jul 2024 12:49:17 +0000
+Subject: [PATCH 39/39] KVM: x86/pmu: Insert #GP for invalid architectural PMU
+ MSRs access
+
+Return KVM_MSR_RET_INVALID instead of 0 to inject #GP to guest for all
+invalid architectural PMU MSRs access.
+
+Currently KVM silently drops the access and doesn't inject #GP for some
+invalid PMU MSRs like MSR_P6_PERFCTR0/MSR_P6_PERFCTR1,
+MSR_P6_EVNTSEL0/MSR_P6_EVNTSEL1, but KVM still injects #GP for all other
+invalid PMU MSRs.
+
+This behavior is introduced by 'commit 5753785fa977 ("KVM: do not #GP
+on perf MSR writes when vPMU is disabled")' in 2012. This looks more
+like a quirk and just want to respect some guests odd behavior for the
+legacy non-architectural PMUs.
+
+But for platforms with architectural PMU nowadays, this quirk can be
+dropped. Especially since Perfmon v6 starts, the GP counters could
+become discontinuous on HW, It's possible that HW doesn't support GP
+counters 0 and 1. #GP needs to be injected to guest to notify this case.
+
+All PMU related kselftests
+(pmu_counters_test/pmu_event_filter_test/vmx_pmu_caps_test) and KUT PMU
+tests (pmu/pmu_lbr/pmu_pebs) pass with this patch on Sapphire Rapids.
+
+Suggested-by: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/kvm/x86.c                            | 53 ++++++++++++-------
+ .../selftests/kvm/x86/pmu_counters_test.c     | 12 +++--
+ 2 files changed, 42 insertions(+), 23 deletions(-)
+
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 01659fc9a56a..024ee6fd9884 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -4204,16 +4204,6 @@ int kvm_set_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 	case MSR_IA32_MC0_CTL2 ... MSR_IA32_MCx_CTL2(KVM_MAX_MCE_BANKS) - 1:
+ 		return set_msr_mce(vcpu, msr_info);
+ 
+-	case MSR_K7_PERFCTR0 ... MSR_K7_PERFCTR3:
+-	case MSR_P6_PERFCTR0 ... MSR_P6_PERFCTR1:
+-	case MSR_K7_EVNTSEL0 ... MSR_K7_EVNTSEL3:
+-	case MSR_P6_EVNTSEL0 ... MSR_P6_EVNTSEL1:
+-		if (kvm_pmu_is_valid_msr(vcpu, msr))
+-			return kvm_pmu_set_msr(vcpu, msr_info);
+-
+-		if (data)
+-			kvm_pr_unimpl_wrmsr(vcpu, msr, data);
+-		break;
+ 	case MSR_K7_CLK_CTL:
+ 		/*
+ 		 * Ignore all writes to this no longer documented MSR.
+@@ -4292,6 +4282,24 @@ int kvm_set_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 	case MSR_IA32_PL0_SSP ... MSR_IA32_PL3_SSP:
+ 		kvm_set_xstate_msr(vcpu, msr_info);
+ 		break;
++	case MSR_K7_PERFCTR0 ... MSR_K7_PERFCTR3:
++	case MSR_P6_PERFCTR0 ... MSR_P6_PERFCTR1:
++	case MSR_K7_EVNTSEL0 ... MSR_K7_EVNTSEL3:
++	case MSR_P6_EVNTSEL0 ... MSR_P6_EVNTSEL1:
++		/*
++		 * Some legacy guests don't expect to get a #GP if these MSRs
++		 * are invalid on the old platforms with non-architectural PMUs.
++		 * Refer: commit 5753785fa977 ("KVM: do not #GP on perf MSR writes
++		 * when vPMU is disabled")
++		 */
++		if (!vcpu_to_pmu(vcpu)->version) {
++			if (kvm_pmu_is_valid_msr(vcpu, msr))
++				return kvm_pmu_set_msr(vcpu, msr_info);
++			if (data)
++				kvm_pr_unimpl_wrmsr(vcpu, msr, data);
++			break;
++		}
++		fallthrough;
+ 	default:
+ 		if (kvm_pmu_is_valid_msr(vcpu, msr))
+ 			return kvm_pmu_set_msr(vcpu, msr_info);
+@@ -4386,14 +4394,6 @@ int kvm_get_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 	case MSR_DRAM_ENERGY_STATUS:	/* DRAM controller */
+ 		msr_info->data = 0;
+ 		break;
+-	case MSR_K7_EVNTSEL0 ... MSR_K7_EVNTSEL3:
+-	case MSR_K7_PERFCTR0 ... MSR_K7_PERFCTR3:
+-	case MSR_P6_PERFCTR0 ... MSR_P6_PERFCTR1:
+-	case MSR_P6_EVNTSEL0 ... MSR_P6_EVNTSEL1:
+-		if (kvm_pmu_is_valid_msr(vcpu, msr_info->index))
+-			return kvm_pmu_get_msr(vcpu, msr_info);
+-		msr_info->data = 0;
+-		break;
+ 	case MSR_IA32_UCODE_REV:
+ 		msr_info->data = vcpu->arch.microcode_version;
+ 		break;
+@@ -4645,6 +4645,23 @@ int kvm_get_msr_common(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ 	case MSR_IA32_PL0_SSP ... MSR_IA32_PL3_SSP:
+ 		kvm_get_xstate_msr(vcpu, msr_info);
+ 		break;
++	case MSR_K7_EVNTSEL0 ... MSR_K7_EVNTSEL3:
++	case MSR_K7_PERFCTR0 ... MSR_K7_PERFCTR3:
++	case MSR_P6_PERFCTR0 ... MSR_P6_PERFCTR1:
++	case MSR_P6_EVNTSEL0 ... MSR_P6_EVNTSEL1:
++		/*
++		 * Some legacy guests don't expect to get a #GP if these MSRs
++		 * are invalid on the old platforms with non-architectural PMUs.
++		 * Refer: commit 5753785fa977 ("KVM: do not #GP on perf MSR writes
++		 * when vPMU is disabled")
++		 */
++		if (!vcpu_to_pmu(vcpu)->version) {
++			if (kvm_pmu_is_valid_msr(vcpu, msr_info->index))
++				return kvm_pmu_get_msr(vcpu, msr_info);
++			msr_info->data = 0;
++			break;
++		}
++		fallthrough;
+ 	default:
+ 		if (kvm_pmu_is_valid_msr(vcpu, msr_info->index))
+ 			return kvm_pmu_get_msr(vcpu, msr_info);
+diff --git a/tools/testing/selftests/kvm/x86/pmu_counters_test.c b/tools/testing/selftests/kvm/x86/pmu_counters_test.c
+index 3eaa216b96c0..f9290c53cff9 100644
+--- a/tools/testing/selftests/kvm/x86/pmu_counters_test.c
++++ b/tools/testing/selftests/kvm/x86/pmu_counters_test.c
+@@ -396,7 +396,8 @@ static void guest_test_rdpmc(uint32_t rdpmc_idx, bool expect_success,
+ static void guest_rd_wr_counters(uint32_t base_msr, uint8_t nr_possible_counters,
+ 				 uint8_t nr_counters, uint32_t or_mask)
+ {
+-	const bool pmu_has_fast_mode = !guest_get_pmu_version();
++	uint8_t guest_pmu_version = guest_get_pmu_version();
++	const bool pmu_has_fast_mode = !guest_pmu_version;
+ 	uint8_t i;
+ 
+ 	for (i = 0; i < nr_possible_counters; i++) {
+@@ -415,12 +416,13 @@ static void guest_rd_wr_counters(uint32_t base_msr, uint8_t nr_possible_counters
+ 		const bool expect_success = i < nr_counters || (or_mask & BIT(i));
+ 
+ 		/*
+-		 * KVM drops writes to MSR_P6_PERFCTR[0|1] if the counters are
+-		 * unsupported, i.e. doesn't #GP and reads back '0'.
++		 * KVM drops writes to MSR_P6_PERFCTR[0|1] for non-architectural PMUs
++		 * if the counters are unsupported, i.e. doesn't #GP and reads back '0'.
+ 		 */
+ 		const uint64_t expected_val = expect_success ? test_val : 0;
+-		const bool expect_gp = !expect_success && msr != MSR_P6_PERFCTR0 &&
+-				       msr != MSR_P6_PERFCTR1;
++		const bool expect_gp = !expect_success &&
++				       (guest_pmu_version ||
++					(msr != MSR_P6_PERFCTR0 && msr != MSR_P6_PERFCTR1));
+ 		uint32_t rdpmc_idx;
+ 		uint8_t vector;
+ 		uint64_t val;
+-- 
+2.43.0
+

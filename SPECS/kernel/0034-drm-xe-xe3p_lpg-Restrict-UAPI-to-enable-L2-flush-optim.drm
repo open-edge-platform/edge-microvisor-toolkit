@@ -1,0 +1,157 @@
+From 40906c222f2250d5d2c1cef23b4f408f6d669d97 Mon Sep 17 00:00:00 2001
+From: Tejas Upadhyay <tejas.upadhyay@intel.com>
+Date: Thu, 5 Mar 2026 17:49:06 +0530
+Subject: [PATCH 34/43] drm/xe/xe3p_lpg: Restrict UAPI to enable L2 flush
+ optimization
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When set, starting xe3p_lpg, the L2 flush optimization
+feature will control whether L2 is in Persistent or
+Transient mode through monitoring of media activity.
+
+To enable L2 flush optimization include new feature flag
+GUC_CTL_ENABLE_L2FLUSH_OPT for Novalake platforms when
+media type is detected.
+
+Tighten UAPI validation to restrict userptr, svm and
+dmabuf mappings to be either 2WAY or XA+1WAY
+
+V5(Thomas): logic correction
+V4(MattA): Modify uapi doc and commit
+V3(MattA): check valid op and pat_index value
+V2(MattA): validate dma-buf bos and madvise pat-index
+
+Acked-by: José Roberto de Souza <jose.souza@intel.com>
+Acked-by: Michal Mrozek <michal.mrozek@intel.com>
+Signed-off-by: Tejas Upadhyay <tejas.upadhyay@intel.com>
+Reviewed-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
+Reviewed-by: Matthew Auld <matthew.auld@intel.com>
+Acked-by: Carl Zhang <carl.zhang@intel.com>
+---
+ drivers/gpu/drm/xe/xe_guc.c        |  3 +++
+ drivers/gpu/drm/xe/xe_guc_fwif.h   |  1 +
+ drivers/gpu/drm/xe/xe_vm.c         |  8 ++++++++
+ drivers/gpu/drm/xe/xe_vm_madvise.c | 23 +++++++++++++++++++++++
+ include/uapi/drm/xe_drm.h          |  4 +++-
+ 5 files changed, 38 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_guc.c b/drivers/gpu/drm/xe/xe_guc.c
+index 4ab65cae8743..8565c1d757a9 100644
+--- a/drivers/gpu/drm/xe/xe_guc.c
++++ b/drivers/gpu/drm/xe/xe_guc.c
+@@ -96,6 +96,9 @@ static u32 guc_ctl_feature_flags(struct xe_guc *guc)
+ 	if (xe_guc_using_main_gamctrl_queues(guc))
+ 		flags |= GUC_CTL_MAIN_GAMCTRL_QUEUES;
+ 
++	if (GRAPHICS_VER(xe) >= 35 && !IS_DGFX(xe) && xe_gt_is_media_type(guc_to_gt(guc)))
++		flags |= GUC_CTL_ENABLE_L2FLUSH_OPT;
++
+ 	return flags;
+ }
+ 
+diff --git a/drivers/gpu/drm/xe/xe_guc_fwif.h b/drivers/gpu/drm/xe/xe_guc_fwif.h
+index a33ea288b907..39ff7b3e960b 100644
+--- a/drivers/gpu/drm/xe/xe_guc_fwif.h
++++ b/drivers/gpu/drm/xe/xe_guc_fwif.h
+@@ -67,6 +67,7 @@ struct guc_update_exec_queue_policy {
+ #define   GUC_CTL_ENABLE_PSMI_LOGGING	BIT(7)
+ #define   GUC_CTL_MAIN_GAMCTRL_QUEUES	BIT(9)
+ #define   GUC_CTL_DISABLE_SCHEDULER	BIT(14)
++#define   GUC_CTL_ENABLE_L2FLUSH_OPT	BIT(15)
+ 
+ #define GUC_CTL_DEBUG			3
+ #define   GUC_LOG_VERBOSITY		REG_GENMASK(1, 0)
+diff --git a/drivers/gpu/drm/xe/xe_vm.c b/drivers/gpu/drm/xe/xe_vm.c
+index d405527abc15..4ec7d079472a 100644
+--- a/drivers/gpu/drm/xe/xe_vm.c
++++ b/drivers/gpu/drm/xe/xe_vm.c
+@@ -3465,6 +3465,10 @@ static int vm_bind_ioctl_check_args(struct xe_device *xe, struct xe_vm *vm,
+ 				 op == DRM_XE_VM_BIND_OP_MAP_USERPTR) ||
+ 		    XE_IOCTL_DBG(xe, coh_mode == XE_COH_NONE &&
+ 				 op == DRM_XE_VM_BIND_OP_MAP_USERPTR) ||
++		    XE_IOCTL_DBG(xe, xe_device_is_l2_flush_optimized(xe) &&
++				 (op == DRM_XE_VM_BIND_OP_MAP_USERPTR ||
++				  is_cpu_addr_mirror) &&
++				 (pat_index != 19 && coh_mode != XE_COH_2WAY)) ||
+ 		    XE_IOCTL_DBG(xe, comp_en &&
+ 				 op == DRM_XE_VM_BIND_OP_MAP_USERPTR) ||
+ 		    XE_IOCTL_DBG(xe, op == DRM_XE_VM_BIND_OP_MAP_USERPTR &&
+@@ -3599,6 +3603,10 @@ static int xe_vm_bind_ioctl_validate_bo(struct xe_device *xe, struct xe_bo *bo,
+ 	if (XE_IOCTL_DBG(xe, bo->ttm.base.import_attach && comp_en))
+ 		return -EINVAL;
+ 
++	if (XE_IOCTL_DBG(xe, bo->ttm.base.import_attach && xe_device_is_l2_flush_optimized(xe) &&
++			 (pat_index != 19 && coh_mode != XE_COH_2WAY)))
++		return -EINVAL;
++
+ 	/* If a BO is protected it can only be mapped if the key is still valid */
+ 	if ((bind_flags & DRM_XE_VM_BIND_FLAG_CHECK_PXP) && xe_bo_is_protected(bo) &&
+ 	    op != DRM_XE_VM_BIND_OP_UNMAP && op != DRM_XE_VM_BIND_OP_UNMAP_ALL)
+diff --git a/drivers/gpu/drm/xe/xe_vm_madvise.c b/drivers/gpu/drm/xe/xe_vm_madvise.c
+index ec55ee138b60..59dfa396e8fa 100644
+--- a/drivers/gpu/drm/xe/xe_vm_madvise.c
++++ b/drivers/gpu/drm/xe/xe_vm_madvise.c
+@@ -418,6 +418,7 @@ int xe_vm_madvise_ioctl(struct drm_device *dev, void *data, struct drm_file *fil
+ 		.range = args->range,
+ 	};
+ 	struct xe_madvise_details details;
++	u16 pat_index, coh_mode;
+ 	struct xe_vm *vm;
+ 	struct drm_exec exec;
+ 	int err, attr_type;
+@@ -454,6 +455,17 @@ int xe_vm_madvise_ioctl(struct drm_device *dev, void *data, struct drm_file *fil
+ 	if (err || !madvise_range.num_vmas)
+ 		goto madv_fini;
+ 
++	if (args->type == DRM_XE_MEM_RANGE_ATTR_PAT) {
++		pat_index = array_index_nospec(args->pat_index.val, xe->pat.n_entries);
++		coh_mode = xe_pat_index_get_coh_mode(xe, pat_index);
++		if (XE_IOCTL_DBG(xe, madvise_range.has_svm_userptr_vmas &&
++				 xe_device_is_l2_flush_optimized(xe) &&
++				 (pat_index != 19 && coh_mode != XE_COH_2WAY))) {
++			err = -EINVAL;
++			goto madv_fini;
++		}
++	}
++
+ 	if (madvise_range.has_bo_vmas) {
+ 		if (args->type == DRM_XE_MEM_RANGE_ATTR_ATOMIC) {
+ 			if (!check_bo_args_are_sane(vm, madvise_range.vmas,
+@@ -471,6 +483,17 @@ int xe_vm_madvise_ioctl(struct drm_device *dev, void *data, struct drm_file *fil
+ 
+ 				if (!bo)
+ 					continue;
++
++				if (args->type == DRM_XE_MEM_RANGE_ATTR_PAT) {
++					if (XE_IOCTL_DBG(xe, bo->ttm.base.import_attach &&
++							 xe_device_is_l2_flush_optimized(xe) &&
++							 (pat_index != 19 &&
++							  coh_mode != XE_COH_2WAY))) {
++						err = -EINVAL;
++						goto err_fini;
++					}
++				}
++
+ 				err = drm_exec_lock_obj(&exec, &bo->ttm.base);
+ 				drm_exec_retry_on_contention(&exec);
+ 				if (err)
+diff --git a/include/uapi/drm/xe_drm.h b/include/uapi/drm/xe_drm.h
+index 077e66a682e2..a7b027169a5a 100644
+--- a/include/uapi/drm/xe_drm.h
++++ b/include/uapi/drm/xe_drm.h
+@@ -1103,7 +1103,9 @@ struct drm_xe_vm_bind_op {
+ 	 * incoherent GT access is possible.
+ 	 *
+ 	 * Note: For userptr and externally imported dma-buf the kernel expects
+-	 * either 1WAY or 2WAY for the @pat_index.
++	 * either 1WAY or 2WAY for the @pat_index. Starting from NVL-P, for
++	 * userptr, svm, madvise and externally imported dma-buf the kernel expects
++	 * either 2WAY or 1WAY and XA @pat_index.
+ 	 *
+ 	 * For DRM_XE_VM_BIND_FLAG_NULL bindings there are no KMD restrictions
+ 	 * on the @pat_index. For such mappings there is no actual memory being
+-- 
+2.43.0
+

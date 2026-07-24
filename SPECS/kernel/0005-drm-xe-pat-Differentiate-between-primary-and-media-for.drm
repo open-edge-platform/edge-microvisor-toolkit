@@ -1,0 +1,118 @@
+From 7cf12029fa6c49cd75205b24b579c12d43ce95dd Mon Sep 17 00:00:00 2001
+From: Gustavo Sousa <gustavo.sousa@intel.com>
+Date: Fri, 6 Feb 2026 15:35:59 -0300
+Subject: [PATCH 05/43] drm/xe/pat: Differentiate between primary and media for
+ PTA
+
+Differently from currently supported platforms, in upcoming changes we
+will need to have different PAT entries for PTA based on the GT type. As
+such, let's prepare the code to support that by having two separate
+PTA-specific members in the pat struct, one for each type of GT.
+
+While at it, also fix the kerneldoc for pat_ats.
+
+Co-developed-by: Tejas Upadhyay <tejas.upadhyay@intel.com>
+Signed-off-by: Tejas Upadhyay <tejas.upadhyay@intel.com>
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_device_types.h |  8 +++++---
+ drivers/gpu/drm/xe/xe_pat.c          | 27 ++++++++++++++++++---------
+ 2 files changed, 23 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_device_types.h b/drivers/gpu/drm/xe/xe_device_types.h
+index f689766adcb1..e8e8d54d19ea 100644
+--- a/drivers/gpu/drm/xe/xe_device_types.h
++++ b/drivers/gpu/drm/xe/xe_device_types.h
+@@ -559,10 +559,12 @@ struct xe_device {
+ 		const struct xe_pat_table_entry *table;
+ 		/** @pat.n_entries: Number of PAT entries */
+ 		int n_entries;
+-		/** @pat.ats_entry: PAT entry for PCIe ATS responses */
++		/** @pat.pat_ats: PAT entry for PCIe ATS responses */
+ 		const struct xe_pat_table_entry *pat_ats;
+-		/** @pat.pta_entry: PAT entry for page table accesses */
+-		const struct xe_pat_table_entry *pat_pta;
++		/** @pat.pat_primary_pta: primary GT PAT entry for page table accesses */
++		const struct xe_pat_table_entry *pat_primary_pta;
++		/** @pat.pat_media_pta: media GT PAT entry for page table accesses */
++		const struct xe_pat_table_entry *pat_media_pta;
+ 		u32 idx[__XE_CACHE_LEVEL_COUNT];
+ 	} pat;
+ 
+diff --git a/drivers/gpu/drm/xe/xe_pat.c b/drivers/gpu/drm/xe/xe_pat.c
+index 14d0dce5190a..5776ea67fe02 100644
+--- a/drivers/gpu/drm/xe/xe_pat.c
++++ b/drivers/gpu/drm/xe/xe_pat.c
+@@ -284,8 +284,10 @@ static void program_pat(struct xe_gt *gt, const struct xe_pat_table_entry table[
+ 
+ 	if (xe->pat.pat_ats)
+ 		xe_mmio_write32(&gt->mmio, XE_REG(_PAT_ATS), xe->pat.pat_ats->value);
+-	if (xe->pat.pat_pta)
+-		xe_mmio_write32(&gt->mmio, XE_REG(_PAT_PTA), xe->pat.pat_pta->value);
++	if (xe->pat.pat_primary_pta && xe_gt_is_main_type(gt))
++		xe_mmio_write32(&gt->mmio, XE_REG(_PAT_PTA), xe->pat.pat_primary_pta->value);
++	if (xe->pat.pat_media_pta && xe_gt_is_media_type(gt))
++		xe_mmio_write32(&gt->mmio, XE_REG(_PAT_PTA), xe->pat.pat_media_pta->value);
+ }
+ 
+ static void program_pat_mcr(struct xe_gt *gt, const struct xe_pat_table_entry table[],
+@@ -301,8 +303,10 @@ static void program_pat_mcr(struct xe_gt *gt, const struct xe_pat_table_entry ta
+ 
+ 	if (xe->pat.pat_ats)
+ 		xe_gt_mcr_multicast_write(gt, XE_REG_MCR(_PAT_ATS), xe->pat.pat_ats->value);
+-	if (xe->pat.pat_pta)
+-		xe_gt_mcr_multicast_write(gt, XE_REG_MCR(_PAT_PTA), xe->pat.pat_pta->value);
++	if (xe->pat.pat_primary_pta && xe_gt_is_main_type(gt))
++		xe_gt_mcr_multicast_write(gt, XE_REG_MCR(_PAT_PTA), xe->pat.pat_primary_pta->value);
++	if (xe->pat.pat_media_pta && xe_gt_is_media_type(gt))
++		xe_gt_mcr_multicast_write(gt, XE_REG_MCR(_PAT_PTA), xe->pat.pat_media_pta->value);
+ }
+ 
+ static int xelp_dump(struct xe_gt *gt, struct drm_printer *p)
+@@ -527,7 +531,8 @@ void xe_pat_init_early(struct xe_device *xe)
+ 		xe->pat.ops = &xe3p_xpc_pat_ops;
+ 		xe->pat.table = xe3p_xpc_pat_table;
+ 		xe->pat.pat_ats = &xe3p_xpc_pat_ats;
+-		xe->pat.pat_pta = &xe3p_xpc_pat_pta;
++		xe->pat.pat_primary_pta = &xe3p_xpc_pat_pta;
++		xe->pat.pat_media_pta = &xe3p_xpc_pat_pta;
+ 		xe->pat.n_entries = ARRAY_SIZE(xe3p_xpc_pat_table);
+ 		xe->pat.idx[XE_CACHE_NONE] = 3;
+ 		xe->pat.idx[XE_CACHE_WT] = 3;	/* N/A (no display); use UC */
+@@ -541,8 +546,10 @@ void xe_pat_init_early(struct xe_device *xe)
+ 			xe->pat.table = xe2_pat_table;
+ 		}
+ 		xe->pat.pat_ats = &xe2_pat_ats;
+-		if (IS_DGFX(xe))
+-			xe->pat.pat_pta = &xe2_pat_pta;
++		if (IS_DGFX(xe)) {
++			xe->pat.pat_primary_pta = &xe2_pat_pta;
++			xe->pat.pat_media_pta = &xe2_pat_pta;
++		}
+ 
+ 		/* Wa_16023588340. XXX: Should use XE_WA */
+ 		if (GRAPHICS_VERx100(xe) == 2001)
+@@ -649,6 +656,8 @@ int xe_pat_dump(struct xe_gt *gt, struct drm_printer *p)
+ int xe_pat_dump_sw_config(struct xe_gt *gt, struct drm_printer *p)
+ {
+ 	struct xe_device *xe = gt_to_xe(gt);
++	const struct xe_pat_table_entry *pta_entry = xe_gt_is_main_type(gt) ?
++		xe->pat.pat_primary_pta : xe->pat.pat_media_pta;
+ 	char label[PAT_LABEL_LEN];
+ 
+ 	if (!xe->pat.table || !xe->pat.n_entries)
+@@ -675,8 +684,8 @@ int xe_pat_dump_sw_config(struct xe_gt *gt, struct drm_printer *p)
+ 		}
+ 	}
+ 
+-	if (xe->pat.pat_pta) {
+-		u32 pat = xe->pat.pat_pta->value;
++	if (pta_entry) {
++		u32 pat = pta_entry->value;
+ 
+ 		drm_printf(p, "Page Table Access:\n");
+ 		xe2_pat_entry_dump(p, "PTA_MODE", pat, false);
+-- 
+2.43.0
+

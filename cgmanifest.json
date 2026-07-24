@@ -4462,7 +4462,7 @@
         "other": {
           "name": "kernel",
           "version": "7.0.0",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz"
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v7.x/linux-7.0.tar.gz"
         }
       }
     },
@@ -4492,7 +4492,7 @@
         "other": {
           "name": "kernel-headers",
           "version": "7.0.0",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz"
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v7.x/linux-7.0.tar.gz"
         }
       }
     },
@@ -4512,7 +4512,7 @@
         "other": {
           "name": "kernel-rt",
           "version": "7.0.0",
-          "downloadUrl": "https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz"
+          "downloadUrl": "https://www.kernel.org/pub/linux/kernel/v7.x/linux-7.0.tar.gz"
         }
       }
     },

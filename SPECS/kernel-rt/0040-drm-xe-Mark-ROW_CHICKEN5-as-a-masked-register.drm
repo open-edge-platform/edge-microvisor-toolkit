@@ -1,0 +1,34 @@
+From d3562382d0d32249421580478a247ffee6838f73 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 10 Apr 2026 15:50:30 -0700
+Subject: [PATCH 40/43] drm/xe: Mark ROW_CHICKEN5 as a masked register
+
+ROW_CHICKEN5 is a masked register (i.e., to adjust the value of any of
+the lower 16 bits, the corresponding bit in the upper 16 bits must also
+be set).  Add the XE_REG_OPTION_MASKED to its definition; failure to do
+so will cause workaround updates of this register to not apply properly.
+
+Bspec: 56853
+Fixes: 835cd6cbb0d0 ("drm/xe/xe3p_lpg: Add initial workarounds for graphics version 35.10")
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/regs/xe_gt_regs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/xe/regs/xe_gt_regs.h b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+index 46f6731a6771..e20fb5163e7c 100644
+--- a/drivers/gpu/drm/xe/regs/xe_gt_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+@@ -579,7 +579,7 @@
+ #define   DISABLE_128B_EVICTION_COMMAND_UDW	REG_BIT(36 - 32)
+ #define   LSCFE_SAME_ADDRESS_ATOMICS_COALESCING_DISABLE	REG_BIT(35 - 32)
+ 
+-#define ROW_CHICKEN5				XE_REG_MCR(0xe7f0)
++#define ROW_CHICKEN5				XE_REG_MCR(0xe7f0, XE_REG_OPTION_MASKED)
+ #define   CPSS_AWARE_DIS			REG_BIT(3)
+ 
+ #define SARB_CHICKEN1				XE_REG_MCR(0xe90c)
+-- 
+2.43.0
+

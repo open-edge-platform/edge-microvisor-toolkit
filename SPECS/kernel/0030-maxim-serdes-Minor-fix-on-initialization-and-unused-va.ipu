@@ -1,0 +1,94 @@
+From 1645e707ca69cfa838bc91a23f289af8d0f173d7 Mon Sep 17 00:00:00 2001
+From: "Khai Wen, Ng" <khai.wen.ng@intel.com>
+Date: Thu, 14 May 2026 17:02:13 +0800
+Subject: [PATCH 30/65] maxim-serdes: Minor fix on initialization and unused
+ variables
+
+Signed-off-by: Khai Wen, Ng <khai.wen.ng@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max_des.c | 14 +++++++-------
+ drivers/media/i2c/maxim-serdes/max_ser.c |  1 -
+ 2 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max_des.c b/drivers/media/i2c/maxim-serdes/max_des.c
+index d37ebd81c629..ed0db18c3c53 100644
+--- a/drivers/media/i2c/maxim-serdes/max_des.c
++++ b/drivers/media/i2c/maxim-serdes/max_des.c
+@@ -1723,7 +1723,7 @@ static int max_des_i2c_atr_init(struct max_des_priv *priv)
+ 
+ 	for (i = 0; i < des->ops->num_links; i++) {
+ 		struct max_des_link *link = &des->links[i];
+-		struct fwnode_handle *child, *chan_fwnode = NULL;
++		struct fwnode_handle *child = NULL, *chan_fwnode = NULL;
+ 		struct i2c_atr_adap_desc desc = {
+ 			.chan_id = i,
+ 		};
+@@ -2307,7 +2307,7 @@ static int max_des_update_link(struct max_des_priv *priv,
+ 			       struct max_des_remap_context *context,
+ 			       struct max_des_link *link,
+ 			       struct v4l2_subdev_state *state,
+-			       u64 *streams_masks, bool enable)
++			       u64 *streams_masks)
+ {
+ 	struct max_des *des = priv->des;
+ 	unsigned int i;
+@@ -2401,7 +2401,7 @@ static int max_des_update_active(struct max_des_priv *priv, u64 *streams_masks,
+ static int max_des_update_links(struct max_des_priv *priv,
+ 				struct max_des_remap_context *context,
+ 				struct v4l2_subdev_state *state,
+-				u64 *streams_masks, bool enable)
++				u64 *streams_masks)
+ {
+ 	struct max_des *des = priv->des;
+ 	unsigned int failed_update_link_id = des->ops->num_links;
+@@ -2412,7 +2412,7 @@ static int max_des_update_links(struct max_des_priv *priv,
+ 		struct max_des_link *link = &des->links[i];
+ 
+ 		ret = max_des_update_link(priv, context, link, state,
+-					  streams_masks, enable);
++					  streams_masks);
+ 		if (ret) {
+ 			failed_update_link_id = i;
+ 			goto err;
+@@ -2426,7 +2426,7 @@ static int max_des_update_links(struct max_des_priv *priv,
+ 		struct max_des_link *link = &des->links[i];
+ 
+ 		max_des_update_link(priv, context, link, state,
+-				    priv->streams_masks, enable);
++				    priv->streams_masks);
+ 	}
+ 
+ 	return ret;
+@@ -2501,7 +2501,7 @@ static int max_des_update_streams(struct v4l2_subdev *sd,
+ 	if (ret)
+ 		goto err_revert_streams_disable;
+ 
+-	ret = max_des_update_links(priv, &context, state, streams_masks, enable);
++	ret = max_des_update_links(priv, &context, state, streams_masks);
+ 	if (ret)
+ 		goto err_revert_active_disable;
+ 
+@@ -2532,7 +2532,7 @@ static int max_des_update_streams(struct v4l2_subdev *sd,
+ 	max_des_update_tpg(priv, state, priv->streams_masks);
+ 
+ err_revert_links_update:
+-	max_des_update_links(priv, &context, state, priv->streams_masks, false);
++	max_des_update_links(priv, &context, state, priv->streams_masks);
+ 
+ err_revert_active_disable:
+ 	max_des_update_active(priv, priv->streams_masks, true);
+diff --git a/drivers/media/i2c/maxim-serdes/max_ser.c b/drivers/media/i2c/maxim-serdes/max_ser.c
+index 02166db9259d..e4c29fdb7922 100644
+--- a/drivers/media/i2c/maxim-serdes/max_ser.c
++++ b/drivers/media/i2c/maxim-serdes/max_ser.c
+@@ -1741,7 +1741,6 @@ static int max_ser_parse_pipe_config(struct max_ser_priv *priv, struct fwnode_ha
+ {
+ 	struct max_ser *ser = priv->ser;
+ 	struct fwnode_handle *child;
+-	unsigned int i;
+ 
+ 	fwnode_for_each_child_node(fwnode, child) {
+ 		const char *name = fwnode_get_name(child);
+-- 
+2.43.0
+

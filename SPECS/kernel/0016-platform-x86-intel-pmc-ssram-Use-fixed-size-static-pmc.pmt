@@ -1,0 +1,58 @@
+From 47b29de4804a805928afa138f54c642d522649fa Mon Sep 17 00:00:00 2001
+From: Xi Pardee <xi.pardee@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:51:55 -0700
+Subject: [PATCH 16/22] platform/x86/intel/pmc/ssram: Use fixed-size static pmc
+ array
+
+Switch pmc_ssram_telems from a devm-allocated pointer to a fixed-size
+static array, eliminating per-probe allocation overhead and simplifying
+lifetime management.
+
+Correspondingly simplify pmc_ssram_telemetry_get_pmc_info() validation to
+check devid availability and tighten input bounds checking. Drop
+null-pointer checks now that the storage is static.
+
+Signed-off-by: Xi Pardee <xi.pardee@linux.intel.com>
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmc/ssram_telemetry.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/ssram_telemetry.c b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+index 1deb4d71da3f..9c3d7ba2fd52 100644
+--- a/drivers/platform/x86/intel/pmc/ssram_telemetry.c
++++ b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+@@ -24,7 +24,7 @@
+ 
+ DEFINE_FREE(pmc_ssram_telemetry_iounmap, void __iomem *, if (_T) iounmap(_T))
+ 
+-static struct pmc_ssram_telemetry *pmc_ssram_telems;
++static struct pmc_ssram_telemetry pmc_ssram_telems[3];
+ static bool device_probed;
+ 
+ static int
+@@ -140,7 +140,7 @@ int pmc_ssram_telemetry_get_pmc_info(unsigned int pmc_idx,
+ 	if (pmc_idx >= MAX_NUM_PMC)
+ 		return -EINVAL;
+ 
+-	if (!pmc_ssram_telems || !pmc_ssram_telems[pmc_idx].devid)
++	if (!pmc_ssram_telems[pmc_idx].devid)
+ 		return -ENODEV;
+ 
+ 	pmc_ssram_telemetry->devid = pmc_ssram_telems[pmc_idx].devid;
+@@ -153,12 +153,6 @@ static int pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_de
+ {
+ 	int ret;
+ 
+-	pmc_ssram_telems = devm_kzalloc(&pcidev->dev, sizeof(*pmc_ssram_telems) * MAX_NUM_PMC,
+-					GFP_KERNEL);
+-	if (!pmc_ssram_telems) {
+-		ret = -ENOMEM;
+-		goto probe_finish;
+-	}
+ 
+ 	ret = pcim_enable_device(pcidev);
+ 	if (ret) {
+-- 
+2.43.0
+

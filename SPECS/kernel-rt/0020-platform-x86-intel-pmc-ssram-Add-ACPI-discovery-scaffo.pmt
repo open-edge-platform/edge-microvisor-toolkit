@@ -1,0 +1,163 @@
+From 785e041e4d5ea16416e09a6e2d65f52435774e45 Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:51:59 -0700
+Subject: [PATCH 20/22] platform/x86/intel/pmc/ssram: Add ACPI discovery
+ scaffolding
+
+Prepare the SSRAM telemetry driver for ACPI-based discovery by adding the
+common initialization path and selection framework needed for resource
+discovery from the ACPI companion device.
+
+At this stage, existing supported devices continue to use the PCI path.
+This change lays the groundwork for follow-on patches that wire platform
+IDs to the ACPI policy path.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Signed-off-by: Xi Pardee <xi.pardee@linux.intel.com>
+---
+ .../platform/x86/intel/pmc/ssram_telemetry.c  | 79 +++++++++++++++++++
+ 1 file changed, 79 insertions(+)
+
+diff --git a/drivers/platform/x86/intel/pmc/ssram_telemetry.c b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+index 246efdcf6950..b937ebb2322f 100644
+--- a/drivers/platform/x86/intel/pmc/ssram_telemetry.c
++++ b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+@@ -5,6 +5,7 @@
+  * Copyright (c) 2023, Intel Corporation.
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/cleanup.h>
+ #include <linux/intel_vsec.h>
+ #include <linux/pci.h>
+@@ -26,14 +27,17 @@ DEFINE_FREE(pmc_ssram_telemetry_iounmap, void __iomem *, if (_T) iounmap(_T))
+ 
+ enum resource_method {
+ 	RES_METHOD_PCI,
++	RES_METHOD_ACPI,
+ };
+ 
+ struct ssram_type {
+ 	enum resource_method method;
++	enum pmc_index p_index;
+ };
+ 
+ static const struct ssram_type pci_main = {
+ 	.method = RES_METHOD_PCI,
++	.p_index = PMC_IDX_MAIN,
+ };
+ 
+ static struct pmc_ssram_telemetry pmc_ssram_telems[3];
+@@ -146,6 +150,76 @@ static int pmc_ssram_telemetry_pci_init(struct pci_dev *pcidev)
+ 	return ret;
+ }
+ 
++static int pmc_ssram_telemetry_get_pmc_acpi(struct pci_dev *pcidev,  unsigned int pmc_idx)
++{
++	void __iomem __free(pmc_ssram_telemetry_iounmap) * ssram = NULL;
++	u64 ssram_base;
++
++	ssram_base = pci_resource_start(pcidev, 0);
++	if (!ssram_base)
++		return -ENODEV;
++
++	ssram = ioremap(ssram_base, SSRAM_HDR_SIZE);
++	if (!ssram)
++		return -ENOMEM;
++
++	pmc_ssram_get_devid_pwrmbase(ssram, pmc_idx);
++
++	return 0;
++}
++
++static int pmc_ssram_telemetry_acpi_init(struct pci_dev *pcidev,
++					 enum pmc_index index)
++{
++	struct acpi_buffer buf = { ACPI_ALLOCATE_BUFFER, NULL };
++	acpi_handle handle = ACPI_HANDLE(&pcidev->dev);
++	struct intel_vsec_header header;
++	struct intel_vsec_header *headers[2] = { &header, NULL };
++	struct intel_vsec_platform_info info = { };
++	union acpi_object *dsd;
++	u32 (*acpi_disc)[4];
++	acpi_status status;
++	int ret;
++
++	if (!handle)
++		return -ENODEV;
++
++	status = acpi_evaluate_object(handle, "_DSD", NULL, &buf);
++	if (ACPI_FAILURE(status))
++		return -ENODEV;
++
++	dsd = pmc_find_telem_guid(buf.pointer);
++	if (!dsd) {
++		ret = -ENODEV;
++		goto cleanup_acpi_buf;
++	}
++
++	ret = pmc_parse_telem_dsd(dsd, &header, &acpi_disc);
++	if (ret)
++		goto cleanup_acpi_buf;
++
++	info.headers = headers;
++	info.caps = VSEC_CAP_TELEMETRY;
++	info.acpi_disc = acpi_disc;
++	info.src = INTEL_VSEC_DISC_ACPI;
++
++	/* This is an ACPI companion device. PCI BAR will be used for base addr. */
++	info.base_addr = 0;
++
++	ret = intel_vsec_register(&pcidev->dev, &info);
++	if (ret)
++		goto cleanup_acpi_disc;
++
++	ret = pmc_ssram_telemetry_get_pmc_acpi(pcidev, index);
++
++cleanup_acpi_disc:
++	kfree(acpi_disc);
++cleanup_acpi_buf:
++	ACPI_FREE(buf.pointer);
++
++	return ret;
++}
++
+ /**
+  * pmc_ssram_telemetry_get_pmc_info() - Get a PMC devid and base_addr information
+  * @pmc_idx:               Index of the PMC
+@@ -186,6 +260,7 @@ static int pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_de
+ {
+ 	const struct ssram_type *ssram_type;
+ 	enum resource_method method;
++	enum pmc_index index;
+ 	int ret;
+ 
+ 	ssram_type = (const struct ssram_type *)id->driver_data;
+@@ -196,6 +271,7 @@ static int pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_de
+ 	}
+ 
+ 	method = ssram_type->method;
++	index = ssram_type->p_index;
+ 
+ 	ret = pcim_enable_device(pcidev);
+ 	if (ret) {
+@@ -205,6 +281,8 @@ static int pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_de
+ 
+ 	if (method == RES_METHOD_PCI)
+ 		ret = pmc_ssram_telemetry_pci_init(pcidev);
++	else if (method == RES_METHOD_ACPI)
++		ret = pmc_ssram_telemetry_acpi_init(pcidev, index);
+ 	else
+ 		ret = -EINVAL;
+ 
+@@ -238,6 +316,7 @@ static struct pci_driver pmc_ssram_telemetry_driver = {
+ };
+ module_pci_driver(pmc_ssram_telemetry_driver);
+ 
++MODULE_IMPORT_NS("INTEL_PMC_CORE");
+ MODULE_IMPORT_NS("INTEL_VSEC");
+ MODULE_AUTHOR("Xi Pardee <xi.pardee@intel.com>");
+ MODULE_DESCRIPTION("Intel PMC SSRAM Telemetry driver");
+-- 
+2.43.0
+

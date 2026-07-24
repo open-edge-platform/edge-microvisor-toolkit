@@ -1,0 +1,481 @@
+From bab07181e4060cd86e2e1dc360e813a673b88b0d Mon Sep 17 00:00:00 2001
+From: Hao Yao <hao.yao@intel.com>
+Date: Fri, 24 Oct 2025 12:09:58 +0800
+Subject: [PATCH 52/65] staging: ipu7: Add IPU8 ABI version 1.0.12
+
+Signed-off-by: Hao Yao <hao.yao@intel.com>
+Signed-off-by: Mokhtar, Mohamad Nor Syahid <mohamad.nor.syahid.mokhtar@intel.com>
+---
+ .../staging/media/ipu7/abi/ipu7_fw_isys_abi.h |  93 +++++++++-
+ drivers/staging/media/ipu7/ipu7-fw-isys.c     | 170 +++++++++++++++++-
+ drivers/staging/media/ipu7/ipu7-isys-queue.c  |   5 +-
+ drivers/staging/media/ipu7/ipu7-isys-video.c  |  13 ++
+ drivers/staging/media/ipu7/ipu7-isys.h        |   9 +
+ 5 files changed, 276 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h b/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
+index 7f622bfe9af6..9a4c63b68044 100644
+--- a/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
++++ b/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
+@@ -251,9 +251,16 @@ struct ipu7_insys_output_link {
+ 	u8 pad[2];
+ };
+ 
++struct ipu7_insys_output_cropping_v1 {
++	u16 line_top;
++	u16 line_bottom;
++};
++
+ struct ipu7_insys_output_cropping {
+ 	u16 line_top;
+ 	u16 line_bottom;
++	u16 column_left;
++	u16 column_right;
+ };
+ 
+ struct ipu7_insys_output_dpcm {
+@@ -263,16 +270,57 @@ struct ipu7_insys_output_dpcm {
+ 	u8 pad;
+ };
+ 
++enum ipu_insys_cfa_dim {
++	IPU_INSYS_CFA_DIM_2x2 = 0,
++	IPU_INSYS_CFA_DIM_4x4 = 1,
++	N_IPU_INSYS_CFA_DIM
++};
++
++#define IPU_INSYS_MAX_BINNING_FACTOR		(4U)
++#define IPU_INSYS_UPIPE_MAX_OUTPUTS		(2U)
++#define IPU_INSYS_UPIPE_MAX_UOB_FIFO_ALLOC	(4U)
++#define IPU_INSYS_UPIPE_STREAM_CFG_BUF_SIZE	(32U)
++#define IPU_INSYS_UPIPE_FRAME_CFG_BUF_SIZE	(36U)
++
++struct ipu7_insys_upipe_output_pin {
++	ia_gofo_addr_t opaque_pin_cfg;
++	u16 plane_offset_1;
++	u16 plane_offset_2;
++	u8 single_uob_fifo;
++	u8 shared_uob_fifo;
++	u8 pad[2];
++};
++
++struct ipu7_insys_capture_output_pin_cfg {
++	struct ipu7_insys_capture_output_pin_payload pin_payload;
++	ia_gofo_addr_t upipe_capture_cfg;
++};
++
++struct ipu7_insys_output_pin_v1 {
++	struct ipu7_insys_output_link link;
++	struct ipu7_insys_output_cropping_v1 crop;
++	struct ipu7_insys_output_dpcm dpcm;
++	u32 stride;
++	u16 ft;
++	u8 send_irq;
++	u8 input_pin_id;
++	u8 early_ack_en;
++	u8 pad[3];
++};
++
+ struct ipu7_insys_output_pin {
+ 	struct ipu7_insys_output_link link;
+ 	struct ipu7_insys_output_cropping crop;
+ 	struct ipu7_insys_output_dpcm dpcm;
++	struct ipu7_insys_upipe_output_pin upipe_pin_cfg;
+ 	u32 stride;
+ 	u16 ft;
++	u8 upipe_enable;
+ 	u8 send_irq;
+ 	u8 input_pin_id;
+ 	u8 early_ack_en;
+-	u8 pad[3];
++	u8 cfa_dim;
++	u8 binning_factor;
+ };
+ 
+ struct ipu7_insys_input_pin {
+@@ -285,6 +333,17 @@ struct ipu7_insys_input_pin {
+ 	u8 pad[2];
+ };
+ 
++struct ipu7_insys_stream_cfg_v1 {
++	struct ipu7_insys_input_pin input_pins[4];
++	struct ipu7_insys_output_pin_v1 output_pins[4];
++	u16 stream_msg_map;
++	u8 port_id;
++	u8 vc;
++	u8 nof_input_pins;
++	u8 nof_output_pins;
++	u8 pad[2];
++};
++
+ struct ipu7_insys_stream_cfg {
+ 	struct ipu7_insys_input_pin input_pins[4];
+ 	struct ipu7_insys_output_pin output_pins[4];
+@@ -296,7 +355,7 @@ struct ipu7_insys_stream_cfg {
+ 	u8 pad[2];
+ };
+ 
+-struct ipu7_insys_buffset {
++struct ipu7_insys_buffset_v1 {
+ 	struct ipu7_insys_capture_output_pin_payload output_pins[4];
+ 	u8 capture_msg_map;
+ 	u8 frame_id;
+@@ -304,7 +363,15 @@ struct ipu7_insys_buffset {
+ 	u8 pad[5];
+ };
+ 
+-struct ipu7_insys_resp {
++struct ipu7_insys_buffset {
++	struct ipu7_insys_capture_output_pin_cfg output_pins[4];
++	u8 capture_msg_map;
++	u8 frame_id;
++	u8 skip_frame;
++	u8 pad[5];
++};
++
++struct ipu7_insys_resp_v1 {
+ 	u64 buf_id;
+ 	struct ipu7_insys_capture_output_pin_payload pin;
+ 	struct ia_gofo_msg_err error_info;
+@@ -318,6 +385,20 @@ struct ipu7_insys_resp {
+ 	u16 mipi_fn;
+ };
+ 
++struct ipu7_insys_resp {
++	u64 buf_id;
++	struct ipu7_insys_capture_output_pin_payload pin;
++	struct ia_gofo_msg_err error_info;
++	u32 timestamp[2];
++	u16 mipi_fn;
++	u8 type;
++	u8 msg_link_streaming_mode;
++	u8 stream_id;
++	u8 pin_id;
++	u8 frame_id;
++	u8 skip_frame;
++};
++
+ struct ipu7_insys_resp_queue_token {
+ 	struct ipu7_insys_resp resp_info;
+ };
+@@ -372,6 +453,12 @@ enum insys_msg_err_stream {
+ 	INSYS_MSG_ERR_STREAM_INSUFFICIENT_RESOURCES_OUTPUT = 36,
+ 	INSYS_MSG_ERR_STREAM_WIDTH_OUTPUT_SIZE = 37,
+ 	INSYS_MSG_ERR_STREAM_CLOSED = 38,
++	INSYS_MSG_ERR_STREAM_BINNING_FACTOR_NOT_SUPPORTED = 39,
++	INSYS_MSG_ERR_STREAM_CFA_DIM_NOT_SUPPORTED = 40,
++	INSYS_MSG_ERR_STREAM_INVALID_UPIPE_ENABLE = 41,
++	INSYS_MSG_ERR_STREAM_INVALID_UPIPE_UOB_SINGLE = 42,
++	INSYS_MSG_ERR_STREAM_INVALID_UPIPE_UOB_SHARED = 43,
++	INSYS_MSG_ERR_STREAM_INVALID_UPIPE_OPAQUE_PIN_CFG = 44,
+ 	INSYS_MSG_ERR_STREAM_N
+ };
+ 
+diff --git a/drivers/staging/media/ipu7/ipu7-fw-isys.c b/drivers/staging/media/ipu7/ipu7-fw-isys.c
+index 1ece286c2934..c594dbdbf3cc 100644
+--- a/drivers/staging/media/ipu7/ipu7-fw-isys.c
++++ b/drivers/staging/media/ipu7/ipu7-fw-isys.c
+@@ -31,6 +31,118 @@ static const char * const send_msg_types[N_IPU_INSYS_SEND_TYPE] = {
+ 	"STREAM_CLOSE"
+ };
+ 
++static void isys_stream_cfg_to_v1(struct ipu7_insys_stream_cfg_v1 *dst,
++				  const struct ipu7_insys_stream_cfg *src)
++{
++	unsigned int i;
++
++	memset(dst, 0, sizeof(*dst));
++	memcpy(dst->input_pins, src->input_pins, sizeof(dst->input_pins));
++	dst->stream_msg_map = src->stream_msg_map;
++	dst->port_id = src->port_id;
++	dst->vc = src->vc;
++	dst->nof_input_pins = src->nof_input_pins;
++	dst->nof_output_pins = src->nof_output_pins;
++
++	for (i = 0; i < ARRAY_SIZE(dst->output_pins); i++) {
++		dst->output_pins[i].link = src->output_pins[i].link;
++		dst->output_pins[i].crop.line_top =
++			src->output_pins[i].crop.line_top;
++		dst->output_pins[i].crop.line_bottom =
++			src->output_pins[i].crop.line_bottom;
++		dst->output_pins[i].dpcm = src->output_pins[i].dpcm;
++		dst->output_pins[i].stride = src->output_pins[i].stride;
++		dst->output_pins[i].ft = src->output_pins[i].ft;
++		dst->output_pins[i].send_irq = src->output_pins[i].send_irq;
++		dst->output_pins[i].input_pin_id =
++			src->output_pins[i].input_pin_id;
++		dst->output_pins[i].early_ack_en =
++			src->output_pins[i].early_ack_en;
++	}
++}
++
++static void isys_buffset_to_v1(struct ipu7_insys_buffset_v1 *dst,
++			       const struct ipu7_insys_buffset *src)
++{
++	unsigned int i;
++
++	memset(dst, 0, sizeof(*dst));
++	for (i = 0; i < ARRAY_SIZE(dst->output_pins); i++)
++		dst->output_pins[i] = src->output_pins[i].pin_payload;
++
++	dst->capture_msg_map = src->capture_msg_map;
++	dst->frame_id = src->frame_id;
++	dst->skip_frame = src->skip_frame;
++}
++
++static size_t isys_prepare_fw_payload_v1(void *cpu_mapped_buf,
++					 u16 send_type, size_t size)
++{
++	if (!cpu_mapped_buf)
++		return 0;
++
++	switch (send_type) {
++	case IPU_INSYS_SEND_TYPE_STREAM_OPEN: {
++		struct ipu7_insys_stream_cfg cfg;
++
++		memcpy(&cfg, cpu_mapped_buf, sizeof(cfg));
++		isys_stream_cfg_to_v1(cpu_mapped_buf, &cfg);
++		return sizeof(struct ipu7_insys_stream_cfg_v1);
++	}
++	case IPU_INSYS_SEND_TYPE_STREAM_START_AND_CAPTURE:
++	case IPU_INSYS_SEND_TYPE_STREAM_CAPTURE: {
++		struct ipu7_insys_buffset set;
++
++		memcpy(&set, cpu_mapped_buf, sizeof(set));
++		isys_buffset_to_v1(cpu_mapped_buf, &set);
++		return sizeof(struct ipu7_insys_buffset_v1);
++	}
++	default:
++		return size;
++	}
++}
++
++static size_t isys_prepare_fw_payload(void *cpu_mapped_buf,
++				      u16 send_type, size_t size)
++{
++	if (!cpu_mapped_buf)
++		return 0;
++
++	switch (send_type) {
++	case IPU_INSYS_SEND_TYPE_STREAM_OPEN:
++		return sizeof(struct ipu7_insys_stream_cfg);
++	case IPU_INSYS_SEND_TYPE_STREAM_START_AND_CAPTURE:
++	case IPU_INSYS_SEND_TYPE_STREAM_CAPTURE:
++		return sizeof(struct ipu7_insys_buffset);
++	default:
++		return size;
++	}
++}
++
++static void isys_decode_resp_v1(struct ipu7_insys_resp *dst, const void *token)
++{
++	const struct ipu7_insys_resp_v1 *src = token;
++
++	memset(dst, 0, sizeof(*dst));
++	dst->buf_id = src->buf_id;
++	dst->pin = src->pin;
++	dst->error_info = src->error_info;
++	dst->timestamp[0] = src->timestamp[0];
++	dst->timestamp[1] = src->timestamp[1];
++	dst->type = src->type;
++	dst->msg_link_streaming_mode = src->msg_link_streaming_mode;
++	dst->stream_id = src->stream_id;
++	dst->pin_id = src->pin_id;
++	dst->frame_id = src->frame_id;
++	dst->skip_frame = src->skip_frame;
++	dst->mipi_fn = src->mipi_fn;
++}
++
++static void isys_decode_resp(struct ipu7_insys_resp *dst, const void *token)
++{
++	memcpy(dst, token, sizeof(*dst));
++}
++
+ int ipu7_fw_isys_complex_cmd(struct ipu7_isys *isys,
+ 			     const unsigned int stream_handle,
+ 			     void *cpu_mapped_buf,
+@@ -50,8 +162,11 @@ int ipu7_fw_isys_complex_cmd(struct ipu7_isys *isys,
+ 	 * Time to flush cache in case we have some payload. Not all messages
+ 	 * have that
+ 	 */
+-	if (cpu_mapped_buf)
++	if (cpu_mapped_buf) {
++		size = isys->abi_ops.prepare_payload(cpu_mapped_buf,
++						     send_type, size);
+ 		clflush_cache_range(cpu_mapped_buf, size);
++	}
+ 
+ 	token = ipu7_syscom_get_token(ctx, stream_handle +
+ 				      IPU_INSYS_INPUT_MSG_QUEUE);
+@@ -97,6 +212,18 @@ int ipu7_fw_isys_init(struct ipu7_isys *isys)
+ 	if (!syscom)
+ 		return -ENOMEM;
+ 
++	if (is_ipu8(adev->isp->hw_ver)) {
++		isys->abi_ops.prepare_payload = isys_prepare_fw_payload;
++		isys->abi_ops.decode_resp = isys_decode_resp;
++		isys->abi_ops.resp_queue_token_size =
++			sizeof(struct ipu7_insys_resp);
++	} else {
++		isys->abi_ops.prepare_payload = isys_prepare_fw_payload_v1;
++		isys->abi_ops.decode_resp = isys_decode_resp_v1;
++		isys->abi_ops.resp_queue_token_size =
++			sizeof(struct ipu7_insys_resp_v1);
++	}
++
+ 	adev->syscom = syscom;
+ 	syscom->num_input_queues = IPU_INSYS_MAX_INPUT_QUEUES;
+ 	syscom->num_output_queues = IPU_INSYS_MAX_OUTPUT_QUEUES;
+@@ -111,11 +238,11 @@ int ipu7_fw_isys_init(struct ipu7_isys *isys)
+ 	queue_configs[IPU_INSYS_OUTPUT_MSG_QUEUE].max_capacity =
+ 		IPU_ISYS_SIZE_RECV_QUEUE;
+ 	queue_configs[IPU_INSYS_OUTPUT_MSG_QUEUE].token_size_in_bytes =
+-		sizeof(struct ipu7_insys_resp);
++		isys->abi_ops.resp_queue_token_size;
+ 	queue_configs[IPU_INSYS_OUTPUT_LOG_QUEUE].max_capacity =
+ 		IPU_ISYS_SIZE_LOG_QUEUE;
+ 	queue_configs[IPU_INSYS_OUTPUT_LOG_QUEUE].token_size_in_bytes =
+-		sizeof(struct ipu7_insys_resp);
++		isys->abi_ops.resp_queue_token_size;
+ 	queue_configs[IPU_INSYS_OUTPUT_RESERVED_QUEUE].max_capacity = 0;
+ 	queue_configs[IPU_INSYS_OUTPUT_RESERVED_QUEUE].token_size_in_bytes = 0;
+ 
+@@ -195,9 +322,15 @@ int ipu7_fw_isys_close(struct ipu7_isys *isys)
+ 
+ struct ipu7_insys_resp *ipu7_fw_isys_get_resp(struct ipu7_isys *isys)
+ {
+-	return (struct ipu7_insys_resp *)
+-		ipu7_syscom_get_token(isys->adev->syscom,
+-				      IPU_INSYS_OUTPUT_MSG_QUEUE);
++	void *token = ipu7_syscom_get_token(isys->adev->syscom,
++				     IPU_INSYS_OUTPUT_MSG_QUEUE);
++
++	if (!token)
++		return NULL;
++
++	isys->abi_ops.decode_resp(&isys->resp, token);
++
++	return &isys->resp;
+ }
+ 
+ void ipu7_fw_isys_put_resp(struct ipu7_isys *isys)
+@@ -327,6 +460,10 @@ void ipu7_fw_isys_dump_stream_cfg(struct device *dev,
+ 			cfg->output_pins[i].crop.line_top);
+ 		dev_dbg(dev, "\t.crop.line_bottom = %d\n",
+ 			cfg->output_pins[i].crop.line_bottom);
++		dev_dbg(dev, "\t.crop.column_left = %d\n",
++			cfg->output_pins[i].crop.column_left);
++		dev_dbg(dev, "\t.crop.column_right = %d\n",
++			cfg->output_pins[i].crop.column_right);
+ 
+ 		dev_dbg(dev, "\t.dpcm_enable = %d\n",
+ 			cfg->output_pins[i].dpcm.enable);
+@@ -334,6 +471,18 @@ void ipu7_fw_isys_dump_stream_cfg(struct device *dev,
+ 			cfg->output_pins[i].dpcm.type);
+ 		dev_dbg(dev, "\t.dpcm.predictor = %d\n",
+ 			cfg->output_pins[i].dpcm.predictor);
++		dev_dbg(dev, "\t.upipe_enable = %d\n",
++			cfg->output_pins[i].upipe_enable);
++		dev_dbg(dev, "\t.upipe_pin_cfg.opaque_pin_cfg = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.opaque_pin_cfg);
++		dev_dbg(dev, "\t.upipe_pin_cfg.plane_offset_1 = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.plane_offset_1);
++		dev_dbg(dev, "\t.upipe_pin_cfg.plane_offset_2 = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.plane_offset_2);
++		dev_dbg(dev, "\t.upipe_pin_cfg.singel_uob_fifo = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.single_uob_fifo);
++		dev_dbg(dev, "\t.upipe_pin_cfg.shared_uob_fifo = %d\n",
++			cfg->output_pins[i].upipe_pin_cfg.shared_uob_fifo);
+ 	}
+ 	dev_dbg(dev, "---------------------------\n");
+ }
+@@ -352,9 +501,12 @@ void ipu7_fw_isys_dump_frame_buff_set(struct device *dev,
+ 
+ 	for (i = 0; i < outputs; i++) {
+ 		dev_dbg(dev, ".output_pin[%d]:\n", i);
+-		dev_dbg(dev, "\t.user_token = %llx\n",
+-			buf->output_pins[i].user_token);
+-		dev_dbg(dev, "\t.addr = 0x%x\n", buf->output_pins[i].addr);
++		dev_dbg(dev, "\t.pin_payload.user_token = %llx\n",
++			buf->output_pins[i].pin_payload.user_token);
++		dev_dbg(dev, "\t.pin_payload.addr = 0x%x\n",
++			buf->output_pins[i].pin_payload.addr);
++		dev_dbg(dev, "\t.pin_payload.upipe_capture_cfg = 0x%x\n",
++			buf->output_pins[i].upipe_capture_cfg);
+ 	}
+ 	dev_dbg(dev, "---------------------------\n");
+ }
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+index c7cd9b3e66f0..9df4f8853180 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+@@ -269,8 +269,9 @@ static void ipu7_isys_buf_to_fw_frame_buf_pin(struct vb2_buffer *vb,
+ 	struct ipu7_isys_video_buffer *ivb =
+ 		vb2_buffer_to_ipu7_isys_video_buffer(vvb);
+ 
+-	set->output_pins[aq->fw_output].addr = ivb->dma_addr;
+-	set->output_pins[aq->fw_output].user_token = (uintptr_t)set;
++	set->output_pins[aq->fw_output].pin_payload.addr = ivb->dma_addr;
++	set->output_pins[aq->fw_output].pin_payload.user_token = (uintptr_t)set;
++	set->output_pins[aq->fw_output].upipe_capture_cfg = 0;
+ }
+ 
+ /*
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-video.c b/drivers/staging/media/ipu7/ipu7-isys-video.c
+index 754507c29cbc..da1afb79a605 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-video.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-video.c
+@@ -452,10 +452,23 @@ static int ipu7_isys_fw_pin_cfg(struct ipu7_isys_video *av,
+ 	/* output pin crop */
+ 	output_pin->crop.line_top = 0;
+ 	output_pin->crop.line_bottom = 0;
++	output_pin->crop.column_left = 0;
++	output_pin->crop.column_right = 0;
+ 
+ 	/* output de-compression */
+ 	output_pin->dpcm.enable = 0;
+ 
++	/* upipe_cfg */
++	output_pin->upipe_pin_cfg.opaque_pin_cfg = 0;
++	output_pin->upipe_pin_cfg.plane_offset_1 = 0;
++	output_pin->upipe_pin_cfg.plane_offset_2 = 0;
++	output_pin->upipe_pin_cfg.single_uob_fifo = 0;
++	output_pin->upipe_pin_cfg.shared_uob_fifo = 0;
++	output_pin->upipe_enable = 0;
++	output_pin->binning_factor = 0;
++	/* stupid setting, even unused, SW still need to set a valid value */
++	output_pin->cfa_dim = IPU_INSYS_CFA_DIM_2x2;
++
+ 	/* frame format type */
+ 	pfmt = ipu7_isys_get_isys_format(av->pix_fmt.pixelformat);
+ 	output_pin->ft = (u16)pfmt->css_pixelformat;
+diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
+index 7351fa82888f..87d30afbd872 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys.h
++++ b/drivers/staging/media/ipu7/ipu7-isys.h
+@@ -67,6 +67,13 @@ struct isys_fw_log {
+ 	u32 size; /* actual size of log content, in bits */
+ };
+ 
++struct ipu7_isys_abi_ops {
++	size_t (*prepare_payload)(void *cpu_mapped_buf, u16 send_type,
++				  size_t size);
++	void (*decode_resp)(struct ipu7_insys_resp *dst, const void *token);
++	size_t resp_queue_token_size;
++};
++
+ /*
+  * struct ipu7_isys
+  *
+@@ -124,6 +131,8 @@ struct ipu7_isys {
+ 	struct list_head framebuflist;
+ 	struct list_head framebuflist_fw;
+ 	struct v4l2_async_notifier notifier;
++	struct ipu7_isys_abi_ops abi_ops;
++	struct ipu7_insys_resp resp;
+ 
+ 	struct ipu7_insys_config *subsys_config;
+ 	dma_addr_t subsys_config_dma_addr;
+-- 
+2.43.0
+

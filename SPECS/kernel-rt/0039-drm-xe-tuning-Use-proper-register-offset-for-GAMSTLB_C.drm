@@ -1,0 +1,41 @@
+From 8f6e95aa3334fb9b2f712efaee0282399d883c2e Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 10 Apr 2026 15:50:29 -0700
+Subject: [PATCH 39/43] drm/xe/tuning: Use proper register offset for
+ GAMSTLB_CTRL
+
+From Xe2 onward (i.e., all platforms officially supported by the Xe
+driver), the GAMSTLB_CTRL register is located at offset 0x477C and
+represented by the macro "GAMSTLB_CTRL" in code.  However the register
+formerly resided at offset 0xCF4C on Xe1-era platforms, and we also have
+macro XEHP_GAMSTLB_CTRL that represents this old offset in the
+unofficial/developer-only Xe1 code.  When tuning for the register was
+added for Xe3p_LPG, the old Xe1-era macro was accidentally used instead
+of the proper macro for Xe2 and beyond, causing the tuning to not be
+applied properly.  Use the proper definition so that the correct offset
+is written to.
+
+Bspec: 59298
+Fixes: 377c89bfaa5d ("drm/xe/xe3p_lpg: Set STLB bank hash mode to 4KB")
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_tuning.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_tuning.c b/drivers/gpu/drm/xe/xe_tuning.c
+index ca9b5b51db89..e36a843af2f6 100644
+--- a/drivers/gpu/drm/xe/xe_tuning.c
++++ b/drivers/gpu/drm/xe/xe_tuning.c
+@@ -96,7 +96,7 @@ static const struct xe_rtp_entry_sr gt_tunings[] = {
+ 	{ XE_RTP_NAME("Tuning: Set STLB Bank Hash Mode to 4KB"),
+ 	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(3510, XE_RTP_END_VERSION_UNDEFINED),
+ 		       IS_INTEGRATED),
+-	  XE_RTP_ACTIONS(FIELD_SET(XEHP_GAMSTLB_CTRL, BANK_HASH_MODE,
++	  XE_RTP_ACTIONS(FIELD_SET(GAMSTLB_CTRL, BANK_HASH_MODE,
+ 				   BANK_HASH_4KB_MODE))
+ 	},
+ };
+-- 
+2.43.0
+

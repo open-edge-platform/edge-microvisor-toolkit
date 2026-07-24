@@ -1,0 +1,44 @@
+From c915413db28faa9e0fb1bf20f9003843044b393f Mon Sep 17 00:00:00 2001
+From: linya14x <linx.yang@intel.com>
+Date: Thu, 5 Mar 2026 15:53:38 +0800
+Subject: [PATCH 55/65] staging: media: ipu7:set skipframe flag when frame
+ error
+
+Signed-off-by: Mokhtar, Mohamad Nor Syahid <mohamad.nor.syahid.mokhtar@intel.com>
+Signed-off-by: linya14x <linx.yang@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys-queue.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+index 9df4f8853180..e5cc4cafb3ea 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+@@ -1092,6 +1092,9 @@ void ipu7_isys_queue_buf_ready(struct ipu7_isys_stream *stream,
+ 	struct device *dev = &isys->adev->auxdev.dev;
+ 	struct ipu7_isys_buffer *ib;
+ 	struct vb2_buffer *vb;
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++	struct vb2_v4l2_buffer *vbuf;
++#endif
+ 	unsigned long flags;
+ 	bool first = true;
+ 	struct vb2_v4l2_buffer *buf;
+@@ -1136,6 +1139,14 @@ void ipu7_isys_queue_buf_ready(struct ipu7_isys_stream *stream,
+ 
+ 		ipu7_isys_buf_calc_sequence_time(ib, time);
+ 
++#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
++		if (!IA_GOFO_MSG_ERR_IS_OK(info->error_info)) {
++			vbuf = to_vb2_v4l2_buffer(vb);
++			dev_dbg(dev, "buffer:%s sequence %u frame error, skip frame\n",
++				ipu7_isys_queue_to_video(aq)->vdev.name, vbuf->sequence);
++			atomic_set(&ib->skipframe_flag, 1);
++		}
++#endif
+ 		ipu7_isys_queue_buf_done(ib);
+ 
+ 		return;
+-- 
+2.43.0
+

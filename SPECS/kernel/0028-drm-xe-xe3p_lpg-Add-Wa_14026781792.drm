@@ -1,0 +1,44 @@
+From 14e6a6427914a7fa993fc7d388596ecca8040fb4 Mon Sep 17 00:00:00 2001
+From: Nitin Gote <nitin.r.gote@intel.com>
+Date: Thu, 19 Feb 2026 13:59:32 +0530
+Subject: [PATCH 28/43] drm/xe/xe3p_lpg: Add Wa_14026781792
+
+Wa_14026781792 applies Xe3p_LPG graphics version 35.10.
+
+Signed-off-by: Nitin Gote <nitin.r.gote@intel.com>
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/xe/regs/xe_gt_regs.h | 1 +
+ drivers/gpu/drm/xe/xe_wa.c           | 4 ++++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/regs/xe_gt_regs.h b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+index 85b170cc6831..48c25c37e6d4 100644
+--- a/drivers/gpu/drm/xe/regs/xe_gt_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+@@ -132,6 +132,7 @@
+ #define   VS_HIT_MAX_VALUE_MASK			REG_GENMASK(25, 20)
+ #define   DIS_MESH_PARTIAL_AUTOSTRIP		REG_BIT(16)
+ #define   DIS_MESH_AUTOSTRIP			REG_BIT(15)
++#define   DIS_TE_PATCH_CTRL			REG_BIT(4)
+ 
+ #define VFLSKPD					XE_REG_MCR(0x62a8, XE_REG_OPTION_MASKED)
+ #define   DIS_PARTIAL_AUTOSTRIP			REG_BIT(9)
+diff --git a/drivers/gpu/drm/xe/xe_wa.c b/drivers/gpu/drm/xe/xe_wa.c
+index c87c8d35b153..3ab19b0ce2e1 100644
+--- a/drivers/gpu/drm/xe/xe_wa.c
++++ b/drivers/gpu/drm/xe/xe_wa.c
+@@ -900,6 +900,10 @@ static const struct xe_rtp_entry_sr lrc_was[] = {
+ 		       ENGINE_CLASS(RENDER)),
+ 	  XE_RTP_ACTIONS(SET(CHICKEN_RASTER_1, DIS_CLIP_NEGATIVE_BOUNDING_BOX))
+ 	},
++	{ XE_RTP_NAME("14026781792"),
++	  XE_RTP_RULES(GRAPHICS_VERSION(3510), ENGINE_CLASS(RENDER)),
++	  XE_RTP_ACTIONS(SET(FF_MODE, DIS_TE_PATCH_CTRL))
++	},
+ 
+ 	/* Xe3p_LPG */
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,47 @@
+From 6f6f1d9a4d2767c1ef3ecd863542bc9316e4367d Mon Sep 17 00:00:00 2001
+From: Gustavo Sousa <gustavo.sousa@intel.com>
+Date: Mon, 9 Mar 2026 21:42:07 -0300
+Subject: [PATCH 19/43] drm/xe: Drop unused IS_PLATFORM_STEP() and
+ IS_SUBPLATFORM_STEP()
+
+The macros IS_PLATFORM_STEP() and IS_SUBPLATFORM_STEP() are unused since
+commit 87c299fa3a97 ("drm/xe/guc: Port Wa_14014475959 to xe_wa and fix
+it") and commit 63bbd800ff01 ("drm/xe/guc: Port
+Wa_22012727170/Wa_22012727685 to xe_wa"), respectively, and we can drop
+them now.  Furthermore, in upcoming changes we will add logic to read
+platform-level step information from PCI RevID and keeping those macros
+around would potentially cause confusion.
+
+v2:
+  - Cite commits that made the macros unused. (Matt)
+
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_device_types.h | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_device_types.h b/drivers/gpu/drm/xe/xe_device_types.h
+index e8e8d54d19ea..123d5489608f 100644
+--- a/drivers/gpu/drm/xe/xe_device_types.h
++++ b/drivers/gpu/drm/xe/xe_device_types.h
+@@ -81,16 +81,6 @@ enum xe_wedged_mode {
+ 
+ #define XE_MAX_ASID	(BIT(20))
+ 
+-#define IS_PLATFORM_STEP(_xe, _platform, min_step, max_step)	\
+-	((_xe)->info.platform == (_platform) &&			\
+-	 (_xe)->info.step.graphics >= (min_step) &&		\
+-	 (_xe)->info.step.graphics < (max_step))
+-#define IS_SUBPLATFORM_STEP(_xe, _platform, sub, min_step, max_step)	\
+-	((_xe)->info.platform == (_platform) &&				\
+-	 (_xe)->info.subplatform == (sub) &&				\
+-	 (_xe)->info.step.graphics >= (min_step) &&			\
+-	 (_xe)->info.step.graphics < (max_step))
+-
+ #define tile_to_xe(tile__)								\
+ 	_Generic(tile__,								\
+ 		 const struct xe_tile * : (const struct xe_device *)((tile__)->xe),	\
+-- 
+2.43.0
+

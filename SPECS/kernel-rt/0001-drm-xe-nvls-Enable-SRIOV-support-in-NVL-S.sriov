@@ -1,0 +1,27 @@
+From f665be9cb25d81206be776d16ac897a4e3ded0f9 Mon Sep 17 00:00:00 2001
+From: SyazwanHalim <mohd.syazwan.abdul.halim@intel.com>
+Date: Tue, 26 May 2026 15:13:43 +0800
+Subject: [PATCH 01/10] drm/xe/nvls: Enable SRIOV support in NVL-S
+
+added SRIOV support for NVL-S platform
+
+Signed-off-by: Zawawi, Muhammad Zul Husni <muhammad.zul.husni.zawawi@intel.com>
+---
+ drivers/gpu/drm/xe/xe_pci.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
+index 5c0b3224f20d..d108e622f96c 100644
+--- a/drivers/gpu/drm/xe/xe_pci.c
++++ b/drivers/gpu/drm/xe/xe_pci.c
+@@ -402,6 +402,7 @@ static const struct xe_device_desc nvls_desc = {
+ 	.dma_mask_size = 46,
+ 	.has_display = true,
+ 	.has_flat_ccs = 1,
++	.has_sriov = true,
+ 	.has_pre_prod_wa = 1,
+ 	.max_gt_per_tile = 2,
+ 	.require_force_probe = true,
+-- 
+2.43.0
+
