@@ -56,6 +56,11 @@ jobs:
           echo "Files to validate: '${changed_specs}'"
           echo "updated-specs=${changed_specs}" >> "$GITHUB_ENV"
 
+      # Install prerequisites and configure Go so that REBUILD_TOOLS=y can build
+      # the tools with the minimum required Go version (see toolkit/scripts/tools.mk).
+      - name: Prepare the build environment
+        run: sudo make -C toolkit install-prereqs-and-configure
+
       - name: Build the worker chroot
         if: ${{ env.updated-specs != '' }}
         run: sudo make -C toolkit -j$(nproc) chroot-tools REBUILD_TOOLS=y DAILY_BUILD_ID=lkg

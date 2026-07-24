@@ -6,9 +6,9 @@ name: Go Test Coverage
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - .github/workflows/go-test-coverage.yml
-      - '**.go'
+      #paths:
+      #- .github/workflows/go-test-coverage.yml
+      #- '**.go'
 
 permissions: read-all
 
@@ -21,15 +21,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-        #- name: Set up Go 1.x
-        # uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff    #v5
-        #with:
-        #go-version: '${{ env.EXPECTED_GO_VERSION }}'
-        #id: go
+      - name: Set up Go 1.x
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e    #v7
+        with:
+          go-version: '${{ env.EXPECTED_GO_VERSION }}'
+          id: go
 
-        #- name: Check active go version
-        #run: |
-        #go version && which go
+      - name: Check active go version
+        run: |
+          go version && which go
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
@@ -67,7 +67,7 @@ jobs:
       - name: Check for out of date go modules
         run: |
           pushd toolkit
-          sudo make go-mod-tidy
+          sudo --preserve-env=PATH make go-mod-tidy
           modchanges=$(git diff tools/go.mod)
           sumchanges=$(git diff tools/go.sum)
           if [ -n "$modchanges$sumchanges" ]; then
@@ -81,11 +81,11 @@ jobs:
       - name: Check for missing tests
         run: |
           pushd toolkit
-          sudo make go-test-coverage
-          noTestCount=$(sudo make go-test-coverage | grep -c "no test files")
+          sudo --preserve-env=PATH make go-test-coverage
+          noTestCount=$(sudo --preserve-env=PATH make go-test-coverage | grep -c "no test files")
           echo "$noTestCount"
           if [ "$noTestCount" -ne "0" ]; then
-            sudo  make go-test-coverage | grep "no test files"
+            sudo --preserve-env=PATH make go-test-coverage | grep "no test files"
             echo Missing "$noTestCount" Go Tests!
           fi
         shell: bash
@@ -93,7 +93,7 @@ jobs:
       - name: Evaluate test coverage
         run: |
           pushd toolkit
-          sudo make go-test-coverage
+          sudo --preserve-env=PATH make go-test-coverage
         shell: bash
 
       - name: Upload test coverage
@@ -105,5 +105,5 @@ jobs:
       - name: Ensure all tools build
         run: |
           pushd toolkit
-          sudo make go-tools REBUILD_TOOLS=y
+          sudo --preserve-env=PATH make go-tools REBUILD_TOOLS=y
         shell: bash
