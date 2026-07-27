@@ -1,0 +1,36 @@
+From 2396501675b1db9005202209cf6f6fed9acdc92b Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Wed, 25 Feb 2026 12:37:20 -0800
+Subject: [PATCH 31/43] drm/xe/xe3p_xpc: Drop stale MCR steering TODO comment
+
+Proper steering+termination for Xe3p_XPC NODE and BANK multicast ranges
+was added in commit 6d5511e56b2d ("drm/xe/xe3p_xpc: Add MCR steering for
+NODE and L3BANK ranges") but we forgot to remove the corresponding TODO
+comment at the top of the block.  Drop it now to avoid confusion.
+
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Shuicheng Lin <shuicheng.lin@intel.com>
+---
+ drivers/gpu/drm/xe/xe_gt_mcr.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/xe/xe_gt_mcr.c b/drivers/gpu/drm/xe/xe_gt_mcr.c
+index da8f6187f893..65907d78349b 100644
+--- a/drivers/gpu/drm/xe/xe_gt_mcr.c
++++ b/drivers/gpu/drm/xe/xe_gt_mcr.c
+@@ -535,12 +535,6 @@ void xe_gt_mcr_init_early(struct xe_gt *gt)
+ 		}
+ 	} else {
+ 		if (GRAPHICS_VERx100(xe) == 3511) {
+-			/*
+-			 * TODO: there are some ranges in bspec with missing
+-			 * termination: [0x00B000, 0x00B0FF] and
+-			 * [0x00D880, 0x00D8FF] (NODE); [0x00B100, 0x00B3FF]
+-			 * (L3BANK). Update them here once bspec is updated.
+-			 */
+ 			gt->steering[DSS].ranges = xe3p_xpc_xecore_steering_table;
+ 			gt->steering[GAM1].ranges = xe3p_xpc_gam_grp1_steering_table;
+ 			gt->steering[INSTANCE0].ranges = xe3p_xpc_instance0_steering_table;
+-- 
+2.43.0
+

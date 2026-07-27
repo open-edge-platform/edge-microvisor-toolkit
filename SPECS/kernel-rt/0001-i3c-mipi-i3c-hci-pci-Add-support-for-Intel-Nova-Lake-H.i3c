@@ -1,0 +1,29 @@
+From 413c21f01fc6c42956316ba5654dbc78e3224fc7 Mon Sep 17 00:00:00 2001
+From: Adrian Hunter <adrian.hunter@intel.com>
+Date: Mon, 9 Mar 2026 09:50:45 +0200
+Subject: [PATCH] i3c: mipi-i3c-hci-pci: Add support for Intel Nova Lake-H I3C
+
+Add I3C controller PCI IDs for Intel Nova Lake-H.
+
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
+ drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c b/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
+index 30302e4d08e2..22a5ba4ad746 100644
+--- a/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
++++ b/drivers/i3c/master/mipi-i3c-hci/mipi-i3c-hci-pci.c
+@@ -337,6 +337,9 @@ static const struct pci_device_id mipi_i3c_hci_pci_devices[] = {
+ 	/* Nova Lake-S */
+ 	{ PCI_VDEVICE(INTEL, 0x6e2c), (kernel_ulong_t)&intel_mi_1_info},
+ 	{ PCI_VDEVICE(INTEL, 0x6e2d), (kernel_ulong_t)&intel_mi_2_info},
++	/* Nova Lake-H */
++	{ PCI_VDEVICE(INTEL, 0xd37c), (kernel_ulong_t)&intel_mi_1_info},
++	{ PCI_VDEVICE(INTEL, 0xd36f), (kernel_ulong_t)&intel_mi_2_info},
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(pci, mipi_i3c_hci_pci_devices);
+-- 
+2.43.0
+

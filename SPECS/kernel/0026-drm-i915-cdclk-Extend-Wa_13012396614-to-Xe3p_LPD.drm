@@ -1,0 +1,31 @@
+From 371dc17ae3a91144299f6c291b76dd549cb076da Mon Sep 17 00:00:00 2001
+From: Gustavo Sousa <gustavo.sousa@intel.com>
+Date: Thu, 22 Jan 2026 09:37:07 -0300
+Subject: [PATCH 26/43] drm/i915/cdclk: Extend Wa_13012396614 to Xe3p_LPD
+
+Xe3p_LPD also needs Wa_13012396614.  Update the conditions for that
+workaround accordingly.
+
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+Reviewed-by: Mika Kahola <mika.kahola@intel.com>
+---
+ drivers/gpu/drm/i915/display/intel_display_wa.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_display_wa.c b/drivers/gpu/drm/i915/display/intel_display_wa.c
+index 581d943b9bdc..4ff690124b33 100644
+--- a/drivers/gpu/drm/i915/display/intel_display_wa.c
++++ b/drivers/gpu/drm/i915/display/intel_display_wa.c
+@@ -63,7 +63,8 @@ bool __intel_display_wa(struct intel_display *display, enum intel_display_wa wa,
+ {
+ 	switch (wa) {
+ 	case INTEL_DISPLAY_WA_13012396614:
+-		return DISPLAY_VERx100(display) == 3000;
++		return DISPLAY_VERx100(display) == 3000 ||
++			DISPLAY_VERx100(display) == 3500;
+ 	case INTEL_DISPLAY_WA_14011503117:
+ 		return DISPLAY_VER(display) == 13;
+ 	case INTEL_DISPLAY_WA_14025769978:
+-- 
+2.43.0
+

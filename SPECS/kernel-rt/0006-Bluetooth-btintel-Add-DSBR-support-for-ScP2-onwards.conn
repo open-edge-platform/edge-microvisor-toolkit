@@ -1,0 +1,55 @@
+From eb05f6dbcdd1e4d76d7420e3a74e34f3f4bf94ad Mon Sep 17 00:00:00 2001
+From: Kiran K <kiran.k@intel.com>
+Date: Sat, 28 Feb 2026 14:42:34 +0530
+Subject: [PATCH 06/18] Bluetooth: btintel: Add DSBR support for ScP2 onwards
+
+Add DSBR support for Scorpious Peak2 cores onwards.
+
+Refer commit eb9e749c0182 ("Bluetooth: btintel: Allow configuring drive
+strength of BRI") for details about DSBR.
+
+Signed-off-by: Kiran K <kiran.k@intel.com>
+Signed-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+---
+ drivers/bluetooth/btintel.c | 5 +++++
+ drivers/bluetooth/btintel.h | 1 +
+ 2 files changed, 6 insertions(+)
+
+diff --git a/drivers/bluetooth/btintel.c b/drivers/bluetooth/btintel.c
+index db6951b96d1c..77930bc225f5 100644
+--- a/drivers/bluetooth/btintel.c
++++ b/drivers/bluetooth/btintel.c
+@@ -2828,6 +2828,7 @@ static int btintel_set_dsbr(struct hci_dev *hdev, struct intel_version_tlv *ver)
+ 	 * 1. BlazarI or BlazarIW + B0 step product in IML image.
+ 	 * 2. Gale Peak2 or BlazarU in OP image.
+ 	 * 3. Scorpious Peak in IML image.
++	 * 4. Scorpious Peak2 onwards + PCIe transport in IML image.
+ 	 */
+ 
+ 	switch (hw_variant) {
+@@ -2848,6 +2849,10 @@ static int btintel_set_dsbr(struct hci_dev *hdev, struct intel_version_tlv *ver)
+ 			break;
+ 		return 0;
+ 	default:
++		/* Scorpius Peak2 onwards */
++		if (hw_variant >= BTINTEL_HWID_SCP2 && hdev->bus == HCI_PCI
++		    && ver->img_type == BTINTEL_IMG_IML)
++			break;
+ 		return 0;
+ 	}
+ 
+diff --git a/drivers/bluetooth/btintel.h b/drivers/bluetooth/btintel.h
+index b7ff183f8886..f16f852b83b8 100644
+--- a/drivers/bluetooth/btintel.h
++++ b/drivers/bluetooth/btintel.h
+@@ -74,6 +74,7 @@ struct intel_tlv {
+ #define BTINTEL_HWID_BZRI	0x1e	/* BlazarI - Lunar Lake */
+ #define BTINTEL_HWID_BZRU	0x1d	/* BlazarU - Meteor Lake */
+ #define BTINTEL_HWID_SCP	0x1f	/* Scorpius Peak - Panther Lake */
++#define BTINTEL_HWID_SCP2	0x20	/* Scorpius Peak2 - Nova Lake */
+ #define BTINTEL_HWID_BZRIW	0x22	/* BlazarIW - Wildcat Lake */
+ 
+ struct intel_version_tlv {
+-- 
+2.43.0
+

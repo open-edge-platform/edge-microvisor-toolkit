@@ -86,10 +86,10 @@ rm -rf gcc-13.2.0
 
 touch $LFS/logs/temptoolchain/status_gcc_pass1_complete
 
-KERNEL_VERSION="7.0.0"
+KERNEL_VERSION="7.0"
 echo Linux-${KERNEL_VERSION} API Headers
-tar xf mainline-preprod-v7.0-linux-260617T095128Z.tar.gz
-pushd mainline-tracking-mainline-preprod-v7.0-linux-260617T095128Z
+tar xf linux-7.0.tar.gz
+pushd linux-${KERNEL_VERSION}
 make mrproper
 make headers
 find usr/include -type f ! -name '*.h' -delete
@@ -121,7 +121,6 @@ echo "rootsbindir=/usr/sbin" > configparms
       --with-headers=$LFS/usr/include    \
       libc_cv_slibdir=/usr/lib           \
       --disable-werror
-
 make -j$(nproc)
 make DESTDIR=$LFS install
 # Fix a hard coded path to the executable loader in the ldd script:

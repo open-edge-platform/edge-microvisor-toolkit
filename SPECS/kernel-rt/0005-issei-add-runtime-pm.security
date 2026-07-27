@@ -1,0 +1,198 @@
+From 08a9ab1e56a7c0f11d6999cbbc3786d9e5e87726 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Thu, 26 Mar 2026 08:42:03 +0200
+Subject: [PATCH 5/7] issei: add runtime pm
+
+Add support for runtime power management.
+
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/issei/host_client.c |  4 ++++
+ drivers/misc/issei/hw_heci.c     | 21 ++++++++++++++++++---
+ drivers/misc/issei/main.c        | 12 ++++++++++++
+ drivers/misc/issei/pci_heci.c    | 18 ++++++++++++++++++
+ 4 files changed, 52 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/misc/issei/host_client.c b/drivers/misc/issei/host_client.c
+index 23257ebc155b..8584355d4258 100644
+--- a/drivers/misc/issei/host_client.c
++++ b/drivers/misc/issei/host_client.c
+@@ -6,6 +6,7 @@
+ #include <linux/fs.h>
+ #include <linux/list.h>
+ #include <linux/overflow.h>
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ #include <linux/types.h>
+ #include <linux/wait.h>
+@@ -72,6 +73,7 @@ static void __issei_cl_clean_all_wbuf(struct issei_device *idev, struct issei_ho
+ 		}
+ 	}
+ 	cl->write_in_progress = false;
++	pm_runtime_put_autosuspend(idev->parent);
+ 	/* synchronized under host client mutex */
+ 	if (waitqueue_active(&cl->write_wait))
+ 		wake_up_interruptible(&cl->write_wait);
+@@ -306,6 +308,7 @@ ssize_t issei_cl_write(struct issei_host_client *cl, const u8 *buf, size_t buf_s
+ 	list_add_tail(&wbuf->list, &idev->write_queue);
+ 	cl->write_in_progress = true;
+ 	cl_dbg(idev, cl, "Write queued %zu bytes\n", buf_size);
++	pm_runtime_get(idev->parent);
+ 
+ 	issei_poke_process_thread(idev);
+ 
+@@ -350,6 +353,7 @@ int issei_cl_write_from_queue(struct issei_device *idev)
+ 	if (ret >= 0)
+ 		idev->ops->irq_write_generate(idev);
+ 	cl->write_in_progress = false;
++	pm_runtime_put_autosuspend(idev->parent);
+ 	/* synchronized under host client mutex */
+ 	if (waitqueue_active(&cl->write_wait))
+ 		wake_up_interruptible(&cl->write_wait);
+diff --git a/drivers/misc/issei/hw_heci.c b/drivers/misc/issei/hw_heci.c
+index 35c55de5c67a..4b71c8636f46 100644
+--- a/drivers/misc/issei/hw_heci.c
++++ b/drivers/misc/issei/hw_heci.c
+@@ -8,6 +8,7 @@
+ #include <linux/err.h>
+ #include <linux/io.h>
+ #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+ #include <linux/sizes.h>
+ #include <linux/spinlock.h>
+ #include <linux/types.h>
+@@ -501,12 +502,20 @@ irqreturn_t issei_heci_irq_quick_handler(int irq, void *dev_id)
+ {
+ 	struct issei_device *idev = dev_id;
+ 	struct issei_heci_hw *hw = to_heci_hw(idev);
++	irqreturn_t ret;
++	int active;
+ 	u32 reg;
+ 
+-	reg = heci_hcsr_read(idev);
+-	if (!heci_irq_src(reg))
++	active = pm_runtime_get_if_active(idev->parent);
++	if (!active)
+ 		return IRQ_NONE;
+ 
++	reg = heci_hcsr_read(idev);
++	if (!heci_irq_src(reg)) {
++		ret = IRQ_NONE;
++		goto out;
++	}
++
+ 	scoped_guard(spinlock_irqsave, &hw->access_lock) {
+ 		reg = heci_hcsr_read(idev);
+ 		heci_irq_clear(idev, reg);
+@@ -519,7 +528,13 @@ irqreturn_t issei_heci_irq_quick_handler(int irq, void *dev_id)
+ 
+ 	issei_poke_process_thread(idev);
+ 
+-	return IRQ_HANDLED;
++	ret = IRQ_HANDLED;
++
++out:
++	if (active > 0)
++		pm_runtime_put_autosuspend(idev->parent);
++
++	return ret;
+ }
+ 
+ static const struct hw_heci_cfg hw_heci_pch_cfg = {
+diff --git a/drivers/misc/issei/main.c b/drivers/misc/issei/main.c
+index 5987fb340250..78447886bae8 100644
+--- a/drivers/misc/issei/main.c
++++ b/drivers/misc/issei/main.c
+@@ -7,6 +7,7 @@
+ #include <linux/export.h>
+ #include <linux/jiffies.h>
+ #include <linux/kthread.h>
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ #include <linux/wait.h>
+ 
+@@ -116,10 +117,13 @@ static int issei_process_thread(void *_dev)
+ 			idev->ops->irq_sync(idev);
+ 
+ 			if (!idev->power_down) {
++				if (!idev->reset_count)
++					pm_runtime_get_noresume(idev->parent);
+ 				idev->reset_count++;
+ 				if (idev->reset_count > ISSEI_MAX_CONSEC_RESET) {
+ 					dev_err(&idev->dev, "reset: reached maximal consecutive resets: disabling the device\n");
+ 					issei_rst_state_set(idev, ISSEI_RST_STATE_DISABLED);
++					pm_runtime_put_noidle(idev->parent);
+ 					break;
+ 				}
+ 			}
+@@ -189,11 +193,19 @@ static int issei_process_thread(void *_dev)
+ 			} else {
+ 				idev->reset_count = 0;
+ 				idev->rst_state = ISSEI_RST_STATE_DONE;
++				pm_runtime_put_autosuspend(idev->parent);
+ 				dev_dbg(&idev->dev, "Reset finished successfully\n");
+ 			}
+ 			break;
+ 
+ 		case ISSEI_RST_STATE_DONE:
++			PM_RUNTIME_ACQUIRE_AUTOSUSPEND(idev->parent, pm);
++			ret = PM_RUNTIME_ACQUIRE_ERR(&pm);
++			if (ret) {
++				dev_err(&idev->dev, "Failed to acquire pm %d", ret);
++				break;
++			}
++
+ 			ret = issei_process_read_msg(idev);
+ 			if (ret != 0 && ret != -ENODATA)
+ 				break;
+diff --git a/drivers/misc/issei/pci_heci.c b/drivers/misc/issei/pci_heci.c
+index 86c567a4bf0f..57cabaff347c 100644
+--- a/drivers/misc/issei/pci_heci.c
++++ b/drivers/misc/issei/pci_heci.c
+@@ -8,11 +8,14 @@
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include <linux/pm.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "cdev.h"
+ #include "hw_heci.h"
+ #include "hw_heci_regs.h"
+ 
++#define HW_HECI_RPM_TIMEOUT_MSEC 60000
++
+ static int issei_heci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -70,6 +73,18 @@ static int issei_heci_probe(struct pci_dev *pdev, const struct pci_device_id *en
+ 		goto free_irq;
+ 	}
+ 
++	pm_runtime_use_autosuspend(dev);
++	pm_runtime_set_autosuspend_delay(dev, HW_HECI_RPM_TIMEOUT_MSEC);
++
++	/*
++	 * ISSEI requires to resume from runtime suspend mode
++	 * in order to perform link reset flow upon system suspend.
++	 */
++	dev_pm_set_driver_flags(dev, DPM_FLAG_NO_DIRECT_COMPLETE);
++
++	pm_runtime_put_noidle(&pdev->dev);
++	pm_runtime_allow(dev);
++
+ 	return 0;
+ 
+ free_irq:
+@@ -87,6 +102,9 @@ static void issei_heci_shutdown(struct pci_dev *pdev)
+ 	struct issei_device *idev = pci_get_drvdata(pdev);
+ 	struct issei_heci_hw *hw = to_heci_hw(idev);
+ 
++	pm_runtime_forbid(&pdev->dev);
++	pm_runtime_get_noresume(&pdev->dev);
++
+ 	issei_stop(idev);
+ 
+ 	idev->ops->irq_disable(idev);
+-- 
+2.43.0
+

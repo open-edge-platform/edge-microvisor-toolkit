@@ -1,0 +1,86 @@
+From 15d5ac3416befb5fac0e0d3b1130534499990ab4 Mon Sep 17 00:00:00 2001
+From: "Khai Wen, Ng" <khai.wen.ng@intel.com>
+Date: Fri, 3 Apr 2026 11:41:01 +0800
+Subject: [PATCH 26/65] media: i2c: maxim-serdes: Retrieve
+ pipe-stream-autoselect from asl
+
+Pipe-stream-autoselect was set to true for max96724. However, in the case
+of concurrent streaming multiple streams from single serializer, select all
+streams mode will not work, and need to fallback to legacy max96712 mode.
+
+Add the property into ASL fwnode to specify if the legacy max96712 mode is
+required.
+
+Signed-off-by: Khai Wen, Ng <khai.wen.ng@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max96724.c | 13 ++++++++++++-
+ drivers/media/i2c/maxim-serdes/max_des.c  |  4 ++++
+ drivers/media/i2c/maxim-serdes/max_des.h  |  1 +
+ 3 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max96724.c b/drivers/media/i2c/maxim-serdes/max96724.c
+index d5380b1a3cda..625c79560d63 100644
+--- a/drivers/media/i2c/maxim-serdes/max96724.c
++++ b/drivers/media/i2c/maxim-serdes/max96724.c
+@@ -456,12 +456,21 @@ static int max96724_init(struct max_des *des)
+ 		}
+ 	}
+ 
+-	if (priv->info->supports_pipe_stream_autoselect) {
++	if (des->pipe_stream_autoselect) {
+ 		/* Enable stream autoselect. */
+ 		ret = regmap_set_bits(priv->regmap, MAX96724_VIDEO_PIPE_EN,
+ 				      MAX96724_VIDEO_PIPE_EN_STREAM_SEL_ALL);
+ 		if (ret)
+ 			return ret;
++	} else {
++		/*
++		 * Disable stream autoselect so each pipe only receives
++		 * the stream matching its configured stream_id.
++		 */
++		ret = regmap_clear_bits(priv->regmap, MAX96724_VIDEO_PIPE_EN,
++					MAX96724_VIDEO_PIPE_EN_STREAM_SEL_ALL);
++		if (ret)
++			return ret;
+ 	}
+ 
+ 	/* Set PHY mode. */
+@@ -1142,6 +1151,8 @@ static int max96724_probe(struct i2c_client *client)
+ 	ops->set_pipe_tunnel_phy = priv->info->set_pipe_tunnel_phy;
+ 	priv->des.ops = ops;
+ 
++	priv->des.pipe_stream_autoselect = priv->info->supports_pipe_stream_autoselect;
++
+ 	ret = max96724_reset(priv);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/media/i2c/maxim-serdes/max_des.c b/drivers/media/i2c/maxim-serdes/max_des.c
+index 9f449b78f3da..56eeb0b79d4e 100644
+--- a/drivers/media/i2c/maxim-serdes/max_des.c
++++ b/drivers/media/i2c/maxim-serdes/max_des.c
+@@ -3090,6 +3090,10 @@ static int max_des_parse_dt(struct max_des_priv *priv)
+ 	struct max_des_phy *phy;
+ 	unsigned int i;
+ 	int ret;
++	u32 val;
++
++	if (!fwnode_property_read_u32(fwnode, "pipe-stream-autoselect", &val))
++		des->pipe_stream_autoselect = !!val;
+ 
+ 	for (i = 0; i < des->ops->num_phys; i++) {
+ 		phy = &des->phys[i];
+diff --git a/drivers/media/i2c/maxim-serdes/max_des.h b/drivers/media/i2c/maxim-serdes/max_des.h
+index dd5d37575710..f160aa150dd2 100644
+--- a/drivers/media/i2c/maxim-serdes/max_des.h
++++ b/drivers/media/i2c/maxim-serdes/max_des.h
+@@ -142,6 +142,7 @@ struct max_des {
+ 	unsigned int phys_config;
+ 	enum max_serdes_gmsl_mode mode;
+ 	bool active;
++	bool pipe_stream_autoselect;
+ };
+ 
+ int max_des_probe(struct i2c_client *client, struct max_des *des);
+-- 
+2.43.0
+

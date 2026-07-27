@@ -1,0 +1,132 @@
+From 3a46e458738731ee3b5ccbcc5943e93770de3902 Mon Sep 17 00:00:00 2001
+From: Szymon Durawa <szymon.durawa@linux.intel.com>
+Date: Wed, 13 May 2026 14:21:58 +0000
+Subject: [PATCH 1/9] PCI: vmd: Add vmd_bus_enumeration() helper function
+
+Move the vmd bus enumeration code to a new helper vmd_bus_enumeration().
+No functional changes.
+
+Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
+---
+ drivers/pci/controller/vmd.c | 89 ++++++++++++++++++++----------------
+ 1 file changed, 49 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index d4ae250d4bc6..070b247b3fbb 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -771,6 +771,54 @@ static int vmd_pm_enable_quirk(struct pci_dev *pdev, void *userdata)
+ 	return 0;
+ }
+ 
++static void vmd_bus_enumeration(struct pci_bus *bus, unsigned long features)
++{
++	struct pci_bus *child;
++	struct pci_dev *dev;
++	int ret;
++
++	vmd_acpi_begin();
++
++	pci_scan_child_bus(bus);
++	vmd_domain_reset(vmd_from_bus(bus));
++
++	/*
++	 * When Intel VMD is enabled, the OS does not discover the Root Ports
++	 * owned by Intel VMD within the MMCFG space. pci_reset_bus() applies
++	 * a reset to the parent of the PCI device supplied as argument. This
++	 * is why we pass a child device, so the reset can be triggered at
++	 * the Intel bridge level and propagated to all the children in the
++	 * hierarchy.
++	 */
++	list_for_each_entry(child, &bus->children, node) {
++		if (!list_empty(&child->devices)) {
++			dev = list_first_entry(&child->devices, struct pci_dev,
++					       bus_list);
++			ret = pci_reset_bus(dev);
++			if (ret)
++				pci_warn(dev, "can't reset device: %d\n", ret);
++
++			break;
++		}
++	}
++
++	pci_assign_unassigned_bus_resources(bus);
++
++	pci_walk_bus(bus, vmd_pm_enable_quirk, &features);
++
++	/*
++	 * VMD root buses are virtual and don't return true on pci_is_pcie()
++	 * and will fail pcie_bus_configure_settings() early. It can instead be
++	 * run on each of the real root ports.
++	 */
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
++
++	pci_bus_add_devices(bus);
++
++	vmd_acpi_end();
++}
++
+ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ {
+ 	struct pci_sysdata *sd = &vmd->sysdata;
+@@ -780,8 +828,6 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	LIST_HEAD(resources);
+ 	resource_size_t offset[2] = {0};
+ 	resource_size_t membar2_offset = 0x2000;
+-	struct pci_bus *child;
+-	struct pci_dev *dev;
+ 	int ret;
+ 
+ 	/*
+@@ -923,45 +969,8 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
+ 			       "domain"), "Can't create symlink to domain\n");
+ 
+-	vmd_acpi_begin();
+-
+-	pci_scan_child_bus(vmd->bus);
+-	vmd_domain_reset(vmd);
++	vmd_bus_enumeration(vmd->bus, features);
+ 
+-	/* When Intel VMD is enabled, the OS does not discover the Root Ports
+-	 * owned by Intel VMD within the MMCFG space. pci_reset_bus() applies
+-	 * a reset to the parent of the PCI device supplied as argument. This
+-	 * is why we pass a child device, so the reset can be triggered at
+-	 * the Intel bridge level and propagated to all the children in the
+-	 * hierarchy.
+-	 */
+-	list_for_each_entry(child, &vmd->bus->children, node) {
+-		if (!list_empty(&child->devices)) {
+-			dev = list_first_entry(&child->devices,
+-					       struct pci_dev, bus_list);
+-			ret = pci_reset_bus(dev);
+-			if (ret)
+-				pci_warn(dev, "can't reset device: %d\n", ret);
+-
+-			break;
+-		}
+-	}
+-
+-	pci_assign_unassigned_bus_resources(vmd->bus);
+-
+-	pci_walk_bus(vmd->bus, vmd_pm_enable_quirk, &features);
+-
+-	/*
+-	 * VMD root buses are virtual and don't return true on pci_is_pcie()
+-	 * and will fail pcie_bus_configure_settings() early. It can instead be
+-	 * run on each of the real root ports.
+-	 */
+-	list_for_each_entry(child, &vmd->bus->children, node)
+-		pcie_bus_configure_settings(child);
+-
+-	pci_bus_add_devices(vmd->bus);
+-
+-	vmd_acpi_end();
+ 	return 0;
+ }
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,50 @@
+From a89f9ea3c859163445cbc811880ecdc17b85ebb3 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Tue, 24 Feb 2026 15:50:56 -0800
+Subject: [PATCH 30/43] drm/xe/tuning: Apply windower hardware filtering
+ setting on Xe3 and Xe3p
+
+A recent bspec tuning guide update asks us to program
+COMMON_SLICE_CHICKEN4[5] on Xe3 and Xe3p platforms.  Add this setting to
+our LRC tuning RTP table so that the setting will become part of each
+context's LRC.
+
+Bspec: 72161, 55902
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Shuicheng Lin <shuicheng.lin@intel.com>
+---
+ drivers/gpu/drm/xe/regs/xe_gt_regs.h | 1 +
+ drivers/gpu/drm/xe/xe_tuning.c       | 5 +++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/regs/xe_gt_regs.h b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+index 48c25c37e6d4..532bfab13f9f 100644
+--- a/drivers/gpu/drm/xe/regs/xe_gt_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+@@ -177,6 +177,7 @@
+ #define COMMON_SLICE_CHICKEN4			XE_REG(0x7300, XE_REG_OPTION_MASKED)
+ #define   SBE_PUSH_CONSTANT_BEHIND_FIX_ENABLE	REG_BIT(12)
+ #define   DISABLE_TDC_LOAD_BALANCING_CALC	REG_BIT(6)
++#define   HW_FILTERING				REG_BIT(5)
+ 
+ #define COMMON_SLICE_CHICKEN3				XE_REG(0x7304, XE_REG_OPTION_MASKED)
+ #define XEHP_COMMON_SLICE_CHICKEN3			XE_REG_MCR(0x7304, XE_REG_OPTION_MASKED)
+diff --git a/drivers/gpu/drm/xe/xe_tuning.c b/drivers/gpu/drm/xe/xe_tuning.c
+index 316f5e2b2e48..9a3ddaf1a072 100644
+--- a/drivers/gpu/drm/xe/xe_tuning.c
++++ b/drivers/gpu/drm/xe/xe_tuning.c
+@@ -126,6 +126,11 @@ static const struct xe_rtp_entry_sr engine_tunings[] = {
+ };
+ 
+ static const struct xe_rtp_entry_sr lrc_tunings[] = {
++	{ XE_RTP_NAME("Tuning: Windower HW Filtering"),
++	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(3000, 3599), ENGINE_CLASS(RENDER)),
++	  XE_RTP_ACTIONS(SET(COMMON_SLICE_CHICKEN4, HW_FILTERING))
++	},
++
+ 	/* DG2 */
+ 
+ 	{ XE_RTP_NAME("Tuning: L3 cache"),
+-- 
+2.43.0
+

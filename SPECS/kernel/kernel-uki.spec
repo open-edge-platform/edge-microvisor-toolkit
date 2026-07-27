@@ -71,7 +71,7 @@ cp %{buildroot}/boot/vmlinuz-uki-%{kernelver}.efi %{buildroot}/boot/efi/EFI/Linu
 
 %changelog
 * Mon Jul 6 2026 Lishan Liu <lishan.liu@intel.com> - 7.0.0-1
-- Update kernel to mainline-preprod-v7.0-linux-260617T095128Z
+- Update kernel to mainline-preprod-v7.0-x86common-dev-emt-260713T072449Z
 
 * Fri May 22 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.23-1
 - Update kernel to 6.18.23-1

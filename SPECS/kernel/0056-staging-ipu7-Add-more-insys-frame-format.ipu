@@ -1,0 +1,33 @@
+From 086d0adb8f3b0bde18ba9219bf33f7de90be6544 Mon Sep 17 00:00:00 2001
+From: Hao Yao <hao.yao@intel.com>
+Date: Fri, 27 Mar 2026 18:04:38 +0800
+Subject: [PATCH 56/65] staging: ipu7: Add more insys frame format
+
+Signed-off-by: Hao Yao <hao.yao@intel.com>
+---
+ drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h b/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
+index 9a4c63b68044..db1bcfd639b2 100644
+--- a/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
++++ b/drivers/staging/media/ipu7/abi/ipu7_fw_isys_abi.h
+@@ -125,6 +125,15 @@ enum ipu7_insys_frame_format_type {
+ 	IPU_INSYS_FRAME_FORMAT_ARGB888 = 31,
+ 	IPU_INSYS_FRAME_FORMAT_BGRA888 = 32,
+ 	IPU_INSYS_FRAME_FORMAT_ABGR888 = 33,
++	IPU_INSYS_FRAME_FORMAT_RGB888 = 34,
++	IPU_INSYS_FRAME_FORMAT_YUV420_LEGACY = 35,
++	IPU_INSYS_FRAME_FORMAT_RAW6 = 36,
++	IPU_INSYS_FRAME_FORMAT_RAW7 = 37,
++	IPU_INSYS_FRAME_FORMAT_RGB444 = 38,
++	IPU_INSYS_FRAME_FORMAT_RGB666 = 39,
++	IPU_INSYS_FRAME_FORMAT_RAW20 = 40,
++	IPU_INSYS_FRAME_FORMAT_P010 = 41,
++	IPU_INSYS_FRAME_FORMAT_RGB555 = 42,
+ 	N_IPU_INSYS_FRAME_FORMAT
+ };
+ 
+-- 
+2.43.0
+

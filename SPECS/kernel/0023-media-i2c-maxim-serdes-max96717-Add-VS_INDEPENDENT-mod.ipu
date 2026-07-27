@@ -1,0 +1,119 @@
+From 6011d419716957ba45577720ab47ab2060e340e4 Mon Sep 17 00:00:00 2001
+From: "Khai Wen, Ng" <khai.wen.ng@intel.com>
+Date: Mon, 30 Mar 2026 11:03:26 +0800
+Subject: [PATCH 23/65] media: i2c: maxim-serdes: max96717: Add VS_INDEPENDENT
+ mode support
+
+MAX9295a supports VS INDEPENDENT mode where there are multiple streams
+with different Vertical Sync signal is sent from the sensor.
+
+Signed-off-by: Khai Wen, Ng <khai.wen.ng@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max96717.c | 17 +++++++++++++++++
+ drivers/media/i2c/maxim-serdes/max_ser.c  |  6 ++++++
+ drivers/media/i2c/maxim-serdes/max_ser.h  |  2 ++
+ 3 files changed, 25 insertions(+)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max96717.c b/drivers/media/i2c/maxim-serdes/max96717.c
+index 364ed0d398b3..5d9e39a75981 100644
+--- a/drivers/media/i2c/maxim-serdes/max96717.c
++++ b/drivers/media/i2c/maxim-serdes/max96717.c
+@@ -136,6 +136,9 @@
+ #define MAX96717_MEM_DT_SEL			GENMASK(5, 0)
+ #define MAX96717_MEM_DT_EN			BIT(6)
+ 
++#define MAX96717_FRONTTOP_13_VS_IND 0x315
++#define MAX96717_FRONTTOP_13_VS_IND_EN	BIT(7)
++
+ #define MAX96717_FRONTTOP_20(p)			(0x31c + (p) * 0x1)
+ #define MAX96717_FRONTTOP_20_SOFT_BPP_EN	BIT(5)
+ #define MAX96717_FRONTTOP_20_SOFT_BPP		GENMASK(4, 0)
+@@ -230,6 +233,7 @@ struct max96717_chip_info {
+ 	unsigned int pipe_hw_ids[MAX96717_PIPES_NUM];
+ 	unsigned int num_phys;
+ 	unsigned int phy_hw_ids[MAX96717_PHYS_NUM];
++	bool vs_independent;
+ };
+ 
+ #define ser_to_priv(_ser) \
+@@ -1095,6 +1099,16 @@ static int max96717_set_pipe_phy(struct max_ser *ser, struct max_ser_pipe *pipe,
+ 				  phy_id == 1);
+ }
+ 
++static int max96717_set_vs_independent(struct max_ser *ser)
++{
++	struct max96717_priv *priv = ser_to_priv(ser);
++	if (!priv->info->vs_independent)
++		return 0;
++
++	return regmap_assign_bits(priv->regmap, MAX96717_FRONTTOP_13_VS_IND,
++				  MAX96717_FRONTTOP_13_VS_IND_EN, priv->info->vs_independent);
++}
++
+ static int max96717_set_pipe_mode(struct max_ser *ser,
+ 				  struct max_ser_pipe *pipe,
+ 				  struct max_ser_pipe_mode *mode)
+@@ -1398,6 +1412,7 @@ static const struct max_ser_ops max96717_ops = {
+ 	.set_pipe_mode = max96717_set_pipe_mode,
+ 	.set_pipe_stream_id = max96717_set_pipe_stream_id,
+ 	.set_pipe_phy = max96717_set_pipe_phy,
++	.set_vs_independent = max96717_set_vs_independent,
+ };
+ 
+ struct max96717_pll_predef_freq {
+@@ -1648,6 +1663,7 @@ static int max96717_probe(struct i2c_client *client)
+ 	ops->num_pipes = priv->info->num_pipes;
+ 	ops->num_dts_per_pipe = priv->info->num_dts_per_pipe;
+ 	ops->num_phys = priv->info->num_phys;
++	ops->vs_independent = priv->info->vs_independent;
+ 	priv->ser.ops = ops;
+ 
+ 	ret = max96717_wait_for_device(priv);
+@@ -1679,6 +1695,7 @@ static const struct max96717_chip_info max9295a_info = {
+ 	.pipe_hw_ids = { 0, 1, 2, 3 },
+ 	.num_phys = 1,
+ 	.phy_hw_ids = { 1 },
++	.vs_independent = true,
+ };
+ 
+ static const struct max96717_chip_info max96717_info = {
+diff --git a/drivers/media/i2c/maxim-serdes/max_ser.c b/drivers/media/i2c/maxim-serdes/max_ser.c
+index e1e662f9982c..357f1ef9273a 100644
+--- a/drivers/media/i2c/maxim-serdes/max_ser.c
++++ b/drivers/media/i2c/maxim-serdes/max_ser.c
+@@ -1057,6 +1057,12 @@ static int max_ser_update_pipe(struct max_ser_priv *priv,
+ 	if (ret)
+ 		goto err_revert_mode;
+ 
++	if (ser->ops->vs_independent) {
++		ret = ser->ops->set_vs_independent(ser);
++		if (ret)
++			goto err_revert_mode;
++	}
++
+ 	pipe->vcs = vcs;
+ 	pipe->mode = mode;
+ 
+diff --git a/drivers/media/i2c/maxim-serdes/max_ser.h b/drivers/media/i2c/maxim-serdes/max_ser.h
+index a9365be5e62d..c20fd2942a85 100644
+--- a/drivers/media/i2c/maxim-serdes/max_ser.h
++++ b/drivers/media/i2c/maxim-serdes/max_ser.h
+@@ -60,6 +60,7 @@ struct max_ser_ops {
+ 	unsigned int num_phys;
+ 	unsigned int num_i2c_xlates;
+ 	unsigned int num_vc_remaps;
++	bool vs_independent;
+ 
+ 	struct max_serdes_phys_configs phys_configs;
+ 	struct max_serdes_tpg_entries tpg_entries;
+@@ -99,6 +100,7 @@ struct max_ser_ops {
+ 	unsigned int (*get_pipe_stream_id)(struct max_ser *ser, struct max_ser_pipe *pipe);
+ 	int (*set_pipe_phy)(struct max_ser *ser, struct max_ser_pipe *pipe,
+ 			    struct max_ser_phy *phy);
++	int (*set_vs_independent)(struct max_ser *ser);
+ };
+ 
+ struct max_ser_priv;
+-- 
+2.43.0
+

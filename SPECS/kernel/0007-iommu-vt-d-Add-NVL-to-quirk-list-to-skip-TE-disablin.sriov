@@ -1,0 +1,41 @@
+From f61715fc977cdf737366b45dac867f64e83c7fe0 Mon Sep 17 00:00:00 2001
+From: SyazwanHalim <mohd.syazwan.abdul.halim@intel.com>
+Date: Thu, 30 Apr 2026 16:33:07 +0800
+Subject: [PATCH 07/10] iommu/vt-d: Add NVL to quirk list to skip TE disabling
+
+The VT-d spec requires (10.4.4 Global Command Register, TE field) that:
+
+Hardware implementations supporting DMA draining must drain any in-flight
+DMA read/write requests queued within the Root-Complex before switching
+address translation on or off and reflecting the status of the command
+through the TES field in the Global Status register.
+
+Unfortunately, some integrated graphic devices fail to do so after some
+kind of power state transition. As the result, the system might stuck in
+iommu_disable_translation(), waiting for the completion of TE transition.
+
+Add NVL to the quirk list for those devices and skips TE disabling if the
+quirk hits.
+
+Signed-off-by: Abdul Halim, Mohd Syazwan <mohd.syazwan.abdul.halim@intel.com>
+---
+ drivers/iommu/intel/iommu.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index ef7613b177b9..651b6142c3db 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -4035,7 +4035,8 @@ static void quirk_igfx_skip_te_disable(struct pci_dev *dev)
+ 	ver = (dev->device >> 8) & 0xff;
+ 	if (ver != 0x45 && ver != 0x46 && ver != 0x4c &&
+ 	    ver != 0x4e && ver != 0x8a && ver != 0x98 &&
+-	    ver != 0x9a && ver != 0xa7 && ver != 0x7d)
++	    ver != 0x9a && ver != 0xa7 && ver != 0x7d &&
++	    ver != 0xd7)
+ 		return;
+ 
+ 	if (risky_device(dev))
+-- 
+2.43.0
+

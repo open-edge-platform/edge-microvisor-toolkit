@@ -1,0 +1,46 @@
+From 22d6578826bda8f60839c4afd853956f08076a7d Mon Sep 17 00:00:00 2001
+From: Khai Wen Ng <khai.wen.ng@intel.com>
+Date: Thu, 11 Sep 2025 04:10:27 +0800
+Subject: [PATCH 12/65] media: i2c: max9296a: Add ACPI ID
+
+Add ACPI device ID INTC1137 to enable device enumeration on ACPI systems.
+The ACPI ID is mapped to the existing max9296a_info chip
+
+Note: INTC1137 is an interim Intel-allocated ID. It is
+recommended that Analog Devices Inc allocate a vendor-specific
+ACPI HID (ADIxxxx) for production systems.
+
+Signed-off-by: Khai Wen Ng <khai.wen.ng@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max9296a.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max9296a.c b/drivers/media/i2c/maxim-serdes/max9296a.c
+index 9545b1f774ce..af0242a733ae 100644
+--- a/drivers/media/i2c/maxim-serdes/max9296a.c
++++ b/drivers/media/i2c/maxim-serdes/max9296a.c
+@@ -1317,6 +1317,12 @@ static const struct max9296a_chip_info max96792a_info = {
+ 	.phy_hw_ids = { 1, 2 },
+ };
+ 
++static const struct acpi_device_id max9296a_acpi_ids[] = {
++	{ "INTC1137", (kernel_ulong_t)&max9296a_info },
++	{}
++};
++MODULE_DEVICE_TABLE(acpi, max9296a_acpi_ids);
++
+ static const struct of_device_id max9296a_of_table[] = {
+ 	{ .compatible = "maxim,max9296a", .data = &max9296a_info },
+ 	{ .compatible = "maxim,max96714", .data = &max96714_info },
+@@ -1332,6 +1338,7 @@ static struct i2c_driver max9296a_i2c_driver = {
+ 	.driver	= {
+ 		.name = "max9296a",
+ 		.of_match_table	= max9296a_of_table,
++		.acpi_match_table = max9296a_acpi_ids,
+ 	},
+ 	.probe = max9296a_probe,
+ 	.remove = max9296a_remove,
+-- 
+2.43.0
+

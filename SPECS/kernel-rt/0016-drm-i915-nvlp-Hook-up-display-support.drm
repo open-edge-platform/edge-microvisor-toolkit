@@ -1,0 +1,31 @@
+From 12d0ae0bb02f7923449d4efcc88356812f0cfaeb Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 6 Feb 2026 15:36:10 -0300
+Subject: [PATCH 16/43] drm/i915/nvlp: Hook up display support
+
+Although NVL-S and NVL-P are quite different on the GT side, they use
+identical Xe3p_LPD display IP and should take all the same codepaths.
+
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Suraj Kandpal <suraj.kandpal@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+Acked-by: Jani Nikula <jani.nikula@intel.com>
+---
+ drivers/gpu/drm/i915/display/intel_display_device.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/i915/display/intel_display_device.c b/drivers/gpu/drm/i915/display/intel_display_device.c
+index 01e0ae01fc50..c32d65727642 100644
+--- a/drivers/gpu/drm/i915/display/intel_display_device.c
++++ b/drivers/gpu/drm/i915/display/intel_display_device.c
+@@ -1500,6 +1500,7 @@ static const struct {
+ 	INTEL_PTL_IDS(INTEL_DISPLAY_DEVICE, &ptl_desc),
+ 	INTEL_WCL_IDS(INTEL_DISPLAY_DEVICE, &ptl_desc),
+ 	INTEL_NVLS_IDS(INTEL_DISPLAY_DEVICE, &nvl_desc),
++	INTEL_NVLP_IDS(INTEL_DISPLAY_DEVICE, &nvl_desc),
+ };
+ 
+ static const struct {
+-- 
+2.43.0
+

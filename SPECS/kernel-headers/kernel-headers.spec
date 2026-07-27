@@ -19,8 +19,8 @@ License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
-URL:            https://github.com/intel/mainline-tracking
-Source0:        https://github.com/intel/mainline-tracking/archive/refs/tags/mainline-preprod-v7.0-linux-260617T095128Z.tar.gz
+URL:            https://www.kernel.org/pub/linux/kernel
+Source0:        https://www.kernel.org/pub/linux/kernel/v7.x/linux-7.0.tar.gz
 # Historical name shipped by other distros
 Provides:       glibc-kernheaders = %{version}-%{release}
 BuildArch:      noarch
@@ -41,7 +41,7 @@ cross-glibc package.
 %endif
 
 %prep
-%setup -q -n mainline-tracking-mainline-preprod-v7.0-linux-260617T095128Z
+%setup -q -n linux-7.0
 
 %build
 make mrproper
@@ -77,7 +77,7 @@ done
 
 %changelog
 * Mon Jul 6 2026 Lishan Liu <lishan.liu@intel.com> - 7.0.0-1
-- Update kernel to mainline-preprod-v7.0-linux-260617T095128Z
+- Update kernel to mainline-preprod-v7.0-x86common-dev-emt-260713T072449Z
 
 * Fri May 22 2026 Lishan Liu <lishan.liu@intel.com> - 6.18.23-1
 - Update kernel to 6.18.23-1

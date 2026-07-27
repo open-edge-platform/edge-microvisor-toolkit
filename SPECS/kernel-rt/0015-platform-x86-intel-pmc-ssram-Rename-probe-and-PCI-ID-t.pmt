@@ -1,0 +1,68 @@
+From af6d13170659bc2d9f2362f759e86a098aa9e7e0 Mon Sep 17 00:00:00 2001
+From: "David E. Box" <david.e.box@linux.intel.com>
+Date: Thu, 12 Mar 2026 18:51:54 -0700
+Subject: [PATCH 15/22] platform/x86/intel/pmc/ssram: Rename probe and PCI ID
+ table for consistency
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Rename intel_pmc_ssram_telemetry_probe() to pmc_ssram_telemetry_probe() and
+intel_pmc_ssram_telemetry_pci_ids[] to pmc_ssram_telemetry_pci_ids[],
+updating the MODULE_DEVICE_TABLE() and pci_driver wiring accordingly.
+
+This aligns the symbol names with the driver filename and module name,
+reduces redundant intel_ prefixes, and improves readability. No functional
+behavior changes are intended.
+
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/platform/x86/intel/pmc/ssram_telemetry.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/platform/x86/intel/pmc/ssram_telemetry.c b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+index 6f6e83e70fc5..1deb4d71da3f 100644
+--- a/drivers/platform/x86/intel/pmc/ssram_telemetry.c
++++ b/drivers/platform/x86/intel/pmc/ssram_telemetry.c
+@@ -149,7 +149,7 @@ int pmc_ssram_telemetry_get_pmc_info(unsigned int pmc_idx,
+ }
+ EXPORT_SYMBOL_GPL(pmc_ssram_telemetry_get_pmc_info);
+ 
+-static int intel_pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_device_id *id)
++static int pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct pci_device_id *id)
+ {
+ 	int ret;
+ 
+@@ -183,7 +183,7 @@ static int intel_pmc_ssram_telemetry_probe(struct pci_dev *pcidev, const struct
+ 	return ret;
+ }
+ 
+-static const struct pci_device_id intel_pmc_ssram_telemetry_pci_ids[] = {
++static const struct pci_device_id pmc_ssram_telemetry_pci_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_MTL_SOCM) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_ARL_SOCS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_ARL_SOCM) },
+@@ -193,14 +193,14 @@ static const struct pci_device_id intel_pmc_ssram_telemetry_pci_ids[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PMC_DEVID_WCL_PCDN) },
+ 	{ }
+ };
+-MODULE_DEVICE_TABLE(pci, intel_pmc_ssram_telemetry_pci_ids);
++MODULE_DEVICE_TABLE(pci, pmc_ssram_telemetry_pci_ids);
+ 
+-static struct pci_driver intel_pmc_ssram_telemetry_driver = {
++static struct pci_driver pmc_ssram_telemetry_driver = {
+ 	.name = "intel_pmc_ssram_telemetry",
+-	.id_table = intel_pmc_ssram_telemetry_pci_ids,
+-	.probe = intel_pmc_ssram_telemetry_probe,
++	.id_table = pmc_ssram_telemetry_pci_ids,
++	.probe = pmc_ssram_telemetry_probe,
+ };
+-module_pci_driver(intel_pmc_ssram_telemetry_driver);
++module_pci_driver(pmc_ssram_telemetry_driver);
+ 
+ MODULE_IMPORT_NS("INTEL_VSEC");
+ MODULE_AUTHOR("Xi Pardee <xi.pardee@intel.com>");
+-- 
+2.43.0
+

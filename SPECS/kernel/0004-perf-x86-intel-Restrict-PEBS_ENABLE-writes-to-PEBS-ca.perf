@@ -1,0 +1,78 @@
+From a0969e011687e11821238d5f4155a80ce0d97071 Mon Sep 17 00:00:00 2001
+From: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Date: Tue, 4 Nov 2025 13:49:07 +0800
+Subject: [PATCH 04/39] perf/x86/intel: Restrict PEBS_ENABLE writes to
+ PEBS-capable counters
+
+Before the introduction of extended PEBS, PEBS supported only
+general-purpose (GP) counters. In a virtual machine (VM) environment,
+the PEBS_BASELINE bit in PERF_CAPABILITIES may not be set, but the PEBS
+format could be indicated as 4 or higher. In such cases, PEBS events
+might be scheduled to fixed counters, and writing the corresponding bits
+into the PEBS_ENABLE MSR could cause a #GP fault.
+
+To prevent writing unsupported bits into the PEBS_ENABLE MSR, ensure
+cpuc->pebs_enabled aligns with x86_pmu.pebs_capable and restrict the
+writes to only PEBS-capable counter bits.
+
+Signed-off-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+---
+ arch/x86/events/intel/core.c |  6 ++++--
+ arch/x86/events/intel/ds.c   | 11 +++++++----
+ 2 files changed, 11 insertions(+), 6 deletions(-)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 4b042d71104f..17c53bbfc08a 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -3554,8 +3554,10 @@ static int handle_pmi_common(struct pt_regs *regs, u64 status)
+ 		 * cpuc->enabled has been forced to 0 in PMI.
+ 		 * Update the MSR if pebs_enabled is changed.
+ 		 */
+-		if (pebs_enabled != cpuc->pebs_enabled)
+-			wrmsrq(MSR_IA32_PEBS_ENABLE, cpuc->pebs_enabled);
++		if (pebs_enabled != cpuc->pebs_enabled) {
++			wrmsrq(MSR_IA32_PEBS_ENABLE,
++			       cpuc->pebs_enabled & x86_pmu.pebs_capable);
++		}
+ 
+ 		/*
+ 		 * Above PEBS handler (PEBS counters snapshotting) has updated fixed
+diff --git a/arch/x86/events/intel/ds.c b/arch/x86/events/intel/ds.c
+index 5027afc97b65..57805c6ba0c3 100644
+--- a/arch/x86/events/intel/ds.c
++++ b/arch/x86/events/intel/ds.c
+@@ -1963,6 +1963,7 @@ void intel_pmu_pebs_disable(struct perf_event *event)
+ {
+ 	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
+ 	struct hw_perf_event *hwc = &event->hw;
++	u64 pebs_enabled;
+ 
+ 	__intel_pmu_pebs_disable(event);
+ 
+@@ -1974,16 +1975,18 @@ void intel_pmu_pebs_disable(struct perf_event *event)
+ 
+ 	intel_pmu_pebs_via_pt_disable(event);
+ 
+-	if (cpuc->enabled)
+-		wrmsrq(MSR_IA32_PEBS_ENABLE, cpuc->pebs_enabled);
++	pebs_enabled = cpuc->pebs_enabled & x86_pmu.pebs_capable;
++	if (pebs_enabled)
++		wrmsrq(MSR_IA32_PEBS_ENABLE, pebs_enabled);
+ }
+ 
+ void intel_pmu_pebs_enable_all(void)
+ {
+ 	struct cpu_hw_events *cpuc = this_cpu_ptr(&cpu_hw_events);
++	u64 pebs_enabled = cpuc->pebs_enabled & x86_pmu.pebs_capable;
+ 
+-	if (cpuc->pebs_enabled)
+-		wrmsrq(MSR_IA32_PEBS_ENABLE, cpuc->pebs_enabled);
++	if (pebs_enabled)
++		wrmsrq(MSR_IA32_PEBS_ENABLE, pebs_enabled);
+ }
+ 
+ void intel_pmu_pebs_disable_all(void)
+-- 
+2.43.0
+

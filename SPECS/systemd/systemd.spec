@@ -1275,9 +1275,9 @@ rm -f %{name}.lang
 # changelog here.
 %changelog
 * Thu 9 July 2026 Lishan Liu <lishan.liu@intel.com> - 255-35
-- Workaround to resolve build error due to 
+- Workaround to resolve build error due to
   unkonw filesystem magic numbers from kernel v7.0
-  
+
 * Tue Jun 9 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 255-34
 - merge from Azure Linux 3.0.20260602-3.0
 - Backport upstream commit 78f8d5e: network: also check ID_NET_MANAGED_BY

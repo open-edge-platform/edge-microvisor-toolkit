@@ -1,0 +1,58 @@
+From 403ee4d5e00565eb2f7c6dfa82515de2f171ee81 Mon Sep 17 00:00:00 2001
+From: Kiran K <kiran.k@intel.com>
+Date: Sat, 28 Feb 2026 14:42:33 +0530
+Subject: [PATCH 05/18] Bluetooth: btintel: Add support for Scorpious Peak2
+ support
+
+Add support for Intel Bluetooth Scorpious Peak2 core.
+
+Signed-off-by: Kiran K <kiran.k@intel.com>
+Signed-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+---
+ drivers/bluetooth/btintel.c      | 3 +++
+ drivers/bluetooth/btintel_pcie.c | 1 +
+ 2 files changed, 4 insertions(+)
+
+diff --git a/drivers/bluetooth/btintel.c b/drivers/bluetooth/btintel.c
+index 7313bd101588..db6951b96d1c 100644
+--- a/drivers/bluetooth/btintel.c
++++ b/drivers/bluetooth/btintel.c
+@@ -502,6 +502,7 @@ int btintel_version_info_tlv(struct hci_dev *hdev,
+ 	case 0x1d:	/* BlazarU (BzrU) */
+ 	case 0x1e:	/* BlazarI (Bzr) */
+ 	case 0x1f:      /* Scorpious Peak */
++	case 0x20:	/* Scorpious Peak2 */
+ 	case 0x22:	/* BlazarIW (BzrIW) */
+ 		break;
+ 	default:
+@@ -3323,6 +3324,7 @@ void btintel_set_msft_opcode(struct hci_dev *hdev, u8 hw_variant)
+ 	case 0x1d:
+ 	case 0x1e:
+ 	case 0x1f:
++	case 0x20:
+ 	case 0x22:
+ 		hci_set_msft_opcode(hdev, 0xFC1E);
+ 		break;
+@@ -3664,6 +3666,7 @@ static int btintel_setup_combined(struct hci_dev *hdev)
+ 	case 0x1d:
+ 	case 0x1e:
+ 	case 0x1f:
++	case 0x20:
+ 	case 0x22:
+ 		/* Display version information of TLV type */
+ 		btintel_version_info_tlv(hdev, &ver_tlv);
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index 473b2115e637..0ce47b88db6e 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -2095,6 +2095,7 @@ static int btintel_pcie_setup_internal(struct hci_dev *hdev)
+ 	switch (INTEL_HW_VARIANT(ver_tlv.cnvi_bt)) {
+ 	case 0x1e:	/* BzrI */
+ 	case 0x1f:	/* ScP  */
++	case 0x20:	/* ScP2 */
+ 	case 0x22:	/* BzrIW */
+ 		/* Display version information of TLV type */
+ 		btintel_version_info_tlv(hdev, &ver_tlv);
+-- 
+2.43.0
+

@@ -1,0 +1,42 @@
+From c465dda2635719e21baf73e0866bde73e3abff0f Mon Sep 17 00:00:00 2001
+From: Khai Wen Ng <khai.wen.ng@intel.com>
+Date: Fri, 12 Sep 2025 03:33:03 +0800
+Subject: [PATCH 10/65] media: i2c: max9296a: Fix video pipe status register
+ offset
+
+Correct the base address for the video pipe PRBS status register
+(VPRBS) from 0x1fc to 0x1dc. The previous offset was incorrect and
+did not reflect the status of the first video pipe.
+
+With the corrected 0x20 stride, the register addresses are now:
+- Pipe 0: 0x1dc
+- Pipe 1: 0x1fc
+- Pipe 2: 0x21c
+- Pipe 3: 0x23c
+
+This ensures proper monitoring of video lock status and pattern
+generator clock source for all video pipes.
+
+Fixes: 2972a59f419a3 ("media: i2c: maxim-serdes: add MAX9296A driver")
+Signed-off-by: Khai Wen Ng <khai.wen.ng@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max9296a.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max9296a.c b/drivers/media/i2c/maxim-serdes/max9296a.c
+index a67692b2f5ee..b2795b08702d 100644
+--- a/drivers/media/i2c/maxim-serdes/max9296a.c
++++ b/drivers/media/i2c/maxim-serdes/max9296a.c
+@@ -61,7 +61,7 @@
+ #define MAX9296A_VIDEO_PIPE_SEL_STREAM(p)	(GENMASK(1, 0) << ((p) * 3))
+ #define MAX9296A_VIDEO_PIPE_SEL_LINK(p)		BIT(2 + (p) * 3)
+ 
+-#define MAX9296A_VPRBS(p)			(0x1fc + (p) * 0x20)
++#define MAX9296A_VPRBS(p)			(0x1dc + (p) * 0x20)
+ #define MAX9296A_VPRBS_VIDEO_LOCK		BIT(0)
+ #define MAX9296A_VPRBS_PATGEN_CLK_SRC		BIT(7)
+ #define MAX9296A_VPRBS_PATGEN_CLK_SRC_150MHZ	0b0
+-- 
+2.43.0
+

@@ -1,0 +1,63 @@
+From 7b5c5583b4802cd46e478042bbf0c712a8385364 Mon Sep 17 00:00:00 2001
+From: "Sodhi, Vunny" <vunny.sodhi@intel.com>
+Date: Tue, 26 May 2026 07:40:24 +0800
+Subject: [PATCH 32/65] fix(max-serdes): avoid ACPI NULL deref in i2c-gate
+ detection
+
+Add a helper to check i2c-gate only for DT-backed devices and skip
+the lookup when an ACPI companion is present. Update i2c adapter
+init/deinit paths to use the helper.
+
+Signed-off-by: Sodhi, Vunny <vunny.sodhi@intel.com>
+---
+ drivers/media/i2c/maxim-serdes/max_ser.c | 25 ++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/i2c/maxim-serdes/max_ser.c b/drivers/media/i2c/maxim-serdes/max_ser.c
+index 6b86861e017b..f7a2155ea584 100644
+--- a/drivers/media/i2c/maxim-serdes/max_ser.c
++++ b/drivers/media/i2c/maxim-serdes/max_ser.c
+@@ -443,9 +443,30 @@ static int max_ser_i2c_mux_init(struct max_ser_priv *priv)
+ 	return i2c_mux_add_adapter(priv->mux, 0, 0);
+ }
+ 
++static bool max_ser_has_i2c_gate(struct max_ser_priv *priv)
++{
++	struct fwnode_handle *gate;
++
++	/*
++	 * The "i2c-gate" child node is a DT-only construct. On ACPI systems
++	 * (kernel 7.0+) calling device_get_named_child_node() can dereference a
++	 * NULL acpi_device while iterating fwnode children, so skip the lookup
++	 * entirely when backed by ACPI.
++	 */
++	if (has_acpi_companion(priv->dev))
++		return false;
++
++	gate = device_get_named_child_node(priv->dev, "i2c-gate");
++	if (!gate)
++		return false;
++
++	fwnode_handle_put(gate);
++	return true;
++}
++
+ static int max_ser_i2c_adapter_init(struct max_ser_priv *priv)
+ {
+-	if (device_get_named_child_node(priv->dev, "i2c-gate"))
++	if (max_ser_has_i2c_gate(priv))
+ 		return max_ser_i2c_mux_init(priv);
+ #if IS_REACHABLE(CONFIG_I2C_ATR)
+ 	return max_ser_i2c_atr_init(priv);
+@@ -456,7 +477,7 @@ static int max_ser_i2c_adapter_init(struct max_ser_priv *priv)
+ 
+ static void max_ser_i2c_adapter_deinit(struct max_ser_priv *priv)
+ {
+-	if (device_get_named_child_node(priv->dev, "i2c-gate")) {
++	if (max_ser_has_i2c_gate(priv)) {
+ 		max_ser_i2c_mux_deinit(priv);
+ 		return;
+ 	}
+-- 
+2.43.0
+

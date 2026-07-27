@@ -1,0 +1,42 @@
+From 8859f4f94d057c98246c36f6c518ace6eb31d802 Mon Sep 17 00:00:00 2001
+From: Kiran K <kiran.k@intel.com>
+Date: Sat, 28 Feb 2026 14:42:37 +0530
+Subject: [PATCH 09/18] Bluetooth: btintel_pcie: Add support for exception dump
+ for ScP2F
+
+Add device coredump support for Scorpious Peak2F product.
+
+Signed-off-by: Kiran K <kiran.k@intel.com>
+Signed-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+---
+ drivers/bluetooth/btintel.h      | 1 +
+ drivers/bluetooth/btintel_pcie.c | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/bluetooth/btintel.h b/drivers/bluetooth/btintel.h
+index b5c00be8277a..0e9ca99aaaae 100644
+--- a/drivers/bluetooth/btintel.h
++++ b/drivers/bluetooth/btintel.h
+@@ -60,6 +60,7 @@ struct intel_tlv {
+ #define BTINTEL_CNVI_BLAZARU		0x930	/* BlazarU - Meteor Lake */
+ #define BTINTEL_CNVI_SCP		0xA00	/* Scorpius Peak - Panther Lake */
+ #define BTINTEL_CNVI_SCP2		0xA10	/* Scorpius Peak2 - Nova Lake */
++#define BTINTEL_CNVI_SCP2F		0xA20	/* Scorpius Peak2F - Nova Lake */
+ 
+ /* CNVR */
+ #define BTINTEL_CNVR_FMP2		0x910
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index 78209e8768bb..a907b493d153 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -1235,6 +1235,7 @@ static void btintel_pcie_read_hwexp(struct btintel_pcie_data *data)
+ 		addr = BTINTEL_PCIE_SCP_HWEXP_DMP_ADDR;
+ 	break;
+ 	case BTINTEL_CNVI_SCP2:
++	case BTINTEL_CNVI_SCP2F:
+ 		len = BTINTEL_PCIE_SCP2_HWEXP_SIZE;
+ 		addr = BTINTEL_PCIE_SCP2_HWEXP_DMP_ADDR;
+ 	break;
+-- 
+2.43.0
+

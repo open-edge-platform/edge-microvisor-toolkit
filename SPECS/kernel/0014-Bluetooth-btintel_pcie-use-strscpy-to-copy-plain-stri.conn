@@ -1,0 +1,40 @@
+From 4762bb211cbc98e9e4b851a86e29d3eadb57935b Mon Sep 17 00:00:00 2001
+From: Thorsten Blum <thorsten.blum@linux.dev>
+Date: Wed, 1 Apr 2026 18:46:24 +0200
+Subject: [PATCH 14/18] Bluetooth: btintel_pcie: use strscpy to copy plain
+ strings
+
+Use strscpy() instead of snprintf() to copy plain strings with no format
+specifiers.
+
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+Signed-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+---
+ drivers/bluetooth/btintel_pcie.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index 8fb3ebe98146..2f59c0d6f9ec 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -351,7 +351,7 @@ static inline void btintel_pcie_dump_debug_registers(struct hci_dev *hdev)
+ 	snprintf(buf, sizeof(buf), "txq: cr_tia: %u cr_hia: %u", cr_tia, cr_hia);
+ 	skb_put_data(skb, buf, strlen(buf));
+ 	bt_dev_dbg(hdev, "%s", buf);
+-	snprintf(buf, sizeof(buf), "--------------------------------");
++	strscpy(buf, "--------------------------------");
+ 	bt_dev_dbg(hdev, "%s", buf);
+ 
+ 	hci_recv_diag(hdev, skb);
+@@ -661,7 +661,7 @@ static int btintel_pcie_read_dram_buffers(struct btintel_pcie_data *data)
+ 	else
+ 		return -EINVAL;
+ 
+-	snprintf(vendor, sizeof(vendor), "Vendor: Intel\n");
++	strscpy(vendor, "Vendor: Intel\n");
+ 	snprintf(driver, sizeof(driver), "Driver: %s\n",
+ 		 data->dmp_hdr.driver_name);
+ 
+-- 
+2.43.0
+

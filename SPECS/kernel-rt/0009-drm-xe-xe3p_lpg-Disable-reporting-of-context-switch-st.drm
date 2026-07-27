@@ -1,0 +1,48 @@
+From 6afbbc218564e46cbc1361af424cc50a5b8f5488 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 6 Feb 2026 15:36:03 -0300
+Subject: [PATCH 09/43] drm/xe/xe3p_lpg: Disable reporting of context switch
+ status to GHWSP
+
+By default the hardware reports context switch status into the global
+hardware status page.  The Xe driver doesn't use this information for
+anything, and as of Xe3p, leaving this setting enabled will prevent
+other hardware optimizations from being enabled.  Disable this reporting
+as suggested by the tuning guide.
+
+Bspec: 72161
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Matt Atwood <matthew.s.atwood@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/xe_tuning.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/xe_tuning.c b/drivers/gpu/drm/xe/xe_tuning.c
+index 5766fa7742d3..a97872b3214b 100644
+--- a/drivers/gpu/drm/xe/xe_tuning.c
++++ b/drivers/gpu/drm/xe/xe_tuning.c
+@@ -10,6 +10,7 @@
+ #include <drm/drm_managed.h>
+ #include <drm/drm_print.h>
+ 
++#include "regs/xe_engine_regs.h"
+ #include "regs/xe_gt_regs.h"
+ #include "xe_gt_types.h"
+ #include "xe_platform_types.h"
+@@ -107,6 +108,12 @@ static const struct xe_rtp_entry_sr engine_tunings[] = {
+ 		       FUNC(xe_rtp_match_first_render_or_compute)),
+ 	  XE_RTP_ACTIONS(SET(RT_CTRL, DIS_NULL_QUERY))
+ 	},
++	{ XE_RTP_NAME("Tuning: disable HW reporting of ctx switch to GHWSP"),
++	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(3500, XE_RTP_END_VERSION_UNDEFINED)),
++	  XE_RTP_ACTIONS(SET(CSFE_CHICKEN1(0),
++			     GHWSP_CSB_REPORT_DIS,
++			     XE_RTP_ACTION_FLAG(ENGINE_BASE)))
++	},
+ };
+ 
+ static const struct xe_rtp_entry_sr lrc_tunings[] = {
+-- 
+2.43.0
+

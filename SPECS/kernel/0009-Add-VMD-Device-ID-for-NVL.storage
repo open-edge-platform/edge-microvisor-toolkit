@@ -1,0 +1,26 @@
+From d0f84a6c81af751c541b45e1114f24fb45f9fd72 Mon Sep 17 00:00:00 2001
+From: Szymon Durawa <szymon.durawa@linux.intel.com>
+Date: Fri, 18 Jul 2025 10:40:03 +0200
+Subject: [PATCH 9/9] Add VMD Device ID for NVL.
+
+Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
+---
+ drivers/pci/controller/vmd.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index d0527be78ebd..f3ddbd8c640e 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -1396,6 +1396,8 @@ static const struct pci_device_id vmd_ids[] = {
+                 .driver_data = VMD_FEATS_CLIENT,},
+ 	{PCI_VDEVICE(INTEL, 0xb07f),
+                 .driver_data = VMD_FEATS_CLIENT,},
++	{PCI_VDEVICE(INTEL, 0xd70b),
++		.driver_data = VMD_FEATS_CLIENT,},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, vmd_ids);
+-- 
+2.43.0
+

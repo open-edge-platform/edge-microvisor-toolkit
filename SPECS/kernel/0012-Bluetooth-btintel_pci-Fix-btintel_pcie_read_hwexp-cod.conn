@@ -1,0 +1,40 @@
+From 0ec1261165c1e6ef01097df4e9a907cb742a3a8a Mon Sep 17 00:00:00 2001
+From: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+Date: Mon, 2 Mar 2026 15:21:21 -0500
+Subject: [PATCH 12/18] Bluetooth: btintel_pci: Fix btintel_pcie_read_hwexp
+ code style
+
+Use proper alignment for break under a switch.
+
+Signed-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+---
+ drivers/bluetooth/btintel_pcie.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index a817a571f720..05f82bc3f0d7 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -1233,16 +1233,16 @@ static void btintel_pcie_read_hwexp(struct btintel_pcie_data *data)
+ 			return;
+ 		len = BTINTEL_PCIE_BLZR_HWEXP_SIZE; /* exception data length */
+ 		addr = BTINTEL_PCIE_BLZR_HWEXP_DMP_ADDR;
+-	break;
++		break;
+ 	case BTINTEL_CNVI_SCP:
+ 		len = BTINTEL_PCIE_SCP_HWEXP_SIZE;
+ 		addr = BTINTEL_PCIE_SCP_HWEXP_DMP_ADDR;
+-	break;
++		break;
+ 	case BTINTEL_CNVI_SCP2:
+ 	case BTINTEL_CNVI_SCP2F:
+ 		len = BTINTEL_PCIE_SCP2_HWEXP_SIZE;
+ 		addr = BTINTEL_PCIE_SCP2_HWEXP_DMP_ADDR;
+-	break;
++		break;
+ 	default:
+ 		bt_dev_err(data->hdev, "Unsupported cnvi 0x%8.8x", data->dmp_hdr.cnvi_top);
+ 		return;
+-- 
+2.43.0
+

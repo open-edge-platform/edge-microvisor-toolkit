@@ -1,0 +1,81 @@
+From 9a14d0aba41b42a107971bf2da0455c85fd3da11 Mon Sep 17 00:00:00 2001
+From: Kiran K <kiran.k@intel.com>
+Date: Sat, 28 Feb 2026 14:42:32 +0530
+Subject: [PATCH 04/18] Bluetooth: btintel: Replace CNVi id with hardware
+ variant
+
+Use hardware variant instead of CNVi to send dsbr command.
+
+Signed-off-by: Kiran K <kiran.k@intel.com>
+Signed-off-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
+---
+ drivers/bluetooth/btintel.c | 18 +++++++++---------
+ drivers/bluetooth/btintel.h |  7 +++++++
+ 2 files changed, 16 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/bluetooth/btintel.c b/drivers/bluetooth/btintel.c
+index 39e16dcca0ce..7313bd101588 100644
+--- a/drivers/bluetooth/btintel.c
++++ b/drivers/bluetooth/btintel.c
+@@ -2818,31 +2818,31 @@ static int btintel_set_dsbr(struct hci_dev *hdev, struct intel_version_tlv *ver)
+ 
+ 	struct btintel_dsbr_cmd cmd;
+ 	struct sk_buff *skb;
+-	u32 dsbr, cnvi;
+-	u8 status;
++	u32 dsbr;
++	u8 status, hw_variant;
+ 	int err;
+ 
+-	cnvi = ver->cnvi_top & 0xfff;
++	hw_variant = INTEL_HW_VARIANT(ver->cnvi_bt);
+ 	/* DSBR command needs to be sent for,
+ 	 * 1. BlazarI or BlazarIW + B0 step product in IML image.
+ 	 * 2. Gale Peak2 or BlazarU in OP image.
+ 	 * 3. Scorpious Peak in IML image.
+ 	 */
+ 
+-	switch (cnvi) {
+-	case BTINTEL_CNVI_BLAZARI:
+-	case BTINTEL_CNVI_BLAZARIW:
++	switch (hw_variant) {
++	case BTINTEL_HWID_BZRI:
++	case BTINTEL_HWID_BZRIW:
+ 		if (ver->img_type == BTINTEL_IMG_IML &&
+ 		    INTEL_CNVX_TOP_STEP(ver->cnvi_top) == 0x01)
+ 			break;
+ 		return 0;
+-	case BTINTEL_CNVI_GAP:
+-	case BTINTEL_CNVI_BLAZARU:
++	case BTINTEL_HWID_GAP:
++	case BTINTEL_HWID_BZRU:
+ 		if (ver->img_type == BTINTEL_IMG_OP &&
+ 		    hdev->bus == HCI_USB)
+ 			break;
+ 		return 0;
+-	case BTINTEL_CNVI_SCP:
++	case BTINTEL_HWID_SCP:
+ 		if (ver->img_type == BTINTEL_IMG_IML)
+ 			break;
+ 		return 0;
+diff --git a/drivers/bluetooth/btintel.h b/drivers/bluetooth/btintel.h
+index 431998049e68..b7ff183f8886 100644
+--- a/drivers/bluetooth/btintel.h
++++ b/drivers/bluetooth/btintel.h
+@@ -69,6 +69,13 @@ struct intel_tlv {
+ 
+ #define BTINTEL_FWID_MAXLEN 64
+ 
++/* CNVi Hardware variant */
++#define BTINTEL_HWID_GAP	0x1c	/* Gale Peak2 - Meteor Lake */
++#define BTINTEL_HWID_BZRI	0x1e	/* BlazarI - Lunar Lake */
++#define BTINTEL_HWID_BZRU	0x1d	/* BlazarU - Meteor Lake */
++#define BTINTEL_HWID_SCP	0x1f	/* Scorpius Peak - Panther Lake */
++#define BTINTEL_HWID_BZRIW	0x22	/* BlazarIW - Wildcat Lake */
++
+ struct intel_version_tlv {
+ 	u32	cnvi_top;
+ 	u32	cnvr_top;
+-- 
+2.43.0
+

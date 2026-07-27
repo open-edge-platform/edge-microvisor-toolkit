@@ -1,0 +1,42 @@
+From f6f2854e1694283e926199c45bb5bfd550c7b0cc Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Tue, 12 Sep 2023 10:50:56 +0300
+Subject: [PATCH 17/17] mei: me: add nova lake point H DID
+
+Add Nova Lake H device id.
+
+Co-developed-by: Tomas Winkler <tomasw@gmail.com>
+Signed-off-by: Tomas Winkler <tomasw@gmail.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/hw-me-regs.h | 1 +
+ drivers/misc/mei/pci-me.c     | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/misc/mei/hw-me-regs.h b/drivers/misc/mei/hw-me-regs.h
+index 232778b7b26b..b9a67629496b 100644
+--- a/drivers/misc/mei/hw-me-regs.h
++++ b/drivers/misc/mei/hw-me-regs.h
+@@ -125,6 +125,7 @@
+ #define PCI_DEVICE_ID_INTEL_MEI_WCL_P      0x4D70  /* Wildcat Lake P */
+ 
+ #define PCI_DEVICE_ID_INTEL_MEI_NVL_S      0x6E68  /* Nova Lake Point S */
++#define PCI_DEVICE_ID_INTEL_MEI_NVL_H      0xD370  /* Nova Lake Point H */
+ 
+ #define PCI_DEVICE_ID_INTEL_MEI_CRI        0x6766  /* Crescent Island */
+ 
+diff --git a/drivers/misc/mei/pci-me.c b/drivers/misc/mei/pci-me.c
+index a4df32e9f596..55e0b8a98827 100644
+--- a/drivers/misc/mei/pci-me.c
++++ b/drivers/misc/mei/pci-me.c
+@@ -131,6 +131,7 @@ static const struct pci_device_id mei_me_pci_tbl[] = {
+ 	{PCI_DEVICE_DATA(INTEL, MEI_WCL_P, MEI_ME_PCH15_CFG)},
+ 
+ 	{PCI_DEVICE_DATA(INTEL, MEI_NVL_S, MEI_ME_PCH22_IOE_CFG)},
++	{PCI_DEVICE_DATA(INTEL, MEI_NVL_H, MEI_ME_PCH15_CFG)},
+ 
+ 	/* required last entry */
+ 	{0, }
+-- 
+2.43.0
+

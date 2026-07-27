@@ -1,0 +1,51 @@
+From f862c9fe91ee6823659915ec4ec3fc158cbdf99b Mon Sep 17 00:00:00 2001
+From: Varun Gupta <varun.gupta@intel.com>
+Date: Mon, 9 Mar 2026 12:09:23 +0530
+Subject: [PATCH 42/43] drm/xe: Add Wa_14026578760
+
+Add GT workaround Wa_14026578760 for graphics versions 35.10, 35.11
+and media version 35.03.
+
+Signed-off-by: Varun Gupta <varun.gupta@intel.com>
+Reviewed-by: Tejas Upadhyay <tejas.upadhyay@intel.com>
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Link: https://patch.msgid.link/20260309063923.4031933-1-varun.gupta@intel.com
+Signed-off-by: Tejas Upadhyay <tejas.upadhyay@intel.com>
+---
+ drivers/gpu/drm/xe/regs/xe_gt_regs.h | 3 +++
+ drivers/gpu/drm/xe/xe_wa.c           | 5 +++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/regs/xe_gt_regs.h b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+index e20fb5163e7c..f8a4dd65ab25 100644
+--- a/drivers/gpu/drm/xe/regs/xe_gt_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+@@ -101,6 +101,9 @@
+ #define VE1_AUX_INV				XE_REG(0x42b8)
+ #define   AUX_INV				REG_BIT(0)
+ 
++#define GAMSTLB_CTRL				XE_REG_MCR(0x477c)
++#define   DIS_PEND_GPA_LINK			REG_BIT(13)
++
+ #define GAMSTLB_CTRL2				XE_REG_MCR(0x4788)
+ #define   STLB_SINGLE_BANK_MODE			REG_BIT(11)
+ 
+diff --git a/drivers/gpu/drm/xe/xe_wa.c b/drivers/gpu/drm/xe/xe_wa.c
+index e30a285ca10c..dd3c682cdef7 100644
+--- a/drivers/gpu/drm/xe/xe_wa.c
++++ b/drivers/gpu/drm/xe/xe_wa.c
+@@ -135,6 +135,11 @@ static const struct xe_rtp_entry_sr gt_was[] = {
+ 	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(1200, 1260)),
+ 	  XE_RTP_ACTIONS(CLR(MISCCPCTL, DOP_CLOCK_GATE_RENDER_ENABLE))
+ 	},
++	{ XE_RTP_NAME("14026578760"),
++	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(3510, 3511), OR,
++		       MEDIA_VERSION(3503)),
++	  XE_RTP_ACTIONS(SET(GAMSTLB_CTRL, DIS_PEND_GPA_LINK))
++	},
+ 
+ 	/* DG1 */
+ 
+-- 
+2.43.0
+

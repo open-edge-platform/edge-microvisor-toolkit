@@ -1,0 +1,33 @@
+From ea85b33fa0be5b9f86cefcdfd3effd71be807a67 Mon Sep 17 00:00:00 2001
+From: hepengpx <pengpengx.he@intel.com>
+Date: Tue, 7 Jul 2026 11:56:21 +0800
+Subject: [PATCH 3/4] staging: ipu7: reclaim pending fw msg buffers by
+ stream_id
+
+When one stream stops, firmware stops that stream immediately.
+Some fw msg bufs may still remain in framebuflist_fw and should be
+reclaimed.
+
+A stream_id is added to isys_fw_msgs to indicate which stream each
+message belongs to.
+
+Signed-off-by: hepengpx <pengpengx.he@intel.com>
+---
+ drivers/staging/media/ipu7/ipu7-isys-queue.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/staging/media/ipu7/ipu7-isys-queue.c b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+index 554c4a51fc42..1bd7edf099e4 100644
+--- a/drivers/staging/media/ipu7/ipu7-isys-queue.c
++++ b/drivers/staging/media/ipu7/ipu7-isys-queue.c
+@@ -440,6 +440,7 @@ static void buf_queue(struct vb2_buffer *vb)
+ 	}
+ 	msg->stream_id = stream->stream_handle;
+ 
++	msg->stream_id = stream->stream_handle;
+ 	buf = &msg->fw_msg.frame;
+ 
+ 	ipu7_isys_buffer_to_fw_frame_buff(buf, stream, &bl);
+-- 
+2.43.0
+

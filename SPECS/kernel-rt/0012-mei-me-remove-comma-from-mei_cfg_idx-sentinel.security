@@ -1,0 +1,30 @@
+From 455b493365cba3ac77b794c697c7a4dd0e221301 Mon Sep 17 00:00:00 2001
+From: Alexander Usyskin <alexander.usyskin@intel.com>
+Date: Tue, 24 Feb 2026 07:50:33 +0200
+Subject: [PATCH 12/17] mei: me: remove comma from mei_cfg_idx sentinel
+
+Adhere to termnator line rule and remove comma from
+sentinel in enum mei_cfg_idx.
+
+Suggested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/misc/mei/hw-me.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/misc/mei/hw-me.h b/drivers/misc/mei/hw-me.h
+index e36f871f323e..0038a6d431fd 100644
+--- a/drivers/misc/mei/hw-me.h
++++ b/drivers/misc/mei/hw-me.h
+@@ -128,7 +128,7 @@ enum mei_cfg_idx {
+ 	MEI_ME_GSCFI_CFG,
+ 	MEI_ME_CSC_CFG,
+ 	MEI_ME_PCH22_IOE_CFG,
+-	MEI_ME_NUM_CFG,
++	MEI_ME_NUM_CFG
+ };
+ 
+ const struct mei_cfg *mei_me_get_cfg(kernel_ulong_t idx);
+-- 
+2.43.0
+

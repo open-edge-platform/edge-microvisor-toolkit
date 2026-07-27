@@ -1,0 +1,59 @@
+From f135ebd5e30f3db2724d709487a459ad43119d61 Mon Sep 17 00:00:00 2001
+From: Aradhya Bhatia <aradhya.bhatia@intel.com>
+Date: Fri, 6 Feb 2026 15:36:07 -0300
+Subject: [PATCH 13/43] drm/xe/xe3p_lpg: Set STLB bank hash mode to 4KB
+
+Since the dominant size of the pages referred in an i-gpu, such as
+Xe3p_LPG, will be 4KB, the HW default of mix of 64K and 2M for STLB bank
+hash mode does not make sense.
+
+Allow the SW to change it to 4KB Mode, for Xe3p_LPG.
+
+v2:
+  - Add Bspec reference. (Matt)
+
+Bspec: 78248
+Signed-off-by: Aradhya Bhatia <aradhya.bhatia@intel.com>
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Gustavo Sousa <gustavo.sousa@intel.com>
+---
+ drivers/gpu/drm/xe/regs/xe_gt_regs.h | 2 ++
+ drivers/gpu/drm/xe/xe_tuning.c       | 9 +++++++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/drivers/gpu/drm/xe/regs/xe_gt_regs.h b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+index b2b2cf135612..b36bb96b00f7 100644
+--- a/drivers/gpu/drm/xe/regs/xe_gt_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_gt_regs.h
+@@ -472,6 +472,8 @@
+ #define   FORCE_MISS_FTLB			REG_BIT(3)
+ 
+ #define XEHP_GAMSTLB_CTRL			XE_REG_MCR(0xcf4c)
++#define   BANK_HASH_MODE			REG_GENMASK(27, 26)
++#define   BANK_HASH_4KB_MODE			REG_FIELD_PREP(BANK_HASH_MODE, 0x3)
+ #define   CONTROL_BLOCK_CLKGATE_DIS		REG_BIT(12)
+ #define   EGRESS_BLOCK_CLKGATE_DIS		REG_BIT(11)
+ #define   TAG_BLOCK_CLKGATE_DIS			REG_BIT(7)
+diff --git a/drivers/gpu/drm/xe/xe_tuning.c b/drivers/gpu/drm/xe/xe_tuning.c
+index 694385ae75f1..316f5e2b2e48 100644
+--- a/drivers/gpu/drm/xe/xe_tuning.c
++++ b/drivers/gpu/drm/xe/xe_tuning.c
+@@ -90,6 +90,15 @@ static const struct xe_rtp_entry_sr gt_tunings[] = {
+ 	  XE_RTP_RULES(MEDIA_VERSION(2000)),
+ 	  XE_RTP_ACTIONS(SET(XE2LPM_SCRATCH3_LBCF, RWFLUSHALLEN))
+ 	},
++
++	/* Xe3p */
++
++	{ XE_RTP_NAME("Tuning: Set STLB Bank Hash Mode to 4KB"),
++	  XE_RTP_RULES(GRAPHICS_VERSION_RANGE(3510, XE_RTP_END_VERSION_UNDEFINED),
++		       IS_INTEGRATED),
++	  XE_RTP_ACTIONS(FIELD_SET(XEHP_GAMSTLB_CTRL, BANK_HASH_MODE,
++				   BANK_HASH_4KB_MODE))
++	},
+ };
+ 
+ static const struct xe_rtp_entry_sr engine_tunings[] = {
+-- 
+2.43.0
+
