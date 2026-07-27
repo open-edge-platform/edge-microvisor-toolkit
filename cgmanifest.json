@@ -3801,8 +3801,8 @@
         "type": "other",
         "other": {
           "name": "intel-level-zero",
-          "version": "1.27.0",
-          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.27.0.tar.gz"
+          "version": "1.28.2",
+          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.28.2.tar.gz"
         }
       }
     },
@@ -3841,8 +3841,8 @@
         "type": "other",
         "other": {
           "name": "intel-npu-driver",
-          "version": "1.32.0",
-          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.32.0.tar.gz"
+          "version": "1.34.0",
+          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.34.0.tar.gz"
         }
       }
     },
@@ -3851,8 +3851,8 @@
         "type": "other",
         "other": {
           "name": "intel-npu-firmware",
-          "version": "1.32.0",
-          "downloadUrl": "https://github.com/intel/linux-npu-driver//archive/refs/tags/v1.32.0/linux-npu-driver-1.32.0.tar.gz"
+          "version": "1.34.0",
+          "downloadUrl": "https://github.com/intel/linux-npu-driver/archive/refs/tags/v1.34.0/linux-npu-driver-1.34.0.tar.gz"
         }
       }
     },
