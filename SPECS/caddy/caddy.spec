@@ -2,7 +2,7 @@
 
 Summary:        Web server with automatic HTTPS
 Name:           caddy
-Version:        2.11.2
+Version:        2.11.4
 Release:        1%{?dist}
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -27,9 +27,7 @@ Source31:       poweredby-black.png
 
 # downstream only patch to disable commands that can alter the binary
 Patch1:         0001-Disable-commands-that-can-alter-the-binary.patch
-Patch2:         CVE-2025-61727.patch
-Patch3:         CVE-2025-61729.patch
-# https://github.com/caddyserver/caddy/commit/2028da4e74cd41f0f7f94222c6599da1a371d4b8
+
 BuildRequires:  golang >= 1.25.5
 # dario.cat/mergo : BSD-3-Clause
 Provides:       bundled(golang(dario.cat/mergo)) = 1.0.2
@@ -48,7 +46,7 @@ Provides:       bundled(golang(github.com/Masterminds/sprig/v3)) = 3.3.0
 # github.com/tailscale/go-winio : MIT
 Provides:       bundled(golang(github.com/tailscale/go-winio)) = c4f3341
 # github.com/alecthomas/chroma/v2 : MIT
-Provides:       bundled(golang(github.com/alecthomas/chroma/v2)) = 2.23.1
+Provides:       bundled(golang(github.com/alecthomas/chroma/v2)) = 2.24.1
 # github.com/antlr4-go/antlr/v4 : BSD-3-Clause
 Provides:       bundled(golang(github.com/antlr4-go/antlr/v4)) = 4.13.1
 # github.com/aryann/difflib : MIT
@@ -56,7 +54,7 @@ Provides:       bundled(golang(github.com/aryann/difflib)) = ff5ff6d
 # github.com/beorn7/perks : MIT
 Provides:       bundled(golang(github.com/beorn7/perks)) = 1.0.1
 # github.com/caddyserver/certmagic : Apache-2.0
-Provides:       bundled(golang(github.com/caddyserver/certmagic)) = 0.25.2
+Provides:       bundled(golang(github.com/caddyserver/certmagic)) = 0.25.3
 # github.com/caddyserver/zerossl : MIT
 Provides:       bundled(golang(github.com/caddyserver/zerossl)) = 0.1.5
 # github.com/cenkalti/backoff/v5 : MIT
@@ -80,7 +78,7 @@ Provides:       bundled(golang(github.com/dgraph-io/ristretto)) = 0.2.0
 # github.com/dgryski/go-farm : MIT
 Provides:       bundled(golang(github.com/dgryski/go-farm)) = a6ae236
 # github.com/dlclark/regexp2 : MIT
-Provides:       bundled(golang(github.com/dlclark/regexp2)) = 1.11.5
+Provides:       bundled(golang(github.com/dlclark/regexp2)) = 1.12.0
 # github.com/dustin/go-humanize : MIT
 Provides:       bundled(golang(github.com/dustin/go-humanize)) = 1.0.1
 # github.com/felixge/httpsnoop : MIT
@@ -90,21 +88,21 @@ Provides:       bundled(golang(github.com/fxamacker/cbor/v2)) = 2.9.0
 # github.com/go-chi/chi/v5 : MIT
 Provides:       bundled(golang(github.com/go-chi/chi/v5)) = 5.2.5
 # github.com/go-jose/go-jose/v3 : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(github.com/go-jose/go-jose/v3)) = 3.0.4
+Provides:       bundled(golang(github.com/go-jose/go-jose/v3)) = 3.0.5
 # github.com/go-jose/go-jose/v4 : Apache-2.0
-Provides:       bundled(golang(github.com/go-jose/go-jose/v4)) = 4.1.3
+Provides:       bundled(golang(github.com/go-jose/go-jose/v4)) = 4.1.4
 # github.com/go-logr/logr : Apache-2.0
 Provides:       bundled(golang(github.com/go-logr/logr)) = 1.4.3
 # github.com/go-logr/stdr : Apache-2.0
 Provides:       bundled(golang(github.com/go-logr/stdr)) = 1.2.2
 # github.com/go-sql-driver/mysql : MPL-2.0
-Provides:       bundled(golang(github.com/go-sql-driver/mysql)) = 1.8.1
+Provides:       bundled(golang(github.com/go-sql-driver/mysql)) = 1.9.3
 # github.com/golang/protobuf : BSD-3-Clause
 Provides:       bundled(golang(github.com/golang/protobuf)) = 1.5.4
 # github.com/golang/snappy : BSD-3-Clause
 Provides:       bundled(golang(github.com/golang/snappy)) = 0.0.4
 # github.com/google/cel-go : Apache-2.0
-Provides:       bundled(golang(github.com/google/cel-go)) = 0.27.0
+Provides:       bundled(golang(github.com/google/cel-go)) = 0.28.1
 # github.com/google/certificate-transparency-go : Apache-2.0
 Provides:       bundled(golang(github.com/google/certificate-transparency-go)) = 74a5dd3
 # github.com/google/go-tpm : Apache-2.0
@@ -114,7 +112,7 @@ Provides:       bundled(golang(github.com/google/go-tspi)) = 0.3.0
 # github.com/google/uuid : BSD-3-Clause
 Provides:       bundled(golang(github.com/google/uuid)) = 1.6.0
 # github.com/grpc-ecosystem/grpc-gateway/v2 : BSD-3-Clause
-Provides:       bundled(golang(github.com/grpc-ecosystem/grpc-gateway/v2)) = 2.27.7
+Provides:       bundled(golang(github.com/grpc-ecosystem/grpc-gateway/v2)) = 2.28.0
 # github.com/huandu/xstrings : MIT
 Provides:       bundled(golang(github.com/huandu/xstrings)) = 1.5.0
 # github.com/inconshreveable/mousetrap : Apache-2.0
@@ -122,11 +120,11 @@ Provides:       bundled(golang(github.com/inconshreveable/mousetrap)) = 1.1.0
 # github.com/jackc/pgpassfile : MIT
 Provides:       bundled(golang(github.com/jackc/pgpassfile)) = 1.0.0
 # github.com/jackc/pgservicefile : MIT
-Provides:       bundled(golang(github.com/jackc/pgservicefile)) = 091c0ba
+Provides:       bundled(golang(github.com/jackc/pgservicefile)) = 5a60cdf
 # github.com/jackc/pgx/v5 : MIT
-Provides:       bundled(golang(github.com/jackc/pgx/v5)) = 5.6.0
+Provides:       bundled(golang(github.com/jackc/pgx/v5)) = 5.9.2
 # github.com/klauspost/compress : BSD-3-Clause AND Apache-2.0 AND MIT
-Provides:       bundled(golang(github.com/klauspost/compress)) = 1.18.4
+Provides:       bundled(golang(github.com/klauspost/compress)) = 1.18.6
 # github.com/klauspost/cpuid/v2 : MIT
 Provides:       bundled(golang(github.com/klauspost/cpuid/v2)) = 2.3.0
 # github.com/libdns/libdns : MIT
@@ -150,7 +148,7 @@ Provides:       bundled(golang(github.com/mitchellh/go-ps)) = 1.0.0
 # github.com/mitchellh/reflectwalk : MIT
 Provides:       bundled(golang(github.com/mitchellh/reflectwalk)) = 1.0.2
 # github.com/pires/go-proxyproto : Apache-2.0
-Provides:       bundled(golang(github.com/pires/go-proxyproto)) = 0.11.0
+Provides:       bundled(golang(github.com/pires/go-proxyproto)) = 0.12.0
 # github.com/pkg/errors : BSD-2-Clause
 Provides:       bundled(golang(github.com/pkg/errors)) = 0.9.1
 # github.com/pmezard/go-difflib : BSD-3-Clause
@@ -162,11 +160,11 @@ Provides:       bundled(golang(github.com/prometheus/client_model)) = 0.6.2
 # github.com/prometheus/common : Apache-2.0
 Provides:       bundled(golang(github.com/prometheus/common)) = 0.67.5
 # github.com/prometheus/procfs : Apache-2.0
-Provides:       bundled(golang(github.com/prometheus/procfs)) = 0.19.2
+Provides:       bundled(golang(github.com/prometheus/procfs)) = 0.20.1
 # github.com/quic-go/qpack : MIT
 Provides:       bundled(golang(github.com/quic-go/qpack)) = 0.6.0
 # github.com/quic-go/quic-go : MIT
-Provides:       bundled(golang(github.com/quic-go/quic-go)) = 0.59.0
+Provides:       bundled(golang(github.com/quic-go/quic-go)) = 0.59.1
 # github.com/rs/xid : MIT
 Provides:       bundled(golang(github.com/rs/xid)) = 1.6.0
 # github.com/russross/blackfriday/v2 : BSD-2-Clause
@@ -180,11 +178,11 @@ Provides:       bundled(golang(github.com/sirupsen/logrus)) = 1.9.4
 # github.com/slackhq/nebula : MIT
 Provides:       bundled(golang(github.com/slackhq/nebula)) = 1.10.3
 # github.com/smallstep/certificates : Apache-2.0
-Provides:       bundled(golang(github.com/smallstep/certificates)) = 0.30.0-rc3
+Provides:       bundled(golang(github.com/smallstep/certificates)) = 0.30.2
 # github.com/smallstep/go-attestation : Apache-2.0
 Provides:       bundled(golang(github.com/smallstep/go-attestation)) = 2306d5b
 # github.com/smallstep/nosql : Apache-2.0
-Provides:       bundled(golang(github.com/smallstep/nosql)) = 0.7.0
+Provides:       bundled(golang(github.com/smallstep/nosql)) = 0.8.0
 # github.com/smallstep/pkcs7 : MIT
 Provides:       bundled(golang(github.com/smallstep/pkcs7)) = 0.2.1
 # github.com/smallstep/scep : MIT
@@ -206,43 +204,43 @@ Provides:       bundled(golang(github.com/urfave/cli)) = 1.22.17
 # github.com/x448/float16 : MIT
 Provides:       bundled(golang(github.com/x448/float16)) = 0.8.4
 # github.com/yuin/goldmark : MIT
-Provides:       bundled(golang(github.com/yuin/goldmark)) = 1.7.16
+Provides:       bundled(golang(github.com/yuin/goldmark)) = 1.8.2
 # github.com/yuin/goldmark-highlighting/v2 : MIT
 Provides:       bundled(golang(github.com/yuin/goldmark-highlighting/v2)) = 37449ab
 # github.com/zeebo/blake3 : CC0-1.0
 Provides:       bundled(golang(github.com/zeebo/blake3)) = 0.2.4
 # go.etcd.io/bbolt : MIT
-Provides:       bundled(golang(go.etcd.io/bbolt)) = 1.3.10
+Provides:       bundled(golang(go.etcd.io/bbolt)) = 1.4.3
 # go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp)) = 0.65.0
+Provides:       bundled(golang(go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp)) = 0.68.0
 # go.opentelemetry.io/contrib/propagators/autoprop : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/autoprop)) = 0.65.0
+Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/autoprop)) = 0.68.0
 # go.opentelemetry.io/contrib/propagators/aws : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/aws)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/aws)) = 1.43.0
 # go.opentelemetry.io/contrib/propagators/b3 : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/b3)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/b3)) = 1.43.0
 # go.opentelemetry.io/contrib/propagators/jaeger : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/jaeger)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/jaeger)) = 1.43.0
 # go.opentelemetry.io/contrib/propagators/ot : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/ot)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/contrib/propagators/ot)) = 1.43.0
 # go.opentelemetry.io/otel : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/otel)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel)) = 1.43.0
 # go.opentelemetry.io/otel/exporters/otlp/otlptrace : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlptrace)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlptrace)) = 1.43.0
 # go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc)) = 1.43.0
 # go.opentelemetry.io/otel/metric : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/otel/metric)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/metric)) = 1.43.0
 # go.opentelemetry.io/otel/sdk : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/otel/sdk)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/sdk)) = 1.43.0
 # go.opentelemetry.io/otel/trace : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/otel/trace)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/trace)) = 1.43.0
 # go.opentelemetry.io/proto/otlp : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/proto/otlp)) = 1.9.0
+Provides:       bundled(golang(go.opentelemetry.io/proto/otlp)) = 1.10.0
 # github.com/smallstep/cli-utils : Apache-2.0 AND BSD-2-Clause
 Provides:       bundled(golang(github.com/smallstep/cli-utils)) = 0.12.2
 # go.step.sm/crypto : Apache-2.0 AND BSD-2-Clause
-Provides:       bundled(golang(go.step.sm/crypto)) = 0.76.2
+Provides:       bundled(golang(go.step.sm/crypto)) = 0.81.0
 # github.com/smallstep/linkedca : Apache-2.0
 Provides:       bundled(golang(github.com/smallstep/linkedca)) = 0.25.0
 # go.uber.org/automaxprocs : MIT
@@ -250,37 +248,37 @@ Provides:       bundled(golang(go.uber.org/automaxprocs)) = 1.6.0
 # go.uber.org/multierr : MIT
 Provides:       bundled(golang(go.uber.org/multierr)) = 1.11.0
 # go.uber.org/zap : MIT
-Provides:       bundled(golang(go.uber.org/zap)) = 1.27.1
+Provides:       bundled(golang(go.uber.org/zap)) = 1.28.0
 # go.uber.org/zap/exp : MIT
 Provides:       bundled(golang(go.uber.org/zap/exp)) = 0.3.0
 # golang.org/x/crypto : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/crypto)) = 0.48.0
+Provides:       bundled(golang(golang.org/x/crypto)) = 0.52.0
 # golang.org/x/crypto/x509roots/fallback : BSD-3-Clause
 Provides:       bundled(golang(golang.org/x/crypto/x509roots/fallback)) = a408498
 # golang.org/x/exp : BSD-3-Clause
 Provides:       bundled(golang(golang.org/x/exp)) = a4bb9ff
 # golang.org/x/mod : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/mod)) = 0.33.0
+Provides:       bundled(golang(golang.org/x/mod)) = 0.35.0
 # golang.org/x/net : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/net)) = 0.51.0
+Provides:       bundled(golang(golang.org/x/net)) = 0.55.0
 # golang.org/x/sync : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/sync)) = 0.19.0
+Provides:       bundled(golang(golang.org/x/sync)) = 0.20.0
 # golang.org/x/sys : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/sys)) = 0.41.0
+Provides:       bundled(golang(golang.org/x/sys)) = 0.45.0
 # golang.org/x/term : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/term)) = 0.40.0
+Provides:       bundled(golang(golang.org/x/term)) = 0.43.0
 # golang.org/x/text : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/text)) = 0.34.0
+Provides:       bundled(golang(golang.org/x/text)) = 0.37.0
 # golang.org/x/time : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/time)) = 0.14.0
+Provides:       bundled(golang(golang.org/x/time)) = 0.15.0
 # golang.org/x/tools : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/tools)) = 0.42.0
+Provides:       bundled(golang(golang.org/x/tools)) = 0.44.0
 # google.golang.org/genproto/googleapis/api : Apache-2.0
-Provides:       bundled(golang(google.golang.org/genproto/googleapis/api)) = 8636f87
+Provides:       bundled(golang(google.golang.org/genproto/googleapis/api)) = 6f92a3b
 # google.golang.org/genproto/googleapis/rpc : Apache-2.0
-Provides:       bundled(golang(google.golang.org/genproto/googleapis/rpc)) = 546029d
+Provides:       bundled(golang(google.golang.org/genproto/googleapis/rpc)) = 7cedc36
 # google.golang.org/grpc : Apache-2.0
-Provides:       bundled(golang(google.golang.org/grpc)) = 1.79.1
+Provides:       bundled(golang(google.golang.org/grpc)) = 1.81.0
 # google.golang.org/protobuf : BSD-3-Clause
 Provides:       bundled(golang(google.golang.org/protobuf)) = 1.36.11
 # gopkg.in/yaml.v3 : Apache-2.0 AND MIT
@@ -288,17 +286,17 @@ Provides:       bundled(golang(gopkg.in/yaml.v3)) = 3.0.1
 # howett.net/plist : BSD-2-Clause-Views AND BSD-3-Clause
 Provides:       bundled(golang(howett.net/plist)) = 1.0.0
 # github.com/DeRuina/timberjack : MIT
-Provides:       bundled(golang(github.com/DeRuina/timberjack)) = 1.3.9
+Provides:       bundled(golang(github.com/DeRuina/timberjack)) = 1.4.2
 # github.com/KimMachineGun/automemlimit : MIT
 Provides:       bundled(golang(github.com/KimMachineGun/automemlimit)) = 0.7.5
 # github.com/cloudflare/circl : BSD 3-Clause
 Provides:       bundled(golang(github.com/cloudflare/circl)) = 1.6.3
 # go.opentelemetry.io/contrib/exporters/autoexport : Apache-2.0
-Provides:       bundled(golang(go.opentelemetry.io/contrib/exporters/autoexport)) = 0.65.0
+Provides:       bundled(golang(go.opentelemetry.io/contrib/exporters/autoexport)) = 0.68.0
 # cel.dev/expr : Apache-2.0
 Provides:       bundled(golang(cel.dev/expr)) = 0.25.1
 # cloud.google.com/go/auth : Apache-2.0 
-Provides:       bundled(golang(cloud.google.com/go/auth)) = 0.18.1
+Provides:       bundled(golang(cloud.google.com/go/auth)) = 0.20.0
 # cloud.google.com/go/auth/oauth2adapt : Apache-2.0
 Provides:       bundled(golang(cloud.google.com/go/auth/oauth2adapt)) = 0.2.8 
 # cloud.google.com/go/compute/metadata : Apache-2.0
@@ -312,13 +310,13 @@ Provides:       bundled(golang(github.com/coreos/go-oidc/v3)) = 3.17.0
 # github.com/google/s2a-go : Apache-2.0
 Provides:       bundled(golang(github.com/google/s2a-go)) = 0.1.9
 # github.com/googleapis/enterprise-certificate-proxy : Apache-2.0
-Provides:       bundled(golang(github.com/googleapis/enterprise-certificate-proxy)) = 0.3.11
+Provides:       bundled(golang(github.com/googleapis/enterprise-certificate-proxy)) = 0.3.15
 # github.com/googleapis/gax-go/v2 : BSD-3-Clause
-Provides:       bundled(golang(github.com/googleapis/gax-go/v2)) = 2.17.0
+Provides:       bundled(golang(github.com/googleapis/gax-go/v2)) = 2.22.0
 # github.com/jackc/pgx/v5 : MIT
-Provides:       bundled(golang(github.com/jackc/pgx/v5)) = 5.6.0
+Provides:       bundled(golang(github.com/jackc/pgx/v5)) = 5.9.2
 # github.com/jackc/puddle/v2 : MIT
-Provides:       bundled(golang(github.com/jackc/puddle/v2)) = 2.2.1
+Provides:       bundled(golang(github.com/jackc/puddle/v2)) = 2.2.2
 # github.com/kylelemons/godebug : Apache-2.0
 Provides:       bundled(golang(github.com/kylelemons/godebug)) = 1.1.0
 # github.com/munnerz/goautoneg : BSD-3-Clause
@@ -332,41 +330,41 @@ Provides:       bundled(golang(github.com/tailscale/go-winio)) = c4f3341
 # go.opentelemetry.io/auto/sdk : Apache-2.0
 Provides:       bundled(golang(go.opentelemetry.io/auto/sdk)) = 1.2.1
 # go.opentelemetry.io/contrib/bridges/prometheus : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/contrib/bridges/prometheus)) = 0.65.0
+Provides:       bundled(golang(go.opentelemetry.io/contrib/bridges/prometheus)) = 0.68.0
 # go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc)) = 0.16.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc)) = 0.19.0
 # go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp)) = 0.16.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp)) = 0.19.0
 # go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc)) = 1.43.0
 # go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp)) = 1.43.0
 # go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc)) = 1.43.0
 # go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp)) = 1.43.0
 # go.opentelemetry.io/otel/exporters/prometheus : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/prometheus)) = 0.62.0 
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/prometheus)) = 0.65.0 
 # go.opentelemetry.io/otel/exporters/stdout/stdoutlog : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/stdout/stdoutlog)) = 0.16.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/stdout/stdoutlog)) = 0.19.0
 # go.opentelemetry.io/otel/exporters/stdout/stdoutmetric : Apache-2.0 AND BSD-3-Clause 
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/stdout/stdoutmetric)) = 1.40.0 
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/stdout/stdoutmetric)) = 1.43.0 
 # go.opentelemetry.io/otel/exporters/stdout/stdouttrace : Apache-2.0 AND BSD-3-Clause 
-Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/stdout/stdouttrace)) = 1.40.0 
+Provides:       bundled(golang(go.opentelemetry.io/otel/exporters/stdout/stdouttrace)) = 1.43.0 
 # go.opentelemetry.io/otel/log : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/log)) = 0.16.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/log)) = 0.19.0
 # go.opentelemetry.io/otel/sdk/log : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/sdk/log)) = 0.16.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/sdk/log)) = 0.19.0
 # go.opentelemetry.io/otel/sdk/metric : Apache-2.0 AND BSD-3-Clause
-Provides:       bundled(golang(go.opentelemetry.io/otel/sdk/metric)) = 1.40.0
+Provides:       bundled(golang(go.opentelemetry.io/otel/sdk/metric)) = 1.43.0
 # go.yaml.in/yaml/v2 : Apache-2.0
-Provides:       bundled(golang(go.yaml.in/yaml/v2)) = 2.4.3
+Provides:       bundled(golang(go.yaml.in/yaml/v2)) = 2.4.4
 # go.yaml.in/yaml/v3 : Apache-2.0
 Provides:       bundled(golang(go.yaml.in/yaml/v3)) = 3.0.4
 # golang.org/x/oauth2 : BSD-3-Clause
-Provides:       bundled(golang(golang.org/x/oauth2)) = 0.35.0
+Provides:       bundled(golang(golang.org/x/oauth2)) = 0.36.0
 # google.golang.org/api : BSD-3-Clause
-Provides:       bundled(golang(google.golang.org/api)) = 0.266.0
+Provides:       bundled(golang(google.golang.org/api)) = 0.277.0
 # google.golang.org/grpc/cmd/protoc-gen-go-grpc : Apache-2.0
 Provides:       bundled(golang(google.golang.org/grpc/cmd/protoc-gen-go-grpc)) = 1.5.1
 
@@ -503,6 +501,9 @@ fi
 %{_datadir}/fish/vendor_completions.d/caddy.fish
 
 %changelog
+* Mon Jul 27 2026 Andy <andy.peng@intel.com> - 2.11.4-1
+- Update version to 2.11.4.
+
 * Wed Apr 22 2026 Shalini Singhal <shalinix.singhal@intel.com> - 2.11.2-1
 - Version upgrade from 2.9.1 to 2.11.2.
 
