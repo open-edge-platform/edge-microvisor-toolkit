@@ -5,37 +5,40 @@
 
 Summary:        Intel NPU Firmware
 Name:           intel-npu-firmware
-Version:        1.32.0
+Version:        1.34.0
 Release:        1%{?dist}
 License:        MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://github.com/intel/linux-npu-driver/
-Source0:        %{url}/archive/refs/tags/v%{version}/linux-npu-driver-%{version}.tar.gz
+Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/intel-npu-driver-v%{version}-firmware.tar.gz
 BuildArch:      noarch
 
 %description
 This package includes Intel NPU(VPU) firmware files required for some devices to operate.
 
 %prep
-%setup -q -n linux-npu-driver-%{version} 
+%setup -q -n firmware 
 
 %install
 mkdir -p %{buildroot}%{_firmwarepath}
-cp -a firmware/bin/COPYRIGHT firmware/bin/* %{buildroot}%{_firmwarepath}
+cp -a bin/* %{buildroot}%{_firmwarepath}
 
 %files
 %defattr(-,root,root)
-%{_firmwarepath}/COPYRIGHT
-%{_firmwarepath}/mtl_vpu_v0.0.bin
-%{_firmwarepath}/vpu_37xx_v0.0.bin
 %{_firmwarepath}/vpu_37xx_v1.bin
-%{_firmwarepath}/vpu_40xx_v0.0.bin
 %{_firmwarepath}/vpu_40xx_v1.bin
 %{_firmwarepath}/vpu_50xx_v1.bin
+%{_firmwarepath}/vpu_60xx_v1.bin
 
 %changelog
+* Thu Jul 16 2026 Andy <andy.peng@intel.com> - 1.34.0-1
+- Update version to v1.34.0
+
+* Thu Jul 2 2026 Andy <andy.peng@intel.com> - 1.33.0-1
+- Update version to v1.33.0
+
 * Mon Apr 14 2026 Andy <andy.peng@intel.com> - 1.32.0-1
 - Update version to v1.32.0
 
