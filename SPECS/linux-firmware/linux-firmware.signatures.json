@@ -1,5 +1,6 @@
 {
   "Signatures": {
-    "linux-firmware-20260309.tar.xz": "c74cc6f562b58ad5bc6b2b00a61abc29c9e49e06126e7ba34fbca9928e07a96c"
+    "nvl_guc_70.bin": "6ae681b7cd26c2700c6b6f52071d841883cd24aa0925fcf57c7536b24197a11d",
+    "linux-firmware-20260622.tar.xz": "2b9d8a358e76eb766588609135e53fa548b902c551daae33ee32f26f25e60dbb"
   }
 }
