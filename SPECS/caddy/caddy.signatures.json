@@ -8,7 +8,7 @@
     "poweredby-black.png": "4691c0d3bd2156db97b76d12f0c98662fe8869f30fe2c07631ffb43bda09e6a1",
     "poweredby-white.png": "e128419a13a91428ea9985fd54c91b8e80061c4d72b4ee913e616b3c823fcdd6",
     "0001-Disable-commands-that-can-alter-the-binary.patch": "1ef152b99af5a3a549254c845145ea9142abd571fb92c370acb3604dc77a1415",
-    "caddy-2.11.2.tar.gz": "ee12f7b5f97308708de5067deebb3d3322fc24f6d54f906a47a0a4e8db799122",
-    "caddy-2.11.2-vendor.tar.gz": "cccbed2afed999aa2eac773968a5d76d1478db44ecb3745df7123b717312a669"
+    "caddy-2.11.4.tar.gz": "2c3d02078286a6282cdb4d1d8744077788d556659dac0b64d8ed5886a7e5aeb9",
+    "caddy-2.11.4-vendor.tar.gz": "c943b18e21ed4f8ac3631b02fc5f154a3624944074e7673d0d7542410351cf72"
   }
 }
