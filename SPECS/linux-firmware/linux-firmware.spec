@@ -1,13 +1,15 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
-Version:        20260309
-Release:        3%{?dist}
+Version:        20260622
+Release:        1%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/
 Source0:        https://www.kernel.org/pub/linux/kernel/firmware/%{name}-%{version}.tar.xz
+Source1:        https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/xe/nvl_guc_70.bin
+
 %global debug_package %{nil}
 %global __os_install_post %{nil}
 %global _firmwarepath    /lib/firmware
@@ -111,6 +113,9 @@ for f in %{buildroot}%{_firmwarepath}/intel/qat/qat_*.bin; do
     ln -s "intel/qat/$base" "%{buildroot}%{_firmwarepath}/$base"
 done
 
+mkdir -p %{buildroot}%{_firmwarepath}/xe
+install -m 0644 %{SOURCE1} %{buildroot}%{_firmwarepath}/xe/nvl_guc_70.bin
+
 %post qat
 dracut --force
 
@@ -173,6 +178,7 @@ dracut --force
 %{_firmwarepath}/xe/ptl_guc_70.bin
 %{_firmwarepath}/xe/ptl_huc.bin
 %{_firmwarepath}/xe/ptl_gsc_1.bin
+%{_firmwarepath}/xe/nvl_guc_70.bin
 
 %files iwlwifi
 %defattr(-,root,root)
@@ -231,6 +237,9 @@ dracut --force
 %{_firmwarepath}/qat_*.bin
 
 %changelog
+* Mon Jun 27 2026 Andy <andy.peng@intel.com> - 20260622-1
+- Upgrade firmware to 20260622.
+
 * Wed Apr 15 2026 Andy <andy.peng@intel.com> - 20260309-3
 - Use upstream copy-firmware.sh to install firmware with proper symlinks.
 - Fixes missing ibt-19-* Bluetooth firmware symlinks.
