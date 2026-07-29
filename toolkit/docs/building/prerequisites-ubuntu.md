@@ -9,7 +9,7 @@ This page outlines the requirements for building with the Edge Microvisor toolki
 
 The Edge Microvsor toolkit on Ubuntu has been validated with the following:
 
-- **Ubuntu 22.04**: Validated with `golang-1.24.11` from https://go.dev/
+- **Ubuntu 22.04**: Validated with `golang-1.26.3` from https://go.dev/
 
 ## Installation Methods
 
@@ -23,9 +23,9 @@ The make targets automatically install the appropriate packages:
 sudo make -C toolkit install-prereqs
 
 # Manually install and configure for Go
-wget https://go.dev/dl/go1.24.12.linux-amd64.tar.gz && echo "bddf8e653c82429aea7aec2520774e79925d4bb929fe20e67ecc00dd5af44c50 go1.24.12.linux-amd64.tar.gz" | sha256sum -c
+wget https://go.dev/dl/go1.26.3.linux-amd64.tar.gz && echo "2b2cfc7148493da5e73981bffbf3353af381d5f93e789c82c79aff64962eb556 go1.26.3.linux-amd64.tar.gz" | sha256sum -c
 sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go1.24.12.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.26.3.linux-amd64.tar.gz
 
 # Manually create Go symlinks for proper PATH integration
 sudo ln -sf /usr/local/go/bin/go /usr/bin/go

@@ -1076,6 +1076,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "clang16",
+          "version": "16.0.6",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.6.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "clinfo",
           "version": "3.0.23.01.25",
           "downloadUrl": "https://github.com/Oblomov/clinfo/archive/3.0.23.01.25/clinfo-3.0.23.01.25.tar.gz"
@@ -3741,8 +3751,8 @@
         "type": "other",
         "other": {
           "name": "intel-compute-runtime",
-          "version": "25.40.35563.4",
-          "downloadUrl": "https://github.com/intel/compute-runtime/archive/25.40.35563.4/compute-runtime-25.40.35563.4.tar.gz"
+          "version": "26.18.38308.1",
+          "downloadUrl": "https://github.com/intel/compute-runtime/archive/26.18.38308.1/compute-runtime-26.18.38308.1.tar.gz"
         }
       }
     },
@@ -3751,8 +3761,8 @@
         "type": "other",
         "other": {
           "name": "intel-gmmlib",
-          "version": "22.9.0",
-          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.9.0.tar.gz"
+          "version": "22.10.0",
+          "downloadUrl": "https://github.com/intel/gmmlib/archive/intel-gmmlib-22.10.0.tar.gz"
         }
       }
     },
@@ -3771,8 +3781,8 @@
         "type": "other",
         "other": {
           "name": "intel-igc",
-          "version": "2.11.7",
-          "downloadUrl": "https://github.com/intel/intel-graphics-compiler/archive/v2.11.7/v2.11.7.tar.gz"
+          "version": "2.34.4",
+          "downloadUrl": "https://github.com/intel/intel-graphics-compiler/archive/refs/tags/v2.34.4.tar.gz"
         }
       }
     },
@@ -3793,6 +3803,16 @@
           "name": "intel-ipsec-mb",
           "version": "1.5.0",
           "downloadUrl": "https://github.com/intel/intel-ipsec-mb/archive/v1.5/intel-ipsec-mb-1.5.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "intel-level-zero",
+          "version": "1.28.2",
+          "downloadUrl": "https://github.com/oneapi-src/level-zero/archive/refs/tags/v1.28.2.tar.gz"
         }
       }
     },
@@ -3870,6 +3890,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "intel-opencl-clang",
+          "version": "160",
+          "downloadUrl": "https://github.com/intel/opencl-clang/archive/07e7c931d8bdb38549a907cf04fd06a278f7cdce/intel-opencl-clang-07e7c931.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "intel-pf-bb-config",
           "version": "23.11",
           "downloadUrl": "https://github.com/intel/pf-bb-config/archive/v23.11.tar.gz"
@@ -3881,8 +3911,8 @@
         "type": "other",
         "other": {
           "name": "intel-vpl-gpu-rt",
-          "version": "25.4.6",
-          "downloadUrl": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-25.4.6/intel-onevpl-25.4.6.tar.gz"
+          "version": "26.2.2",
+          "downloadUrl": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-26.2.2/intel-onevpl-26.2.2.tar.gz"
         }
       }
     },
@@ -6271,8 +6301,8 @@
         "type": "other",
         "other": {
           "name": "libva-utils",
-          "version": "2.22.0",
-          "downloadUrl": "https://github.com/intel/libva-utils/archive/2.22.0/libva-utils-2.22.0.tar.gz"
+          "version": "2.23.0",
+          "downloadUrl": "https://github.com/intel/libva-utils/archive/2.23.0/libva-utils-2.23.0.tar.gz"
         }
       }
     },
@@ -6820,6 +6850,16 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "lld16",
+          "version": "16.0.6",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.6.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "lldb",
           "version": "18.1.8",
           "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-18.1.8.tar.gz"
@@ -6865,6 +6905,16 @@
           "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-15.0.7.tar.gz"
         }
       }
+    },
+    {     
+      "component": { 
+        "type": "other", 
+        "other": {
+          "name": "llvm16",
+          "version": "16.0.6",
+          "downloadUrl": "https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.6.tar.gz"
+        }
+      } 
     },
     {
       "component": {
@@ -7073,16 +7123,6 @@
           "name": "lvm2",
           "version": "2.03.23",
           "downloadUrl": "https://sourceware.org/pub/lvm2/LVM2.2.03.23.tgz"
-        }
-      }
-    },
-    {
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "lxc",
-          "version": "5.0.3",
-          "downloadUrl": "https://linuxcontainers.org/downloads/lxc/lxc-5.0.3.tar.gz"
         }
       }
     },
@@ -7431,8 +7471,8 @@
         "type": "other",
         "other": {
           "name": "mesa",
-          "version": "25.3.4",
-          "downloadUrl": "https://archive.mesa3d.org/mesa-25.3.4.tar.xz"
+          "version": "26.0.3",
+          "downloadUrl": "https://archive.mesa3d.org/mesa-26.0.3.tar.xz"
         }
       }
     },
@@ -15317,7 +15357,7 @@
         "other": {
           "name": "spirv-headers",
           "version": "1.6.1",
-          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Headers//archive/refs/tags/vulkan-sdk-1.4.309.0.tar.gz"
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Headers//archive/refs/tags/vulkan-sdk-1.4.350.1.tar.gz"
         }
       }
     },
@@ -15345,9 +15385,19 @@
       "component": {
         "type": "other",
         "other": {
+          "name": "spirv-llvm16-translator",
+          "version": "16.0.23",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-LLVM-Translator/archive/v16.0.23/spirv-llvm-translator-v16.0.23.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
           "name": "spirv-tools",
-          "version": "2025.1",
-          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Tools/archive/vulkan-sdk-1.4.309.0.tar.gz"
+          "version": "2026.2",
+          "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Tools/archive/vulkan-sdk-1.4.350.1.tar.gz"
         }
       }
     },
@@ -16228,6 +16278,16 @@
           "name": "vc-intrinsics",
           "version": "0.22.1",
           "downloadUrl": "https://github.com/intel/vc-intrinsics/archive/v0.22.1/vc-intrinsics-v0.22.1.tar.gz"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "vc-intrinsics",
+          "version": "0.25.0",
+          "downloadUrl": "https://github.com/intel/vc-intrinsics/archive/refs/tags/v0.25.0/vc-intrinsics-v0.25.0.tar.gz"
         }
       }
     },

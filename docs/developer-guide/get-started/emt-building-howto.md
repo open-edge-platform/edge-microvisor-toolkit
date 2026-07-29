@@ -85,8 +85,6 @@ microvisor/
 ├── docs/
 ├── LICENSES-AND-NOTICES/
 ├── SPECS/
-├── SPECS-EXTENDED/
-├── SPECS-SIGNED/
 └── toolkit/
     ├── docs/
     └── imageconfigs/

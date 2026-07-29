@@ -1,7 +1,7 @@
-From 52509dd1e92bdf8d693dc4b941026a5bf8b93091 Mon Sep 17 00:00:00 2001
+From 0b9bcdd915b47bc316fd6f2bc7462e8fc9e50c6e Mon Sep 17 00:00:00 2001
 From: "Chew, Tong Liang" <tong.liang.chew@intel.com>
 Date: Fri, 1 Apr 2022 12:47:43 +0800
-Subject: [PATCH 08/11] meson: version update
+Subject: [PATCH 5/8] meson: version update
 
 Upstream URL: NA
 Upstream-status: Innapropriate
@@ -18,7 +18,7 @@ Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
  5 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/src/egl/meson.build b/src/egl/meson.build
-index b9baa09122cd..cde38b222bba 100644
+index f9b0e348ad4..182d3c2bef2 100644
 --- a/src/egl/meson.build
 +++ b/src/egl/meson.build
 @@ -168,7 +168,7 @@ endif
@@ -31,7 +31,7 @@ index b9baa09122cd..cde38b222bba 100644
  else
    egl_lib_name = 'EGL_@0@'.format(glvnd_vendor_name)
 diff --git a/src/gbm/meson.build b/src/gbm/meson.build
-index 97e8d5fa0441..fdf016bf3c03 100644
+index fbfdfb20f26..a03e567522e 100644
 --- a/src/gbm/meson.build
 +++ b/src/gbm/meson.build
 @@ -30,7 +30,7 @@ libgbm = shared_library(
@@ -44,7 +44,7 @@ index 97e8d5fa0441..fdf016bf3c03 100644
  )
  
 diff --git a/src/glx/meson.build b/src/glx/meson.build
-index 28313f83a783..969127089e48 100644
+index 28313f83a78..969127089e4 100644
 --- a/src/glx/meson.build
 +++ b/src/glx/meson.build
 @@ -80,7 +80,7 @@ endif
@@ -57,7 +57,7 @@ index 28313f83a783..969127089e48 100644
    gl_lib_name = 'GLX_@0@'.format(glvnd_vendor_name)
    gl_lib_version = '0.0.0'
 diff --git a/src/mesa/glapi/es1api/meson.build b/src/mesa/glapi/es1api/meson.build
-index 3ae36ff12aa8..d34d4d8968dd 100644
+index 3ae36ff12aa..d34d4d8968d 100644
 --- a/src/mesa/glapi/es1api/meson.build
 +++ b/src/mesa/glapi/es1api/meson.build
 @@ -37,7 +37,7 @@ libglesv1_cm = shared_library(
@@ -70,7 +70,7 @@ index 3ae36ff12aa8..d34d4d8968dd 100644
    name_prefix : host_machine.system() == 'windows' ? 'lib' : [],  # always use lib, but avoid warnings on !windows
    install : true,
 diff --git a/src/mesa/glapi/es2api/meson.build b/src/mesa/glapi/es2api/meson.build
-index be999c1ab3b8..b979bcd48405 100644
+index be999c1ab3b..b979bcd4840 100644
 --- a/src/mesa/glapi/es2api/meson.build
 +++ b/src/mesa/glapi/es2api/meson.build
 @@ -37,7 +37,7 @@ libgles2 = shared_library(
@@ -83,5 +83,5 @@ index be999c1ab3b8..b979bcd48405 100644
    name_prefix : host_machine.system() == 'windows' ? 'lib' : [],  # always use lib, but avoid warnings on !windows
    install : true,
 -- 
-2.34.1
+2.43.0
 

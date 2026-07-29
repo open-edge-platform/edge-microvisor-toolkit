@@ -2,7 +2,7 @@
 %global mfx_ver_minor 16
 
 Name:           intel-vpl-gpu-rt
-Version:        25.4.6
+Version:        26.2.2
 Release:        1%{?dist}
 Summary:        Intel Video Processing Library (Intel VPL) GPU Runtime
 License:        MIT
@@ -17,9 +17,9 @@ Patch0001: 0001-avce-Use-VDEnc-for-YUY2-AYUV-RGB-formats.patch
 Patch0002: 0002-AVC10b-Decode-feature.patch
 Patch0003: 0003-Enable-HEVC-VDENC-422-for-MTL-ARL.patch
 Patch0004: 0004-Correct-luma-and-chroma-offsets-linux.patch
-Patch0005: 0005-Add-NVL-platform-support-to-build-configuration.patch
-Patch0006: 0006-Add-new-device-IDs-for-NVL-S.patch
-Patch0007: 0005-Enable-AV1-422-decode.patch
+Patch0005: 0005-Enable-AV1-8-10bit-422-decode.patch
+Patch0006: 0006-Add-Device-ID-for-NVL-P.patch
+
 
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
@@ -69,6 +69,9 @@ developing applications that use %{name}.
 %{_libdir}/pkgconfig/libmfx-gen.pc
 
 %changelog
+* Wed Jul 1 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.2.2-1
+- upgrade to 26.2.2
+
 * Wed Apr 1 2026 Lishan Liu <lishan.liu@intel.com> - 25.4.6-1
 - Upgraded to version 25.4.6
 

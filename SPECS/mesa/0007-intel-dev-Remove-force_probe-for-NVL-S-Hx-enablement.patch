@@ -1,7 +1,7 @@
-From 1cd900a7bcfaefde8f54e5d2af0aeab96cc6aaf4 Mon Sep 17 00:00:00 2001
+From f7e87b656f21b014514b3918baa00c6c2231f1aa Mon Sep 17 00:00:00 2001
 From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
 Date: Wed, 11 Feb 2026 12:06:10 +0800
-Subject: [PATCH 11/11] intel/dev: Remove force_probe for NVL-S/Hx enablement
+Subject: [PATCH 7/8] intel/dev: Remove force_probe for NVL-S/Hx enablement
 
 Upstream URL: NA
 Upstream-status: Pending
@@ -14,7 +14,7 @@ Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/include/pci_ids/iris_pci_ids.h b/include/pci_ids/iris_pci_ids.h
-index 44c97d912e68..24a8164f0dcf 100644
+index 44c97d912e6..24a8164f0dc 100644
 --- a/include/pci_ids/iris_pci_ids.h
 +++ b/include/pci_ids/iris_pci_ids.h
 @@ -304,9 +304,9 @@ CHIPSET(0xb0b0, ptl, "PTL", "Intel(R) Graphics")
@@ -34,5 +34,5 @@ index 44c97d912e68..24a8164f0dcf 100644
 +CHIPSET(0xd744, nvl_s_hx_ul, "NVL-UL", "Intel(R) Graphics")
 +CHIPSET(0xd745, nvl_s_hx_ul, "NVL-HX", "Intel(R) Graphics")
 -- 
-2.34.1
+2.43.0
 

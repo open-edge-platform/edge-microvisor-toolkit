@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5    #v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
         with:
           persist-credentials: false
 
@@ -55,6 +55,11 @@ jobs:
           changed_specs=$(git diff-tree --diff-filter=d  --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }} | { grep "SPECS.*/.*\.spec$" || test $? = 1; } | awk '{printf "%s ", $0}')
           echo "Files to validate: '${changed_specs}'"
           echo "updated-specs=${changed_specs}" >> "$GITHUB_ENV"
+
+      # Install prerequisites and configure Go so that REBUILD_TOOLS=y can build
+      # the tools with the minimum required Go version (see toolkit/scripts/tools.mk).
+      - name: Prepare the build environment
+        run: sudo make -C toolkit install-prereqs-and-configure
 
       - name: Build the worker chroot
         if: ${{ env.updated-specs != '' }}

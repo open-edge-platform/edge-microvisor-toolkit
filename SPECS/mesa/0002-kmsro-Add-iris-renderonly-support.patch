@@ -1,7 +1,7 @@
-From dba558d2792f5635170e95b6659d1a23a4e00c11 Mon Sep 17 00:00:00 2001
+From 2038549f9b0a0b5c4031c9cc8413fc697a8032b1 Mon Sep 17 00:00:00 2001
 From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
 Date: Tue, 18 Nov 2025 23:23:22 +0800
-Subject: [PATCH 05/11] kmsro: Add iris renderonly support
+Subject: [PATCH 2/8] kmsro: Add iris renderonly support
 
 Enable using iris for KMS renderonly.
 
@@ -29,10 +29,10 @@ Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
  8 files changed, 28 insertions(+), 8 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index 9716180ee6d3..967185a5d058 100644
+index cc901ec629e..83146d83a50 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -242,6 +242,7 @@ with_gallium_kmsro = system_has_kms_drm and [
+@@ -247,6 +247,7 @@ with_gallium_kmsro = system_has_kms_drm and [
    with_gallium_v3d,
    with_gallium_vc4,
    with_gallium_zink,
@@ -41,7 +41,7 @@ index 9716180ee6d3..967185a5d058 100644
  
  _vulkan_drivers = get_option('vulkan-drivers')
 diff --git a/src/gallium/auxiliary/pipe-loader/meson.build b/src/gallium/auxiliary/pipe-loader/meson.build
-index 2bda1d288724..78023b369147 100644
+index 2bda1d28872..78023b36914 100644
 --- a/src/gallium/auxiliary/pipe-loader/meson.build
 +++ b/src/gallium/auxiliary/pipe-loader/meson.build
 @@ -45,6 +45,9 @@ endif
@@ -55,7 +55,7 @@ index 2bda1d288724..78023b369147 100644
  libpipe_loader_static = static_library(
    'pipe_loader_static',
 diff --git a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
-index ee6500e9e3c2..0c4b4499b250 100644
+index ee6500e9e3c..0c4b4499b25 100644
 --- a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
 +++ b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
 @@ -388,6 +388,9 @@ pipe_loader_get_compatible_render_capable_device_fds(int kms_only_fd, unsigned i
@@ -82,7 +82,7 @@ index ee6500e9e3c2..0c4b4499b250 100644
     /* For platform display-only devices, we try to find a render-capable device
      * on the platform bus and that should be compatible with the display-only
 diff --git a/src/gallium/auxiliary/target-helpers/drm_helper.h b/src/gallium/auxiliary/target-helpers/drm_helper.h
-index 236b68f8c0ee..4e3361320028 100644
+index 236b68f8c0e..4e336132002 100644
 --- a/src/gallium/auxiliary/target-helpers/drm_helper.h
 +++ b/src/gallium/auxiliary/target-helpers/drm_helper.h
 @@ -53,6 +53,7 @@ const struct drm_driver_descriptor descriptor_name = {         \
@@ -109,7 +109,7 @@ index 236b68f8c0ee..4e3361320028 100644
  DRM_DRIVER_DESCRIPTOR_STUB(kmsro)
  #endif
 diff --git a/src/gallium/winsys/iris/drm/iris_drm_public.h b/src/gallium/winsys/iris/drm/iris_drm_public.h
-index e8e497580246..afb640cc8548 100644
+index e8e49758024..afb640cc854 100644
 --- a/src/gallium/winsys/iris/drm/iris_drm_public.h
 +++ b/src/gallium/winsys/iris/drm/iris_drm_public.h
 @@ -32,7 +32,7 @@ struct pipe_screen *
@@ -123,7 +123,7 @@ index e8e497580246..afb640cc8548 100644
  
  #endif /* IRIS_DRM_PUBLIC_H */
 diff --git a/src/gallium/winsys/iris/drm/iris_drm_winsys.c b/src/gallium/winsys/iris/drm/iris_drm_winsys.c
-index 011311ecd503..8cfcc5f7a6ea 100644
+index 011311ecd50..8cfcc5f7a6e 100644
 --- a/src/gallium/winsys/iris/drm/iris_drm_winsys.c
 +++ b/src/gallium/winsys/iris/drm/iris_drm_winsys.c
 @@ -40,12 +40,12 @@ iris_drm_screen_create(int fd, const struct pipe_screen_config *config)
@@ -143,7 +143,7 @@ index 011311ecd503..8cfcc5f7a6ea 100644
        return NULL;
  
 diff --git a/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c b/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
-index deb847d994e5..e676c633572b 100644
+index deb847d994e..e676c633572 100644
 --- a/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
 +++ b/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
 @@ -33,6 +33,7 @@
@@ -167,7 +167,7 @@ index deb847d994e5..e676c633572b 100644
        }
  
 diff --git a/src/loader/loader.c b/src/loader/loader.c
-index aeefe6425105..367a2be3ae95 100644
+index 0567beb3dee..46e26c81b63 100644
 --- a/src/loader/loader.c
 +++ b/src/loader/loader.c
 @@ -249,8 +249,8 @@ loader_open_render_node_platform_devices(const char * const drivers[],
@@ -182,5 +182,5 @@ index aeefe6425105..367a2be3ae95 100644
  
           fd = loader_open_device(device->nodes[DRM_NODE_RENDER]);
 -- 
-2.34.1
+2.43.0
 

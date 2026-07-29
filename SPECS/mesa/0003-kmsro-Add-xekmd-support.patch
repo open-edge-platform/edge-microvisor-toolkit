@@ -1,7 +1,7 @@
-From 7f4ad2e5e6234fb93442f20fd98f4daa67f6821a Mon Sep 17 00:00:00 2001
+From 2c2e77bd5863ad77447f53d3466067d2ae9cf845 Mon Sep 17 00:00:00 2001
 From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
 Date: Wed, 19 Nov 2025 10:33:51 +0800
-Subject: [PATCH 06/11] kmsro: Add xekmd support
+Subject: [PATCH 3/8] kmsro: Add xekmd support
 
 Upstream PR: NA
 Upstream-status: Innapropriate
@@ -16,7 +16,7 @@ Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
  2 files changed, 6 insertions(+)
 
 diff --git a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
-index 0c4b4499b250..3c933910d0ef 100644
+index 0c4b4499b25..3c933910d0e 100644
 --- a/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
 +++ b/src/gallium/auxiliary/pipe-loader/pipe_loader_drm.c
 @@ -391,6 +391,7 @@ pipe_loader_get_compatible_render_capable_device_fds(int kms_only_fd, unsigned i
@@ -28,7 +28,7 @@ index 0c4b4499b250..3c933910d0ef 100644
     };
  
 diff --git a/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c b/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
-index e676c633572b..ff6c6466fb5c 100644
+index e676c633572..ff6c6466fb5 100644
 --- a/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
 +++ b/src/gallium/winsys/kmsro/drm/kmsro_drm_winsys.c
 @@ -131,6 +131,11 @@ struct pipe_screen *kmsro_drm_screen_create(int kms_fd,
@@ -44,5 +44,5 @@ index e676c633572b..ff6c6466fb5c 100644
        }
  
 -- 
-2.34.1
+2.43.0
 

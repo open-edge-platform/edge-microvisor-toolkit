@@ -1,7 +1,7 @@
-From 9a5ea5131516ac910f4ec2103622b99b3a543953 Mon Sep 17 00:00:00 2001
+From 874944887f5953eab8f16d77015a2aa1eb516e11 Mon Sep 17 00:00:00 2001
 From: "Mazlan, Hazwan Arif" <hazwan.arif.mazlan@intel.com>
 Date: Wed, 28 Aug 2024 16:38:31 +0800
-Subject: [PATCH 09/11] Revert "Auto-enable TLSDESC support"
+Subject: [PATCH 6/8] Revert "Auto-enable TLSDESC support"
 
 Upstream URL: NA
 Upstream-status: Innapropriate
@@ -14,10 +14,10 @@ Signed-off-by: Chew, Tong Liang <tong.liang.chew@intel.com>
  1 file changed, 42 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index 967185a5d058..3599a16e68f6 100644
+index 83146d83a50..c86a420bd68 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -525,48 +525,6 @@ if with_platform_android and get_option('platform-sdk-version') >= 29
+@@ -560,48 +560,6 @@ if with_platform_android and get_option('platform-sdk-version') >= 29
    add_project_link_arguments('-Wl,-plugin-opt=-emulated-tls=0', language: ['c', 'cpp'])
  endif
  
@@ -67,5 +67,5 @@ index 967185a5d058..3599a16e68f6 100644
    if not (with_platform_x11 and with_any_opengl)
      error('Cannot build GLX support without X11 platform support and at least one OpenGL API')
 -- 
-2.34.1
+2.43.0
 
