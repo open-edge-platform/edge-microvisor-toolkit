@@ -1,5 +1,5 @@
 Name:           intel-gmmlib
-Version:        22.9.0
+Version:        22.10.0
 Release:        1%{?dist}
 Summary:        Intel Graphics Memory Management Library
 License:        MIT
@@ -58,6 +58,9 @@ mkdir build && cd build
 %{_libdir}/pkgconfig/igdgmm.pc
 
 %changelog
+* Wed Jul 1 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 22.10.0-1
+- upgrade to 22.10.0
+
 * Tue Mar 10 2026 Andy <andy.peng@intel.com> - 22.9.0-1
 - Upgraded to version 22.9.0.
 

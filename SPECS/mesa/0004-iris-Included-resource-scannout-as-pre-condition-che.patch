@@ -1,7 +1,7 @@
-From b088319bfd7743ecf2b19517fb577b0dd0590a43 Mon Sep 17 00:00:00 2001
+From c86637f4deab685d2fcc27c402d5665a38e01f2d Mon Sep 17 00:00:00 2001
 From: tchew6 <tong.liang.chew@intel.com>
 Date: Thu, 24 Jun 2021 13:20:53 +0800
-Subject: [PATCH 07/11] iris: Included resource scannout as pre-condition
+Subject: [PATCH 4/8] iris: Included resource scannout as pre-condition
  checking
 
 The renderonly_scanout object exits for two reasons:
@@ -25,7 +25,7 @@ Signed-off-by: Mazlan, Hazwan Arif <hazwan.arif.mazlan@intel.com>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/src/gallium/drivers/iris/iris_resource.c b/src/gallium/drivers/iris/iris_resource.c
-index 37c7eacc75ac..78d26c57375d 100644
+index b3c64b8a5f9..d815350046d 100644
 --- a/src/gallium/drivers/iris/iris_resource.c
 +++ b/src/gallium/drivers/iris/iris_resource.c
 @@ -1148,12 +1148,12 @@ iris_resource_create_for_image(struct pipe_screen *pscreen,
@@ -53,5 +53,5 @@ index 37c7eacc75ac..78d26c57375d 100644
        }
        /* Because we share the same drm file across multiple iris_screen, when
 -- 
-2.34.1
+2.43.0
 
