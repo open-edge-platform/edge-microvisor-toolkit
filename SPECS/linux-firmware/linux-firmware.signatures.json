@@ -1,6 +1,7 @@
 {
   "Signatures": {
     "nvl_guc_70.bin": "7fc32b4e2cfe1f4eeabefdaed7d44b698c2c0f791a5af80b1de8ed4cd700d68a",
+    "ipu8_fw.bin": "8ddc1849a3515ea82d094daf1475c94653e97f5cdeac79ea409bc8f2ba804478",
     "linux-firmware-20260622.tar.xz": "2b9d8a358e76eb766588609135e53fa548b902c551daae33ee32f26f25e60dbb"
   }
 }
