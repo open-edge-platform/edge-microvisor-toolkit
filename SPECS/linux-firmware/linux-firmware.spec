@@ -1,7 +1,7 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20260622
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -9,6 +9,7 @@ Group:          System Environment/Kernel
 URL:            https://www.kernel.org/
 Source0:        https://www.kernel.org/pub/linux/kernel/firmware/%{name}-%{version}.tar.xz
 Source1:        https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/tree/xe/nvl_guc_70.bin
+Source2:        https://github.com/intel/ipu7-camera-bins/raw/refs/heads/main/lib/firmware/intel/ipu/ipu8_fw.bin
 
 %global debug_package %{nil}
 %global __os_install_post %{nil}
@@ -115,6 +116,9 @@ done
 
 mkdir -p %{buildroot}%{_firmwarepath}/xe
 install -m 0644 %{SOURCE1} %{buildroot}%{_firmwarepath}/xe/nvl_guc_70.bin
+
+mkdir -p %{buildroot}%{_firmwarepath}/intel/ipu
+install -m 0644 %{SOURCE2} %{buildroot}%{_firmwarepath}/intel/ipu/ipu8_fw.bin
 
 %post qat
 dracut --force
@@ -237,6 +241,9 @@ dracut --force
 %{_firmwarepath}/qat_*.bin
 
 %changelog
+* Mon Aug 3 2026 Andy <andy.peng@intel.com> - 20260622-2
+- Add ipu8_fw.bin firmware.
+
 * Mon Jun 27 2026 Andy <andy.peng@intel.com> - 20260622-1
 - Upgrade firmware to 20260622.
 
