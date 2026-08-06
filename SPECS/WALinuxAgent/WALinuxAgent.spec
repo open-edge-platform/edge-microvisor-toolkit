@@ -1,7 +1,7 @@
 Summary:        The Windows Azure Linux Agent
 Name:           WALinuxAgent
 Version:        2.11.1.4
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        ASL 2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -26,6 +26,7 @@ Patch2:         fix-argument-to-goalstate.patch
 # This patch adds azurelinux support into the setup.py. This patch should be
 # removed in the next 2.12 release/
 Patch3:         update-setup.patch
+Patch4:         acl-support.patch
 BuildRequires:  python3-distro
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-xml
@@ -113,6 +114,11 @@ python3 setup.py check && python3 setup.py test
 
 
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.11.1.4-5
+- merge from Azure Linux 3.0.20260712-3.0
+- Fix waagent-network-setup.service failure and update to teardown the specific interface.
+- Add support for Azure Container Linux
+
 * Wed Jan 22 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.11.1.4-5
 - Update Vendor and Distribution
 
