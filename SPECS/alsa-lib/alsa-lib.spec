@@ -2,8 +2,8 @@
 
 Summary:        ALSA library
 Name:           alsa-lib
-Version:        1.2.9
-Release:        3%{?dist}
+Version:        1.2.16.1
+Release:        1%{?dist}
 License:        LGPLv2+
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -11,7 +11,6 @@ Group:          Applications/Internet
 URL:            https://alsa-project.org
 Source0:        https://www.alsa-project.org/files/pub/lib/%{name}-%{version}.tar.bz2
 Source1:        https://www.alsa-project.org/files/pub/lib/alsa-topology-conf-%{version_alsa_tplg}.tar.bz2
-Patch0:         CVE-2026-25068.patch
 
 BuildRequires:  python3-devel
 BuildRequires:  python3-libs
@@ -69,6 +68,10 @@ tar xvjf %{SOURCE1} -C %{buildroot}/%{_datadir}/alsa --strip-components=1 --wild
 %{_datadir}/alsa/topology/*
 
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.2.16.1-1
+- merge from Azure Linux 3.0.20260712-3.0
+- Auto-upgrade to 1.2.16.1 - for CVE-2026-56109
+
 * Mon Mar 16 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.2.9-3
 - merge from Azure Linux 3.0.20260304-3.0 
 - Patch for CVE-2026-25068
