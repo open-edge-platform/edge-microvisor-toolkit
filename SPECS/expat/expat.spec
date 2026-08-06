@@ -1,22 +1,15 @@
 %define         underscore_version %(echo %{version} | cut -d. -f1-3 --output-delimiter="_")
 Summary:        An XML parser library
 Name:           expat
-Version:        2.6.4
-Release:        6%{?dist}
+Version:        2.8.2
+Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/GeneralLibraries
 URL:            https://libexpat.github.io/
 Source0:        https://github.com/libexpat/libexpat/releases/download/R_%{underscore_version}/%{name}-%{version}.tar.bz2
-Patch0:         CVE-2024-8176.patch
-Patch1:         CVE-2025-59375.patch
-Patch2:         CVE-2026-24515.patch
-Patch3:         CVE-2026-25210.patch
-Patch4:         Stop-updating-event-pointer-on-exit-for-reentry.patch
-Patch5:         CVE-2026-32776.patch
-Patch6:         CVE-2026-32777.patch
-Patch7:         CVE-2026-32778.patch
+
 Requires:       %{name}-libs = %{version}-%{release}
 
 BuildRequires: autoconf, libtool, xmlto, gcc-c++
@@ -78,6 +71,13 @@ rm -rf %{buildroot}/%{_docdir}/%{name}
 %{_libdir}/libexpat.so.1*
 
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.8.2-1
+- merge from Azure Linux 3.0.20260712-3.0
+- Upgrade to 2.8.2 to fix multiple CVEs
+
+* Thu Jul 9 2026 Lishan Liu <lishan.liu@intel.com> - 2.8.1-1
+- Upgrade to 2.8.1
+
 * Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.6.4-6
 - merge from Azure Linux 3.0.20260506-3.0
 - Patch for CVE-2026-32778, CVE-2026-32777, CVE-2026-32776
