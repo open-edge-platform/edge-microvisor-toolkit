@@ -72,7 +72,7 @@
 Name:           mesa
 Summary:        Mesa graphics libraries
 Version:        26.0.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        BSD
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -738,6 +738,9 @@ popd
 %endif
 
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.0.3-2
+- Bump release to rebuild with rust
+
 * Wed Jul 1 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.0.3-1
 - upgrade to 26.0.3
 
