@@ -5,7 +5,7 @@
 Summary: Industry-standard container runtime
 Name: %{upstream_name}2
 Version: 2.2.4
-Release: 2%{?dist}
+Release: 4%{?dist}
 License: ASL 2.0
 Group: Tools/Container
 URL: https://www.containerd.io
@@ -24,6 +24,14 @@ Patch4:	fix-TestCgroupNamespace-cgroupv1.patch
 Patch5:	CVE-2026-39821.patch
 Patch6:	CVE-2026-42506.patch
 Patch7:	CVE-2026-27136.patch
+Patch8:	CVE-2026-53488.patch
+Patch9:	CVE-2026-53492.patch
+Patch10:	CVE-2026-50195.patch
+Patch11:	CVE-2026-53489.patch
+Patch12:	CVE-2026-47262.patch
+Patch13:	CVE-2026-25680.patch
+Patch14:	CVE-2026-25681.patch
+Patch15:	CVE-2026-42502.patch
 
 %{?systemd_requires}
 
@@ -136,6 +144,11 @@ fi
 %{_bindir}/containerd-stress
 
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.2.4-4
+- merge from Azure Linux 3.0.20260712-3.0
+- Patch for CVE-2026-42502, CVE-2026-25681, CVE-2026-25680
+- Patch for CVE-2026-50195, CVE-2026-53488, CVE-2026-53492, CVE-2026-53489, CVE-2026-47262
+
 * Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.2.4-2
 - merge from Azure Linux 3.0.20260602-3.0
 - Resolve merge from fasttrack, bring patches for CVE-2026-42506, CVE-2026-39821, CVE-2026-27136 forward to 2.2.4 version of containerd2.
