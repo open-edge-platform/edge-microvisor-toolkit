@@ -1,10 +1,10 @@
 Summary:        Commit RPMs to an OSTree repository
 Name:           rpm-ostree
 Version:        2024.4
-Release:        10%{?dist}
+Release:        11%{?dist}
 License:        LGPLv2+
-Vendor:         Microsoft Corporation
-Distribution:   Azure Linux
+Vendor:        Intel Corporation
+Distribution:  Edge Microvisor Toolkit
 URL:            https://github.com/coreos/rpm-ostree
 Source0:        %{url}/releases/download/v%{version}/%{name}-%{version}.tar.xz
 Patch0:         0001-Revert-compose-Inject-our-static-tmpfiles.d-dropins-.patch
@@ -182,6 +182,12 @@ make check
 %{_datadir}/gir-1.0/*-1.0.gir
 
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2024.4-11
+- update Vendor and Distribution
+- Initial Edge Microvisor Toolkit import from Azure Linux (license: MIT). License verified.
+- merge from Azure Linux 3.0.20260712-3.0
+- Bump release to rebuild with rust
+
 * Tue Apr 21 2026 Azure Linux Security Servicing Account <azurelinux-security@microsoft.com> - 2024.4-10
 - Patch for CVE-2026-33056, CVE-2026-33055
 
