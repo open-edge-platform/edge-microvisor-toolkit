@@ -47,11 +47,10 @@ mv npu_compiler_elf-* third_party/npu_compiler_elf
 
 sed -i '/add_subdirectory(googletest EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
+# yaml-cpp is only needed by the validation layer; skip its cmake include
+sed -i '/include(cmake\/yaml-cpp.cmake)/s/^/#/' third_party/CMakeLists.txt
 
 %build
-# Fix yaml-cpp cmake config referencing /usr/lib instead of /usr/lib64
-sed -i 's|/usr/lib/libyaml-cpp|%{_libdir}/libyaml-cpp|g' /usr/lib/cmake/yaml-cpp/yaml-cpp-targets.cmake
-
 cmake \
 	-B build -S . \
 	-DENABLE_VALIDATION_BUILD=OFF \
