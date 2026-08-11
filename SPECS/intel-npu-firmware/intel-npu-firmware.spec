@@ -5,7 +5,7 @@
 
 Summary:        Intel NPU Firmware
 Name:           intel-npu-firmware
-Version:        1.32.0
+Version:        1.35.0
 Release:        1%{?dist}
 License:        MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
