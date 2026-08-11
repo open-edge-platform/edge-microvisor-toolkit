@@ -10,7 +10,7 @@ Source0:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.ta
 Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/f9ad3bf89c2418d714aef2e6b96a5aafb12a1971/level-zero-npu-extensions-f9ad3bf.tar.gz
 Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/a301d97e0717fb797c79ec51f8cdc13152878700/npu_compiler_elf-a301d97.tar.gz
 
-ExclusiveArch:	x86_64wge
+ExclusiveArch:	x86_64
 
 # Disable LTO - the project builds static libraries (.a) with LTO bitcode
 # objects that the BFD linker cannot resolve, causing undefined reference
