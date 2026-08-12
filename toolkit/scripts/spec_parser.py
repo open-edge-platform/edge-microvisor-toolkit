@@ -3,7 +3,7 @@ import json
 import argparse
 import re
 import git
-import subprocess
+import subprocess # nosec B404 - subprocess is invoked only with fixed argument lists (shell=False); see get_value_from_make / get_spec_variable_valu
 import glob
 
 DIST_TAG = ""
@@ -301,7 +301,8 @@ def get_value_from_make(directory, var):
             cwd=directory,
             text=True,
             capture_output=True,
-            check=True
+            check=True,
+            shell=False
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:
@@ -381,7 +382,7 @@ def extract_packages_from_file(file_name):
 def get_spec_variable_value(spec_file_path):
     try:
         # Run the rpmspec command to get the spec file data
-        result = subprocess.run(['rpmspec', '-P', spec_file_path], capture_output=True, text=True, check=True)
+        result = subprocess.run(['rpmspec', '-P', spec_file_path], capture_output=True, text=True, check=True, shell=False)
         spec_data = result.stdout
 
         return spec_data
