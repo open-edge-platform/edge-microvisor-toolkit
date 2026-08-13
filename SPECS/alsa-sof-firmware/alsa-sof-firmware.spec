@@ -18,7 +18,7 @@
 Summary:        Firmware and topology files for Sound Open Firmware project
 Name:           alsa-sof-firmware
 Version:        %{sof_ver}
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        BSD-3-Clause AND Apache-2.0
 Distribution:   Edge Microvisor Toolkit
 Vendor:         Intel Corporation
@@ -27,6 +27,9 @@ Source:         https://github.com/thesofproject/sof-bin/releases/download/%{sof
 %if 0%{?with_sof_addon}
 Source3:        https://github.com/thesofproject/sof-bin/releases/download/v%{sof_ver_addon}/sof-tplg-v%{sof_ver_addon}.tar.gz
 %endif
+Source4:         https://github.com/thesofproject/sof-bin/releases/download/%{sof_ver_pkg}/sof-nvl-s.ri
+Source5:         https://github.com/thesofproject/sof-bin/releases/download/%{sof_ver_pkg}/sof-nvl.ri
+Source6:         https://github.com/thesofproject/sof-bin/releases/download/%{sof_ver_pkg}/sof-nvl-rt722.tplg
 BuildRequires:  alsa-topology >= %{tplg_version}
 BuildRequires:  alsa-utils >= %{tplg_version}
 Conflicts:      alsa-firmware <= 1.2.1-6
@@ -60,6 +63,14 @@ ln -s sof-ipc4-tplg firmware/intel/sof-ace-tplg
 tar xvzf %{SOURCE3}
 mv sof-tplg-v%{sof_ver_addon}/*.tplg firmware/intel/sof-tplg
 %endif
+
+# for nvl
+mkdir -p firmware/intel/sof-ipc4/nvl-s
+cp %{SOURCE4} firmware/intel/sof-ipc4/nvl-s
+mkdir -p firmware/intel/sof-ipc4/nvl
+cp %{SOURCE5} firmware/intel/sof-ipc4/nvl
+mkdir -p firmware/intel/sof-ipc4-tplg
+cp %{SOURCE6} firmware/intel/sof-ipc4-tplg
 
 # remove NXP firmware files
 rm Notice.NXP LICENCE.NXP
@@ -163,6 +174,9 @@ if st and st.type == "directory" then
 end
 
 %changelog
+* Wed Aug 13 2026 Andy <andy.peng@intel.com> - 2025.12-2
+- Include NVL firmware files.
+
 * Mon Jan 12 2026 Basavarajx unniche <basavarajx.unniche@intel.com> - 2025.12-1
 - Update version to 2025.12.
 
