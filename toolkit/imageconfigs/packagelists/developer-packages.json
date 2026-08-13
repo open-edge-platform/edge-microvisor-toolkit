@@ -5,6 +5,7 @@
         "createrepo_c",
         "curl-devel",
         "device-mapper",
+        "expat-devel",
         "flex",
         "fuse-devel",
         "git",
