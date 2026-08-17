@@ -27,6 +27,7 @@ application-gateway-kubernetes-ingress
 apr
 apr-util
 archivemount
+argparse-manpage
 asciidoc
 aspell
 at
@@ -211,6 +212,7 @@ fping
 freefont
 freeglut
 freeipmi
+freeradius
 freetype
 fribidi
 frr
@@ -296,6 +298,7 @@ hyperv-daemons
 i2c-tools
 iana-etc
 ibarr
+ibdump
 ibsim
 icoutils
 icu
