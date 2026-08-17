@@ -5,7 +5,7 @@
 
 Summary:        Intel NPU Firmware
 Name:           intel-npu-firmware
-Version:        1.33.0
+Version:        1.35.0
 Release:        1%{?dist}
 License:        MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
@@ -36,6 +36,9 @@ cp -a firmware/bin/COPYRIGHT firmware/bin/* %{buildroot}%{_firmwarepath}
 %{_firmwarepath}/vpu_50xx_v1.bin
 
 %changelog
+* Tue Aug 11 2026 Andy <andy.peng@intel.com> - 1.35.0-1
+- Upgrade version to 1.35.0.
+
 * Thu Jul 2 2026 Andy <andy.peng@intel.com> - 1.33.0-1
 - Update version to v1.33.0
 
