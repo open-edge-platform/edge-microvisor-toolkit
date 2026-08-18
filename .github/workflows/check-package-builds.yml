@@ -144,13 +144,15 @@ jobs:
           ${{ matrix.build-prep }}
 
       - name: Run the build
+        env:
+          PACKAGE_NAME: ${{ env[matrix.package-type] }}
         run: |
           set -euo pipefail
 
           if sudo make -C toolkit -j$(nproc) build-packages \
-            PACKAGE_REBUILD_LIST="${{ env[matrix.package-type] }}" \
+            PACKAGE_REBUILD_LIST="${PACKAGE_NAME}" \
             REBUILD_TOOLS=y \
-            SRPM_PACK_LIST="${{ env[matrix.package-type] }}" \
+            SRPM_PACK_LIST="${PACKAGE_NAME}" \
             ${{ matrix.extra-args }} 2>&1 | tee build.log; then
             touch build.succeeded
           fi

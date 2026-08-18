@@ -11,6 +11,7 @@ runs:
       with:
         fetch-depth: 0
         fetch-tags: true
+        persist-credentials: false
 
     - name: Checkout stable specs and manifests
       shell: bash

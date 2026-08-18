@@ -51,10 +51,13 @@ jobs:
           echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
 
       - name: Get the changed files
+        env:
+          BASE_SHA: ${{ env.base_sha }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
           git config --global --add safe.directory '*'
-          echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }})'"
-          changed_specs=$(git diff-tree --diff-filter=d --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }} | { grep "SPECS.*/.*\.spec$" || test $? = 1; } | tr '\n' ' ' )
+          echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA")'"
+          changed_specs=$(git diff-tree --diff-filter=d --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA" | { grep "SPECS.*/.*\.spec$" || test $? = 1; } | tr '\n' ' ' )
           echo "Files to validate: '${changed_specs}'"
           echo "updated-specs=${changed_specs}" >> "$GITHUB_ENV"
 
@@ -71,4 +74,7 @@ jobs:
 
       - name: Verify .spec files
         if: ${{ env.updated-specs != '' }}
-        run: python3 toolkit/scripts/check_spec_guidelines.py --toolchain_specs  "${{ env.toolchain-spec-list }}" --specs ${{ env.updated-specs }}
+        env:
+          TOOLCHAIN_SPEC_LIST: ${{ env.toolchain-spec-list }}
+          UPDATED_SPECS: ${{ env.updated-specs }}
+        run: python3 toolkit/scripts/check_spec_guidelines.py --toolchain_specs  "${TOOLCHAIN_SPEC_LIST}" --specs ${UPDATED_SPECS}
