@@ -50,9 +50,12 @@ jobs:
           echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
 
       - name: Get the changed files
+        env:
+          BASE_SHA: ${{ env.base_sha }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
-          echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }})'"
-          changed_specs=$(git diff-tree --diff-filter=d  --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }} | { grep "SPECS.*/.*\.spec$" || test $? = 1; } | awk '{printf "%s ", $0}')
+          echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA")'"
+          changed_specs=$(git diff-tree --diff-filter=d  --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA" | { grep "SPECS.*/.*\.spec$" || test $? = 1; } | awk '{printf "%s ", $0}')
           echo "Files to validate: '${changed_specs}'"
           echo "updated-specs=${changed_specs}" >> "$GITHUB_ENV"
 
@@ -67,4 +70,6 @@ jobs:
 
       - name: Check each spec
         if: ${{ env.updated-specs != '' }}
-        run: .github/workflows/validate-cg-manifest.sh build/worker/worker_chroot.tar.gz ${{ env.updated-specs }}
+        env:
+          UPDATED_SPECS: ${{ env.updated-specs }}
+        run: .github/workflows/validate-cg-manifest.sh build/worker/worker_chroot.tar.gz ${UPDATED_SPECS}

@@ -54,10 +54,13 @@ jobs:
           echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
 
       - name: Get changed packages
+        env:
+          BASE_SHA: ${{ env.base_sha }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
           # Find the packages that have been modified in the current PR. They will be of the form '/path/to/SPECS/<pkgname>/**/.*', and we want to extract
           # the package's directory name (ie the folder inside ./SPECS).
-          changed_pkg_dirs=$(git diff-tree --diff-filter=d --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }} | { grep -oP "(?<=^${{ matrix.specs-dir }}/)([^/]+)" || [[ $? -eq 1 ]]; } | sort -u | xargs)
+          changed_pkg_dirs=$(git diff-tree --diff-filter=d --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA" | { grep -oP "(?<=^${{ matrix.specs-dir }}/)([^/]+)" || [[ $? -eq 1 ]]; } | sort -u | xargs)
 
           echo "Folders with modified files in this PR:"
           echo "${{ matrix.specs-dir }}/*: '${changed_pkg_dirs}'"
@@ -74,8 +77,11 @@ jobs:
           echo "changed_pkgs=${changed_pkgs}" >> "$GITHUB_ENV"
 
       - name: Prepare the build environment
+        env:
+          CHANGED_PKGS: ${{ env.changed_pkgs }}
+          CHANGED_PKGS_EXTENDED: ${{ env.changed_pkgs_extended }}
         run: |
-          if [ -z "${{ env.changed_pkgs }}" ] && [ -z "${{ env.changed_pkgs_extended }}" ]; then
+          if [ -z "${CHANGED_PKGS}" ] && [ -z "${CHANGED_PKGS_EXTENDED}" ]; then
             echo "No package changes detected."
             exit 0
           fi
@@ -90,19 +96,21 @@ jobs:
           sudo make -C toolkit -j"$(nproc)" chroot-tools REBUILD_TOOLS=y DAILY_BUILD_ID=lkg
 
       - name: Check for invalid source signatures
+        env:
+          CHANGED_PKGS: ${{ env.changed_pkgs }}
         run: |
-          if [ -z "${{ env.changed_pkgs }}" ]; then
+          if [ -z "${CHANGED_PKGS}" ]; then
             echo "No package changes detected in '${{ matrix.specs-dir }}''."
             exit 0
           fi
 
           set -x
-          if ! sudo make -C toolkit -j"$(nproc)" input-srpms REBUILD_TOOLS=y DAILY_BUILD_ID=lkg SRPM_PACK_LIST="${{ env.changed_pkgs }}" SPECS_DIR="../${{ matrix.specs-dir }}"; then
+          if ! sudo make -C toolkit -j"$(nproc)" input-srpms REBUILD_TOOLS=y DAILY_BUILD_ID=lkg SRPM_PACK_LIST="${CHANGED_PKGS}" SPECS_DIR="../${{ matrix.specs-dir }}"; then
             set +x
             printf "\n\n******************************\n"
             echo "Failed to check the signatures of the modified packages."
             echo "Check the logs above for details on the mismatches files and their expected hashes."
-            echo "Consider running: sudo make -C toolkit input-srpms REBUILD_TOOLS=y SRPM_PACK_LIST='${{ env.changed_pkgs }}' SPECS_DIR=../${{ matrix.specs-dir }}"
+            echo "Consider running: sudo make -C toolkit input-srpms REBUILD_TOOLS=y SRPM_PACK_LIST='${CHANGED_PKGS}' SPECS_DIR=../${{ matrix.specs-dir }}"
             printf "******************************\n\n"
             exit 1
           else
