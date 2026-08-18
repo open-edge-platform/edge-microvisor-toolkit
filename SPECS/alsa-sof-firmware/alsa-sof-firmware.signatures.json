@@ -1,7 +1,9 @@
 {
   "Signatures": {
     "sof-nvl.ri": "46726e9e7637369d89992825f1b5e5eb5da6fd8421161b8dabb9737213f1ce58",
+    "sof-nvl-openmodules.ri": "a2493daceefc50a2df75546420011bce00266979321e638bdbdb7273289bf95b",
     "sof-nvl-s.ri": "a44b694624560790b87fa2d97d3a8ef2b8247a24b370c25ed413c30d313585a5",
+    "sof-nvl-s-openmodules.ri": "4fea1314a514d07f936bbe0e216f0fe394438d7abc3dbf7d2a532a16771dc823",
     "sof-nvl-rt722.tplg": "61ae0369f79cb27b3b2e1880ba9dfb510c6ed2c77f97e3f8506a8eba5850c1d1",
     "sof-bin-2025.12.tar.gz": "2f7aed784d2fa092c750651e949727f2ae4e9e39cca2c6bfed420f618adf2a9e"
   }

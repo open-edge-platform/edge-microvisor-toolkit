@@ -30,6 +30,8 @@ Source3:        https://github.com/thesofproject/sof-bin/releases/download/v%{so
 Source4:         https://github.com/thesofproject/sof-bin/releases/download/%{sof_ver_pkg}/sof-nvl-s.ri
 Source5:         https://github.com/thesofproject/sof-bin/releases/download/%{sof_ver_pkg}/sof-nvl.ri
 Source6:         https://github.com/thesofproject/sof-bin/releases/download/%{sof_ver_pkg}/sof-nvl-rt722.tplg
+Source7:         https://github.com/thesofproject/sof-bin/releases/download/%{sof_ver_pkg}/sof-nvl-s-openmodules.ri
+Source8:         https://github.com/thesofproject/sof-bin/releases/download/%{sof_ver_pkg}/sof-nvl-openmodules.ri
 BuildRequires:  alsa-topology >= %{tplg_version}
 BuildRequires:  alsa-utils >= %{tplg_version}
 Conflicts:      alsa-firmware <= 1.2.1-6
@@ -67,8 +69,10 @@ mv sof-tplg-v%{sof_ver_addon}/*.tplg firmware/intel/sof-tplg
 # for nvl
 mkdir -p firmware/intel/sof-ipc4/nvl-s
 cp %{SOURCE4} firmware/intel/sof-ipc4/nvl-s
+cp %{SOURCE7} firmware/intel/sof-ipc4/nvl-s
 mkdir -p firmware/intel/sof-ipc4/nvl
 cp %{SOURCE5} firmware/intel/sof-ipc4/nvl
+cp %{SOURCE8} firmware/intel/sof-ipc4/nvl
 mkdir -p firmware/intel/sof-ipc4-tplg
 cp %{SOURCE6} firmware/intel/sof-ipc4-tplg
 
