@@ -39,9 +39,12 @@ jobs:
           echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
 
       - name: Check for merge conflicts
+        env:
+          BASE_SHA: ${{ env.base_sha }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
-          echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }})'"
-          changed_files=$(git diff-tree --diff-filter=d --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }})
+          echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA")'"
+          changed_files=$(git diff-tree --diff-filter=d --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA")
 
           merge_conflict_found=false
           for file in $changed_files ; do
