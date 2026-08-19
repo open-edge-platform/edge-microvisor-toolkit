@@ -1,5 +1,5 @@
 %define emt_ver 3
-%define dist_version 26.06
+%define dist_version 26.06.02
 %define build_number_no_dist_no_time %(echo %{distro_release_version} | cut -d. -f 3)
 
 Summary:        Edge Microvisor Toolkit release files
@@ -121,6 +121,9 @@ install -Dm0644 %{SOURCE4} -t %{buildroot}%{_sysctldir}/
 %{_sysctldir}/*.conf
 
 %changelog
+* Wed Aug 19 2026 Lishan Liu <lishan.liu@intel.com> - 26.06.02 - 1
+- Update dist version to 26.06.02
+
 * Mon Mar 30 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.06-1
 - bump version for 26.06  release.
 
