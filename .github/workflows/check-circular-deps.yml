@@ -25,6 +25,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Prepare the build environment
+        run: |
+          toolkit/scripts/toolchain/toolchain_update_git_submodule.sh
+          sudo make -C toolkit install-prereqs-and-configure
+
       - name: Check for circular dependencies
         run: |
           echo "Checking for circular dependency loops..."
