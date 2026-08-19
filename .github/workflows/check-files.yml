@@ -41,17 +41,22 @@ jobs:
         echo "Merging ${{ github.sha }} into ${{ github.event.before }}"
 
     - name: Get the changed files
+      env:
+        BASE_SHA: ${{ env.base_sha }}
+        HEAD_SHA: ${{ github.sha }}
       run: |
-        echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }})'"
-        changed_files=$(git diff-tree --diff-filter=AM --no-commit-id --name-only -r ${{ env.base_sha }} ${{ github.sha }})
+        echo "Files changed: '$(git diff-tree --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA")'"
+        changed_files=$(git diff-tree --diff-filter=AM --no-commit-id --name-only -r "$BASE_SHA" "$HEAD_SHA")
         echo "Files to validate: '${changed_files}'"
         echo "changed-files<<EOF" >> $GITHUB_ENV
         echo "${changed_files}" >> $GITHUB_ENV
         echo "EOF" >> $GITHUB_ENV
 
     - name: Check for disallowed file types
+      env:
+        CHANGED_FILES: ${{ env.changed-files }}
       run: |
-        if [[ -z "${{ env.changed-files }}" ]]; then
+        if [[ -z "${CHANGED_FILES}" ]]; then
           echo "No files to validate. Exiting."
           exit 0
         fi
@@ -123,7 +128,7 @@ jobs:
             1>&2 echo "**** ERROR ****"
             error_found=1
           fi
-        done <<< "${{ env.changed-files }}"
+        done <<< "${CHANGED_FILES}"
 
         if [[ $error_found -eq 1 ]]; then
           echo ""
