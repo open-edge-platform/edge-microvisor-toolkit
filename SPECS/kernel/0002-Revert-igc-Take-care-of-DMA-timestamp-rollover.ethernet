@@ -1,0 +1,29 @@
+From 4b14e5cd6378a0e4b147f56d4e9ec73ea6e02288 Mon Sep 17 00:00:00 2001
+From: KhaiWenTan <khai.wen.tan@intel.com>
+Date: Thu, 25 Jun 2026 13:35:22 +0800
+Subject: [PATCH 2/6] Revert "igc: Take care of DMA timestamp rollover"
+
+This reverts commit af7b03b8fad0f872c89d775d77545d4fe9ab61f4.
+
+Signed-off-by: KhaiWenTan <khai.wen.tan@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc_ptp.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igc/igc_ptp.c b/drivers/net/ethernet/intel/igc/igc_ptp.c
+index 1be754b8d6d5..aaeb31d7faf9 100644
+--- a/drivers/net/ethernet/intel/igc/igc_ptp.c
++++ b/drivers/net/ethernet/intel/igc/igc_ptp.c
+@@ -459,9 +459,6 @@ static void igc_ptp_dma_time_to_hwtstamp(struct igc_adapter *adapter,
+ 	nsec = rd32(IGC_SYSTIML);
+ 	sec = rd32(IGC_SYSTIMH);
+ 
+-	if (unlikely(nsec < (systim & 0xFFFFFFFF)))
+-		--sec;
+-
+ 	switch (adapter->hw.mac.type) {
+ 	case igc_i225:
+ 		memset(hwtstamps, 0, sizeof(*hwtstamps));
+-- 
+2.34.1
+

@@ -1,0 +1,79 @@
+From 1c29b0aa777ca254f219d2e062c92bb112669107 Mon Sep 17 00:00:00 2001
+From: Daniel Borkmann <daniel@iogearbox.net>
+Date: Wed, 8 Apr 2026 21:12:40 +0200
+Subject: [PATCH 3/9] bpf: Fix ld_{abs,ind} failure path analysis in subprogs
+
+[ Upstream commit ee861486e377edc55361c08dcbceab3f6b6577bd ]
+
+Usage of ld_{abs,ind} instructions got extended into subprogs some time
+ago via commit 09b28d76eac4 ("bpf: Add abnormal return checks."). These
+are only allowed in subprograms when the latter are BTF annotated and
+have scalar return types.
+
+The code generator in bpf_gen_ld_abs() has an abnormal exit path (r0=0 +
+exit) from legacy cBPF times. While the enforcement is on scalar return
+types, the verifier must also simulate the path of abnormal exit if the
+packet data load via ld_{abs,ind} failed.
+
+This is currently not the case. Fix it by having the verifier simulate
+both success and failure paths, and extend it in similar ways as we do
+for tail calls. The success path (r0=unknown, continue to next insn) is
+pushed onto stack for later validation and the r0=0 and return to the
+caller is done on the fall-through side.
+
+Fixes: 09b28d76eac4 ("bpf: Add abnormal return checks.")
+Reported-by: STAR Labs SG <info@starlabs.sg>
+Signed-off-by: Daniel Borkmann <daniel@iogearbox.net>
+Link: https://lore.kernel.org/r/20260408191242.526279-2-daniel@iogearbox.net
+Signed-off-by: Alexei Starovoitov <ast@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+
+[ Backport note: upstream commit d846d83bdacbd8f14fc45c63b8c1d22608452e1c
+  also renames visit_tailcall_insn() to visit_abnormal_return_insn() and
+  extends visit_insn()'s CFG successor computation for BPF_LD_ABS/IND and
+  tail-call instructions, using the bpf_iarray/gotox jump-table
+  infrastructure. That infrastructure (iarray_realloc, bpf_find_containing_subprog-based
+  jt setup, visit_gotox_insn, computed-goto/BPF_JCOND-based gotox support)
+  does not exist in this tree, so those hunks were dropped as
+  inapplicable/not-yet-present dependencies rather than backported. The
+  security-relevant fix -- teaching check_ld_abs() to simulate the
+  bpf_gen_ld_abs() hidden abnormal-exit path when running inside a
+  subprogram -- is fully self-contained and mirrors the existing analogous
+  handling already present for BPF_FUNC_tail_call in check_helper_call(),
+  so it applies cleanly and is functionally complete on its own. ]
+(cherry picked from commit d846d83bdacbd8f14fc45c63b8c1d22608452e1c)
+---
+ kernel/bpf/verifier.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
+index d1c51d812f3b6..e76c1bb3f994e 100644
+--- a/kernel/bpf/verifier.c
++++ b/kernel/bpf/verifier.c
+@@ -17402,6 +17402,23 @@ static int check_ld_abs(struct bpf_verifier_env *env, struct bpf_insn *insn)
+ 	mark_reg_unknown(env, regs, BPF_REG_0);
+ 	/* ld_abs load up to 32-bit skb data. */
+ 	regs[BPF_REG_0].subreg_def = env->insn_idx + 1;
++	/*
++	 * See bpf_gen_ld_abs() which emits a hidden BPF_EXIT with r0=0
++	 * which must be explored by the verifier when in a subprog.
++	 */
++	if (env->cur_state->curframe) {
++		struct bpf_verifier_state *branch;
++
++		mark_reg_scratched(env, BPF_REG_0);
++		branch = push_stack(env, env->insn_idx + 1, env->insn_idx, false);
++		if (IS_ERR(branch))
++			return PTR_ERR(branch);
++		mark_reg_known_zero(env, regs, BPF_REG_0);
++		err = prepare_func_exit(env, &env->insn_idx);
++		if (err)
++			return err;
++		env->insn_idx--;
++	}
+ 	return 0;
+ }
+ 
+-- 
+2.43.0
+

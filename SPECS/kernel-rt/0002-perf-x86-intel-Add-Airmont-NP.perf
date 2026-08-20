@@ -1,0 +1,34 @@
+From 825196476abeeeaafda94f09d4a35d9a3f33e969 Mon Sep 17 00:00:00 2001
+From: Martin Schiller <ms@dev.tdt.de>
+Date: Mon, 24 Nov 2025 08:48:45 +0100
+Subject: [PATCH 2/2] perf/x86/intel: Add Airmont NP
+
+[ Upstream commit a08340fd291671c54d379d285b2325490ce90ddd ]
+
+The Intel / MaxLinear Airmont NP (aka Lightning Mountain) supports the
+same architectual and non-architecural events as Airmont.
+
+Signed-off-by: Martin Schiller <ms@dev.tdt.de>
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Reviewed-by: Dapeng Mi <dapeng1.mi@linux.intel.com>
+Link: https://patch.msgid.link/20251124074846.9653-3-ms@dev.tdt.de
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/x86/events/intel/core.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/x86/events/intel/core.c b/arch/x86/events/intel/core.c
+index 052f1a3aa208..a81bb8659d31 100644
+--- a/arch/x86/events/intel/core.c
++++ b/arch/x86/events/intel/core.c
+@@ -7569,6 +7569,7 @@ __init int intel_pmu_init(void)
+ 	case INTEL_ATOM_SILVERMONT_D:
+ 	case INTEL_ATOM_SILVERMONT_MID:
+ 	case INTEL_ATOM_AIRMONT:
++	case INTEL_ATOM_AIRMONT_NP:
+ 	case INTEL_ATOM_SILVERMONT_MID2:
+ 		memcpy(hw_cache_event_ids, slm_hw_cache_event_ids,
+ 			sizeof(hw_cache_event_ids));
+-- 
+2.34.1
+

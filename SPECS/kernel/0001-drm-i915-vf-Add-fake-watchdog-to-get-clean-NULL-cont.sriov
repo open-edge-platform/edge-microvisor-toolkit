@@ -1,0 +1,168 @@
+From 6979a2fdc80f12cf1beaf81b6bbdea38a2dc2fe3 Mon Sep 17 00:00:00 2001
+From: Thineshkumar Saravanan <thineshkumar.saravanan@intel.com>
+Date: Thu, 18 Jun 2026 16:31:42 +0800
+Subject: [PATCH] drm/i915/vf: Add fake watchdog to get clean NULL context
+ reset
+
+Implement a fake watchdog mechanism in i915 by programming the
+PR_CTR watchdog counter registers and issuing an unsatisfiable
+semaphore wait.
+
+The watchdog threshold is set to a very small value and the counter
+is started via PR_CTR_CTRL. A MI_SEMAPHORE_WAIT command is then
+issued with a condition that can never be satisfied, causing the
+engine to stall. This ensures that the watchdog counter expires and
+triggers the expected engine reset/recovery path.
+
+This is used to guarantee a clean reset when switching to or handling
+NULL context in VF scenarios.
+
+The implementation mirrors the xe driver approach, using:
+  - PR_CTR_THRSH to program the threshold
+  - PR_CTR_CTRL to start/stop the counter
+  - semaphore wait to induce a controlled hang
+
+Signed-off-by: Thineshkumar Saravanan <thineshkumar.saravanan@intel.com>
+---
+ drivers/gpu/drm/i915/gt/intel_engine_regs.h |  7 ++
+ drivers/gpu/drm/i915/gt/intel_gt.c          | 78 ++++++++++++++++++++-
+ 2 files changed, 84 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/intel_engine_regs.h b/drivers/gpu/drm/i915/gt/intel_engine_regs.h
+index d70b296b8976..0b738a524980 100644
+--- a/drivers/gpu/drm/i915/gt/intel_engine_regs.h
++++ b/drivers/gpu/drm/i915/gt/intel_engine_regs.h
+@@ -116,6 +116,13 @@
+ #define RING_BBADDR(base)			_MMIO((base) + 0x140)
+ #define RING_BB_OFFSET(base)			_MMIO((base) + 0x158)
+ #define RING_BBADDR_UDW(base)			_MMIO((base) + 0x168) /* gen8+ */
++#define PR_CTR_CTRL(base)			_MMIO((base) + 0x178)
++#define   CTR_COUNT_SELECT_FF			REG_BIT(31)
++#define   CTR_LOGIC_OP_MASK			REG_GENMASK(30, 0)
++#define     CTR_START				0
++#define     CTR_STOP				1
++#define   CTR_LOGIC_OP(OP)			REG_FIELD_PREP(CTR_LOGIC_OP_MASK, CTR_##OP)
++#define PR_CTR_THRSH(base)			_MMIO((base) + 0x17c)
+ #define CCID(base)				_MMIO((base) + 0x180)
+ #define   CCID_EN				BIT(0)
+ #define   CCID_EXTENDED_STATE_RESTORE		BIT(2)
+diff --git a/drivers/gpu/drm/i915/gt/intel_gt.c b/drivers/gpu/drm/i915/gt/intel_gt.c
+index d380228ac473..2211095429a9 100644
+--- a/drivers/gpu/drm/i915/gt/intel_gt.c
++++ b/drivers/gpu/drm/i915/gt/intel_gt.c
+@@ -16,6 +16,7 @@
+ #include "intel_engine_pm.h"
+ #include "intel_engine_regs.h"
+ #include "intel_ggtt_gmch.h"
++#include "intel_gpu_commands.h"
+ #include "intel_gt.h"
+ #include "intel_gt_buffer_pool.h"
+ #include "intel_gt_ccs_mode.h"
+@@ -32,6 +33,7 @@
+ #include "intel_rc6.h"
+ #include "intel_renderstate.h"
+ #include "intel_rps.h"
++#include "intel_ring.h"
+ #include "intel_sa_media.h"
+ #include "intel_gt_sysfs.h"
+ #include "intel_tlb.h"
+@@ -536,6 +538,62 @@ static struct i915_address_space *kernel_vm(struct intel_gt *gt)
+ 		return i915_vm_get(&gt->ggtt->vm);
+ }
+ 
++/*
++ * Emit a "fake watchdog" with an impossible wait condition into @rq so that
++ * the engine's preemption watchdog counter overflows and forces the GuC to
++ * reset the engine.
++ *
++ * On a SR-IOV VF this is used while recording the engine default state: the
++ * VF cannot reset the shared physical engine itself, but by stalling on a
++ * semaphore that never completes we let the watchdog trip and have the GuC
++ * (owned by the PF) reset the engine for us. That reset hands the VF a clean
++ * engine, so the recorded default context does not inherit stale HW register
++ * state left behind by a previously running VF (cross-VF contamination).
++ *
++ * Note: the forced reset will complete @rq with an error - that is expected
++ * and must be tolerated by the caller.
++ */
++static int emit_fake_watchdog(struct i915_request *rq)
++{
++	// TKS
++	struct intel_engine_cs *engine = rq->engine;
++	u32 ggtt_addr = i915_ggtt_offset(engine->status_page.vma) +
++			I915_GEM_HWS_SCRATCH * sizeof(u32);
++	u32 *cs;
++
++	drm_info(&engine->i915->drm,
++		 "i915: fake watchdog armed on %s (sem ggtt 0x%08x)\n",
++		 engine->name, ggtt_addr);
++
++	cs = intel_ring_begin(rq, 12);
++	if (IS_ERR(cs))
++		return PTR_ERR(cs);
++
++	/* Arm the watchdog counter with an impossibly small threshold. */
++	*cs++ = MI_LOAD_REGISTER_IMM(2) | MI_LRI_LRM_CS_MMIO;
++	*cs++ = i915_mmio_reg_offset(PR_CTR_THRSH(0));
++	*cs++ = 2; /* small threshold */
++	*cs++ = i915_mmio_reg_offset(PR_CTR_CTRL(0));
++	*cs++ = CTR_LOGIC_OP(START);
++
++	/* Wait on a condition that can never be satisfied. */
++	*cs++ = MI_SEMAPHORE_WAIT |
++		MI_SEMAPHORE_GLOBAL_GTT |
++		MI_SEMAPHORE_POLL |
++		MI_SEMAPHORE_SAD_EQ_SDD;
++	*cs++ = 0xdead; /* this should never be seen */
++	*cs++ = ggtt_addr;
++	*cs++ = 0;
++
++	/* Stop the counter (only reached if the wait ever completes). */
++	*cs++ = MI_LOAD_REGISTER_IMM(1) | MI_LRI_LRM_CS_MMIO;
++	*cs++ = i915_mmio_reg_offset(PR_CTR_CTRL(0));
++	*cs++ = CTR_LOGIC_OP(STOP);
++
++	intel_ring_advance(rq, cs);
++	return 0;
++}
++
+ static int __engines_record_defaults(struct intel_gt *gt)
+ {
+ 	struct i915_request *requests[I915_NUM_ENGINES] = {};
+@@ -576,6 +634,18 @@ static int __engines_record_defaults(struct intel_gt *gt)
+ 			goto err_fini;
+ 		}
+ 
++		/*
++		 * VFs cannot reset the shared physical engine themselves, so
++		 * force the GuC to do it via a fake watchdog before recording
++		 * the defaults. This guarantees a clean engine and avoids
++		 * inheriting stale state left behind by a previous VF.
++		 */
++		if (IS_SRIOV_VF(gt->i915)) {
++			err = emit_fake_watchdog(rq);
++			if (err)
++				goto err_rq;
++		}
++
+ 		err = intel_engine_emit_ctx_wa(rq);
+ 		if (err)
+ 			goto err_rq;
+@@ -610,7 +680,13 @@ static int __engines_record_defaults(struct intel_gt *gt)
+ 		if (!rq)
+ 			continue;
+ 
+-		if (rq->fence.error) {
++		/*
++		 * On a VF the fake watchdog deliberately forces a GuC engine
++		 * reset, which completes the request with an error. That reset
++		 * is exactly what provides the clean engine state we want to
++		 * record, so treat it as expected rather than fatal.
++		 */
++		if (rq->fence.error && !IS_SRIOV_VF(gt->i915)) {
+ 			err = -EIO;
+ 			goto out;
+ 		}
+-- 
+2.34.1
+

@@ -1,0 +1,52 @@
+From 02a888364fb55d9f274fb5440e857c62952a00d9 Mon Sep 17 00:00:00 2001
+From: Junxiao Chang <junxiao.chang@intel.com>
+Date: Wed, 15 Jul 2026 10:26:46 +0800
+Subject: [PATCH 2/2] drm/i915/iov: fix sriov bounds check issue
+
+Range check covers count PTEs, write covers count + num_copies.
+Change range check from count to count + num_copies.
+
+node->size == 0 might introduce underflow issue, check it before
+use.
+
+Signed-off-by: Junxiao Chang <junxiao.chang@intel.com>
+---
+ drivers/gpu/drm/i915/gt/iov/intel_iov_ggtt.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gt/iov/intel_iov_ggtt.c b/drivers/gpu/drm/i915/gt/iov/intel_iov_ggtt.c
+index 5d5efa33bbf6..da5c56ba78af 100644
+--- a/drivers/gpu/drm/i915/gt/iov/intel_iov_ggtt.c
++++ b/drivers/gpu/drm/i915/gt/iov/intel_iov_ggtt.c
+@@ -53,7 +53,7 @@ int intel_iov_ggtt_pf_update_vf_ptes(struct intel_iov *iov, u32 vfid, u32 pte_of
+ {
+ 	struct drm_mm_node *node = &iov->pf.provisioning.configs[vfid].ggtt_region;
+ 	u64 ggtt_addr = node->start + pte_offset * I915_GTT_PAGE_SIZE_4K;
+-	u64 ggtt_addr_end = ggtt_addr + count * I915_GTT_PAGE_SIZE_4K - 1;
++	u64 ggtt_addr_end;
+ 	u64 vf_ggtt_end = node->start + node->size - 1;
+ 	gen8_pte_t pte_pattern = prepare_pattern_pte(*(ptes), vfid);
+ 	struct sg_table *st;
+@@ -68,14 +68,16 @@ int intel_iov_ggtt_pf_update_vf_ptes(struct intel_iov *iov, u32 vfid, u32 pte_of
+ 	for (i = 0; i < count; i++)
+ 		GEM_BUG_ON(prepare_pattern_pte(ptes[i], vfid) != pte_pattern);
+ 
+-	if (!count)
++	if (!count || !node->size)
+ 		return -EINVAL;
+ 
++	n_ptes = num_copies ? num_copies + count : count;
++
++	ggtt_addr_end = ggtt_addr + n_ptes * I915_GTT_PAGE_SIZE_4K - 1;
++
+ 	if (ggtt_addr_end > vf_ggtt_end)
+ 		return -ERANGE;
+ 
+-	n_ptes = num_copies ? num_copies + count : count;
+-
+ 	st = kmalloc(sizeof(*st), GFP_KERNEL);
+ 	if (!st)
+ 		return -ENOMEM;
+-- 
+2.34.1
+
