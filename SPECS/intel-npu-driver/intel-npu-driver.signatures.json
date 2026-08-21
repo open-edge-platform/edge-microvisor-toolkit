@@ -1,7 +1,7 @@
 {
   "Signatures": {
-    "npu_compiler_elf-82c444b.tar.gz": "75ca714b84b5426ed2261e3ec798111f6dafde8d38f01351be0210021b689257",
-    "level-zero-npu-extensions-c7cb5d2.tar.gz": "72dd945869f773d21a4042feb069f4841866e9a4057575eb3588320d3768961e",
-    "intel-npu-driver-v1.33.0.tar.gz": "2c25feabf471ae49d8dc99dca7c584113b0a25a3ef045ba834ce65f731fde7f5"
+    "npu_compiler_elf-a301d97.tar.gz": "e6440ae3e1b2717084a7e05c439e976c984d762c6f67aba69a022c568b07ce2c",
+    "level-zero-npu-extensions-f9ad3bf.tar.gz": "3255ea26d1d530a57a6558573cc233b717ecd34bf7adafd9401887ee4ddf5d6b",
+    "intel-npu-driver-v1.35.0.tar.gz": "c5f3e5fbec8e5d8fbed68cd1c40aaab26182fefb5a76286bfd341aa02bfbea02"
   }
 }

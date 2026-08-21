@@ -51,6 +51,7 @@ skip_list=(
     "srp"
     "srp-hwe"
     "trident"
+    "ucx"
     "update-ssh-keys"
     "vitess"
     "xpmem"

@@ -1,13 +1,14 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
-Version:        20260309
-Release:        3%{?dist}
+Version:        20260810
+Release:        1%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/
 Source0:        https://www.kernel.org/pub/linux/kernel/firmware/%{name}-%{version}.tar.xz
+
 %global debug_package %{nil}
 %global __os_install_post %{nil}
 %global _firmwarepath    /lib/firmware
@@ -116,8 +117,8 @@ dracut --force
 
 %files
 %defattr(-,root,root)
-%license GPL*
-%license WHENCE LICENCE.iwlwifi_firmware
+%license LICENSES/GPL-2.0
+%license WHENCE LICENSES/LICENCE.iwlwifi_firmware
 %{_firmwarepath}/rsi
 %{_firmwarepath}/rsi_91x.fw
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-8000C-*.ucode
@@ -125,32 +126,32 @@ dracut --force
 
 %files broadcom
 %defattr(-,root,root)
-%license WHENCE LICENCE.broadcom_bcm43xx LICENCE.cypress
+%license WHENCE LICENSES/LICENCE.broadcom_bcm43xx LICENSES/LICENCE.cypress
 %{_firmwarepath}/bnx2x
 %{_firmwarepath}/brcm
 
 %files qlogic
 %defattr(-,root,root)
-%license WHENCE LICENCE.qla1280
+%license WHENCE LICENSES/LICENCE.qla1280
 %{_firmwarepath}/qed
 
 %files qualcomm
 %defattr(-,root,root)
-%license WHENCE LICENSE.QualcommAtheros_ath10k
+%license WHENCE LICENSES/LICENSE.QualcommAtheros_ath10k
 %{_firmwarepath}/ath10k
 
 %files intel
 %defattr(-,root,root)
-%license WHENCE LICENSE.i915
-%license LICENSE.ipu3_firmware LICENCE.ibt_firmware LICENCE.fw_sst_0f28
-%license LICENCE.IntcSST2 LICENCE.adsp_sst LICENSE.ice
+%license WHENCE LICENSES/LICENSE.i915
+%license LICENSES/LICENSE.ipu3_firmware LICENSES/LICENCE.ibt_firmware LICENSES/LICENCE.fw_sst_0f28
+%license LICENSES/LICENCE.IntcSST2 LICENSES/LICENCE.adsp_sst LICENSES/LICENSE.ice
 %{_firmwarepath}/i915
 %{_firmwarepath}/xe
 %{_firmwarepath}/intel
 
 %files i915
 %defattr(-,root,root)
-%license WHENCE LICENSE.i915
+%license WHENCE LICENSES/LICENSE.i915
 %{_firmwarepath}/i915/mtl_guc_70.bin
 %{_firmwarepath}/i915/adlp_guc_70.bin
 %{_firmwarepath}/i915/dg1_guc_70.bin
@@ -173,10 +174,11 @@ dracut --force
 %{_firmwarepath}/xe/ptl_guc_70.bin
 %{_firmwarepath}/xe/ptl_huc.bin
 %{_firmwarepath}/xe/ptl_gsc_1.bin
+%{_firmwarepath}/xe/nvl_guc_70.bin
 
 %files iwlwifi
 %defattr(-,root,root)
-%license WHENCE LICENCE.iwlwifi_firmware
+%license WHENCE LICENSES/LICENCE.iwlwifi_firmware
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-so-a0-gf-a0-89.ucode
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-so-a0-gf-a0.pnvm
 %{_firmwarepath}/intel/iwlwifi/iwlwifi-ma-b0-gf-a0-83.ucode
@@ -209,12 +211,12 @@ dracut --force
 
 %files ice
 %defattr(-,root,root)
-%license WHENCE LICENSE.ice
+%license WHENCE LICENSES/LICENSE.ice
 %{_firmwarepath}/intel/ice
 
 %files qat
 %defattr(-,root,root)
-%license WHENCE LICENCE.qat_firmware
+%license WHENCE LICENSES/LICENCE.qat_firmware
 %{_firmwarepath}/intel/qat/qat_402xx.bin
 %{_firmwarepath}/intel/qat/qat_402xx_mmp.bin
 %{_firmwarepath}/intel/qat/qat_420xx.bin
@@ -231,6 +233,9 @@ dracut --force
 %{_firmwarepath}/qat_*.bin
 
 %changelog
+* Mon Aug 17 2026 Andy <andy.peng@intel.com> - 20260810-1
+- Upgrade firmware to 20260810.
+
 * Wed Apr 15 2026 Andy <andy.peng@intel.com> - 20260309-3
 - Use upstream copy-firmware.sh to install firmware with proper symlinks.
 - Fixes missing ibt-19-* Bluetooth firmware symlinks.

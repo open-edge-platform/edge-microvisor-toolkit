@@ -1,14 +1,14 @@
 Summary:	    Intel Neural Processing Unit Driver
 Name:		    intel-npu-driver
-Version:	    1.33.0
+Version:	    1.35.0
 Release:	    1%{?dist}
 License:	    MIT AND Apache-2.0
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 URL:		    https://github.com/intel/linux-npu-driver
 Source0:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
-Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/c7cb5d218ca14f6a81b3ef0bb89e718e9fcdba8e/level-zero-npu-extensions-c7cb5d2.tar.gz
-Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/82c444bcb9feb0f55fa33e18fbd711ec35426fba/npu_compiler_elf-82c444b.tar.gz
+Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/f9ad3bf89c2418d714aef2e6b96a5aafb12a1971/level-zero-npu-extensions-f9ad3bf.tar.gz
+Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/a301d97e0717fb797c79ec51f8cdc13152878700/npu_compiler_elf-a301d97.tar.gz
 
 ExclusiveArch:	x86_64
 
@@ -23,7 +23,7 @@ BuildRequires:	glibc-devel
 BuildRequires:	gmock-devel
 BuildRequires:	gtest-devel
 BuildRequires:	libudev-devel
-BuildRequires:	intel-level-zero-devel >= 1.27.0
+BuildRequires:	intel-level-zero-devel >= 1.28.2
 BuildRequires:	openssl-devel
 BuildRequires:	yaml-cpp-devel
 
@@ -47,6 +47,8 @@ mv npu_compiler_elf-* third_party/npu_compiler_elf
 
 sed -i '/add_subdirectory(googletest EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
 sed -i '/add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
+# yaml-cpp is only needed by the validation layer; skip its cmake include
+sed -i '/include(cmake\/yaml-cpp.cmake)/s/^/#/' third_party/CMakeLists.txt
 
 %build
 cmake \
@@ -69,6 +71,9 @@ rm -rf %{buildroot}%{_libdir}/lib64
 %{_libdir}/libze_intel_npu.so*
 
 %changelog
+* Tue Aug 11 2026 Andy <andy.peng@intel.com> - 1.35.0-1
+- Upgrade version to 1.35.0.
+
 * Thu Jul 2 2026 Andy <andy.peng@intel.com> - 1.33.0-1
 - Update version to v1.33.0
 

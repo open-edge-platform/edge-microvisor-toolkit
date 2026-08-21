@@ -9,7 +9,7 @@
 Summary:        SELinux policy
 Name:           selinux-policy
 Version:        %{refpolicy_major}.%{refpolicy_minor}
-Release:        20%{?dist}
+Release:        21%{?dist}
 License:        GPLv2
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -74,6 +74,8 @@ Patch52:        0050-Fix-fsadm-selinux-permission-denied.patch
 Patch53:        0051-Fix-ntpd-selinux-permission-denied.patch
 Patch54:        0038-enable-liveos-iso-flow.patch
 Patch55:        0041-rpm-Allow-gpg-agent-run-in-rpm-scripts-to-watch-secr.patch
+Patch56:        0039-container-allow-mmap-runtime-files.patch
+Patch57:        0040-irqbalance-v1.9.4-added-namespacing-in-the-systemd-u.patch
 
 BuildRequires:  bzip2
 BuildRequires:  checkpolicy >= %{CHECKPOLICYVER}
@@ -346,6 +348,13 @@ exit 0
 selinuxenabled && semodule -nB
 exit 0
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 2.20240226-21
+- merge from Azure Linux 3.0.20260712-3.0
+- Update policy for irqbalance v1.9.5.
+- Backport upstream refpolicy fix to allow system container engines to mmap
+  runtime files (container_runtime_t:file map), fixing containerd 2.2
+  MountManager initialization failure under SELinux enforcing.
+
 * Fri Oct 3 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 2.20240226-20
 - merge from Azure Linux 3.0.20250910-3.0
 - Include policy.kern otherwise some semanage operations fail without it.

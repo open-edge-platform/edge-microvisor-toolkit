@@ -1,7 +1,7 @@
 Summary:        Cloud instance init scripts
 Name:           cloud-init
 Version:        24.3.1
-Release:        6%{?dist}
+Release:        7%{?dist}
 License:        GPLv3
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -145,6 +145,10 @@ make check %{?_smp_mflags}
 %config(noreplace) %{_sysconfdir}/cloud/cloud.cfg.d/10-azure-kvp.cfg
 
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 24.3.1-7
+- merge from Azure Linux 3.0.20260712-3.0
+- Fix no-single-process patch typo
+
 * Mon Sep 8 2025 Lee Chee Yang <chee.yang.lee@intel.com> - 24.3.1-6
 - merge from Azure Linux 3.0.20250910-3.0.
 - Patch CVE-2024-6174 & CVE-2024-11584
