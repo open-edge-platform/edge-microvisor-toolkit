@@ -1,7 +1,7 @@
 Summary:        agent for collecting, processing, aggregating, and writing metrics.
 Name:           telegraf
 Version:        1.31.0
-Release:        27%{?dist}
+Release:        28%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -52,6 +52,13 @@ Patch34:        CVE-2026-46597.patch
 Patch35:        CVE-2026-27136.patch
 Patch36:        CVE-2026-41889.patch
 Patch37:        CVE-2026-42151.patch
+Patch38:        CVE-2026-25680.patch
+Patch39:        CVE-2026-25681.patch
+Patch40:        CVE-2026-39827.patch
+Patch41:        CVE-2026-39828.patch
+Patch43:        CVE-2026-39835.patch
+Patch44:        CVE-2026-42502.patch
+Patch45:        CVE-2026-46598.patch
 
 BuildRequires:  golang < 1.26.0
 BuildRequires:  systemd-devel
@@ -156,6 +163,10 @@ fi
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-28
+- merge from Azure Linux 3.0.20260712-3.0
+- Patch for CVE-2026-46598, CVE-2026-42502, CVE-2026-39835, CVE-2026-39828, CVE-2026-39827, CVE-2026-25681, CVE-2026-25680
+
 * Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-27
 - merge from Azure Linux 3.0.20260602-3.0
 - Patch for CVE-2026-41889, CVE-2026-42151
