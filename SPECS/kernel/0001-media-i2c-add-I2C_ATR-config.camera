@@ -1,0 +1,36 @@
+From 4bf910f9081277b010aeda9288c4d6261bf755a7 Mon Sep 17 00:00:00 2001
+From: "Mokhtar, Mohamad Nor Syahid" <mohamad.nor.syahid.mokhtar@intel.com>
+Date: Wed, 1 Jul 2026 14:33:00 +0800
+Subject: [PATCH] media: i2c: add I2C_ATR config
+
+enable I2C_ATR config
+upgrading the V4L2 version
+
+Signed-off-by: Mokhtar, Mohamad Nor Syahid <mohamad.nor.syahid.mokhtar@intel.com>
+---
+ drivers/media/i2c/Kconfig | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index d5ff6dccc68a..363a8c2d184e 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -311,6 +311,7 @@ config VIDEO_MAX9X
+ 	tristate "MAX9X serdes support"
+ 	depends on VIDEO_DEV && I2C
+ 	select VIDEO_V4L2_SUBDEV_API
++	select I2C_ATR
+ 	depends on MEDIA_CAMERA_SUPPORT
+ 	help
+ 		This is a Video4Linux2 sensor-level driver for MAX9X serdes.
+@@ -1263,6 +1264,7 @@ config VIDEO_MAX9X
+ 	tristate "MAX9X serdes support"
+ 	depends on VIDEO_DEV && I2C
+ 	select VIDEO_V4L2_SUBDEV_API
++	select I2C_ATR
+ 	depends on MEDIA_CAMERA_SUPPORT
+ 	help
+ 		This is a Video4Linux2 sensor-level driver
+-- 
+2.34.1
+

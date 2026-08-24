@@ -1,0 +1,116 @@
+From 888288d01eda43f736e59537308d298cd233ac39 Mon Sep 17 00:00:00 2001
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Date: Mon, 9 Feb 2026 15:43:09 -0800
+Subject: [PATCH 1/2] powercap: intel_rapl: Remove incorrect CPU check in PMU
+ context
+
+The RAPL MSR read path incorrectly validates CPU context when called
+from the PMU subsystem:
+
+    if (atomic) {
+        if (unlikely(smp_processor_id() != cpu))
+            return -EIO;
+        rdmsrq(ra->reg.msr, ra->value);
+    }
+
+This check fails for package-scoped MSRs like RAPL energy counters,
+which are readable from any CPU within the package.
+
+The perf tool avoids hitting this check by validating against
+/sys/bus/event_source/devices/power/cpumask before opening events.
+However, turbostat does not perform this validation and may attempt
+reads from non-lead CPUs, causing the check to fail and return zero
+power values.
+
+Since package-scoped MSRs are architecturally accessible from any CPU
+in the package, remove the CPU matching check.
+
+Also rename 'atomic' to 'pmu_ctx' to clarify this indicates PMU context
+where rdmsrq() can be used directly instead of rdmsrl_safe_on_cpu().
+
+Fixes: 748d6ba43afd ("powercap: intel_rapl: Enable MSR-based RAPL PMU support")
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Tested-by: Furquim Ulisses <ulisses.furquim@intel.com>
+Reviewed-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Link: https://patch.msgid.link/20260209234310.1440722-2-sathyanarayanan.kuppuswamy@linux.intel.com
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+(cherry picked from commit 7537bae8b6eb635583e0e6260f61d13ddbd52087)
+---
+ drivers/powercap/intel_rapl_common.c |  6 +++---
+ drivers/powercap/intel_rapl_msr.c    | 12 +++++-------
+ include/linux/intel_rapl.h           |  2 +-
+ 3 files changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/powercap/intel_rapl_common.c b/drivers/powercap/intel_rapl_common.c
+index b9d87e56cbbc..77b84c944f93 100644
+--- a/drivers/powercap/intel_rapl_common.c
++++ b/drivers/powercap/intel_rapl_common.c
+@@ -254,7 +254,7 @@ static void rapl_init_domains(struct rapl_package *rp);
+ static int rapl_read_data_raw(struct rapl_domain *rd,
+ 			      enum rapl_primitives prim,
+ 			      bool xlate, u64 *data,
+-			      bool atomic);
++			      bool pmu_ctx);
+ static int rapl_write_data_raw(struct rapl_domain *rd,
+ 			       enum rapl_primitives prim,
+ 			       unsigned long long value);
+@@ -832,7 +832,7 @@ prim_fixups(struct rapl_domain *rd, enum rapl_primitives prim)
+  */
+ static int rapl_read_data_raw(struct rapl_domain *rd,
+ 			      enum rapl_primitives prim, bool xlate, u64 *data,
+-			      bool atomic)
++			      bool pmu_ctx)
+ {
+ 	u64 value;
+ 	enum rapl_primitives prim_fixed = prim_fixups(rd, prim);
+@@ -854,7 +854,7 @@ static int rapl_read_data_raw(struct rapl_domain *rd,
+ 
+ 	ra.mask = rpi->mask;
+ 
+-	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra, atomic)) {
++	if (rd->rp->priv->read_raw(get_rid(rd->rp), &ra, pmu_ctx)) {
+ 		pr_debug("failed to read reg 0x%llx for %s:%s\n", ra.reg.val, rd->rp->name, rd->name);
+ 		return -EIO;
+ 	}
+diff --git a/drivers/powercap/intel_rapl_msr.c b/drivers/powercap/intel_rapl_msr.c
+index eaf8724c93d3..10e70898dffc 100644
+--- a/drivers/powercap/intel_rapl_msr.c
++++ b/drivers/powercap/intel_rapl_msr.c
+@@ -110,16 +110,14 @@ static int rapl_cpu_down_prep(unsigned int cpu)
+ 	return 0;
+ }
+ 
+-static int rapl_msr_read_raw(int cpu, struct reg_action *ra, bool atomic)
++static int rapl_msr_read_raw(int cpu, struct reg_action *ra, bool pmu_ctx)
+ {
+ 	/*
+-	 * When called from atomic-context (eg PMU event handler)
+-	 * perform MSR read directly using rdmsrq().
++	 * When called from PMU context, perform MSR read directly using
++	 * rdmsrq() without IPI overhead. Package-scoped MSRs are readable
++	 * from any CPU in the package.
+ 	 */
+-	if (atomic) {
+-		if (unlikely(smp_processor_id() != cpu))
+-			return -EIO;
+-
++	if (pmu_ctx) {
+ 		rdmsrq(ra->reg.msr, ra->value);
+ 		goto out;
+ 	}
+diff --git a/include/linux/intel_rapl.h b/include/linux/intel_rapl.h
+index e9ade2ff4af6..2c2b5d0eeb67 100644
+--- a/include/linux/intel_rapl.h
++++ b/include/linux/intel_rapl.h
+@@ -152,7 +152,7 @@ struct rapl_if_priv {
+ 	union rapl_reg reg_unit;
+ 	union rapl_reg regs[RAPL_DOMAIN_MAX][RAPL_DOMAIN_REG_MAX];
+ 	int limits[RAPL_DOMAIN_MAX];
+-	int (*read_raw)(int id, struct reg_action *ra, bool atomic);
++	int (*read_raw)(int id, struct reg_action *ra, bool pmu_ctx);
+ 	int (*write_raw)(int id, struct reg_action *ra);
+ 	void *defaults;
+ 	void *rpi;
+-- 
+2.34.1
+

@@ -1,0 +1,89 @@
+From c15a665dd1091c0048c5c59d8c131ce5b4a51531 Mon Sep 17 00:00:00 2001
+From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Date: Mon, 9 Feb 2026 15:43:10 -0800
+Subject: [PATCH 2/2] powercap: intel_rapl: Expose all package CPUs in PMU
+ cpumask
+
+Currently, the RAPL PMU cpumask only includes one CPU per package
+(typically the lead_cpu) for both MSR and TPMI interfaces. This
+forces tools to pin their operations to that specific CPU, even
+though package-scoped registers are readable from any CPU within
+the package.
+
+Change the cpumask to include all online CPUs in each package. This
+allows tools like perf and turbostat to read RAPL events from any
+CPU in the package without requiring special handling to find and
+use the designated lead_cpu.
+
+The change refactors get_pmu_cpu() into set_pmu_cpumask() which
+populates the cpumask with all CPUs belonging to each RAPL package
+instead of returning a single CPU.
+
+This improves flexibility for userspace tools while maintaining
+correctness since package-scoped RAPL MSRs are architecturally
+accessible from any CPU in the package.
+
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Tested-by: Furquim Ulisses <ulisses.furquim@intel.com>
+Reviewed-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Link: https://patch.msgid.link/20260209234310.1440722-3-sathyanarayanan.kuppuswamy@linux.intel.com
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+(cherry picked from commit 525e0064f3d81764277036036932e873608a47af)
+---
+ drivers/powercap/intel_rapl_common.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/powercap/intel_rapl_common.c b/drivers/powercap/intel_rapl_common.c
+index 77b84c944f93..7a21dbad2282 100644
+--- a/drivers/powercap/intel_rapl_common.c
++++ b/drivers/powercap/intel_rapl_common.c
+@@ -1590,23 +1590,21 @@ static struct rapl_pmu rapl_pmu;
+ 
+ /* PMU helpers */
+ 
+-static int get_pmu_cpu(struct rapl_package *rp)
++static void set_pmu_cpumask(struct rapl_package *rp, cpumask_var_t mask)
+ {
+ 	int cpu;
+ 
+ 	if (!rp->has_pmu)
+-		return nr_cpu_ids;
++		return;
+ 
+ 	/* Only TPMI & MSR RAPL are supported for now */
+ 	if (rp->priv->type != RAPL_IF_TPMI && rp->priv->type != RAPL_IF_MSR)
+-		return nr_cpu_ids;
++		return;
+ 
+ 	/* TPMI/MSR RAPL uses any CPU in the package for PMU */
+ 	for_each_online_cpu(cpu)
+ 		if (topology_physical_package_id(cpu) == rp->id)
+-			return cpu;
+-
+-	return nr_cpu_ids;
++			cpumask_set_cpu(cpu, mask);
+ }
+ 
+ static bool is_rp_pmu_cpu(struct rapl_package *rp, int cpu)
+@@ -1883,7 +1881,6 @@ static ssize_t cpumask_show(struct device *dev,
+ {
+ 	struct rapl_package *rp;
+ 	cpumask_var_t cpu_mask;
+-	int cpu;
+ 	int ret;
+ 
+ 	if (!alloc_cpumask_var(&cpu_mask, GFP_KERNEL))
+@@ -1895,9 +1892,7 @@ static ssize_t cpumask_show(struct device *dev,
+ 
+ 	/* Choose a cpu for each RAPL Package */
+ 	list_for_each_entry(rp, &rapl_packages, plist) {
+-		cpu = get_pmu_cpu(rp);
+-		if (cpu < nr_cpu_ids)
+-			cpumask_set_cpu(cpu, cpu_mask);
++		set_pmu_cpumask(rp, cpu_mask);
+ 	}
+ 	cpus_read_unlock();
+ 
+-- 
+2.34.1
+
