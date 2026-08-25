@@ -7,7 +7,7 @@ design-driven. Before implementation, all significant changes must be first
 discussed, formally documented, and agreed upon.
 This document describes the whole process.
 
-To learn more about Edge Microvisor Toolkit, check the [Edge Microvisor Toolkit documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-microvisor-toolkit/index.html)
+To learn more about Edge Microvisor Toolkit, check the [Edge Microvisor Toolkit documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-microvisor-toolkit/index.html)
 
 ## The Proposal Process
 
@@ -142,4 +142,4 @@ request or the Feature Request is closed.
 ## Help
 
 To learn about contributing to Edge Microvisor Toolkit in general, see the
-[contribution guidelines](https://docs.openedgeplatform.intel.com/2026.1/edge-microvisor-toolkit/emt-contribution.html).
+[contribution guidelines](https://docs.openedgeplatform.intel.com/2026.2/edge-microvisor-toolkit/emt-contribution.html).
