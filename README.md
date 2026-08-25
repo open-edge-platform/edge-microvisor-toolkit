@@ -32,7 +32,7 @@ source.
 ## Get Started
 
 To find out how to deploy and work with Edge Microvisor Toolkit, see the
-[Get Started guide](https://docs.openedgeplatform.intel.com/2026.1/edge-microvisor-toolkit/emt-get-started.html).
+[Get Started guide](https://docs.openedgeplatform.intel.com/2026.2/edge-microvisor-toolkit/emt-get-started.html).
 
 For a quick start, get the current
 [ISO](https://files-rs.edgeorchestration.intel.com/files-edge-orch/microvisor/iso/26.06/EdgeMicrovisorToolkit-26.06.iso)
