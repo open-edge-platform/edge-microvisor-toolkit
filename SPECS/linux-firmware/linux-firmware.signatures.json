@@ -1,5 +1,6 @@
 {
   "Signatures": {
+    "ipu8_fw.bin": "8ddc1849a3515ea82d094daf1475c94653e97f5cdeac79ea409bc8f2ba804478",
     "linux-firmware-20260810.tar.xz": "ac17c34fe73756926a961fbafadf8d8f07a3bd2dd2f4ea31a0fb5d50c714a49a"
   }
 }
