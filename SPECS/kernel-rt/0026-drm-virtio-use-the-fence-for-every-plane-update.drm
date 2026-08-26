@@ -15,11 +15,11 @@ Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
  drivers/gpu/drm/virtio/virtgpu_plane.c | 78 ++++++++++----------------
  1 file changed, 29 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/gpu/drm/virtio/virtgpu_plane.c b/drivers/gpu/drm/virtio/virtgpu_plane.c
-index 29e4b458ae573..86365a8c8ee1f 100644
+Index: b/drivers/gpu/drm/virtio/virtgpu_plane.c
+===================================================================
 --- a/drivers/gpu/drm/virtio/virtgpu_plane.c
 +++ b/drivers/gpu/drm/virtio/virtgpu_plane.c
-@@ -201,30 +201,31 @@ static void virtio_gpu_resource_flush(struct drm_plane *plane,
+@@ -201,33 +201,34 @@ static void virtio_gpu_resource_flush(st
  	struct drm_device *dev = plane->dev;
  	struct virtio_gpu_device *vgdev = dev->dev_private;
  	struct virtio_gpu_framebuffer *vgfb;
@@ -43,7 +43,10 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  			return;
 +		}
  		virtio_gpu_array_add_obj(objs, vgfb->base.obj[0]);
- 		virtio_gpu_array_lock_resv(objs);
+ 		if (virtio_gpu_lock_one_resv_uninterruptible(objs)) {
+ 			virtio_gpu_array_put_free(objs);
+ 			return;
+ 		}
 -		virtio_gpu_cmd_resource_flush(vgdev, bo->hw_res_handle, x, y,
 -					      width, height, objs,
 -					      vgplane_st->fence);
@@ -66,7 +69,7 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  	}
  }
  
-@@ -345,10 +346,7 @@ static int virtio_gpu_prepare_imported_obj(struct drm_plane *plane,
+@@ -348,10 +349,7 @@ err:
  static int virtio_gpu_plane_prepare_fb(struct drm_plane *plane,
  				       struct drm_plane_state *new_state)
  {
@@ -77,7 +80,7 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  	struct virtio_gpu_object *bo;
  	struct drm_gem_object *obj;
  	int ret;
-@@ -357,7 +355,6 @@ static int virtio_gpu_plane_prepare_fb(struct drm_plane *plane,
+@@ -360,7 +358,6 @@ static int virtio_gpu_plane_prepare_fb(s
  		return 0;
  
  	vgfb = to_virtio_gpu_framebuffer(new_state->fb);
@@ -85,7 +88,7 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  	bo = gem_to_virtio_gpu_obj(vgfb->base.obj[0]);
  
  	drm_gem_plane_helper_prepare_fb(plane, new_state);
-@@ -366,29 +363,13 @@ static int virtio_gpu_plane_prepare_fb(struct drm_plane *plane,
+@@ -369,29 +366,13 @@ static int virtio_gpu_plane_prepare_fb(s
  		return 0;
  
  	obj = new_state->fb->obj[0];
@@ -116,7 +119,7 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  }
  
  static void virtio_gpu_cleanup_imported_obj(struct drm_gem_object *obj)
-@@ -404,18 +385,11 @@ static void virtio_gpu_cleanup_imported_obj(struct drm_gem_object *obj)
+@@ -407,18 +388,11 @@ static void virtio_gpu_cleanup_imported_
  static void virtio_gpu_plane_cleanup_fb(struct drm_plane *plane,
  					struct drm_plane_state *state)
  {
@@ -135,7 +138,7 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  	obj = state->fb->obj[0];
  	if (drm_gem_is_imported(obj))
  		virtio_gpu_cleanup_imported_obj(obj);
-@@ -430,7 +404,6 @@ static void virtio_gpu_cursor_plane_update(struct drm_plane *plane,
+@@ -433,7 +407,6 @@ static void virtio_gpu_cursor_plane_upda
  	struct virtio_gpu_device *vgdev = dev->dev_private;
  	struct virtio_gpu_output *output = NULL;
  	struct virtio_gpu_framebuffer *vgfb;
@@ -143,7 +146,7 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  	struct virtio_gpu_object *bo = NULL;
  	uint32_t handle;
  
-@@ -443,7 +416,6 @@ static void virtio_gpu_cursor_plane_update(struct drm_plane *plane,
+@@ -446,7 +419,6 @@ static void virtio_gpu_cursor_plane_upda
  
  	if (plane->state->fb) {
  		vgfb = to_virtio_gpu_framebuffer(plane->state->fb);
@@ -151,7 +154,7 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  		bo = gem_to_virtio_gpu_obj(vgfb->base.obj[0]);
  		handle = bo->hw_res_handle;
  	} else {
-@@ -452,20 +424,28 @@ static void virtio_gpu_cursor_plane_update(struct drm_plane *plane,
+@@ -455,11 +427,15 @@ static void virtio_gpu_cursor_plane_upda
  
  	if (bo && bo->dumb && (plane->state->fb != old_state->fb)) {
  		/* new cursor -- update & wait */
@@ -167,8 +170,9 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  			return;
 +		}
  		virtio_gpu_array_add_obj(objs, vgfb->base.obj[0]);
- 		virtio_gpu_array_lock_resv(objs);
- 		virtio_gpu_cmd_transfer_to_host_2d
+ 		if (virtio_gpu_lock_one_resv_uninterruptible(objs)) {
+ 			virtio_gpu_array_put_free(objs);
+@@ -469,9 +445,13 @@ static void virtio_gpu_cursor_plane_upda
  			(vgdev, 0,
  			 plane->state->crtc_w,
  			 plane->state->crtc_h,
@@ -184,6 +188,3 @@ index 29e4b458ae573..86365a8c8ee1f 100644
  	}
  
  	if (plane->state->fb != old_state->fb) {
--- 
-2.43.0
-

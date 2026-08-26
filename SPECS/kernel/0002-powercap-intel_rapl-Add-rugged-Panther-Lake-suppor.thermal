@@ -1,0 +1,31 @@
+From 7a033a9dfa313d8c21fac6fb07f48f23c9ab4966 Mon Sep 17 00:00:00 2001
+From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Date: Mon, 20 Jul 2026 10:55:03 +0800
+Subject: [PATCH 2/4] powercap: intel_rapl: Add rugged Panther Lake support
+
+Add RAPL support for rugged Panther Lake.
+
+In this tree the rapl_ids[] table lives in intel_rapl_common.c and
+INTEL_PANTHERLAKE_L uses &rapl_defaults_core, so wire INTEL_PANTHERLAKE_R
+to the same defaults as its sibling.
+
+Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+---
+ drivers/powercap/intel_rapl_common.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/powercap/intel_rapl_common.c b/drivers/powercap/intel_rapl_common.c
+index 7a21dbad2282..2436611e0132 100644
+--- a/drivers/powercap/intel_rapl_common.c
++++ b/drivers/powercap/intel_rapl_common.c
+@@ -1286,6 +1286,7 @@ static const struct x86_cpu_id rapl_ids[] __initconst = {
+ 	X86_MATCH_VFM(INTEL_EMERALDRAPIDS_X,	&rapl_defaults_spr_server),
+ 	X86_MATCH_VFM(INTEL_LUNARLAKE_M,	&rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_PANTHERLAKE_L,	&rapl_defaults_core),
++	X86_MATCH_VFM(INTEL_PANTHERLAKE_R,	&rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_WILDCATLAKE_L,	&rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_NOVALAKE,		&rapl_defaults_core),
+ 	X86_MATCH_VFM(INTEL_NOVALAKE_L,		&rapl_defaults_core),
+-- 
+2.34.1
+

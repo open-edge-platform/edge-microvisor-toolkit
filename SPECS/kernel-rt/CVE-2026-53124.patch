@@ -1,0 +1,151 @@
+From 10610c048181b32ad4ad99cc1bdba5d1e529cc31 Mon Sep 17 00:00:00 2001
+From: Uday Shankar <ushankar@purestorage.com>
+Date: Sun, 5 Apr 2026 22:25:30 -0600
+Subject: [PATCH 7/9] ublk: reset per-IO canceled flag on each fetch
+
+[ Upstream commit 0842186d2c4e67d2f8c8c2d1d779e8acffd41b5b ]
+
+If a ublk server starts recovering devices but dies before issuing fetch
+commands for all IOs, cancellation of the fetch commands that were
+successfully issued may never complete. This is because the per-IO
+canceled flag can remain set even after the fetch for that IO has been
+submitted - the per-IO canceled flags for all IOs in a queue are reset
+together only once all IOs for that queue have been fetched. So if a
+nonempty proper subset of the IOs for a queue are fetched when the ublk
+server dies, the IOs in that subset will never successfully be canceled,
+as their canceled flags remain set, and this prevents ublk_cancel_cmd
+from actually calling io_uring_cmd_done on the commands, despite the
+fact that they are outstanding.
+
+Fix this by resetting the per-IO cancel flags immediately when each IO
+is fetched instead of waiting for all IOs for the queue (which may never
+happen).
+
+Signed-off-by: Uday Shankar <ushankar@purestorage.com>
+Fixes: 728cbac5fe21 ("ublk: move device reset into ublk_ch_release()")
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: zhang, the-essence-of-life <zhangweize9@gmail.com>
+Link: https://patch.msgid.link/20260405-cancel-v2-1-02d711e643c2@purestorage.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+(cherry picked from commit 63335e5a67d89bb7cb9b023bbb3785896587a648)
+
+Manual adaptation note:
+This branch predates the ublk 'batch I/O' feature series (e.g.
+97e8ba31b8f1b 'ublk: consolidate nr_io_ready and nr_queues_ready' is
+present, but the later per-queue nr_io_ready/ublk_queue_ready rework
+and the whole UBLK_F_BATCH_IO feature, ~60 commits, are not). The
+upstream fix assumes per-queue IO-ready tracking (ublk_queue_ready(),
+ubq->nr_io_ready, ublk_mark_io_ready(ub, q_id, io)) and a second call
+site in ublk_batch_prep_io(), none of which exist here.
+
+The underlying bug is the same at a coarser granularity: this branch's
+ublk_mark_io_ready()/ublk_reset_io_flags() only clear
+UBLK_IO_FLAG_CANCELED once ALL IOs across the ENTIRE device have been
+fetched (ublk_dev_ready()), so a ublk server that dies mid-recovery
+before fetching every IO on every queue leaves the canceled flag set
+forever on the IOs it did fetch, exactly as described upstream.
+
+Adapted the fix to this branch's device-level tracking:
+ - added ublk_reset_io_flag(ubq, io) to clear UBLK_IO_FLAG_CANCELED for
+   a single IO under ubq->cancel_lock, mirroring upstream.
+ - ublk_mark_io_ready() now takes the ubq/io being fetched and calls
+   ublk_reset_io_flag() unconditionally, before checking
+   ublk_dev_ready(), so each IO's canceled flag is cleared immediately
+   at fetch time regardless of whether the whole device is ready yet.
+ - ublk_reset_io_flags(ub) (the device-wide helper invoked once the
+   whole device is ready) no longer loops over ios[] clearing the
+   flag, since that is now done per-IO in ublk_mark_io_ready(); it
+   still resets ubq->fail_io and the device-wide canceling flag.
+ - ublk_fetch() gained a struct ublk_queue *ubq parameter (already
+   available at its only call site in ublk_ch_uring_cmd_local()) to
+   pass through to ublk_mark_io_ready().
+
+The ublk_batch_prep_io() call site from the upstream patch does not
+exist on this branch and was not added; no UBLK_F_BATCH_IO support is
+being introduced by this backport.
+---
+ drivers/block/ublk_drv.c | 27 ++++++++++++++++-----------
+ 1 file changed, 16 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/block/ublk_drv.c b/drivers/block/ublk_drv.c
+index c339222513b03..a1b50ba9df8ee 100644
+--- a/drivers/block/ublk_drv.c
++++ b/drivers/block/ublk_drv.c
+@@ -2121,19 +2121,22 @@ static void ublk_stop_dev(struct ublk_device *ub)
+ 	ublk_cancel_dev(ub);
+ }
+ 
+-/* reset ublk io_uring queue & io flags */
++static void ublk_reset_io_flag(struct ublk_queue *ubq, struct ublk_io *io)
++{
++	/* UBLK_IO_FLAG_CANCELED can be cleared now */
++	spin_lock(&ubq->cancel_lock);
++	io->flags &= ~UBLK_IO_FLAG_CANCELED;
++	spin_unlock(&ubq->cancel_lock);
++}
++
++/* reset ublk io_uring queue flags */
+ static void ublk_reset_io_flags(struct ublk_device *ub)
+ {
+-	int i, j;
++	int i;
+ 
+ 	for (i = 0; i < ub->dev_info.nr_hw_queues; i++) {
+ 		struct ublk_queue *ubq = ublk_get_queue(ub, i);
+ 
+-		/* UBLK_IO_FLAG_CANCELED can be cleared now */
+-		spin_lock(&ubq->cancel_lock);
+-		for (j = 0; j < ubq->q_depth; j++)
+-			ubq->ios[j].flags &= ~UBLK_IO_FLAG_CANCELED;
+-		spin_unlock(&ubq->cancel_lock);
+ 		ubq->fail_io = false;
+ 	}
+ 	mutex_lock(&ub->cancel_mutex);
+@@ -2142,13 +2145,15 @@ static void ublk_reset_io_flags(struct ublk_device *ub)
+ }
+ 
+ /* device can only be started after all IOs are ready */
+-static void ublk_mark_io_ready(struct ublk_device *ub)
++static void ublk_mark_io_ready(struct ublk_device *ub, struct ublk_queue *ubq,
++	struct ublk_io *io)
+ 	__must_hold(&ub->mutex)
+ {
+ 	if (!ub->unprivileged_daemons && !capable(CAP_SYS_ADMIN))
+ 		ub->unprivileged_daemons = true;
+ 
+ 	ub->nr_io_ready++;
++	ublk_reset_io_flag(ubq, io);
+ 	if (ublk_dev_ready(ub)) {
+ 		/* now we are ready for handling ublk io request */
+ 		ublk_reset_io_flags(ub);
+@@ -2349,7 +2354,7 @@ static int ublk_check_fetch_buf(const struct ublk_device *ub, __u64 buf_addr)
+ }
+ 
+ static int ublk_fetch(struct io_uring_cmd *cmd, struct ublk_device *ub,
+-		      struct ublk_io *io, __u64 buf_addr)
++		      struct ublk_queue *ubq, struct ublk_io *io, __u64 buf_addr)
+ {
+ 	int ret = 0;
+ 
+@@ -2379,7 +2384,7 @@ static int ublk_fetch(struct io_uring_cmd *cmd, struct ublk_device *ub,
+ 		goto out;
+ 
+ 	WRITE_ONCE(io->task, get_task_struct(current));
+-	ublk_mark_io_ready(ub);
++	ublk_mark_io_ready(ub, ubq, io);
+ out:
+ 	mutex_unlock(&ub->mutex);
+ 	return ret;
+@@ -2484,7 +2489,7 @@ static int ublk_ch_uring_cmd_local(struct io_uring_cmd *cmd,
+ 		ret = ublk_check_fetch_buf(ub, addr);
+ 		if (ret)
+ 			goto out;
+-		ret = ublk_fetch(cmd, ub, io, addr);
++		ret = ublk_fetch(cmd, ub, ubq, io, addr);
+ 		if (ret)
+ 			goto out;
+ 
+-- 
+2.43.0
+

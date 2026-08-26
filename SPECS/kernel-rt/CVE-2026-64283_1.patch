@@ -1,0 +1,131 @@
+From a9b351cdb6c4b8aeaa7a95d844032d04874f96e1 Mon Sep 17 00:00:00 2001
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Date: Sun, 23 Nov 2025 22:05:15 +0000
+Subject: [PATCH 33/60] fs: Add uoff_t
+
+In a recent commit, I inadvertently changed a comparison from being an
+unsigned comparison (on 64-bit systems) to being a signed comparison
+(which it had always been on 32-bit systems).  This led to a sporadic
+fstests failure.
+
+To make sure this comparison is always unsigned, introduce a new type,
+uoff_t which is the unsigned version of loff_t.  Generally file sizes
+are restricted to being a signed integer, but in these two places it is
+convenient to pass -1 to indicate "up to the end of the file".
+
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Link: https://patch.msgid.link/20251123220518.1447261-1-willy@infradead.org
+Signed-off-by: Christian Brauner <brauner@kernel.org>
+(cherry picked from commit 37d369fa97cc0774ea4eab726d16bcb5fbe3a104)
+---
+ include/linux/mm.h                     | 8 ++++----
+ include/linux/shmem_fs.h               | 2 +-
+ include/linux/types.h                  | 1 +
+ include/uapi/asm-generic/posix_types.h | 1 +
+ mm/shmem.c                             | 6 +++---
+ mm/truncate.c                          | 2 +-
+ 6 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 92ba2489f2374..07d3f9eb33a81 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -3660,10 +3660,10 @@ struct vm_unmapped_area_info {
+ extern unsigned long vm_unmapped_area(struct vm_unmapped_area_info *info);
+ 
+ /* truncate.c */
+-extern void truncate_inode_pages(struct address_space *, loff_t);
+-extern void truncate_inode_pages_range(struct address_space *,
+-				       loff_t lstart, loff_t lend);
+-extern void truncate_inode_pages_final(struct address_space *);
++void truncate_inode_pages(struct address_space *mapping, loff_t lstart);
++void truncate_inode_pages_range(struct address_space *mapping, loff_t lstart,
++		uoff_t lend);
++void truncate_inode_pages_final(struct address_space *mapping);
+ 
+ /* generic vm_area_ops exported for stackable file systems */
+ extern vm_fault_t filemap_fault(struct vm_fault *vmf);
+diff --git a/include/linux/shmem_fs.h b/include/linux/shmem_fs.h
+index 0e47465ef0fd5..774efe592a9a9 100644
+--- a/include/linux/shmem_fs.h
++++ b/include/linux/shmem_fs.h
+@@ -111,7 +111,7 @@ struct page *shmem_read_mapping_page_gfp(struct address_space *mapping,
+ 					pgoff_t index, gfp_t gfp_mask);
+ int shmem_writeout(struct folio *folio, struct swap_iocb **plug,
+ 		struct list_head *folio_list);
+-void shmem_truncate_range(struct inode *inode, loff_t start, loff_t end);
++void shmem_truncate_range(struct inode *inode, loff_t start, uoff_t end);
+ int shmem_unuse(unsigned int type);
+ 
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+diff --git a/include/linux/types.h b/include/linux/types.h
+index 6dfdb8e8e4c35..d4437e9c452c5 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -50,6 +50,7 @@ typedef __kernel_old_gid_t	old_gid_t;
+ 
+ #if defined(__GNUC__)
+ typedef __kernel_loff_t		loff_t;
++typedef __kernel_uoff_t		uoff_t;
+ #endif
+ 
+ /*
+diff --git a/include/uapi/asm-generic/posix_types.h b/include/uapi/asm-generic/posix_types.h
+index b5f7594eee7ab..0a90ad92dbf3a 100644
+--- a/include/uapi/asm-generic/posix_types.h
++++ b/include/uapi/asm-generic/posix_types.h
+@@ -86,6 +86,7 @@ typedef struct {
+  */
+ typedef __kernel_long_t	__kernel_off_t;
+ typedef long long	__kernel_loff_t;
++typedef unsigned long long	__kernel_uoff_t;
+ typedef __kernel_long_t	__kernel_old_time_t;
+ #ifndef __KERNEL__
+ typedef __kernel_long_t	__kernel_time_t;
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 3c329b794ae4d..ff9acd60b4e54 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -1087,7 +1087,7 @@ static struct folio *shmem_get_partial_folio(struct inode *inode, pgoff_t index)
+  * Remove range of pages and swap entries from page cache, and free them.
+  * If !unfalloc, truncate or punch hole; if unfalloc, undo failed fallocate.
+  */
+-static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
++static void shmem_undo_range(struct inode *inode, loff_t lstart, uoff_t lend,
+ 								 bool unfalloc)
+ {
+ 	struct address_space *mapping = inode->i_mapping;
+@@ -1254,7 +1254,7 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
+ 	shmem_recalc_inode(inode, 0, -nr_swaps_freed);
+ }
+ 
+-void shmem_truncate_range(struct inode *inode, loff_t lstart, loff_t lend)
++void shmem_truncate_range(struct inode *inode, loff_t lstart, uoff_t lend)
+ {
+ 	shmem_undo_range(inode, lstart, lend, false);
+ 	inode_set_mtime_to_ts(inode, inode_set_ctime_current(inode));
+@@ -5826,7 +5826,7 @@ unsigned long shmem_get_unmapped_area(struct file *file,
+ }
+ #endif
+ 
+-void shmem_truncate_range(struct inode *inode, loff_t lstart, loff_t lend)
++void shmem_truncate_range(struct inode *inode, loff_t lstart, uoff_t lend)
+ {
+ 	truncate_inode_pages_range(inode->i_mapping, lstart, lend);
+ }
+diff --git a/mm/truncate.c b/mm/truncate.c
+index 4bf64fd610c94..9b7f682185dd7 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -364,7 +364,7 @@ long mapping_evict_folio(struct address_space *mapping, struct folio *folio)
+  * page aligned properly.
+  */
+ void truncate_inode_pages_range(struct address_space *mapping,
+-				loff_t lstart, loff_t lend)
++				loff_t lstart, uoff_t lend)
+ {
+ 	pgoff_t		start;		/* inclusive */
+ 	pgoff_t		end;		/* exclusive */
+-- 
+2.43.0
+

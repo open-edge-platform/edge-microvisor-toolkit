@@ -1,0 +1,73 @@
+From 5bdd6ed1a1a112df6d74eb9b364bf6bdfca5deec Mon Sep 17 00:00:00 2001
+From: "Pan, Kris" <kris.pan@intel.com>
+Date: Tue, 30 Jun 2026 15:01:38 +0800
+Subject: [PATCH] media: ipu7: fix psys probe failure due to unregistered bus
+
+The ipu7_psys_bus was defined but never registered via bus_register().
+In kernel 6.18.37, commit cb5dcab1993a9 ("driver core: reject devices
+with unregistered buses") added a check in bus_add_device() that
+explicitly rejects device registration on unregistered buses.
+
+This caused the ipu7 psys probe to fail with:
+
+  bus_add_device: cannot add device 'ipu7-psys0'
+    to unregistered bus 'intel-ipu7-psys'
+  intel_ipu7_psys.psys ... probe ... failed with error -22
+
+Since the ipu7_psys_bus is used as the device bus for the /dev/ipu7-psysX
+character device nodes, it must be registered before device_register()
+is called in ipu7_psys_probe().
+
+Replace module_auxiliary_driver() with explicit module_init/exit functions
+that call bus_register() before auxiliary_driver_register(), matching the
+approach already used in the ipu6 psys driver.
+
+Fixes: 1f8b30cdc1c6a ("media: ipu7: sync psys folder from ipu7-drivers")
+Signed-off-by: Pan, Kris <kris.pan@intel.com>
+---
+ drivers/staging/media/ipu7/psys/ipu-psys.c | 29 +++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/media/ipu7/psys/ipu-psys.c b/drivers/staging/media/ipu7/psys/ipu-psys.c
+index 76c056f972c7..4fe37632fb18 100644
+--- a/drivers/staging/media/ipu7/psys/ipu-psys.c
++++ b/drivers/staging/media/ipu7/psys/ipu-psys.c
+@@ -1539,7 +1539,34 @@ static struct auxiliary_driver ipu7_psys_driver = {
+ 	},
+ };
+ 
+-module_auxiliary_driver(ipu7_psys_driver);
++static int __init ipu7_psys_init(void)
++{
++	int rval;
++
++	rval = bus_register(&ipu7_psys_bus);
++	if (rval) {
++		pr_err("can't register ipu7 psys bus (%d)\n", rval);
++		return rval;
++	}
++
++	rval = auxiliary_driver_register(&ipu7_psys_driver);
++	if (rval) {
++		pr_err("failed to register ipu7 psys auxiliary driver (%d)\n",
++		       rval);
++		bus_unregister(&ipu7_psys_bus);
++		return rval;
++	}
++
++	return 0;
++}
++module_init(ipu7_psys_init);
++
++static void __exit ipu7_psys_exit(void)
++{
++	auxiliary_driver_unregister(&ipu7_psys_driver);
++	bus_unregister(&ipu7_psys_bus);
++}
++module_exit(ipu7_psys_exit);
+ 
+ MODULE_AUTHOR("Bingbu Cao <bingbu.cao@intel.com>");
+ MODULE_AUTHOR("Qingwu Zhang <qingwu.zhang@intel.com>");
+-- 
+2.34.1
+

@@ -1,0 +1,96 @@
+From 56077de75f3c021a48c0189379e3fa4530e9ae34 Mon Sep 17 00:00:00 2001
+From: KhaiWenTan <khai.wen.tan@intel.com>
+Date: Thu, 25 Jun 2026 13:34:57 +0800
+Subject: [PATCH 1/6] Revert "igc: Enable HW TX Timestamp for AF_XDP ZC"
+
+This reverts commit e3ca62b0f8e5880890ac1134c29d50e9081f226a.
+
+Signed-off-by: KhaiWenTan <khai.wen.tan@intel.com>
+---
+ drivers/net/ethernet/intel/igc/igc.h      |  1 -
+ drivers/net/ethernet/intel/igc/igc_main.c |  7 +------
+ drivers/net/ethernet/intel/igc/igc_ptp.c  | 24 -----------------------
+ 3 files changed, 1 insertion(+), 31 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igc/igc.h b/drivers/net/ethernet/intel/igc/igc.h
+index a087edfdeab7..b490d0a32334 100644
+--- a/drivers/net/ethernet/intel/igc/igc.h
++++ b/drivers/net/ethernet/intel/igc/igc.h
+@@ -790,7 +790,6 @@ void igc_ptp_clear_xsk_tx_tstamp_queue(struct igc_adapter *adapter,
+ 				       u16 queue_id);
+ void igc_ptp_read(struct igc_adapter *adapter, struct timespec64 *ts);
+ void igc_ptp_tx_tstamp_event(struct igc_adapter *adapter);
+-ktime_t igc_tx_dma_hw_tstamp(struct igc_adapter *adapter, u64 tstamp);
+ 
+ int igc_led_setup(struct igc_adapter *adapter);
+ void igc_led_free(struct igc_adapter *adapter);
+diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
+index d5fd96a8aed3..ea8f84e3862f 100644
+--- a/drivers/net/ethernet/intel/igc/igc_main.c
++++ b/drivers/net/ethernet/intel/igc/igc_main.c
+@@ -3121,7 +3121,6 @@ static void igc_xdp_xmit_zc(struct igc_ring *ring)
+ 		tx_desc->read.buffer_addr = cpu_to_le64(dma);
+ 
+ 		bi->type = IGC_TX_BUFFER_TYPE_XSK;
+-		bi->tx_flags |= IGC_TX_FLAGS_DMA_TSTAMP;
+ 		bi->protocol = 0;
+ 		bi->bytecount = xdp_desc.len;
+ 		bi->gso_segs = 1;
+@@ -3162,7 +3161,6 @@ static bool igc_clean_tx_irq(struct igc_q_vector *q_vector, int napi_budget)
+ 	unsigned int i = tx_ring->next_to_clean;
+ 	struct igc_tx_buffer *tx_buffer;
+ 	union igc_adv_tx_desc *tx_desc;
+-	ktime_t timestamp = 0;
+ 	u32 xsk_frames = 0;
+ 
+ 	if (test_bit(__IGC_DOWN, &adapter->state))
+@@ -3201,10 +3199,7 @@ static bool igc_clean_tx_irq(struct igc_q_vector *q_vector, int napi_budget)
+ 		    tx_buffer->tx_flags & IGC_TX_FLAGS_DMA_TSTAMP) {
+ 			u64 tstamp = le64_to_cpu(eop_desc->wb.dma_tstamp);
+ 
+-			if (tx_ring->xsk_pool && adapter->tstamp_config.tx_type == HWTSTAMP_TX_ON)
+-				timestamp = igc_tx_dma_hw_tstamp(adapter, tstamp);
+-			else
+-				igc_ptp_tx_dma_tstamp(adapter, tx_buffer->skb, tstamp);
++			igc_ptp_tx_dma_tstamp(adapter, tx_buffer->skb, tstamp);
+ 		}
+ 
+ 		/* clear next_to_watch to prevent false hangs */
+diff --git a/drivers/net/ethernet/intel/igc/igc_ptp.c b/drivers/net/ethernet/intel/igc/igc_ptp.c
+index 6fa9b13e22af..1be754b8d6d5 100644
+--- a/drivers/net/ethernet/intel/igc/igc_ptp.c
++++ b/drivers/net/ethernet/intel/igc/igc_ptp.c
+@@ -949,30 +949,6 @@ void igc_ptp_tx_dma_tstamp(struct igc_adapter *adapter,
+ 	skb_tstamp_tx(skb, &shhwtstamps);
+ }
+ 
+-ktime_t igc_tx_dma_hw_tstamp(struct igc_adapter *adapter, u64 tstamp)
+-{
+-	struct skb_shared_hwtstamps shhwtstamps;
+-	int adjust = 0;
+-
+-	igc_ptp_dma_time_to_hwtstamp(adapter, &shhwtstamps, tstamp);
+-
+-	switch (adapter->link_speed) {
+-	case SPEED_10:
+-		adjust = IGC_I225_TX_LATENCY_10;
+-		break;
+-	case SPEED_100:
+-		adjust = IGC_I225_TX_LATENCY_100;
+-		break;
+-	case SPEED_1000:
+-		adjust = IGC_I225_TX_LATENCY_1000;
+-		break;
+-	case SPEED_2500:
+-		adjust = IGC_I225_TX_LATENCY_2500;
+-		break;
+-	}
+-	return ktime_add_ns(shhwtstamps.hwtstamp, adjust);
+-}
+-
+ /**
+  * igc_ptp_tx_tstamp_event
+  * @adapter: board private structure
+-- 
+2.34.1
+
