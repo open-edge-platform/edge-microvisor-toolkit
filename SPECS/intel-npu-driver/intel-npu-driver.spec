@@ -1,6 +1,6 @@
 Summary:	    Intel Neural Processing Unit Driver
 Name:		    intel-npu-driver
-Version:	    1.34.0
+Version:	    1.35.0
 Release:	    1%{?dist}
 License:	    MIT AND Apache-2.0
 Vendor:         Intel Corporation
@@ -8,8 +8,7 @@ Distribution:   Edge Microvisor Toolkit
 URL:		    https://github.com/intel/linux-npu-driver
 Source0:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
 Source1:	    https://github.com/intel/level-zero-npu-extensions/archive/f9ad3bf89c2418d714aef2e6b96a5aafb12a1971/level-zero-npu-extensions-f9ad3bf.tar.gz
-Source2:	    https://github.com/intel-innersource/libraries.ai.npu.elf/archive/eca361b16892e3035f95c03bfb7f8d53ad2c8ef7/libraries.ai.npu.elf-eca361b.tar.gz
-Source3:	    %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}-firmware.tar.gz
+Source2:	    https://github.com/openvinotoolkit/npu_compiler_elf/archive/a301d97e0717fb797c79ec51f8cdc13152878700/npu_compiler_elf-a301d97.tar.gz
 
 ExclusiveArch:	x86_64
 
@@ -36,38 +35,26 @@ It enables energy-efficient execution of artificial neural network tasks.
 
 
 %prep
-%setup -q -n drivers.vpu.linux.client-npu-1.34.0-release_ttl_presilicon-20260619-27819362393
+%setup -q -n linux-npu-driver-%{version}
 
 # thirdparty deps
 rm -rf thirdparty/googletest thirdparty/level-zero third_party/level-zero-npu-extensions \
-   thirdparty/perfetto thirdparty/yaml-cpp third_party/npu_elf
+   thirdparty/perfetto thirdparty/yaml-cpp third_party/npu_compiler_elf
 tar xf %{SOURCE1}
 mv level-zero-npu-extensions-* third_party/level-zero-npu-extensions
 tar xf %{SOURCE2}
-mv libraries.ai.npu.elf-* third_party/npu_elf
-tar xf %{SOURCE3} --strip-components=1 -C firmware
+mv npu_compiler_elf-* third_party/npu_compiler_elf
 
-
-sed -i '/include(cmake\/googletest.cmake)/s/^/#/' third_party/CMakeLists.txt
+sed -i '/add_subdirectory(googletest EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
+sed -i '/add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)/s/^/#/' third_party/CMakeLists.txt
+# yaml-cpp is only needed by the validation layer; skip its cmake include
 sed -i '/include(cmake\/yaml-cpp.cmake)/s/^/#/' third_party/CMakeLists.txt
-sed -i '/include(cmake\/movi-scripts.cmake)/s/^/#/' third_party/CMakeLists.txt
-
-sed -i 's|target_include_directories(${PROJECT_NAME} INTERFACE include)|target_include_directories(${PROJECT_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)|' firmware/CMakeLists.txt
-
-sed -i 's|get_target_property(FIRMWARE_INCLUDES fw_vpu_api_headers INTERFACE_INCLUDE_DIRECTORIES)|#get_target_property(FIRMWARE_INCLUDES fw_vpu_api_headers INTERFACE_INCLUDE_DIRECTORIES)|' third_party/cmake/vpux_elf.cmake
-sed -i 's|include_directories(SYSTEM ${FIRMWARE_INCLUDES})|include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/firmware/include)|' third_party/cmake/vpux_elf.cmake
-sed -i '/add_subdirectory(npu_elf)/a target_include_directories(npu_elf SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/firmware/include)' third_party/cmake/vpux_elf.cmake
-
-sed -i 's|/usr/lib/libyaml-cpp.a|/usr/lib64/libyaml-cpp.so|' /usr/lib/cmake/yaml-cpp/yaml-cpp-targets.cmake
 
 %build
 cmake \
 	-B build -S . \
 	-DENABLE_VALIDATION_BUILD=OFF \
-	-DENABLE_NPU_COMPILER_BUILD=OFF \
-	-DENABLE_NPU_COMPILER_DOWNLOAD=OFF \
-	-DENABLE_NPU_FIRMWARE_API_DOWNLOAD=OFF \
-	-DENABLE_TOOLS_BUILD=OFF
+	-DENABLE_NPU_COMPILER_BUILD=OFF
 
 cmake --build build --target ze_intel_npu
 
@@ -76,20 +63,16 @@ mkdir -p %{buildroot}%{_libdir}
 cmake --install build --prefix=%{buildroot}%{_libdir}
 cp -a %{buildroot}%{_libdir}/lib64/libze_intel_npu.so.* %{buildroot}%{_libdir}
 rm -rf %{buildroot}%{_libdir}/lib64
-rm -rf %{buildroot}%{_libdir}/bin
-rm -rf %{buildroot}%{_libdir}/share
 
 %files
 %defattr(-,root,root)
+%license LICENSE.md
 %doc README.md
 %{_libdir}/libze_intel_npu.so*
 
 %changelog
-* Thu Jul 16 2026 Andy <andy.peng@intel.com> - 1.34.0-1
-- Update version to v1.34.0
-
-* Thu Jul 2 2026 Andy <andy.peng@intel.com> - 1.33.0-1
-- Update version to v1.33.0
+* Tue Aug 11 2026 Andy <andy.peng@intel.com> - 1.35.0-1
+- Upgrade version to 1.35.0.
 
 * Tue Apr 14 2026 Andy <andy.peng@intel.com> - 1.32.0-1
 - Upgrade version to 1.32.0.
