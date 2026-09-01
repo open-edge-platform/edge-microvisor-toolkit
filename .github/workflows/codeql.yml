@@ -59,6 +59,8 @@ jobs:
         with:
           template: report
           token: ${{ secrets.SECURITY_TOKEN }}
+          # Point at the SARIF written by the analyze step (default "../results" doesn't exist).
+          sarifReportDir: ${{ github.workspace }}/sarif-results
 
       - name: Rename Report by Code Matrix
         run: |
