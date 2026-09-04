@@ -46,7 +46,9 @@ select_partition() {
     #returns the uuid this script needs to search for to select the rootfs
     required_part=$( grep -o "boot_uuid=.* " /proc/cmdline | cut -c 11-46 )
 
-    rootfs_number=$(blkid | grep -i "$required_part" | grep -v '/dev/mapper' | awk -F ":" '{print substr($1,length($1),1)}')
+    # blkid prints "<device>: UUID=..."; keep the last character of the device
+    # name, which is the partition number
+    rootfs_number=$(blkid | grep -i "$required_part" | grep -v '/dev/mapper' | sed -n 's/^[^:]*\(.\):.*/\1/p')
     if [[ "$rootfs_number" -eq "2" ]];
     then
 	export rootfs_partition="rootfs_a"
@@ -99,11 +101,10 @@ get_partition_suffix() {
 #####################################################################################
 enable_other_parts() {
     luks_key=$1
-    list_block_devices=($(lsblk -o NAME,TYPE | grep -i disk  | awk  '$1 ~ /sd*|nvme*/ {print $1}'))
+    list_block_devices=($(lsblk -dn -o NAME,TYPE | grep -iE '^(sd|nvme)[^[:space:]]*[[:space:]]+disk' | sed 's/[[:space:]].*//'))
 
-    ## $3 represents the block device size. if 0 omit
-    ## $4 is set to 1 if the device is removable
-    # list_block_devices=($(lsblk -o NAME,TYPE,SIZE,RM | grep -i disk | awk '$1 ~ /sd*|nvme*/ {if ($3 !="0B" && $4 ==0)  {print $1}}'))
+    ## the SIZE and RM columns could also be used to skip devices with a size of
+    ## 0B or removable devices (RM set to 1). See get_dest_disk().
     list_of_lvmg_part=''
     for block_dev in "${list_block_devices[@]}";
     do
@@ -113,7 +114,7 @@ enable_other_parts() {
 	    continue
 	fi
 	
-	parts=$(lsblk -ln -o NAME,TYPE "/dev/${block_dev}" | grep -v 'disk' | awk '{print $1}')
+	parts=$(lsblk -ln -o NAME,TYPE "/dev/${block_dev}" | grep -v 'disk' | sed 's/[[:space:]].*//')
 	for part in $parts;
 	do
 	    echo "check on /dev/$part"
@@ -136,7 +137,10 @@ get_dest_disk()
 {
     disk_device=""
 
-    list_block_devices=($(lsblk -o NAME,TYPE,SIZE,RM | grep -i disk | awk '$1 ~ /sd*|nvme*/ {if ($3 !="0B" && $4 ==0)  {print $1}}'))
+    ## skip block devices with a size of 0B and removable devices (RM set to 1)
+    list_block_devices=($(lsblk -dn -o NAME,TYPE,SIZE,RM | \
+        grep -iE '^(sd|nvme)[^[:space:]]*[[:space:]]+disk[[:space:]]+[^[:space:]]+[[:space:]]+0$' | \
+        grep -vE '[[:space:]]0B[[:space:]]' | sed 's/[[:space:]].*//'))
     for block_dev in "${list_block_devices[@]}";
     do
         #if there were any problems when the ubuntu was streamed.
