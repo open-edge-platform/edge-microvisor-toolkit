@@ -1,7 +1,7 @@
 Name:           yq
 Summary:        yq is a portable command-line YAML, JSON, XML, CSV, TOML and properties processor.
-Version:        4.45.4
-Release:        2%{?dist}
+Version:        4.53.6
+Release:        1%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -9,7 +9,7 @@ Group:          Applications/System
 URL:            https://mikefarah.gitbook.io/yq
 Source0:        https://github.com/mikefarah/yq/archive/refs/tags/v%{version}.tar.gz#/%{name}-v%{version}.tar.gz
 Source1:        %{name}-vendor-v%{version}.tar.gz
-BuildRequires:  golang >= 1.24.4
+BuildRequires:  golang >= 1.25.0
 
 %description
 yq is a portable command-line YAML, JSON, XML, CSV, TOML and properties processor.
@@ -29,6 +29,9 @@ install -m 0755 yq %{buildroot}%{_bindir}
  %{_bindir}/yq
 
 %changelog
+* Wed Sep 2 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 4.53.6-1
+- Update to 4.53.6
+
 * Tue Sep 2 2025 Polmoorx shiva kumar <polmoorx.shiva.kumar@intel.com> - 4.45.4-2
 - Update go version to use above 1.24.4
 
