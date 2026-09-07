@@ -3,7 +3,7 @@
      "COPYING": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
      "module-setup.sh": "581153fd908980815b67880c5a675b66fa4895ddfc33d486506f8b6ca7b44199",
      "systemd-cryptsetup@root.service": "1de17e5c76bcbe1f3fe1505d723f9bcb5b4c259f3ad49fe793c57257aef3b0d0",
-     "tpm-cryptsetup.sh": "8214a425455789c3c1420b299cf0d5519b5865e5850cb15025c2ba206f3fc4a2",
+     "tpm-cryptsetup.sh": "76bf57035e5bfcfc52c70e5d877649fdbf6e94475b8e6113ce1c629a9ded518a",
      "tpm-cryptsetup.conf":  "1536a7fb4b5f032f8b0b3dd68f61fc3e690667db8e3c44b3550d9dfb242ef4e6"
  }
 }

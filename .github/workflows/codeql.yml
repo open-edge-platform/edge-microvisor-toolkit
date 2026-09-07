@@ -44,12 +44,23 @@ jobs:
         uses: github/codeql-action/analyze@ae9ef3a1d2e3413523c3741725c30064970cc0d4    #v3
         with:
           category: "/language:${{matrix.language}}"
+          # Write the SARIF to disk (in addition to the default upload to code scanning).
+          output: sarif-results
+          upload: always
+
+      - name: Upload SARIF results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02    #v4
+        with:
+          name: sarif-${{ matrix.language }}
+          path: sarif-results/*.sarif
 
       - name: Generate Security Report
         uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d    #v3.0.4
         with:
           template: report
           token: ${{ secrets.SECURITY_TOKEN }}
+          # Point at the SARIF written by the analyze step (default "../results" doesn't exist).
+          sarifReportDir: ${{ github.workspace }}/sarif-results
 
       - name: Rename Report by Code Matrix
         run: |

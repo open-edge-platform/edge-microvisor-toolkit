@@ -1,7 +1,7 @@
 Summary:        Full Disk Encryption with DM-verity to ensure confidentiality and integrity
 Name:           tpm-cryptsetup
 Version:        1.0
-Release:        9%{?dist}
+Release:        10%{?dist}
 License:        GPLv2+
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -36,6 +36,9 @@ cp %{SOURCE4} COPYING
 %{_libdir}/dracut/modules.d/01tpm-cryptsetup/*
 
 %changelog
+* Thu Sep 3 2026 Chee Yang Lee <chee.yang.lee@intel.com> - 1.0-10
+- drop use of awk in the script.
+
 * Mon Mar 10 2025 Adithya Baglody <adithya.nagaraj.baglody@intel.com> - 1.0-9
 - Support a usecase where only dm-verity is enabled without FDE
 - The script first checks if FDE is enabled, if not, it will

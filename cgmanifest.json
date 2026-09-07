@@ -17309,8 +17309,8 @@
         "type": "other",
         "other": {
           "name": "yq",
-          "version": "4.45.4",
-          "downloadUrl": "https://github.com/mikefarah/yq/archive/refs/tags/v4.45.4.tar.gz"
+          "version": "4.53.6",
+          "downloadUrl": "https://github.com/mikefarah/yq/archive/refs/tags/v4.53.6.tar.gz"
         }
       }
     },
