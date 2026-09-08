@@ -1,13 +1,14 @@
 Summary:        Linux Firmware
 Name:           linux-firmware
 Version:        20260810
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        GPL+ AND GPLv2+ AND MIT AND Redistributable, no modification permitted
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
 Group:          System Environment/Kernel
 URL:            https://www.kernel.org/
 Source0:        https://www.kernel.org/pub/linux/kernel/firmware/%{name}-%{version}.tar.xz
+Source1:        https://github.com/intel/ipu7-camera-bins/raw/refs/heads/main/lib/firmware/intel/ipu/ipu8_fw.bin
 
 %global debug_package %{nil}
 %global __os_install_post %{nil}
@@ -111,6 +112,9 @@ for f in %{buildroot}%{_firmwarepath}/intel/qat/qat_*.bin; do
     base=$(basename "$f")
     ln -s "intel/qat/$base" "%{buildroot}%{_firmwarepath}/$base"
 done
+
+mkdir -p %{buildroot}%{_firmwarepath}/intel/ipu
+install -m 0644 %{SOURCE1} %{buildroot}%{_firmwarepath}/intel/ipu/ipu8_fw.bin
 
 %post qat
 dracut --force
@@ -233,6 +237,9 @@ dracut --force
 %{_firmwarepath}/qat_*.bin
 
 %changelog
+* Fri Aug 21 2026 Andy <andy.peng@intel.com> - 20260810-2
+- Add ipu8_fw.bin firmware.
+
 * Mon Aug 17 2026 Andy <andy.peng@intel.com> - 20260810-1
 - Upgrade firmware to 20260810.
 
