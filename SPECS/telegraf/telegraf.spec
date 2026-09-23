@@ -1,7 +1,7 @@
 Summary:        agent for collecting, processing, aggregating, and writing metrics.
 Name:           telegraf
 Version:        1.31.0
-Release:        28%{?dist}
+Release:        29%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -9,7 +9,7 @@ Group:          Development/Tools
 URL:            https://github.com/influxdata/telegraf
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 # Use the generate_source_tarbbal.sh script to get the vendored sources.
-Source1:        %{name}-%{version}-vendor.tar.gz
+Source1:        %{name}-%{version}-v1-vendor.tar.gz
 Source2:        telegraf.te
 Source3:        telegraf.fc
 Patch0:         CVE-2024-35255.patch
@@ -59,6 +59,17 @@ Patch41:        CVE-2026-39828.patch
 Patch43:        CVE-2026-39835.patch
 Patch44:        CVE-2026-42502.patch
 Patch45:        CVE-2026-46598.patch
+Patch46:        CVE-2026-58207.patch
+Patch47:        CVE-2026-58208.patch
+Patch48:        CVE-2026-58209.patch
+Patch49:        CVE-2026-58250.patch
+Patch50:        CVE-2026-58251.patch
+Patch51:        CVE-2026-58252.patch
+Patch52:        CVE-2026-58253.patch
+Patch53:        CVE-2026-56852.patch
+Patch54:        CVE-2025-29923.patch
+Patch55:        CVE-2025-46327.patch
+Patch56:        CVE-2026-54908.patch
 
 BuildRequires:  golang < 1.26.0
 BuildRequires:  systemd-devel
@@ -163,6 +174,14 @@ fi
 %selinux_modules_uninstall -s %{selinuxtype} %{modulename}
 
 %changelog
+* Thu Aug 20 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-29
+- merge from Azure Linux 3.0.20260809-3.0
+- Patch for CVE-2026-54908
+- Patch CVE-2025-29923
+- Patch CVE-2025-46327
+- Patch for CVE-2026-56852
+- Patch for CVE-2026-58253, CVE-2026-58252, CVE-2026-58251, CVE-2026-58250, CVE-2026-58209, CVE-2026-58208, CVE-2026-58207
+
 * Thu Aug 6 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1.31.0-28
 - merge from Azure Linux 3.0.20260712-3.0
 - Patch for CVE-2026-46598, CVE-2026-42502, CVE-2026-39835, CVE-2026-39828, CVE-2026-39827, CVE-2026-25681, CVE-2026-25680

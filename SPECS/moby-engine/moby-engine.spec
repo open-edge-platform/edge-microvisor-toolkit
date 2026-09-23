@@ -3,7 +3,7 @@
 Summary: The open-source application container engine
 Name:    moby-engine
 Version: 25.0.3
-Release: 18%{?dist}
+Release: 19%{?dist}
 License: ASL 2.0
 Group:   Tools/Container
 URL: https://mobyproject.org
@@ -41,6 +41,7 @@ Patch21: CVE-2026-39834.patch
 Patch22: CVE-2026-46597.patch
 Patch23: CVE-2026-39827.patch
 Patch24: CVE-2026-39835.patch
+Patch25: CVE-2026-56852.patch
 
 %{?systemd_requires}
 
@@ -143,6 +144,10 @@ chmod 0700 /opt/docker-data
 %{_unitdir}/*
 
 %changelog
+* Thu Aug 20 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.3-19
+- merge from Azure Linux 3.0.20260809-3.0
+- Patch for CVE-2026-56852
+
 * Thu Jun 4 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 25.0.3-18
 - merge from Azure Linux 3.0.20260602-3.0
 - Patch for CVE-2026-46597, CVE-2026-39834, CVE-2026-39830, CVE-2026-39829, CVE-2026-39821, CVE-2026-39835, CVE-2026-39827

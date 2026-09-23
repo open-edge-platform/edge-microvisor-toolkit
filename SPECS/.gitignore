@@ -220,6 +220,7 @@ fsverity-utils
 fuse
 fuse-zip
 fuse3
+fwupd
 gawk
 gbenchmark
 gc
@@ -463,6 +464,7 @@ libinput
 libiscsi
 libisoburn
 libisofs
+libjcat
 libjpeg-turbo
 libkcapi
 libksba
@@ -525,6 +527,7 @@ libsolv
 libsoup
 libssh
 libssh2
+libstemmer
 libstoragemgmt
 libtalloc
 libtar
@@ -560,6 +563,7 @@ libxkbcommon
 libxkbfile
 libxml++
 libxml2
+libxmlb
 libxshmfence
 libxslt
 libyaml
