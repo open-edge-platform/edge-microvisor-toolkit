@@ -57,7 +57,7 @@ ifeq ($(DOWNLOAD_SRPMS),y)
 $(STATUS_FLAGS_DIR)/build_srpms.flag: $(local_specs) $(local_spec_dirs) $(local_spec_sources) $(SPECS_DIR) $(go-downloader)
 	for spec in $(local_specs); do \
 		spec_file=$${spec} && \
-		srpm_file=$$(rpmspec -q $${spec_file} --srpm --define='with_check 1' --define='dist $(DIST_TAG)' --queryformat %{NAME}-%{VERSION}-%{RELEASE}.src.rpm) && \
+		srpm_file=$$(rpmspec -q $${spec_file} --srpm --define='with_check 1' --define='_without_xpmem 1' --define='dist $(DIST_TAG)' --queryformat %{NAME}-%{VERSION}-%{RELEASE}.src.rpm) && \
 		for url in $(SRPM_URL_LIST); do \
 			$(go-downloader) $${url}/$${srpm_file} \
 				-O $(BUILD_SRPMS_DIR)/$${srpm_file} \

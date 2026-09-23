@@ -2,7 +2,7 @@ Summary:        Prebuilt version of ca-certificates-base package.
 Name:           prebuilt-ca-certificates-base
 # When updating, "Epoch, "Version", AND "Release" tags must be updated in the "ca-certificates" package as well.
 Version:        %{emt}.0.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 License:        MIT
 Vendor:         Intel Corporation
 Distribution:   Edge Microvisor Toolkit
@@ -45,6 +45,10 @@ find %{buildroot} -name README -delete
 %{_sysconfdir}/pki/java/cacerts
 
 %changelog
+* Thu Aug 20 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 1:26.0.0-2
+- merge from Azure Linux 3.0.20260809-3.0
+- Making 'Release' match with 'ca-certificates'
+
 * Mon Mar 30 2026 Lee Chee Yang <chee.yang.lee@intel.com> - 26.0.0-1
 - bump for 26.06 release.
 

@@ -52,6 +52,11 @@ const (
 	// WithCheckDefine specifies the with_check option for rpm tool commands
 	WithCheckDefine = "with_check"
 
+	// WithoutXpmemDefine disables the optional xpmem support of the SPECs which use the 'xpmem' bcond
+	// (i.e. 'ucx'). XPMEM requires an out-of-tree kernel module which Edge Microvisor Toolkit does not
+	// ship, so the feature is turned off for every RPM query and build.
+	WithoutXpmemDefine = "_without_xpmem"
+
 	// NoCompatibleArchError specifies the error message when processing a SPEC written for a different architecture.
 	NoCompatibleArchError = "error: No compatible architectures found for build"
 
@@ -357,6 +362,9 @@ func defaultDefines(runCheck bool) map[string]string {
 
 	return map[string]string{
 		WithCheckDefine: withCheckSetting,
+		// Always build without xpmem support so that the specs analyzed by the grapher/specreader and the
+		// specs built by pkgworker agree on the set of produced RPMs.
+		WithoutXpmemDefine: "1",
 	}
 }
 
